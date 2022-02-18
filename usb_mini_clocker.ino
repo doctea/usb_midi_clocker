@@ -1,9 +1,10 @@
-//#define DISABLE_FLIP
+// note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
+// proof of concept for syncing multiple USB Midi devices
 
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
-#define ENABLE_MIDI_SERIAL_FLUSH 1
+//#define ENABLE_MIDI_SERIAL_FLUSH 1
 
 USB Usb;
 USBHub  Hub1(&Usb);
@@ -20,6 +21,7 @@ UHS2MIDI_CREATE_INSTANCE(&Usb,0,Midi2);
 UHS2MIDI_CREATE_INSTANCE(&Usb,0,Midi3);
 
 unsigned long t1 = millis();
+unsigned long ticks = 0;
 
 void handleNoteOn(byte inChannel, byte inNumber, byte inVelocity)
 {
@@ -68,6 +70,12 @@ void handleControlChange(byte inChannel, byte inNumber, byte inValue) {
   Midi3.sendNoteOn(inValue, 127, 1);
 }
 
+void onInit() {
+  Midi1.sendStart();
+  Midi2.sendStart();
+  Midi3.sendStart();
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -103,6 +111,7 @@ void setup()
 
 byte counter = 0;
 
+unsigned int started_at = 0;
 // -----------------------------------------------------------------------------`
 //
 // -----------------------------------------------------------------------------
@@ -113,12 +122,20 @@ void loop()
   Midi2.read();
   Midi3.read();
 
-  if ((millis() - t1) > 50)
+  /*if (millis()-started_at>=10000) {
+    Midi1.sendStart();
+    Midi2.sendStart();
+    Midi3.sendStart();
+    started_at = millis();
+  }*/
+
+  if ((millis() - t1) > 20)
   {
     Midi1.sendClock();
     Midi2.sendClock();
     Midi3.sendClock();
     t1 = millis();
+    ticks++;
     //Serial.println("tick!");
 
     //MIDI.sendNoteOn(random(0,127), random(0,6), random(1,16));
@@ -126,14 +143,15 @@ void loop()
     /*MIDI.sendNoteOn(counter, 0, 1);
     counter = (counter+1)%8;
     MIDI.sendNoteOn(counter, 1, 1);*/
-
-    Midi1.sendNoteOn(counter, 0, 1);
-    Midi2.sendNoteOn(counter, 0, 1);
-    Midi3.sendNoteOn(counter, 0, 1);    
-    counter = (counter+1)%8;
-    Midi1.sendNoteOn(counter, 1, 1);
-    Midi2.sendNoteOn(counter, 1, 1);
-    Midi3.sendNoteOn(counter, 1, 1);
-
+   
+    if (ticks%24==0) {
+      Midi1.sendNoteOn(counter, 0, 1);
+      Midi2.sendNoteOn(counter, 0, 1);
+      Midi3.sendNoteOn(counter, 0, 1);    
+      counter = (counter+1)%8;
+      Midi1.sendNoteOn(counter, 1, 1);
+      Midi2.sendNoteOn(counter, 1, 1);
+      Midi3.sendNoteOn(counter, 1, 1);
+    }
   }
 }
