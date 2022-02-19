@@ -23,6 +23,13 @@ UHS2MIDI_CREATE_INSTANCE(&Usb,0,Midi3);
 unsigned long t1 = millis();
 unsigned long ticks = 0;
 
+void handleStart() {
+  Serial.println("Received START!");
+  Midi1.sendStart();
+  Midi2.sendStart();
+  Midi3.sendStart();
+}
+
 void handleNoteOn(byte inChannel, byte inNumber, byte inVelocity)
 {
   Serial.print("NoteOn\tch");
@@ -33,9 +40,9 @@ void handleNoteOn(byte inChannel, byte inNumber, byte inVelocity)
   Serial.println(inVelocity);
 
   //MIDI.sendNoteOn(inNumber, random(0,127), inChannel);
-  Midi1.sendNoteOn(inNumber, random(0,127), 1);
+  /*Midi1.sendNoteOn(inNumber, random(0,127), 1);
   Midi2.sendNoteOn(inNumber, random(0,127), 1);
-  Midi3.sendNoteOn(inNumber, random(0,127), 1);
+  Midi3.sendNoteOn(inNumber, random(0,127), 1);*/
 
 }
 
@@ -48,12 +55,12 @@ void handleNoteOff(byte inChannel, byte inNumber, byte inVelocity)
   Serial.print("\tvelocity: ");
   Serial.println(inVelocity);
 
-  Midi1.sendNoteOn(inNumber, 0, 1);
+  /*Midi1.sendNoteOn(inNumber, 0, 1);
   Midi2.sendNoteOn(inNumber, 0, 1);
   Midi3.sendNoteOn(inNumber, 0, 1);
   Midi1.sendNoteOff(inNumber, 0, 1);
   Midi2.sendNoteOff(inNumber, 0, 1);
-  Midi3.sendNoteOff(inNumber, 0, 1);
+  Midi3.sendNoteOff(inNumber, 0, 1);*/
 
 }
 
@@ -65,9 +72,15 @@ void handleControlChange(byte inChannel, byte inNumber, byte inValue) {
   Serial.print("\tvalue: ");
   Serial.println(inValue);
 
-  Midi1.sendNoteOn(inValue, 127, 1);
+  if (inNumber==54 && inValue==127) {
+    Midi1.sendStart();
+    Midi2.sendStart();
+    Midi3.sendStart();
+  }
+
+  /*Midi1.sendNoteOn(inValue, 127, 1);
   Midi2.sendNoteOn(inValue, 127, 1);
-  Midi3.sendNoteOn(inValue, 127, 1);
+  Midi3.sendNoteOn(inValue, 127, 1);*/
 }
 
 void onInit() {
@@ -81,6 +94,9 @@ void setup()
   Serial.begin(115200);
   while (!Serial);
 
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
+
   /*MIDI.begin();
   MIDI.setHandleNoteOn(handleNoteOn);
   MIDI.setHandleNoteOff(handleNoteOff);
@@ -90,16 +106,19 @@ void setup()
   Midi1.setHandleNoteOn(handleNoteOn);
   Midi1.setHandleNoteOff(handleNoteOff);
   Midi1.setHandleControlChange(handleControlChange);
+  Midi1.setHandleStart(handleStart);
 
   Midi2.begin();
   Midi2.setHandleNoteOn(handleNoteOn);
   Midi2.setHandleNoteOff(handleNoteOff);
   Midi2.setHandleControlChange(handleControlChange);
+  Midi2.setHandleStart(handleStart);
 
   Midi3.begin();
   Midi3.setHandleNoteOn(handleNoteOn);
   Midi3.setHandleNoteOff(handleNoteOff);
   Midi3.setHandleControlChange(handleControlChange);
+  Midi3.setHandleStart(handleStart);
 
   if (Usb.Init() == -1) {
     while (1); //halt
@@ -143,15 +162,28 @@ void loop()
     /*MIDI.sendNoteOn(counter, 0, 1);
     counter = (counter+1)%8;
     MIDI.sendNoteOn(counter, 1, 1);*/
-   
+
+    if (ticks%12==0) {
+      digitalWrite(6, HIGH);
+    }
     if (ticks%24==0) {
-      Midi1.sendNoteOn(counter, 0, 1);
+      digitalWrite(7, HIGH);
+      /*Midi1.sendNoteOn(counter, 0, 1);
       Midi2.sendNoteOn(counter, 0, 1);
       Midi3.sendNoteOn(counter, 0, 1);    
       counter = (counter+1)%8;
       Midi1.sendNoteOn(counter, 1, 1);
       Midi2.sendNoteOn(counter, 1, 1);
       Midi3.sendNoteOn(counter, 1, 1);
+     */
+      //digitalWrite(6, LOW);
+      //digitalWrite(7, LOW);
+    }
+    if (ticks%12==2) {
+      digitalWrite(6, LOW);
+    }
+    if (ticks%24==2) {
+      digitalWrite(7, LOW);
     }
   }
 }
