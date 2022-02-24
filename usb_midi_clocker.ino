@@ -89,7 +89,6 @@ void loop()
 
   if ((millis() - t1) > ms_per_tick)
   {
-    ticks++;
     unsigned int delta = millis()-t1;
     
     if (DEBUG_TICKS) {
@@ -109,6 +108,7 @@ void loop()
         
     if (DEBUG_TICKS) Serial.println(F(" ]"));
 
+    ticks++;
     t1 = millis();
   }
 }

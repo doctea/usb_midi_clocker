@@ -39,10 +39,10 @@ void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
 void apcmini_on_tick(unsigned long ticks) {
   static byte beat_counter;
   
-  if (ixAPCmini != 0xff && midi_apcmini) {
+  if (midi_apcmini) {
     midi_apcmini->sendClock();
 
-    if (ticks%PPQN==0) {
+    if (is_bpm_on_beat(ticks)) {
       if (DEBUG_TICKS) {
         Serial.print(F("apcmini w/"));
         /*Serial.print(ticks);
@@ -53,7 +53,7 @@ void apcmini_on_tick(unsigned long ticks) {
       beat_counter = (byte)((ticks/PPQN) % 8); //(beat_counter+1)%8;
       midi_apcmini->sendNoteOn(beat_counter, 1, 1);
       //midi_apcmini->sendNoteOn(counter, 1, 1);
-    } else if (ticks%PPQN==duration) {
+    } else if (is_bpm_on_beat(ticks,duration)) {
       midi_apcmini->sendNoteOn(beat_counter, 0, 1);
     }
   }

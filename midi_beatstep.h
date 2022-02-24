@@ -31,7 +31,7 @@ void beatstep_handle_start() {
 void beatstep_on_tick(unsigned long ticks) {
   if (midi_beatstep) {
     if (DEBUG_TICKS) Serial.print(F(" beatstep "));
-    if (ticks%(PPQN*4)==0 && !beatstep_started) {
+    if (is_bpm_on_bar(ticks) && !beatstep_started) {
       Serial.println("First beat of bar and BEATSTEP not started -- starting!");
       midi_beatstep->sendStart();
       beatstep_started = true;

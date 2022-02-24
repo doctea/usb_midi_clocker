@@ -10,6 +10,13 @@
 #define IS_BPM_ON_HALF_BEAT (ticks==0 || (ticks%(PPQN/2))==0)
 */
 
+inline bool is_bpm_on_phrase(unsigned long ticks,     unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*4*4) == offset; }
+inline bool is_bpm_on_bar(unsigned long ticks,        unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*4)   == offset; }
+inline bool is_bpm_on_half_bar(unsigned long ticks,   unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*2)   == offset; }
+inline bool is_bpm_on_beat(unsigned long ticks,       unsigned long offset = 0) { return ticks==offset || ticks%(PPQN)     == offset; }
+inline bool is_bpm_on_eighth(unsigned long ticks,     unsigned long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
+inline bool is_bpm_on_sixteenth(unsigned long ticks,  unsigned long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
+
 unsigned long t1 = millis();
 unsigned long ticks = 0;
 
