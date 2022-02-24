@@ -31,9 +31,6 @@ UHS2MIDI_NAMESPACE::uhs2MidiTransport *MidiTransports[] {&__uhs2Midi1, &__uhs2Mi
 
 #include "multi_usb_handlers.h"
 
-unsigned long t1 = millis();
-unsigned long ticks = 0;
-
 void onInit1() {
   setupmidi(0);
 }
