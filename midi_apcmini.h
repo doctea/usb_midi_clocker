@@ -42,7 +42,7 @@ void apcmini_on_tick(unsigned long ticks) {
   if (midi_apcmini) {
     midi_apcmini->sendClock();
 
-    if (is_bpm_on_beat(ticks)) {
+    if (is_bpm_on_eighth(ticks)) {
       if (DEBUG_TICKS) {
         Serial.print(F("apcmini w/"));
         /*Serial.print(ticks);
@@ -50,7 +50,7 @@ void apcmini_on_tick(unsigned long ticks) {
         Serial.print(beat_counter);
         Serial.print(F(" "));
       }
-      beat_counter = (byte)((ticks/PPQN) % 8); //(beat_counter+1)%8;
+      beat_counter = (byte)((ticks/(PPQN)) % NUM_STEPS); //(beat_counter+1)%8;
       midi_apcmini->sendNoteOn(beat_counter, 1, 1);
       //midi_apcmini->sendNoteOn(counter, 1, 1);
     } else if (is_bpm_on_beat(ticks,duration)) {
@@ -80,15 +80,36 @@ void apcmini_clear_display() {
 
 void apcmini_update_clock() {
   // draw the clock divisions
-  for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
+  /*for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
     //byte start_row = (8-NUM_CLOCKS) * 8;
     byte start_row = 64-((c+1)*8);
     for (byte i = 0 ; i < 8 ; i++) {
-      if (clock_multiplier[c]<0.5) {
+      float cm = clock_multiplier[c] / 2;
+      if (cm<0.5) {
         midi_apcmini->sendNoteOn(start_row+i, 2, 1);
-      } else if (clock_multiplier[c]<1.0) {
+      } else if (cm<1.0) {
         midi_apcmini->sendNoteOn(start_row+i, 3, 1);
-      } else if (i%(byte)clock_multiplier[c]==0) {
+      } else if (i%(byte)cm==0) {
+        midi_apcmini->sendNoteOn(start_row+i, 1, 1);
+      } else {
+        midi_apcmini->sendNoteOn(start_row+i, 0, 1);
+      }
+    }
+  }*/
+
+  for (byte c = 0 ; c < NUM_SEQUENCES ; c++) {
+    //byte start_row = (8-NUM_CLOCKS) * 8;
+    byte start_row = 64-((c+1)*8);
+    for (byte i = 0 ; i < NUM_STEPS ; i++) {
+      byte level = 0;
+      /*if (sequence[c][i*2]>1 && sequence[c][(i*2)+1]>1) {
+        level = 3;
+      } else if (sequence[c][i]>1) {
+        level = 1;
+      } else {
+        level = 0;
+      }*/
+      if (sequence[c][i]>0) {
         midi_apcmini->sendNoteOn(start_row+i, 1, 1);
       } else {
         midi_apcmini->sendNoteOn(start_row+i, 0, 1);

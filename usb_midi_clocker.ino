@@ -6,7 +6,7 @@
 
 int duration = 2;
 
-#define DEBUG_TICKS true
+#define DEBUG_TICKS false
 
 USB Usb;
 USBHub  Hub1(&Usb);
@@ -67,6 +67,8 @@ void setup()
 
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
+
+  init_sequence();
 
   if (Usb.Init() == -1) {
     while (1); //halt
