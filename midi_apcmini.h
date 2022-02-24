@@ -66,7 +66,41 @@ void apcmini_on_restart() {
   }
 }
 
+
+unsigned long last_updated_display = 0;
+
+void apcmini_clear_display() {
+  Serial.println("Clearing APC display..");
+  for (byte x = 0 ; x < 8 ; x++) {
+    for (byte y = 0 ; y < 8 ;y++) {
+      midi_apcmini->sendNoteOn(x+(y*8), 0, 1);
+    }
+  }
+}
+
+void apcmini_update_clock() {
+  // draw the clock divisions
+  for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
+    //byte start_row = (8-NUM_CLOCKS) * 8;
+    byte start_row = 64-((c+1)*8);
+    for (byte i = 0 ; i < 8 ; i++) {
+      if (clock_multiplier[c]<0.5) {
+        midi_apcmini->sendNoteOn(start_row+i, 2, 1);
+      } else if (clock_multiplier[c]<1.0) {
+        midi_apcmini->sendNoteOn(start_row+i, 3, 1);
+      } else if (i%(byte)clock_multiplier[c]==0) {
+        midi_apcmini->sendNoteOn(start_row+i, 1, 1);
+      } else {
+        midi_apcmini->sendNoteOn(start_row+i, 0, 1);
+      }
+    }
+  }
+  last_updated_display = ticks;
+}
+
+
 void apcmini_init() {
     midi_apcmini->setHandleControlChange(apcmini_control_change);
     midi_apcmini->setHandleNoteOn(apcmini_note_on);
+    apcmini_clear_display();
 }

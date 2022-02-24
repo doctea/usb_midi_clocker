@@ -17,13 +17,34 @@ inline bool is_bpm_on_beat(unsigned long ticks,       unsigned long offset = 0) 
 inline bool is_bpm_on_eighth(unsigned long ticks,     unsigned long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
 inline bool is_bpm_on_sixteenth(unsigned long ticks,  unsigned long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
 
+inline bool is_bpm_on_multiplier(unsigned long ticks, float multiplier, unsigned long offset = 0) {
+  unsigned long p = ((float)PPQN*multiplier);
+  /*Serial.print(F("is_bpm_on_multiplier("));
+  Serial.print(ticks);
+  Serial.print(F(", "));
+  Serial.print(multiplier);
+  Serial.print(F(", "));
+  Serial.print(offset);
+  Serial.print(F(") checking ticks "));
+  Serial.print(ticks);
+  Serial.print(F(" with mod "));
+  Serial.print(p);
+  Serial.print(F(" against offset "));
+  Serial.print(offset);
+  Serial.print(F(" ? ="));*/
+  bool v = (ticks==offset || ticks%p == offset);
+  /*Serial.print(v);
+  Serial.println("!");*/
+  return v;
+}
+
 unsigned long t1 = millis();
 unsigned long ticks = 0;
 
 // tracking which beat we're on
 float bpm_current = 60.0f;
-//double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
-unsigned long ms_per_tick = 40;
+double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+//unsigned long ms_per_tick = 40;
 
 unsigned int started_at = 0;
 #endif

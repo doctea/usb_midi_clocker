@@ -74,6 +74,7 @@ void setup()
   delay( 200 );
   
   Serial.println(F("Arduino ready."));
+
 }
 
 // -----------------------------------------------------------------------------`
@@ -87,8 +88,7 @@ void loop()
   apcmini_loop();
   bamble_loop();
 
-  if ((millis() - t1) > ms_per_tick)
-  {
+  if ((millis() - t1) > ms_per_tick) {
     unsigned int delta = millis()-t1;
     
     if (DEBUG_TICKS) {
@@ -110,5 +110,9 @@ void loop()
 
     ticks++;
     t1 = millis();
+
+    if (ticks - last_updated_display > PPQN) {
+      apcmini_update_clock();
+    }
   }
 }
