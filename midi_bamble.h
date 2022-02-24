@@ -26,6 +26,13 @@ void bamble_on_tick(unsigned long ticks) {
   }
 }
 
+void bamble_on_restart() {
+  if (midi_bamble) {
+    midi_bamble->sendStop();
+    midi_bamble->sendStart();
+  }
+}
+
 void bamble_init() {
     bamble_started = false;
 

@@ -13,18 +13,24 @@ inline void apcmini_loop() {
   }  
 }
 
+void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
+  if (inNumber==0 && inVelocity==127) { // lower-left pad pressed
+    Serial.println(F("APCmini pressed, restarting downbeat"));
+    on_restart();
+  }
+}
 
 void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
-  Serial.print("APCMINI CC ch");
+  Serial.print(F("APCMINI CC ch"));
   Serial.print(inChannel);
-  Serial.print("\tnum ");
+  Serial.print(F("\tnum "));
   Serial.print(inNumber);
-  Serial.print("\tvalue: ");
+  Serial.print(F("\tvalue: "));
   Serial.println(inValue);
 
   if (inNumber==51) {
     bpm_current = map(inValue, 0, 127, 60, 140);
-    Serial.print("set bpm to ");
+    Serial.print(F("set bpm to "));
     Serial.println(bpm_current);
     ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
   }
@@ -53,6 +59,14 @@ void apcmini_on_tick(unsigned long ticks) {
   }
 }
 
+void apcmini_on_restart() {
+  if (midi_apcmini) {
+    midi_apcmini->sendStop();
+    midi_apcmini->sendStart();
+  }
+}
+
 void apcmini_init() {
     midi_apcmini->setHandleControlChange(apcmini_control_change);
+    midi_apcmini->setHandleNoteOn(apcmini_note_on);
 }

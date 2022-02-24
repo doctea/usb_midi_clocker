@@ -1,3 +1,4 @@
+#include "bpm.h"
 /*
 BEATSTEP:   Initialised device vendorid: 7285   productid: 518
 BAMBLEWEENY:  Initialised device vendorid: 10374    productid: 32779
@@ -31,6 +32,14 @@ void setupmidi(uint8_t idx)
     bamble_init();
     return;
   }
+}
+
+// call this when global clock should be reset
+void on_restart() {
+    ticks = 0;
+    beatstep_on_restart();
+    bamble_on_restart();
+    apcmini_on_restart();
 }
 
 /*

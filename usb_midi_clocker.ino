@@ -21,6 +21,8 @@ MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *Midi[] {&M
 //The instance name of uhs2MidiTransport is prefixed with __uhs2.
 UHS2MIDI_NAMESPACE::uhs2MidiTransport *MidiTransports[] {&__uhs2Midi1, &__uhs2Midi2, &__uhs2Midi3};
 
+void on_restart();
+
 #include "bpm.h"
 
 #include "cv_outs.h"

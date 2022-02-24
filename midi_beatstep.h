@@ -41,6 +41,13 @@ void beatstep_on_tick(unsigned long ticks) {
   }
 }
 
+void beatstep_on_restart() {
+  if (midi_beatstep) {
+    midi_beatstep->sendStop();
+    midi_beatstep->sendStart();
+  }
+}
+
 void beatstep_init() {
     beatstep_started = false;
 
