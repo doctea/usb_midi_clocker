@@ -17,6 +17,8 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==0 && inVelocity==127) { // lower-left pad pressed
     Serial.println(F("APCmini pressed, restarting downbeat"));
     on_restart();
+  } else {
+    Serial.println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
   }
 }
 
