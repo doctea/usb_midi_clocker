@@ -5,6 +5,8 @@ uint8_t ixAPCmini  = 0xff;
 
 bool apcmini_started = false;
 
+void apcmini_update_clock();
+
 inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
     do {
@@ -17,6 +19,12 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==0 && inVelocity==127) { // lower-left pad pressed
     Serial.println(F("APCmini pressed, restarting downbeat"));
     on_restart();
+  } else if ((inNumber>=82 && inNumber<= 85) && inVelocity==127) {
+    clock_multiplier[inNumber - 82] *= 2;
+    if (clock_multiplier[inNumber - 82]>16) clock_multiplier[inNumber - 82] = 0.5;
+    apcmini_update_clock();
+  } else {
+    Serial.println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
   }
 }
 
