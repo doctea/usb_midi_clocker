@@ -111,8 +111,5 @@ void loop()
     ticks++;
     t1 = millis();
 
-    if (ticks - last_updated_display > PPQN) {
-      apcmini_update_clock();
-    }
   }
 }

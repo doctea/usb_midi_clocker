@@ -7,7 +7,9 @@ bool apcmini_started = false;
 
 bool apcmini_shift_held = false;
 
-void apcmini_update_clock();
+unsigned long last_updated_display = 0;
+
+void apcmini_update_clock_display();
 
 inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
@@ -16,6 +18,9 @@ inline void apcmini_loop() {
     } while ( MidiTransports[ixAPCmini]->available() > 0);
   }  
 }
+
+#define APCMINI_NUM_ROWS      8
+#define APCMINI_DISPLAY_WIDTH 8
 
 #define APCMINI_BUTTON_CLIP_STOP 82
 #define APCMINI_BUTTON_SOLO      83
@@ -37,7 +42,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.println(F("APCmini pressed, restarting downbeat"));
     on_restart();
   } else if ((inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) && inVelocity==127) {  // Clip Stop -> Solo -> Rec arm -> Mute buttons
-    byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;
+    byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;  
     if (apcmini_shift_held) {
       clock_multiplier[clock_number] /= 2;    // halve the selected clock multiplier
     } else {
@@ -49,7 +54,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     if (clock_multiplier[clock_number]<CLOCK_MULTIPLIER_MIN) 
       clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;
       
-    apcmini_update_clock();
+    apcmini_update_clock_display();
   } else if (inNumber==APCMINI_BUTTON_SHIFT && inVelocity==127) {
     apcmini_shift_held = true;
   } else {
@@ -90,11 +95,15 @@ void apcmini_on_tick(unsigned long ticks) {
         Serial.print(beat_counter);
         Serial.print(F(" "));
       }
-      beat_counter = (byte)((ticks/PPQN) % 8); //(beat_counter+1)%8;
+      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH); //(beat_counter+1)%8;
       midi_apcmini->sendNoteOn(beat_counter, APCMINI_GREEN, 1);
       //midi_apcmini->sendNoteOn(counter, 1, 1);
     } else if (is_bpm_on_beat(ticks,duration)) {
       midi_apcmini->sendNoteOn(beat_counter, APCMINI_OFF, 1);
+    }
+
+    if (ticks - last_updated_display > PPQN) {
+      apcmini_update_clock_display();
     }
   }
 }
@@ -107,24 +116,21 @@ void apcmini_on_restart() {
 }
 
 
-unsigned long last_updated_display = 0;
-
 void apcmini_clear_display() {
   Serial.println("Clearing APC display..");
-  for (byte x = 0 ; x < 8 ; x++) {
-    for (byte y = 0 ; y < 8 ;y++) {
+  for (byte x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
+    for (byte y = 0 ; y < APCMINI_DISPLAY_WIDTH ;y++) {
       midi_apcmini->sendNoteOn(x+(y*8), APCMINI_OFF, 1);
     }
   }
 }
 
-void apcmini_update_clock() {
-  byte display_width = 8;
+void apcmini_update_clock_display() {
   // draw the clock divisions
   for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
     //byte start_row = (8-NUM_CLOCKS) * 8;
-    byte start_row = 64-((c+1)*display_width);
-    for (byte i = 0 ; i < display_width ; i++) {
+    byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
+    for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       if (clock_multiplier[c]<=0.5) {
         midi_apcmini->sendNoteOn(start_row+i, APCMINI_RED, 1);
       } else if (clock_multiplier[c]<=1.0) {
