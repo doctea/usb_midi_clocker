@@ -8,15 +8,19 @@
 #define PIN_CLOCK_4   7
 
 #define NUM_CLOCKS 4
+#define CLOCK_MULTIPLIER_MIN  0.5
+#define CLOCK_MULTIPLIER_MAX 16.0
 
 float clock_multiplier[NUM_CLOCKS] = {
-  4,
-  2,
-  1,
+  4.0,
+  2.0,
+  1.0,
   0.5
 };
 
+#ifdef SEQUENCER
 #include "sequencer.h"
+#endif
 
 /*int clock_delay[NUM_CLOCKS] = {
   0, 0, 0, 0
@@ -52,12 +56,16 @@ void update_cv_outs(unsigned long ticks) {
     digitalWrite(PIN_CLOCK_4, LOW);
   }*/
 
-  /*for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+#ifdef SEQUENCER
+  trigger_sequence(ticks);
+#else
+  for (int i = 0 ; i < NUM_CLOCKS ; i++) {
     if (is_bpm_on_multiplier(ticks, clock_multiplier[i])) {
       digitalWrite(PIN_CLOCK_START+i, HIGH);
     } else if (is_bpm_on_multiplier(ticks, clock_multiplier[i], duration)) {
       digitalWrite(PIN_CLOCK_START+i, LOW);
     }
-  }*/
-  trigger_sequence(ticks);
+  }
+#endif
+
 }

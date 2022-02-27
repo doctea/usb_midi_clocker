@@ -1,3 +1,5 @@
+// work in progress -- doesn't work yet
+
 #ifndef INCLUDED_SEQUENCER
 #define INCLUDED_SEQUENCER
 

@@ -68,7 +68,9 @@ void setup()
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
 
+#ifdef SEQUENCER
   init_sequence();
+#endif
 
   if (Usb.Init() == -1) {
     while (1); //halt
@@ -113,8 +115,5 @@ void loop()
     ticks++;
     t1 = millis();
 
-    if (ticks - last_updated_display > PPQN) {
-      apcmini_update_clock();
-    }
   }
 }
