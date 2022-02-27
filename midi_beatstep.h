@@ -51,6 +51,7 @@ void beatstep_on_restart() {
 void beatstep_init() {
     beatstep_started = false;
 
+    midi_beatstep->turnThruOff();
     midi_beatstep->setHandleControlChange(beatstep_control_change);
     midi_beatstep->setHandleStart(beatstep_handle_start);    
 }

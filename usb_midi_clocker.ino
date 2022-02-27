@@ -6,7 +6,7 @@
 
 int duration = 2;
 
-#define DEBUG_TICKS true
+#define DEBUG_TICKS false
 
 USB Usb;
 USBHub  Hub1(&Usb);

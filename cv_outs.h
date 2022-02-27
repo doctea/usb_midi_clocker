@@ -7,11 +7,13 @@
 #define PIN_CLOCK_4   7
 
 #define NUM_CLOCKS 4
+#define CLOCK_MULTIPLIER_MIN  0.5
+#define CLOCK_MULTIPLIER_MAX 16.0
 
 float clock_multiplier[NUM_CLOCKS] = {
-  4,
-  2,
-  1,
+  4.0,
+  2.0,
+  1.0,
   0.5
 };
 

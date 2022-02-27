@@ -36,6 +36,7 @@ void bamble_on_restart() {
 void bamble_init() {
     bamble_started = false;
 
+    midi_bamble->turnThruOff();
     //midi_bamble->setHandleControlChange(bamble_control_change);
     //midi_bamble->setHandleStart(bamble_handle_start);    
 }
