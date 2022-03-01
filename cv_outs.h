@@ -60,9 +60,9 @@ void update_cv_outs(unsigned long ticks) {
   trigger_sequence(ticks);
 #else
   for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-    if (is_bpm_on_multiplier(ticks, clock_multiplier[i])) {
+    if (is_bpm_on_multiplier(clock_delay[i]+ticks, clock_multiplier[i])) {
       digitalWrite(PIN_CLOCK_START+i, HIGH);
-    } else if (is_bpm_on_multiplier(ticks, clock_multiplier[i], duration)) {
+    } else if (is_bpm_on_multiplier(clock_delay[i]+ticks, clock_multiplier[i], duration)) {
       digitalWrite(PIN_CLOCK_START+i, LOW);
     }
   }

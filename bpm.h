@@ -6,6 +6,7 @@
 #define BPM_MINIMUM   60
 #define BPM_MAXIMUM   140
 
+bool playing = true;
 
 unsigned long t1 = millis();
 unsigned long ticks = 0;
@@ -17,14 +18,14 @@ double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 
 unsigned int started_at = 0;
 
-inline bool is_bpm_on_phrase(unsigned long ticks,     unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*4*4) == offset; }
-inline bool is_bpm_on_bar(unsigned long ticks,        unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*4)   == offset; }
-inline bool is_bpm_on_half_bar(unsigned long ticks,   unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*2)   == offset; }
-inline bool is_bpm_on_beat(unsigned long ticks,       unsigned long offset = 0) { return ticks==offset || ticks%(PPQN)     == offset; }
-inline bool is_bpm_on_eighth(unsigned long ticks,     unsigned long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
-inline bool is_bpm_on_sixteenth(unsigned long ticks,  unsigned long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
+inline bool is_bpm_on_phrase(signed long ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN*4*4) == offset; }
+inline bool is_bpm_on_bar(signed long ticks,        signed long offset = 0) { return ticks==offset || ticks%(PPQN*4)   == offset; }
+inline bool is_bpm_on_half_bar(signed long ticks,   signed long offset = 0) { return ticks==offset || ticks%(PPQN*2)   == offset; }
+inline bool is_bpm_on_beat(signed long ticks,       signed long offset = 0) { return ticks==offset || ticks%(PPQN)     == offset; }
+inline bool is_bpm_on_eighth(signed long ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
+inline bool is_bpm_on_sixteenth(signed long ticks,  signed long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
 
-inline bool is_bpm_on_multiplier(unsigned long ticks, float multiplier, unsigned long offset = 0) {
+inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed long offset = 0) {
   unsigned long p = ((float)PPQN*multiplier);
   /*Serial.print(F("is_bpm_on_multiplier("));
   Serial.print(ticks);

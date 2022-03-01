@@ -92,7 +92,7 @@ void loop()
   apcmini_loop();
   bamble_loop();
 
-  if ((millis() - t1) > ms_per_tick) {
+  if (playing && (millis() - t1) > ms_per_tick) {
     unsigned int delta = millis()-t1;
     
     if (DEBUG_TICKS) {
