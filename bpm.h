@@ -7,6 +7,7 @@
 #define BPM_MAXIMUM   140
 
 bool playing = true;
+bool single_step = false;
 
 unsigned long t1 = millis();
 unsigned long ticks = 0;
@@ -27,22 +28,28 @@ inline bool is_bpm_on_sixteenth(signed long ticks,  signed long offset = 0) { re
 
 inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed long offset = 0) {
   unsigned long p = ((float)PPQN*multiplier);
-  /*Serial.print(F("is_bpm_on_multiplier("));
+#ifdef DEBUG_BPM
+  Serial.print(F("is_bpm_on_multiplier(ticks="));
   Serial.print(ticks);
-  Serial.print(F(", "));
+  Serial.print(F(", multiplier="));
   Serial.print(multiplier);
-  Serial.print(F(", "));
+  Serial.print(F(", offset="));
   Serial.print(offset);
   Serial.print(F(") checking ticks "));
   Serial.print(ticks);
-  Serial.print(F(" with mod "));
+  Serial.print(F(" with PPQN*multiplier "));
   Serial.print(p);
   Serial.print(F(" against offset "));
   Serial.print(offset);
-  Serial.print(F(" ? ="));*/
-  bool v = (ticks==offset || ticks%p == offset);
-  /*Serial.print(v);
-  Serial.println("!");*/
+  Serial.print(F(" == ticks%p = "));
+  Serial.print(ticks%p);
+  Serial.print(F(" ? ="));
+#endif
+  bool v = (ticks==offset || ticks%p == offset);  // TODO: test whether this ticks==offset business is causing the little stutter on restart?
+#ifdef DEBUG_BPM
+  Serial.print(v ? F("true!") : F("false!"));
+  Serial.println();
+#endif
   return v;
 }
 

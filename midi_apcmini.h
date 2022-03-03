@@ -10,6 +10,7 @@ bool restart_on_next_bar = false;
 
 int clock_selected = 0;
 
+bool redraw_immediately = false;
 unsigned long last_updated_display = 0;
 
 void apcmini_update_clock_display();
@@ -32,7 +33,7 @@ inline void apcmini_loop() {
 #define APCMINI_BUTTON_SELECT    86
 #define APCMINI_BUTTON_UNLABELED_1    87
 #define APCMINI_BUTTON_UNLABELED_2    88
-#define APCMINI_BUTTON_STOP_ALL_CLIPS 89  // TODO: this isn't correct as playing doesn't seem to toggle?
+#define APCMINI_BUTTON_STOP_ALL_CLIPS 89
 #define APCMINI_BUTTON_SHIFT     98
 #define APCMINI_BUTTON_UP        64
 #define APCMINI_BUTTON_DOWN      65
@@ -50,7 +51,7 @@ inline void apcmini_loop() {
 
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && inVelocity==127) {
-    playing != playing;
+    playing = !playing;
   } else if (inNumber==0 && inVelocity==127) { // lower-left pad pressed
     Serial.println(F("APCmini pressed, restarting downbeat"));
     on_restart();
@@ -59,21 +60,34 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
     restart_on_next_bar = true;
   } else if (inNumber==APCMINI_BUTTON_UP) {
+    redraw_immediately = true;
     clock_selected--;
     if (clock_selected<0)
       clock_selected = NUM_CLOCKS-1;
   } else if (inNumber==APCMINI_BUTTON_DOWN) {
+    redraw_immediately = true;
     clock_selected++;
     if (clock_selected>=NUM_CLOCKS) 
       clock_selected = 0;
   } else if (inNumber==APCMINI_BUTTON_LEFT) {
+    redraw_immediately = true;
     clock_delay[clock_selected] -= 1;
-    if (clock_delay[clock_selected]<-4)
-      clock_delay[clock_selected] = 4;
+    if (clock_delay[clock_selected]<0)
+      clock_delay[clock_selected] = 7;
+    Serial.print(F("Set selected clock delay to "));
+    Serial.println(clock_delay[clock_selected]);
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
+    redraw_immediately = true;
     clock_delay[clock_selected] += 1;
-    if (clock_delay[clock_selected]>4)
-      clock_delay[clock_selected] = -4;
+    if (clock_delay[clock_selected]>7)
+      clock_delay[clock_selected] = 0;
+    Serial.print(F("Set selected clock delay to "));
+    Serial.println(clock_delay[clock_selected]);
+  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1 && inVelocity==127) {
+    single_step = true;
+    //ticks += 1;
+    Serial.print(F("Single-stepped to tick "));
+    Serial.println(ticks);
   } else if ((inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) && inVelocity==127) {  // Clip Stop -> Solo -> Rec arm -> Mute buttons
     byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;  
     if (apcmini_shift_held) {
@@ -93,6 +107,9 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else {
     Serial.println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
   }
+
+  if (redraw_immediately) 
+    last_updated_display = 0;
 }
 
 void apcmini_note_off(byte inChannel, byte inNumber, byte inVelocity) {
@@ -141,8 +158,9 @@ void apcmini_on_tick(unsigned long ticks) {
       midi_apcmini->sendNoteOn(beat_counter, APCMINI_OFF, 1);
     }
 
-    if (ticks - last_updated_display > PPQN) {
+    if (redraw_immediately || ticks - last_updated_display > PPQN) {
       apcmini_update_clock_display();
+      redraw_immediately = false;
     }
   }
 }
@@ -170,17 +188,17 @@ void apcmini_update_clock_display() {
     //byte start_row = (8-NUM_CLOCKS) * 8;
     byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-      byte io = (i + clock_delay[c]) % APCMINI_DISPLAY_WIDTH;   // TODO: this doesn't display properly?
+      byte io = (i - clock_delay[c]) % APCMINI_DISPLAY_WIDTH; //) % APCMINI_DISPLAY_WIDTH;   // TODO: this doesn't display properly?
       if (clock_multiplier[c]<=0.5) {
-        midi_apcmini->sendNoteOn(start_row+io, APCMINI_RED, 1);
+        midi_apcmini->sendNoteOn(start_row+i, APCMINI_RED, 1);
       } else if (clock_multiplier[c]<=1.0) {
-        midi_apcmini->sendNoteOn(start_row+io, APCMINI_GREEN, 1);
+        midi_apcmini->sendNoteOn(start_row+i, APCMINI_GREEN, 1);
       } else if (io%(byte)clock_multiplier[c]==0) {
         byte colour = clock_multiplier[c]   > 8.0 ? APCMINI_RED : 
                       (clock_multiplier[c]  > 4.0 ? APCMINI_YELLOW : APCMINI_GREEN);
-        midi_apcmini->sendNoteOn(start_row+io, colour, 1);
+        midi_apcmini->sendNoteOn(start_row+i, colour, 1);
       } else {
-        midi_apcmini->sendNoteOn(start_row+io, APCMINI_OFF, 1);  // turn the led off
+        midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);  // turn the led off
       }
     }
     if (c==clock_selected)

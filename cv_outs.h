@@ -22,9 +22,9 @@ float clock_multiplier[NUM_CLOCKS] = {
 #include "sequencer.h"
 #endif
 
-/*int clock_delay[NUM_CLOCKS] = {
+int clock_delay[NUM_CLOCKS] = {
   0, 0, 0, 0
-};*/
+};
 
 void update_cv_outs(unsigned long ticks) {
   // start bar (every fourth quarter note)
@@ -60,9 +60,16 @@ void update_cv_outs(unsigned long ticks) {
   trigger_sequence(ticks);
 #else
   for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-    if (is_bpm_on_multiplier(clock_delay[i]+ticks, clock_multiplier[i])) {
+    if (is_bpm_on_multiplier(
+      ticks - (PPQN*clock_delay[i]), 
+      clock_multiplier[i]
+    )) {
       digitalWrite(PIN_CLOCK_START+i, HIGH);
-    } else if (is_bpm_on_multiplier(clock_delay[i]+ticks, clock_multiplier[i], duration)) {
+    } else if (is_bpm_on_multiplier(
+      ticks - (PPQN*clock_delay[i]), 
+      clock_multiplier[i], 
+      duration                      //+((clock_delay[i]%8)*PPQN))
+    )) {
       digitalWrite(PIN_CLOCK_START+i, LOW);
     }
   }
