@@ -188,7 +188,7 @@ void apcmini_update_clock_display() {
     //byte start_row = (8-NUM_CLOCKS) * 8;
     byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-      byte io = (i - clock_delay[c]) % APCMINI_DISPLAY_WIDTH; //) % APCMINI_DISPLAY_WIDTH;   // TODO: this doesn't display properly?
+      byte io = (i - clock_delay[c]) % APCMINI_DISPLAY_WIDTH; 
       if (clock_multiplier[c]<=0.5) {
         midi_apcmini->sendNoteOn(start_row+i, APCMINI_RED, 1);
       } else if (clock_multiplier[c]<=1.0) {

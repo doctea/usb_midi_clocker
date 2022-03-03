@@ -61,12 +61,12 @@ void update_cv_outs(unsigned long ticks) {
 #else
   for (int i = 0 ; i < NUM_CLOCKS ; i++) {
     if (is_bpm_on_multiplier(
-      ticks - (PPQN*clock_delay[i]), 
+      (long)ticks - (PPQN*clock_delay[i]), 
       clock_multiplier[i]
     )) {
       digitalWrite(PIN_CLOCK_START+i, HIGH);
     } else if (is_bpm_on_multiplier(
-      ticks - (PPQN*clock_delay[i]), 
+      (long)ticks - (PPQN*clock_delay[i]), 
       clock_multiplier[i], 
       duration                      //+((clock_delay[i]%8)*PPQN))
     )) {

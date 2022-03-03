@@ -45,7 +45,7 @@ inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed lon
   Serial.print(ticks%p);
   Serial.print(F(" ? ="));
 #endif
-  bool v = (ticks==offset || ticks%p == offset);  // TODO: test whether this ticks==offset business is causing the little stutter on restart?
+  bool v = (ticks==offset || ticks%p == offset);  
 #ifdef DEBUG_BPM
   Serial.print(v ? F("true!") : F("false!"));
   Serial.println();
