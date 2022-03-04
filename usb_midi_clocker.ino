@@ -6,6 +6,7 @@
 
 int duration = 2;
 
+#define ENABLE_SEQUENCER
 #define DEBUG_TICKS false
 
 USB Usb;
@@ -26,6 +27,9 @@ void on_restart();
 
 #include "bpm.h"
 
+#ifdef ENABLE_SEQUENCER
+#include "sequencer.h"
+#endif
 #include "cv_outs.h"
 
 #include "midi_beatstep.h"
@@ -69,7 +73,7 @@ void setup()
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
 
-#ifdef SEQUENCER
+#ifdef ENABLE_SEQUENCER
   init_sequence();
 #endif
 

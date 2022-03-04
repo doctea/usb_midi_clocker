@@ -18,7 +18,7 @@ float clock_multiplier[NUM_CLOCKS] = {
   0.5
 };
 
-#ifdef SEQUENCER
+#ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
 #endif
 
@@ -56,23 +56,37 @@ void update_cv_outs(unsigned long ticks) {
     digitalWrite(PIN_CLOCK_4, LOW);
   }*/
 
-#ifdef SEQUENCER
-  trigger_sequence(ticks);
-#else
   for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-    if (is_bpm_on_multiplier(
-      (long)ticks - (PPQN*clock_delay[i]), 
-      clock_multiplier[i]
-    )) {
-      digitalWrite(PIN_CLOCK_START+i, HIGH);
-    } else if (is_bpm_on_multiplier(
-      (long)ticks - (PPQN*clock_delay[i]), 
-      clock_multiplier[i], 
-      duration                      //+((clock_delay[i]%8)*PPQN))
-    )) {
-      digitalWrite(PIN_CLOCK_START+i, LOW);
-    }
-  }
+    bool should_go_high = false;
+    bool should_go_low  = false;
+
+    if (
+#ifdef ENABLE_SEQUENCER
+      should_trigger_sequence(ticks, i) ||
 #endif
+      is_bpm_on_multiplier(
+        (long)ticks - (PPQN*clock_delay[i]), 
+        clock_multiplier[i]
+      )
+    ) {
+        should_go_high = true;
+    } else if (
+#ifdef ENABLE_SEQUENCER
+      should_trigger_sequence(ticks, i, duration) || 
+#endif
+      is_bpm_on_multiplier(
+        (long)ticks - (PPQN*clock_delay[i]), 
+        clock_multiplier[i], 
+        duration                      //+((clock_delay[i]%8)*PPQN))
+      )
+    ) {
+      should_go_low = true;
+    }
+
+    if (should_go_high) digitalWrite(PIN_CLOCK_START+i, HIGH);
+    else if (should_go_low)  digitalWrite(PIN_CLOCK_START+i, LOW);
+        
+  }
+
 
 }
