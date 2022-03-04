@@ -4,9 +4,13 @@
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
+void do_tick(long ticks);
+
+#include <uClock.h>
+
 int duration = 2;
 
-#define ENABLE_SEQUENCER
+//#define ENABLE_SEQUENCER
 #define DEBUG_TICKS false
 
 USB Usb;
@@ -26,6 +30,7 @@ UHS2MIDI_NAMESPACE::uhs2MidiTransport *MidiTransports[] {&__uhs2Midi1, &__uhs2Mi
 void on_restart();
 
 #include "bpm.h"
+#include "clock.h"
 
 #ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
@@ -55,6 +60,8 @@ void setup()
   Serial.begin(115200);
   while (!Serial);
 
+  Serial.println(F("Arduino initialising usb/midi..."));
+
   __uhs2Midi1.attachOnInit(onInit1);
   Midi1.turnThruOff();
   Midi1.begin(MIDI_CHANNEL_OMNI);
@@ -73,17 +80,22 @@ void setup()
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
 
-#ifdef ENABLE_SEQUENCER
-  init_sequence();
-#endif
-
   if (Usb.Init() == -1) {
     while (1); //halt
   }//if (Usb.Init() == -1...
+  Serial.println(F("USB ready."));
   delay( 200 );
   
   Serial.println(F("Arduino ready."));
 
+#ifdef ENABLE_SEQUENCER
+  init_sequence();
+#endif
+
+  Serial.println(F("Initialising uClock.."));
+  setup_uclock();
+
+  Serial.println(F("Arduino ready."));
 }
 
 // -----------------------------------------------------------------------------`
@@ -91,35 +103,43 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
-  Usb.Task();
+  //ATOMIC(
+    Usb.Task();
+  //)
 
   beatstep_loop();
   apcmini_loop();
   bamble_loop();
 
-  if ((playing && (millis() - t1) > ms_per_tick)
-      || single_step) {
-    unsigned int delta = millis()-t1;
-    
-    if (DEBUG_TICKS) {
-      Serial.print(ticks);
-      Serial.print(F(":\tTicked with delta\t"));
-      Serial.print(delta);
-      Serial.print(F("!\t(ms_per_tick is "));
-      Serial.print(ms_per_tick);
-      Serial.print(F(") sending clock for [ "));
-    }
+  //Serial.println(F("."));
+  /*if (!playing && single_step) {
+    do_tick(ticks);
+  }*/
+}
 
+void do_tick(long ticks) {
+  unsigned int delta = millis()-t1;
+  
+  if (DEBUG_TICKS) {
+    Serial.print(ticks);
+    Serial.print(F(":\tTicked with delta\t"));
+    Serial.print(delta);
+    Serial.print(F("!\t(ms_per_tick is "));
+    Serial.print(ms_per_tick);
+    Serial.print(F(") sending clock for [ "));
+  }
+
+  //ATOMIC(
     update_cv_outs(ticks);
-    
+  
     beatstep_on_tick(ticks);
     bamble_on_tick(ticks);
     apcmini_on_tick(ticks);
-        
-    if (DEBUG_TICKS) Serial.println(F(" ]"));
+  //)
+      
+  if (DEBUG_TICKS) Serial.println(F(" ]"));
 
-    ticks++;
-    t1 = millis();
-    single_step = false;
-  }
+  //ticks++;
+  t1 = millis();
+  single_step = false;
 }

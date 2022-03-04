@@ -3,17 +3,17 @@
 
 #define PPQN  24
 
-#define BPM_MINIMUM   60
-#define BPM_MAXIMUM   140
+#define BPM_MINIMUM   60.0
+#define BPM_MAXIMUM   140.0
 
 bool playing = true;
 bool single_step = false;
 
 unsigned long t1 = millis();
-unsigned long ticks = 0;
+//unsigned long ticks = 0;
 
 // tracking which beat we're on
-float bpm_current = 60.0f;
+float bpm_current = BPM_MINIMUM; //60.0f;
 double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 //unsigned long ms_per_tick = 40;
 

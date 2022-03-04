@@ -36,7 +36,7 @@ void setupmidi(uint8_t idx)
 
 // call this when global clock should be reset
 void on_restart() {
-    ticks = 0;
+    uClock.resetCounters();
     beatstep_on_restart();
     bamble_on_restart();
     apcmini_on_restart();

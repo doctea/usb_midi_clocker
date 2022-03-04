@@ -33,18 +33,20 @@ void beatstep_on_tick(unsigned long ticks) {
     if (DEBUG_TICKS) Serial.print(F(" beatstep "));
     if (is_bpm_on_bar(ticks) && !beatstep_started) {
       Serial.println("First beat of bar and BEATSTEP not started -- starting!");
-      midi_beatstep->sendStart();
+      ATOMIC(midi_beatstep->sendStart());
       beatstep_started = true;
     }
-    
-    midi_beatstep->sendClock();
+
+    ATOMIC(midi_beatstep->sendClock());
   }
 }
 
 void beatstep_on_restart() {
   if (midi_beatstep) {
-    midi_beatstep->sendStop();
-    midi_beatstep->sendStart();
+    ATOMIC(
+      midi_beatstep->sendStop();
+      midi_beatstep->sendStart();
+    )
   }
 }
 
