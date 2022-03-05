@@ -5,8 +5,8 @@
 void ClockOut96PPQN(uint32_t * tick) {
   // Send MIDI_CLOCK to external gears
   //Serial.write(MIDI_CLOCK);
-  Serial.print(F("ClockOut96PPQN ticked "));
-  Serial.println(*tick);
+  //Serial.print(F("ClockOut96PPQN ticked "));
+  //Serial.println(*tick);
   //if (*tick % 6 == 0) 
   //  Serial.println("Ticked on 6th?"); //a quarter note?");
   do_tick(*tick);
