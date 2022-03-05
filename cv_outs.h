@@ -22,7 +22,7 @@ float clock_multiplier[NUM_CLOCKS] = {
 #include "sequencer.h"
 #endif
 
-int clock_delay[NUM_CLOCKS] = {
+byte clock_delay[NUM_CLOCKS] = {
   0, 0, 0, 0
 };
 

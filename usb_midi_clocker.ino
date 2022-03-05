@@ -4,14 +4,14 @@
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
-void do_tick(long ticks);
+void do_tick(unsigned long ticks);
 
 #include <uClock.h>
 
 int duration = 2;
 
 //#define ENABLE_SEQUENCER
-#define DEBUG_TICKS false
+//#define DEBUG_TICKS
 
 USB Usb;
 USBHub  Hub1(&Usb);
@@ -98,48 +98,60 @@ void setup()
   Serial.println(F("Arduino ready."));
 }
 
+long loop_counter = 0;
+
 // -----------------------------------------------------------------------------`
 //
 // -----------------------------------------------------------------------------
 void loop()
 {
+  //if (loop_counter%100==0) Serial.println(F("100th loop()"));
   //ATOMIC(
     Usb.Task();
   //)
 
-  beatstep_loop();
-  apcmini_loop();
-  bamble_loop();
+  ATOMIC(
+    beatstep_loop();
+    apcmini_loop();
+    bamble_loop();
+  )
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
     do_tick(ticks);
   }*/
+  if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
+  loop_counter++;
 }
 
-void do_tick(long ticks) {
-  unsigned int delta = millis()-t1;
-  
-  if (DEBUG_TICKS) {
+void do_tick(uint32_t ticks) {  
+#ifdef DEBUG_TICKS
+    unsigned int delta = millis()-t1;
+
     Serial.print(ticks);
     Serial.print(F(":\tTicked with delta\t"));
     Serial.print(delta);
     Serial.print(F("!\t(ms_per_tick is "));
     Serial.print(ms_per_tick);
     Serial.print(F(") sending clock for [ "));
-  }
+#endif
 
   //ATOMIC(
     update_cv_outs(ticks);
-  
-    beatstep_on_tick(ticks);
+
+    //Serial.print(F("about to beatstep_on_tick for "));
+    //Serial.println(ticks);
+    beatstep_on_tick((unsigned long) ticks);
+    //Serial.println(F("finished beatstep_on_tick!"));
     bamble_on_tick(ticks);
     apcmini_on_tick(ticks);
   //)
-      
-  if (DEBUG_TICKS) Serial.println(F(" ]"));
+
+#ifdef DEBUG_TICKS
+  Serial.println(F(" ]"));
+#endif 
 
   //ticks++;
-  t1 = millis();
+  //t1 = millis();
   single_step = false;
 }

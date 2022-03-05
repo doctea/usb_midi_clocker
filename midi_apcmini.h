@@ -19,11 +19,12 @@ inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
     do {
       Midi[ixAPCmini]->read();
+      //Serial.println(F("Read from apcmini in apcmini_loop!"));
     } while ( MidiTransports[ixAPCmini]->available() > 0);
   }
 
   if (midi_apcmini && millis() - last_updated_display > 50) {
-    Serial.println("updating apcmini display?");
+    //Serial.println(F("updating apcmini display?"));
     apcmini_update_clock_display();
   }  
 }
@@ -189,13 +190,13 @@ void apcmini_on_tick(unsigned long ticks) {
     }
 
     if (is_bpm_on_beat(ticks)) {
-      if (DEBUG_TICKS) {
+#ifdef DEBUG_TICKS
         Serial.print(F("apcmini w/"));
         /*Serial.print(ticks);
         Serial.print(F("\tCounter is "));*/
         Serial.print(beat_counter);
         Serial.print(F(" "));
-      }
+#endif
       beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH); //(beat_counter+1)%8;
       ATOMIC(midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1));
       //midi_apcmini->sendNoteOn(counter, 1, 1);
@@ -221,7 +222,7 @@ void apcmini_on_restart() {
 
 
 void apcmini_clear_display() {
-  Serial.println("Clearing APC display..");
+  Serial.println(F("Clearing APC display.."));
   for (byte x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
     for (byte y = 0 ; y < APCMINI_DISPLAY_WIDTH ;y++) {
       ATOMIC(midi_apcmini->sendNoteOn(x+(y*8), APCMINI_OFF, 1));

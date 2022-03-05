@@ -18,7 +18,10 @@ void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
     Serial.println(F("BEATSTEP START PRESSED!"));
     beatstep_started = false;
   } else {
-    Serial.print("Beatstep");
+    Serial.print(F("Received Beatstep CC "));
+    Serial.print(inNumber);
+    Serial.print(F(" with value "));
+    Serial.println(inValue);
     //handleNoteOn(inChannel, inNumber, inValue);
   }
 }
@@ -29,15 +32,33 @@ void beatstep_handle_start() {
 }
 
 void beatstep_on_tick(unsigned long ticks) {
+  //Serial.print("beatstep_on_tick:");
+  //Serial.flush();
   if (midi_beatstep) {
+    //Serial.println("..midi_beatstep set..");
+#ifdef DEBUG_TICKS
     if (DEBUG_TICKS) Serial.print(F(" beatstep "));
+#endif
+    //Serial.println("about to test bpm on bar..");
+    //Serial.flush();
     if (is_bpm_on_bar(ticks) && !beatstep_started) {
-      Serial.println("First beat of bar and BEATSTEP not started -- starting!");
+      //Serial.println(F("First beat of bar and BEATSTEP not started -- starting!"));
+      //Serial.println("First beat of bar and BEATSTEP not started -- starting!");
+      //Serial.flush();
       ATOMIC(midi_beatstep->sendStart());
+      //Serial.println("sent start");
+      //Serial.flush();
       beatstep_started = true;
     }
 
+    //Serial.println("about to send clock message");
+    //Serial.flush();
     ATOMIC(midi_beatstep->sendClock());
+    //Serial.println("sent clock");
+    //Serial.flush();
+  } else {
+    //Serial.println("..no midi_beatstep detected!");
+    //Serial.flush();
   }
 }
 
@@ -51,9 +72,11 @@ void beatstep_on_restart() {
 }
 
 void beatstep_init() {
-    beatstep_started = false;
+    //ATOMIC(
+      beatstep_started = false;
 
-    midi_beatstep->turnThruOff();
-    midi_beatstep->setHandleControlChange(beatstep_control_change);
-    midi_beatstep->setHandleStart(beatstep_handle_start);    
+      midi_beatstep->turnThruOff();
+      midi_beatstep->setHandleControlChange(beatstep_control_change);
+      midi_beatstep->setHandleStart(beatstep_handle_start);    
+    //)
 }

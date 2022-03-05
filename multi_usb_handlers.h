@@ -15,9 +15,10 @@ void setupmidi(uint8_t idx)
 
   if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
     ixBeatStep = idx;
-    Serial.println(F("BeatStep connected."));
+    Serial.print(F("BeatStep connected..."));
     midi_beatstep = Midi[idx];
     beatstep_init();
+    Serial.println(F("completed Beatstep init"));
     return;
   } else if ( vid == 0x09e8 && pid == 0x0028 ) {   //is AKAI APCmini?
     ixAPCmini = idx;

@@ -15,7 +15,9 @@ inline void bamble_loop() {
 
 void bamble_on_tick(unsigned long ticks) {
   if (midi_bamble) {
-    if (DEBUG_TICKS) Serial.print(F(" bamble "));
+#ifdef DEBUG_TICKS
+    Serial.print(F(" bamble "));
+#endif
     if (is_bpm_on_bar(ticks) && !bamble_started) {
       Serial.println(F("First beat of bar and BEATSTEP not started -- starting!"));
       midi_bamble->sendStart();

@@ -9,22 +9,22 @@
 bool playing = true;
 bool single_step = false;
 
-unsigned long t1 = millis();
+//unsigned long t1 = millis();
 //unsigned long ticks = 0;
 
 // tracking which beat we're on
 float bpm_current = BPM_MINIMUM; //60.0f;
-double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+//double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 //unsigned long ms_per_tick = 40;
 
-unsigned int started_at = 0;
+//unsigned int started_at = 0;
 
-inline bool is_bpm_on_phrase(signed long ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN*4*4) == offset; }
-inline bool is_bpm_on_bar(signed long ticks,        signed long offset = 0) { return ticks==offset || ticks%(PPQN*4)   == offset; }
-inline bool is_bpm_on_half_bar(signed long ticks,   signed long offset = 0) { return ticks==offset || ticks%(PPQN*2)   == offset; }
-inline bool is_bpm_on_beat(signed long ticks,       signed long offset = 0) { return ticks==offset || ticks%(PPQN)     == offset; }
-inline bool is_bpm_on_eighth(signed long ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
-inline bool is_bpm_on_sixteenth(signed long ticks,  signed long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
+bool is_bpm_on_phrase(signed long ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN*4*4) == offset; }
+bool is_bpm_on_bar(signed long ticks,        signed long offset = 0) { return ticks==offset || ticks%(PPQN*4)   == offset; }
+bool is_bpm_on_half_bar(signed long ticks,   signed long offset = 0) { return ticks==offset || ticks%(PPQN*2)   == offset; }
+bool is_bpm_on_beat(signed long ticks,       signed long offset = 0) { return ticks==offset || ticks%(PPQN)     == offset; }
+bool is_bpm_on_eighth(signed long ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
+bool is_bpm_on_sixteenth(signed long ticks,  signed long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
 
 inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed long offset = 0) {
   unsigned long p = ((float)PPQN*multiplier);
@@ -53,11 +53,14 @@ inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed lon
   return v;
 }
 
-void set_bpm(unsigned int new_bpm) {
-    bpm_current = new_bpm;
-    Serial.print(F("set bpm to "));
-    Serial.println(bpm_current);
-    ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+void set_bpm(float new_bpm) {
+    //ATOMIC(
+      bpm_current = new_bpm;
+      uClock.setTempo(bpm_current);
+      Serial.print(F("set bpm to "));
+      Serial.println(bpm_current);
+      //ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+    //)
 }
 
 #endif
