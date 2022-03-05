@@ -172,9 +172,11 @@ void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
   Serial.print(F("\tvalue: "));
   Serial.println(inValue);
 
+#ifdef ENABLE_BPM
   if (inNumber==56) {   // 56 == "master" fader set bpm 
     set_bpm(map(inValue, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
   }
+#endif
 }
 
 void apcmini_on_tick(unsigned long ticks) {
