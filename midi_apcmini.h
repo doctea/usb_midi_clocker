@@ -181,11 +181,15 @@ void apcmini_on_tick(unsigned long ticks) {
   static byte beat_counter;
   
   if (midi_apcmini) {
-    ATOMIC(midi_apcmini->sendClock();)
+    //ATOMIC(
+      midi_apcmini->sendClock();
+    //)
 
     if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
       on_restart();
-      ATOMIC(midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);)
+      //ATOMIC(
+        midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+      //)
       restart_on_next_bar = false;
     }
 
@@ -198,10 +202,14 @@ void apcmini_on_tick(unsigned long ticks) {
         Serial.print(F(" "));
 #endif
       beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH); //(beat_counter+1)%8;
-      ATOMIC(midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1));
+      //ATOMIC(
+        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
+      //);
       //midi_apcmini->sendNoteOn(counter, 1, 1);
     } else if (is_bpm_on_beat(ticks,duration)) {
-      ATOMIC(midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1));
+      //ATOMIC(
+        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
+      //)
     }
 
     if (redraw_immediately) { // || ticks - last_updated_display > PPQN) {
@@ -213,10 +221,10 @@ void apcmini_on_tick(unsigned long ticks) {
 
 void apcmini_on_restart() {
   if (midi_apcmini) {
-    ATOMIC(
+    //ATOMIC(
       midi_apcmini->sendStop();
       midi_apcmini->sendStart();
-    )
+    //)
   }
 }
 
@@ -225,7 +233,9 @@ void apcmini_clear_display() {
   Serial.println(F("Clearing APC display.."));
   for (byte x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
     for (byte y = 0 ; y < APCMINI_DISPLAY_WIDTH ;y++) {
-      ATOMIC(midi_apcmini->sendNoteOn(x+(y*8), APCMINI_OFF, 1));
+      //ATOMIC(
+        midi_apcmini->sendNoteOn(x+(y*8), APCMINI_OFF, 1);
+      //)
     }
   }
 }
@@ -238,21 +248,33 @@ void apcmini_update_clock_display() {
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       byte io = (i - clock_delay[c]) % APCMINI_DISPLAY_WIDTH; //) % APCMINI_DISPLAY_WIDTH;   // TODO: this doesn't display properly?
       if (clock_multiplier[c]<=0.5) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_RED, 1);)
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(start_row+i, APCMINI_RED, 1);
+        //)
       } else if (clock_multiplier[c]<=1.0) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_GREEN, 1);)
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(start_row+i, APCMINI_GREEN, 1);
+        //)
       } else if (io%(byte)clock_multiplier[c]==0) {
         byte colour = clock_multiplier[c]   > 8.0 ? APCMINI_RED : 
                       (clock_multiplier[c]  > 4.0 ? APCMINI_YELLOW : APCMINI_GREEN);
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, colour, 1);)
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(start_row+i, colour, 1);
+        //)
       } else {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);)  // turn the led off
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);
+        //)  // turn the led off
       }
     }
     if (c==clock_selected) {
-      ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_GREEN, 1);)
+      //ATOMIC(
+        midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_GREEN, 1);
+      //)
     } else {
-      ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_OFF, 1);)
+      //ATOMIC(
+        midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_OFF, 1);
+      //)
     }
   }
 #ifdef ENABLE_SEQUENCER
@@ -260,9 +282,13 @@ void apcmini_update_clock_display() {
     byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       if (should_trigger_sequence(i*PPQN,c)) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_YELLOW, 1));
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(start_row+i, APCMINI_YELLOW, 1);
+        //)
       } else {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1));
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);
+        //)
       }
     }
   }

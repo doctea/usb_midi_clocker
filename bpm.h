@@ -10,7 +10,7 @@ bool playing = true;
 bool single_step = false;
 
 //unsigned long t1 = millis();
-//unsigned long ticks = 0;
+unsigned long ticks = 0;
 
 // tracking which beat we're on
 float bpm_current = BPM_MINIMUM; //60.0f;
@@ -55,10 +55,12 @@ inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed lon
 
 void set_bpm(float new_bpm) {
     //ATOMIC(
-      bpm_current = new_bpm;
-      uClock.setTempo(bpm_current);
-      Serial.print(F("set bpm to "));
-      Serial.println(bpm_current);
+      if (bpm_current!=new_bpm) {
+        bpm_current = new_bpm;
+        uClock.setTempo(bpm_current);
+        Serial.print(F("set bpm to "));
+        Serial.println(bpm_current);
+      }
       //ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
     //)
 }

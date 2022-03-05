@@ -45,7 +45,9 @@ void beatstep_on_tick(unsigned long ticks) {
       //Serial.println(F("First beat of bar and BEATSTEP not started -- starting!"));
       //Serial.println("First beat of bar and BEATSTEP not started -- starting!");
       //Serial.flush();
-      ATOMIC(midi_beatstep->sendStart());
+      //ATOMIC(
+        midi_beatstep->sendStart();
+      //);
       //Serial.println("sent start");
       //Serial.flush();
       beatstep_started = true;
@@ -53,7 +55,9 @@ void beatstep_on_tick(unsigned long ticks) {
 
     //Serial.println("about to send clock message");
     //Serial.flush();
-    ATOMIC(midi_beatstep->sendClock());
+    //ATOMIC(
+      midi_beatstep->sendClock();
+    //);
     //Serial.println("sent clock");
     //Serial.flush();
   } else {
@@ -64,10 +68,10 @@ void beatstep_on_tick(unsigned long ticks) {
 
 void beatstep_on_restart() {
   if (midi_beatstep) {
-    ATOMIC(
+    //ATOMIC(
       midi_beatstep->sendStop();
       midi_beatstep->sendStart();
-    )
+    //)
   }
 }
 

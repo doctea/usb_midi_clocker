@@ -106,13 +106,19 @@ long loop_counter = 0;
 void loop()
 {
   //if (loop_counter%100==0) Serial.println(F("100th loop()"));
-  //ATOMIC(
+  ATOMIC(
     Usb.Task();
-  //)
+  )
 
   ATOMIC(
     beatstep_loop();
+  )
+
+  ATOMIC(
     apcmini_loop();
+  )
+
+  ATOMIC(
     bamble_loop();
   )
 
@@ -137,14 +143,14 @@ void do_tick(uint32_t ticks) {
 #endif
 
   //ATOMIC(
-    update_cv_outs(ticks);
+    update_cv_outs((unsigned long) ticks);
 
     //Serial.print(F("about to beatstep_on_tick for "));
     //Serial.println(ticks);
     beatstep_on_tick((unsigned long) ticks);
     //Serial.println(F("finished beatstep_on_tick!"));
-    bamble_on_tick(ticks);
-    apcmini_on_tick(ticks);
+    bamble_on_tick((unsigned long) ticks);
+    apcmini_on_tick((unsigned long) ticks);
   //)
 
 #ifdef DEBUG_TICKS

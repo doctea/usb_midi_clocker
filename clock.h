@@ -7,14 +7,18 @@ void ClockOut96PPQN(uint32_t * tick) {
   //Serial.write(MIDI_CLOCK);
   //Serial.print(F("ClockOut96PPQN ticked "));
   //Serial.println(*tick);
-  //if (*tick % 6 == 0) 
-  //  Serial.println("Ticked on 6th?"); //a quarter note?");
-  do_tick(*tick);
+  if (*tick % 24 == 0) {
+    Serial.print("Ticked on 24th: "); //a quarter note?");
+    Serial.println(*tick);
+  }
+  ticks++;
+  do_tick(ticks);
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.
 void onClockStart() {
   //Serial.write(MIDI_START);
+  ticks = 0;
   Serial.println("uClock started!");
 }
 
