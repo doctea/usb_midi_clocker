@@ -7,13 +7,13 @@ proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV
 
 ## Explanation
 
-This allows an Arduino Uno with the USB Host Shield 2.0 to act as a USB *host* -- like an intelligent USB hub with multiple ports, so that USB MIDI devices connected to it (say keyboards or sequencers or synths) are sent MIDI clock.  
+This allows an Arduino Uno with the USB Host Shield 2.0 to act as a USB *host* -- like an intelligent USB hub with multiple ports, so that USB MIDI devices connected to it (say keyboards or sequencers or synths) are sent MIDI clock.  This way you can sync USB MIDI devices, that don't have a normal MIDI DIN input, without connecting to a computer for DAWless usage.
 
 This video should demonstrate what I mean a bit:- https://photos.google.com/photo/AF1QipNL_kUVU3N1QzCV3z4exyQTlNcGLMTfbsU7jkwI
 
 The Arduino you see at the start of the video has a "USB Host Shield 2.0" on top and then a DIY'd 4-output CV clock shield sitting on top of that.
 
-There's an 8-port powered USB hub plugged into the port of the USB Host Shield. Connected to that USB hub is the Akai APCmini, the Beatstep, and another [https://github.com/doctea/drum2musocv](USB MIDI sequencer project of my own) (which in turn goes off to a Eurorack MIDI-CV interface and a BitBox mk2 sampler for syncing clock and sending triggers).
+There's an 8-port powered USB hub plugged into the port of the USB Host Shield. Connected to that USB hub is the Akai APCmini, the Beatstep, and another [USB MIDI sequencer project of my own](https://github.com/doctea/drum2musocv) (which in turn goes off to a Eurorack MIDI-CV interface and a BitBox mk2 sampler for syncing clock and sending triggers).
 
 This project keeps time and sends clock divisions on the CV outs, but also detects the USB MIDI devices connected to the USB hub and does a different thing for each one:-
 
@@ -22,3 +22,13 @@ This project keeps time and sends clock divisions on the CV outs, but also detec
 - For the APCmini it sends a display indicating the settings of the clock outputs, receives MIDI messages from the APCmini to change those settings, and lights up to indicate the current step of the sequencer.
 - There's also a function to resync - either immediately or at the start of the next bar -- that sends a stop followed immediately by a start, and resets the internal clock, so that everything restarts in sync at beat 1.
 
+It also has a very rudimentary sequencer, currently overlaid over the clock outputs.
+
+### TODO/Future 
+
+- Sync from external input (MIDI and CV)
+- More outputs
+- Better sequencer
+- Route MIDI data and notes from device X to device Y?
+- Sequencer that records and playback MIDI notes or CV
+- Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
