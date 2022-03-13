@@ -28,6 +28,7 @@ It also has a very rudimentary sequencer, currently overlaid over the clock outp
 
 - Sync from external input (MIDI and CV)
 - More outputs
+- MIDI DIN or TRS input + output
 - Better sequencer
 - Route MIDI data and notes from device X to device Y?
 - Sequencer that records and playback MIDI notes or CV
