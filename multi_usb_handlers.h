@@ -43,6 +43,7 @@ void on_restart() {
     beatstep_on_restart();
     bamble_on_restart();
     apcmini_on_restart();
+    redraw_immediately = true;
 }
 
 /*

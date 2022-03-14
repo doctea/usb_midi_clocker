@@ -57,7 +57,7 @@ void set_bpm(float new_bpm) {
     //ATOMIC(
       if (bpm_current!=new_bpm) {
         bpm_current = new_bpm;
-        uClock.setTempo(bpm_current);
+        uClock.setTempo(new_bpm); //bpm_current * 24);
         Serial.print(F("set bpm to "));
         Serial.println(bpm_current);
       }

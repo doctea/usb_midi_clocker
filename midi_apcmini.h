@@ -1,5 +1,6 @@
 #include "bpm.h"
 
+
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
 uint8_t ixAPCmini  = 0xff;
 
@@ -32,6 +33,7 @@ inline void apcmini_loop() {
 #define APCMINI_NUM_ROWS      8
 #define APCMINI_DISPLAY_WIDTH 8
 
+
 #define APCMINI_BUTTON_CLIP_STOP 82
 #define APCMINI_BUTTON_SOLO      83
 #define APCMINI_BUTTON_REC_ARM   84
@@ -56,12 +58,15 @@ inline void apcmini_loop() {
 
 // button colours from https://remotify.io/community/question/led-feedback-values
 #define APCMINI_OFF           0
+#define APCMINI_ON            1
 #define APCMINI_GREEN         1
 #define APCMINI_GREEN_BLINK   2
 #define APCMINI_RED           3
 #define APCMINI_RED_BLINK     4
 #define APCMINI_YELLOW        5
 #define APCMINI_YELLOW_BLINK  6
+
+#include "midi_apcmini_display.h"
 
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
@@ -82,16 +87,20 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     restart_on_next_bar = true;
   } else if (inNumber==APCMINI_BUTTON_UP) {
     // move clock selection up
-    redraw_immediately = true;
+    byte old_clock_selected  = clock_selected;
+    //redraw_immediately = true;
     clock_selected--;
     if (clock_selected<0)
       clock_selected = NUM_CLOCKS-1;
+    redraw_clock_selected(old_clock_selected, clock_selected);
   } else if (inNumber==APCMINI_BUTTON_DOWN) {
     // move clock selection down
-    redraw_immediately = true;
+    byte old_clock_selected  = clock_selected;
+    //redraw_immediately = true;
     clock_selected++;
     if (clock_selected>=NUM_CLOCKS) 
       clock_selected = 0;
+    redraw_clock_selected(old_clock_selected, clock_selected);
   } else if (inNumber==APCMINI_BUTTON_LEFT) {
     // shift clock offset left
     redraw_immediately = true;
@@ -100,20 +109,22 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
       clock_delay[clock_selected] = 7;
     Serial.print(F("Set selected clock delay to "));
     Serial.println(clock_delay[clock_selected]);
-    redraw_immediately = true;
+    //redraw_immediately = true;
+    redraw_row(clock_selected);
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
     // shift clock offset right
-    redraw_immediately = true;
+    //redraw_immediately = true;
     clock_delay[clock_selected] += 1;
     if (clock_delay[clock_selected]>7)
       clock_delay[clock_selected] = 0;
     Serial.print(F("Set selected clock delay to "));
     Serial.println(clock_delay[clock_selected]);
+    redraw_row(clock_selected);
   } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) {  
     // button between Clip Stop -> Solo -> Rec arm -> Mute buttons
     // change divisions/multiplier of corresponding clock
     byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;  
-    
+    byte old_clock_selected = clock_selected;
     clock_selected = clock_number;
     
     if (apcmini_shift_held) {
@@ -127,7 +138,9 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     else if (clock_multiplier[clock_number]<CLOCK_MULTIPLIER_MIN) 
       clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;
 
-    redraw_immediately = true;
+    //redraw_immediately = true;
+    redraw_row(clock_selected);
+    redraw_clock_selected(old_clock_selected, clock_selected);
   } else if (inNumber==APCMINI_BUTTON_SHIFT) {
     apcmini_shift_held = true;
 /*  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
@@ -147,7 +160,8 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     int col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
     Serial.println(col);
     sequence_data[row][col] = !sequence_data[row][col];
-    redraw_immediately = true;
+    //redraw_immediately = true;
+    redraw_sequence_row(row);
 #endif 
   } else {
     Serial.print(F("Unknown akaiAPC button with note number "));
@@ -242,11 +256,13 @@ void apcmini_clear_display() {
   }
 }
 
+
 void apcmini_update_clock_display() {
   // draw the clock divisions
   for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
     //byte start_row = (8-NUM_CLOCKS) * 8;
-    byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
+    redraw_row(c);
+    /*byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       byte io = (i - clock_delay[c]) % APCMINI_DISPLAY_WIDTH; //) % APCMINI_DISPLAY_WIDTH;   // TODO: this doesn't display properly?
       if (clock_multiplier[c]<=0.5) {
@@ -268,20 +284,14 @@ void apcmini_update_clock_display() {
           midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);
         //)  // turn the led off
       }
-    }
-    if (c==clock_selected) {
-      //ATOMIC(
-        midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_GREEN, 1);
-      //)
-    } else {
-      //ATOMIC(
-        midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_OFF, 1);
-      //)
-    }
+    if (c==clock_selected)
+      midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_GREEN, 1);
+    else
+      midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + c, APCMINI_OFF, 1);*/
   }
 #ifdef ENABLE_SEQUENCER
   for (byte c = 0 ; c < NUM_SEQUENCES ; c++) {
-    byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
+    /*byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       if (should_trigger_sequence(i*PPQN,c)) {
         //ATOMIC(
@@ -292,7 +302,8 @@ void apcmini_update_clock_display() {
           midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);
         //)
       }
-    }
+    }*/
+    redraw_sequence_row(c);
   }
 #endif
   last_updated_display = millis();
