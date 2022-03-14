@@ -1,3 +1,5 @@
+This branch uses uClock -- however it doesn't work properly: https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
+
 # usb_midi_clocker
 
 proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV clock, using Arduino USB Host Shield on an Arduino Uno
