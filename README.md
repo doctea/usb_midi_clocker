@@ -19,8 +19,9 @@ This project keeps time and sends clock divisions on the CV outs, but also detec
 
 - For the Beatstep it sends MIDI start/stop and clock.
 - For the Bamble it sends MIDI start/stop and clock.
-- For the APCmini it sends a display indicating the settings of the clock outputs, receives MIDI messages from the APCmini to change those settings, and lights up to indicate the current step of the sequencer.
-- There's also a function to resync - either immediately or at the start of the next bar -- that sends a stop followed immediately by a start, and resets the internal clock, so that everything restarts in sync at beat 1.
+- For the APCmini it sends a display indicating the settings of the clock outputs, receives MIDI messages from the APCmini to change those settings, and lights up to indicate the current step of the sequence.
+- Can use the 'master' fader on the APCmini to change tempo.
+- There's also a function to resync - either immediately or at the start of the next bar -- that sends a stop followed immediately by a start to the MIDI devices, and resets the internal clock, so that everything restarts in sync (hopefully!) at beat 1.
 
 It also has a very rudimentary sequencer, currently overlaid over the clock outputs.
 
