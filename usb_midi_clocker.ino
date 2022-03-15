@@ -110,17 +110,17 @@ void loop()
     Usb.Task();
   )
 
-  ATOMIC(
+  //ATOMIC(
     beatstep_loop();
-  )
+  //)
 
-  ATOMIC(
-    apcmini_loop();
-  )
+  //ATOMIC(
+    //apcmini_loop();
+  //)
 
-  ATOMIC(
+  //ATOMIC(
     bamble_loop();
-  )
+  //)
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
@@ -130,7 +130,7 @@ void loop()
   loop_counter++;
 }
 
-void do_tick(uint32_t ticks) {  
+void do_tick(uint32_t in_ticks) {  
 #ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 
@@ -142,15 +142,26 @@ void do_tick(uint32_t ticks) {
     Serial.print(F(") sending clock for [ "));
 #endif
 
+    ticks = in_ticks;
+    
+    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+      in_ticks = ticks = 0;
+      on_restart();
+      //ATOMIC(
+        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+      //)
+      restart_on_next_bar = false;
+    }
+
   //ATOMIC(
-    update_cv_outs((unsigned long) ticks);
+    update_cv_outs((unsigned long) in_ticks);
 
     //Serial.print(F("about to beatstep_on_tick for "));
     //Serial.println(ticks);
-    beatstep_on_tick((unsigned long) ticks);
+    beatstep_on_tick((unsigned long) in_ticks);
     //Serial.println(F("finished beatstep_on_tick!"));
-    bamble_on_tick((unsigned long) ticks);
-    apcmini_on_tick((unsigned long) ticks);
+    bamble_on_tick((unsigned long) in_ticks);
+    apcmini_on_tick((unsigned long) in_ticks);
   //)
 
 #ifdef DEBUG_TICKS

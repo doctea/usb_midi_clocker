@@ -37,13 +37,15 @@ void setupmidi(uint8_t idx)
 
 // call this when global clock should be reset
 void on_restart() {
-    ticks = 0;
+    Serial.println(F("on_restart()==>"));
+    ATOMIC(ticks = 0;)
     uClock.setTempo(bpm_current);
     uClock.resetCounters();
     beatstep_on_restart();
     bamble_on_restart();
     apcmini_on_restart();
     redraw_immediately = true;
+    Serial.println(F("<==on_restart()"));
 }
 
 /*
