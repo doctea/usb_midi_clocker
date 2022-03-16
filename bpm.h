@@ -9,6 +9,8 @@
 bool playing = true;
 bool single_step = false;
 
+bool restart_on_next_bar = false;
+
 //unsigned long t1 = millis();
 unsigned long ticks = 0;
 

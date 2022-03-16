@@ -1,3 +1,5 @@
+#ifdef ENABLE_BAMBLE
+
 #include "bpm.h"
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_bamble;
@@ -5,7 +7,7 @@ uint8_t ixBamble   = 0xff;
 
 bool bamble_started = false;
 
-inline void bamble_loop() {
+inline void bamble_loop(uint32_t ticks) {
   if ( ixBamble != 0xff) {
     do {
       Midi[ixBamble]->read();
@@ -42,3 +44,5 @@ void bamble_init() {
     //midi_bamble->setHandleControlChange(bamble_control_change);
     //midi_bamble->setHandleStart(bamble_handle_start);    
 }
+
+#endif

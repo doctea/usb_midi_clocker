@@ -1,6 +1,13 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices
 
+#define ENABLE_APCMINI
+//#define ENABLE_BEATSTEP
+//#define ENABLE_BAMBLE
+
+//#define ENABLE_APCMINI_DISPLAY
+//#define ENABLE_BPM
+
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
@@ -84,7 +91,7 @@ void setup()
     while (1); //halt
   }//if (Usb.Init() == -1...
   Serial.println(F("USB ready."));
-  delay( 200 );
+  delay( 1000 );
   
   Serial.println(F("Arduino ready."));
 
@@ -110,17 +117,26 @@ void loop()
     Usb.Task();
   )
 
-  //ATOMIC(
-    beatstep_loop();
-  //)
+  //unsigned long ticks;
+  //uClock.getTick(&ticks);
 
+#ifdef ENABLE_BEATSTEP
   //ATOMIC(
-    //apcmini_loop();
+    beatstep_loop(ticks);
   //)
+#endif
 
+#ifdef ENABLE_APCMINI
   //ATOMIC(
-    bamble_loop();
+    apcmini_loop(ticks);
   //)
+#endif
+
+#ifdef ENABLE_BAMBLE
+  //ATOMIC(
+    bamble_loop(ticks);
+  //)
+#endif
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
@@ -144,8 +160,8 @@ void do_tick(uint32_t in_ticks) {
 
     ticks = in_ticks;
     
-    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
-      in_ticks = ticks = 0;
+    if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
+      //in_ticks = ticks = 0;
       on_restart();
       //ATOMIC(
         //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
@@ -158,10 +174,17 @@ void do_tick(uint32_t in_ticks) {
 
     //Serial.print(F("about to beatstep_on_tick for "));
     //Serial.println(ticks);
+#ifdef ENABLE_BEATSTEP
     beatstep_on_tick((unsigned long) in_ticks);
+#endif
     //Serial.println(F("finished beatstep_on_tick!"));
+#ifdef ENABLE_BAMBLE
     bamble_on_tick((unsigned long) in_ticks);
+#endif
+
+#ifdef ENABLE_ACPMINI
     apcmini_on_tick((unsigned long) in_ticks);
+#endif
   //)
 
 #ifdef DEBUG_TICKS
@@ -170,5 +193,5 @@ void do_tick(uint32_t in_ticks) {
 
   //ticks++;
   //t1 = millis();
-  single_step = false;
+  //single_step = false;
 }

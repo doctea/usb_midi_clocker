@@ -1,3 +1,5 @@
+#ifdef ENABLE_APCMINI
+
 #include "bpm.h"
 
 #define APCMINI_NUM_ROWS      8
@@ -41,8 +43,6 @@ uint8_t ixAPCmini  = 0xff;
 bool apcmini_started = false;
 bool apcmini_shift_held = false;
 
-bool restart_on_next_bar = false;
-
 int clock_selected = 0;
 
 bool redraw_immediately = false;
@@ -54,7 +54,7 @@ void apcmini_update_clock_display();
 
 byte beat_counter;
 
-inline void apcmini_loop() {
+inline void apcmini_loop(uint32_t ticks) {
   if ( ixAPCmini != 0xff) {
     do {
       Midi[ixAPCmini]->read();
@@ -301,3 +301,5 @@ void apcmini_init() {
     redraw_immediately = true;
 #endif
 }
+
+#endif

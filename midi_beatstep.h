@@ -1,3 +1,5 @@
+#ifdef ENABLE_BEATSTEP
+
 #include "bpm.h"
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_beatstep;
@@ -5,7 +7,7 @@ uint8_t ixBeatStep = 0xff;
 
 bool beatstep_started = false;
 
-inline void beatstep_loop() {
+inline void beatstep_loop(uint32_t ticks) {
   if ( ixBeatStep != 0xff) {
     do {
       Midi[ixBeatStep]->read();
@@ -84,3 +86,5 @@ void beatstep_init() {
       midi_beatstep->setHandleStart(beatstep_handle_start);    
     //)
 }
+
+#endif
