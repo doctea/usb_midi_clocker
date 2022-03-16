@@ -60,44 +60,54 @@ inline void apcmini_loop(uint32_t ticks) {
       Midi[ixAPCmini]->read();
       //Serial.println(F("Read from apcmini in apcmini_loop!"));
     } while ( MidiTransports[ixAPCmini]->available() > 0);
+  } else {
+    return;
   }
 
 #ifdef ENABLE_APCMINI_DISPLAY
   if (midi_apcmini && millis() - last_updated_display > 50) {
-    //Serial.println(F("updating apcmini display?"));
+    Serial.println(F("apcmini_loop: calling apcmini_update_clock_display.."));
     apcmini_update_clock_display();
+    Serial.println(F("return from apcmini_update_clock_display()"));
   }
   
   static unsigned long last_processed_tick;
 
   if (last_processed_tick!=ticks) {
     if (is_bpm_on_beat(ticks)) {
+      Serial.println(F("inside is_bpm_on_beat branch.."));
 #ifdef DEBUG_TICKS
-        Serial.print(F("apcmini w/"));
-        /*Serial.print(ticks);
-        Serial.print(F("\tCounter is "));*/
-        Serial.print(beat_counter);
-        Serial.print(F(" "));
+      Serial.print(F("apcmini w/"));
+      /*Serial.print(ticks);
+      Serial.print(F("\tCounter is "));*/
+      Serial.print(beat_counter);
+      Serial.print(F(" "));
 #endif
-        beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH); //(beat_counter+1)%8;
-        ATOMIC(
-          midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
-        );
-        //midi_apcmini->sendNoteOn(counter, 1, 1);
-      } else if (is_bpm_on_beat(ticks,duration)) {
-        ATOMIC(
-          midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-        )
-      }
+      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH); //(beat_counter+1)%8;
+      ATOMIC(
+        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
+      );
+      //midi_apcmini->sendNoteOn(counter, 1, 1);
+      Serial.println(F("finished is_bpm_on_beat branch"));
+    } else if (is_bpm_on_beat(ticks,duration)) {
+      Serial.println(F("inside is_bpm_on_beat_ended branch.."));
+      ATOMIC(
+        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
+      )
+      Serial.println(F("finished is_bpm_on_beat_ended branch"));
+    }
   
-      if (redraw_immediately) { // || ticks - last_updated_display > PPQN) {
-        apcmini_update_clock_display();
-        redraw_immediately = false;
-      }
+    if (redraw_immediately) { // || ticks - last_updated_display > PPQN) {
+      Serial.println(F("redraw_immediately is set!"));
+      apcmini_update_clock_display();
+      redraw_immediately = false;
+    }
+    //ATOMIC(
       last_processed_tick = ticks;
+    //)
   }
 #endif
-
+  Serial.println(F("finished apcmini_loop"));
 }
 
 #ifdef ENABLE_APCMINI_DISPLAY
@@ -120,7 +130,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     // restart/resync at end of bar
     Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
 #ifdef ENABLE_APCMINI_DISPLAY
-    ATOMIC(midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);)
+    ATOMIC(midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);)  // turn on the 'going to restart on next bar' flashing indicator
 #endif
     restart_on_next_bar = true;
   } else if (inNumber==APCMINI_BUTTON_UP) {
@@ -257,6 +267,9 @@ void apcmini_on_restart() {
       midi_apcmini->sendStop();
       midi_apcmini->sendStart();
     //)
+    ATOMIC(
+      midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
+    )
   }
 }
 
@@ -276,6 +289,7 @@ void apcmini_clear_display() {
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display() {
+  Serial.println(F("starting apcmini_update_clock_display().."));
   // draw the clock divisions
   for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
     //byte start_row = (8-NUM_CLOCKS) * 8;
@@ -287,6 +301,7 @@ void apcmini_update_clock_display() {
   }
 #endif
   last_updated_display = millis();
+  Serial.println(F("returning from apcmini_update_clock_display()"));
 }
 #endif
 

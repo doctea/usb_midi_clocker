@@ -5,7 +5,7 @@
 //#define ENABLE_BEATSTEP
 //#define ENABLE_BAMBLE
 
-//#define ENABLE_APCMINI_DISPLAY
+#define ENABLE_APCMINI_DISPLAY
 //#define ENABLE_BPM
 
 #include <UHS2-MIDI.h>
