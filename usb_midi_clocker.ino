@@ -2,7 +2,7 @@
 // proof of concept for syncing multiple USB Midi devices
 
 #define ENABLE_APCMINI
-//#define ENABLE_BEATSTEP
+#define ENABLE_BEATSTEP
 //#define ENABLE_BAMBLE
 
 #define ENABLE_APCMINI_DISPLAY
@@ -11,7 +11,7 @@
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
-void do_tick(unsigned long ticks);
+void do_tick(uint32_t *ticks);
 
 #include <uClock.h>
 
@@ -22,7 +22,7 @@ int duration = 2;
 
 USB Usb;
 USBHub  Hub1(&Usb);
-USBHub  Hub2(&Usb);
+//USBHub  Hub2(&Usb);
 
 #define NUMBER_OF_DEVICES 3
 UHS2MIDI_CREATE_INSTANCE(&Usb, 0, Midi1);
@@ -113,28 +113,30 @@ long loop_counter = 0;
 void loop()
 {
   //if (loop_counter%100==0) Serial.println(F("100th loop()"));
-  ATOMIC(
+  //ATOMIC(
     Usb.Task();
-  )
+  //)
 
   //unsigned long ticks;
   //uClock.getTick(&ticks);
 
 #ifdef ENABLE_BEATSTEP
   //ATOMIC(
-    beatstep_loop(ticks);
+  Serial.println("==>doing beatstep_loop()");
+    beatstep_loop();
+  Serial.println("<==done beatstep_loop()!");
   //)
 #endif
 
 #ifdef ENABLE_APCMINI
   //ATOMIC(
-    apcmini_loop(ticks);
+    apcmini_loop();
   //)
 #endif
 
 #ifdef ENABLE_BAMBLE
   //ATOMIC(
-    bamble_loop(ticks);
+    bamble_loop();
   //)
 #endif
 
@@ -146,7 +148,7 @@ void loop()
   loop_counter++;
 }
 
-void do_tick(uint32_t in_ticks) {  
+void do_tick(uint32_t * in_ticks) {  
 #ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 
@@ -158,7 +160,7 @@ void do_tick(uint32_t in_ticks) {
     Serial.print(F(") sending clock for [ "));
 #endif
 
-    ticks = in_ticks;
+    ticks = *in_ticks;
     
     if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
       //in_ticks = ticks = 0;
@@ -170,20 +172,20 @@ void do_tick(uint32_t in_ticks) {
     }
 
   //ATOMIC(
-    update_cv_outs((unsigned long) in_ticks);
+    update_cv_outs(*in_ticks);
 
     //Serial.print(F("about to beatstep_on_tick for "));
     //Serial.println(ticks);
 #ifdef ENABLE_BEATSTEP
-    beatstep_on_tick((unsigned long) in_ticks);
+    beatstep_on_tick(in_ticks);
 #endif
     //Serial.println(F("finished beatstep_on_tick!"));
 #ifdef ENABLE_BAMBLE
-    bamble_on_tick((unsigned long) in_ticks);
+    bamble_on_tick(in_ticks);
 #endif
 
-#ifdef ENABLE_ACPMINI
-    apcmini_on_tick((unsigned long) in_ticks);
+#ifdef ENABLE_APCMINI
+    apcmini_on_tick(in_ticks);
 #endif
   //)
 

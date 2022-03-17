@@ -12,13 +12,16 @@ void ClockOut96PPQN(uint32_t * tick) {
     Serial.println(*tick);
   }*/
   //*ticks++;
-  do_tick(*tick);
+  do_tick(tick);
 }
 
 // The callback function wich will be called when clock starts by using Clock.start() method.
 void onClockStart() {
+  Serial.println(F("onClockStart()!"));
   //Serial.write(MIDI_START);
-  ticks = 0;
+  ATOMIC(
+    ticks = 0;
+  )
   Serial.println(F("uClock started!"));
 }
 

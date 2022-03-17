@@ -3,11 +3,11 @@
 #include "bpm.h"
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_bamble;
-uint8_t ixBamble   = 0xff;
+volatile uint8_t ixBamble   = 0xff;
 
-bool bamble_started = false;
+volatile bool bamble_started = false;
 
-inline void bamble_loop(uint32_t ticks) {
+inline void bamble_loop() {
   if ( ixBamble != 0xff) {
     do {
       Midi[ixBamble]->read();
@@ -15,13 +15,13 @@ inline void bamble_loop(uint32_t ticks) {
   }
 }
 
-void bamble_on_tick(unsigned long ticks) {
+void bamble_on_tick(uint32_t *ticks) {
   if (midi_bamble) {
 #ifdef DEBUG_TICKS
     Serial.print(F(" bamble "));
 #endif
     if (is_bpm_on_bar(ticks) && !bamble_started) {
-      Serial.println(F("First beat of bar and BEATSTEP not started -- starting!"));
+      Serial.println(F("First beat of bar and BAMBLE not started -- starting!"));
       midi_bamble->sendStart();
       bamble_started = true;
     }

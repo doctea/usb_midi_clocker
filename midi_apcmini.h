@@ -38,9 +38,9 @@
 
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
-uint8_t ixAPCmini  = 0xff;
+volatile uint8_t ixAPCmini  = 0xff;
 
-bool apcmini_started = false;
+volatile bool apcmini_started = false;
 bool apcmini_shift_held = false;
 
 int clock_selected = 0;
@@ -54,7 +54,7 @@ void apcmini_update_clock_display();
 
 byte beat_counter;
 
-inline void apcmini_loop(uint32_t ticks) {
+inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
     do {
       Midi[ixAPCmini]->read();
@@ -66,15 +66,15 @@ inline void apcmini_loop(uint32_t ticks) {
 
 #ifdef ENABLE_APCMINI_DISPLAY
   if (midi_apcmini && millis() - last_updated_display > 50) {
-    Serial.println(F("apcmini_loop: calling apcmini_update_clock_display.."));
+    //Serial.println(F("apcmini_loop: calling apcmini_update_clock_display.."));
     apcmini_update_clock_display();
-    Serial.println(F("return from apcmini_update_clock_display()"));
+    //Serial.println(F("return from apcmini_update_clock_display()"));
   }
   
   static unsigned long last_processed_tick;
 
   if (last_processed_tick!=ticks) {
-    if (is_bpm_on_beat(ticks)) {
+    if (is_bpm_on_beat(&ticks)) {
       Serial.println(F("inside is_bpm_on_beat branch.."));
 #ifdef DEBUG_TICKS
       Serial.print(F("apcmini w/"));
@@ -89,7 +89,7 @@ inline void apcmini_loop(uint32_t ticks) {
       );
       //midi_apcmini->sendNoteOn(counter, 1, 1);
       Serial.println(F("finished is_bpm_on_beat branch"));
-    } else if (is_bpm_on_beat(ticks,duration)) {
+    } else if (is_bpm_on_beat(&ticks,duration)) {
       Serial.println(F("inside is_bpm_on_beat_ended branch.."));
       ATOMIC(
         midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
@@ -107,7 +107,7 @@ inline void apcmini_loop(uint32_t ticks) {
     //)
   }
 #endif
-  Serial.println(F("finished apcmini_loop"));
+  //Serial.println(F("finished apcmini_loop"));
 }
 
 #ifdef ENABLE_APCMINI_DISPLAY
@@ -251,8 +251,8 @@ void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
 #endif
 }
 
-void apcmini_on_tick(unsigned long ticks) {
-  static byte beat_counter;
+void apcmini_on_tick(uint32_t *ticks) {
+  //static byte beat_counter;
   
   if (midi_apcmini) {
     //ATOMIC(

@@ -61,16 +61,19 @@ void on_restart() {
     Serial.println(F("reset counters"));
     //uClock.getTick(&ticks);
 #ifdef ENABLE_BEATSTEP
+    Serial.print(F("restart beatstep..."));
     beatstep_on_restart();
-    Serial.println(F("restart beatstep"));
+    Serial.println(F("restarted"));
 #endif
 #ifdef ENABLE_BAMBLE
+    Serial.print(F("restart bamble..."));
     bamble_on_restart();
-    Serial.println(F("restart bamble"));
+    Serial.println(F("restarted"));
 #endif
 #ifdef ENABLE_APCMINI
+    Serial.print(F("restart apcmini..."));
     apcmini_on_restart();
-    Serial.println(F("restart apcmini"));
+    Serial.println(F("restarted"));
     redraw_immediately = true;
 #endif
     Serial.println(F("<==on_restart()"));
