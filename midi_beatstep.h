@@ -8,13 +8,13 @@ volatile uint8_t ixBeatStep = 0xff;
 volatile bool beatstep_started = false;
 
 inline void beatstep_loop() {
-  //ATOMIC(
+  ATOMIC(
     if ( ixBeatStep != 0xff) {
       do {
         Midi[ixBeatStep]->read();
       } while ( MidiTransports[ixBeatStep]->available() > 0);
     }
-  //)
+  )
 }
 
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
@@ -37,7 +37,7 @@ void beatstep_handle_start() {
   Serial.println(F("beatstep_handle_start() finished"));
 }
 
-void beatstep_on_tick(uint32_t *ticks) {
+void beatstep_on_tick(uint32_t ticks) {
   //Serial.flush();
   
   if (midi_beatstep) {

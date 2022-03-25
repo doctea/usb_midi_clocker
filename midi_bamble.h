@@ -8,14 +8,16 @@ volatile uint8_t ixBamble   = 0xff;
 volatile bool bamble_started = false;
 
 inline void bamble_loop() {
-  if ( ixBamble != 0xff) {
-    do {
-      Midi[ixBamble]->read();
-    } while ( MidiTransports[ixBamble]->available() > 0);
+  ATOMIC(
+    if ( ixBamble != 0xff) {
+      do {
+        Midi[ixBamble]->read();
+      } while ( MidiTransports[ixBamble]->available() > 0);
+    }
   }
 }
 
-void bamble_on_tick(uint32_t *ticks) {
+void bamble_on_tick(uint32_t ticks) {
   if (midi_bamble) {
 #ifdef DEBUG_TICKS
     Serial.print(F(" bamble "));

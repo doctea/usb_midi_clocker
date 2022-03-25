@@ -11,7 +11,7 @@
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
-void do_tick(uint32_t *ticks);
+void do_tick(uint32_t ticks);
 
 #include <uClock.h>
 
@@ -148,7 +148,7 @@ void loop()
   loop_counter++;
 }
 
-void do_tick(uint32_t * in_ticks) {  
+void do_tick(uint32_t in_ticks) {  
 #ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 
@@ -160,7 +160,7 @@ void do_tick(uint32_t * in_ticks) {
     Serial.print(F(") sending clock for [ "));
 #endif
 
-    ticks = *in_ticks;
+    ticks = in_ticks;
     
     if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
       //in_ticks = ticks = 0;
@@ -172,7 +172,7 @@ void do_tick(uint32_t * in_ticks) {
     }
 
   //ATOMIC(
-    update_cv_outs(*in_ticks);
+    update_cv_outs(in_ticks);
 
     //Serial.print(F("about to beatstep_on_tick for "));
     //Serial.println(ticks);
