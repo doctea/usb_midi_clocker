@@ -14,7 +14,7 @@ inline void bamble_loop() {
         Midi[ixBamble]->read();
       } while ( MidiTransports[ixBamble]->available() > 0);
     }
-  }
+  )
 }
 
 void bamble_on_tick(uint32_t ticks) {
