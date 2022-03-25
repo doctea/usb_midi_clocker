@@ -66,7 +66,7 @@ void beatstep_on_tick(uint32_t ticks) {
     //ATOMIC(
       midi_beatstep->sendClock();
     //);
-    Serial.println(F("sent clock"));
+    //Serial.println(F("sent clock"));
     
     //Serial.flush();
   } else {

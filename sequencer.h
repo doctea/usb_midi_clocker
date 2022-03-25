@@ -39,7 +39,9 @@ bool should_trigger_sequence(unsigned long ticks, int sequence, int offset = 0) 
 
   if (is_bpm_on_beat(ticks, offset)) {
     if (sequence_data[sequence][step]>0) {
-      Serial.print(F("Trigger sequence on step "));
+      Serial.print(F("Trigger sequence "));
+      Serial.print(sequence);
+      Serial.print(F(" on step "));
       Serial.print(step);
       Serial.println(F("!"));
       return true;
