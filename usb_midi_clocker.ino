@@ -7,6 +7,8 @@
 
 #define ENABLE_APCMINI_DISPLAY
 //#define ENABLE_BPM
+//#define ENABLE_SEQUENCER
+//#define DEBUG_TICKS
 
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
@@ -16,9 +18,6 @@ void do_tick(uint32_t ticks);
 #include <uClock.h>
 
 int duration = 2;
-
-//#define ENABLE_SEQUENCER
-//#define DEBUG_TICKS
 
 USB Usb;
 USBHub  Hub1(&Usb);
@@ -113,9 +112,9 @@ long loop_counter = 0;
 void loop()
 {
   //if (loop_counter%100==0) Serial.println(F("100th loop()"));
-  //ATOMIC(
+  ATOMIC(
     Usb.Task();
-  //)
+  )
 
   //unsigned long ticks;
   //uClock.getTick(&ticks);
@@ -148,6 +147,7 @@ void loop()
   loop_counter++;
 }
 
+// called inside interrupt
 void do_tick(uint32_t in_ticks) {  
 #ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;

@@ -252,21 +252,22 @@ void apcmini_on_tick(uint32_t ticks) {
   //static byte beat_counter;
   
   if (midi_apcmini) {
-    //ATOMIC(
+    ATOMIC(
       midi_apcmini->sendClock();
-    //)
+    )
   }
 }
 
+// called inside interrupt
 void apcmini_on_restart() {
   if (midi_apcmini) {
     //ATOMIC(
       midi_apcmini->sendStop();
       midi_apcmini->sendStart();
     //)
-    ATOMIC(
+    //ATOMIC(
       midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
-    )
+    //)
   }
 }
 
@@ -297,7 +298,9 @@ void apcmini_update_clock_display() {
     redraw_sequence_row(c);
   }
 #endif
-  last_updated_display = millis();
+  ATOMIC(
+    last_updated_display = millis();
+  )
   Serial.println(F("returning from apcmini_update_clock_display()"));
 }
 #endif

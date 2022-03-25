@@ -32,10 +32,13 @@ void bamble_on_tick(uint32_t ticks) {
   }
 }
 
+// called inside interrupt
 void bamble_on_restart() {
   if (midi_bamble) {
-    midi_bamble->sendStop();
-    midi_bamble->sendStart();
+    //ATOMIC(
+      midi_bamble->sendStop();
+      midi_bamble->sendStart();
+    //)
   }
 }
 

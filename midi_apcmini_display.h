@@ -20,7 +20,7 @@ void redraw_row(byte c) {
 
 void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
   ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + old_clock_selected, APCMINI_OFF, 1);)
-  ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_selected, APCMINI_ON, 1);)
+  ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_selected,     APCMINI_ON,  1);)
 }
 
 #ifdef ENABLE_SEQUENCER
