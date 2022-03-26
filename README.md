@@ -1,4 +1,4 @@
-This branch uses uClock -- however it doesn't work properly: https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
+This branch uses uClock -- it now works properly without crashing thanks to the help of midilab! https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
 
 # usb_midi_clocker
 
