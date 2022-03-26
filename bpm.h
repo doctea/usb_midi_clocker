@@ -2,6 +2,7 @@
 #define BPM__INCLUDED
 
 #define PPQN  24
+#define BEATS_PER_BAR 4
 
 #define BPM_MINIMUM   60.0
 #define BPM_MAXIMUM   140.0
@@ -9,7 +10,7 @@
 bool playing = true;
 bool single_step = false;
 
-bool restart_on_next_bar = false;
+volatile bool restart_on_next_bar = false;
 
 //unsigned long t1 = millis();
 volatile uint32_t ticks = 0;

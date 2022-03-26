@@ -7,7 +7,7 @@
 
 #define ENABLE_APCMINI_DISPLAY
 #define ENABLE_BPM
-//#define ENABLE_SEQUENCER
+#define ENABLE_SEQUENCER
 //#define DEBUG_TICKS
 
 #include <UHS2-MIDI.h>
@@ -104,7 +104,7 @@ void setup()
   Serial.println(F("Arduino ready."));
 }
 
-long loop_counter = 0;
+//long loop_counter = 0;
 
 // -----------------------------------------------------------------------------`
 //
@@ -143,8 +143,8 @@ void loop()
   /*if (!playing && single_step) {
     do_tick(ticks);
   }*/
-  if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
-  loop_counter++;
+  /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
+  loop_counter++;*/
 }
 
 // called inside interrupt

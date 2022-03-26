@@ -43,7 +43,7 @@ void beatstep_on_tick(uint32_t ticks) {
   //Serial.flush();
   
   if (midi_beatstep) {
-    Serial.print(F("beatstep_on_tick:"));
+    //Serial.print(F("beatstep_on_tick:"));
 #ifdef DEBUG_TICKS
     if (DEBUG_TICKS) Serial.print(F(" beatstep "));
 #endif

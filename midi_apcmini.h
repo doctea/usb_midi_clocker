@@ -43,7 +43,7 @@ volatile uint8_t ixAPCmini  = 0xff;
 volatile bool apcmini_started = false;
 bool apcmini_shift_held = false;
 
-int clock_selected = 0;
+byte clock_selected = 0;
 
 bool redraw_immediately = false;
 unsigned long last_updated_display = 0;
@@ -204,16 +204,17 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.print(F("Single-stepped to tick "));
     Serial.println(ticks);*/
 #ifdef ENABLE_SEQUENCER
-  } else if (inNumber>=0 && inNumber < 4 * 8) {
-    int row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
+  } else if (inNumber>=0 && inNumber < 4 * APCMINI_DISPLAY_WIDTH) {
+    byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
     Serial.print(F("For inNumber "));
     Serial.print(inNumber);
     Serial.print(F(" got row (ie clock) "));
     Serial.print(row);
     Serial.print(F(" and column "));
-    int col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
+    byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
     Serial.println(col);
-    sequence_data[row][col] = !sequence_data[row][col];
+    sequencer_press(row,col);
+    //sequence_data[row][col] = !sequence_data[row][col];
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_sequence_row(row);
 #endif
