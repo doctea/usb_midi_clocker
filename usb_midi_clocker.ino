@@ -3,10 +3,10 @@
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
-//#define ENABLE_BAMBLE
+#define ENABLE_BAMBLE
 
 #define ENABLE_APCMINI_DISPLAY
-//#define ENABLE_BPM
+#define ENABLE_BPM
 //#define ENABLE_SEQUENCER
 //#define DEBUG_TICKS
 
@@ -121,9 +121,9 @@ void loop()
 
 #ifdef ENABLE_BEATSTEP
   //ATOMIC(
-  Serial.println("==>doing beatstep_loop()");
+  //Serial.println("==>doing beatstep_loop()");
     beatstep_loop();
-  Serial.println("<==done beatstep_loop()!");
+  //Serial.println("<==done beatstep_loop()!");
   //)
 #endif
 
