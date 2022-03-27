@@ -117,10 +117,14 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
     // start / stop play
     playing = !playing;
+#ifdef USE_UCLOCK
     if (playing)
       uClock.start();
     else
       uClock.stop();
+#else
+
+#endif
   } else if (inNumber==0 && apcmini_shift_held) { // lower-left pad pressed
     // restart/resync immediately
     Serial.println(F("APCmini pressed, restarting downbeat"));

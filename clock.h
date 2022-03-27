@@ -2,15 +2,6 @@
 
 // The callback function wich will be called by Clock each Pulse of 96PPQN clock resolution.
 void ClockOut96PPQN(uint32_t *tick) {
-  // Send MIDI_CLOCK to external gears
-  //Serial.write(MIDI_CLOCK);
-  //Serial.print(F("ClockOut96PPQN ticked "));
-  //Serial.println(*tick);
-  /*if (*tick % 24 == 0) {
-    Serial.print("Ticked on 24th: "); //a quarter note?");
-    Serial.println(*tick);
-  }*/
-  //*ticks++;
   do_tick(*tick);
 }
 
@@ -28,7 +19,7 @@ void onClockStop() {
   Serial.print(F("uClock stopped!"));
 }
 
-
+#ifdef USE_UCLOCK
 void setup_uclock() {
   // Inits the clock
   uClock.init();
@@ -42,3 +33,9 @@ void setup_uclock() {
 
   uClock.start();
 }
+#else
+void setup_cheapclock() {
+  ticks = 0;
+  set_bpm(bpm_current);
+}
+#endif

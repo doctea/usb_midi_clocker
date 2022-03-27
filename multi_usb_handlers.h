@@ -55,7 +55,8 @@ void on_restart() {
     Serial.println(F("on_restart()==>"));
     //ATOMIC(ticks = 0;)
     Serial.println(F("reset ticks"));
-    uClock.setTempo(bpm_current);
+    // TODO: cheapclock version
+    uClock.setTempo(bpm_current); // todo: probably not needed?
     Serial.println(F("reset tempo"));
     uClock.resetCounters();
     Serial.println(F("reset counters"));

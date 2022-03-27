@@ -1,5 +1,11 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
-// proof of concept for syncing multiple USB Midi devices
+// proof of concept for syncing multiple USB Midi devices wit
+
+#define USE_UCLOCK
+
+#ifndef USE_UCLOCK
+#define ATOMIC(X) X
+#endif
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
@@ -16,7 +22,9 @@
 
 void do_tick(uint32_t ticks);
 
+#ifdef USE_UCLOCK
 #include <uClock.h>
+#endif
 
 int duration = 2;
 
@@ -99,8 +107,12 @@ void setup()
   init_sequence();
 #endif
 
+#ifdef USE_UCLOCK
   Serial.println(F("Initialising uClock.."));
   setup_uclock();
+#else
+  setup_cheapclock();
+#endif
 
   Serial.println(F("Arduino ready."));
 }
@@ -117,27 +129,16 @@ void loop()
     Usb.Task();
   )
 
-  //unsigned long ticks;
-  //uClock.getTick(&ticks);
-
 #ifdef ENABLE_BEATSTEP
-  //ATOMIC(
-  //Serial.println("==>doing beatstep_loop()");
     beatstep_loop();
-  //Serial.println("<==done beatstep_loop()!");
-  //)
 #endif
 
 #ifdef ENABLE_APCMINI
-  //ATOMIC(
     apcmini_loop();
-  //)
 #endif
 
 #ifdef ENABLE_BAMBLE
-  //ATOMIC(
     bamble_loop();
-  //)
 #endif
 
   //Serial.println(F("."));
@@ -172,15 +173,13 @@ void do_tick(uint32_t in_ticks) {
       restart_on_next_bar = false;
     }
 
-  //ATOMIC(
+
     update_cv_outs(in_ticks);
 
-    //Serial.print(F("about to beatstep_on_tick for "));
-    //Serial.println(ticks);
 #ifdef ENABLE_BEATSTEP
     beatstep_on_tick(in_ticks);
 #endif
-    //Serial.println(F("finished beatstep_on_tick!"));
+
 #ifdef ENABLE_BAMBLE
     bamble_on_tick(in_ticks);
 #endif
@@ -188,7 +187,6 @@ void do_tick(uint32_t in_ticks) {
 #ifdef ENABLE_APCMINI
     apcmini_on_tick(in_ticks);
 #endif
-  //)
 
 #ifdef DEBUG_TICKS
   Serial.println(F(" ]"));
