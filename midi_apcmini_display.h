@@ -29,8 +29,9 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
 void redraw_sequence_row(byte c) {
     byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-      if (read_sequence(c,i)) { //should_trigger_sequence(i*PPQN,c)) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_YELLOW, 1);)
+      byte v = read_sequence(c,i);
+      if (v) { //should_trigger_sequence(i*PPQN,c)) {
+        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, (2*(v-1)) + APCMINI_ON, 1);)
       } else {
         ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);)
       }

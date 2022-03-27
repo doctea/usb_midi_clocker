@@ -24,7 +24,11 @@
 #define APCMINI_BUTTON_DEVICE    71
 
 //#define START_BEAT_INDICATOR 0
-#define START_BEAT_INDICATOR APCMINI_BUTTON_UP
+#define START_BEAT_INDICATOR  APCMINI_BUTTON_UP
+
+// restart buttons mapping - these are shifted
+#define BUTTON_RESTART_IMMEDIATELY    APCMINI_BUTTON_UP
+#define BUTTON_RESTART_AT_END_OF_BAR  APCMINI_BUTTON_DEVICE
 
 // button colours from https://remotify.io/community/question/led-feedback-values
 #define APCMINI_OFF           0
@@ -119,11 +123,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     else
       uClock.stop();
 #endif
-  } else if (inNumber==0 && apcmini_shift_held) { // lower-left pad pressed
+  } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
     // restart/resync immediately
     Serial.println(F("APCmini pressed, restarting downbeat"));
     on_restart();
-  } else if (inNumber==7 && apcmini_shift_held) {
+  } else if (inNumber==BUTTON_RESTART_AT_END_OF_BAR && apcmini_shift_held) {
     // restart/resync at end of bar
     Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
 #ifdef ENABLE_APCMINI_DISPLAY
@@ -217,7 +221,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.print(F(" and column "));
     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
     Serial.println(col);
-    sequencer_press(row, col);
+    sequencer_press(row, col, apcmini_shift_held);
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_sequence_row(row);
 #endif

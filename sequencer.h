@@ -2,12 +2,15 @@
 #ifndef INCLUDED_SEQUENCER
 #define INCLUDED_SEQUENCER
 
-//#define SEQUENCER_BYTES // define this to use more memory-hungry internal layout of data
+#define SEQUENCER_BYTES // define this to use more memory-hungry internal layout of data
 
 #define NUM_SEQUENCES 4
 #define NUM_STEPS     8
 
 #ifdef SEQUENCER_BYTES
+
+#define SEQUENCER_MAX_VALUE 3
+
 volatile byte sequence_data[NUM_SEQUENCES][NUM_STEPS] = {
   { 0, 0, 0, 0, 0, 0, 0, 0 },
   { 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -43,13 +46,26 @@ inline int step_number_from_ticks(signed long ticks) {
 }
 
 #ifdef SEQUENCER_BYTES
-inline bool read_sequence(byte row, byte col) {
-  return sequence_data[sequence][col] > 0;
+inline byte read_sequence(byte row, byte col) {
+  return sequence_data[row][col];
 }
 inline void write_sequence(byte row, byte col, byte value) {
-  ATOMIC(
+  /*ATOMIC(
     sequence_data[row][col] = !sequence_data[row][col];
-  )
+  )*/
+  sequence_data[row][col] = value;
+  if (sequence_data[row][col]==255)
+    sequence_data[row][col] = SEQUENCER_MAX_VALUE;
+  else if (sequence_data[row][col]>SEQUENCER_MAX_VALUE)
+    sequence_data[row][col] = 0;
+}
+
+void sequencer_press(byte row, byte col, bool shift = false) {
+  //sequence_data[row][col] = !sequence_data[row][col];
+  if (shift) 
+    write_sequence(row, col, read_sequence(row, col)-1);
+  else 
+    write_sequence(row, col, read_sequence(row, col)+1);
 }
 #else
 inline bool read_sequence(byte row, byte col) {
@@ -60,12 +76,11 @@ inline void write_sequence(byte row, byte col, byte value) {
     bitWrite(sequence_data[row], /*NUM_STEPS -*/ col, value);
   )
 }
-#endif
-
-void sequencer_press(byte row, byte col) {
+void sequencer_press(byte row, byte col, bool shift = false) {
   //sequence_data[row][col] = !sequence_data[row][col];
   write_sequence(row, col, !read_sequence(row, col));
 }
+#endif
 
 bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0) {
   byte step = step_number_from_ticks(ticks); //(ticks / (PPQN)) % NUM_STEPS;
@@ -75,9 +90,12 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0)
     Serial.println(F("!"));
   }*/
 
-  if (is_bpm_on_beat(ticks, offset)) {
-    //if (sequence_data[sequence][step]>0) {
-    if (read_sequence(sequence, step)) {
+  byte v = read_sequence(sequence, step);
+  if (v) {
+    if (is_bpm_on_beat(ticks, offset) 
+        || (v==2 && is_bpm_on_eighth(ticks, offset))
+        || (v==3 && is_bpm_on_sixteenth(ticks, offset))
+    ) {
 #ifdef DEBUG_SEQUENCER
       if (offset==0) {
         Serial.print(F("For tick "));
