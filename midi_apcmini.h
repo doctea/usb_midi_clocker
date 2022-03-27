@@ -43,7 +43,9 @@ volatile uint8_t ixAPCmini  = 0xff;
 volatile bool apcmini_started = false;
 bool apcmini_shift_held = false;
 
+#ifdef ENABLE_CLOCKS
 byte clock_selected = 0;
+#endif
 
 bool redraw_immediately = false;
 unsigned long last_updated_display = 0;
@@ -130,6 +132,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     ATOMIC(midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);)  // turn on the 'going to restart on next bar' flashing indicator
 #endif
     restart_on_next_bar = true;
+#ifdef ENABLE_CLOCKS
   } else if (inNumber==APCMINI_BUTTON_UP) {
     // move clock selection up
     byte old_clock_selected  = clock_selected;
@@ -160,7 +163,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.println(clock_delay[clock_selected]);
     //redraw_immediately = true;
 #ifdef ENABLE_APCMINI_DISPLAY
-    redraw_row(clock_selected);
+    redraw_clock_row(clock_selected);
 #endif
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
     // shift clock offset right
@@ -171,7 +174,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.print(F("Set selected clock delay to "));
     Serial.println(clock_delay[clock_selected]);
 #ifdef ENABLE_APCMINI_DISPLAY
-    redraw_row(clock_selected);
+    redraw_clock_row(clock_selected);
 #endif
   } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) {  
     // button between Clip Stop -> Solo -> Rec arm -> Mute buttons
@@ -192,8 +195,9 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
       clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;
 
 #ifdef ENABLE_APCMINI_DISPLAY
-    redraw_row(clock_selected);
+    redraw_clock_row(clock_selected);
     redraw_clock_selected(old_clock_selected, clock_selected);
+#endif
 #endif
   } else if (inNumber==APCMINI_BUTTON_SHIFT) {
     apcmini_shift_held = true;
@@ -290,10 +294,12 @@ void apcmini_clear_display() {
 void apcmini_update_clock_display() {
   Serial.println(F("starting apcmini_update_clock_display().."));
   // draw the clock divisions
+#ifdef ENABLE_CLOCKS
   for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
     //byte start_row = (8-NUM_CLOCKS) * 8;
-    redraw_row(c);
+    redraw_clock_row(c);
   }
+#endif
 #ifdef ENABLE_SEQUENCER
   for (byte c = 0 ; c < NUM_SEQUENCES ; c++) {
     redraw_sequence_row(c);

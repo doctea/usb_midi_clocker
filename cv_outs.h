@@ -62,23 +62,33 @@ void update_cv_outs(unsigned long ticks) {
 
     if (
 #ifdef ENABLE_SEQUENCER
-      should_trigger_sequence(ticks, i) ||
+      should_trigger_sequence(ticks, i)
 #endif
+#if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+      ||
+#endif
+#ifdef ENABLE_CLOCKS
       is_bpm_on_multiplier(
         (long)ticks - (PPQN*clock_delay[i]), 
         clock_multiplier[i]
       )
+#endif
     ) {
         should_go_high = true;
     } else if (
 #ifdef ENABLE_SEQUENCER
-      should_trigger_sequence(ticks, i, duration) || 
+      should_trigger_sequence(ticks, i, duration)
 #endif
+#if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+      ||
+#endif
+#ifdef ENABLE_CLOCKS
       is_bpm_on_multiplier(
         (long)ticks - (PPQN*clock_delay[i]), 
         clock_multiplier[i], 
         duration                      //+((clock_delay[i]%8)*PPQN))
       )
+#endif
     ) {
       should_go_low = true;
     }

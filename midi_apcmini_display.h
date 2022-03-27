@@ -1,6 +1,7 @@
 #ifdef ENABLE_APCMINI_DISPLAY
 
-void redraw_row(byte c) {
+#ifdef ENABLE_CLOCKS
+void redraw_clock_row(byte c) {
     byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       byte io = (i - clock_delay[c]) % APCMINI_DISPLAY_WIDTH; //) % APCMINI_DISPLAY_WIDTH;   // TODO: this doesn't display properly?
@@ -22,6 +23,7 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
   ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + old_clock_selected, APCMINI_OFF, 1);)
   ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_selected,     APCMINI_ON,  1);)
 }
+#endif
 
 #ifdef ENABLE_SEQUENCER
 void redraw_sequence_row(byte c) {

@@ -8,6 +8,7 @@
 #define ENABLE_APCMINI_DISPLAY
 #define ENABLE_BPM
 #define ENABLE_SEQUENCER
+#define ENABLE_CLOCKS
 //#define DEBUG_TICKS
 
 #include <UHS2-MIDI.h>
