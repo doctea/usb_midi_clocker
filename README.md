@@ -1,6 +1,9 @@
+- This branch now includes optional experimental uClock mode -- which works so long as you don't send any CC messages :( https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
+- Non-uClock mode seems stable, but sending CC messages (eg faders on AKAI APCMini) causes noticeable stutter, lag and timing problems
+
 # usb_midi_clocker
 
-proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV clock, using Arduino USB Host Shield on an Arduino Uno
+Proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV clock, using Arduino USB Host Shield on an Arduino Uno.  The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beatstep), acting as master clock for USB MIDI and Eurorack CV clock, with shiftable generator/divider.
 
 - Works with Arturia Beatstep (requires receiving a MIDI start message externally before it will listen to external clock!)
 - note: as of 2022-02-28, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
@@ -23,10 +26,11 @@ This project keeps time and sends clock divisions on the CV outs, but also detec
 - Can use the 'master' fader on the APCmini to change tempo.
 - There's also a function to resync - either immediately or at the start of the next bar -- that sends a stop followed immediately by a start to the MIDI devices, and resets the internal clock, so that everything restarts in sync (hopefully!) at beat 1.
 
-It also has a very rudimentary sequencer, currently overlaid over the clock outputs.
+It also has a very rudimentary sequencer, using Akai APCMini for input+display, currently overlaid over the clock outputs.
 
 ### TODO/Future 
 
+- Get it working in uClock mode without crashes
 - Sync from external input (MIDI and CV)
 - More outputs
 - MIDI DIN or TRS input + output
