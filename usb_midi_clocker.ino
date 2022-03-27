@@ -3,7 +3,7 @@
 
 #include "debug.h"
 
-#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
@@ -11,7 +11,7 @@
 
 #define ENABLE_APCMINI_DISPLAY
 #define ENABLE_BPM
-//#define ENABLE_SEQUENCER
+#define ENABLE_SEQUENCER
 #define ENABLE_CLOCKS
 
 //#define DEBUG_TICKS
