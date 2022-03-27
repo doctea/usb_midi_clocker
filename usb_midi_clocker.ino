@@ -3,19 +3,17 @@
 
 #define USE_UCLOCK
 
-#ifndef USE_UCLOCK
-#define ATOMIC(X) X
-#endif
-
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
 #define ENABLE_BAMBLE
 
 #define ENABLE_APCMINI_DISPLAY
 #define ENABLE_BPM
-#define ENABLE_SEQUENCER
+//#define ENABLE_SEQUENCER
 #define ENABLE_CLOCKS
+
 //#define DEBUG_TICKS
+//#define DEBUG_SEQUENCER
 
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
@@ -24,6 +22,8 @@ void do_tick(uint32_t ticks);
 
 #ifdef USE_UCLOCK
 #include <uClock.h>
+#else
+#define ATOMIC(X) X
 #endif
 
 int duration = 2;
@@ -141,6 +141,14 @@ void loop()
     bamble_loop();
 #endif
 
+#ifndef USE_UCLOCK
+    if ( millis()-t1 > ms_per_tick ) {
+      do_tick(ticks);
+      ticks++;
+      t1 = millis();
+    }
+#endif
+
   //Serial.println(F("."));
   /*if (!playing && single_step) {
     do_tick(ticks);
@@ -151,7 +159,7 @@ void loop()
 
 // called inside interrupt
 void do_tick(uint32_t in_ticks) {  
-#ifdef DEBUG_TICKS
+/*#ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 
     Serial.print(ticks);
@@ -160,7 +168,7 @@ void do_tick(uint32_t in_ticks) {
     Serial.print(F("!\t(ms_per_tick is "));
     Serial.print(ms_per_tick);
     Serial.print(F(") sending clock for [ "));
-#endif
+#endif*/
 
     ticks = in_ticks;
     
@@ -172,7 +180,6 @@ void do_tick(uint32_t in_ticks) {
       //)
       restart_on_next_bar = false;
     }
-
 
     update_cv_outs(in_ticks);
 

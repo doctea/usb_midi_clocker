@@ -50,34 +50,38 @@ void setupmidi(uint8_t idx)
 
 // call this when global clock should be reset
 void on_restart() {
-    restart_on_next_bar = false;
+  restart_on_next_bar = false;
 
-    Serial.println(F("on_restart()==>"));
-    //ATOMIC(ticks = 0;)
-    Serial.println(F("reset ticks"));
-    // TODO: cheapclock version
-    uClock.setTempo(bpm_current); // todo: probably not needed?
-    Serial.println(F("reset tempo"));
-    uClock.resetCounters();
-    Serial.println(F("reset counters"));
-    //uClock.getTick(&ticks);
+  Serial.println(F("on_restart()==>"));
+  
+  Serial.println(F("reset ticks"));
+  // TODO: cheapclock version
+#ifdef USE_UCLOCK
+  uClock.setTempo(bpm_current); // todo: probably not needed?
+  Serial.println(F("reset tempo"));
+  uClock.resetCounters();
+  Serial.println(F("reset counters"));
+#else
+  ticks = 0;
+#endif
+  
 #ifdef ENABLE_BEATSTEP
-    Serial.print(F("restart beatstep..."));
-    beatstep_on_restart();
-    Serial.println(F("restarted"));
+  Serial.print(F("restart beatstep..."));
+  beatstep_on_restart();
+  Serial.println(F("restarted"));
 #endif
 #ifdef ENABLE_BAMBLE
-    Serial.print(F("restart bamble..."));
-    bamble_on_restart();
-    Serial.println(F("restarted"));
+  Serial.print(F("restart bamble..."));
+  bamble_on_restart();
+  Serial.println(F("restarted"));
 #endif
 #ifdef ENABLE_APCMINI
-    Serial.print(F("restart apcmini..."));
-    apcmini_on_restart();
-    Serial.println(F("restarted"));
-    redraw_immediately = true;
+  Serial.print(F("restart apcmini..."));
+  apcmini_on_restart();
+  Serial.println(F("restarted"));
+  redraw_immediately = true;
 #endif
-    Serial.println(F("<==on_restart()"));
+  Serial.println(F("<==on_restart()"));
 }
 
 /*

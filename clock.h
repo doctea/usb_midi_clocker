@@ -1,5 +1,7 @@
 #include "bpm.h"
 
+#ifdef USE_UCLOCK
+
 // The callback function wich will be called by Clock each Pulse of 96PPQN clock resolution.
 void ClockOut96PPQN(uint32_t *tick) {
   do_tick(*tick);
@@ -12,14 +14,13 @@ void onClockStart() {
   ATOMIC(
     ticks = 0;
   )
-  Serial.println(F("uClock started!"));
+  Serial.println(F("Clock started!"));
 }
 
 void onClockStop() {
-  Serial.print(F("uClock stopped!"));
+  Serial.print(F("Clock stopped!"));
 }
 
-#ifdef USE_UCLOCK
 void setup_uclock() {
   // Inits the clock
   uClock.init();
@@ -33,9 +34,14 @@ void setup_uclock() {
 
   uClock.start();
 }
+
 #else
+
+/// use cheapclock clock
+unsigned long t1 = millis();
 void setup_cheapclock() {
   ticks = 0;
   set_bpm(bpm_current);
 }
+
 #endif

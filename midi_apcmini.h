@@ -69,12 +69,10 @@ inline void apcmini_loop() {
   }
 
 #ifdef ENABLE_APCMINI_DISPLAY
-  
   static unsigned long last_processed_tick;
 
   if (last_processed_tick!=ticks) {
     if (is_bpm_on_beat(ticks)) {
-      Serial.println(F("inside is_bpm_on_beat branch.."));
 #ifdef DEBUG_TICKS
       Serial.print(F("apcmini w/"));
       /*Serial.print(ticks);
@@ -82,22 +80,18 @@ inline void apcmini_loop() {
       Serial.print(beat_counter);
       Serial.print(F(" "));
 #endif
-      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH); //(beat_counter+1)%8;
+      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
       ATOMIC(
         midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
       );
-      //midi_apcmini->sendNoteOn(counter, 1, 1);
-      Serial.println(F("finished is_bpm_on_beat branch"));
     } else if (is_bpm_on_beat(ticks,duration)) {
-      Serial.println(F("inside is_bpm_on_beat_ended branch.."));
       ATOMIC(
         midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
       )
-      Serial.println(F("finished is_bpm_on_beat_ended branch"));
     }
  
-    if (redraw_immediately || midi_apcmini && millis() - last_updated_display > 50) { // || ticks - last_updated_display > PPQN) {
-      Serial.println(F("redraw_immediately is set!"));
+    if (midi_apcmini && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
+      //Serial.println(F("redraw_immediately is set!"));
       apcmini_update_clock_display();
       redraw_immediately = false;
     }
@@ -122,8 +116,6 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
       uClock.start();
     else
       uClock.stop();
-#else
-
 #endif
   } else if (inNumber==0 && apcmini_shift_held) { // lower-left pad pressed
     // restart/resync immediately
@@ -180,7 +172,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
-  } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) {  
+  } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) {
     // button between Clip Stop -> Solo -> Rec arm -> Mute buttons
     // change divisions/multiplier of corresponding clock
     byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;  
@@ -296,7 +288,7 @@ void apcmini_clear_display() {
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display() {
-  Serial.println(F("starting apcmini_update_clock_display().."));
+  //Serial.println(F("starting apcmini_update_clock_display().."));
   // draw the clock divisions
 #ifdef ENABLE_CLOCKS
   for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
@@ -312,7 +304,7 @@ void apcmini_update_clock_display() {
   ATOMIC(
     last_updated_display = millis();
   )
-  Serial.println(F("returning from apcmini_update_clock_display()"));
+  //Serial.println(F("returning from apcmini_update_clock_display()"));
 }
 #endif
 
