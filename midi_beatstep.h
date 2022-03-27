@@ -32,14 +32,14 @@ void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
 
 void beatstep_handle_start() {
   Serial.println(F("beatstep_handle_start()"));
-  ATOMIC(
+  //ATOMIC(
     midi_beatstep->sendStart();
-  )
+  //)
   beatstep_started = true;
   Serial.println(F("beatstep_handle_start() finished"));
 }
 
-void beatstep_on_tick(uint32_t ticks) {
+void beatstep_on_tick(volatile uint32_t ticks) {
   //Serial.flush();
   
   if (midi_beatstep) {

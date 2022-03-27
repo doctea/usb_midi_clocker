@@ -18,7 +18,7 @@ volatile
 uint32_t ticks = 0;
 
 // tracking which beat we're on
-static float bpm_current = 120.0f; //BPM_MINIMUM; //60.0f;
+volatile static float bpm_current = 120.0f; //BPM_MINIMUM; //60.0f;
 #ifndef USE_UCLOCK
 double ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 #endif
@@ -63,9 +63,9 @@ void set_bpm(float new_bpm) {
   if (bpm_current!=new_bpm) {
     bpm_current = new_bpm;
 #ifdef USE_UCLOCK
-ATOMIC(
+//ATOMIC(
     uClock.setTempo(new_bpm); //bpm_current * 24);
-)
+//)
 #else
     ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 #endif

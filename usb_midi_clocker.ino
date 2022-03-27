@@ -1,7 +1,9 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices wit
 
-#define USE_UCLOCK
+#include "debug.h"
+
+#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
@@ -19,6 +21,13 @@
 #include <usbhub.h>
 
 void do_tick(uint32_t ticks);
+
+int freeRam ()
+{
+  extern int __heap_start, *__brkval;
+  int v;
+  return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
+}
 
 #ifdef USE_UCLOCK
 #include <uClock.h>
@@ -158,7 +167,7 @@ void loop()
 }
 
 // called inside interrupt
-void do_tick(uint32_t in_ticks) {  
+void do_tick(volatile uint32_t in_ticks) {  
 /*#ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 

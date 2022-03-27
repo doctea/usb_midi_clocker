@@ -17,7 +17,8 @@ inline void bamble_loop() {
   )
 }
 
-void bamble_on_tick(uint32_t ticks) {
+// called inside interrupt
+void bamble_on_tick(volatile uint32_t ticks) {
   if (midi_bamble) {
 #ifdef DEBUG_TICKS
     Serial.print(F(" bamble "));

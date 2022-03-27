@@ -1,6 +1,5 @@
 #include "bpm.h"
 
-
 #define PIN_CLOCK_START  4
 #define PIN_CLOCK_1   4
 #define PIN_CLOCK_2   5
@@ -10,6 +9,7 @@
 #define NUM_CLOCKS 4
 #define CLOCK_MULTIPLIER_MIN  0.5
 #define CLOCK_MULTIPLIER_MAX 16.0
+#define CLOCK_DELAY_MAX 15
 
 float clock_multiplier[NUM_CLOCKS] = {
   4.0,
