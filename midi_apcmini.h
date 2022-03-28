@@ -42,7 +42,7 @@
 
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
-uint8_t ixAPCmini  = 0xff;
+volatile uint8_t ixAPCmini = 0xff;
 
 volatile bool apcmini_started = false;
 bool apcmini_shift_held = false;
@@ -51,20 +51,20 @@ bool apcmini_shift_held = false;
 byte clock_selected = 0;
 #endif
 
-bool redraw_immediately = false;
-unsigned long last_updated_display = 0;
+volatile bool redraw_immediately = false;
+volatile unsigned long last_updated_display = 0;
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display();
 #endif
 
-byte beat_counter;
+volatile byte beat_counter;
 
 inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
     ATOMIC(
       do {
-        Midi[ixAPCmini]->read();
+          Midi[ixAPCmini]->read();
         //debug_println(F("Read from apcmini in apcmini_loop!"));
       } while ( MidiTransports[ixAPCmini]->available() > 0);
     )
@@ -75,34 +75,47 @@ inline void apcmini_loop() {
 #ifdef ENABLE_APCMINI_DISPLAY
   static unsigned long last_processed_tick;
 
-  if (last_processed_tick!=ticks) {
-    if (is_bpm_on_beat(ticks)) {
+  ATOMIC(
+    bool should_process = last_processed_tick!=ticks;
+  )
+  if (!should_process) return;
+
+  ATOMIC(
+    bool on_beat = is_bpm_on_beat(ticks);
+  )
+
+  if (on_beat) {
 #ifdef DEBUG_TICKS
-      debug_print(F("apcmini w/"));
-      /*debug_print(ticks);
-      debug_print(F("\tCounter is "));*/
-      debug_print(beat_counter);
-      debug_print(F(" "));
+    debug_print(F("apcmini w/"));
+    /*debug_print(ticks);
+    debug_print(F("\tCounter is "));*/
+    debug_print(beat_counter);
+    debug_print(F(" "));
 #endif
+    ATOMIC(
       beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
-      ATOMIC(
-        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
-      );
-    } else if (is_bpm_on_beat(ticks,duration)) {
-      ATOMIC(
+      midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
+    )
+  } else {
+    ATOMIC(
+      bool on_beat_stop = is_bpm_on_beat(ticks, duration);
+      if (on_beat_stop) {
         midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      )
-    }
- 
-    if (midi_apcmini && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
-      //debug_println(F("redraw_immediately is set!"));
-      apcmini_update_clock_display();
-      redraw_immediately = false;
-    }
-    //ATOMIC(
-      last_processed_tick = ticks;
-    //)
+      }
+    )
   }
+
+  if (midi_apcmini && (redraw_immediately || ticks - last_updated_display > 5)) { // || ticks - last_updated_display > PPQN) {
+    //debug_println(F("redraw_immediately is set!"));    
+    ATOMIC(
+      apcmini_update_clock_display();
+    )
+    redraw_immediately = false;
+  }
+
+  ATOMIC(
+    last_processed_tick = ticks;
+  )
 #endif
   //debug_println(F("finished apcmini_loop"));
 }
@@ -290,16 +303,12 @@ void apcmini_clear_display() {
   debug_println(F("Clearing APC display.."));
   for (byte x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
     for (byte y = 0 ; y < APCMINI_DISPLAY_WIDTH ;y++) {
-      ATOMIC(
+      //ATOMIC(
         midi_apcmini->sendNoteOn(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1);
-      )
+      //)
     }
   }
 }
-#endif
-
-
-#ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display() {
   //debug_println(F("starting apcmini_update_clock_display().."));
   // draw the clock divisions
@@ -314,9 +323,9 @@ void apcmini_update_clock_display() {
     redraw_sequence_row(c);
   }
 #endif
-  ATOMIC(
-    last_updated_display = millis();
-  )
+  //ATOMIC(
+    last_updated_display = ticks; //millis();
+  //)
   //debug_println(F("returning from apcmini_update_clock_display()"));
 }
 #endif
@@ -324,7 +333,7 @@ void apcmini_update_clock_display() {
 
 void apcmini_init() {
     midi_apcmini->turnThruOff();
-    midi_apcmini->setHandleControlChange(apcmini_control_change);
+    midi_apcmini->setHandleControlChange(apcmini_control_change); // less crashy if disable this... but still crashes.
     midi_apcmini->setHandleNoteOn(apcmini_note_on);
     midi_apcmini->setHandleNoteOff(apcmini_note_off);
 #ifdef ENABLE_APCMINI_DISPLAY

@@ -59,12 +59,15 @@ ATOMIC(
   return v;
 }
 
+volatile bool set_tempo = false;
+
 void set_bpm(float new_bpm) {
   if (bpm_current!=new_bpm) {
     bpm_current = new_bpm;
 #ifdef USE_UCLOCK
 //ATOMIC(
-    uClock.setTempo(new_bpm); //bpm_current * 24);
+    set_tempo = true;
+    //uClock.setTempo(new_bpm); //bpm_current * 24);
 //)
 #else
     ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));

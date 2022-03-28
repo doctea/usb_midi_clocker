@@ -8,13 +8,13 @@ volatile uint8_t ixBeatStep = 0xff;
 volatile bool beatstep_started = false;
 
 inline void beatstep_loop() {
-  ATOMIC(
-    if ( ixBeatStep != 0xff) {
+  if ( ixBeatStep != 0xff) {
+    ATOMIC(
       do {
         Midi[ixBeatStep]->read();
       } while ( MidiTransports[ixBeatStep]->available() > 0);
-    }
-  )
+    )
+  }
 }
 
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {

@@ -8,13 +8,13 @@ volatile uint8_t ixBamble   = 0xff;
 volatile bool bamble_started = false;
 
 inline void bamble_loop() {
-  ATOMIC(
-    if ( ixBamble != 0xff) {
+  if ( ixBamble != 0xff) {
+    ATOMIC(
       do {
         Midi[ixBamble]->read();
       } while ( MidiTransports[ixBamble]->available() > 0);
-    }
-  )
+    )
+  }
 }
 
 // called inside interrupt

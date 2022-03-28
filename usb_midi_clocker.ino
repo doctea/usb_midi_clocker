@@ -3,7 +3,7 @@
 
 #include "debug.h"
 
-//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
@@ -130,6 +130,11 @@ void loop()
   ATOMIC(
     Usb.Task();
   )
+
+  if (set_tempo) {
+    uClock.setTempo(bpm_current);
+    set_tempo = false;
+  }
 
 #ifdef ENABLE_BEATSTEP
     beatstep_loop();

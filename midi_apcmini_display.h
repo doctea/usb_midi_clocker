@@ -1,7 +1,7 @@
 #ifdef ENABLE_APCMINI_DISPLAY
 
 #ifdef ENABLE_CLOCKS
-// called from inside note_on etc, where ATOMIC should already be set
+// called from inside note_on etc, where ATOMIC should already be in effect
 void redraw_clock_row(byte c) {
     byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
