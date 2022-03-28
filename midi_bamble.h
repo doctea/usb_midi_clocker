@@ -18,13 +18,13 @@ inline void bamble_loop() {
 }
 
 // called inside interrupt
-void bamble_on_tick(volatile uint32_t ticks) {
+void bamble_on_tick(uint32_t ticks) {
   if (midi_bamble) {
 #ifdef DEBUG_TICKS
-    Serial.print(F(" bamble "));
+    debug_print(F(" bamble "));
 #endif
     if (is_bpm_on_bar(ticks) && !bamble_started) {
-      Serial.println(F("First beat of bar and BAMBLE not started -- starting!"));
+      debug_println(F("First beat of bar and BAMBLE not started -- starting!"));
       midi_bamble->sendStart();
       bamble_started = true;
     }

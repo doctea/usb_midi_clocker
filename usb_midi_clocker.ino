@@ -77,7 +77,7 @@ void setup()
   Serial.begin(115200);
   while (!Serial);
 
-  Serial.println(F("Arduino initialising usb/midi..."));
+  debug_println(F("Arduino initialising usb/midi..."));
 
   __uhs2Midi1.attachOnInit(onInit1);
   Midi1.turnThruOff();
@@ -100,23 +100,23 @@ void setup()
   if (Usb.Init() == -1) {
     while (1); //halt
   }//if (Usb.Init() == -1...
-  Serial.println(F("USB ready."));
+  debug_println(F("USB ready."));
   delay( 1000 );
   
-  Serial.println(F("Arduino ready."));
+  debug_println(F("Arduino ready."));
 
 #ifdef ENABLE_SEQUENCER
   init_sequence();
 #endif
 
 #ifdef USE_UCLOCK
-  Serial.println(F("Initialising uClock.."));
+  debug_println(F("Initialising uClock.."));
   setup_uclock();
 #else
   setup_cheapclock();
 #endif
 
-  Serial.println(F("Arduino ready."));
+  debug_println(F("Arduino ready."));
 }
 
 //long loop_counter = 0;
@@ -126,7 +126,7 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
-  //if (loop_counter%100==0) Serial.println(F("100th loop()"));
+  //if (loop_counter%100==0) debug_println(F("100th loop()"));
   ATOMIC(
     Usb.Task();
   )
@@ -151,25 +151,25 @@ void loop()
     }
 #endif
 
-  //Serial.println(F("."));
+  //debug_println(F("."));
   /*if (!playing && single_step) {
     do_tick(ticks);
   }*/
-  /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
+  /*if (loop_counter%1000==0) debug_println(F("main loop() - 1000 loops passed"));
   loop_counter++;*/
 }
 
 // called inside interrupt
-void do_tick(volatile uint32_t in_ticks) {  
+void do_tick(uint32_t in_ticks) {  
 /*#ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 
-    Serial.print(ticks);
-    Serial.print(F(":\tTicked with delta\t"));
-    Serial.print(delta);
-    Serial.print(F("!\t(ms_per_tick is "));
-    Serial.print(ms_per_tick);
-    Serial.print(F(") sending clock for [ "));
+    debug_print(ticks);
+    debug_print(F(":\tTicked with delta\t"));
+    debug_print(delta);
+    debug_print(F("!\t(ms_per_tick is "));
+    debug_print(ms_per_tick);
+    debug_print(F(") sending clock for [ "));
 #endif*/
 
     ticks = in_ticks;
@@ -198,7 +198,7 @@ void do_tick(volatile uint32_t in_ticks) {
 #endif
 
 #ifdef DEBUG_TICKS
-  Serial.println(F(" ]"));
+  debug_println(F(" ]"));
 #endif 
 
   //ticks++;

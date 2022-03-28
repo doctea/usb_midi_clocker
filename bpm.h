@@ -30,31 +30,31 @@ inline bool is_bpm_on_beat(uint32_t  ticks,       signed long offset = 0) { retu
 inline bool is_bpm_on_eighth(uint32_t  ticks,     signed long offset = 0) { return ticks==offset || ticks%(PPQN/2)   == offset; }
 inline bool is_bpm_on_sixteenth(uint32_t  ticks,  signed long offset = 0) { return ticks==offset || ticks%(PPQN/4)   == offset; }
 
-inline bool is_bpm_on_multiplier(volatile signed long ticks, float multiplier, signed long offset = 0) {
+inline bool is_bpm_on_multiplier(signed long ticks, float multiplier, signed long offset = 0) {
   unsigned long p = ((float)PPQN*multiplier);
 #ifdef DEBUG_BPM
-  Serial.print(F("is_bpm_on_multiplier(ticks="));
-  Serial.print(ticks);
-  Serial.print(F(", multiplier="));
-  Serial.print(multiplier);
-  Serial.print(F(", offset="));
-  Serial.print(offset);
-  Serial.print(F(") checking ticks "));
-  Serial.print(ticks);
-  Serial.print(F(" with PPQN*multiplier "));
-  Serial.print(p);
-  Serial.print(F(" against offset "));
-  Serial.print(offset);
-  Serial.print(F(" == ticks%p = "));
-  Serial.print(ticks%p);
-  Serial.print(F(" ? ="));
+  debug_print(F("is_bpm_on_multiplier(ticks="));
+  debug_print(ticks);
+  debug_print(F(", multiplier="));
+  debug_print(multiplier);
+  debug_print(F(", offset="));
+  debug_print(offset);
+  debug_print(F(") checking ticks "));
+  debug_print(ticks);
+  debug_print(F(" with PPQN*multiplier "));
+  debug_print(p);
+  debug_print(F(" against offset "));
+  debug_print(offset);
+  debug_print(F(" == ticks%p = "));
+  debug_print(ticks%p);
+  debug_print(F(" ? ="));
 #endif
 ATOMIC(
   bool v = (ticks==offset || ticks%p == offset);  
 )
 #ifdef DEBUG_BPM
-  Serial.print(v ? F("true!") : F("false!"));
-  Serial.println();
+  debug_print(v ? F("true!") : F("false!"));
+  debug_println();
 #endif
   return v;
 }
@@ -69,8 +69,8 @@ void set_bpm(float new_bpm) {
 #else
     ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 #endif
-    Serial.print(F("set bpm to "));
-    Serial.println(bpm_current);
+    debug_print(F("set bpm to "));
+    debug_println(bpm_current);
   }
 }
 

@@ -42,7 +42,7 @@
 
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
-volatile uint8_t ixAPCmini  = 0xff;
+uint8_t ixAPCmini  = 0xff;
 
 volatile bool apcmini_started = false;
 bool apcmini_shift_held = false;
@@ -65,7 +65,7 @@ inline void apcmini_loop() {
     ATOMIC(
       do {
         Midi[ixAPCmini]->read();
-        //Serial.println(F("Read from apcmini in apcmini_loop!"));
+        //debug_println(F("Read from apcmini in apcmini_loop!"));
       } while ( MidiTransports[ixAPCmini]->available() > 0);
     )
   } else {
@@ -78,24 +78,24 @@ inline void apcmini_loop() {
   if (last_processed_tick!=ticks) {
     if (is_bpm_on_beat(ticks)) {
 #ifdef DEBUG_TICKS
-      Serial.print(F("apcmini w/"));
-      /*Serial.print(ticks);
-      Serial.print(F("\tCounter is "));*/
-      Serial.print(beat_counter);
-      Serial.print(F(" "));
+      debug_print(F("apcmini w/"));
+      /*debug_print(ticks);
+      debug_print(F("\tCounter is "));*/
+      debug_print(beat_counter);
+      debug_print(F(" "));
 #endif
       beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
-      //ATOMIC(
+      ATOMIC(
         midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
-      //);
+      );
     } else if (is_bpm_on_beat(ticks,duration)) {
-      //ATOMIC(
+      ATOMIC(
         midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      //)
+      )
     }
  
     if (midi_apcmini && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
-      //Serial.println(F("redraw_immediately is set!"));
+      //debug_println(F("redraw_immediately is set!"));
       apcmini_update_clock_display();
       redraw_immediately = false;
     }
@@ -104,7 +104,7 @@ inline void apcmini_loop() {
     //)
   }
 #endif
-  //Serial.println(F("finished apcmini_loop"));
+  //debug_println(F("finished apcmini_loop"));
 }
 
 #ifdef ENABLE_APCMINI_DISPLAY
@@ -125,11 +125,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
 #endif
   } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
     // restart/resync immediately
-    Serial.println(F("APCmini pressed, restarting downbeat"));
+    debug_println(F("APCmini pressed, restarting downbeat"));
     on_restart();
   } else if (inNumber==BUTTON_RESTART_AT_END_OF_BAR && apcmini_shift_held) {
     // restart/resync at end of bar
-    Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
+    debug_println(F("APCmini pressed, restarting downbeat on next bar"));
 #ifdef ENABLE_APCMINI_DISPLAY
     //ATOMIC(
       midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
@@ -163,8 +163,8 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     clock_delay[clock_selected] -= 1; // wraps around to 255
     if (clock_delay[clock_selected]>CLOCK_DELAY_MAX)
       clock_delay[clock_selected] = CLOCK_DELAY_MAX;
-    Serial.print(F("Set selected clock delay to "));
-    Serial.println(clock_delay[clock_selected]);
+    debug_print(F("Set selected clock delay to "));
+    debug_println(clock_delay[clock_selected]);
     //redraw_immediately = true;
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
@@ -175,8 +175,8 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     clock_delay[clock_selected] += 1;
     if (clock_delay[clock_selected]>7)
       clock_delay[clock_selected] = 0;
-    Serial.print(F("Set selected clock delay to "));
-    Serial.println(clock_delay[clock_selected]);
+    debug_print(F("Set selected clock delay to "));
+    debug_println(clock_delay[clock_selected]);
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
@@ -209,26 +209,26 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     // for debugging -- single-step through a tick
     single_step = true;
     //ticks += 1;
-    Serial.print(F("Single-stepped to tick "));
-    Serial.println(ticks);*/
+    debug_print(F("Single-stepped to tick "));
+    debug_println(ticks);*/
 #ifdef ENABLE_SEQUENCER
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
-    Serial.print(F("For inNumber "));
-    Serial.print(inNumber);
-    Serial.print(F(" got row (ie clock) "));
-    Serial.print(row);
-    Serial.print(F(" and column "));
+    debug_print(F("For inNumber "));
+    debug_print(inNumber);
+    debug_print(F(" got row (ie clock) "));
+    debug_print(row);
+    debug_print(F(" and column "));
     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
-    Serial.println(col);
+    debug_println(col);
     sequencer_press(row, col, apcmini_shift_held);
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_sequence_row(row);
 #endif
 #endif 
   } else {
-    Serial.print(F("Unknown akaiAPC button with note number "));
-    Serial.println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
+    debug_print(F("Unknown akaiAPC button with note number "));
+    debug_println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
   }
 
   if (redraw_immediately) 
@@ -245,12 +245,12 @@ void apcmini_note_off(byte inChannel, byte inNumber, byte inVelocity) {
 // called from loop, already inside ATOMIC, so don't use ATOMIC here
 void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
   //ATOMIC(
-    /*Serial.print(F("APCMINI CC ch"));
-    Serial.print(inChannel);
-    Serial.print(F("\tnum "));
-    Serial.print(inNumber);
-    Serial.print(F("\tvalue: "));
-    Serial.println(inValue);*/
+    /*debug_print(F("APCMINI CC ch"));
+    debug_print(inChannel);
+    debug_print(F("\tnum "));
+    debug_print(inNumber);
+    debug_print(F("\tvalue: "));
+    debug_println(inValue);*/
   //)
   debug_free_ram();
 
@@ -262,7 +262,7 @@ void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
 }
 
 // called inside interrupt
-void apcmini_on_tick(volatile uint32_t ticks) {
+void apcmini_on_tick(uint32_t ticks) {
   //static byte beat_counter;
   
   if (midi_apcmini) {
@@ -272,7 +272,7 @@ void apcmini_on_tick(volatile uint32_t ticks) {
   }
 }
 
-// called inside interrupt
+// called inside interrupt / loop where ATOMIC is already set
 void apcmini_on_restart() {
   if (midi_apcmini) {
     //ATOMIC(
@@ -287,7 +287,7 @@ void apcmini_on_restart() {
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_clear_display() {
-  Serial.println(F("Clearing APC display.."));
+  debug_println(F("Clearing APC display.."));
   for (byte x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
     for (byte y = 0 ; y < APCMINI_DISPLAY_WIDTH ;y++) {
       ATOMIC(
@@ -301,7 +301,7 @@ void apcmini_clear_display() {
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display() {
-  //Serial.println(F("starting apcmini_update_clock_display().."));
+  //debug_println(F("starting apcmini_update_clock_display().."));
   // draw the clock divisions
 #ifdef ENABLE_CLOCKS
   for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
@@ -317,7 +317,7 @@ void apcmini_update_clock_display() {
   ATOMIC(
     last_updated_display = millis();
   )
-  //Serial.println(F("returning from apcmini_update_clock_display()"));
+  //debug_println(F("returning from apcmini_update_clock_display()"));
 }
 #endif
 

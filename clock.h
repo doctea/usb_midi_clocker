@@ -3,22 +3,22 @@
   #ifdef USE_UCLOCK
   
   // The callback function wich will be called by Clock each Pulse of 96PPQN clock resolution.
-  void ClockOut96PPQN(volatile uint32_t *tick) {
+  void ClockOut96PPQN(uint32_t *tick) {
     do_tick(*tick);
   }
   
   // The callback function wich will be called when clock starts by using Clock.start() method.
   void onClockStart() {
-    Serial.println(F("onClockStart()!"));
+    debug_println(F("onClockStart()!"));
     //Serial.write(MIDI_START);
     ATOMIC(
       ticks = 0;
     )
-    Serial.println(F("Clock started!"));
+    debug_println(F("Clock started!"));
   }
   
   void onClockStop() {
-    Serial.print(F("Clock stopped!"));
+    debug_print(F("Clock stopped!"));
   }
   
   void setup_uclock() {

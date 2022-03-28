@@ -72,9 +72,9 @@ inline bool read_sequence(byte row, byte col) {
   return bitRead(sequence_data[row], /*NUM_STEPS -*/ col);
 }
 inline void write_sequence(byte row, byte col, byte value) {
-  ATOMIC(
+  //ATOMIC(
     bitWrite(sequence_data[row], /*NUM_STEPS -*/ col, value);
-  )
+  //)
 }
 void sequencer_press(byte row, byte col, bool shift = false) {
   //sequence_data[row][col] = !sequence_data[row][col];
@@ -85,9 +85,9 @@ void sequencer_press(byte row, byte col, bool shift = false) {
 bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0) {
   byte step = step_number_from_ticks(ticks); //(ticks / (PPQN)) % NUM_STEPS;
   /*if (offset==0 && is_bpm_on_beat(ticks)) {
-    Serial.print(F("On step "));
-    Serial.print(step);
-    Serial.println(F("!"));
+    debug_print(F("On step "));
+    debug_print(step);
+    debug_println(F("!"));
   }*/
 
   byte v = read_sequence(sequence, step);
@@ -98,15 +98,15 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0)
     ) {
 #ifdef DEBUG_SEQUENCER
       if (offset==0) {
-        Serial.print(F("For tick "));
-        Serial.print(ticks);
-        Serial.print(F(" got step_number "));
-        Serial.print(step);
-        Serial.print(F(", trigger sequence #"));
-        Serial.print(sequence);
-        Serial.print(F(" on step "));
-        Serial.print(step);
-        Serial.println(F("!"));
+        debug_print(F("For tick "));
+        debug_print(ticks);
+        debug_print(F(" got step_number "));
+        debug_print(step);
+        debug_print(F(", trigger sequence #"));
+        debug_print(sequence);
+        debug_print(F(" on step "));
+        debug_print(step);
+        debug_println(F("!"));
       } 
 #endif
       return true;
