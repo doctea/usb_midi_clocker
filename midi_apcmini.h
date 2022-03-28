@@ -108,7 +108,7 @@ inline void apcmini_loop() {
   if (midi_apcmini && (redraw_immediately || ticks - last_updated_display > 5)) { // || ticks - last_updated_display > PPQN) {
     //debug_println(F("redraw_immediately is set!"));    
     ATOMIC(
-      apcmini_update_clock_display();
+      apcmini_update_clock_display(); // seemed a LOT lessy crashy -- maybe even not crashy at all -- when this was disabled..?
     )
     redraw_immediately = false;
   }
