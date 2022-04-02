@@ -1,9 +1,13 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices wit
 
+//#ifdef SEEEDUINO
+//#define ARDUINO_SAMD_ZERO
+//#endif
+
 #include "debug.h"
 
-#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
@@ -32,7 +36,7 @@ int duration = 2;
 
 USB Usb;
 USBHub  Hub1(&Usb);
-//USBHub  Hub2(&Usb);
+USBHub  Hub2(&Usb);
 
 #define NUMBER_OF_DEVICES 3
 UHS2MIDI_CREATE_INSTANCE(&Usb, 0, Midi1);
@@ -131,10 +135,12 @@ void loop()
     Usb.Task();
   )
 
+#ifdef USE_UCLOCK
   if (set_tempo) {
     uClock.setTempo(bpm_current);
     set_tempo = false;
   }
+#endif
 
 #ifdef ENABLE_BEATSTEP
     beatstep_loop();
