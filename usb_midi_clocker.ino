@@ -4,10 +4,16 @@
 //#ifdef SEEEDUINO
 //#define ARDUINO_SAMD_ZERO
 //#endif
+//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+
+#ifdef USE_UCLOCK
+#include <uClock.h>
+#else
+#define ATOMIC(X) X
+#endif
 
 #include "debug.h"
-
-//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+#include "storage.h"
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP
@@ -25,12 +31,6 @@
 #include <usbhub.h>
 
 void do_tick(uint32_t ticks);
-
-#ifdef USE_UCLOCK
-#include <uClock.h>
-#else
-#define ATOMIC(X) X
-#endif
 
 int duration = 2;
 
@@ -155,7 +155,7 @@ void loop()
 #endif
 
 #ifndef USE_UCLOCK
-    if ( millis()-t1 > ms_per_tick ) {
+    if ( playing && millis()-t1 > ms_per_tick ) {
       do_tick(ticks);
       ticks++;
       t1 = millis();

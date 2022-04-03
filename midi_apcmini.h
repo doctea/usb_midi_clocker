@@ -30,15 +30,6 @@
 #define BUTTON_RESTART_IMMEDIATELY    APCMINI_BUTTON_UP
 #define BUTTON_RESTART_AT_END_OF_BAR  APCMINI_BUTTON_DEVICE
 
-// button colours from https://remotify.io/community/question/led-feedback-values
-#define APCMINI_OFF           0
-#define APCMINI_ON            1
-#define APCMINI_GREEN         1
-#define APCMINI_GREEN_BLINK   2
-#define APCMINI_RED           3
-#define APCMINI_RED_BLINK     4
-#define APCMINI_YELLOW        5
-#define APCMINI_YELLOW_BLINK  6
 
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
@@ -56,6 +47,7 @@ volatile unsigned long last_updated_display = 0;
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display();
+void apcmini_update_position_display(int ticks);
 #endif
 
 volatile byte beat_counter;
@@ -74,49 +66,25 @@ inline void apcmini_loop() {
 
 #ifdef ENABLE_APCMINI_DISPLAY
   static unsigned long last_processed_tick;
-
+  long ticks2;
   ATOMIC(
     bool should_process = last_processed_tick!=ticks;
+    ticks2 = ticks;
   )
   if (!should_process) return;
 
-  ATOMIC(
-    bool on_beat = is_bpm_on_beat(ticks);
-  )
-
-  if (on_beat) {
-#ifdef DEBUG_TICKS
-    debug_print(F("apcmini w/"));
-    /*debug_print(ticks);
-    debug_print(F("\tCounter is "));*/
-    debug_print(beat_counter);
-    debug_print(F(" "));
-#endif
-    ATOMIC(
-      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
-      midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
-    )
-  } else {
-    ATOMIC(
-      bool on_beat_stop = is_bpm_on_beat(ticks, duration);
-      if (on_beat_stop) {
-        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      }
-    )
-  }
-
-  if (midi_apcmini && (redraw_immediately || ticks - last_updated_display > 5)) { // || ticks - last_updated_display > PPQN) {
-    //debug_println(F("redraw_immediately is set!"));    
-    ATOMIC(
-      apcmini_update_clock_display(); // seemed a LOT lessy crashy -- maybe even not crashy at all -- when this was disabled..?
-    )
+  apcmini_update_position_display(ticks2);
+ 
+  if (midi_apcmini && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
+    //Serial.println(F("redraw_immediately is set!"));
+    apcmini_update_clock_display();
     redraw_immediately = false;
   }
+#endif
 
   ATOMIC(
     last_processed_tick = ticks;
   )
-#endif
   //debug_println(F("finished apcmini_loop"));
 }
 
@@ -129,11 +97,16 @@ inline void apcmini_loop() {
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
     // start / stop play
+    if (!playing)
+      on_restart();
+      
     playing = !playing;
+    
 #ifdef USE_UCLOCK
-    if (playing)
+    if (playing) {
+      on_restart();
       uClock.start();
-    else
+    } else
       uClock.stop();
 #endif
   } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
@@ -173,23 +146,15 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else if (inNumber==APCMINI_BUTTON_LEFT) {
     // shift clock offset left
     redraw_immediately = true;
-    clock_delay[clock_selected] -= 1; // wraps around to 255
-    if (clock_delay[clock_selected]>CLOCK_DELAY_MAX)
-      clock_delay[clock_selected] = CLOCK_DELAY_MAX;
-    debug_print(F("Set selected clock delay to "));
-    debug_println(clock_delay[clock_selected]);
+    decrease_clock_delay(clock_selected);
     //redraw_immediately = true;
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
     // shift clock offset right
-    //redraw_immediately = true;
-    clock_delay[clock_selected] += 1;
-    if (clock_delay[clock_selected]>7)
-      clock_delay[clock_selected] = 0;
-    debug_print(F("Set selected clock delay to "));
-    debug_println(clock_delay[clock_selected]);
+    redraw_immediately = true;
+    increase_clock_delay(clock_selected);
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
@@ -201,15 +166,17 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     clock_selected = clock_number;
     
     if (apcmini_shift_held) {
-      clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
+      increase_clock_multiplier(clock_number);
+      //clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
     } else {
-      clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
+      decrease_clock_multiplier(clock_number);
+      //clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
     }
     
-    if (clock_multiplier[clock_number]>CLOCK_MULTIPLIER_MAX)
+    /*if (clock_multiplier[clock_number]>CLOCK_MULTIPLIER_MAX)
       clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MIN;
     else if (clock_multiplier[clock_number]<CLOCK_MULTIPLIER_MIN) 
-      clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;
+      clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;*/
 
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
@@ -218,12 +185,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
 #endif
   } else if (inNumber==APCMINI_BUTTON_SHIFT) {
     apcmini_shift_held = true;
-/*  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
-    // for debugging -- single-step through a tick
-    single_step = true;
-    //ticks += 1;
-    debug_print(F("Single-stepped to tick "));
-    debug_println(ticks);*/
+  } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
+    load_state(0, &current_state);
+
+  } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
+    save_state(0, &current_state);
 #ifdef ENABLE_SEQUENCER
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);

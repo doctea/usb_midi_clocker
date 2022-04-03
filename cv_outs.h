@@ -6,56 +6,60 @@
 #define PIN_CLOCK_3   6
 #define PIN_CLOCK_4   7
 
-#define NUM_CLOCKS 4
-#define CLOCK_MULTIPLIER_MIN  0.5
-#define CLOCK_MULTIPLIER_MAX 16.0
+#define CLOCK_MULTIPLIER_MIN  0.25
+#define CLOCK_MULTIPLIER_MAX  16.0
 #define CLOCK_DELAY_MAX 15
 
-float clock_multiplier[NUM_CLOCKS] = {
-  4.0,
-  2.0,
-  1.0,
-  0.5
+#define NUM_CLOCK_MULTIPLIER_VALUES 7
+
+float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
+  0.25,     // 0
+  0.5,      // 1
+  1,        // 2
+  2,        // 3
+  4,        // 4
+  8,        // 5
+  16        // 6
 };
+
+float get_clock_multiplier(byte i) {
+  return clock_multiplier_values[current_state.clock_multiplier[i]];
+}
+void increase_clock_multiplier(byte i) {
+  current_state.clock_multiplier[i]++;
+  if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES)
+    current_state.clock_multiplier[i] = 0;
+}
+void decrease_clock_multiplier(byte i) {
+  current_state.clock_multiplier[i]--;
+  if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES) // ie has wrapped around to 255
+    current_state.clock_multiplier[i] = NUM_CLOCK_MULTIPLIER_VALUES-1;
+}
+
+byte get_clock_delay(byte i) {
+  return current_state.clock_delay[i];
+}
+byte decrease_clock_delay(byte clock_selected, byte amount = 1) {
+  current_state.clock_delay[clock_selected] -= amount; // wraps around to 255
+  if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
+    current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;  
+  Serial.print(F("Decreased selected clock delay to "));
+  Serial.println(get_clock_delay(clock_selected));
+}
+byte increase_clock_delay(byte clock_selected, byte amount = 1) {
+  current_state.clock_delay[clock_selected] += amount;
+  if (current_state.clock_delay[clock_selected]>7)
+    current_state.clock_delay[clock_selected] = 0;
+  Serial.print(F("Increased selected clock delay to "));
+  Serial.println(current_state.clock_delay[clock_selected]);
+}
 
 #ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
 #endif
 
-byte clock_delay[NUM_CLOCKS] = {
-  0, 0, 0, 0
-};
-
 void update_cv_outs(unsigned long ticks) {
   // start bar (every fourth quarter note)
-  /*if (is_bpm_on_bar(ticks)) {
-    digitalWrite(PIN_CLOCK_1, HIGH);
-  } else if (is_bpm_on_bar(ticks,duration)) {
-    digitalWrite(PIN_CLOCK_1, LOW);
-  }
-
-  // every two quarter notes
-  if (is_bpm_on_half_bar(ticks)) {
-    digitalWrite(PIN_CLOCK_2, HIGH);
-  } else if (is_bpm_on_half_bar(ticks,duration)) {
-    digitalWrite(PIN_CLOCK_2, LOW);
-  }
-
-  // every quarter note
-  if (is_bpm_on_beat(ticks)) {
-    digitalWrite(PIN_CLOCK_3, HIGH);
-
-  } else if (is_bpm_on_beat(ticks, duration)) {
-    digitalWrite(PIN_CLOCK_3, LOW);
-  }
-
-  // every eighth note
-  if (is_bpm_on_eighth(ticks)) { 
-    digitalWrite(PIN_CLOCK_4, HIGH);
-  } else if (is_bpm_on_eighth(ticks,duration)) {
-    digitalWrite(PIN_CLOCK_4, LOW);
-  }*/
-
   for (int i = 0 ; i < NUM_CLOCKS ; i++) {
     bool should_go_high = false;
     bool should_go_low  = false;
@@ -69,8 +73,8 @@ void update_cv_outs(unsigned long ticks) {
 #endif
 #ifdef ENABLE_CLOCKS
       is_bpm_on_multiplier(
-        (long)ticks - (PPQN*clock_delay[i]), 
-        clock_multiplier[i]
+        (long)ticks - (PPQN*get_clock_delay(i)), 
+        get_clock_multiplier(i)
       )
 #endif
     ) {
@@ -84,9 +88,9 @@ void update_cv_outs(unsigned long ticks) {
 #endif
 #ifdef ENABLE_CLOCKS
       is_bpm_on_multiplier(
-        (long)ticks - (PPQN*clock_delay[i]), 
-        clock_multiplier[i], 
-        duration                      //+((clock_delay[i]%8)*PPQN))
+        (long)ticks - (PPQN*get_clock_delay(i)), 
+        get_clock_multiplier(i), 
+        duration                     
       )
 #endif
     ) {
