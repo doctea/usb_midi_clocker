@@ -141,23 +141,15 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else if (inNumber==APCMINI_BUTTON_LEFT) {
     // shift clock offset left
     redraw_immediately = true;
-    current_state.clock_delay[clock_selected] -= 1; // wraps around to 255
-    if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
-      current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;
-    Serial.print(F("Set selected clock delay to "));
-    Serial.println(current_state.clock_delay[clock_selected]);
+    decrease_clock_delay(clock_selected);
     //redraw_immediately = true;
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
     // shift clock offset right
-    //redraw_immediately = true;
-    current_state.clock_delay[clock_selected] += 1;
-    if (current_state.clock_delay[clock_selected]>7)
-      current_state.clock_delay[clock_selected] = 0;
-    Serial.print(F("Set selected clock delay to "));
-    Serial.println(current_state.clock_delay[clock_selected]);
+    redraw_immediately = true;
+    increase_clock_delay(clock_selected);
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif

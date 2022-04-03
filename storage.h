@@ -21,7 +21,7 @@ savestate current_state;
 
 void save_state(byte preset_number, savestate *input) {
   int eeAddress = 16 + (preset_number * sizeof(savestate));
-  Serial.print("save_state at ");
+  Serial.print(F("save_state at "));
   Serial.println(eeAddress);
   EEPROM.put(eeAddress, *input);
 }
@@ -32,7 +32,7 @@ void load_state(byte preset_number, savestate *output) {
   if (id==SAVE_ID_BYTE_V0 || id==SAVE_ID_BYTE_V1) {
     Serial.print(F("Found ID "));
     Serial.print(id);
-    Serial.print(" at ");
+    Serial.print(F(" at "));
     Serial.print(eeAddress);
     Serial.println(F(" - loading! :D"));
     EEPROM.get(eeAddress, *output);
