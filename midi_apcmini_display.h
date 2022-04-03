@@ -50,25 +50,23 @@ void redraw_clock_row(byte c) {
 }
 
 void apcmini_update_position_display(int ticks) {
-  //ATOMIC(
-    if (is_bpm_on_beat(ticks)) {
-  #ifdef DEBUG_TICKS
-      Serial.print(F("apcmini w/"));
-      /*Serial.print(ticks);
-      Serial.print(F("\tCounter is "));*/
-      Serial.print(beat_counter);
-      Serial.print(F(" "));
-  #endif
-      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
-      ATOMIC(
-        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
-      );
-    } else if (is_bpm_on_beat(ticks,duration)) {
-      ATOMIC(
-        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      )
-    }
-  //)
+  byte beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
+  if (is_bpm_on_beat(ticks)) {
+    #ifdef DEBUG_TICKS
+        Serial.print(F("apcmini w/"));
+        /*Serial.print(ticks);
+        Serial.print(F("\tCounter is "));*/
+        Serial.print(beat_counter);
+        Serial.print(F(" "));
+    #endif
+    ATOMIC(
+      midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
+    );
+  } else if (is_bpm_on_beat(ticks,duration)) {
+    ATOMIC(
+      midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
+    )
+  }
 }
 
 void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
