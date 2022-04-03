@@ -30,15 +30,6 @@
 #define BUTTON_RESTART_IMMEDIATELY    APCMINI_BUTTON_UP
 #define BUTTON_RESTART_AT_END_OF_BAR  APCMINI_BUTTON_DEVICE
 
-// button colours from https://remotify.io/community/question/led-feedback-values
-#define APCMINI_OFF           0
-#define APCMINI_ON            1
-#define APCMINI_GREEN         1
-#define APCMINI_GREEN_BLINK   2
-#define APCMINI_RED           3
-#define APCMINI_RED_BLINK     4
-#define APCMINI_YELLOW        5
-#define APCMINI_YELLOW_BLINK  6
 
 
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
@@ -56,6 +47,7 @@ unsigned long last_updated_display = 0;
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display();
+void apcmini_update_position_display(int ticks);
 #endif
 
 byte beat_counter;
@@ -76,23 +68,7 @@ inline void apcmini_loop() {
   static unsigned long last_processed_tick;
 
   if (last_processed_tick!=ticks) {
-    if (is_bpm_on_beat(ticks)) {
-#ifdef DEBUG_TICKS
-      Serial.print(F("apcmini w/"));
-      /*Serial.print(ticks);
-      Serial.print(F("\tCounter is "));*/
-      Serial.print(beat_counter);
-      Serial.print(F(" "));
-#endif
-      beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
-      //ATOMIC(
-        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
-      //);
-    } else if (is_bpm_on_beat(ticks,duration)) {
-      //ATOMIC(
-        midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      //)
-    }
+    apcmini_update_position_display(ticks);
  
     if (midi_apcmini && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
       //Serial.println(F("redraw_immediately is set!"));
