@@ -8,15 +8,14 @@
 #define NUM_STEPS     8
 
 #ifdef SEQUENCER_BYTES
-
 #define SEQUENCER_MAX_VALUE 3
-
-volatile byte sequence_data[NUM_SEQUENCES][NUM_STEPS] = {
+/*volatile byte sequence_data[NUM_SEQUENCES][NUM_STEPS] = {
   { 0, 0, 0, 0, 0, 0, 0, 0 },
   { 0, 0, 0, 0, 0, 0, 0, 0 },
   { 1, 0, 1, 0, 0, 0, 0, 0 },
   { 0, 0, 0, 1, 0, 0, 0, 0 }
-};
+};*/
+//byte *sequence_data[NUM_SEQUENCES][NUM_STEPS] = &current_state.sequence_data;
 #else
 volatile byte sequence_data[NUM_SEQUENCES] = { // order is reversed because bit 0 = rightmost bit
   0b00000000,
@@ -47,17 +46,17 @@ inline int step_number_from_ticks(signed long ticks) {
 
 #ifdef SEQUENCER_BYTES
 inline byte read_sequence(byte row, byte col) {
-  return sequence_data[row][col];
+  return current_state.sequence_data[row][col];
 }
 inline void write_sequence(byte row, byte col, byte value) {
   /*ATOMIC(
     sequence_data[row][col] = !sequence_data[row][col];
   )*/
-  sequence_data[row][col] = value;
-  if (sequence_data[row][col]==255)
-    sequence_data[row][col] = SEQUENCER_MAX_VALUE;
-  else if (sequence_data[row][col]>SEQUENCER_MAX_VALUE)
-    sequence_data[row][col] = 0;
+  current_state.sequence_data[row][col] = value;
+  if (current_state.sequence_data[row][col]==255)
+    current_state.sequence_data[row][col] = SEQUENCER_MAX_VALUE;
+  else if (current_state.sequence_data[row][col]>SEQUENCER_MAX_VALUE)
+    current_state.sequence_data[row][col] = 0;
 }
 
 void sequencer_press(byte row, byte col, bool shift = false) {

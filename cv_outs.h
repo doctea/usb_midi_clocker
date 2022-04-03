@@ -6,25 +6,51 @@
 #define PIN_CLOCK_3   6
 #define PIN_CLOCK_4   7
 
-#define NUM_CLOCKS 4
-#define CLOCK_MULTIPLIER_MIN  0.5
-#define CLOCK_MULTIPLIER_MAX 16.0
+#define CLOCK_MULTIPLIER_MIN  0.25
+#define CLOCK_MULTIPLIER_MAX  16.0
 #define CLOCK_DELAY_MAX 15
 
-float clock_multiplier[NUM_CLOCKS] = {
-  4.0,
-  2.0,
-  1.0,
-  0.5
+#define NUM_CLOCK_MULTIPLIER_VALUES 7
+
+float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
+  0.25,     // 0
+  0.5,      // 1
+  1,        // 2
+  2,        // 3
+  4,        // 4
+  8,        // 5
+  16        // 6
 };
+
+/*byte clock_multiplier[NUM_CLOCKS] = {
+  5,
+  4,
+  3,
+  2,
+};*/
+//byte *clock_multiplier[NUM_CLOCKS] = &current_state.clock_multiplier;
+
+float get_clock_multiplier(byte i) {
+  return clock_multiplier_values[current_state.clock_multiplier[i]];
+}
+void increase_clock_multiplier(byte i) {
+  current_state.clock_multiplier[i]++;
+  if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES)
+    current_state.clock_multiplier[i] = 0;
+}
+void decrease_clock_multiplier(byte i) {
+  current_state.clock_multiplier[i]--;
+  if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES) // ie has wrapped around to 255
+    current_state.clock_multiplier[i] = NUM_CLOCK_MULTIPLIER_VALUES-1;
+}
 
 #ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
 #endif
 
-byte clock_delay[NUM_CLOCKS] = {
+/*byte clock_delay[NUM_CLOCKS] = {
   0, 0, 0, 0
-};
+};*/
 
 void update_cv_outs(unsigned long ticks) {
   // start bar (every fourth quarter note)
@@ -69,8 +95,8 @@ void update_cv_outs(unsigned long ticks) {
 #endif
 #ifdef ENABLE_CLOCKS
       is_bpm_on_multiplier(
-        (long)ticks - (PPQN*clock_delay[i]), 
-        clock_multiplier[i]
+        (long)ticks - (PPQN*current_state.clock_delay[i]), 
+        get_clock_multiplier(i)
       )
 #endif
     ) {
@@ -84,8 +110,8 @@ void update_cv_outs(unsigned long ticks) {
 #endif
 #ifdef ENABLE_CLOCKS
       is_bpm_on_multiplier(
-        (long)ticks - (PPQN*clock_delay[i]), 
-        clock_multiplier[i], 
+        (long)ticks - (PPQN*current_state.clock_delay[i]), 
+        get_clock_multiplier(i), 
         duration                      //+((clock_delay[i]%8)*PPQN))
       )
 #endif

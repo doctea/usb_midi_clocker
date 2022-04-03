@@ -116,11 +116,16 @@ inline void apcmini_loop() {
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
     // start / stop play
+    if (!playing)
+      on_restart();
+      
     playing = !playing;
+    
 #ifdef USE_UCLOCK
-    if (playing)
+    if (playing) {
+      on_restart();
       uClock.start();
-    else
+    } else
       uClock.stop();
 #endif
   } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
@@ -160,11 +165,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else if (inNumber==APCMINI_BUTTON_LEFT) {
     // shift clock offset left
     redraw_immediately = true;
-    clock_delay[clock_selected] -= 1; // wraps around to 255
-    if (clock_delay[clock_selected]>CLOCK_DELAY_MAX)
-      clock_delay[clock_selected] = CLOCK_DELAY_MAX;
+    current_state.clock_delay[clock_selected] -= 1; // wraps around to 255
+    if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
+      current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;
     Serial.print(F("Set selected clock delay to "));
-    Serial.println(clock_delay[clock_selected]);
+    Serial.println(current_state.clock_delay[clock_selected]);
     //redraw_immediately = true;
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
@@ -172,11 +177,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
     // shift clock offset right
     //redraw_immediately = true;
-    clock_delay[clock_selected] += 1;
-    if (clock_delay[clock_selected]>7)
-      clock_delay[clock_selected] = 0;
+    current_state.clock_delay[clock_selected] += 1;
+    if (current_state.clock_delay[clock_selected]>7)
+      current_state.clock_delay[clock_selected] = 0;
     Serial.print(F("Set selected clock delay to "));
-    Serial.println(clock_delay[clock_selected]);
+    Serial.println(current_state.clock_delay[clock_selected]);
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
@@ -188,15 +193,17 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     clock_selected = clock_number;
     
     if (apcmini_shift_held) {
-      clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
+      increase_clock_multiplier(clock_number);
+      //clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
     } else {
-      clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
+      decrease_clock_multiplier(clock_number);
+      //clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
     }
     
-    if (clock_multiplier[clock_number]>CLOCK_MULTIPLIER_MAX)
+    /*if (clock_multiplier[clock_number]>CLOCK_MULTIPLIER_MAX)
       clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MIN;
     else if (clock_multiplier[clock_number]<CLOCK_MULTIPLIER_MIN) 
-      clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;
+      clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;*/
 
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
@@ -211,6 +218,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     //ticks += 1;
     Serial.print(F("Single-stepped to tick "));
     Serial.println(ticks);*/
+  } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
+    load_state(0, &current_state);
+
+  } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
+    save_state(0, &current_state);
 #ifdef ENABLE_SEQUENCER
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
