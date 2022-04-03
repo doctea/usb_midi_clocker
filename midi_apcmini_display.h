@@ -21,10 +21,10 @@ const byte colour_intensity[] = {
   APCMINI_YELLOW,
   APCMINI_RED,
 };
-inline byte get_colour(byte l) {
-  if (l>=sizeof(colour_intensity))
-    l = sizeof(colour_intensity)-1;
-  return colour_intensity[l];
+inline byte get_colour(byte lev) {
+  if (lev>=sizeof(colour_intensity))
+    lev = sizeof(colour_intensity)-1;
+  return colour_intensity[lev];
 }
 
 #ifdef ENABLE_CLOCKS
@@ -39,7 +39,7 @@ void redraw_clock_row(byte c) {
         ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(LEVEL_2), 1));
       } else if (cm<=1.0) {
         ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(LEVEL_1), 1));
-      } else if (io%(byte)cm==0) {
+      } else if (!is_clock_off(c) && io%(byte)cm==0) {
         byte colour =  cm  > 8.0 ? get_colour(LEVEL_2) : 
                       (cm  > 4.0 ? get_colour(LEVEL_1) : get_colour(LEVEL_1));
         ATOMIC(midi_apcmini->sendNoteOn(start_row+i, colour, 1));
@@ -83,7 +83,7 @@ void redraw_sequence_row(byte c) {
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       byte v = read_sequence(c,i);
       if (v) { //should_trigger_sequence(i*PPQN,c)) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(v) - 1 /*(2*(v-1)) + APCMINI_ON*/, 1);)
+        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
       } else {
         ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);)
       }
