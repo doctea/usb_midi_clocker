@@ -30,11 +30,12 @@ It also has a very rudimentary sequencer, using Akai APCMini for input+display, 
 
 ### TODO/Future 
 
+- Port to Teensy 4.1 and merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
 - Get it working in uClock mode without crashes
 - Sync from external input (MIDI and CV)
 - More outputs
 - MIDI DIN or TRS input + output
 - Better sequencer
-- Route MIDI data and notes from device X to device Y?
+- Configurable routing of MIDI data and notes from device X to device Y?
 - Sequencer that records and playback MIDI notes or CV
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
