@@ -10,8 +10,7 @@
 #define CLOCK_MULTIPLIER_MAX  16.0
 #define CLOCK_DELAY_MAX 15
 
-#define NUM_CLOCK_MULTIPLIER_VALUES 7
-
+#define NUM_CLOCK_MULTIPLIER_VALUES 8
 float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
   0.25,     // 0
   0.5,      // 1
@@ -19,8 +18,10 @@ float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
   2,        // 3
   4,        // 4
   8,        // 5
-  16        // 6
+  16,       // 6
+  32,       // 7
 };
+#define CLOCK_MULTIPLIER_OFF  32.0
 
 float get_clock_multiplier(byte i) {
   return clock_multiplier_values[current_state.clock_multiplier[i]];
@@ -34,6 +35,9 @@ void decrease_clock_multiplier(byte i) {
   current_state.clock_multiplier[i]--;
   if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES) // ie has wrapped around to 255
     current_state.clock_multiplier[i] = NUM_CLOCK_MULTIPLIER_VALUES-1;
+}
+bool is_clock_off(byte i) {
+  return ((byte)get_clock_multiplier(i)>=CLOCK_MULTIPLIER_OFF);
 }
 
 byte get_clock_delay(byte i) {
@@ -54,6 +58,16 @@ byte increase_clock_delay(byte clock_selected, byte amount = 1) {
   Serial.println(current_state.clock_delay[clock_selected]);
 }
 
+bool should_trigger_clock(unsigned long ticks, byte i, byte offset = 0) {
+  byte clock_delay = get_clock_delay(i);
+  return !is_clock_off(i) && 
+    is_bpm_on_multiplier(
+      (long)ticks - (PPQN*clock_delay), 
+      get_clock_multiplier(i),
+      offset
+    );
+}
+
 #ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
 #endif
@@ -72,10 +86,7 @@ void update_cv_outs(unsigned long ticks) {
       ||
 #endif
 #ifdef ENABLE_CLOCKS
-      is_bpm_on_multiplier(
-        (long)ticks - (PPQN*get_clock_delay(i)), 
-        get_clock_multiplier(i)
-      )
+      should_trigger_clock(ticks, i)
 #endif
     ) {
         should_go_high = true;
@@ -87,11 +98,7 @@ void update_cv_outs(unsigned long ticks) {
       ||
 #endif
 #ifdef ENABLE_CLOCKS
-      is_bpm_on_multiplier(
-        (long)ticks - (PPQN*get_clock_delay(i)), 
-        get_clock_multiplier(i), 
-        duration                     
-      )
+      should_trigger_clock(ticks, i, duration)
 #endif
     ) {
       should_go_low = true;
