@@ -4,7 +4,7 @@
 //#ifdef SEEEDUINO
 //#define ARDUINO_SAMD_ZERO
 //#endif
-//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 
 #ifdef USE_UCLOCK
 #include <uClock.h>

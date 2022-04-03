@@ -17,7 +17,7 @@ typedef struct savestate {
   byte clock_delay[NUM_CLOCKS] = { 0, 0, 0, 0 };
 };
 
-savestate current_state;
+savestate current_state;  // global current state
 
 void save_state(byte preset_number, savestate *input) {
   ATOMIC(

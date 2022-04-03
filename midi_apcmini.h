@@ -50,8 +50,6 @@ void apcmini_update_clock_display();
 void apcmini_update_position_display(int ticks);
 #endif
 
-volatile byte beat_counter;
-
 inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
     ATOMIC(
