@@ -1,7 +1,6 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices wit
 
-
 #include "debug.h"
 #include "storage.h"
 
@@ -46,36 +45,10 @@ int duration = 2;
 
 #include "multi_usb_handlers.h"
 
-void onInit1() {
-  setupmidi(0);
-}
-
-void onInit2() {
-  setupmidi(1);
-}
-
-void onInit3() {
-  setupmidi(2);
-}
-
 void setup()
 {
   Serial.begin(115200);
   while (!Serial);
-
-  Serial.println(F("Arduino initialising usb/midi..."));
-
-  __uhs2Midi1.attachOnInit(onInit1);
-  Midi1.turnThruOff();
-  Midi1.begin(MIDI_CHANNEL_OMNI);
-
-  __uhs2Midi2.attachOnInit(onInit2);
-  Midi2.turnThruOff();
-  Midi2.begin(MIDI_CHANNEL_OMNI);
-
-  __uhs2Midi3.attachOnInit(onInit3);
-  Midi3.turnThruOff();
-  Midi3.begin(MIDI_CHANNEL_OMNI);
 
   pinMode(PIN_CLOCK_1, OUTPUT);
   pinMode(PIN_CLOCK_2, OUTPUT);
@@ -83,10 +56,7 @@ void setup()
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
 
-  if (Usb.Init() == -1) {
-    while (1); //halt
-  }//if (Usb.Init() == -1...
-  Serial.println(F("USB ready."));
+  setup_multi_usb();
   delay( 1000 );
   
   Serial.println(F("Arduino ready."));

@@ -84,6 +84,40 @@ void on_restart() {
   Serial.println(F("<==on_restart()"));
 }
 
+
+void onInit1() {
+  setupmidi(0);
+}
+
+void onInit2() {
+  setupmidi(1);
+}
+
+void onInit3() {
+  setupmidi(2);
+}
+
+void setup_multi_usb() {
+  Serial.println(F("Arduino initialising usb/midi..."));
+
+  __uhs2Midi1.attachOnInit(onInit1);
+  Midi1.turnThruOff();
+  Midi1.begin(MIDI_CHANNEL_OMNI);
+
+  __uhs2Midi2.attachOnInit(onInit2);
+  Midi2.turnThruOff();
+  Midi2.begin(MIDI_CHANNEL_OMNI);
+
+  __uhs2Midi3.attachOnInit(onInit3);
+  Midi3.turnThruOff();
+  Midi3.begin(MIDI_CHANNEL_OMNI);
+
+  if (Usb.Init() == -1) {
+    while (1); //halt
+  }//if (Usb.Init() == -1...
+  Serial.println(F("USB ready."));
+}
+
 /*
 void start_clocks_if_stopped() {
   if (!beatstep_started && midi_beatstep) {
