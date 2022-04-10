@@ -100,7 +100,7 @@ void onInit3() {
 void setup_multi_usb() {
   Serial.println(F("Arduino initialising usb/midi..."));
 
-  __uhs2Midi1.attachOnInit(onInit1);
+  /*__uhs2Midi1.attachOnInit(onInit1);
   Midi1.turnThruOff();
   Midi1.begin(MIDI_CHANNEL_OMNI);
 
@@ -115,7 +115,27 @@ void setup_multi_usb() {
   if (Usb.Init() == -1) {
     while (1); //halt
   }//if (Usb.Init() == -1...
-  Serial.println(F("USB ready."));
+  Serial.println(F("USB ready."));*/
+
+
+  MIDI1.begin(MIDI_CHANNEL_OMNI);
+  MIDI2.begin(MIDI_CHANNEL_OMNI);
+  MIDI3.begin(MIDI_CHANNEL_OMNI);
+  MIDI4.begin(MIDI_CHANNEL_OMNI);
+  MIDI5.begin(MIDI_CHANNEL_OMNI);
+  MIDI6.begin(MIDI_CHANNEL_OMNI);
+  MIDI7.begin(MIDI_CHANNEL_OMNI);
+  MIDI8.begin(MIDI_CHANNEL_OMNI);  
+  MIDI1.turnThruOff();
+  MIDI2.turnThruOff();
+  MIDI3.turnThruOff();
+  MIDI4.turnThruOff();
+  MIDI5.turnThruOff();
+  MIDI6.turnThruOff();
+  MIDI7.turnThruOff();
+  MIDI8.turnThruOff();
+
+  myusb.begin();  
 }
 
 /*
