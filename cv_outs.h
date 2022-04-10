@@ -43,14 +43,14 @@ bool is_clock_off(byte i) {
 byte get_clock_delay(byte i) {
   return current_state.clock_delay[i];
 }
-byte decrease_clock_delay(byte clock_selected, byte amount = 1) {
+void decrease_clock_delay(byte clock_selected, byte amount = 1) {
   current_state.clock_delay[clock_selected] -= amount; // wraps around to 255
   if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
     current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;  
   Serial.print(F("Decreased selected clock delay to "));
   Serial.println(get_clock_delay(clock_selected));
 }
-byte increase_clock_delay(byte clock_selected, byte amount = 1) {
+void increase_clock_delay(byte clock_selected, byte amount = 1) {
   current_state.clock_delay[clock_selected] += amount;
   if (current_state.clock_delay[clock_selected]>7)
     current_state.clock_delay[clock_selected] = 0;
