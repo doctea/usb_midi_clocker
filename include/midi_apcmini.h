@@ -30,9 +30,8 @@
 #define BUTTON_RESTART_IMMEDIATELY    APCMINI_BUTTON_UP
 #define BUTTON_RESTART_AT_END_OF_BAR  APCMINI_BUTTON_DEVICE
 
-
-
-MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
+//MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
+MIDIDevice *midi_apcmini;
 volatile uint8_t ixAPCmini  = 0xff;
 
 volatile bool apcmini_started = false;
@@ -48,16 +47,18 @@ unsigned long last_updated_display = 0;
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_update_clock_display();
 void apcmini_update_position_display(int ticks);
+void apcmini_clear_display();
 #endif
 
 inline void apcmini_loop() {
   if ( ixAPCmini != 0xff) {
-    ATOMIC(
-      do {
-        Midi[ixAPCmini]->read();
+    //ATOMIC(
+      while (usbmidilist[ixAPCmini]->read());
+      /*do {
+        usbmidilist[ixAPCmini]->read();
         //Serial.println(F("Read from apcmini in apcmini_loop!"));
-      } while ( MidiTransports[ixAPCmini]->available() > 0);
-    )
+      } while ( usbmidilist[ixAPCmini]->getTransport()->available() > 0);*/
+    //)
   } else {
     return;
   }
@@ -88,6 +89,7 @@ inline void apcmini_loop() {
 
 // called from loop, already inside ATOMIC, so don't use ATOMIC here
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
+  Serial.printf("apcmini_note_on for %i, %i, %i\n", inChannel, inNumber, inVelocity);
   if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
     // start / stop play
     if (!playing)
@@ -120,9 +122,10 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     // move clock selection up
     byte old_clock_selected  = clock_selected;
     //redraw_immediately = true;
-    clock_selected--;
-    if (clock_selected<0)
+    if (clock_selected==0)
       clock_selected = NUM_CLOCKS-1;
+    else
+      clock_selected--;
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_selected(old_clock_selected, clock_selected);
 #endif
@@ -151,7 +154,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
 #ifdef ENABLE_APCMINI_DISPLAY
     redraw_clock_row(clock_selected);
 #endif
-  } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<= APCMINI_BUTTON_MUTE) {
+  } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<=APCMINI_BUTTON_MUTE) {
     // button between Clip Stop -> Solo -> Rec arm -> Mute buttons
     // change divisions/multiplier of corresponding clock
     byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;  
@@ -185,10 +188,23 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.print(F("Single-stepped to tick "));
     Serial.println(ticks);*/
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
+#ifdef ENABLE_APCMINI_DISPLAY
+    apcmini_clear_display();
+    /*for (int i = 0 ; i < 64 ; i++) {
+      if (midi_apcmini) {
+        midi_apcmini->sendNoteOn(i, random(0,6), 1);
+      }
+    }
+    apcmini_clear_display();*/
+#endif
     load_state(0, &current_state);
-
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
     save_state(0, &current_state);
+    Serial.println("---- debug");
+    for (int i = 0 ; i < 8 ; i++) {
+      Serial.printf("usbmidilist[%i] is %04X:%04X aka %s:%s\n", i, usbmidilist[i]->idVendor(), usbmidilist[i]->idProduct(), usbmidilist[i]->manufacturer(), usbmidilist[i]->product() );
+    }
+    Serial.println("---- debug");
 #ifdef ENABLE_SEQUENCER
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
@@ -243,7 +259,7 @@ void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
 void apcmini_on_tick(volatile uint32_t ticks) {
   if (midi_apcmini) {
     //ATOMIC(
-      midi_apcmini->sendClock();
+      //midi_apcmini->sendRealTime(usbMIDI.Clock); // sendRealTime(MIDI);
     //)
   }
 }
@@ -252,8 +268,8 @@ void apcmini_on_tick(volatile uint32_t ticks) {
 void apcmini_on_restart() {
   if (midi_apcmini) {
     //ATOMIC(
-      midi_apcmini->sendStop();
-      midi_apcmini->sendStart();
+      //midi_apcmini->sendRealTime(usbMIDI.Stop); //sendStop();
+      //midi_apcmini->sendRealTime(usbMIDI.Start);
     //)
     //ATOMIC(
       midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
@@ -261,45 +277,10 @@ void apcmini_on_restart() {
   }
 }
 
-#ifdef ENABLE_APCMINI_DISPLAY
-void apcmini_clear_display() {
-  Serial.println(F("Clearing APC display.."));
-  for (byte x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
-    for (byte y = 0 ; y < APCMINI_DISPLAY_WIDTH ;y++) {
-      ATOMIC(
-        midi_apcmini->sendNoteOn(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1);
-      )
-    }
-  }
-}
-#endif
-
-
-#ifdef ENABLE_APCMINI_DISPLAY
-void apcmini_update_clock_display() {
-  //Serial.println(F("starting apcmini_update_clock_display().."));
-  // draw the clock divisions
-#ifdef ENABLE_CLOCKS
-  for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
-    //byte start_row = (8-NUM_CLOCKS) * 8;
-    redraw_clock_row(c);
-  }
-#endif
-#ifdef ENABLE_SEQUENCER
-  for (byte c = 0 ; c < NUM_SEQUENCES ; c++) {
-    redraw_sequence_row(c);
-  }
-#endif
-  ATOMIC(
-    last_updated_display = millis();
-  )
-  //Serial.println(F("returning from apcmini_update_clock_display()"));
-}
-#endif
-
 
 void apcmini_init() {
-    midi_apcmini->turnThruOff();
+    //midi_apcmini->turnThruOff();
+    Serial.println("apcmini_init()");
     midi_apcmini->setHandleControlChange(apcmini_control_change);
     midi_apcmini->setHandleNoteOn(apcmini_note_on);
     midi_apcmini->setHandleNoteOff(apcmini_note_off);

@@ -17,7 +17,7 @@ UHS2MIDI_NAMESPACE::uhs2MidiTransport *MidiTransports[] {&__uhs2Midi1, &__uhs2Mi
 
 #include <MIDI.h>
 #include <USBHost_t36.h> // access to USB MIDI devices (plugged into 2nd USB port)
-
+/*
 // Create the Serial MIDI ports
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);
@@ -27,7 +27,7 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial5, MIDI5);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial6, MIDI6);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial7, MIDI7);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial8, MIDI8);
-
+*/
 
 // Create the ports for USB devices plugged into Teensy's 2nd USB port (via hubs)
 USBHost Usb;
@@ -43,6 +43,8 @@ MIDIDevice midi05(Usb);
 MIDIDevice midi06(Usb);
 MIDIDevice midi07(Usb);
 MIDIDevice midi08(Usb);
-MIDIDevice * midilist[8] = {
+MIDIDevice * usbmidilist[8] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
 };
+
+uint16_t usb_midi_connected[8] = { 0,0,0,0,0,0,0,0 };

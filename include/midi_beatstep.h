@@ -2,19 +2,22 @@
 
 #include "bpm.h"
 
-MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_beatstep;
+MIDIDevice *midi_beatstep;
 volatile uint8_t ixBeatStep = 0xff;
 
 volatile bool beatstep_started = false;
 
 inline void beatstep_loop() {
-  ATOMIC(
-    if ( ixBeatStep != 0xff) {
-      do {
-        Midi[ixBeatStep]->read();
-      } while ( MidiTransports[ixBeatStep]->available() > 0);
-    }
-  )
+  if ( ixBeatStep != 0xff) {
+    while (midi_beatstep->read());
+    /*ATOMIC(
+      if ( ixBeatStep != 0xff) {
+        do {
+          Midi[ixBeatStep]->read();
+        } while ( MidiTransports[ixBeatStep]->available() > 0);
+      }
+    )*/
+  }
 }
 
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
@@ -33,7 +36,7 @@ void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
 void beatstep_handle_start() {
   Serial.println(F("beatstep_handle_start()"));
   //ATOMIC(
-    midi_beatstep->sendStart();
+    midi_beatstep->sendRealTime(usbMIDI.Start); //sendStart();
   //)
   beatstep_started = true;
   Serial.println(F("beatstep_handle_start() finished"));
@@ -41,8 +44,9 @@ void beatstep_handle_start() {
 
 void beatstep_on_tick(volatile uint32_t ticks) {
   //Serial.flush();
+  //Serial.println("beatstep_on_tick()");
   
-  if (midi_beatstep) {
+  if (ixBeatStep!=0xFF) { //} midi_beatstep!=nullptr) {
     //Serial.print(F("beatstep_on_tick:"));
 #ifdef DEBUG_TICKS
     if (DEBUG_TICKS) Serial.print(F(" beatstep "));
@@ -54,17 +58,18 @@ void beatstep_on_tick(volatile uint32_t ticks) {
       //Serial.println("First beat of bar and BEATSTEP not started -- starting!");
       //Serial.flush();
       //ATOMIC(
-        midi_beatstep->sendStart();
+        midi_beatstep->sendRealTime(usbMIDI.Start); //sendStart();
       //);
       Serial.println("sent start");
       //Serial.flush();
       beatstep_started = true;
     }
 
-    //Serial.println("about to send clock message");
+    //Serial.println("about to send clock message to beatstep");
     //Serial.flush();
     //ATOMIC(
-      midi_beatstep->sendClock();
+      midi_beatstep->sendRealTime(usbMIDI.Clock); //sendClock();
+      midi_beatstep->send_now();
     //);
     //Serial.println(F("sent clock"));
     
@@ -80,8 +85,8 @@ void beatstep_on_restart() {
   if (midi_beatstep) {
     Serial.println(F("beatstep_on_restart()"));
     //ATOMIC(
-      midi_beatstep->sendStop();
-      midi_beatstep->sendStart();
+      midi_beatstep->sendRealTime(usbMIDI.Stop); //sendStop();
+      midi_beatstep->sendRealTime(usbMIDI.Start); //sendStart();
     //)
     Serial.println(F("beatstep_on_restart done"));
   }
@@ -93,7 +98,7 @@ void beatstep_init() {
       beatstep_started = false;
     )
 
-    midi_beatstep->turnThruOff();
+    //midi_beatstep->turnThruOff();
     midi_beatstep->setHandleControlChange(beatstep_control_change);
     midi_beatstep->setHandleStart(beatstep_handle_start);    
     Serial.println(F("beatstep_init() finished"));

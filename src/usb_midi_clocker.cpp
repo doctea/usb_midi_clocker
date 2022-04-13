@@ -1,8 +1,17 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices wit
 
+#if defined(__arm__) && defined(CORE_TEENSY)
+//#define byte uint8_t
+#define F(X) X
+#endif
+
+#include <Arduino.h>
+
 #include "debug.h"
 #include "storage.h"
+
+savestate current_state;
 
 //#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 
@@ -48,7 +57,7 @@ int duration = 2;
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial);
+  //while (!Serial);
 
   pinMode(PIN_CLOCK_1, OUTPUT);
   pinMode(PIN_CLOCK_2, OUTPUT);
@@ -56,10 +65,11 @@ void setup()
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
 
+  delay( 100 );
+
   setup_multi_usb();
-  delay( 1000 );
-  
-  Serial.println(F("Arduino ready."));
+    
+  Serial.println(F("USB ready."));
 
 #ifdef ENABLE_SEQUENCER
   init_sequence();
@@ -82,10 +92,14 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
-  //if (loop_counter%100==0) Serial.println(F("100th loop()"));
-  ATOMIC(
-    Usb.Task();
-  )
+  static int loop_counter;
+  loop_counter++;
+  //if (loop_counter%100000==0) Serial.println(F("100000th loop()"));
+  //ATOMIC(
+  Usb.Task();
+  //)
+
+  update_usb_devices();
 
 #ifdef ENABLE_BEATSTEP
     beatstep_loop();
@@ -157,6 +171,7 @@ void do_tick(volatile uint32_t in_ticks) {
   Serial.println(F(" ]"));
 #endif 
 
+  //last_processed_tick = ticks;
   //ticks++;
   //t1 = millis();
   //single_step = false;

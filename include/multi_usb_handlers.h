@@ -5,19 +5,22 @@ BAMBLEWEENY:  Initialised device vendorid: 10374    productid: 32779
 AKAI APCMINI: Initialised device vendorid: 2536   productid: 40
 */
 
+
 void setupmidi(uint8_t idx)
 {
-  uint16_t vid = MidiTransports[idx]->idVendor();
-  uint16_t pid = MidiTransports[idx]->idProduct();
-  char buf[16];
-  sprintf(buf, "%d:%04X,%04X - ",  idx, vid, pid);
-  Serial.print(buf);
+  uint16_t vid = usbmidilist[idx]->idVendor();
+  uint16_t pid = usbmidilist[idx]->idProduct();
+  Serial.printf("Previously unknown device detected on usbmidi port %d:vid%04X,pid%04X - ",  idx, vid, pid);
+  Serial.printf("%s - %s\n", usbmidilist[idx]->manufacturer(), usbmidilist[idx]->product());
+  Serial.printf("MIDIDevice is at address &%i\n", &usbmidilist[idx]);
+  Serial.printf("MIDIDevice is at address  %i\n", usbmidilist[idx]);
 
 #ifdef ENABLE_BEATSTEP
   if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
     ixBeatStep = idx;
-    Serial.print(F("BeatStep connected..."));
-    midi_beatstep = Midi[idx];
+    Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
+    midi_beatstep = usbmidilist[idx];
+    usb_midi_connected[idx] = pid;
     beatstep_init();
     Serial.println(F("completed Beatstep init"));
     return;
@@ -26,8 +29,9 @@ void setupmidi(uint8_t idx)
 #ifdef ENABLE_APCMINI
   if ( vid == 0x09e8 && pid == 0x0028 ) {   //is AKAI APCmini?
     ixAPCmini = idx;
-    Serial.println(F("AKAI APCmini connected."));
-    midi_apcmini = Midi[idx];
+    Serial.printf(F("AKAI APCmini connected on idx %i...\n"),idx);
+    midi_apcmini = usbmidilist[idx];
+    usb_midi_connected[idx] = pid;
     apcmini_init();
     return;
   }
@@ -35,8 +39,9 @@ void setupmidi(uint8_t idx)
 #ifdef ENABLE_BAMBLE
   if ( vid == 0x2886 && pid == 0x800B ) {            //is BAMBLE?
     ixBamble = idx;
-    Serial.println(F("BAMBLEWEENY connected."));
-    midi_bamble = Midi[idx];
+    Serial.printf(F("BAMBLEWEENY connected on idx %i....\n"),idx);
+    midi_bamble = usbmidilist[idx];
+    usb_midi_connected[idx] = pid;
     bamble_init();
     return;
   }
@@ -46,6 +51,47 @@ void setupmidi(uint8_t idx)
   Serial.print(vid);
   Serial.print(F(", pid="));
   Serial.println(pid);
+}
+
+
+void update_usb_devices() {
+  for (int port=0; port < 8; port++) {
+    //Serial.printf("port %i is already %04X\n", port, usb_midi_connected[port]);
+    //if (usb_midi_connected[port] != (((uint64_t)usbmidilist[port]->idVendor()<<16) | ((uint64_t)usbmidilist[port]->idProduct()))) {
+    if (usb_midi_connected[port] != usbmidilist[port]->idProduct()) {
+      Serial.printf("update_usb_devices: port %i value %04X differs from current %04X!\n", 
+        port,
+        //(((uint64_t)usbmidilist[port]->idVendor()<<16) | ((uint64_t)usbmidilist[port]->idProduct()))
+        usbmidilist[port]->idProduct(),
+        usb_midi_connected[port]
+      );
+      //usb_midi_connected[port] = ((uint64_t)usbmidilist[port]->idVendor()<<16) | ((uint64_t)usbmidilist[port]->idProduct());
+      Serial.printf("Setting %i to %04X\n", port, usbmidilist[port]->idProduct());
+      usb_midi_connected[port] = usbmidilist[port]->idProduct();
+      Serial.printf("is now %04X\n", usb_midi_connected[port]);
+      setupmidi(port);
+      Serial.printf("and after setupmidi, is now %04X\n", usb_midi_connected[port]);
+      Serial.println("-----");
+      
+      continue;
+
+      if (!usb_midi_connected[port]) {
+        Serial.printf("Received data from uninitalised port %i with ids %04x:%04x...\n", port, usbmidilist[port]->idVendor(), usbmidilist[port]->idProduct());
+        setupmidi(port);
+        usb_midi_connected[port] = true;
+        Serial.printf("...Finished setupmidi for port %i\n", port);
+
+        /*uint8_t type =       usbmidilist[port]->getType();
+        uint8_t data1 =      usbmidilist[port]->getData1();
+        uint8_t data2 =      usbmidilist[port]->getData2();
+        uint8_t channel =    usbmidilist[port]->getChannel();
+        const uint8_t *sys = usbmidilist[port]->getSysExArray();*/
+        //sendToComputer(type, data1, data2, channel, sys, 8 + port);
+        //activity = true;
+      }
+    }
+    //while (usbmidilist[port]->read());
+  }
 }
 
 // call this when global clock should be reset
@@ -84,7 +130,7 @@ void on_restart() {
   Serial.println(F("<==on_restart()"));
 }
 
-
+/*
 void onInit1() {
   setupmidi(0);
 }
@@ -95,7 +141,7 @@ void onInit2() {
 
 void onInit3() {
   setupmidi(2);
-}
+}*/
 
 void setup_multi_usb() {
   Serial.println(F("Arduino initialising usb/midi..."));
@@ -117,7 +163,7 @@ void setup_multi_usb() {
   }//if (Usb.Init() == -1...
   Serial.println(F("USB ready."));*/
 
-
+/*
   MIDI1.begin(MIDI_CHANNEL_OMNI);
   MIDI2.begin(MIDI_CHANNEL_OMNI);
   MIDI3.begin(MIDI_CHANNEL_OMNI);
@@ -134,8 +180,9 @@ void setup_multi_usb() {
   MIDI6.turnThruOff();
   MIDI7.turnThruOff();
   MIDI8.turnThruOff();
-
-  myusb.begin();  
+*/
+  Usb.begin();  
+  delay(5000);
 }
 
 /*

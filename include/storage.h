@@ -1,5 +1,3 @@
-#include <EEPROM.h>
-
 #define NUM_CLOCKS    4
 #define NUM_SEQUENCES 4
 #define NUM_STEPS     8
@@ -8,25 +6,34 @@
 #define SAVE_ID_BYTE_V1 0xD1
 
 typedef struct savestate {
-  byte id = SAVE_ID_BYTE_V1;
-  byte size_clocks    = NUM_CLOCKS;
-  byte size_sequences = NUM_SEQUENCES;
-  byte size_steps     = NUM_STEPS;
-  byte clock_multiplier[NUM_CLOCKS] = { 5, 4, 3, 2 };
-  byte sequence_data[NUM_SEQUENCES][NUM_STEPS];
-  byte clock_delay[NUM_CLOCKS] = { 0, 0, 0, 0 };
-};
+  uint8_t id = SAVE_ID_BYTE_V1;
+  uint8_t size_clocks    = NUM_CLOCKS;
+  uint8_t size_sequences = NUM_SEQUENCES;
+  uint8_t size_steps     = NUM_STEPS;
+  uint8_t clock_multiplier[NUM_CLOCKS] = { 5, 4, 3, 2 };
+  uint8_t sequence_data[NUM_SEQUENCES][NUM_STEPS];
+  uint8_t clock_delay[NUM_CLOCKS] = { 0, 0, 0, 0 };
+} savestate;
 
-savestate current_state;
+#if defined(__arm__) && defined(CORE_TEENSY)
+// ...
+void save_state(uint8_t preset_number, savestate *input) {
+  Serial.println("save_state not implemented on teensy");
+}
+void load_state(uint8_t preset_number, savestate *output) {
+  Serial.println("load_state not implemented on teensy");
+}
+#else
+#include <EEPROM.h>
 
-void save_state(byte preset_number, savestate *input) {
+void save_state(uint8_t preset_number, savestate *input) {
   int eeAddress = 16 + (preset_number * sizeof(savestate));
   Serial.print(F("save_state at "));
   Serial.println(eeAddress);
   EEPROM.put(eeAddress, *input);
 }
 
-void load_state(byte preset_number, savestate *output) {
+void load_state(uint8_t preset_number, savestate *output) {
   int eeAddress = 16 + (preset_number * sizeof(savestate));
   byte id = EEPROM.read(eeAddress);
   if (id==SAVE_ID_BYTE_V0 || id==SAVE_ID_BYTE_V1) {
@@ -49,3 +56,4 @@ void load_state(byte preset_number, savestate *output) {
     Serial.println(F(" instead :("));
   }    
 }
+#endif

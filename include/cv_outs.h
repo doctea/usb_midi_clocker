@@ -1,10 +1,10 @@
 #include "bpm.h"
 
-#define PIN_CLOCK_START  4
-#define PIN_CLOCK_1   4
-#define PIN_CLOCK_2   5
-#define PIN_CLOCK_3   6
-#define PIN_CLOCK_4   7
+#define PIN_CLOCK_START  2
+#define PIN_CLOCK_1   2
+#define PIN_CLOCK_2   3
+#define PIN_CLOCK_3   4
+#define PIN_CLOCK_4   5
 
 #define CLOCK_MULTIPLIER_MIN  0.25
 #define CLOCK_MULTIPLIER_MAX  16.0
@@ -73,6 +73,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset = 0) {
 #endif
 
 void update_cv_outs(unsigned long ticks) {
+#if defined(ENABLE_SEQUENCER) || defined(ENABLE_CLOCKS)
   // start bar (every fourth quarter note)
   for (int i = 0 ; i < NUM_CLOCKS ; i++) {
     bool should_go_high = false;
@@ -108,6 +109,6 @@ void update_cv_outs(unsigned long ticks) {
     else if (should_go_low)  digitalWrite(PIN_CLOCK_START+i, LOW);
         
   }
-
+#endif
 
 }
