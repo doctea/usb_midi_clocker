@@ -5,22 +5,41 @@ BAMBLEWEENY:  Initialised device vendorid: 10374    productid: 32779
 AKAI APCMINI: Initialised device vendorid: 2536   productid: 40
 */
 
-
-void setupmidi(uint8_t idx)
+// assign device to port and set appropriate handlers
+void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
 {
-  uint16_t vid = usbmidilist[idx]->idVendor();
-  uint16_t pid = usbmidilist[idx]->idProduct();
-  Serial.printf("Previously unknown device detected on usbmidi port %d:vid%04X,pid%04X - ",  idx, vid, pid);
-  Serial.printf("%s - %s\n", usbmidilist[idx]->manufacturer(), usbmidilist[idx]->product());
-  Serial.printf("MIDIDevice is at address &%i\n", &usbmidilist[idx]);
-  Serial.printf("MIDIDevice is at address  %i\n", usbmidilist[idx]);
+  uint16_t vid, pid;
+  if (packed_id==0) {
+    vid = usbmidilist[idx]->idVendor();
+    pid = usbmidilist[idx]->idProduct();
+    packed_id = (usbmidilist[idx]->idVendor()<<16) | (usbmidilist[idx]->idProduct());
+  } else {
+    vid = packed_id >> 16;
+    pid = 0x0000FFFF & packed_id;
+  }
+  Serial.printf("USB Port %d changed from %08X to %08X (now ", usb_midi_connected[idx], packed_id);
+  Serial.printf("'%s' '%s')\n", usbmidilist[idx]->manufacturer(), usbmidilist[idx]->product());
+
+  // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
+  usbmidilist[idx]->setHandleNoteOn(nullptr);
+  usbmidilist[idx]->setHandleNoteOff(nullptr);
+  usbmidilist[idx]->setHandleControlChange(nullptr);
+  usbmidilist[idx]->setHandleClock(nullptr);
+  usbmidilist[idx]->setHandleStart(nullptr);
+  usbmidilist[idx]->setHandleStop(nullptr);
+
+  if (packed_id==0) {
+    usb_midi_connected[idx] = 0;
+    Serial.printf("Disconnected device on port %i\n", idx);
+    return;
+  }
 
 #ifdef ENABLE_BEATSTEP
   if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
     ixBeatStep = idx;
     Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
     midi_beatstep = usbmidilist[idx];
-    usb_midi_connected[idx] = pid;
+    usb_midi_connected[idx] = packed_id;
     beatstep_init();
     Serial.println(F("completed Beatstep init"));
     return;
@@ -31,7 +50,7 @@ void setupmidi(uint8_t idx)
     ixAPCmini = idx;
     Serial.printf(F("AKAI APCmini connected on idx %i...\n"),idx);
     midi_apcmini = usbmidilist[idx];
-    usb_midi_connected[idx] = pid;
+    usb_midi_connected[idx] = packed_id;
     apcmini_init();
     return;
   }
@@ -41,12 +60,13 @@ void setupmidi(uint8_t idx)
     ixBamble = idx;
     Serial.printf(F("BAMBLEWEENY connected on idx %i....\n"),idx);
     midi_bamble = usbmidilist[idx];
-    usb_midi_connected[idx] = pid;
+    usb_midi_connected[idx] = packed_id;
     bamble_init();
     return;
   }
 #endif
 
+  usb_midi_connected[idx] = packed_id;
   Serial.print(F("Detected unknown (or disabled) device vid="));
   Serial.print(vid);
   Serial.print(F(", pid="));
@@ -56,41 +76,34 @@ void setupmidi(uint8_t idx)
 
 void update_usb_devices() {
   for (int port=0; port < 8; port++) {
-    //Serial.printf("port %i is already %04X\n", port, usb_midi_connected[port]);
-    //if (usb_midi_connected[port] != (((uint64_t)usbmidilist[port]->idVendor()<<16) | ((uint64_t)usbmidilist[port]->idProduct()))) {
-    if (usb_midi_connected[port] != usbmidilist[port]->idProduct()) {
-      Serial.printf("update_usb_devices: port %i value %04X differs from current %04X!\n", 
-        port,
-        //(((uint64_t)usbmidilist[port]->idVendor()<<16) | ((uint64_t)usbmidilist[port]->idProduct()))
-        usbmidilist[port]->idProduct(),
-        usb_midi_connected[port]
-      );
-      //usb_midi_connected[port] = ((uint64_t)usbmidilist[port]->idVendor()<<16) | ((uint64_t)usbmidilist[port]->idProduct());
-      Serial.printf("Setting %i to %04X\n", port, usbmidilist[port]->idProduct());
-      usb_midi_connected[port] = usbmidilist[port]->idProduct();
-      Serial.printf("is now %04X\n", usb_midi_connected[port]);
-      setupmidi(port);
-      Serial.printf("and after setupmidi, is now %04X\n", usb_midi_connected[port]);
-      Serial.println("-----");
-      
-      continue;
+    uint32_t packed_id = (usbmidilist[port]->idVendor()<<16) | (usbmidilist[port]->idProduct());
+    //Serial.printf("packed %04X and %04X to %08X\n", usbmidilist[port]->idVendor(),  usbmidilist[port]->idProduct(), packed_id);
+    if (usb_midi_connected[port] != packed_id) {
+      // device at this port has changed since we last saw it -- ie, disconnection or connection
 
-      if (!usb_midi_connected[port]) {
-        Serial.printf("Received data from uninitalised port %i with ids %04x:%04x...\n", port, usbmidilist[port]->idVendor(), usbmidilist[port]->idProduct());
-        setupmidi(port);
-        usb_midi_connected[port] = true;
-        Serial.printf("...Finished setupmidi for port %i\n", port);
-
-        /*uint8_t type =       usbmidilist[port]->getType();
-        uint8_t data1 =      usbmidilist[port]->getData1();
-        uint8_t data2 =      usbmidilist[port]->getData2();
-        uint8_t channel =    usbmidilist[port]->getChannel();
-        const uint8_t *sys = usbmidilist[port]->getSysExArray();*/
-        //sendToComputer(type, data1, data2, channel, sys, 8 + port);
-        //activity = true;
+      // unassign the midi_xxx helper pointers if appropriate
+      if (midi_bamble==usbmidilist[port]) {
+        Serial.printf("Nulling ixBamble and midi_bamble\n");
+        ixBamble = 0xFF;
+        midi_bamble = nullptr;
       }
+      if (midi_beatstep==usbmidilist[port]) {
+        Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
+        ixBeatStep = 0xFF;
+        midi_beatstep = nullptr;
+      }
+      if (midi_apcmini==usbmidilist[port]) {
+        Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
+        ixAPCmini = 0xFF;
+        midi_apcmini = nullptr;
+      }
+
+      Serial.printf("update_usb_devices: device at port %i is %08X which differs from current %08X!\n", port, usbmidilist[port]->idProduct(), usb_midi_connected[port]);
+
+      // call setupmidi() to assign device to port and set handlers
+      setupmidi(port, packed_id);
+      Serial.println("-----");
     }
-    //while (usbmidilist[port]->read());
   }
 }
 

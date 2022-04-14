@@ -3,9 +3,9 @@
 #include "bpm.h"
 
 MIDIDevice *midi_bamble;
-volatile uint8_t ixBamble   = 0xff;
+uint8_t ixBamble   = 0xff;
 
-volatile bool bamble_started = false;
+bool bamble_started = false;
 
 inline void bamble_loop() {
   if ( ixBamble != 0xff) {
@@ -22,8 +22,8 @@ inline void bamble_loop() {
 }
 
 // called inside interrupt
-void bamble_on_tick(volatile uint32_t ticks) {
-  if (midi_bamble) {
+void bamble_on_tick(uint32_t ticks) {
+  if (ixBamble != 0xFF) {
 #ifdef DEBUG_TICKS
     Serial.print(F(" bamble "));
 #endif

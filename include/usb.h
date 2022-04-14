@@ -47,4 +47,4 @@ MIDIDevice * usbmidilist[8] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
 };
 
-uint16_t usb_midi_connected[8] = { 0,0,0,0,0,0,0,0 };
+uint64_t usb_midi_connected[8] = { 0,0,0,0,0,0,0,0 };

@@ -99,6 +99,8 @@ void beatstep_init() {
     )
 
     //midi_beatstep->turnThruOff();
+    midi_beatstep->setHandleNoteOn(nullptr);
+    midi_beatstep->setHandleNoteOff(nullptr);
     midi_beatstep->setHandleControlChange(beatstep_control_change);
     midi_beatstep->setHandleStart(beatstep_handle_start);    
     Serial.println(F("beatstep_init() finished"));

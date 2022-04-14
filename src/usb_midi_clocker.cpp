@@ -97,6 +97,7 @@ void loop()
   //if (loop_counter%100000==0) Serial.println(F("100000th loop()"));
   //ATOMIC(
   Usb.Task();
+  while (usbMIDI.read());
   //)
 
   update_usb_devices();
