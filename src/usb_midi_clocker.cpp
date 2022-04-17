@@ -84,24 +84,19 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
-  digitalWrite(LED_BUILTIN, HIGH);
   static int loop_counter;
   static unsigned long last_ticked_time;
+  static bool lit = false;
   loop_counter++;
-  //if (loop_counter%100000==0) Serial.println(F("100000th loop()"));
+  if (loop_counter%1000000==0) {
+    digitalWrite(LED_BUILTIN, lit);
+    lit = !lit;
+    //Serial.println(F("100000th loop()"));
+  }
   //ATOMIC(
   Usb.Task();
   while (usbMIDI.read());
   //)
-
-  update_usb_devices();
-
-  update_midi_serial_devices();
-  digitalWrite(LED_BUILTIN, LOW);
-
-  usb_devices_loop();
-
-  digitalWrite(LED_BUILTIN, HIGH);
 
   #ifndef USE_UCLOCK
       if ( playing && millis()-t1 >= ms_per_tick ) {
@@ -114,14 +109,19 @@ void loop()
         t1 = millis();
       }
   #endif
+
+  update_usb_devices();
+
+  update_midi_serial_devices();
+
+  usb_devices_loop();
+
   //Serial.println(F("."));
   /*if (!playing && single_step) {
     do_tick(ticks);
   }*/
   /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
   loop_counter++;*/
-
-  digitalWrite(LED_BUILTIN, LOW);
 
 }
 
