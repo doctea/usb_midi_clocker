@@ -14,9 +14,12 @@ uint8_t ixBamble   = 0xff;
 bool bamble_started = false;
 
 inline void bamble_loop() {
-  if ( ixBamble != 0xff) {
-    while(midi_bamble->read());
+  if ( ixBamble == 0xff) { 
+    return;
   }
+  /*if ( ixBamble != 0xff) {
+    while(midi_bamble->read());
+  }*/
 
   /*ATOMIC(
     if ( ixBamble != 0xff) {

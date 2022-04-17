@@ -73,7 +73,7 @@ void send_midi_serial_stop_start() {
     }
 }
 
-void update_midi_serial_devices() {
+void read_midi_serial_devices() {
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         while (midi_out_serial[i]->read());
     }

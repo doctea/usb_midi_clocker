@@ -61,6 +61,7 @@ void drumkit_note_off(byte channel, byte note, byte velocity) {
 void setup_midi_serial_devices() {
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         midi_out_serial[i]->begin(MIDI_CHANNEL_OMNI);
+        midi_out_serial[i]->turnThruOff();
     }
 
     #ifdef ENABLE_LESTRUM

@@ -18,7 +18,7 @@ MIDIDevice midi05(Usb);
 MIDIDevice midi06(Usb);
 MIDIDevice midi07(Usb);
 MIDIDevice midi08(Usb);
-MIDIDevice * usbmidilist[8] = {
+MIDIDevice * usb_midi_device[8] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
 };
 

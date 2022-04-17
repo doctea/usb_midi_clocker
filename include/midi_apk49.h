@@ -14,9 +14,13 @@ uint8_t ixMPK49   = 0xff;
 bool MPK49_started = false;
 
 inline void MPK49_loop() {
-  if ( ixMPK49 != 0xff && midi_MPK49) {
-    while(midi_MPK49->read());
+  if ( ixMPK49 == 0xff ) {
+    return;
   }
+
+  /*if ( ixMPK49 != 0xff && midi_MPK49) {
+    while(midi_MPK49->read());
+  }*/
 
   /*ATOMIC(
     if ( ixMPK49 != 0xff) {
@@ -55,7 +59,9 @@ void MPK49_on_restart() {
 }
 
 void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
-    Serial.printf("mpk49_handle_note_on %i, %i, %i: ", channel, note, velocity);
+    static int counter = 0;
+    Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
+
     if (midi_out_bitbox) {
         Serial.printf("sending to midi_out_bitbox\n");
         midi_out_bitbox->sendNoteOn(note, velocity, 3);
@@ -65,7 +71,7 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
     if (midi_out_bitbox) {
-        Serial.printf("sending note off to midi_out_bitbox");
+        Serial.printf("sending note off to midi_out_bitbox\n");
         midi_out_bitbox->sendNoteOff(note, velocity, 3);
     }
 }

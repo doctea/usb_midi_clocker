@@ -29,6 +29,7 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &E
 #include "midi_apcmini.h"
 #include "midi_bamble.h"
 #include "midi_apk49.h"
+#include "midi_keystep.h"
 
 
 #endif

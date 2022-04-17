@@ -54,17 +54,16 @@ void apcmini_clear_display();
 #endif
 
 inline void apcmini_loop() {
-  if ( ixAPCmini != 0xff) {
+  if ( ixAPCmini == 0xff ) {
+    return;
+  }
+  /*if ( ixAPCmini != 0xff) {
     //ATOMIC(
-      while (usbmidilist[ixAPCmini]->read());
-      /*do {
-        usbmidilist[ixAPCmini]->read();
-        //Serial.println(F("Read from apcmini in apcmini_loop!"));
-      } while ( usbmidilist[ixAPCmini]->getTransport()->available() > 0);*/
+      while (usb_midi_device[ixAPCmini]->read());
     //)
   } else {
     return;
-  }
+  }*/
 
 #ifdef ENABLE_APCMINI_DISPLAY
   static unsigned long last_processed_tick;
@@ -201,8 +200,8 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else if (!apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
     Serial.println("---- debug");
     for (int i = 0 ; i < 8 ; i++) {
-      if (usbmidilist[i])
-        Serial.printf("usbmidilist[%i] is %04X:%04X aka %s:%s\n", i, usbmidilist[i]->idVendor(), usbmidilist[i]->idProduct(), usbmidilist[i]->manufacturer(), usbmidilist[i]->product() );
+      if (usb_midi_device[i])
+        Serial.printf("usb_midi_device[%i] is %04X:%04X aka %s:%s\n", i, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct(), usb_midi_device[i]->manufacturer(), usb_midi_device[i]->product() );
     }
     Serial.println("---- debug");
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {

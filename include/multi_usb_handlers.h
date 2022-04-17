@@ -1,39 +1,36 @@
 #include "bpm.h"
+
 /*
-BEATSTEP:   Initialised device vendorid: 7285   productid: 518
-BAMBLEWEENY:  Initialised device vendorid: 10374    productid: 32779
-AKAI APCMINI: Initialised device vendorid: 2536   productid: 40
-*/
-/*
-usbmidilist[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
-usbmidilist[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
-usbmidilist[2] is 1C75:0206 aka Arturia:Arturia BeatStep
-usbmidilist[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI       
-usbmidilist[4] is 09E8:006B aka Akai:Akai MPK49
+usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
+usb_midi_device[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
+usb_midi_device[2] is 1C75:0206 aka Arturia:Arturia BeatStep
+usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI       
+usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 */
 
+#define NUM_USB_DEVICES 8
+
 // assign device to port and set appropriate handlers
-void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
-{
+void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {
   uint16_t vid, pid;
   if (packed_id==0) {
-    vid = usbmidilist[idx]->idVendor();
-    pid = usbmidilist[idx]->idProduct();
-    packed_id = (usbmidilist[idx]->idVendor()<<16) | (usbmidilist[idx]->idProduct());
+    vid = usb_midi_device[idx]->idVendor();
+    pid = usb_midi_device[idx]->idProduct();
+    packed_id = (usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct());
   } else {
     vid = packed_id >> 16;
     pid = 0x0000FFFF & packed_id;
   }
   Serial.printf("USB Port %d changed from %08X to %08X (now ", usb_midi_connected[idx], packed_id);
-  Serial.printf("'%s' '%s')\n", usbmidilist[idx]->manufacturer(), usbmidilist[idx]->product());
+  Serial.printf("'%s' '%s')\n", usb_midi_device[idx]->manufacturer(), usb_midi_device[idx]->product());
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
-  usbmidilist[idx]->setHandleNoteOn(nullptr);
-  usbmidilist[idx]->setHandleNoteOff(nullptr);
-  usbmidilist[idx]->setHandleControlChange(nullptr);
-  usbmidilist[idx]->setHandleClock(nullptr);
-  usbmidilist[idx]->setHandleStart(nullptr);
-  usbmidilist[idx]->setHandleStop(nullptr);
+  usb_midi_device[idx]->setHandleNoteOn(nullptr);
+  usb_midi_device[idx]->setHandleNoteOff(nullptr);
+  usb_midi_device[idx]->setHandleControlChange(nullptr);
+  usb_midi_device[idx]->setHandleClock(nullptr);
+  usb_midi_device[idx]->setHandleStart(nullptr);
+  usb_midi_device[idx]->setHandleStop(nullptr);
 
   if (packed_id==0) {
     usb_midi_connected[idx] = 0;
@@ -45,7 +42,7 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
   if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
     ixBeatStep = idx;
     Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
-    midi_beatstep = usbmidilist[idx];
+    midi_beatstep = usb_midi_device[idx];
     usb_midi_connected[idx] = packed_id;
     beatstep_init();
     Serial.println(F("completed Beatstep init"));
@@ -56,7 +53,7 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
   if ( vid == 0x09e8 && pid == 0x0028 ) {   //is AKAI APCmini?
     ixAPCmini = idx;
     Serial.printf(F("AKAI APCmini connected on idx %i...\n"),idx);
-    midi_apcmini = usbmidilist[idx];
+    midi_apcmini = usb_midi_device[idx];
     usb_midi_connected[idx] = packed_id;
     apcmini_init();
     return;
@@ -66,7 +63,7 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
   if ( vid == 0x2886 && pid == 0x800B ) {            //is BAMBLE?
     ixBamble = idx;
     Serial.printf(F("BAMBLEWEENY connected on idx %i....\n"),idx);
-    midi_bamble = usbmidilist[idx];
+    midi_bamble = usb_midi_device[idx];
     usb_midi_connected[idx] = packed_id;
     bamble_init();
     return;
@@ -76,9 +73,19 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
   if (vid == 0x09E8 && pid== 0x006B) {
     ixMPK49 = idx;
     Serial.printf(F("MPK49 connected on idx %i....\n"),idx);
-    midi_MPK49 = usbmidilist[idx];
+    midi_MPK49 = usb_midi_device[idx];
     usb_midi_connected[idx] = packed_id;
     MPK49_init();
+    return;
+  }
+#endif
+#ifdef ENABLE_KEYSTEP
+  if (vid == 0x1C75 && pid== 0x0288) {
+    ixKeystep = idx;
+    Serial.printf(F("Keystep connected on idx %i....\n"),idx);
+    midi_keystep = usb_midi_device[idx];
+    usb_midi_connected[idx] = packed_id;
+    keystep_init();
     return;
   }
 #endif
@@ -91,36 +98,40 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
 }
 
 
-void update_usb_devices() {
-  for (int port=0; port < 8; port++) {
-    uint32_t packed_id = (usbmidilist[port]->idVendor()<<16) | (usbmidilist[port]->idProduct());
-    //Serial.printf("packed %04X and %04X to %08X\n", usbmidilist[port]->idVendor(),  usbmidilist[port]->idProduct(), packed_id);
+void update_usb_device_connections() {
+  for (int port=0; port < NUM_USB_DEVICES; port++) {
+    uint32_t packed_id = (usb_midi_device[port]->idVendor()<<16) | (usb_midi_device[port]->idProduct());
+    //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_device[port]->idVendor(),  usb_midi_device[port]->idProduct(), packed_id);
     if (usb_midi_connected[port] != packed_id) {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
-
       // unassign the midi_xxx helper pointers if appropriate
-      if (midi_bamble==usbmidilist[port]) {
+      if (midi_bamble==usb_midi_device[port]) {
         Serial.printf("Nulling ixBamble and midi_bamble\n");
         ixBamble = 0xFF;
         midi_bamble = nullptr;
       }
-      if (midi_beatstep==usbmidilist[port]) {
+      if (midi_beatstep==usb_midi_device[port]) {
         Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
         ixBeatStep = 0xFF;
         midi_beatstep = nullptr;
       }
-      if (midi_apcmini==usbmidilist[port]) {
+      if (midi_apcmini==usb_midi_device[port]) {
         Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
         ixAPCmini = 0xFF;
         midi_apcmini = nullptr;
       }
-      if (midi_MPK49==usbmidilist[port]) {
+      if (midi_MPK49==usb_midi_device[port]) {
         Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
         ixMPK49 = 0xFF;
         midi_MPK49 = nullptr;
       }
+      if (midi_keystep==usb_midi_device[port]) {
+        Serial.printf("Nulling ixKeystep and midi_keystep\n");
+        ixKeystep = 0xFF;
+        midi_keystep = nullptr;
+      }
 
-      Serial.printf("update_usb_devices: device at port %i is %08X which differs from current %08X!\n", port, usbmidilist[port]->idProduct(), usb_midi_connected[port]);
+      Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, usb_midi_device[port]->idProduct(), usb_midi_connected[port]);
 
       // call setupmidi() to assign device to port and set handlers
       setupmidi(port, packed_id);
@@ -129,13 +140,24 @@ void update_usb_devices() {
   }
 }
 
-void usb_devices_loop() {
+void read_usb_devices() {
+  static int counter;
+  /*for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+    while(usb_midi_device[counter]->read());
+  }*/
+  // only process one device per loop
+  if (counter>=NUM_USB_DEVICES)
+    counter = 0;
+  while(usb_midi_device[counter]->read());
+  counter++;
+}
+
+void known_devices_loop() {
   #ifdef ENABLE_BEATSTEP
       beatstep_loop();
   #endif
 
   #ifdef ENABLE_APCMINI
-
       apcmini_loop();
   #endif
 
@@ -146,6 +168,10 @@ void usb_devices_loop() {
   #ifdef ENABLE_MPK49
       MPK49_loop();
   #endif
+
+  #ifdef ENABLE_KEYSTEP
+      keystep_loop();
+  #endif
 }
 
 // call this when global clock should be reset
@@ -153,9 +179,7 @@ void on_restart() {
   restart_on_next_bar = false;
 
   Serial.println(F("on_restart()==>"));
-  
-  Serial.println(F("reset ticks"));
-  // TODO: cheapclock version
+
 #ifdef USE_UCLOCK
   uClock.setTempo(bpm_current); // todo: probably not needed?
   Serial.println(F("reset tempo"));
@@ -163,6 +187,7 @@ void on_restart() {
   Serial.println(F("reset counters"));
 #else
   ticks = 0;
+  Serial.println(F("reset ticks"));
 #endif
   
   send_midi_serial_stop_start();
@@ -183,60 +208,18 @@ void on_restart() {
   Serial.println(F("restarted"));
   redraw_immediately = true;
 #endif
+#ifdef ENABLE_KEYSTEP
+  Serial.print(F("restart keystep..."));
+  keystep_on_restart();
+  Serial.println(F("restarted"));
+#endif
+
   Serial.println(F("<==on_restart()"));
 }
-
-/*
-void onInit1() {
-  setupmidi(0);
-}
-
-void onInit2() {
-  setupmidi(1);
-}
-
-void onInit3() {
-  setupmidi(2);
-}*/
 
 void setup_multi_usb() {
   Serial.println(F("Arduino initialising usb/midi..."));
 
-  /*__uhs2Midi1.attachOnInit(onInit1);
-  Midi1.turnThruOff();
-  Midi1.begin(MIDI_CHANNEL_OMNI);
-
-  __uhs2Midi2.attachOnInit(onInit2);
-  Midi2.turnThruOff();
-  Midi2.begin(MIDI_CHANNEL_OMNI);
-
-  __uhs2Midi3.attachOnInit(onInit3);
-  Midi3.turnThruOff();
-  Midi3.begin(MIDI_CHANNEL_OMNI);
-
-  if (Usb.Init() == -1) {
-    while (1); //halt
-  }//if (Usb.Init() == -1...
-  Serial.println(F("USB ready."));*/
-
-/*
-  MIDI1.begin(MIDI_CHANNEL_OMNI);
-  MIDI2.begin(MIDI_CHANNEL_OMNI);
-  MIDI3.begin(MIDI_CHANNEL_OMNI);
-  MIDI4.begin(MIDI_CHANNEL_OMNI);
-  MIDI5.begin(MIDI_CHANNEL_OMNI);
-  MIDI6.begin(MIDI_CHANNEL_OMNI);
-  MIDI7.begin(MIDI_CHANNEL_OMNI);
-  MIDI8.begin(MIDI_CHANNEL_OMNI);  
-  MIDI1.turnThruOff();
-  MIDI2.turnThruOff();
-  MIDI3.turnThruOff();
-  MIDI4.turnThruOff();
-  MIDI5.turnThruOff();
-  MIDI6.turnThruOff();
-  MIDI7.turnThruOff();
-  MIDI8.turnThruOff();
-*/
   Usb.begin();
   for (int i = 0 ; i < 5 ; i++) {
     digitalWrite(LED_BUILTIN, HIGH);

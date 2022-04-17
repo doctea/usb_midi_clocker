@@ -11,16 +11,12 @@ volatile uint8_t ixBeatStep = 0xff;
 volatile bool beatstep_started = false;
 
 inline void beatstep_loop() {
-  if ( ixBeatStep != 0xff) {
-    while (midi_beatstep->read());
-    /*ATOMIC(
-      if ( ixBeatStep != 0xff) {
-        do {
-          Midi[ixBeatStep]->read();
-        } while ( MidiTransports[ixBeatStep]->available() > 0);
-      }
-    )*/
+  if ( ixBeatStep == 0xff) {
+    return;
   }
+  /*if ( ixBeatStep != 0xff) {
+    while (midi_beatstep->read());
+  }*/
 }
 
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {

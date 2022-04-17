@@ -110,11 +110,13 @@ void loop()
       }
   #endif
 
-  update_usb_devices();
+  update_usb_device_connections();
 
-  update_midi_serial_devices();
+  read_midi_serial_devices();
 
-  usb_devices_loop();
+  read_usb_devices();
+
+  known_devices_loop();
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
