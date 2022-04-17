@@ -1,3 +1,6 @@
+#ifndef USB__INCLUDED
+#define USB__INCLUDED
+
 #include <MIDI.h>
 #include <USBHost_t36.h> // access to USB MIDI devices (plugged into 2nd USB port)
 
@@ -20,3 +23,5 @@ MIDIDevice * usbmidilist[8] = {
 };
 
 uint64_t usb_midi_connected[8] = { 0,0,0,0,0,0,0,0 };
+
+#endif

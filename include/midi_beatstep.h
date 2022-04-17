@@ -1,5 +1,8 @@
+#ifndef BEATSTEP__INCLUDED
+#define BEATSTEP__INCLUDED
 #ifdef ENABLE_BEATSTEP
 
+#include <Arduino.h>
 #include "bpm.h"
 
 MIDIDevice *midi_beatstep;
@@ -106,5 +109,7 @@ void beatstep_init() {
     Serial.println(F("beatstep_init() finished"));
     //)
 }
+
+#endif
 
 #endif

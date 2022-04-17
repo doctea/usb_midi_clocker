@@ -1,4 +1,5 @@
-// work in progress -- doesn't work yet
+#include <Arduino.h>
+
 #ifndef INCLUDED_SEQUENCER
 #define INCLUDED_SEQUENCER
 

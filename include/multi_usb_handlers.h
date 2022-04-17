@@ -124,7 +124,7 @@ void on_restart() {
   ticks = 0;
 #endif
   
-  send_midi_device_stop_start();
+  send_midi_serial_stop_start();
 
 #ifdef ENABLE_BEATSTEP
   Serial.print(F("restart beatstep..."));

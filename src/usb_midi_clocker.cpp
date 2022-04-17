@@ -8,22 +8,12 @@
 
 #include <Arduino.h>
 
+#include "Config.h"
+
 #include "debug.h"
 #include "storage.h"
 
-savestate current_state;
-
 //#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
-
-#define ENABLE_APCMINI
-#define ENABLE_BEATSTEP
-#define ENABLE_BAMBLE
-
-#define ENABLE_APCMINI_DISPLAY
-#define ENABLE_BPM
-#define ENABLE_SEQUENCER
-#define ENABLE_CLOCKS
-
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
 
@@ -39,11 +29,11 @@ void do_tick(uint32_t ticks);
 int duration = 2;
 
 #include "usb.h"
-#include "midi_outs.h"
 
 #include "Config.h"
 
 #include "MidiMappings.h"
+#include "midi_outs.h"
 
 #include "bpm.h"
 #include "clock.h"
@@ -53,9 +43,6 @@ int duration = 2;
 #endif
 #include "cv_outs.h"
 
-#include "midi_beatstep.h"
-#include "midi_apcmini.h"
-#include "midi_bamble.h"
 
 #include "multi_usb_handlers.h"
 
@@ -75,6 +62,8 @@ void setup()
 
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
+
+  setup_storage();
 
 #ifdef ENABLE_SEQUENCER
   init_sequence();
@@ -161,7 +150,7 @@ void do_tick(volatile uint32_t in_ticks) {
       restart_on_next_bar = false;
     }
 
-    send_midi_device_clocks();
+    send_midi_serial_clocks();
 
     update_cv_outs(in_ticks);
 

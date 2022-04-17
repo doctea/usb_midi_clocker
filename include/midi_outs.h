@@ -1,5 +1,5 @@
-#ifndef MIDI_INCLUDED
-#define MIDI_INCLUDED
+#ifndef MIDIOUT__INCLUDED
+#define MIDIOUT__INCLUDED
 
 #include <MIDI.h>
 
@@ -34,11 +34,12 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial7, MIDI7);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial8, MIDI8);
 #endif
 
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_outs[NUM_MIDI_OUTS] = {
+midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_OUTS] = {
+    // TODO: properly initialise up to the size of NUM_MIDI_OUTS
     &MIDI1,&MIDI2,&MIDI3,&MIDI4,&MIDI5,&MIDI6,&MIDI7,&MIDI8
 };
 
-bool midi_out_clock_enabled[NUM_MIDI_OUTS] = {
+bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
     true,
     false,
     false,
@@ -49,39 +50,35 @@ bool midi_out_clock_enabled[NUM_MIDI_OUTS] = {
     false
 };
 
-void send_midi_device_clocks() {
+void send_midi_serial_clocks() {
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        if (midi_out_clock_enabled[i]) {
-            midi_outs[i]->sendRealTime(midi::Clock);
+        if (midi_out_serial_clock_enabled[i]) {
+            midi_out_serial[i]->sendRealTime(midi::Clock);
         }
     }
 }
 
-void send_midi_device_stop_start() {
+void send_midi_serial_stop_start() {
     // send all stops first
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        if (midi_out_clock_enabled[i]) {
-            midi_outs[i]->sendRealTime(midi::Stop);
+        if (midi_out_serial_clock_enabled[i]) {
+            midi_out_serial[i]->sendRealTime(midi::Stop);
         }
     }
     // then send all starts
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        if (midi_out_clock_enabled[i]) {
-            midi_outs[i]->sendRealTime(midi::Start);
+        if (midi_out_serial_clock_enabled[i]) {
+            midi_out_serial[i]->sendRealTime(midi::Start);
         }
     }
 }
 
 void update_midi_serial_devices() {
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        while (midi_outs[i]->read());
+        while (midi_out_serial[i]->read());
     }
 }
 
-
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &MIDI1;
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;
-
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum      = &MIDI1;
+#include "ConfigMidi.h"
 
 #endif

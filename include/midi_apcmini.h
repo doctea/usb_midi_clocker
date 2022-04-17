@@ -1,3 +1,5 @@
+#ifndef APCMINI__INCLUDED
+#define APCMINI__INCLUDED
 #ifdef ENABLE_APCMINI
 
 #include "bpm.h"
@@ -188,24 +190,20 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.print(F("Single-stepped to tick "));
     Serial.println(ticks);*/
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
-#ifdef ENABLE_APCMINI_DISPLAY
-    apcmini_clear_display();
-    /*for (int i = 0 ; i < 64 ; i++) {
-      if (midi_apcmini) {
-        midi_apcmini->sendNoteOn(i, random(0,6), 1);
-      }
-    }
-    apcmini_clear_display();*/
-#endif
     load_state(0, &current_state);
+#ifdef ENABLE_APCMINI_DISPLAY
+    apcmini_update_clock_display();
+#endif
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
     save_state(0, &current_state);
+#ifdef ENABLE_SEQUENCER
+  } else if (!apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
     Serial.println("---- debug");
     for (int i = 0 ; i < 8 ; i++) {
-      Serial.printf("usbmidilist[%i] is %04X:%04X aka %s:%s\n", i, usbmidilist[i]->idVendor(), usbmidilist[i]->idProduct(), usbmidilist[i]->manufacturer(), usbmidilist[i]->product() );
+      if (usbmidilist[i])
+        Serial.printf("usbmidilist[%i] is %04X:%04X aka %s:%s\n", i, usbmidilist[i]->idVendor(), usbmidilist[i]->idProduct(), usbmidilist[i]->manufacturer(), usbmidilist[i]->product() );
     }
     Serial.println("---- debug");
-#ifdef ENABLE_SEQUENCER
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
     Serial.print(F("For inNumber "));
@@ -289,5 +287,7 @@ void apcmini_init() {
     redraw_immediately = true;
 #endif
 }
+
+#endif
 
 #endif

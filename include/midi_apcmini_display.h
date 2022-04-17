@@ -1,4 +1,9 @@
+#ifndef APCMINI_DISPLAY__INCLUDED
+#define APCMINI_DISPLAY__INCLUDED
 #ifdef ENABLE_APCMINI_DISPLAY
+
+#include "cv_outs.h"
+#include "sequencer.h"
 
 // button colours from https://remotify.io/community/question/led-feedback-values
 #define APCMINI_OFF           (uint8_t)0
@@ -136,5 +141,7 @@ void apcmini_update_clock_display() {
 }
 #endif
 
+
+#endif
 
 #endif

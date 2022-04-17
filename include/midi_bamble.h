@@ -1,8 +1,11 @@
+#ifndef BAMBLE__INCLUDED
+#define BAMBLE__INCLUDED
+
 #ifdef ENABLE_BAMBLE
 
 #include "bpm.h"
 
-MIDIDevice *midi_bamble;
+MIDIDevice *midi_bamble;  
 uint8_t ixBamble   = 0xff;
 
 bool bamble_started = false;
@@ -55,5 +58,8 @@ void bamble_init() {
     //midi_bamble->setHandleControlChange(bamble_control_change);
     //midi_bamble->setHandleStart(bamble_handle_start);    
 }
+
+#endif
+
 
 #endif
