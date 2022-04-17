@@ -1,10 +1,21 @@
 #include "bpm.h"
 
-#define PIN_CLOCK_START  2
-#define PIN_CLOCK_1   2
-#define PIN_CLOCK_2   3
-#define PIN_CLOCK_3   4
-#define PIN_CLOCK_4   5
+#define PIN_CLOCK_START  30
+#define PIN_CLOCK_1   30
+#define PIN_CLOCK_2   31
+#define PIN_CLOCK_3   32
+#define PIN_CLOCK_4   33
+#define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
+#define PIN_CLOCK_6   37
+#define PIN_CLOCK_7   38
+#define PIN_CLOCK_8   39
+
+const byte clock_pin[NUM_CLOCKS] = {
+    PIN_CLOCK_1, PIN_CLOCK_2, PIN_CLOCK_3, PIN_CLOCK_4,
+    #if NUM_CLOCKS == 8
+      PIN_CLOCK_5, PIN_CLOCK_6, PIN_CLOCK_7, PIN_CLOCK_8
+    #endif
+  };
 
 #define CLOCK_MULTIPLIER_MIN  0.25
 #define CLOCK_MULTIPLIER_MAX  16.0
@@ -105,9 +116,8 @@ void update_cv_outs(unsigned long ticks) {
       should_go_low = true;
     }
 
-    if (should_go_high) digitalWrite(PIN_CLOCK_START+i, HIGH);
-    else if (should_go_low)  digitalWrite(PIN_CLOCK_START+i, LOW);
-        
+    if (should_go_high)       digitalWrite(clock_pin[i], HIGH);
+    else if (should_go_low)   digitalWrite(clock_pin[i], LOW);
   }
 #endif
 

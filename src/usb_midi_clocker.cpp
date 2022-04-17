@@ -39,6 +39,11 @@ void do_tick(uint32_t ticks);
 int duration = 2;
 
 #include "usb.h"
+#include "midi_outs.h"
+
+#include "Config.h"
+
+#include "MidiMappings.h"
 
 #include "bpm.h"
 #include "clock.h"
@@ -59,17 +64,17 @@ void setup()
   Serial.begin(115200);
   //while (!Serial);
 
-  pinMode(PIN_CLOCK_1, OUTPUT);
-  pinMode(PIN_CLOCK_2, OUTPUT);
-
-  pinMode(PIN_CLOCK_3, OUTPUT);
-  pinMode(PIN_CLOCK_4, OUTPUT);
+  for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+    pinMode(clock_pin[i], OUTPUT);
+  }
 
   delay( 100 );
 
   setup_multi_usb();
-    
   Serial.println(F("USB ready."));
+
+  setup_midi_serial_devices();
+  Serial.println(F("Serial ready."));   
 
 #ifdef ENABLE_SEQUENCER
   init_sequence();
@@ -101,6 +106,8 @@ void loop()
   //)
 
   update_usb_devices();
+
+  update_midi_serial_devices();
 
 #ifdef ENABLE_BEATSTEP
     beatstep_loop();
@@ -153,6 +160,8 @@ void do_tick(volatile uint32_t in_ticks) {
       //)
       restart_on_next_bar = false;
     }
+
+    send_midi_device_clocks();
 
     update_cv_outs(in_ticks);
 

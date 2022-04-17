@@ -1,6 +1,6 @@
 #include "bpm.h"
 
-  #ifdef USE_UCLOCK
+#ifdef USE_UCLOCK
   
   // The callback function wich will be called by Clock each Pulse of 96PPQN clock resolution.
   void ClockOut96PPQN(volatile uint32_t *tick) {
