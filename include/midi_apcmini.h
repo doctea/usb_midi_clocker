@@ -3,6 +3,7 @@
 #ifdef ENABLE_APCMINI
 
 #include "bpm.h"
+#include "sequencer.h"
 
 #define APCMINI_NUM_ROWS      8
 #define APCMINI_DISPLAY_WIDTH 8

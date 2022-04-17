@@ -1,6 +1,9 @@
 #include <Arduino.h>
+#include "Config.h"
 #include "storage.h"
 #include "cv_outs.h"
+
+int duration = 2;
 
 float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
   0.25,     // 0

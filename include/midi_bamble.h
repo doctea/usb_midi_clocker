@@ -4,6 +4,9 @@
 #ifdef ENABLE_BAMBLE
 
 #include "bpm.h"
+#include "Config.h"
+#include "ConfigMidi.h"
+#include "midi_outs.h"
 
 MIDIDevice *midi_bamble;  
 uint8_t ixBamble   = 0xff;
@@ -53,6 +56,8 @@ void bamble_on_restart() {
 
 void bamble_init() {
     bamble_started = false;
+
+    //midi_out_cv12_poly = midi_bamble;
 
     //midi_bamble->turnThruOff();
     //midi_bamble->setHandleControlChange(bamble_control_change);

@@ -27,6 +27,8 @@ const byte clock_pin[NUM_CLOCKS] = {
 
 #define NUM_CLOCK_MULTIPLIER_VALUES 8
 extern float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES];
+extern int duration;
+
 #define CLOCK_MULTIPLIER_OFF  32.0
  
 

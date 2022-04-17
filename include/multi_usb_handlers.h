@@ -4,6 +4,13 @@ BEATSTEP:   Initialised device vendorid: 7285   productid: 518
 BAMBLEWEENY:  Initialised device vendorid: 10374    productid: 32779
 AKAI APCMINI: Initialised device vendorid: 2536   productid: 40
 */
+/*
+usbmidilist[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
+usbmidilist[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
+usbmidilist[2] is 1C75:0206 aka Arturia:Arturia BeatStep
+usbmidilist[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI       
+usbmidilist[4] is 09E8:006B aka Akai:Akai MPK49
+*/
 
 // assign device to port and set appropriate handlers
 void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
@@ -65,6 +72,16 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000)
     return;
   }
 #endif
+#ifdef ENABLE_MPK49
+  if (vid == 0x09E8 && pid== 0x006B) {
+    ixMPK49 = idx;
+    Serial.printf(F("MPK49 connected on idx %i....\n"),idx);
+    midi_MPK49 = usbmidilist[idx];
+    usb_midi_connected[idx] = packed_id;
+    MPK49_init();
+    return;
+  }
+#endif
 
   usb_midi_connected[idx] = packed_id;
   Serial.print(F("Detected unknown (or disabled) device vid="));
@@ -97,6 +114,11 @@ void update_usb_devices() {
         ixAPCmini = 0xFF;
         midi_apcmini = nullptr;
       }
+      if (midi_MPK49==usbmidilist[port]) {
+        Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
+        ixMPK49 = 0xFF;
+        midi_MPK49 = nullptr;
+      }
 
       Serial.printf("update_usb_devices: device at port %i is %08X which differs from current %08X!\n", port, usbmidilist[port]->idProduct(), usb_midi_connected[port]);
 
@@ -105,6 +127,25 @@ void update_usb_devices() {
       Serial.println("-----");
     }
   }
+}
+
+void usb_devices_loop() {
+  #ifdef ENABLE_BEATSTEP
+      beatstep_loop();
+  #endif
+
+  #ifdef ENABLE_APCMINI
+
+      apcmini_loop();
+  #endif
+
+  #ifdef ENABLE_BAMBLE
+      bamble_loop();
+  #endif
+
+  #ifdef ENABLE_MPK49
+      MPK49_loop();
+  #endif
 }
 
 // call this when global clock should be reset
@@ -196,8 +237,12 @@ void setup_multi_usb() {
   MIDI7.turnThruOff();
   MIDI8.turnThruOff();
 */
-  Usb.begin();  
-  delay(5000);
+  Usb.begin();
+  for (int i = 0 ; i < 5 ; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(1000);
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 }
 
 /*

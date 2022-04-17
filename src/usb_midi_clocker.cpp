@@ -26,8 +26,6 @@ void do_tick(uint32_t ticks);
 #define ATOMIC(X) X
 #endif
 
-int duration = 2;
-
 #include "usb.h"
 
 #include "Config.h"
@@ -86,7 +84,9 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
+  digitalWrite(LED_BUILTIN, HIGH);
   static int loop_counter;
+  static unsigned long last_ticked_time;
   loop_counter++;
   //if (loop_counter%100000==0) Serial.println(F("100000th loop()"));
   //ATOMIC(
@@ -97,33 +97,32 @@ void loop()
   update_usb_devices();
 
   update_midi_serial_devices();
+  digitalWrite(LED_BUILTIN, LOW);
 
-#ifdef ENABLE_BEATSTEP
-    beatstep_loop();
-#endif
+  usb_devices_loop();
 
-#ifdef ENABLE_APCMINI
-    apcmini_loop();
-#endif
+  digitalWrite(LED_BUILTIN, HIGH);
 
-#ifdef ENABLE_BAMBLE
-    bamble_loop();
-#endif
-
-#ifndef USE_UCLOCK
-    if ( playing && millis()-t1 > ms_per_tick ) {
-      do_tick(ticks);
-      ticks++;
-      t1 = millis();
-    }
-#endif
-
+  #ifndef USE_UCLOCK
+      if ( playing && millis()-t1 >= ms_per_tick ) {
+        do_tick(ticks);
+        if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
+          Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
+        }
+        last_ticked_time = millis();
+        ticks++;
+        t1 = millis();
+      }
+  #endif
   //Serial.println(F("."));
   /*if (!playing && single_step) {
     do_tick(ticks);
   }*/
   /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
   loop_counter++;*/
+
+  digitalWrite(LED_BUILTIN, LOW);
+
 }
 
 // called inside interrupt
@@ -140,7 +139,7 @@ void do_tick(volatile uint32_t in_ticks) {
 #endif*/
 
     ticks = in_ticks;
-    
+   
     if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
       //in_ticks = ticks = 0;
       on_restart();

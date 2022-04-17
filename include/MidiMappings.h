@@ -4,31 +4,34 @@
 #define MIDI_IN_NUMBER_LESTRUM 0
 
 #include "Config.h"
+#include "ConfigMidi.h"
 #include "midi_outs.h"
-
-#include "midi_beatstep.h"
-#include "midi_apcmini.h"
-#include "midi_bamble.h"
 
 #ifdef ENABLE_LESTRUM
 // configure incoming lestrum to output to midimuso via bamble
 void lestrum_note_on(byte channel, byte note, byte velocity) {
-    if (midi_out_cv12_poly) {
-        Serial.printf("lestrum_note_on(channel %i, note %i, velocity %i)\n", channel, note, velocity);
-        if (channel==1) {
-            midi_out_cv12_poly->sendNoteOn(note, 127, 1); //channel);
-        } else {
-            midi_bamble->sendNoteOn(note, 127, 3);
-        }
+    Serial.printf("lestrum_note_on(channel %i, note %i, velocity %i): ", channel, note, velocity);
+    if (channel==1) {
+        Serial.println("channel 1->midi_out_cv12_poly");
+        //midi_out_cv12_poly->sendNoteOn(note, 127, 1); //channel);
+        if (midi_bamble) 
+            midi_bamble->sendNoteOn(note, 127, 1); //channel);
+    } else {
+        Serial.println("channel 3->midi_out_bitbox");
+        if (midi_out_bitbox)
+            midi_out_bitbox->sendNoteOn(note, 127, 3);
     }
 }
 void lestrum_note_off(byte channel, byte note, byte velocity) {
-    if (midi_out_cv12_poly) {
-        if (channel==1) {
-            midi_out_cv12_poly->sendNoteOff(note, 0, 1); //channel);
-        } else {
-            midi_bamble->sendNoteOff(note, 127, 3);
-        }
+    Serial.printf("lestrum_note_off(channel %i, note %i, velocity %i): ", channel, note, velocity);
+    if (channel==1) {
+        Serial.println("channel 1->midi_out_cv12_poly");
+        if (midi_bamble) 
+            midi_bamble->sendNoteOff(note, 127, 1); //channel);
+    } else {
+        Serial.println("channel 3->midi_out_bitbox");
+        if (midi_out_bitbox)
+            midi_out_bitbox->sendNoteOff(note, 127, 3);
     }
 }
 #endif
@@ -37,8 +40,10 @@ void lestrum_note_off(byte channel, byte note, byte velocity) {
 #ifdef ENABLE_DRUMKIT
 // configure incoming drumkit on input 2 to go out to drums on bamble
 void drumkit_note_on(byte channel, byte note, byte velocity) {
+    Serial.printf("drumkit_note_on(channel %i, note %i, velocity %i): ", channel, note, velocity);
     #ifdef ENABLE_BAMBLE
         if (midi_bamble) {
+            Serial.println("sending!");
             midi_bamble->sendNoteOn(note, velocity, 10);
         }
     #endif
@@ -65,7 +70,7 @@ void setup_midi_serial_devices() {
 
     #ifdef ENABLE_DRUMKIT
         midi_in_drumkit->setHandleNoteOn(drumkit_note_on);
-        midi_in_drumkit->setHandleNoteOn(drumkit_note_off);
+        midi_in_drumkit->setHandleNoteOff(drumkit_note_off);
     #endif
 }
 

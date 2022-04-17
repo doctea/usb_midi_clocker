@@ -17,6 +17,7 @@ void set_bpm(float new_bpm) {
     //)
     #else
       ms_per_tick = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+      Serial.printf("set ms_per_tick to %f\n", ms_per_tick);
     #endif
     Serial.print(F("set bpm to "));
     Serial.println(bpm_current);
