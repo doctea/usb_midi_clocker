@@ -25,7 +25,7 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {
     vid = packed_id >> 16;
     pid = 0x0000FFFF & packed_id;
   }
-  Serial.printf("USB Port %d changed from %08X to %08X (now ", usb_midi_connected[idx], packed_id);
+  Serial.printf("USB Port %d changed from %08X to %08X (now ", idx, usb_midi_connected[idx], packed_id);
   Serial.printf("'%s' '%s')\n", usb_midi_device[idx]->manufacturer(), usb_midi_device[idx]->product());
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
@@ -135,7 +135,7 @@ void update_usb_device_connections() {
         midi_keystep = nullptr;
       }
 
-      Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, usb_midi_device[port]->idProduct(), usb_midi_connected[port]);
+      Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_connected[port]);
 
       // call setupmidi() to assign device to port and set handlers
       setupmidi(port, packed_id);
@@ -144,19 +144,24 @@ void update_usb_device_connections() {
   }
 }
 
-void read_usb_devices() {
-  static int counter;
-  /*for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+#define SINGLE_FRAME_READ
+
+void read_midi_usb_devices() {
+  #ifdef SINGLE_FRAME_READ
+    for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+      while(usb_midi_device[i]->read());
+    }
+  #else
+    static int counter;
+    // only process one device per loop
+    if (counter>=NUM_USB_DEVICES)
+      counter = 0;
     while(usb_midi_device[counter]->read());
-  }*/
-  // only process one device per loop
-  if (counter>=NUM_USB_DEVICES)
-    counter = 0;
-  while(usb_midi_device[counter]->read());
-  counter++;
+    counter++;
+  #endif
 }
 
-void known_devices_send_clock() {
+void send_midi_usb_clocks() {
   if(ixBeatStep!=0xFF) {
     midi_beatstep->sendRealTime(midi::Clock);
   }
@@ -168,25 +173,29 @@ void known_devices_send_clock() {
   }
 }
 
-void known_devices_loop() {
+void loop_midi_usb_devices() {
+  unsigned long temp_tick;
+  noInterrupts();
+  temp_tick = ticks;
+  interrupts();
   #ifdef ENABLE_BEATSTEP
-      beatstep_loop();
+      beatstep_loop(temp_tick);
   #endif
 
   #ifdef ENABLE_APCMINI
-      apcmini_loop();
+      apcmini_loop(temp_tick);
   #endif
 
   #ifdef ENABLE_BAMBLE
-      bamble_loop();
+      bamble_loop(temp_tick);
   #endif
 
   #ifdef ENABLE_MPK49
-      MPK49_loop();
+      MPK49_loop(temp_tick);
   #endif
 
   #ifdef ENABLE_KEYSTEP
-      keystep_loop();
+      keystep_loop(temp_tick);
   #endif
 }
 
@@ -205,7 +214,9 @@ void on_restart() {
   ticks = 0;
   Serial.println(F("reset ticks"));
 #endif
+  noInterrupts();
   ticks = 0;
+  interrupts();
   last_processed_tick = -1;
   
   send_midi_serial_stop_start();

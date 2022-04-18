@@ -10,10 +10,12 @@
 #define PIN_CLOCK_2   31
 #define PIN_CLOCK_3   32
 #define PIN_CLOCK_4   33
+#if NUM_CLOCKS == 8
 #define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
 #define PIN_CLOCK_6   37
 #define PIN_CLOCK_7   38
 #define PIN_CLOCK_8   39
+#endif
 
 const byte clock_pin[NUM_CLOCKS] = {
     PIN_CLOCK_1, PIN_CLOCK_2, PIN_CLOCK_3, PIN_CLOCK_4,

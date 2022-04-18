@@ -11,7 +11,7 @@ volatile uint8_t ixBeatStep = 0xff;
 
 volatile bool beatstep_started = false;
 
-void beatstep_loop() {
+void beatstep_loop(unsigned long ticks) {
   if ( ixBeatStep == 0xff) {
     return;
   }
@@ -65,7 +65,7 @@ void beatstep_on_tick(volatile uint32_t ticks) {
       beatstep_started = true;
     }
     #ifndef USE_UCLOCK
-      midi_beatstep->sendRealTime(usbMIDI.Clock); //sendClock();
+      //midi_beatstep->sendRealTime(usbMIDI.Clock); //sendClock();
       //midi_beatstep->send_now();
     #endif
     

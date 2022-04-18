@@ -13,7 +13,7 @@ extern volatile uint8_t ixBeatStep; //= 0xff;
 
 extern volatile bool beatstep_started; //= false;
 
-void beatstep_loop();
+void beatstep_loop(unsigned long ticks);
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue);
 void beatstep_handle_start();
 void beatstep_on_tick(volatile uint32_t ticks);

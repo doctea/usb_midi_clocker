@@ -1,4 +1,4 @@
-#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
+//#define USE_UCLOCK  // experimental: crashes a lot
 
 #define ENABLE_APCMINI
 #define ENABLE_BEATSTEP

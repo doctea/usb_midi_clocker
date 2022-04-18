@@ -108,10 +108,13 @@ void loop()
         t1 = millis();
       }
   #else
-    if ((signed long)ticks > last_processed_tick) {
-      //Serial.println("SHOULD TICK!");
-      do_tick(ticks);
-      last_processed_tick = ticks;
+    noInterrupts();
+    signed long temp_tick = ticks;
+    interrupts();
+    if ((signed long) temp_tick > last_processed_tick) {
+      Serial.println("SHOULD TICK!");
+      do_tick(temp_tick);
+      last_processed_tick = temp_tick;
     } else {
       //Serial.printf("not ticking because %i is <= %i\n", ticks, last_processed_tick);
     }
@@ -121,9 +124,9 @@ void loop()
 
   read_midi_serial_devices();
 
-  read_usb_devices();
+  read_midi_usb_devices();
 
-  known_devices_loop();
+  loop_midi_usb_devices();
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
@@ -148,7 +151,7 @@ void do_tick(uint32_t in_ticks) {
 #endif*/
     //Serial.println("ticked");
 
-    #ifndef USE_CLOCKS
+    #ifndef USE_UCLOCK
       ticks = in_ticks;
     #endif
    
@@ -161,9 +164,8 @@ void do_tick(uint32_t in_ticks) {
       restart_on_next_bar = false;
     }
 
-#ifndef USE_UCLOCK
     send_midi_serial_clocks();
-#endif
+    send_midi_usb_clocks();
 
     update_cv_outs(in_ticks);
 

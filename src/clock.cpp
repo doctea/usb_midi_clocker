@@ -6,9 +6,9 @@
 
   void timer_tick() {
     ticks++;
-    //Serial.println("ticked");
-    send_midi_serial_clocks();
-    known_devices_send_clock();
+    //Serial.printf("ticked %i\n", ticks); 
+    //send_midi_serial_clocks();
+    //send_midi_usb_clocks();
   }
   
   void setup_uclock() {

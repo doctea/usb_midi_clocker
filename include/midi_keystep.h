@@ -13,7 +13,7 @@ extern uint8_t ixKeystep;
 
 extern bool keystep_started;
 
-void keystep_loop();
+void keystep_loop(unsigned long ticks);
 // called inside interrupt
 void keystep_on_tick(uint32_t ticks) ;
 // called inside interrupt

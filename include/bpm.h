@@ -14,10 +14,7 @@ extern bool single_step;
 
 extern bool restart_on_next_bar;
 
-#ifdef USE_UCLOCK
-volatile 
-#endif
-extern uint32_t ticks; // = 0;
+volatile extern uint32_t ticks; // = 0;
 extern long last_processed_tick;
 
 // tracking which beat we're on

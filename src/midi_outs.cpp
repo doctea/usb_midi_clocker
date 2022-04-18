@@ -51,8 +51,17 @@ void send_midi_serial_stop_start() {
     }
 }
 
+#define SINGLE_FRAME_READ
+
 void read_midi_serial_devices() {
-    for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        while (midi_out_serial[i]->read());
-    }
+    #ifdef SINGLE_FRAME_READ
+        for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+            while (midi_out_serial[i]->read());
+        }
+    #else
+        static counter = 0;
+        if (count>NUM_MIDI_OUTS) counter = 0;
+        while(midi_out_serial[i]->read());
+        counter++
+    #endif
 }

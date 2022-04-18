@@ -16,9 +16,9 @@ usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 // assign device to port and set appropriate handlers
 void setupmidi(uint8_t idx, uint32_t packed_id);
 void update_usb_device_connections();
-void read_usb_devices();
+void read_midi_usb_devices();
 void known_devices_loop();
-void known_devices_send_clock();
+void send_midi_usb_clocks();
 
 void on_restart();
 void setup_multi_usb();

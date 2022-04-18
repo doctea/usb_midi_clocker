@@ -54,7 +54,7 @@ void apcmini_update_position_display(int ticks);
 void apcmini_clear_display();
 #endif
 
-void apcmini_loop(); 
+void apcmini_loop(unsigned long ticks); 
 
 #ifdef ENABLE_APCMINI_DISPLAY
 #include "midi_apcmini_display.h"

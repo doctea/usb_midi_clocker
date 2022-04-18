@@ -9,7 +9,7 @@ uint8_t ixKeystep   = 0xff;
 
 bool keystep_started = false;
 
-void keystep_loop() {
+void keystep_loop(unsigned long ticks) {
   if ( ixKeystep == 0xff ) {
       return;
   }
@@ -55,7 +55,7 @@ void keystep_on_restart() {
 
 void keystep_handle_note_on(byte channel, byte note, byte velocity) {
     static int counter = 0;
-    Serial.printf("%i: keystep_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
+    Serial.printf("%i: keystep_handle_note_on %i, %i, %i: ", counter++, channel, note, velocity);
 
     if (midi_out_bitbox) {
         Serial.printf("sending to midi_out_bitbox\n");
@@ -66,11 +66,13 @@ void keystep_handle_note_on(byte channel, byte note, byte velocity) {
 }
 void keystep_handle_note_off(byte channel, byte note, byte velocity) {
     static int counter = 0;
-    Serial.printf("%i: keystep_handle_note_off %i, %i, %i: \n", counter++, channel, note, velocity);
+    Serial.printf("%i: keystep_handle_note_off %i, %i, %i: ", counter++, channel, note, velocity);
 
     if (midi_out_bitbox) {
         Serial.printf("sending note off to midi_out_bitbox\n");
         midi_out_bitbox->sendNoteOff(note, velocity, 3);
+    } else {
+      Serial.println();
     }
 }
 

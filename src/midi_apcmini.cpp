@@ -20,7 +20,7 @@ void apcmini_update_position_display(int ticks);
 void apcmini_clear_display();
 #endif
 
-void apcmini_loop() {
+void apcmini_loop(unsigned long ticks) {
   if ( ixAPCmini == 0xff ) {
     return;
   }

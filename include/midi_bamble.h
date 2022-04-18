@@ -18,7 +18,7 @@ extern uint8_t ixBamble;
 
 extern bool bamble_started;
 
-void bamble_loop();
+void bamble_loop(unsigned long ticks);
 void bamble_on_tick(uint32_t ticks);
 void bamble_on_restart();
 void bamble_init();

@@ -1,7 +1,7 @@
 #include "bpm.h"
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "midi_apk49.h"
+#include "midi_mpk49.h"
 #include "midi_outs.h"
 
 MIDIDevice *midi_MPK49;  
@@ -9,7 +9,7 @@ uint8_t ixMPK49   = 0xff;
 
 bool MPK49_started = false;
 
-void MPK49_loop() {
+void MPK49_loop(unsigned long ticks) {
   if ( ixMPK49 == 0xff ) {
     return;
   }
