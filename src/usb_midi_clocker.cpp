@@ -13,15 +13,14 @@
 #include "debug.h"
 #include "storage.h"
 
-//#define USE_UCLOCK  // experimental: crashes a lot when receiving CC messages from APCMini
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
 
-void on_restart();
+//void on_restart();
 void do_tick(uint32_t ticks);
 
 #ifdef USE_UCLOCK
-#include <uClock.h>
+//#include <uClock.h>
 #else
 #define ATOMIC(X) X
 #endif
@@ -108,6 +107,11 @@ void loop()
         ticks++;
         t1 = millis();
       }
+  #else
+    if (ticks > last_processed_tick) {
+      do_tick(ticks);
+      last_processed_tick = ticks;
+    }
   #endif
 
   update_usb_device_connections();
@@ -151,7 +155,9 @@ void do_tick(volatile uint32_t in_ticks) {
       restart_on_next_bar = false;
     }
 
+#ifndef USE_UCLOCK
     send_midi_serial_clocks();
+#endif
 
     update_cv_outs(in_ticks);
 

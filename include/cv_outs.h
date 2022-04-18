@@ -2,6 +2,7 @@
 #define CVOUT_INCLUDED
 
 #include <Arduino.h>
+#include "Config.h"
 #include "bpm.h"
 
 #define PIN_CLOCK_START  30

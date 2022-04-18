@@ -2,10 +2,11 @@
 #define STORAGE__INCLUDED
 
 #include <Arduino.h>
+#include "Config.h"
 
-#define NUM_CLOCKS    4
+/*#define NUM_CLOCKS    4
 #define NUM_SEQUENCES 4
-#define NUM_STEPS     8
+#define NUM_STEPS     8*/
 
 #define SAVE_ID_BYTE_V0 0xD0
 #define SAVE_ID_BYTE_V1 0xD1

@@ -18,6 +18,7 @@ extern bool restart_on_next_bar;
 volatile 
 #endif
 extern uint32_t ticks; // = 0;
+extern long last_processed_tick;
 
 // tracking which beat we're on
 extern float bpm_current; //BPM_MINIMUM; //60.0f;

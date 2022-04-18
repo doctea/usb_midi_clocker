@@ -157,7 +157,7 @@ void load_state(uint8_t preset_number, savestate *output) {
   myFile.close();
 
 #ifdef ENABLE_APCMINI_DISPLAY
-  redraw_immediately = true;
+  //redraw_immediately = true;
 #endif
 
   Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
