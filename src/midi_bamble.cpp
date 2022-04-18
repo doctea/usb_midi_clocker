@@ -35,14 +35,16 @@ void bamble_on_tick(uint32_t ticks) {
 #ifdef DEBUG_TICKS
     Serial.print(F(" bamble "));
 #endif
-    if (is_bpm_on_bar(ticks) && !bamble_started) {
-      Serial.println(F("First beat of bar and BAMBLE not started -- starting!"));
-      midi_bamble->sendRealTime(usbMIDI.Start); //sendStart();
-      bamble_started = true;
-    }
+    #ifndef USE_UCLOCK
+      if (is_bpm_on_bar(ticks) && !bamble_started) {
+        Serial.println(F("First beat of bar and BAMBLE not started -- starting!"));
+        midi_bamble->sendRealTime(usbMIDI.Start); //sendStart();
+        bamble_started = true;
+      }
     
-    midi_bamble->sendRealTime(usbMIDI.Clock); //Clock();
-    midi_bamble->send_now();
+      midi_bamble->sendRealTime(usbMIDI.Clock); //Clock();
+      midi_bamble->send_now();
+    #endif
   }
 }
 

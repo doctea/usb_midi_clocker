@@ -1,6 +1,7 @@
 #define ATOMIC(X) X
 
 #include <Arduino.h>
+#include "Config.h"
 #include "USBHost_t36.h"
 #include "midi_beatstep.h"
 #include "bpm.h"
@@ -63,14 +64,10 @@ void beatstep_on_tick(volatile uint32_t ticks) {
       //Serial.flush();
       beatstep_started = true;
     }
-
-    //Serial.println("about to send clock message to beatstep");
-    //Serial.flush();
-    //ATOMIC(
+    #ifndef USE_UCLOCK
       midi_beatstep->sendRealTime(usbMIDI.Clock); //sendClock();
-      midi_beatstep->send_now();
-    //);
-    //Serial.println(F("sent clock"));
+      //midi_beatstep->send_now();
+    #endif
     
     //Serial.flush();
   } else {

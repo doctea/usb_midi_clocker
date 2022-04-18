@@ -18,6 +18,7 @@ void setupmidi(uint8_t idx, uint32_t packed_id);
 void update_usb_device_connections();
 void read_usb_devices();
 void known_devices_loop();
+void known_devices_send_clock();
 
 void on_restart();
 void setup_multi_usb();

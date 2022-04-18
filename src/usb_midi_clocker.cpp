@@ -108,9 +108,12 @@ void loop()
         t1 = millis();
       }
   #else
-    if (ticks > last_processed_tick) {
+    if ((signed long)ticks > last_processed_tick) {
+      //Serial.println("SHOULD TICK!");
       do_tick(ticks);
       last_processed_tick = ticks;
+    } else {
+      //Serial.printf("not ticking because %i is <= %i\n", ticks, last_processed_tick);
     }
   #endif
 
@@ -132,7 +135,7 @@ void loop()
 }
 
 // called inside interrupt
-void do_tick(volatile uint32_t in_ticks) {  
+void do_tick(uint32_t in_ticks) {
 /*#ifdef DEBUG_TICKS
     unsigned int delta = millis()-t1;
 
@@ -143,8 +146,11 @@ void do_tick(volatile uint32_t in_ticks) {
     Serial.print(ms_per_tick);
     Serial.print(F(") sending clock for [ "));
 #endif*/
+    //Serial.println("ticked");
 
-    ticks = in_ticks;
+    #ifndef USE_CLOCKS
+      ticks = in_ticks;
+    #endif
    
     if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
       //in_ticks = ticks = 0;

@@ -156,6 +156,18 @@ void read_usb_devices() {
   counter++;
 }
 
+void known_devices_send_clock() {
+  if(ixBeatStep!=0xFF) {
+    midi_beatstep->sendRealTime(midi::Clock);
+  }
+  /*if(ixAPCmini!=0xFF) {
+    midi_apcmini->sendRealTime(midi::Clock);
+  }*/
+  if (ixBamble!=0xFF) {
+    midi_bamble->sendRealTime(midi::Clock);
+  }
+}
+
 void known_devices_loop() {
   #ifdef ENABLE_BEATSTEP
       beatstep_loop();
