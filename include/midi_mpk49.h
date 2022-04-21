@@ -10,7 +10,7 @@
 #include "ConfigMidi.h"
 #include "midi_outs.h"
 
-extern MIDIDevice *midi_MPK49;  
+extern MIDIDevice_BigBuffer *midi_MPK49;  
 extern uint8_t ixMPK49; //  = 0xff;
 
 extern bool MPK49_started; // = false;

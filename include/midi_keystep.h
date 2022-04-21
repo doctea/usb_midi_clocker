@@ -8,7 +8,7 @@
 #include "ConfigMidi.h"
 #include "midi_outs.h"
 
-extern MIDIDevice *midi_keystep;  
+extern MIDIDevice_BigBuffer *midi_keystep;  
 extern uint8_t ixKeystep;
 
 extern bool keystep_started;

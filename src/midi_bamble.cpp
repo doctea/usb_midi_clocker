@@ -7,7 +7,7 @@
 #include "midi_outs.h"
 #include "midi_bamble.h"
 
-MIDIDevice *midi_bamble;  
+MIDIDevice_BigBuffer *midi_bamble;  
 uint8_t ixBamble   = 0xff;
 
 bool bamble_started = false;

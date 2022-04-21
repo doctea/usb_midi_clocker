@@ -4,7 +4,7 @@
 //#include "midi_outs.h"
 #include "midi_keystep.h"
 
-MIDIDevice *midi_keystep;  
+MIDIDevice_BigBuffer *midi_keystep;  
 uint8_t ixKeystep   = 0xff;
 
 bool keystep_started = false;
@@ -56,24 +56,32 @@ void keystep_on_restart() {
 void keystep_handle_note_on(byte channel, byte note, byte velocity) {
     static int counter = 0;
     Serial.printf("%i: keystep_handle_note_on %i, %i, %i: ", counter++, channel, note, velocity);
-
-    if (midi_out_bitbox) {
-        Serial.printf("sending to midi_out_bitbox\n");
-        midi_out_bitbox->sendNoteOn(note, velocity, 3);
-    } else {
-        Serial.println();
-    }
+    
+    #ifdef ENABLE_BITBOX
+      if (midi_out_bitbox) {
+          Serial.printf("sending to midi_out_bitbox\n");
+          midi_out_bitbox->sendNoteOn(note, velocity, 3);
+      } else {
+          Serial.println();
+      }
+    #else
+      Serial.println("No output device configured");
+    #endif
 }
 void keystep_handle_note_off(byte channel, byte note, byte velocity) {
     static int counter = 0;
     Serial.printf("%i: keystep_handle_note_off %i, %i, %i: ", counter++, channel, note, velocity);
 
-    if (midi_out_bitbox) {
-        Serial.printf("sending note off to midi_out_bitbox\n");
-        midi_out_bitbox->sendNoteOff(note, velocity, 3);
-    } else {
-      Serial.println();
-    }
+    #ifdef ENABLE_BITBOX
+      if (midi_out_bitbox) {
+          Serial.printf("sending note off to midi_out_bitbox\n");
+          midi_out_bitbox->sendNoteOff(note, velocity, 3);
+      } else {
+        Serial.println();
+      }
+    #else
+      Serial.println("No output device configured");
+    #endif
 }
 
 void keystep_init() {

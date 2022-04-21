@@ -1,6 +1,6 @@
 #ifndef APCMINI__INCLUDED
 #define APCMINI__INCLUDED
-#ifdef ENABLE_APCMINI
+//#ifdef ENABLE_APCMINI
 
 #include "bpm.h"
 #include "sequencer.h"
@@ -35,7 +35,7 @@
 #define BUTTON_RESTART_AT_END_OF_BAR  APCMINI_BUTTON_DEVICE
 
 //MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *midi_apcmini;
-extern MIDIDevice *midi_apcmini;
+extern MIDIDevice_BigBuffer *midi_apcmini;
 extern volatile uint8_t ixAPCmini;  //= 0xff;
 
 extern volatile bool apcmini_started;// = false;
@@ -72,6 +72,6 @@ void apcmini_on_tick(volatile uint32_t ticks);
 // called inside interrupt
 void apcmini_on_restart();
 void apcmini_init();
-#endif
+//#endif
 
 #endif

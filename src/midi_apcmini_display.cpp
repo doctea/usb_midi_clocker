@@ -2,7 +2,8 @@
 #include "midi_apcmini.h"
 #include "midi_apcmini_display.h"
 
-#define ATOMIC(X) X
+//#define ATOMIC(X) noInterrupts(); X; interrupts();
+  #define ATOMIC(X) X
 
 #include "Config.h"
 #include "cv_outs.h"
@@ -14,7 +15,7 @@
   APCMINI_YELLOW,
   APCMINI_RED,
 };*/
-inline byte get_colour(byte lev) {
+byte get_colour(byte lev) {
   if (lev>=sizeof(colour_intensity))
     lev = sizeof(colour_intensity)-1;
   return colour_intensity[lev];
@@ -40,7 +41,7 @@ void apcmini_update_position_display(int ticks) {
     ATOMIC(
       midi_apcmini->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
       midi_apcmini->sendNoteOff(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      midi_apcmini->send_now();
+      //midi_apcmini->send_now();
     )
   }
 }
@@ -104,7 +105,7 @@ void apcmini_clear_display() {
       midi_apcmini->sendNoteOn(x, APCMINI_OFF, 1);
     )
   }
-  delay(1000);
+  //delay(1000);
   Serial.println("Leaving APC display");
 }
 

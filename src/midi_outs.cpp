@@ -4,13 +4,13 @@
 #include "midi_outs.h"
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI2);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI3);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI4);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI5);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI6);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI7);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI8);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI3);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial4, MIDI4);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial5, MIDI5);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial6, MIDI6);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial7, MIDI7);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial8, MIDI8);
 
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_OUTS] = {
     // TODO: properly initialise up to the size of NUM_MIDI_OUTS
@@ -55,13 +55,15 @@ void send_midi_serial_stop_start() {
 
 void read_midi_serial_devices() {
     #ifdef SINGLE_FRAME_READ
+        //int i = 0;
         for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
             while (midi_out_serial[i]->read());
         }
     #else
-        static counter = 0;
-        if (count>NUM_MIDI_OUTS) counter = 0;
-        while(midi_out_serial[i]->read());
-        counter++
+        static int counter = 0;
+        if (counter>=NUM_MIDI_OUTS) 
+            counter = 0;
+        while(midi_out_serial[counter]->read());
+        counter++;
     #endif
 }

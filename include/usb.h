@@ -10,15 +10,15 @@ extern USBHub hub1;
 extern USBHub hub2;
 extern USBHub hub3;
 extern USBHub hub4;
-extern MIDIDevice midi01;
-extern MIDIDevice midi02;
-extern MIDIDevice midi03;
-extern MIDIDevice midi04;
-extern MIDIDevice midi05;
-extern MIDIDevice midi06;
-extern MIDIDevice midi07;
-extern MIDIDevice midi08;
-extern MIDIDevice * usb_midi_device[8];/* = {
+extern MIDIDevice_BigBuffer midi01;
+extern MIDIDevice_BigBuffer midi02;
+extern MIDIDevice_BigBuffer midi03;
+extern MIDIDevice_BigBuffer midi04;
+extern MIDIDevice_BigBuffer midi05;
+extern MIDIDevice_BigBuffer midi06;
+extern MIDIDevice_BigBuffer midi07;
+extern MIDIDevice_BigBuffer midi08;
+extern MIDIDevice_BigBuffer * usb_midi_device[8];/* = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
 };*/
 

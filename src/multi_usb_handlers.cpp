@@ -109,31 +109,41 @@ void update_usb_device_connections() {
     if (usb_midi_connected[port] != packed_id) {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
       // unassign the midi_xxx helper pointers if appropriate
+      #ifdef ENABLE_BAMBLE
       if (midi_bamble==usb_midi_device[port]) {
         Serial.printf("Nulling ixBamble and midi_bamble\n");
         ixBamble = 0xFF;
         midi_bamble = nullptr;
       }
+      #endif
+      #ifdef ENABLE_BEATSTEP
       if (midi_beatstep==usb_midi_device[port]) {
         Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
         ixBeatStep = 0xFF;
         midi_beatstep = nullptr;
       }
+      #endif
+      #ifdef ENABLE_APCMINI
       if (midi_apcmini==usb_midi_device[port]) {
         Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
         ixAPCmini = 0xFF;
         midi_apcmini = nullptr;
       }
+      #endif
+      #ifdef ENABLE_MPK49
       if (midi_MPK49==usb_midi_device[port]) {
         Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
         ixMPK49 = 0xFF;
         midi_MPK49 = nullptr;
       }
+      #endif
+      #ifdef ENABLE_KEYSTEP
       if (midi_keystep==usb_midi_device[port]) {
         Serial.printf("Nulling ixKeystep and midi_keystep\n");
         ixKeystep = 0xFF;
         midi_keystep = nullptr;
       }
+      #endif
 
       Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_connected[port]);
 
@@ -148,8 +158,14 @@ void update_usb_device_connections() {
 
 void read_midi_usb_devices() {
   #ifdef SINGLE_FRAME_READ
+    static int counter;
     for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-      while(usb_midi_device[i]->read());
+      //while(usb_midi_device[i]->read());
+      if (usb_midi_device[i]->read()) {
+        //usb_midi_device[counter%NUM_USB_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
+        counter++;
+        //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
+      }
     }
   #else
     static int counter;
@@ -162,15 +178,21 @@ void read_midi_usb_devices() {
 }
 
 void send_midi_usb_clocks() {
-  if(ixBeatStep!=0xFF) {
-    midi_beatstep->sendRealTime(midi::Clock);
-  }
+  #ifdef ENABLE_BEATSTEP
+    if(ixBeatStep!=0xFF) {
+      midi_beatstep->sendRealTime(midi::Clock);
+      //midi_beatstep->send_now();
+    }
+  #endif
   /*if(ixAPCmini!=0xFF) {
     midi_apcmini->sendRealTime(midi::Clock);
   }*/
-  if (ixBamble!=0xFF) {
-    midi_bamble->sendRealTime(midi::Clock);
-  }
+  #ifdef ENABLE_BAMBLE
+    if (ixBamble!=0xFF) {
+      midi_bamble->sendRealTime(midi::Clock);
+      //midi_bamble->send_now();
+    }
+  #endif
 }
 
 void loop_midi_usb_devices() {

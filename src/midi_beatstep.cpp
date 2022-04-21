@@ -1,4 +1,6 @@
-#define ATOMIC(X) X
+//#define ATOMIC(X) noInterrupts(); X; interrupts();
+  #define ATOMIC(X) X
+
 
 #include <Arduino.h>
 #include "Config.h"
@@ -6,7 +8,7 @@
 #include "midi_beatstep.h"
 #include "bpm.h"
 
-MIDIDevice *midi_beatstep;
+MIDIDevice_BigBuffer *midi_beatstep;
 volatile uint8_t ixBeatStep = 0xff;
 
 volatile bool beatstep_started = false;

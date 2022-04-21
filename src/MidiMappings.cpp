@@ -4,54 +4,64 @@
 #include "midi_outs.h"
 //#include "midi_bamble.h"
 
-//#ifdef ENABLE_BITBOX
+#ifdef ENABLE_BITBOX
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
-//#endif
+#endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 //#ifdef ENABLE_BAMBLE
 //MIDIDevice *midi_out_cv12_poly   = midi_bamble;
 //#endif
 
-//#ifdef ENABLE_LESTRUM
+#ifdef ENABLE_LESTRUM
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum      = &ENABLE_LESTRUM;
-//#endif
+#endif
 
-//#ifdef ENABLE_DRUMKIT
+#ifdef ENABLE_DRUMKIT
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &ENABLE_DRUMKIT;
-//#endif
+#endif
 
 
 #ifdef ENABLE_LESTRUM
 // configure incoming lestrum to output to midimuso via bamble
 void lestrum_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
-    channel = channel & 0b01111111;
-    note = note & 0b01111111;
-    velocity = velocity & 0b01111111;
-    Serial.printf("!! lestrum_note_on(channel %i, note %i, velocity %i): ", channel, note, velocity);
+    Serial.printf("lestrum_note_on(\tchannel %i,\tnote %i,\tvelocity %i): ", channel, note, velocity);
     if (channel==1) {
-        Serial.println("channel 1->midi_out_cv12_poly");
-        //midi_out_cv12_poly->sendNoteOn(note, 127, 1); //channel);
-        if (ixBamble!=0xFF && midi_bamble) 
-            midi_bamble->sendNoteOn(note, 127, 1); //channel);
+        #ifdef ENABLE_BAMBLE
+            Serial.println("channel 1->midi_out_cv12_poly");
+            //midi_out_cv12_poly->sendNoteOn(note, 127, 1); //channel);
+            if (ixBamble!=0xFF && midi_bamble) 
+                midi_bamble->sendNoteOn(note, 127, 1); //channel);
+        #else
+            Serial.println("channel 1, but no output device configured");
+        #endif
     } else {
-        Serial.println("channel 3->midi_out_bitbox");
-        if (midi_out_bitbox)
-            midi_out_bitbox->sendNoteOn(note, 127, 3);
+        #ifdef ENABLE_BITBOX
+            Serial.println("channel 3->midi_out_bitbox");
+            if (midi_out_bitbox)
+                midi_out_bitbox->sendNoteOn(note, 127, 3);
+        #else
+            Serial.printf("channel %i, but no output device configured\n", channel);
+        #endif
     }
 }
 void lestrum_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
-    channel = channel & 0b01111111;
-    note = note & 0b01111111;
-    velocity = velocity & 0b01111111;
-    Serial.printf("!! lestrum_note_off(channel %i, note %i, velocity %i): ", channel, note, velocity);
+    Serial.printf("!! lestrum_note_off(\tchannel %i,\tnote %i,\tvelocity %i): ", channel, note, velocity);
     if (channel==1) {
-        Serial.println("channel 1->midi_out_cv12_poly");
-        if (ixBamble!=0xFF && midi_bamble) 
-            midi_bamble->sendNoteOff(note, 127, 1); //channel);
+        #ifdef ENABLE_BAMBLE
+            Serial.println("channel 1->midi_out_cv12_poly");
+            if (ixBamble!=0xFF && midi_bamble) 
+                midi_bamble->sendNoteOff(note, 127, 1); //channel);
+        #else
+            Serial.println("channel 1, but no output device configured");
+        #endif
     } else {
-        Serial.println("channel 3->midi_out_bitbox");
-        if (midi_out_bitbox)
-            midi_out_bitbox->sendNoteOff(note, 127, 3);
+        #ifdef ENABLE_BITBOX
+            Serial.println("channel 3->midi_out_bitbox");
+            if (midi_out_bitbox)
+                midi_out_bitbox->sendNoteOff(note, 127, 3);
+        #else
+            Serial.printf("channel %i, but no output device configured\n", channel);
+        #endif
     }
 }
 #endif
@@ -60,7 +70,7 @@ void lestrum_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
 #ifdef ENABLE_DRUMKIT
 // configure incoming drumkit on input 2 to go out to drums on bamble
 void drumkit_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
-    Serial.printf("?? drumkit_note_on(channel %i, note %i, velocity %i): ", channel, note, velocity);
+    Serial.printf("drumkit_note_on(\tchannel %i,\tnote %i,\tvelocity %i): ", channel, note, velocity);
     #ifdef ENABLE_BAMBLE
         if (midi_bamble) {
             Serial.println("sending!");

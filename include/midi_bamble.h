@@ -13,7 +13,7 @@
 //#include "ConfigMidi.h"
 //#include "midi_outs.h"
 
-extern MIDIDevice *midi_bamble;  
+extern MIDIDevice_BigBuffer *midi_bamble;  
 extern uint8_t ixBamble;
 
 extern bool bamble_started;

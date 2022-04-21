@@ -22,6 +22,7 @@ void do_tick(uint32_t ticks);
 #ifdef USE_UCLOCK
 //#include <uClock.h>
 #else
+//#define ATOMIC(X) noInterrupts(); X; interrupts();
 #define ATOMIC(X) X
 #endif
 
@@ -120,13 +121,13 @@ void loop()
     }
   #endif
 
-  update_usb_device_connections();
-
   read_midi_serial_devices();
 
+  #ifdef ENABLE_USB
+  update_usb_device_connections();
   read_midi_usb_devices();
-
   loop_midi_usb_devices();
+  #endif
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
@@ -165,21 +166,28 @@ void do_tick(uint32_t in_ticks) {
     }
 
     send_midi_serial_clocks();
+
+    #ifdef ENABLE_USB
     send_midi_usb_clocks();
+    #endif
 
+    #ifdef ENABLE_CV
     update_cv_outs(in_ticks);
+    #endif
 
-#ifdef ENABLE_BEATSTEP
-    beatstep_on_tick(in_ticks);
-#endif
+    #ifdef ENABLE_USB
+      #ifdef ENABLE_BEATSTEP
+          beatstep_on_tick(in_ticks);
+      #endif
 
-#ifdef ENABLE_BAMBLE
-    bamble_on_tick(in_ticks);
-#endif
+      #ifdef ENABLE_BAMBLE
+          bamble_on_tick(in_ticks);
+      #endif
 
-#ifdef ENABLE_APCMINI
-    apcmini_on_tick(in_ticks);
-#endif
+      #ifdef ENABLE_APCMINI
+          apcmini_on_tick(in_ticks);
+      #endif
+    #endif
 
 #ifdef DEBUG_TICKS
   Serial.println(F(" ]"));

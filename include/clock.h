@@ -8,6 +8,7 @@
 
   #include <TimerThree.h>
   
+  //#define ATOMIC(X) noInterrupts(); X; interrupts();
   #define ATOMIC(X) X
 
   // The callback function wich will be called by Clock each Pulse of 96PPQN clock resolution.

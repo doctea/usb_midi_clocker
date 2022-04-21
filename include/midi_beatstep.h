@@ -2,13 +2,14 @@
 #define BEATSTEP__INCLUDED
 #ifdef ENABLE_BEATSTEP
 
-#define ATOMIC(X) X
+//#define ATOMIC(X) noInterrupts(); X; interrupts();
+  #define ATOMIC(X) X
 
 #include "USBHost_t36.h"
 #include <Arduino.h>
 #include "bpm.h"
 
-extern MIDIDevice *midi_beatstep;
+extern MIDIDevice_BigBuffer *midi_beatstep;
 extern volatile uint8_t ixBeatStep; //= 0xff;
 
 extern volatile bool beatstep_started; //= false;

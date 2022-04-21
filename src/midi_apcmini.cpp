@@ -1,7 +1,11 @@
 #include "Config.h"
 #include "midi_apcmini.h"
+#include "cv_outs.h"
+#include "storage.h"
+#include <MIDI.h>
+#include "USBHost_t36.h"
 
-MIDIDevice *midi_apcmini;
+MIDIDevice_BigBuffer *midi_apcmini;
 volatile uint8_t ixAPCmini  = 0xff;
 
 volatile bool apcmini_started = false;
@@ -13,12 +17,6 @@ byte clock_selected = 0;
 
 bool redraw_immediately = false;
 unsigned long last_updated_display = 0;
-
-#ifdef ENABLE_APCMINI_DISPLAY
-void apcmini_update_clock_display();
-void apcmini_update_position_display(int ticks);
-void apcmini_clear_display();
-#endif
 
 void apcmini_loop(unsigned long ticks) {
   if ( ixAPCmini == 0xff ) {
@@ -50,11 +48,6 @@ void apcmini_loop(unsigned long ticks) {
 #endif
   //Serial.println(F("finished apcmini_loop"));
 }
-
-#ifdef ENABLE_APCMINI_DISPLAY
-#include "midi_apcmini_display.h"
-#endif
-
 
 // called from loop, already inside ATOMIC, so don't use ATOMIC here
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
@@ -90,7 +83,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
 #ifdef ENABLE_CLOCKS
   } else if (inNumber==APCMINI_BUTTON_UP) {
     // move clock selection up
-    byte old_clock_selected  = clock_selected;
+    byte old_clock_selected = clock_selected;
     //redraw_immediately = true;
     if (clock_selected==0)
       clock_selected = NUM_CLOCKS-1;
@@ -238,7 +231,9 @@ void apcmini_on_restart() {
       //midi_apcmini->sendRealTime(usbMIDI.Start);
     //)
     //ATOMIC(
+    #ifdef ENABLE_APCMINI_DISPLAY
       midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
+    #endif
     //)
   }
 }

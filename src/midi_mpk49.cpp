@@ -4,7 +4,7 @@
 #include "midi_mpk49.h"
 #include "midi_outs.h"
 
-MIDIDevice *midi_MPK49;  
+MIDIDevice_BigBuffer *midi_MPK49;  
 uint8_t ixMPK49   = 0xff;
 
 bool MPK49_started = false;
@@ -58,18 +58,26 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
     static int counter = 0;
     Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
 
-    if (midi_out_bitbox) {
-        Serial.printf("sending to midi_out_bitbox\n");
-        midi_out_bitbox->sendNoteOn(note, velocity, 3);
-    } else {
-        Serial.println();
-    }
+    #ifdef ENABLE_BITBOX
+      if (midi_out_bitbox) {
+          Serial.printf("sending to midi_out_bitbox\n");
+          midi_out_bitbox->sendNoteOn(note, velocity, 3);
+      } else {
+          Serial.println();
+      }
+    #else
+      Serial.println("No output device configured");
+    #endif
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
+  #ifdef ENABLE_BITBOX
     if (midi_out_bitbox) {
         Serial.printf("sending note off to midi_out_bitbox\n");
         midi_out_bitbox->sendNoteOff(note, velocity, 3);
     }
+  #else
+    Serial.println("mpk49_handle_note_off: no output device configured");
+  #endif
 }
 
 void MPK49_init() {

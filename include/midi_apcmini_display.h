@@ -1,16 +1,17 @@
 #ifndef APCMINI_DISPLAY__INCLUDED
 #define APCMINI_DISPLAY__INCLUDED
-#ifdef ENABLE_APCMINI_DISPLAY
 
-#define ATOMIC(X) X
+//#define ATOMIC(X) noInterrupts(); X; interrupts();
+  #define ATOMIC(X) X
 
+#include <MIDI.h>
 #include "Config.h"
 #include "cv_outs.h"
 #include "sequencer.h"
 #include "storage.h"
 
 // button colours from https://remotify.io/community/question/led-feedback-values
-#define APCMINI_OFF           (uint8_t)0
+#define APCMINI_OFF           0
 #define APCMINI_ON            1
 #define APCMINI_GREEN         1
 #define APCMINI_GREEN_BLINK   2
@@ -48,11 +49,9 @@ void redraw_sequence_row(byte c);
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_clear_display();
-
+void apcmini_update_position_display(int ticks);
 void apcmini_update_clock_display(); 
 #endif
 
-
-#endif
 
 #endif
