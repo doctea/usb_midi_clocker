@@ -136,6 +136,8 @@ void loop()
   /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
   loop_counter++;*/
 
+  load_state_update();  // read next bit of file
+
 }
 
 // called inside interrupt

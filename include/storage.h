@@ -23,6 +23,9 @@ typedef struct savestate {
 
 void save_state(uint8_t preset_number, savestate *input);
 void load_state(uint8_t preset_number, savestate *input);
+void load_state_update();
+void load_state_start(uint8_t preset_number, savestate *input);
+void load_state_parse_line(String line, savestate *output);
 void setup_storage();
 
 extern savestate current_state;

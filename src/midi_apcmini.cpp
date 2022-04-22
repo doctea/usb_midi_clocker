@@ -151,7 +151,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.print(F("Single-stepped to tick "));
     Serial.println(ticks);*/
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
-    load_state(0, &current_state);
+    load_state_start(0, &current_state);
 #ifdef ENABLE_APCMINI_DISPLAY
     apcmini_update_clock_display();
 #endif

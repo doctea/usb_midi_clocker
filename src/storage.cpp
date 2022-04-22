@@ -51,7 +51,7 @@ void save_state(uint8_t preset_number, savestate *input) {
     SD.remove(filename);
   }
   myFile = SD.open(filename, FILE_WRITE_BEGIN | O_TRUNC); //FILE_WRITE_BEGIN);
-  if (!myFile) {
+  if (!myFile) {    
     Serial.printf("Error: couldn't open %s for writing\n", filename);
     return;
   }
@@ -77,6 +77,118 @@ void save_state(uint8_t preset_number, savestate *input) {
   myFile.close();
   Serial.println("Finished saving.");
 }
+
+enum load_states {
+  NONE,
+  LOADING
+};
+
+byte load_state_current = load_states::NONE;
+savestate *load_state_output;
+File load_state_file;
+uint8_t clock_multiplier_index = 0;
+uint8_t clock_delay_index = 0;
+uint8_t sequence_data_index = 0;
+
+void load_state_update() {
+  if (load_state_current!=load_states::LOADING || !load_state_file)
+    return;
+
+  String line;
+  if(line = load_state_file.readStringUntil('\n')) {
+    Serial.printf("%i: parsing line %s\n", millis(), line.c_str());
+    load_state_parse_line(line, load_state_output);
+    Serial.printf("%i: finished load_state_parse_line\n", millis());
+  } else {
+    Serial.printf("%i: Finished loading file\n", millis());
+    load_state_current = load_states::NONE;
+    load_state_file.close();
+    Serial.printf("%i: closed file\n",millis());
+  }
+}
+void load_state_start(uint8_t preset_number, savestate *output) {
+  bool debug = false;
+  //Serial.println("load_state not implemented on teensy");
+  if (load_state_current==load_states::LOADING) {
+    load_state_file.close();
+    load_state_current = load_states::NONE;
+  }
+  clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
+
+  char filename[255] = "";
+  sprintf(filename, "sequences/sequence%i.txt", preset_number);
+  Serial.printf("load_state_start(%i) opening %s\n", preset_number, filename);
+  load_state_file = SD.open(filename, FILE_READ);
+
+  if (!load_state_file) {
+    Serial.printf("Error: Couldn't open %s for reading!\n", filename);
+    return;
+  }
+
+  load_state_file.setTimeout(0);
+  load_state_current = load_states::LOADING;
+  load_state_output = output;
+}
+
+void load_state_parse_line(String line, savestate *output) {
+  bool debug = false;
+  if (line.charAt(0)==';') 
+    return;  // skip comment lines
+  if (line.startsWith("id=")) {
+    output->id = (uint8_t) line.remove(0,String("id=").length()).toInt();
+    if (debug) Serial.printf("Read id %i\n", output->id);
+  }
+  if (line.startsWith("size_clocks=")) {
+    output->size_clocks = (uint8_t) line.remove(0,String("size_clocks=").length()).toInt();
+    if (debug) Serial.printf("Read size_clocks %i\n", output->size_clocks);
+  }
+  if (line.startsWith("size_sequences=")) {
+    output->size_sequences = (uint8_t) line.remove(0,String("size_sequences=").length()).toInt();
+    if (debug) Serial.printf("Read size_sequences %i\n", output->size_sequences);
+  }
+  if (line.startsWith("size_steps=")) {
+    output->size_steps = (uint8_t) line.remove(0,String("size_steps=").length()).toInt();
+    if (debug) Serial.printf("Read size_steps %i\n", output->size_steps);
+  }
+  if (line.startsWith("clock_multiplier=")) {
+    if (clock_multiplier_index>NUM_CLOCKS) {
+      Serial.println("Skipping clock_multiplier entry as exceeds NUM_CLOCKS");
+      return;
+    }
+    output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();
+    if (debug) Serial.printf("Read a clock_multiplier: %i\n", output->clock_multiplier[clock_multiplier_index]);
+    clock_multiplier_index++;      
+  }
+  if (line.startsWith("clock_delay=")) {
+    if (clock_delay_index>NUM_CLOCKS) {
+      Serial.println("Skipping clock_delay entry as exceeds NUM_CLOCKS");
+      return;
+    }
+    output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String("clock_delay=").length()).toInt();      
+    if (debug) Serial.printf("Read a clock_delay: %i\n", output->clock_delay[clock_delay_index]);
+    clock_delay_index++;
+  }
+  if (line.startsWith("sequence_data=")) {
+    if (clock_delay_index>NUM_SEQUENCES) {
+      Serial.println("Skipping sequence_data entry as exceeds NUM_CLOCKS");
+      return;
+    }
+    //output->clock_multiplier = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();      
+    String data = line.remove(0,String("sequence_data=").length());
+    char v[2] = "0";
+    if (debug) Serial.printf("Reading sequence %i: [", sequence_data_index);
+    for (unsigned int x = 0 ; x < data.length() && x < output->size_steps && data.charAt(x)!='\n' ; x++) {
+      v[0] = data.charAt(x);
+      if (v[0]=='\n') break;
+      output->sequence_data[sequence_data_index][x] = hex2int(v);
+      //Serial.printf("%i:%i, ", x, output->sequence_data[sequence_data_index][x]);
+      if (debug) Serial.printf("%i", output->sequence_data[sequence_data_index][x]);
+    }
+    if (debug) Serial.println("]");
+    sequence_data_index++;
+  }
+}
+
 void load_state(uint8_t preset_number, savestate *output) {
   bool debug = false;
   //Serial.println("load_state not implemented on teensy");
@@ -86,75 +198,22 @@ void load_state(uint8_t preset_number, savestate *output) {
   sprintf(filename, "sequences/sequence%i.txt", preset_number);
   Serial.printf("load_state(%i) opening %s\n", preset_number, filename);
   myFile = SD.open(filename, FILE_READ);
+  myFile.setTimeout(0);
+
+  clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
   if (!myFile) {
     Serial.printf("Error: Couldn't open %s for reading!\n", filename);
     return;
   }
 
-  uint8_t clock_multiplier_index = 0;
-  uint8_t clock_delay_index = 0;
-  uint8_t sequence_data_index = 0;
-
   String line;
   while (line = myFile.readStringUntil('\n')) {
-    if (line.charAt(0)==';') 
-      continue;  // skip comment lines
-    if (line.startsWith("id=")) {
-      output->id = (uint8_t) line.remove(0,String("id=").length()).toInt();
-      if (debug) Serial.printf("Read id %i\n", output->id);
-    }
-    if (line.startsWith("size_clocks=")) {
-      output->size_clocks = (uint8_t) line.remove(0,String("size_clocks=").length()).toInt();
-      if (debug) Serial.printf("Read size_clocks %i\n", output->size_clocks);
-    }
-    if (line.startsWith("size_sequences=")) {
-      output->size_sequences = (uint8_t) line.remove(0,String("size_sequences=").length()).toInt();
-      if (debug) Serial.printf("Read size_sequences %i\n", output->size_sequences);
-    }
-    if (line.startsWith("size_steps=")) {
-      output->size_steps = (uint8_t) line.remove(0,String("size_steps=").length()).toInt();
-      if (debug) Serial.printf("Read size_steps %i\n", output->size_steps);
-    }
-    if (line.startsWith("clock_multiplier=")) {
-      if (clock_multiplier_index>NUM_CLOCKS) {
-        Serial.println("Skipping clock_multiplier entry as exceeds NUM_CLOCKS");
-        continue;
-      }
-      output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();
-      if (debug) Serial.printf("Read a clock_multiplier: %i\n", output->clock_multiplier[clock_multiplier_index]);
-      clock_multiplier_index++;      
-    }
-    if (line.startsWith("clock_delay=")) {
-      if (clock_delay_index>NUM_CLOCKS) {
-        Serial.println("Skipping clock_delay entry as exceeds NUM_CLOCKS");
-        continue;
-      }
-      output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String("clock_delay=").length()).toInt();      
-      if (debug) Serial.printf("Read a clock_delay: %i\n", output->clock_delay[clock_delay_index]);
-      clock_delay_index++;
-    }
-    if (line.startsWith("sequence_data=")) {
-      if (clock_delay_index>NUM_SEQUENCES) {
-        Serial.println("Skipping sequence_data entry as exceeds NUM_CLOCKS");
-        continue;
-      }
-      //output->clock_multiplier = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();      
-      String data = line.remove(0,String("sequence_data=").length());
-      char v[2] = "0";
-      if (debug) Serial.printf("Reading sequence %i: [", sequence_data_index);
-      for (unsigned int x = 0 ; x < data.length() && x < output->size_steps && data.charAt(x)!='\n' ; x++) {
-        v[0] = data.charAt(x);
-        if (v[0]=='\n') break;
-        output->sequence_data[sequence_data_index][x] = hex2int(v);
-        //Serial.printf("%i:%i, ", x, output->sequence_data[sequence_data_index][x]);
-        if (debug) Serial.printf("%i", output->sequence_data[sequence_data_index][x]);
-      }
-      if (debug) Serial.println("]");
-      sequence_data_index++;
-    }
+    load_state_parse_line(line, output);
   }
+  Serial.println("Closing file..");
   myFile.close();
+  Serial.println("File closed");
 
 #ifdef ENABLE_APCMINI_DISPLAY
   //redraw_immediately = true;
