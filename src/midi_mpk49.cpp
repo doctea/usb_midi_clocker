@@ -66,8 +66,8 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
     Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
 
     #ifdef ENABLE_RECORDING
-    if (mpk49_recording)
-      recordInstruction(midi::NoteOn, channel, note, velocity);
+      if (mpk49_recording)
+        recordInstruction(midi::NoteOn, channel, note, velocity);
     #endif
 
     #ifdef ENABLE_BITBOX
@@ -101,11 +101,16 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 #ifdef ENABLE_RECORDING
 void mpk49_handle_mmc_record() {
   mpk49_recording = !mpk49_recording;
+  if (mpk49_recording) {
+    Serial.println("mpk49 recording");
+  } else {
+    Serial.println("mpk49 stop recording");
+  }
 }
 
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
   Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
-  for (int i = 0 ; i < size ; i++) {
+  for (unsigned int i = 0 ; i < size ; i++) {
     Serial.printf("%02x ", data[i]);
   }
   Serial.println("]");

@@ -107,7 +107,7 @@ void load_state_update() {
   }
 }
 void load_state_start(uint8_t preset_number, savestate *output) {
-  bool debug = false;
+  //bool debug = false;
   //Serial.println("load_state not implemented on teensy");
   if (load_state_current==load_states::LOADING) {
     load_state_file.close();

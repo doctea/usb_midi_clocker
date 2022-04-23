@@ -44,14 +44,13 @@ void do_tick(uint32_t ticks);
 
 #include "multi_usb_handlers.h"
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
   //while (!Serial);
 
-  for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-    pinMode(clock_pin[i], OUTPUT);
-  }
+  #ifdef ENABLE_CV
+  setup_cv();
+  #endif
 
   delay( 100 );
 

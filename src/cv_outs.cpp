@@ -61,46 +61,64 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
     );
 }
 
+void setup_cv() {
+  for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+    pinMode(clock_pin[i], OUTPUT);
+  }
+  #ifdef PIN_CLOCK_RESET
+    pinMode(PIN_CLOCK_RESET, OUTPUT);
+  #endif
+}
+
 #ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
 #endif
 
 void update_cv_outs(unsigned long ticks) {
-#if defined(ENABLE_SEQUENCER) || defined(ENABLE_CLOCKS)
-  // start bar (every fourth quarter note)
-  for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-    bool should_go_high = false;
-    bool should_go_low  = false;
+  #if defined(ENABLE_SEQUENCER) || defined(ENABLE_CLOCKS)
 
-    if (
-#ifdef ENABLE_SEQUENCER
-      should_trigger_sequence(ticks, i)
-#endif
-#if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
-      ||
-#endif
-#ifdef ENABLE_CLOCKS
-      should_trigger_clock(ticks, i)
-#endif
-    ) {
-        should_go_high = true;
-    } else if (
-#ifdef ENABLE_SEQUENCER
-      should_trigger_sequence(ticks, i, duration)
-#endif
-#if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
-      ||
-#endif
-#ifdef ENABLE_CLOCKS
-      should_trigger_clock(ticks, i, duration)
-#endif
-    ) {
-      should_go_low = true;
+    #ifdef PIN_CLOCK_RESET
+      if (is_bpm_on_phrase(ticks)) {
+        Serial.printf("On phrase! %i\n", ticks);
+        digitalWrite(PIN_CLOCK_RESET, HIGH);
+      } else if (is_bpm_on_phrase(ticks,duration)) {
+        digitalWrite(PIN_CLOCK_RESET, LOW);
+      }
+    #endif
+    
+    for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+      bool should_go_high = false;
+      bool should_go_low  = false;
+
+      if (
+        #ifdef ENABLE_SEQUENCER
+              (i < NUM_SEQUENCES && should_trigger_sequence(ticks, i))
+        #endif
+        #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+              ||
+        #endif
+        #ifdef ENABLE_CLOCKS
+              (i < NUM_CLOCKS && should_trigger_clock(ticks, i))
+        #endif
+      ) {
+          should_go_high = true;
+      } else if (
+        #ifdef ENABLE_SEQUENCER
+              (i < NUM_SEQUENCES && should_trigger_sequence(ticks, i, duration))
+        #endif
+        #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+              ||
+        #endif
+        #ifdef ENABLE_CLOCKS
+              (i < NUM_CLOCKS && should_trigger_clock(ticks, i, duration))
+        #endif
+      ) {
+        should_go_low = true;
+      }
+
+      if (should_go_high)       digitalWrite(clock_pin[i], HIGH);
+      else if (should_go_low)   digitalWrite(clock_pin[i], LOW);
     }
-
-    if (should_go_high)       digitalWrite(clock_pin[i], HIGH);
-    else if (should_go_low)   digitalWrite(clock_pin[i], LOW);
-  }
-#endif
+  #endif
 
 }

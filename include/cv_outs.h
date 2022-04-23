@@ -10,19 +10,36 @@
 #define PIN_CLOCK_2   31
 #define PIN_CLOCK_3   32
 #define PIN_CLOCK_4   33
-#if NUM_CLOCKS == 8
-#define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
-#define PIN_CLOCK_6   37
-#define PIN_CLOCK_7   38
-#define PIN_CLOCK_8   39
+#if NUM_CLOCKS > 4
+  #define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
 #endif
+#if NUM_CLOCKS > 5
+  #define PIN_CLOCK_6   37
+#endif
+#if NUM_CLOCKS > 6
+  #define PIN_CLOCK_7   38
+#endif
+#if NUM_CLOCKS > 7
+  #define PIN_CLOCK_8   39
+#endif
+
+#define PIN_CLOCK_RESET 40
 
 const byte clock_pin[NUM_CLOCKS] = {
     PIN_CLOCK_1, PIN_CLOCK_2, PIN_CLOCK_3, PIN_CLOCK_4,
-    #if NUM_CLOCKS == 8
-      PIN_CLOCK_5, PIN_CLOCK_6, PIN_CLOCK_7, PIN_CLOCK_8
+    #if NUM_CLOCKS > 4
+      PIN_CLOCK_5, 
     #endif
-  };
+    #if NUM_CLOCKS > 5
+      PIN_CLOCK_6, 
+    #endif
+    #if NUM_CLOCKS > 6
+      PIN_CLOCK_7,
+    #endif
+    #if NUM_CLOCKS > 7
+      PIN_CLOCK_8
+    #endif
+};
 
 #define CLOCK_MULTIPLIER_MIN  0.25
 #define CLOCK_MULTIPLIER_MAX  16.0
@@ -34,7 +51,7 @@ extern int duration;
 
 #define CLOCK_MULTIPLIER_OFF  32.0
  
-
+void setup_cv();
 float get_clock_multiplier(byte i);
 void increase_clock_multiplier(byte i);
 void decrease_clock_multiplier(byte i); 

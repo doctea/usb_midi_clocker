@@ -19,6 +19,7 @@
 #define ENABLE_SEQUENCER
 #define ENABLE_CLOCKS
 
-#define NUM_CLOCKS 4
+#define NUM_CLOCKS 4              // 4 clocks (+ 1 reset if PIN_CLOCK_RESET is also set)
+//#define NUM_CLOCKS 7            // 7 clocks + 1 reset
 #define NUM_SEQUENCES 4
 #define NUM_STEPS 8
