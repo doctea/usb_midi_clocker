@@ -177,6 +177,10 @@ void do_tick(uint32_t in_ticks) {
     update_cv_outs(in_ticks);
     #endif
 
+    #ifdef ENABLE_MPK49
+      MPK49_on_tick(in_ticks);
+    #endif
+
     #ifdef ENABLE_USB
       #ifdef ENABLE_BEATSTEP
           beatstep_on_tick(in_ticks);
