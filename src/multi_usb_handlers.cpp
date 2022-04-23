@@ -193,6 +193,11 @@ void send_midi_usb_clocks() {
       //midi_bamble->send_now();
     }
   #endif
+  #ifdef ENABLE_MPK49
+    if (ixMPK49!=0xFF) {
+      midi_MPK49->sendRealTime(midi::Clock);
+    }
+  #endif
 }
 
 void loop_midi_usb_devices() {

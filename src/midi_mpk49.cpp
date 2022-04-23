@@ -4,10 +4,13 @@
 #include "midi_mpk49.h"
 #include "midi_outs.h"
 
+#include "midi_looper.h"
+
 MIDIDevice_BigBuffer *midi_MPK49;  
 uint8_t ixMPK49   = 0xff;
 
 bool MPK49_started = false;
+bool mpk49_recording = false;
 
 void MPK49_loop(unsigned long ticks) {
   if ( ixMPK49 == 0xff ) {
@@ -42,6 +45,10 @@ void MPK49_on_tick(uint32_t ticks) {
     midi_MPK49->sendRealTime(usbMIDI.Clock); //Clock();
     midi_MPK49->send_now();*/
   }
+  // playLoop(ticks%(PPQN*4*4*4));
+  #ifdef ENABLE_RECORDING
+    playInstruction(ticks); //%(LOOP_LENGTH));
+  #endif
 }
 
 // called inside interrupt
@@ -58,6 +65,11 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
     static int counter = 0;
     Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
 
+    #ifdef ENABLE_RECORDING
+    if (mpk49_recording)
+      recordInstruction(midi::NoteOn, channel, note, velocity);
+    #endif
+
     #ifdef ENABLE_BITBOX
       if (midi_out_bitbox) {
           Serial.printf("sending to midi_out_bitbox\n");
@@ -70,6 +82,12 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
     #endif
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
+
+  #ifdef ENABLE_RECORDING
+  if (mpk49_recording)
+    recordInstruction(midi::NoteOff, channel, note, velocity);
+  #endif
+    
   #ifdef ENABLE_BITBOX
     if (midi_out_bitbox) {
         Serial.printf("sending note off to midi_out_bitbox\n");
@@ -79,6 +97,24 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
     Serial.println("mpk49_handle_note_off: no output device configured");
   #endif
 }
+
+#ifdef ENABLE_RECORDING
+void mpk49_handle_mmc_record() {
+  mpk49_recording = !mpk49_recording;
+}
+
+void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
+  Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
+  for (int i = 0 ; i < size ; i++) {
+    Serial.printf("%02x ", data[i]);
+  }
+  Serial.println("]");
+
+  if (data[3]==0x06 && data[4]==0x06) {
+    mpk49_handle_mmc_record();
+  }
+}
+#endif
 
 void MPK49_init() {
     MPK49_started = false;
@@ -91,4 +127,7 @@ void MPK49_init() {
     //midi_MPK49->setHandleStart(MPK49_handle_start);
     midi_MPK49->setHandleNoteOn(mpk49_handle_note_on);
     midi_MPK49->setHandleNoteOff(mpk49_handle_note_off);
+    #ifdef ENABLE_RECORDING
+    midi_MPK49->setHandleSystemExclusive(mpk49_handle_system_exclusive);
+    #endif
 }

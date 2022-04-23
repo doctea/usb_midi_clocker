@@ -190,7 +190,6 @@ void load_state_parse_line(String line, savestate *output) {
 }
 
 void load_state(uint8_t preset_number, savestate *output) {
-  bool debug = false;
   //Serial.println("load_state not implemented on teensy");
   File myFile;
 

@@ -3,6 +3,8 @@
 #define ENABLE_USB
 #define ENABLE_CV
 
+#define ENABLE_RECORDING
+
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
