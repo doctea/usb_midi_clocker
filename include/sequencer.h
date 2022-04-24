@@ -5,10 +5,15 @@
 #include "Config.h"
 #include "bpm.h"
 
-#define NUM_SEQUENCES 4
 #define NUM_STEPS     8
 
 #define SEQUENCER_MAX_VALUE 3
+
+//#ifdef ENABLE_SEQUENCER
+const byte cv_out_sequence_pin[NUM_SEQUENCES] = {
+  PIN_SEQUENCE_1, PIN_SEQUENCE_2, PIN_SEQUENCE_3, PIN_SEQUENCE_4
+};
+//#endif
 
 inline int beat_number_from_ticks(signed long ticks) {
   return (ticks / PPQN) % BEATS_PER_BAR;

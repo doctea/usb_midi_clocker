@@ -2,7 +2,7 @@
 #define APCMINI_DISPLAY__INCLUDED
 
 //#define ATOMIC(X) noInterrupts(); X; interrupts();
-  #define ATOMIC(X) X
+#define ATOMIC(X) X
 
 #include <MIDI.h>
 #include "Config.h"

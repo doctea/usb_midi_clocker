@@ -19,7 +19,42 @@
 #define ENABLE_SEQUENCER
 #define ENABLE_CLOCKS
 
-#define NUM_CLOCKS 4              // 4 clocks (+ 1 reset if PIN_CLOCK_RESET is also set)
-//#define NUM_CLOCKS 7            // 7 clocks + 1 reset
-#define NUM_SEQUENCES 4
-#define NUM_STEPS 8
+#define SEPARATE_SEQUENCER_AND_CLOCKS   // define this if we have 8 distinct cv outputs available
+                                        // first set of four become clock, second set of four for sequencer
+                                        // if not defined then the four sequencer outputs are overlaid over the clock outputs
+
+#ifdef ENABLE_CLOCKS
+    #define NUM_CLOCKS 4              // 4 clocks (+ 1 reset if PIN_CLOCK_RESET is also set)
+    //#define NUM_CLOCKS 7            // 7 clocks + 1 reset
+
+    #define PIN_CLOCK_START  30
+    #define PIN_CLOCK_1   30
+    #define PIN_CLOCK_2   31
+    #define PIN_CLOCK_3   32
+    #define PIN_CLOCK_4   33
+    #if NUM_CLOCKS > 4
+    #define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
+    #endif
+    #if NUM_CLOCKS > 5
+    #define PIN_CLOCK_6   37
+    #endif
+    #if NUM_CLOCKS > 6
+    #define PIN_CLOCK_7   38
+    #endif
+    #if NUM_CLOCKS > 7
+    #define PIN_CLOCK_8   39
+    #endif
+
+    //#define PIN_CLOCK_RESET 40
+#endif
+
+#ifdef ENABLE_SEQUENCER
+    #define NUM_SEQUENCES 4
+    #define NUM_STEPS 8
+    #ifdef SEPARATE_SEQUENCER_AND_CLOCKS
+        #define PIN_SEQUENCE_1 36
+        #define PIN_SEQUENCE_2 37
+        #define PIN_SEQUENCE_3 38
+        #define PIN_SEQUENCE_4 39
+    #endif
+#endif
