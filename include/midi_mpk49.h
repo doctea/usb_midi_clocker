@@ -15,6 +15,10 @@ extern uint8_t ixMPK49; //  = 0xff;
 
 extern bool MPK49_started; // = false;
 
+extern bool MPK49_started;
+extern bool mpk49_recording;
+extern bool mpk49_playing;
+
 void MPK49_loop(unsigned long ticks);
 // called inside interrupt
 void MPK49_on_tick(uint32_t ticks);

@@ -8,6 +8,8 @@
 
 void recordInstruction(byte instruction_type, byte channel, byte arg0, byte arg1);
 void playInstruction(int index);
+void clear_recording();
+void stop_all_notes();
 
 /**
  * @var {byte} the maximum number of instructions

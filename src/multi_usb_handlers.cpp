@@ -4,6 +4,8 @@
 #include "midi_bamble.h"
 #include "midi_beatstep.h"
 
+#include "tft.h"
+
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
 usb_midi_device[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
@@ -279,6 +281,7 @@ void setup_multi_usb() {
   Usb.begin();
   for (int i = 0 ; i < 5 ; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
+    tft_print(".");
     delay(1000);
     digitalWrite(LED_BUILTIN, LOW);
   }

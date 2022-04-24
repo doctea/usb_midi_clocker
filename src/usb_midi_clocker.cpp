@@ -52,25 +52,40 @@ void setup() {
   Serial.begin(115200);
   //while (!Serial);
 
+  #ifdef ENABLE_SCREEN
+    setup_tft();
+  #endif
+
   #ifdef ENABLE_CV
-  setup_cv();
+  #ifdef ENABLE_SCREEN
+  tft_print("Setting up CV..\n");
+  #endif
+    setup_cv();
   #endif
 
   delay( 100 );
 
   #ifdef ENABLE_SCREEN
-    setup_tft();
+  tft_print("..USB..\n");
   #endif
-
   setup_multi_usb();
   Serial.println(F("USB ready."));
 
+  #ifdef ENABLE_SCREEN
+  tft_print("..serial MIDI..\n");
+  #endif
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
 
+  #ifdef ENABLE_SCREEN
+  tft_print("..storage..\n");
+  #endif
   setup_storage();
 
 #ifdef ENABLE_SEQUENCER
+  #ifdef ENABLE_SCREEN
+    tft_print("..Sequencer..\n");
+  #endif
   init_sequence();
 #endif
 
@@ -78,10 +93,17 @@ void setup() {
   Serial.println(F("Initialising uClock.."));
   setup_uclock();
 #else
+  #ifdef ENABLE_SCREEN
+    tft_print("..clock..\n");
+  #endif
   setup_cheapclock();
 #endif
 
   Serial.println(F("Arduino ready."));
+  tft_print("Ready!");
+  #ifdef ENABLE_SCREEN
+  tft_clear();
+  #endif
 }
 
 //long loop_counter = 0;
@@ -107,9 +129,9 @@ void loop()
 
   #ifndef USE_UCLOCK
       if ( playing && millis()-t1 >= ms_per_tick ) {
-        if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
+        /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
           Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
-        }
+        }*/
         do_tick(ticks);
         last_ticked_time = millis();
         ticks++;

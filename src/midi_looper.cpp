@@ -7,9 +7,46 @@
 #include "ConfigMidi.h"
 #include "midi_outs.h"
 
+// TODO: rewrite all this to work a lot better, ie:-
+//      >1 event per tick
+//      record as midi file
+//      load as midi file
+//      make stop_all_notes
+//      able to track multiple devices / channels
+//      transpose
+//      quantizing (time)
+//      quantizing (scale)
+
 byte loop_instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_ARGUMENTS];
 
 // from https://github.com/LesserChance/arduino-midi-looper/blob/master/instruction.ino
+
+void stop_all_notes() {
+    for (int i = 0 ; i < LOOP_LENGTH ; i++) {
+        if (loop_instructions[i][0]==midi::NoteOn) {
+            midi_out_bitbox->sendNoteOff(
+                loop_instructions[i][2], 
+                loop_instructions[i][3], 
+                3
+            );
+        }
+    }
+}
+
+void clear_recording() {
+    for (int i = 0 ; i < LOOP_LENGTH ; i++) {
+        // turn off notes that might be playing
+        if (loop_instructions[i][0]==midi::NoteOn) {
+            midi_out_bitbox->sendNoteOff(
+                loop_instructions[i][2], 
+                loop_instructions[i][3], 
+                3
+            );
+        }
+        // clear the note
+        loop_instructions[i][0] = 0;
+    }
+}
 
 /**
  * Record the passed instruction in the current position

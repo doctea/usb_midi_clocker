@@ -5,6 +5,8 @@
 #include <MIDI.h>
 #include "USBHost_t36.h"
 
+#include "midi_looper.h"
+
 MIDIDevice_BigBuffer *midi_apcmini;
 volatile uint8_t ixAPCmini  = 0xff;
 
@@ -52,20 +54,24 @@ void apcmini_loop(unsigned long ticks) {
 // called from loop, already inside ATOMIC, so don't use ATOMIC here
 void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   Serial.printf("apcmini_note_on for %i, %i, %i\n", inChannel, inNumber, inVelocity);
-  if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
+  if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
     // start / stop play
     if (!playing)
       on_restart();
       
     playing = !playing;
     
-#ifdef USE_UCLOCK
-    if (playing) {
-      on_restart();
-      //uClock.start();
-    } else {
-      //uClock.stop();
-    }
+    #ifdef USE_UCLOCK
+        if (playing) {
+          on_restart();
+          //uClock.start();
+        } else {
+          //uClock.stop();
+        }
+    #endif
+#ifdef ENABLE_RECORDING
+  } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
+    clear_recording();
 #endif
   } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
     // restart/resync immediately
@@ -74,11 +80,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
   } else if (inNumber==BUTTON_RESTART_AT_END_OF_BAR && apcmini_shift_held) {
     // restart/resync at end of bar
     Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
-#ifdef ENABLE_APCMINI_DISPLAY
-    //ATOMIC(
-      midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
-    //)  // turn on the 'going to restart on next bar' flashing indicator
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        //ATOMIC(
+          midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
+        //)  // turn on the 'going to restart on next bar' flashing indicator
+    #endif
     restart_on_next_bar = true;
 #ifdef ENABLE_CLOCKS
   } else if (inNumber==APCMINI_BUTTON_UP) {
@@ -89,9 +95,9 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
       clock_selected = NUM_CLOCKS-1;
     else
       clock_selected--;
-#ifdef ENABLE_APCMINI_DISPLAY
-    redraw_clock_selected(old_clock_selected, clock_selected);
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        redraw_clock_selected(old_clock_selected, clock_selected);
+    #endif
   } else if (inNumber==APCMINI_BUTTON_DOWN) {
     // move clock selection down
     byte old_clock_selected  = clock_selected;
@@ -99,24 +105,24 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     clock_selected++;
     if (clock_selected>=NUM_CLOCKS) 
       clock_selected = 0;
-#ifdef ENABLE_APCMINI_DISPLAY
-    redraw_clock_selected(old_clock_selected, clock_selected);
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        redraw_clock_selected(old_clock_selected, clock_selected);
+    #endif
   } else if (inNumber==APCMINI_BUTTON_LEFT) {
     // shift clock offset left
     redraw_immediately = true;
     decrease_clock_delay(clock_selected);
     //redraw_immediately = true;
-#ifdef ENABLE_APCMINI_DISPLAY
-    redraw_clock_row(clock_selected);
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        redraw_clock_row(clock_selected);
+    #endif
   } else if (inNumber==APCMINI_BUTTON_RIGHT) {
     // shift clock offset right
     redraw_immediately = true;
     increase_clock_delay(clock_selected);
-#ifdef ENABLE_APCMINI_DISPLAY
-    redraw_clock_row(clock_selected);
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        redraw_clock_row(clock_selected);
+    #endif
   } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber<=APCMINI_BUTTON_MUTE) {
     // button between Clip Stop -> Solo -> Rec arm -> Mute buttons
     // change divisions/multiplier of corresponding clock
@@ -137,10 +143,10 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     else if (clock_multiplier[clock_number]<CLOCK_MULTIPLIER_MIN) 
       clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;*/
 
-#ifdef ENABLE_APCMINI_DISPLAY
-    redraw_clock_row(clock_selected);
-    redraw_clock_selected(old_clock_selected, clock_selected);
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        redraw_clock_row(clock_selected);
+        redraw_clock_selected(old_clock_selected, clock_selected);
+    #endif
 #endif
   } else if (inNumber==APCMINI_BUTTON_SHIFT) {
     apcmini_shift_held = true;
@@ -152,9 +158,9 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.println(ticks);*/
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
     load_state_start(0, &current_state);
-#ifdef ENABLE_APCMINI_DISPLAY
-    apcmini_update_clock_display();
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        apcmini_update_clock_display();
+    #endif
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
     save_state(0, &current_state);
 #ifdef ENABLE_SEQUENCER
@@ -175,9 +181,9 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
     Serial.println(col);
     sequencer_press(row, col, apcmini_shift_held);
-#ifdef ENABLE_APCMINI_DISPLAY
-    redraw_sequence_row(row);
-#endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+        redraw_sequence_row(row);
+    #endif
 #endif 
   } else {
     Serial.print(F("Unknown akaiAPC button with note number "));

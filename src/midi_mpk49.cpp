@@ -116,6 +116,11 @@ void mpk49_handle_mmc_start() {
 
 void mpk49_handle_mmc_stop() {
   mpk49_playing = false;
+
+  if (!mpk49_playing) {
+    stop_all_notes();
+    //midi_out_bitbox->sendControlChange(123,0,3);
+  }
 }
 
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
