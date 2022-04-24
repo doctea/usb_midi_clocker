@@ -1,7 +1,11 @@
 #include <Arduino.h>
 #include "storage.h"
 
-savestate current_state;
+#include "SD.h"
+//#include "SdFat.h"
+#include <SPI.h>
+
+savestate current_state; 
 
 #if defined(__arm__) && defined(CORE_TEENSY)
 // ... Teensy, so save to SD card instead of to EEPROM
@@ -24,9 +28,6 @@ uint32_t hex2int(char *hex) {
     }
     return val;
 }
-
-#include <SD.h>
-#include <SPI.h>
 
 const int chipSelect = BUILTIN_SDCARD;
 

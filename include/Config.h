@@ -1,5 +1,7 @@
 //#define USE_UCLOCK  // experimental: crashes a lot
 
+#define ENABLE_SCREEN       // tft
+
 #define ENABLE_USB
 #define ENABLE_CV
 

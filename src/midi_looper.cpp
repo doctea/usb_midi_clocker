@@ -22,16 +22,6 @@ void recordInstruction(byte instruction_type, byte channel, byte arg0, byte arg1
     loop_instructions[loop_record_instruction_position][1] = channel;
     loop_instructions[loop_record_instruction_position][2] = arg0;
     loop_instructions[loop_record_instruction_position][3] = arg1;
-    
-    //store the time the event occurred
-    //loop_instruction_times[loop_record_instruction_position] = (ticks%(LOOP_LENGTH)); // - loop_start[0]; //getRecordingPosition();
-    
-    //go to the next instruction position
-    /*if (loop_record_instruction_position == MAX_INSTRUCTIONS - 1) {
-        loop_record_instruction_position = 0;
-    } else {
-        loop_record_instruction_position++;
-    }*/
 }
 
 /**
@@ -68,38 +58,3 @@ void playInstruction(int index) {
         //sendPadNoteOff(channel, pitch, velocity);
     }
 }
-
-/*
- * Playback a specific loop
- */
-/*void playLoop(int index) {
-    //unsigned int last_playback_position = loop_playback_position[index];
-    unsigned int playback_position = (ticks%(LOOP_LENGTH)); //getPlaybackPosition(index);
-
-    //play any commands between the last time this was checked and now
-    if (playback_position != last_playback_position) {
-        byte i = loop_instruction_index_start[index];
-        boolean done_checking = false;
-
-        while (!done_checking) {
-            unsigned int check_time = loop_instruction_times[i];
-            if (check_time >= last_playback_position && check_time < playback_position) {
-                playInstruction(i);
-            }
-
-            if (i == loop_instruction_index_end[index] || check_time >= playback_position) {
-                //no need to check any further
-                done_checking = true;
-            } else {
-                //ready the check for the next instruction
-                i++;
-                if (i == MAX_INSTRUCTIONS) {
-                    i = 0;
-                }
-            }
-        }
-
-        loop_playback_position[index] = playback_position;
-    }
-
-}*/

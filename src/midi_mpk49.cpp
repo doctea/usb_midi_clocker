@@ -11,6 +11,7 @@ uint8_t ixMPK49   = 0xff;
 
 bool MPK49_started = false;
 bool mpk49_recording = false;
+bool mpk49_playing = true;
 
 void MPK49_loop(unsigned long ticks) {
   if ( ixMPK49 == 0xff ) {
@@ -47,7 +48,8 @@ void MPK49_on_tick(uint32_t ticks) {
   }
   // playLoop(ticks%(PPQN*4*4*4));
   #ifdef ENABLE_RECORDING
-    playInstruction(ticks); //%(LOOP_LENGTH));
+    if (mpk49_playing)
+      playInstruction(ticks); //%(LOOP_LENGTH));
   #endif
 }
 
@@ -62,24 +64,24 @@ void MPK49_on_restart() {
 }
 
 void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
-    static int counter = 0;
-    Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
+  static int counter = 0;
+  Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
 
-    #ifdef ENABLE_RECORDING
-      if (mpk49_recording)
-        recordInstruction(midi::NoteOn, channel, note, velocity);
-    #endif
+  #ifdef ENABLE_RECORDING
+    if (mpk49_recording)
+      recordInstruction(midi::NoteOn, channel, note, velocity);
+  #endif
 
-    #ifdef ENABLE_BITBOX
-      if (midi_out_bitbox) {
-          Serial.printf("sending to midi_out_bitbox\n");
-          midi_out_bitbox->sendNoteOn(note, velocity, 3);
-      } else {
-          Serial.println();
-      }
-    #else
-      Serial.println("No output device configured");
-    #endif
+  #ifdef ENABLE_BITBOX
+    if (midi_out_bitbox) {
+        Serial.printf("sending to midi_out_bitbox\n");
+        midi_out_bitbox->sendNoteOn(note, velocity, 3);
+    } else {
+        Serial.println();
+    }
+  #else
+    Serial.println("No output device configured");
+  #endif
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
@@ -108,6 +110,14 @@ void mpk49_handle_mmc_record() {
   }
 }
 
+void mpk49_handle_mmc_start() {
+  mpk49_playing = true;
+}
+
+void mpk49_handle_mmc_stop() {
+  mpk49_playing = false;
+}
+
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
   Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
   for (unsigned int i = 0 ; i < size ; i++) {
@@ -115,8 +125,14 @@ void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
   }
   Serial.println("]");
 
-  if (data[3]==0x06 && data[4]==0x06) {
-    mpk49_handle_mmc_record();
+  if (data[3]==0x06) {
+    if (data[4]==0x06) { // record pressed
+      mpk49_handle_mmc_record();
+    } else if (data[4]==0x01) { // stop pressed
+      mpk49_handle_mmc_stop();
+    } else if (data[4]==0x02) { // start pressed
+      mpk49_handle_mmc_start();
+    }
   }
 }
 #endif

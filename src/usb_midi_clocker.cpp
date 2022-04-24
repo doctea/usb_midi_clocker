@@ -13,6 +13,10 @@
 #include "debug.h"
 #include "storage.h"
 
+#ifdef ENABLE_SCREEN
+  #include "tft.h"
+#endif
+
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
 
@@ -53,6 +57,10 @@ void setup() {
   #endif
 
   delay( 100 );
+
+  #ifdef ENABLE_SCREEN
+    setup_tft();
+  #endif
 
   setup_multi_usb();
   Serial.println(F("USB ready."));
@@ -99,13 +107,17 @@ void loop()
 
   #ifndef USE_UCLOCK
       if ( playing && millis()-t1 >= ms_per_tick ) {
-        do_tick(ticks);
         if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
           Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
         }
+        do_tick(ticks);
         last_ticked_time = millis();
         ticks++;
         t1 = millis();
+      } else {
+        #ifdef ENABLE_SCREEN
+          tft_update(ticks);
+        #endif
       }
   #else
     noInterrupts();
@@ -136,6 +148,7 @@ void loop()
   loop_counter++;*/
 
   load_state_update();  // read next bit of file
+
 
 }
 
