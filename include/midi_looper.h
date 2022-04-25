@@ -1,8 +1,8 @@
 #ifndef MIDI_LOOPER__INCLUDED
 #define MIDI_LOOPER__INCLUDED
 
-#include <MIDI.h>
-#include "USBHost_t36.h"
+//#include <MIDI.h>
+//#include "USBHost_t36.h"
 
 #define LOOP_LENGTH (PPQN*4*4)
 

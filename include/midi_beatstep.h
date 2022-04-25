@@ -3,7 +3,7 @@
 #ifdef ENABLE_BEATSTEP
 
 //#define ATOMIC(X) noInterrupts(); X; interrupts();
-  #define ATOMIC(X) X
+#define ATOMIC(X) X
 
 #include "USBHost_t36.h"
 #include <Arduino.h>
@@ -20,6 +20,12 @@ void beatstep_handle_start();
 void beatstep_on_tick(volatile uint32_t ticks);
 void beatstep_on_restart(); 
 void beatstep_init();
+
+#ifdef ENABLE_SCREEN
+  #include "tft.h"
+  void beatstep_display_key_status(ST7789_t3 *tft);
+#endif
+
 #endif
 
 #endif

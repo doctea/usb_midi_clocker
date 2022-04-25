@@ -1,13 +1,17 @@
 #include "Config.h"
+
+#ifdef ENABLE_SCREEN
+
 #include "bpm.h"
 #include "midi_mpk49.h"
 
-#ifdef ENABLE_SCREEN
+#include "tft.h"
+#include "multi_usb_handlers.h"
 
 #include <Adafruit_GFX.h>    // Core graphics library
 //#include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
 //#include <Adafruit_ST7789.h> // Hardware-specific library for ST7789
-#include <ST7789_t3.h> // Hardware-specific library for ST7789
+#include <ST7789_t3.h> // Hardware-specific library for ST7789 on Teensy
 
 #include <SPI.h>
 
@@ -57,8 +61,14 @@ void tft_clear() {
     tft.fillScreen(ST77XX_BLACK);
 }
 
-void tft_print (char *text) {
+void tft_print (const char *text) {
     tft.print(text);
+}
+
+void tft_header(ST7789_t3 *tft, const char *text) {
+    tft->setTextColor(0xFFFFFF,0);
+    tft->setTextSize(0);
+    tft->println(text);
 }
 
 void tft_update(int ticks) {
@@ -78,21 +88,15 @@ void tft_update(int ticks) {
     );
 
     #if defined(ENABLE_MPK49) && defined(ENABLE_RECORDING)
-        if (mpk49_recording) {
-            tft.setTextColor(rgb(0xFF,0,0),0);
-            tft.print("[Rec]");
-        } else {
-            tft.setTextColor(0xFF,0);
-            tft.print("     ");
-        }
-        if (mpk49_playing) {
-            tft.setTextColor(rgb(0x00,0xFF,0x00),0);
-            tft.print("[>>]");
-        } else {
-            tft.setTextColor(rgb(0x00,0x00,0xFF),0);
-            tft.print("[##]");
-        }
-        tft.print("\n");
+        mpk49_display_looper_status(&tft);
+    #endif
+
+    #if defined(ENABLE_BEATSTEP)
+        beatstep_display_key_status(&tft);
+    #endif
+
+    #ifdef ENABLE_USB
+        display_usb_device_list(&tft);
     #endif
 
     //tft.printf("ticks: %i", ticks);

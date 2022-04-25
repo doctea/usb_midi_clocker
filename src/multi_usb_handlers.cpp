@@ -27,8 +27,16 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {
     vid = packed_id >> 16;
     pid = 0x0000FFFF & packed_id;
   }
+  if (((usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct())) != packed_id) {
+      Serial.printf("packed_id %08X and newly-generated packed_id %08X don't match already?!", 
+      (usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct()),
+      packed_id 
+    );
+      return;
+  }
   Serial.printf("USB Port %d changed from %08X to %08X (now ", idx, usb_midi_connected[idx], packed_id);
   Serial.printf("'%s' '%s')\n", usb_midi_device[idx]->manufacturer(), usb_midi_device[idx]->product());
+  usb_midi_connected[idx] = packed_id;
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
   usb_midi_device[idx]->setHandleNoteOn(nullptr);
@@ -204,9 +212,9 @@ void send_midi_usb_clocks() {
 
 void loop_midi_usb_devices() {
   unsigned long temp_tick;
-  noInterrupts();
+  //noInterrupts();
   temp_tick = ticks;
-  interrupts();
+  //interrupts();
   #ifdef ENABLE_BEATSTEP
       beatstep_loop(temp_tick);
   #endif
@@ -243,9 +251,9 @@ void on_restart() {
   ticks = 0;
   Serial.println(F("reset ticks"));
 #endif
-  noInterrupts();
+  //noInterrupts();
   ticks = 0;
-  interrupts();
+  //interrupts();
   last_processed_tick = -1;
   
   send_midi_serial_stop_start();
@@ -276,7 +284,7 @@ void on_restart() {
 }
 
 void setup_multi_usb() {
-  Serial.println(F("Arduino initialising usb/midi..."));
+  Serial.print(F("Arduino initialising usb/midi..."));
 
   Usb.begin();
   for (int i = 0 ; i < 5 ; i++) {
@@ -285,7 +293,26 @@ void setup_multi_usb() {
     delay(1000);
     digitalWrite(LED_BUILTIN, LOW);
   }
+  tft_print("\n");
 }
+
+#ifdef ENABLE_SCREEN
+  void display_usb_device_list(ST7789_t3 *tft) {
+    tft_header(tft, "USB devices:");
+    tft->setTextSize(1);
+    int connected = 0;
+    for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+      /*if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
+        connected++;
+        tft->printf("%i %19s\n", i, usb_midi_device[i]->product());
+      }*/
+      tft->printf("%08x\n", usb_midi_connected[i]);
+    }
+    for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) {
+      tft->printf("%21s\n","");
+    }
+  }
+#endif
 
 /*
 void start_clocks_if_stopped() {
