@@ -302,16 +302,17 @@ void setup_multi_usb() {
     tft->setTextSize(1);
     int connected = 0;
     for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-      /*if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
+      if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
         connected++;
         tft->printf("%i %19s\n", i, usb_midi_device[i]->product());
-      }*/
-      tft->printf("%08x\n", usb_midi_connected[i]);
+      }
+      //tft->printf("%08x\n", usb_midi_connected[i]);
     }
     for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) {
       tft->printf("%21s\n","");
     }
   }
+
 #endif
 
 /*
