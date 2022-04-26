@@ -1,19 +1,19 @@
 - This branch for porting to Teensy 4.1 using [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
-- This branch now includes optional experimental uClock mode -- which works so long as you don't send any CC messages :( https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
+- ~~This branch now includes optional experimental uClock mode -- which works so long as you don't send any CC messages :( https://github.com/midilab/uClock/issues/4#issuecomment-1066212517~~
 - Non-uClock mode seems stable, but sending CC messages (eg faders on AKAI APCMini) causes noticeable stutter, lag and timing problems
 
 # usb_midi_clocker
 
-Proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV clock, using Arduino USB Host Shield on an Arduino Uno.  The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beatstep), acting as master clock for USB MIDI and Eurorack CV clock, with shiftable generator/divider.
+Proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV clock, using a Teensy 4.1 mounted to a Deftaudio 8x8 breakout board (available on Tindie).  The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beatstep), acting as master clock for USB MIDI, to output Eurorack CV clock, with shiftable generator/divider, and other neat features like sequencer, looping, stuff like that..
 
 - Works with Arturia Beatstep (requires receiving a MIDI start message externally before it will listen to external clock!)
-- note: as of 2022-02-28, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
+- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
 ## Explanation
 
 This allows a Teensy 4.1 equipped with a Deftaudio 8x8 MIDI+USB interface board to act as a USB MIDI *host* -- like an intelligent USB hub with multiple ports, so that USB MIDI devices connected to it (say keyboards or sequencers or synths) are sent MIDI clock.  This way you can sync USB MIDI devices, that don't have a normal MIDI DIN input, without connecting to a computer for DAWless usage.  Also outputs Eurorack CV clock/sequences.
 
-This video should demonstrate what I mean a bit:- https://photos.google.com/photo/AF1QipNL_kUVU3N1QzCV3z4exyQTlNcGLMTfbsU7jkwI
+This video should demonstrate what I mean a bit (old video from the Arduino Uno+USB Host Shield version!):- https://photos.google.com/photo/AF1QipNL_kUVU3N1QzCV3z4exyQTlNcGLMTfbsU7jkwI
 
 The Arduino you see at the start of the video has a "USB Host Shield 2.0" on top and then a DIY'd 4-output CV clock shield sitting on top of that.
 
@@ -31,12 +31,18 @@ It also has a very rudimentary sequencer, using Akai APCMini for input+display, 
 
 ### TODO/Future 
 
-- Port to Teensy 4.1 and merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
-- Get it working in uClock mode without crashes
+- ~~Port to Teensy 4.1 and~~ (done!)
+- Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
+- Get it working in uClock/interrupts mode without crashes
 - Sync from external input (MIDI and CV)
-- More outputs
-- MIDI DIN or TRS input + output
+- More outputs - done now works with 4 clock outs and 4 separate sequencer track outs
+- ~~MIDI DIN or TRS input + output~~ Using Deftaudio 8x8 interface board so get 8 MIDI DIN-ins and 8 MIDI DIN-outs!
 - Better sequencer
+  - better how?
 - Configurable routing of MIDI data and notes from device X to device Y?
 - Sequencer that records and playback MIDI notes or CV
+  - rudimentary MIDI looper working
+- TFT display (basically working now using the Adafruit ST7789_t3 library)
+- Encoder for controlling options and parameters
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
+
