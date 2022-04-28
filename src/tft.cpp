@@ -100,11 +100,16 @@ void button_pressed(byte button) {
     if (button==PIN_BUTTON_A) {
 
     } else if (button==PIN_BUTTON_B) {
-        
+
     }
 }
 
 void tft_update(int ticks) {
+    static unsigned long last_updated_tft;
+    if (millis()-last_updated_tft<20) { // maximum 50 fps
+        return;
+    }
+    last_updated_tft = millis();
     long t = millis();
     tft.setCursor(0,0);
     tft.setTextSize(2);
