@@ -52,7 +52,6 @@ void send_midi_serial_stop_start() {
 }
 
 #define SINGLE_FRAME_READ
-
 void read_midi_serial_devices() {
     #ifdef SINGLE_FRAME_READ
         //int i = 0;
@@ -66,4 +65,9 @@ void read_midi_serial_devices() {
         while(midi_out_serial[counter]->read());
         counter++;
     #endif
+}
+
+void loop_serial_usb_devices() {
+    // anything that should be done per-loop for serial midi devices
+
 }

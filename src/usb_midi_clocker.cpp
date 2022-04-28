@@ -114,7 +114,6 @@ void setup() {
 void loop()
 {
   static int loop_counter;
-  static unsigned long last_ticked_time;
   static bool lit = false;
   loop_counter++;
   if (loop_counter%1000000==0) {
@@ -128,19 +127,21 @@ void loop()
   //)
 
   #ifndef USE_UCLOCK
-      if ( playing && millis()-t1 >= ms_per_tick ) {
-        /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
-          Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
-        }*/
-        do_tick(ticks);
-        last_ticked_time = millis();
-        ticks++;
-        t1 = millis();
-      } else {
-        #ifdef ENABLE_SCREEN
-          tft_update(ticks);
-        #endif
-      }
+    static unsigned long last_ticked_time;
+
+    if ( playing && millis()-t1 >= ms_per_tick ) {
+      /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
+        Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
+      }*/
+      do_tick(ticks);
+      last_ticked_time = millis();
+      ticks++;
+      t1 = millis();
+    } else {
+      #ifdef ENABLE_SCREEN
+        tft_update(ticks);
+      #endif
+    }
   #else
     noInterrupts();
     signed long temp_tick = ticks;
@@ -155,11 +156,11 @@ void loop()
   #endif
 
   read_midi_serial_devices();
+  loop_serial_usb_devices();
 
   #ifdef ENABLE_USB
   update_usb_device_connections();
   read_midi_usb_devices();
-  loop_midi_usb_devices();
   #endif
 
   //Serial.println(F("."));
@@ -170,7 +171,6 @@ void loop()
   loop_counter++;*/
 
   load_state_update();  // read next bit of file
-
 
 }
 

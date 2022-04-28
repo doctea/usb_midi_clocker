@@ -1,6 +1,9 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <ST7789_t3.h> // Hardware-specific library for ST7789 on Teensy
 
+#include <Encoder.h>
+#include <Bounce.h>
+
 void setup_tft(void);
 void tft_update(int ticks);
 void tft_print (const char *text);

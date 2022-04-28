@@ -22,6 +22,17 @@
 //Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
 ST7789_t3 tft = ST7789_t3(TFT_CS, TFT_DC, TFT_RST);
 
+#define PIN_BUTTON_A  4
+#define PIN_BUTTON_B  5
+#define ENCODER_KNOB_L  2
+#define ENCODER_KNOB_R  3
+
+#define MAX_KNOB 1024
+
+Encoder knob(ENCODER_KNOB_L, ENCODER_KNOB_R);
+Bounce pushButtonA = Bounce(PIN_BUTTON_A, 10); // 10ms debounce
+Bounce pushButtonB = Bounce(PIN_BUTTON_B, 10); // 10ms debounce
+
 // by ktownsend from https://forums.adafruit.com/viewtopic.php?t=21536
 uint16_t rgb(uint8_t r, uint8_t g, uint8_t b) {
   return ((r / 8) << 11) | ((g / 4) << 5) | (b / 8);
@@ -55,6 +66,10 @@ void setup_tft(void) {
   // large block of text
   tft.fillScreen(ST77XX_BLACK);
   //testdrawtext("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur adipiscing ante sed nibh tincidunt feugiat. Maecenas enim massa, fringilla sed malesuada et, malesuada sit amet turpis. Sed porttitor neque ut ante pretium vitae malesuada nunc bibendum. Nullam aliquet ultrices massa eu hendrerit. Ut sed nisi lorem. In vestibulum purus a tortor imperdiet posuere. ", ST77XX_WHITE);
+
+  pinMode(PIN_BUTTON_A, INPUT_PULLUP);
+  pinMode(PIN_BUTTON_B, INPUT_PULLUP);
+
 }
 
 void tft_clear() {
@@ -69,6 +84,24 @@ void tft_header(ST7789_t3 *tft, const char *text) {
     tft->setTextColor(0xFFFFFF,0);
     tft->setTextSize(0);
     tft->println(text);
+}
+
+void knob_turned(int knob_position) {
+    static int last_knob_position;
+    if (knob_position < last_knob_position) {
+        set_bpm(bpm_current-1);
+    } else if (knob_position > last_knob_position) {
+        set_bpm(bpm_current+1);
+    }
+    last_knob_position = knob_position;
+    // do some action when knob is turned
+}
+void button_pressed(byte button) {
+    if (button==PIN_BUTTON_A) {
+
+    } else if (button==PIN_BUTTON_B) {
+        
+    }
 }
 
 void tft_update(int ticks) {
@@ -98,6 +131,33 @@ void tft_update(int ticks) {
     #ifdef ENABLE_USB
         display_usb_device_list(&tft);
     #endif
+
+    static int button_count = 0;
+    static int last_knob_read = 0, new_knob_read;
+
+    new_knob_read = knob.read();///4;
+    if (new_knob_read!=last_knob_read) {
+        last_knob_read = new_knob_read/4;
+        //if (last_knob_read<0) 
+        //    last_knob_read = MAX_KNOB;
+        knob_turned(last_knob_read);
+    }
+    if (pushButtonA.update()) {
+        if (pushButtonA.fallingEdge()) {
+            button_count++;
+            button_pressed(PIN_BUTTON_A);
+        }
+    }
+    if (pushButtonB.update()) {
+        if (pushButtonB.fallingEdge()) {
+            button_count++;
+            button_pressed(PIN_BUTTON_B);
+        }
+    }
+
+    tft.setTextSize(2);
+    tft.printf("K:%4i\n", last_knob_read);
+    tft.printf("B:%4i\n", button_count);
 
     //tft.printf("ticks: %i", ticks);
 
