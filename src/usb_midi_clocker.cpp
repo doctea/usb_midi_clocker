@@ -161,6 +161,7 @@ void loop()
   #ifdef ENABLE_USB
   update_usb_device_connections();
   read_midi_usb_devices();
+  loop_midi_usb_devices();
   #endif
 
   //Serial.println(F("."));
