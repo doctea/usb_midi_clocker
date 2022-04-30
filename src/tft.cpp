@@ -75,6 +75,8 @@ void setup_tft(void) {
   pinMode(PIN_BUTTON_A, INPUT_PULLUP);
   pinMode(PIN_BUTTON_B, INPUT_PULLUP);
 
+  tft.useFrameBuffer(true);
+
   setup_menu();
 }
 
@@ -102,12 +104,18 @@ void tft_header(ST7789_t3 *tft, const char *text) {
 
 void tft_update(int ticks) {
     static unsigned long last_updated_tft;
-    if (millis()-last_updated_tft<20) { // maximum 50 fps
+    if (millis()-last_updated_tft<100) { // maximum 50 fps
         return;
     }
     last_updated_tft = millis();
 
+    long time = millis();
     menu.display(); //&tft);
+    Serial.printf("menu display took %ims\n",(millis()-time));
+
+    //time = millis();
+    menu.update_inputs();
+    //Serial.printf("input update took %ims\n",(millis()-time));
 
     //return;
 

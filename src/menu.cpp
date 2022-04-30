@@ -1,5 +1,8 @@
-#include "mymenu.h"
+#include "Config.h"
 #include "storage.h"
+
+#ifdef ENABLE_SCREEN
+#include "mymenu.h"
 
 Menu menu = Menu();
 
@@ -22,3 +25,5 @@ void setup_menu() {
     //menu.add(&test_item_2);
     //menu.add(&test_item_3);
 }
+
+#endif

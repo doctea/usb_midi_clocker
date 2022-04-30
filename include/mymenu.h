@@ -170,10 +170,12 @@ class Menu {
             tft.setTextSize(0);
             tft.printf("[%-18s]\n",last_message);
             y = tft.getCursorY();
-
+            
             for (int i = 0 ; i < items.size() ; i++) {
                 MenuItem *item = items.get(i);
+                int time = millis();
                 y = item->display(Coord(0,y), i==currently_selected, i==currently_opened) + 1;
+                Serial.printf("menuitem %i took %i to refresh\n", i, millis()-time);
                 //tft.printf("position: %i\n", y);
             }
             //y = tft.getCursorY();
@@ -186,9 +188,13 @@ class Menu {
             tft.setTextSize(2);
             tft.printf("K:%2i B:%2i\n", last_knob_position, button_count);
             tft.printf("S:%2i O:%2i\n", currently_selected, currently_opened);
-            //return tft.getCursorY();
 
+            tft.updateScreenAsync(false);
 
+            return y;
+        }
+
+        void update_inputs() {
             //static int button_count = 0;
             static int last_knob_read = 0, new_knob_read;
             //int new_knob_read;
@@ -213,7 +219,6 @@ class Menu {
                     button_back();
                 }
             }
-            return y;
         }
 
 };
@@ -301,7 +306,7 @@ class SequencerStatus : public MenuItem {
 };
 
 // MPK49 loop indicator
-#if defined(ENABLE_SCREEN) && defined(ENABLE_RECORDING)
+#if defined(ENABLE_RECORDING)
 #include "midi_mpk49.h"
 
 extern bool mpk49_recording;
@@ -342,7 +347,6 @@ class LooperStatus : public MenuItem {
 };
 #endif
 
-
 // BEATSTEP NOTES 
 #include "midi_beatstep.h"
 String get_note_name(int pitch);
@@ -353,7 +357,6 @@ class HarmonyStatus : public MenuItem {
         }
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft.setCursor(pos.x, pos.y);
-
             header(label, pos, selected, opened);
             //tft.setTextColor(rgb(0xFFFFFF),0);
             tft.setTextSize(2);
@@ -363,8 +366,6 @@ class HarmonyStatus : public MenuItem {
                 get_note_name(last_beatstep_note).c_str(), 
                 get_note_name(current_beatstep_note).c_str()
             );
-
-            //return tft.getTextSizeY() * 8;
             return tft.getCursorY();
         }
 };
@@ -379,7 +380,6 @@ class PositionIndicator : public MenuItem {
         virtual int display(Coord pos, bool selected, bool opened) override {
             //Serial.printf("positionindicator display for %s\n", label);
             tft.setCursor(pos.x,pos.y);
-
             header("position", pos, selected, opened);
             tft.setTextSize(2);
             if (playing) {
@@ -394,7 +394,6 @@ class PositionIndicator : public MenuItem {
                 bpm_current
             );
 
-            //return tft.getTextSizeY() * (2*8);
             return tft.getCursorY();
         }
 

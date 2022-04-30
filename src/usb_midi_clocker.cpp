@@ -16,6 +16,7 @@
 #ifdef ENABLE_SCREEN
   #include "tft.h"
 #endif
+#include "project.h"
 
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
@@ -57,32 +58,24 @@ void setup() {
   #endif
 
   #ifdef ENABLE_CV
-  #ifdef ENABLE_SCREEN
-  tft_print("Setting up CV..\n");
-  #endif
+    tft_print("Setting up CV..\n");
     setup_cv();
   #endif
 
   delay( 100 );
 
-  #ifdef ENABLE_SCREEN
   tft_print("..serial MIDI..\n");
-  #endif
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
 
-  #ifdef ENABLE_SCREEN
   tft_print("..storage..\n");
-  #endif
   storage::setup_storage();
 
   tft_print("..setup project..\n");
   project.setup_project();
 
 #ifdef ENABLE_SEQUENCER
-  #ifdef ENABLE_SCREEN
-    tft_print("..Sequencer..\n");
-  #endif
+  tft_print("..Sequencer..\n");
   init_sequence();
 #endif
 
@@ -90,21 +83,17 @@ void setup() {
   Serial.println(F("Initialising uClock.."));
   setup_uclock();
 #else
-  #ifdef ENABLE_SCREEN
-    tft_print("..clock..\n");
-  #endif
+  tft_print("..clock..\n");
   setup_cheapclock();
 #endif
 
-  #ifdef ENABLE_SCREEN
   tft_print("..USB..");
-  #endif
   setup_multi_usb();
   Serial.println(F("USB ready."));
 
   Serial.println(F("Arduino ready."));
-  tft_print("Ready!");
   #ifdef ENABLE_SCREEN
+  tft_print("Ready!");
   tft_clear();
   #endif
 }
