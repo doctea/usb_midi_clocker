@@ -17,3 +17,7 @@ void tft_header(ST7789_t3 *tft, const char *text);
 
 extern ST7789_t3 tft;
 
+
+extern Encoder knob;
+extern Bounce pushButtonA;
+extern Bounce pushButtonB;

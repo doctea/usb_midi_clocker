@@ -80,7 +80,7 @@ void setup() {
   #ifdef ENABLE_SCREEN
   tft_print("..storage..\n");
   #endif
-  setup_storage();
+  storage::setup_storage();
 
 #ifdef ENABLE_SEQUENCER
   #ifdef ENABLE_SCREEN
@@ -171,7 +171,7 @@ void loop()
   /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
   loop_counter++;*/
 
-  load_state_update();  // read next bit of file
+  //storage::load_state_update();  // read next bit of file
 
 }
 

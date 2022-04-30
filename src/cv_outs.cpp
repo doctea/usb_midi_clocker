@@ -3,6 +3,11 @@
 #include "storage.h"
 #include "cv_outs.h"
 #include "sequencer.h"
+#include "project.h"
+
+//extern storage::savestate current_state;
+
+using namespace storage;
 
 int duration = PPQN/8;
 

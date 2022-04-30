@@ -1,6 +1,9 @@
 #include "storage.h"
 #include "sequencer.h"
 #include "bpm.h"
+#include "project.h"
+
+//#define byte uint8_t
 
 void init_sequence() {
   /*for (int seq = 0 ; seq < NUM_SEQUENCES ; seq++) {

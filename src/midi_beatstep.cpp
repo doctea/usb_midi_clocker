@@ -94,14 +94,14 @@ void beatstep_on_restart() {
 
 void beatstep_handle_note_on(byte channel, byte note, byte velocity) {
   current_beatstep_note = note;
-  Serial.printf("beatstep got note on %i\n", note);
+  //Serial.printf("beatstep got note on %i\n", note);
 }
 #
 void beatstep_handle_note_off(byte channel, byte note, byte velocity) {
   if (current_beatstep_note==note) 
     current_beatstep_note = -1;
   last_beatstep_note = note;
-  Serial.printf("beatstep got note off %i\n", note);
+  //Serial.printf("beatstep got note off %i\n", note);
 }
 
 void beatstep_init() {
