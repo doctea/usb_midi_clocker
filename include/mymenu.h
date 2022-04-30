@@ -126,7 +126,7 @@ class PositionIndicator : public MenuItem {
             //MenuItem(in_label);
         }
         virtual int display(ST7789_t3 *tft, int x, int y, bool selected) override {
-            Serial.printf("positionindicator display for %s\n", label);
+            //Serial.printf("positionindicator display for %s\n", label);
             tft->setCursor(x,y);
             tft->setTextSize(2);
             if (playing) {
@@ -172,6 +172,7 @@ class Menu {
         }
         void knob_right() {
             currently_selected++;
+            Serial.printf("selected %i\n", currently_selected);
         }
         void button_select() {
 

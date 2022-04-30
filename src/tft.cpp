@@ -118,7 +118,7 @@ void tft_update(int ticks) {
 
     menu.display(&tft);
 
-    return;
+    //return;
 
     /*
     long t = millis();
@@ -136,6 +136,7 @@ void tft_update(int ticks) {
         bpm_current
     );*/
 
+    /*
     #if defined(ENABLE_MPK49) && defined(ENABLE_RECORDING)
         mpk49_display_looper_status(&tft);
     #endif
@@ -143,7 +144,7 @@ void tft_update(int ticks) {
     #if defined(ENABLE_BEATSTEP)
         beatstep_display_key_status(&tft);
     #endif
-
+*/
     #ifdef ENABLE_USB
         display_usb_device_list(&tft);
     #endif
