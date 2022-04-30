@@ -14,8 +14,6 @@ extern MIDIDevice_BigBuffer *midi_MPK49;
 extern uint8_t ixMPK49; //  = 0xff;
 
 extern bool MPK49_started; // = false;
-
-extern bool MPK49_started;
 extern bool mpk49_recording;
 extern bool mpk49_playing;
 

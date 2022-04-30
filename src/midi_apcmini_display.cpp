@@ -9,6 +9,7 @@
 #include "cv_outs.h"
 #include "sequencer.h"
 #include "storage.h"
+#include "project.h"
 
 /*const byte colour_intensity[] = {
   APCMINI_GREEN,

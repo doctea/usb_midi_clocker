@@ -15,12 +15,6 @@
 
 #include <SPI.h>
 
-#define TFT_CS        10
-#define TFT_RST        6 // Or set to -1 and connect to Arduino RESET pin
-#define TFT_DC         9 
-
-//Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
-ST7789_t3 tft = ST7789_t3(TFT_CS, TFT_DC, TFT_RST);
 
 #define PIN_BUTTON_A  4
 #define PIN_BUTTON_B  5
@@ -32,6 +26,16 @@ ST7789_t3 tft = ST7789_t3(TFT_CS, TFT_DC, TFT_RST);
 Encoder knob(ENCODER_KNOB_L, ENCODER_KNOB_R);
 Bounce pushButtonA = Bounce(PIN_BUTTON_A, 10); // 10ms debounce
 Bounce pushButtonB = Bounce(PIN_BUTTON_B, 10); // 10ms debounce
+
+#include "menu.h"
+
+#define TFT_CS        10
+#define TFT_RST        6 // Or set to -1 and connect to Arduino RESET pin
+#define TFT_DC         9 
+
+//Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+ST7789_t3 tft = ST7789_t3(TFT_CS, TFT_DC, TFT_RST);
+
 
 // by ktownsend from https://forums.adafruit.com/viewtopic.php?t=21536
 uint16_t rgb(uint8_t r, uint8_t g, uint8_t b) {
@@ -67,9 +71,13 @@ void setup_tft(void) {
   tft.fillScreen(ST77XX_BLACK);
   //testdrawtext("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur adipiscing ante sed nibh tincidunt feugiat. Maecenas enim massa, fringilla sed malesuada et, malesuada sit amet turpis. Sed porttitor neque ut ante pretium vitae malesuada nunc bibendum. Nullam aliquet ultrices massa eu hendrerit. Ut sed nisi lorem. In vestibulum purus a tortor imperdiet posuere. ", ST77XX_WHITE);
 
+    //todo: move this to menu
   pinMode(PIN_BUTTON_A, INPUT_PULLUP);
   pinMode(PIN_BUTTON_B, INPUT_PULLUP);
 
+  tft.useFrameBuffer(true);
+
+  setup_menu();
 }
 
 void tft_clear() {
@@ -86,30 +94,32 @@ void tft_header(ST7789_t3 *tft, const char *text) {
     tft->println(text);
 }
 
-void knob_turned(int knob_position) {
-    static int last_knob_position;
-    if (knob_position < last_knob_position) {
-        set_bpm(bpm_current-1);
-    } else if (knob_position > last_knob_position) {
-        set_bpm(bpm_current+1);
-    }
-    last_knob_position = knob_position;
-    // do some action when knob is turned
-}
-void button_pressed(byte button) {
+/*void button_pressed(byte button) {
     if (button==PIN_BUTTON_A) {
 
     } else if (button==PIN_BUTTON_B) {
 
     }
-}
+}*/
 
 void tft_update(int ticks) {
     static unsigned long last_updated_tft;
-    if (millis()-last_updated_tft<20) { // maximum 50 fps
+    if (millis()-last_updated_tft<100) { // maximum 50 fps
         return;
     }
     last_updated_tft = millis();
+
+    long time = millis();
+    menu.display(); //&tft);
+    Serial.printf("menu display took %ims\n",(millis()-time));
+
+    //time = millis();
+    menu.update_inputs();
+    //Serial.printf("input update took %ims\n",(millis()-time));
+
+    //return;
+
+    /*
     long t = millis();
     tft.setCursor(0,0);
     tft.setTextSize(2);
@@ -123,8 +133,9 @@ void tft_update(int ticks) {
         (ticks % (PPQN*4*4) / (PPQN*4)) + 1,
         (ticks % (PPQN*4) / PPQN) + 1,
         bpm_current
-    );
+    );*/
 
+    /*
     #if defined(ENABLE_MPK49) && defined(ENABLE_RECORDING)
         mpk49_display_looper_status(&tft);
     #endif
@@ -132,37 +143,11 @@ void tft_update(int ticks) {
     #if defined(ENABLE_BEATSTEP)
         beatstep_display_key_status(&tft);
     #endif
-
+*/
     #ifdef ENABLE_USB
         display_usb_device_list(&tft);
     #endif
 
-    static int button_count = 0;
-    static int last_knob_read = 0, new_knob_read;
-
-    new_knob_read = knob.read();///4;
-    if (new_knob_read!=last_knob_read) {
-        last_knob_read = new_knob_read/4;
-        //if (last_knob_read<0) 
-        //    last_knob_read = MAX_KNOB;
-        knob_turned(last_knob_read);
-    }
-    if (pushButtonA.update()) {
-        if (pushButtonA.fallingEdge()) {
-            button_count++;
-            button_pressed(PIN_BUTTON_A);
-        }
-    }
-    if (pushButtonB.update()) {
-        if (pushButtonB.fallingEdge()) {
-            button_count++;
-            button_pressed(PIN_BUTTON_B);
-        }
-    }
-
-    tft.setTextSize(2);
-    tft.printf("K:%4i\n", last_knob_read);
-    tft.printf("B:%4i\n", button_count);
 
     //tft.printf("ticks: %i", ticks);
 

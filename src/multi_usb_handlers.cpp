@@ -290,10 +290,11 @@ void setup_multi_usb() {
   for (int i = 0 ; i < 5 ; i++) {
     digitalWrite(LED_BUILTIN, HIGH);
     tft_print(".");
-    delay(1000);
+    delay(500);
     digitalWrite(LED_BUILTIN, LOW);
   }
   tft_print("\n");
+
 }
 
 #ifdef ENABLE_SCREEN

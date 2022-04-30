@@ -2,6 +2,10 @@
 
 #define ENABLE_SCREEN       // tft
 
+#ifndef ENABLE_SCREEN
+    #define tft_print(X) Serial.println(X)
+#endif
+
 #define ENABLE_USB
 #define ENABLE_CV
 

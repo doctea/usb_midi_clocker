@@ -1,6 +1,8 @@
 #ifndef MIDI_HELPERS__INCLUDED
 #define MIDI_HELPERS__INCLUDED
 
+#include <Arduino.h>
+
 String get_note_name(int pitch) {
   if (pitch==-1 || pitch>127) {
     String s = "_"; //note_names[chromatic_degree] + String(octave);
@@ -17,3 +19,5 @@ String get_note_name(int pitch) {
 }
 
 #endif
+
+String get_note_name(int pitch);
