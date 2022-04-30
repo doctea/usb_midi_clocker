@@ -17,3 +17,5 @@ String get_note_name(int pitch) {
 }
 
 #endif
+
+String get_note_name(int pitch);

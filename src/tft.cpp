@@ -15,6 +15,8 @@
 
 #include <SPI.h>
 
+#include "menu.h"
+
 #define TFT_CS        10
 #define TFT_RST        6 // Or set to -1 and connect to Arduino RESET pin
 #define TFT_DC         9 
@@ -70,6 +72,7 @@ void setup_tft(void) {
   pinMode(PIN_BUTTON_A, INPUT_PULLUP);
   pinMode(PIN_BUTTON_B, INPUT_PULLUP);
 
+  setup_menu();
 }
 
 void tft_clear() {
@@ -89,9 +92,11 @@ void tft_header(ST7789_t3 *tft, const char *text) {
 void knob_turned(int knob_position) {
     static int last_knob_position;
     if (knob_position < last_knob_position) {
-        set_bpm(bpm_current-1);
+        //set_bpm(bpm_current-1);
+        menu.knob_left();
     } else if (knob_position > last_knob_position) {
-        set_bpm(bpm_current+1);
+        //set_bpm(bpm_current+1);
+        menu.knob_right();
     }
     last_knob_position = knob_position;
     // do some action when knob is turned
@@ -110,6 +115,12 @@ void tft_update(int ticks) {
         return;
     }
     last_updated_tft = millis();
+
+    menu.display(&tft);
+
+    return;
+
+    /*
     long t = millis();
     tft.setCursor(0,0);
     tft.setTextSize(2);
@@ -123,7 +134,7 @@ void tft_update(int ticks) {
         (ticks % (PPQN*4*4) / (PPQN*4)) + 1,
         (ticks % (PPQN*4) / PPQN) + 1,
         bpm_current
-    );
+    );*/
 
     #if defined(ENABLE_MPK49) && defined(ENABLE_RECORDING)
         mpk49_display_looper_status(&tft);
