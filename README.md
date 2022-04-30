@@ -1,3 +1,4 @@
+- This version is for running on an Arduino Uno with a USB Host Shield 2.0.  I'm now working mostly on the Teensy version but this branch might still be of interest and use to someone.
 - This branch now includes optional experimental uClock mode -- which works so long as you don't send any CC messages :( https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
 - Non-uClock mode seems stable, but sending CC messages (eg faders on AKAI APCMini) causes noticeable stutter, lag and timing problems
 
