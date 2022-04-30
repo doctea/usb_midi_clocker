@@ -10,6 +10,7 @@ PositionIndicator posbar = PositionIndicator();
 LooperStatus mpk49_looper = LooperStatus();
 HarmonyStatus beatstep_notes = HarmonyStatus();
 SequencerStatus sequencer_status = SequencerStatus();
+USBDevicesPanel usbdevices_panel = USBDevicesPanel();
 
 //MenuItem test_item_1 = MenuItem("test 1");
 //MenuItem test_item_2 = MenuItem("test 2");
@@ -20,6 +21,7 @@ void setup_menu() {
     menu.add(&mpk49_looper);
     menu.add(&beatstep_notes);
     menu.add(&sequencer_status);
+    menu.add(&usbdevices_panel);
 
     //menu.add(&test_item_1);
     //menu.add(&test_item_2);

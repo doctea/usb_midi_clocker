@@ -22,8 +22,3 @@ void send_midi_usb_clocks();
 
 void on_restart();
 void setup_multi_usb();
-
-#ifdef ENABLE_SCREEN
-    #include "tft.h"
-    void display_usb_device_list(ST7789_t3 *tft);
-#endif

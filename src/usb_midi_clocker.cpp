@@ -95,6 +95,7 @@ void setup() {
   #ifdef ENABLE_SCREEN
   tft_print("Ready!");
   tft_clear();
+  tft_start();
   #endif
 }
 

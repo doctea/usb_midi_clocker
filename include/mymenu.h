@@ -57,12 +57,15 @@ class MenuItem {
 
         int header(const char *text, Coord pos, bool selected = false, bool opened = false) {
             tft.setCursor(pos.x, pos.y);
-            tft.setTextColor(0xFFFFFF,ST77XX_BLACK);
+            colours(selected);
             tft.setTextSize(0);
-            if (opened) 
+            if (opened) {
                 tft.print(">>>");
-            tft.printf("%-15s\n",text);
-            return (tft.getTextSize()+1)*8;
+                tft.printf("%-19s",text);   // \n not needed as reaching to edge
+            } else {
+                tft.printf("%-22s",text);   // \n not needed as reaching to edge
+            }
+            return (tft.getTextSize()+1)*6;
         }
 
         virtual bool button_select() {
@@ -168,14 +171,14 @@ class Menu {
             tft.setCursor(0,0);
             tft.setTextColor(message_colour,ST77XX_BLACK);
             tft.setTextSize(0);
-            tft.printf("[%-18s]\n",last_message);
+            tft.printf("[%-19s]\n",last_message);
             y = tft.getCursorY();
             
             for (int i = 0 ; i < items.size() ; i++) {
                 MenuItem *item = items.get(i);
-                int time = millis();
+                //int time = millis();
                 y = item->display(Coord(0,y), i==currently_selected, i==currently_opened) + 1;
-                Serial.printf("menuitem %i took %i to refresh\n", i, millis()-time);
+                //Serial.printf("menuitem %i took %i to refresh\n", i, millis()-time);
                 //tft.printf("position: %i\n", y);
             }
             //y = tft.getCursorY();
@@ -234,7 +237,7 @@ class SequencerStatus : public MenuItem {
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft.setCursor(pos.x,pos.y);
-            colours(selected);
+            //colours(selected);
             header(label, pos, selected, opened);
             int x = pos.x, y = tft.getCursorY(); //.y;
 
@@ -324,24 +327,26 @@ class LooperStatus : public MenuItem {
             tft.setTextSize(2);
             if (mpk49_recording) {
                 //tft.setTextColor(rgb(0xFF,0,0),0);
-                colours(selected, ST77XX_RED);
+                colours(opened, ST77XX_RED);
                 tft.print("[Rec]");
             } else {
-                colours(selected, ST77XX_WHITE);
+                colours(opened, ST77XX_WHITE);
                 tft.print("     ");
             }
+            colours(ST77XX_WHITE,ST77XX_BLACK);
+            tft.print("  ");
             if (mpk49_playing) {
                 //tft.setTextColor(rgb(0x00,0xFF,0x00),0);
-                colours(selected, ST77XX_GREEN);
+                colours(opened, ST77XX_GREEN);
                 tft.print("[>>]");
             } else {
                 //tft.setTextColor(rgb(0x00,0x00,0xFF),0);
-                colours(selected, ST77XX_BLUE);
+                colours(opened, ST77XX_BLUE);
                 tft.print("[##]");
             }
             //tft.print("\n");
             //y += (1+tft.getTextSizeY()) * 8;
-            tft.println();
+            //tft.println();
             return tft.getCursorY();// + 10;
         }
 };
@@ -360,9 +365,9 @@ class HarmonyStatus : public MenuItem {
             header(label, pos, selected, opened);
             //tft.setTextColor(rgb(0xFFFFFF),0);
             tft.setTextSize(2);
-            colours(selected);
+            colours(opened);
 
-            tft.printf("%4s : %4s\n", 
+            tft.printf("%4s : %4s",     // \n not needed because already fills row..
                 get_note_name(last_beatstep_note).c_str(), 
                 get_note_name(current_beatstep_note).c_str()
             );
@@ -383,9 +388,9 @@ class PositionIndicator : public MenuItem {
             header("position", pos, selected, opened);
             tft.setTextSize(2);
             if (playing) {
-                colours(selected, ST77XX_GREEN, ST77XX_BLACK);
+                colours(opened, ST77XX_GREEN, ST77XX_BLACK);
             } else {
-                colours(selected, ST77XX_RED, ST77XX_BLACK);
+                colours(opened, ST77XX_RED, ST77XX_BLACK);
             }
             tft.printf("%04i:%02i:%02i @ %03.2f\n", 
                 (ticks / (PPQN*4*4)) + 1, 
@@ -418,7 +423,7 @@ class USBDevicesPanel : public MenuItem {
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft.setCursor(pos.x,pos.y);
             header("USB devices:", pos, selected, opened);
-            colours(selected);
+            colours(opened);
             tft.setTextSize(1);
             int connected = 0;
             for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {

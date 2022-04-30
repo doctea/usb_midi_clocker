@@ -75,11 +75,15 @@ void setup_tft(void) {
   pinMode(PIN_BUTTON_A, INPUT_PULLUP);
   pinMode(PIN_BUTTON_B, INPUT_PULLUP);
 
-  tft.useFrameBuffer(true);
-
   setup_menu();
 }
 
+// start framebuffer/async
+void tft_start() {
+    tft.useFrameBuffer(true);
+}
+
+// clear screen
 void tft_clear() {
     tft.fillScreen(ST77XX_BLACK);
 }
@@ -89,7 +93,7 @@ void tft_print (const char *text) {
 }
 
 void tft_header(ST7789_t3 *tft, const char *text) {
-    tft->setTextColor(0xFFFFFF,0);
+    tft->setTextColor(ST77XX_WHITE,ST77XX_BLACK);
     tft->setTextSize(0);
     tft->println(text);
 }
@@ -109,9 +113,9 @@ void tft_update(int ticks) {
     }
     last_updated_tft = millis();
 
-    long time = millis();
+    //long time = millis();
     menu.display(); //&tft);
-    Serial.printf("menu display took %ims\n",(millis()-time));
+    //Serial.printf("menu display took %ims\n",(millis()-time));
 
     //time = millis();
     menu.update_inputs();
@@ -144,9 +148,9 @@ void tft_update(int ticks) {
         beatstep_display_key_status(&tft);
     #endif
 */
-    #ifdef ENABLE_USB
+    /*#ifdef ENABLE_USB
         display_usb_device_list(&tft);
-    #endif
+    #endif*/
 
 
     //tft.printf("ticks: %i", ticks);

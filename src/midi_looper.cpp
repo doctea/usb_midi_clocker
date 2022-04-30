@@ -72,7 +72,7 @@ void playInstruction(int index) {
     }
     if (loop_instructions[index][0] == midi::NoteOn) {
         if (debug) Serial.printf("index %i note on\n", index);
-        byte channel  = loop_instructions[index][1];
+        //byte channel  = loop_instructions[index][1];
         byte pitch    = loop_instructions[index][2];
         byte velocity = loop_instructions[index][3];
         
@@ -83,7 +83,7 @@ void playInstruction(int index) {
         //Send pad instruction
         //sendPadNoteOn(channel, pitch, velocity);
     } else if (loop_instructions[index][0] == midi::NoteOff) {
-        byte channel  = loop_instructions[index][1];
+        //byte channel  = loop_instructions[index][1];
         byte pitch    = loop_instructions[index][2];
         byte velocity = loop_instructions[index][3];
         

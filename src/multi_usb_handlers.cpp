@@ -27,7 +27,7 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {
     vid = packed_id >> 16;
     pid = 0x0000FFFF & packed_id;
   }
-  if (((usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct())) != packed_id) {
+  if ((uint32_t)((usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct())) != packed_id) {
       Serial.printf("packed_id %08X and newly-generated packed_id %08X don't match already?!", 
       (usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct()),
       packed_id 
@@ -296,25 +296,6 @@ void setup_multi_usb() {
   tft_print("\n");
 
 }
-
-#ifdef ENABLE_SCREEN
-  void display_usb_device_list(ST7789_t3 *tft) {
-    tft_header(tft, "USB devices:");
-    tft->setTextSize(1);
-    int connected = 0;
-    for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-      if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
-        connected++;
-        tft->printf("%i %19s\n", i, usb_midi_device[i]->product());
-      }
-      //tft->printf("%08x\n", usb_midi_connected[i]);
-    }
-    for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) {
-      tft->printf("%21s\n","");
-    }
-  }
-
-#endif
 
 /*
 void start_clocks_if_stopped() {
