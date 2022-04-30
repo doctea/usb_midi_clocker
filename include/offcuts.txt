@@ -1,0 +1,38 @@
+
+class FilebrowserPanel : public MenuItem {
+    LinkedList<String> contents_list = LinkedList<String>();
+    String current_directory;
+
+    void change_directory(String filepath) {
+        File root;
+        File file;
+        //SD.sdfs.chdir(filepath);
+        root = SD.open(filepath.c_str());
+        file = root.openNextFile();
+        while (file) {
+            contents_list.add(String(file.name()));
+        }
+        file.close();
+        root.close();
+    }
+
+    public:
+        FilebrowserPanel() : MenuItem("Filebrowser") {
+            change_directory("");
+        };
+
+        virtual bool allow_takeover() override {
+            return true;
+        }
+
+        virtual int display(Coord pos, bool selected, bool opened) override {
+            header("Filebrowser", pos, selected, opened);
+            if (opened) {
+                tft.println(current_directory);
+                for (int i = 0 ; i < contents_list.size() ; i++) {
+                    tft.println(contents_list.get(i));
+                }
+            }
+            return tft.getCursorY();
+        }
+};

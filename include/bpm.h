@@ -23,6 +23,10 @@ extern float bpm_current; //BPM_MINIMUM; //60.0f;
 extern double ms_per_tick; // = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 #endif
 
+#define BPM_CURRENT_PHRASE          (ticks / (PPQN*4*4))
+#define BPM_CURRENT_BAR_OF_PHRASE   (ticks % (PPQN*4*4) / (PPQN*4))
+#define BPM_CURRENT_BEAT_OF_BAR     (ticks % (PPQN*4) / PPQN)
+
 inline bool is_bpm_on_phrase(uint32_t ticks,      unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*4*4) == offset; }
 inline bool is_bpm_on_bar(uint32_t    ticks,      unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*4)   == offset; }
 inline bool is_bpm_on_half_bar(uint32_t  ticks,   unsigned long offset = 0) { return ticks==offset || ticks%(PPQN*2)   == offset; }
