@@ -116,7 +116,7 @@ void tft_update(int ticks) {
     }
     last_updated_tft = millis();
 
-    menu.display(&tft);
+    menu.display(); //&tft);
 
     //return;
 
