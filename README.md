@@ -1,7 +1,5 @@
 - This branch for porting to Teensy 4.1 using [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
-- ~~This branch now includes optional experimental uClock mode -- which works so long as you don't send any CC messages :( https://github.com/midilab/uClock/issues/4#issuecomment-1066212517~~
-- Non-uClock mode seems stable, but sending CC messages (eg faders on AKAI APCMini) causes noticeable stutter, lag and timing problems
-- This is the version that works on an Arduino Uno with a USB Host Shield.  Worked pretty well, but wanted to expand it to do more advanced sequencing and deal with more devices, now porting to [teensy8x8 branch](https://github.com/doctea/usb_midi_clocker/tree/teensy_8x8) instead.
+- This is the version that works on an Arduino Uno with a USB Host Shield.  Worked pretty well, but wanted to expand it to do more advanced sequencing and deal with more devices, now porting to Teensy instead.
 
 # usb_midi_clocker
 
@@ -30,20 +28,32 @@ This project keeps time and sends clock divisions on the CV outs, but also detec
 
 It also has a very rudimentary sequencer, using Akai APCMini for input+display, currently overlaid over the clock outputs.
 
+## Features
+
+- ST7899 display using ST7899_t3 for info + custom menu system
+- Encoder + button for controlling menus
+- CV output on digital pins via level shifter *TODO:* schematic/instructions
+- Save sequences and clock settings to SD card, 8 slots per project
+
 ### TODO/Future 
 
-- ~~Port to Teensy 4.1 and~~ (done!)
+- Update docs to reflect all features
+- Enable switching between multiple projects
+- ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
 - Get it working in uClock/interrupts mode without crashes
 - Sync from external input (MIDI and CV)
-- More outputs - done now works with 4 clock outs and 4 separate sequencer track outs
+- ~~More outputs~~ - done now works with 4 clock outs and 4 separate sequencer track outs
 - ~~MIDI DIN or TRS input + output~~ Using Deftaudio 8x8 interface board so get 8 MIDI DIN-ins and 8 MIDI DIN-outs!
 - Better sequencer
   - better how?
 - Configurable routing of MIDI data and notes from device X to device Y?
 - Sequencer that records and playback MIDI notes or CV
   - rudimentary MIDI looper working
-- TFT display (basically working now using the Adafruit ST7789_t3 library)
-- Encoder for controlling options and parameters
+  - improve by writing & saving real MIDI files?
+- ~~TFT display~~ (basically working now using the Adafruit ST7789_t3 library)
+- ~~Encoder for controlling options and parameters~~
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
+- Give better control over Beatstep via sysex if possible?
+  - ie, change pattern, change speed..?
 
