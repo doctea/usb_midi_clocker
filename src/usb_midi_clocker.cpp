@@ -66,12 +66,6 @@ void setup() {
   delay( 100 );
 
   #ifdef ENABLE_SCREEN
-  tft_print("..USB..\n");
-  #endif
-  setup_multi_usb();
-  Serial.println(F("USB ready."));
-
-  #ifdef ENABLE_SCREEN
   tft_print("..serial MIDI..\n");
   #endif
   setup_midi_serial_devices();
@@ -81,6 +75,9 @@ void setup() {
   tft_print("..storage..\n");
   #endif
   storage::setup_storage();
+
+  tft_print("..setup project..\n");
+  project.setup_project();
 
 #ifdef ENABLE_SEQUENCER
   #ifdef ENABLE_SCREEN
@@ -98,6 +95,12 @@ void setup() {
   #endif
   setup_cheapclock();
 #endif
+
+  #ifdef ENABLE_SCREEN
+  tft_print("..USB..");
+  #endif
+  setup_multi_usb();
+  Serial.println(F("USB ready."));
 
   Serial.println(F("Arduino ready."));
   tft_print("Ready!");

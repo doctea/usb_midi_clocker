@@ -3,7 +3,12 @@
 #include <Arduino.h>
 #include "Config.h"
 
+#include "SD.h"
+
 namespace storage {
+
+  #define FILEPATH_SEQUENCE "sequences/sequence%i.txt"
+
   //#include <SD.h>
   //#include <SdFat.h>
 

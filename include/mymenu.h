@@ -108,6 +108,8 @@ class Menu {
             items.get(currently_opened)->knob_left();
         } else {
             currently_selected--;
+            if (currently_selected<0) 
+                currently_selected = items.size()-1;
         }
         return true;
     }
@@ -118,6 +120,8 @@ class Menu {
             items.get(currently_opened)->knob_right();
         } else {
             currently_selected++;
+            if (currently_selected >= items.size())
+                currently_selected = 0;
         }
         return true;
     }
@@ -171,11 +175,12 @@ class Menu {
                 MenuItem *item = items.get(i);
                 y = item->display(Coord(0,y), i==currently_selected, i==currently_opened) + 1;
                 //tft.printf("position: %i\n", y);
-                y = tft.getCursorY();
             }
+            //y = tft.getCursorY();
             //controlPanel.display(Coord(0,y), currently_selected>=items.size(), currently_opened>=items.size()) + 1;
             //header("ControlDebug", pos, selected);
             //colours(selected);
+            tft.setCursor(0, y);
             tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
             tft.println();
             tft.setTextSize(2);
@@ -218,8 +223,7 @@ class Menu {
 #include "storage.h"
 extern Menu menu;
 class SequencerStatus : public MenuItem {
-    int selected_sequence_number = 0;
-    int loaded_sequence_number = -1;
+    int ui_selected_sequence_number = 0;
     public: 
         SequencerStatus() : MenuItem("Sequencer") {}
 
@@ -231,46 +235,64 @@ class SequencerStatus : public MenuItem {
 
             int button_size = 12;
             x = 2;
+            y++;
             for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
-                tft.fillRoundRect(x, y, button_size, button_size, 3, 
+                int col = (project.loaded_sequence_number==i) ? ST77XX_GREEN :    // if currently loaded 
+                            (ui_selected_sequence_number==i)  ? ST77XX_YELLOW :   // if selected
+                                                                ST77XX_RED;
+
+                if (i==ui_selected_sequence_number) {
+                    tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
+                } else {
+                    tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+                }
+                if (project.is_selected_sequence_number_empty(i)) {
+                    tft.drawRoundRect(x, y, button_size, button_size, 3, col);
+                } else {
+                    tft.fillRoundRect(x, y, button_size, button_size, 3, col);
+                }
+                /*tft.fillRoundRect(x, y, button_size, button_size, 3, 
+                    project.selected_sequence_number==i ?
                     loaded_sequence_number==i ? 
                         ST77XX_GREEN : 
                     selected && selected_sequence_number==i ? 
                         ST77XX_YELLOW : 
                         ST77XX_RED
-                );
-                x += button_size+2;
+                );*/
+                x += button_size + 2;
             }
-            y += 6;
+            y += button_size + 4;
             return y; //tft.getCursorY() + 8;
         }
 
         virtual bool knob_left() {
-            selected_sequence_number--;
-            if (selected_sequence_number<0)
-                selected_sequence_number = NUM_STATES_PER_PROJECT;
+            ui_selected_sequence_number--;
+            if (ui_selected_sequence_number < 0)
+                ui_selected_sequence_number = NUM_STATES_PER_PROJECT-1;
+            project.select_sequence_number(ui_selected_sequence_number);
             return true;
         }
 
         virtual bool knob_right() {
-            selected_sequence_number++;
-            if (selected_sequence_number>= NUM_STATES_PER_PROJECT)
-                selected_sequence_number = 0;
+            ui_selected_sequence_number++;
+            if (ui_selected_sequence_number >= NUM_STATES_PER_PROJECT)
+                ui_selected_sequence_number = 0;
+            project.select_sequence_number(ui_selected_sequence_number);
             return true;
         }
 
         virtual bool button_select() {
-            project.select_sequence_number(selected_sequence_number);
+            project.select_sequence_number(ui_selected_sequence_number);
             bool success = project.load_state(); //selected_sequence_number);
             if (success) {
-                loaded_sequence_number = selected_sequence_number;
+                //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
-                sprintf(msg, "Loaded %i", loaded_sequence_number);
+                sprintf(msg, "Loaded %i", project.loaded_sequence_number);
                 menu.set_message_colour(ST77XX_GREEN);
                 menu.set_last_message(msg);
             } else {
                 char msg[20] = "";
-                sprintf(msg, "Error loading %i", selected_sequence_number);
+                sprintf(msg, "Error loading %i", ui_selected_sequence_number);
                 menu.set_message_colour(ST77XX_RED);
                 menu.set_last_message(msg);
             }

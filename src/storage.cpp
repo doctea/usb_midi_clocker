@@ -46,7 +46,7 @@ namespace storage {
     File myFile;
 
     char filename[255] = "";
-    sprintf(filename, "sequences/sequence%i.txt", preset_number);
+    sprintf(filename, FILEPATH_SEQUENCE, preset_number);
     Serial.printf("save_state(%i) writing to %s\n", preset_number, filename);
     if (SD.exists(filename)) {
       Serial.printf("%s exists, deleting first\n", filename);
@@ -197,7 +197,7 @@ namespace storage {
     File myFile;
 
     char filename[255] = "";
-    sprintf(filename, "sequences/sequence%i.txt", preset_number);
+    sprintf(filename, FILEPATH_SEQUENCE, preset_number);
     Serial.printf("load_state(%i) opening %s\n", preset_number, filename);
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);
