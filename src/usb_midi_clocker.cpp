@@ -129,6 +129,16 @@ void loop()
       do_tick(ticks);
       last_ticked_time = millis();
       ticks++;
+
+      if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+        //in_ticks = ticks = 0;
+        on_restart();
+        //ATOMIC(
+          //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+        //)
+        restart_on_next_bar = false;
+      }
+
       t1 = millis();
     } else {
       #ifdef ENABLE_SCREEN
@@ -186,14 +196,7 @@ void do_tick(uint32_t in_ticks) {
       ticks = in_ticks;
     #endif
    
-    if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
-      //in_ticks = ticks = 0;
-      on_restart();
-      //ATOMIC(
-        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-      //)
-      restart_on_next_bar = false;
-    }
+    // original restart check+code went here?
 
     send_midi_serial_clocks();
 
