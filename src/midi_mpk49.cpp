@@ -149,36 +149,12 @@ void MPK49_init() {
 
     //midi_out_cv12_poly = midi_MPK49;
     //midi_MPK49->begin();
-
     //midi_MPK49->turnThruOff();
     //midi_MPK49->setHandleControlChange(MPK49_control_change);
     //midi_MPK49->setHandleStart(MPK49_handle_start);
     midi_MPK49->setHandleNoteOn(mpk49_handle_note_on);
     midi_MPK49->setHandleNoteOff(mpk49_handle_note_off);
     #ifdef ENABLE_RECORDING
-    midi_MPK49->setHandleSystemExclusive(mpk49_handle_system_exclusive);
+      midi_MPK49->setHandleSystemExclusive(mpk49_handle_system_exclusive);
     #endif
 }
-
-#if defined(ENABLE_SCREEN) && defined(ENABLE_RECORDING)
-  void mpk49_display_looper_status(ST7789_t3 *tft) {
-    tft_header(tft, "mpk49:");
-    tft->setTextSize(2);
-    if (mpk49_recording) {
-        tft->setTextColor(rgb(0xFF,0,0),0);
-        tft->print("[Rec]");
-    } else {
-        tft->setTextColor(0xFF,0);
-        tft->print("     ");
-    }
-    if (mpk49_playing) {
-        tft->setTextColor(rgb(0x00,0xFF,0x00),0);
-        tft->print("[>>]");
-    } else {
-        tft->setTextColor(rgb(0x00,0x00,0xFF),0);
-        tft->print("[##]");
-    }
-    tft->print("\n");
-  }
-
-#endif
