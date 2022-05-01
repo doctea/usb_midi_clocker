@@ -130,6 +130,7 @@ void loop()
       last_ticked_time = millis();
       ticks++;
 
+      /*  // but thing maths works out better if this is called here?
       if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
         //in_ticks = ticks = 0;
         on_restart();
@@ -138,6 +139,7 @@ void loop()
         //)
         restart_on_next_bar = false;
       }
+      */
 
       t1 = millis();
     } else {
@@ -196,12 +198,20 @@ void do_tick(uint32_t in_ticks) {
       ticks = in_ticks;
     #endif
    
-    // original restart check+code went here?
+    // original restart check+code went here? -- seems like better timing with bamble etc when call this here
+    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+      //in_ticks = ticks = 0;
+      on_restart();
+      //ATOMIC(
+        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+      //)
+      restart_on_next_bar = false;
+    }
 
     send_midi_serial_clocks();
 
     #ifdef ENABLE_USB
-    send_midi_usb_clocks();
+      send_midi_usb_clocks();
     #endif
 
     #ifdef ENABLE_CV
