@@ -67,8 +67,36 @@ class midi_track {
     midi_output_wrapper *output;
 
     bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
-
+    bool recorded_hanging_notes[127];
     int loaded_recording_number = -1;
+
+    //int quantization = 6;   // quantise to nearest step...?
+
+    int find_nearest_quantized_time(int time, int quantization) {
+        int step_of_phrase = (time / (PPQN/4));
+        int beat_of_bar = (time % (PPQN*4) / PPQN);
+        int step_of_beat = (time % (PPQN*4) / PPQN);
+
+        int step_num = time / quantization; //(PPQN/4)
+        int step_start_at_tick = step_num * quantization;
+        int diff = time - step_start_at_tick;
+        //Serial.printf("for time\t%i, got step_num\t%i, step_start_at\t%i, diff\t%i\n", time, step_num, step_start_at_tick, diff);
+
+        int step;
+        if (diff<quantization/2) {
+            step = step_start_at_tick;
+        } else {
+            step = step_start_at_tick+1; //(quantization/2);
+        }
+        //Serial.printf("for time\t%i, got step\t%i\n", time, step);
+
+        int quantized_time = step;// * quantization;
+        //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
+        return quantized_time % LOOP_LENGTH;
+    }
+    int quantize_time(int time, int quantization = 4) {
+        return find_nearest_quantized_time(time, PPQN/quantization) % LOOP_LENGTH;
+    }
     
     public: 
         midi_track(midi_output_wrapper *default_output) {
@@ -79,17 +107,35 @@ class midi_track {
             }*/
         };
 
+        void record_event(midi_message midi_event) {
+            unsigned long time = ticks % (LOOP_LENGTH);
+            //time = quantize_time(time);
+            record_event(time, midi_event);
+        }
         void record_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ uint8_t pitch, uint8_t velocity) {
             midi_message m;
             m.message_type = instruction_type;
             //m.channel = 3; //channel;
             m.pitch = pitch;
             m.velocity = velocity;
-            frames[time%LOOP_LENGTH].add(m);
+            //frames[time%LOOP_LENGTH].add(m);
+            record_event(time, m);
         }
         void record_event(unsigned long time, midi_message midi_event) {
             //Serial.printf("Recording event at\t%i", time);
+            time = quantize_time(time);
             frames[time%LOOP_LENGTH].add(midi_event);
+            if (midi_event.message_type==midi::NoteOn) {
+                recorded_hanging_notes[midi_event.pitch] = true;
+            } else if (midi_event.message_type==midi::NoteOff) {
+                recorded_hanging_notes[midi_event.pitch] = false;
+            }
+        }
+
+        void clear_hanging() {
+            for (int i = 0 ; i < 127 ; i++) {
+                recorded_hanging_notes[i] = false;
+            }
         }
 
         LinkedList<midi_message> get_frames(unsigned long time) {
@@ -103,8 +149,7 @@ class midi_track {
             int position = time%LOOP_LENGTH;
             int number_messages = frames[position].size();
 
-            if (frames[position].size()>0) 
-                Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages);
+            if (frames[position].size()>0) Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages);
 
             for (int i = 0 ; i < number_messages ; i++) {
                 midi_message m = frames[position].get(i);
@@ -148,10 +193,10 @@ class midi_track {
             Serial.println("mpk49 stopped recording");
             // send & record note-offs for all playing notes
             for (byte i = 0 ; i < 127 ; i++) {
-                if (playing_notes[i]) {
+                if (recorded_hanging_notes[i]) {
                     output->sendNoteOff(i, 0);
                     record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
-                    playing_notes[i] = false;
+                    recorded_hanging_notes[i] = false;
                 }
             }
         }
@@ -206,6 +251,10 @@ class midi_track {
             myFile.close();
             Serial.printf("Finished saving, %i lines written!\n", lines_written);
 
+            if (lines_written==0) {
+                // TODO:  delete the empty file / update project availability so it displays the slot as empty
+            }
+
             loaded_recording_number = recording_number;
             return true;
         }
@@ -242,6 +291,7 @@ class midi_track {
                     total_frames++;
                     //if (debug) Serial.printf("Read id %i\n", output->id);
                     line = line.remove(0,String("loop_data=").length());
+                    line = line.remove(line.length()-1,1);
                     char c_line[(1+sizeof(midi_message)) * MAX_INSTRUCTIONS];// = line.c_str();
                     strcpy(c_line, line.c_str());
                     midi_message m;
@@ -250,7 +300,7 @@ class midi_track {
                     char *tok;
                     tok = strtok(c_line,",;:");
                     while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
-                        Serial.printf("for token '%s', ", tok);
+                        Serial.printf("at time %i: for token '%s', sizeof is already %i, ", time, tok, frames[time].size());
                         int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
                         sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
                         m.message_type = tmp_message_type;
@@ -262,7 +312,8 @@ class midi_track {
                         messages_count++;
                         tok = strtok(NULL,",;:");
                     }
-                    total_messages+=messages_count;
+                    Serial.printf("for time\t%i read\t%i messages\n", time, messages_count);
+                    total_messages += messages_count;
                     time++;
                 }
             }
@@ -278,6 +329,7 @@ class midi_track {
             Serial.printf("Loaded recording from [%s] - [%i] frames with total [%i] messages\n", filename, total_frames, total_messages);
             
             loaded_recording_number = recording_number;
+            clear_hanging();
 
             return true;
         }       
