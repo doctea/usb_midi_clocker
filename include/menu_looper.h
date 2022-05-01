@@ -52,18 +52,18 @@ class LooperStatus : public MenuItem {
             //header(label, pos, selected, opened);
             int x = pos.x, y = tft.getCursorY(); //.y;
 
-            int button_size = 12;
+            int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
             y++;
             for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
-                int col = (project.loaded_loop_number==i) ? ST77XX_GREEN :    // if currently loaded 
+                int col = (project.loaded_loop_number==i) ?  ST77XX_GREEN :    // if currently loaded 
                              (ui_selected_loop_number==i)  ? ST77XX_YELLOW :   // if selected
-                                                                ST77XX_BLUE;        
+                                                             ST77XX_BLUE;        
 
                 if (i==ui_selected_loop_number) {
-                    tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
+                    tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_WHITE);
                 } else {
-                    tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+                    tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_BLACK);
                 }
                 if (project.is_selected_loop_number_empty(i)) {
                     tft.drawRoundRect(x, y, button_size, button_size, 3, col);
@@ -94,7 +94,7 @@ class LooperStatus : public MenuItem {
 
         virtual bool button_select() {
             project.select_loop_number(ui_selected_loop_number);
-            bool success = project.load_loop();
+            bool success = project.load_loop(ui_selected_loop_number, &mpk49_loop_track);
             if (success) {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
