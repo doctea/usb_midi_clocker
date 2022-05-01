@@ -72,16 +72,20 @@ class midi_track {
         }
 
         void clear_all() {
+            Serial.println("clearing recording");
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
+                /*for (int x = 0 ; x < frames[i].size() ; x++) {
+                    delete frames[i].get(x);
+                }*/
                 frames[i].clear();
             }
         }
 
         void stop_all_notes() {
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-                LinkedList<midi_message> messages = frames[i];
-                for (int x = 0 ; x < frames[i].size() ; x++) {
-                    midi_message m = frames[i].get(i);
+                LinkedList<midi_message> *messages = &frames[i];
+                for (int x = 0 ; x < messages->size() ; x++) {
+                    midi_message m = messages->get(x);
                     midi_out_bitbox->sendNoteOff(
                         m.pitch, 
                         m.velocity, 
