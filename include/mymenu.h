@@ -17,8 +17,7 @@
 #include "tft.h"
 #include "bpm.h"
 
-#include "project.h"
-
+//#include "project.h"
 
 class Coord {
     public:
@@ -58,7 +57,8 @@ class MenuItem {
         }
 
         int header(const char *text, Coord pos, bool selected = false, bool opened = false) {
-            tft.setCursor(pos.x, pos.y);
+            tft.drawLine(pos.x, pos.y, tft.width(), pos.y, ST7735_WHITE);
+            tft.setCursor(pos.x, pos.y+1);
             colours(selected);
             tft.setTextSize(0);
             if (opened) {
@@ -67,7 +67,8 @@ class MenuItem {
             } else {
                 tft.printf("%-22s",text);   // \n not needed as reaching to edge
             }
-            return (tft.getTextSize()+1)*6;
+            //return (tft.getTextSize()+1)*6;
+            return tft.getCursorY();
         }
 
         virtual bool button_select() {
@@ -75,6 +76,10 @@ class MenuItem {
         }
         
         virtual bool button_back() {
+            return false;
+        }
+        
+        virtual bool button_right() {
             return false;
         }
 
@@ -156,6 +161,19 @@ class Menu {
         }
         return true;
     }
+    bool button_right() {
+        Serial.println("button_right()");
+        if (currently_opened!=-1) {
+            if (items.get(currently_opened)->button_right()) {
+                Serial.printf("right with currently_opened %i subhandled!\n", currently_opened);
+            } else {
+                Serial.printf("right with currently_opened %i not subhandled!\n", currently_opened);
+            }
+        } else {
+            Serial.printf("right with nothing currently_opened\n"); //setting to -1\n", currently_opened);
+        }
+        return true;
+    }
 
     public:
         char last_message[20] = "...started up...";
@@ -227,152 +245,48 @@ class Menu {
             if (pushButtonA.update()) {
                 if (pushButtonA.fallingEdge()) {
                     button_count++;
-                    //button_pressed(PIN_BUTTON_A);
                     button_select();
                 }
             }
             if (pushButtonB.update()) {
                 if (pushButtonB.fallingEdge()) {
                     button_count++;
-                    //button_pressed(PIN_BUTTON_B);
                     button_back();
                 }
             }
-        }
-
-};
-
-
-#include "sequencer.h"
-#include "storage.h"
-extern Menu menu;
-class SequencerStatus : public MenuItem {
-    int ui_selected_sequence_number = 0;
-    public: 
-        SequencerStatus() : MenuItem("Sequencer") {}
-
-        virtual int display(Coord pos, bool selected, bool opened) override {
-            tft.setCursor(pos.x,pos.y);
-            //colours(selected);
-            header(label, pos, selected, opened);
-            int x = pos.x, y = tft.getCursorY(); //.y;
-
-            int button_size = 12;
-            x = 2;
-            y++;
-            for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
-                int col = (project.loaded_sequence_number==i) ? ST77XX_GREEN :    // if currently loaded 
-                             (ui_selected_sequence_number==i) ? ST77XX_YELLOW :   // if selected
-                                                                ST77XX_BLUE;        
-
-                if (i==ui_selected_sequence_number) {
-                    tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
-                } else {
-                    tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+            if (pushButtonC.update()) {
+                if (pushButtonC.fallingEdge()) {
+                    button_count++;
+                    button_right();
                 }
-                if (project.is_selected_sequence_number_empty(i)) {
-                    tft.drawRoundRect(x, y, button_size, button_size, 3, col);
-                } else {
-                    tft.fillRoundRect(x, y, button_size, button_size, 3, col);
-                }
-                x += button_size + 2;
             }
-            y += button_size + 4;
-            return y; //tft.getCursorY() + 8;
         }
 
-        virtual bool knob_left() {
-            ui_selected_sequence_number--;
-            if (ui_selected_sequence_number < 0)
-                ui_selected_sequence_number = NUM_STATES_PER_PROJECT-1;
-            project.select_sequence_number(ui_selected_sequence_number);
-            return true;
-        }
-
-        virtual bool knob_right() {
-            ui_selected_sequence_number++;
-            if (ui_selected_sequence_number >= NUM_STATES_PER_PROJECT)
-                ui_selected_sequence_number = 0;
-            project.select_sequence_number(ui_selected_sequence_number);
-            return true;
-        }
-
-        virtual bool button_select() {
-            project.select_sequence_number(ui_selected_sequence_number);
-            bool success = project.load_state(); //selected_sequence_number);
-            if (success) {
-                //loaded_sequence_number = ui_selected_sequence_number;
-                char msg[20] = "";
-                sprintf(msg, "Loaded %i", project.loaded_sequence_number);
-                menu.set_message_colour(ST77XX_GREEN);
-                menu.set_last_message(msg);
-            } else {
-                char msg[20] = "";
-                sprintf(msg, "Error loading %i", ui_selected_sequence_number);
-                menu.set_message_colour(ST77XX_RED);
-                menu.set_last_message(msg);
-            }
-            return true;
-        }
 };
 
-// MPK49 loop indicator
-#if defined(ENABLE_RECORDING)
-#include "midi_mpk49.h"
+#ifdef ENABLE_BEATSTEP
+    // BEATSTEP NOTES 
+    #include "midi_beatstep.h"
+    String get_note_name(int pitch);
+    class HarmonyStatus : public MenuItem {
+        public:
+            HarmonyStatus() : MenuItem("beatstep harmony") {};
 
-extern bool mpk49_recording;
-extern bool mpk49_playing;
-class LooperStatus : public MenuItem {   
-    public:
-        LooperStatus() : MenuItem("mpk49_looper") {};
+            virtual int display(Coord pos, bool selected, bool opened) override {
+                tft.setCursor(pos.x, pos.y);
+                header(label, pos, selected, opened);
+                //tft.setTextColor(rgb(0xFFFFFF),0);
+                tft.setTextSize(2);
+                colours(opened);
 
-        virtual int display(Coord pos, bool selected, bool opened) override {
-            tft.setCursor(pos.x,pos.y);
-            header(label, pos, selected, opened);
-
-            tft.setTextSize(2);
-            if (mpk49_recording) {
-                colours(opened, ST77XX_RED);
-                tft.print("[Rec]");
-            } else {
-                colours(opened, ST77XX_WHITE);
-                tft.print("     ");
+                tft.printf("%4s : %4s",     // \n not needed because already fills row..
+                    get_note_name(last_beatstep_note).c_str(), 
+                    get_note_name(current_beatstep_note).c_str()
+                );
+                return tft.getCursorY();
             }
-            colours(ST77XX_WHITE,ST77XX_BLACK);
-            tft.print("  ");
-            if (mpk49_playing) {
-                colours(opened, ST77XX_GREEN);
-                tft.print("[>>]");
-            } else {
-                colours(opened, ST77XX_BLUE);
-                tft.print("[##]");
-            }
-            return tft.getCursorY();// + 10;
-        }
-};
+    };
 #endif
-
-// BEATSTEP NOTES 
-#include "midi_beatstep.h"
-String get_note_name(int pitch);
-class HarmonyStatus : public MenuItem {
-    public:
-        HarmonyStatus() : MenuItem("beatstep harmony") {};
-
-        virtual int display(Coord pos, bool selected, bool opened) override {
-            tft.setCursor(pos.x, pos.y);
-            header(label, pos, selected, opened);
-            //tft.setTextColor(rgb(0xFFFFFF),0);
-            tft.setTextSize(2);
-            colours(opened);
-
-            tft.printf("%4s : %4s",     // \n not needed because already fills row..
-                get_note_name(last_beatstep_note).c_str(), 
-                get_note_name(current_beatstep_note).c_str()
-            );
-            return tft.getCursorY();
-        }
-};
 
 // BPM indicator
 class PositionIndicator : public MenuItem {
@@ -410,31 +324,32 @@ class PositionIndicator : public MenuItem {
 };
 
 
-#include "multi_usb_handlers.h"
-class USBDevicesPanel : public MenuItem {
-    public:
-        USBDevicesPanel() : MenuItem("USB Devices") {}
+#ifdef ENABLE_USB
+    #include "multi_usb_handlers.h"
+    class USBDevicesPanel : public MenuItem {
+        public:
+            USBDevicesPanel() : MenuItem("USB Devices") {}
 
-        virtual int display(Coord pos, bool selected, bool opened) override {
-            tft.setCursor(pos.x,pos.y);
-            header("USB devices:", pos, selected, opened);
-            colours(opened);
-            tft.setTextSize(1);
-            int connected = 0;
-            for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-                if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
-                    connected++;
-                    tft.printf("%i %19s\n", i, usb_midi_device[i]->product());
-                    //tft.printf("%08x\n", usb_midi_connected[i]);  // packed usb vendor+product id
-                }            
+            virtual int display(Coord pos, bool selected, bool opened) override {
+                tft.setCursor(pos.x,pos.y);
+                header("USB devices:", pos, selected, opened);
+                colours(opened);
+                tft.setTextSize(1);
+                int connected = 0;
+                for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+                    if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
+                        connected++;
+                        tft.printf("%i %19s\n", i, usb_midi_device[i]->product());
+                        //tft.printf("%08x\n", usb_midi_connected[i]);  // packed usb vendor+product id
+                    }            
+                }
+                /*for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) { // blank unused rows
+                    tft.printf("%21s\n","");
+                }*/
+                return tft.getCursorY();
             }
-            /*for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) { // blank unused rows
-                tft.printf("%21s\n","");
-            }*/
-            return tft.getCursorY();
-        }
-};
-
+    };
+#endif
 
 
 #endif

@@ -15,17 +15,12 @@
 
 #include <SPI.h>
 
-
-#define PIN_BUTTON_A  4
-#define PIN_BUTTON_B  5
-#define ENCODER_KNOB_L  2
-#define ENCODER_KNOB_R  3
-
 #define MAX_KNOB 1024
 
 Encoder knob(ENCODER_KNOB_L, ENCODER_KNOB_R);
 Bounce pushButtonA = Bounce(PIN_BUTTON_A, 10); // 10ms debounce
 Bounce pushButtonB = Bounce(PIN_BUTTON_B, 10); // 10ms debounce
+Bounce pushButtonC = Bounce(PIN_BUTTON_C, 10); // 10ms debounce
 
 #include "menu.h"
 
@@ -70,10 +65,6 @@ void setup_tft(void) {
   // large block of text
   tft.fillScreen(ST77XX_BLACK);
   //testdrawtext("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur adipiscing ante sed nibh tincidunt feugiat. Maecenas enim massa, fringilla sed malesuada et, malesuada sit amet turpis. Sed porttitor neque ut ante pretium vitae malesuada nunc bibendum. Nullam aliquet ultrices massa eu hendrerit. Ut sed nisi lorem. In vestibulum purus a tortor imperdiet posuere. ", ST77XX_WHITE);
-
-    //todo: move this to menu
-  pinMode(PIN_BUTTON_A, INPUT_PULLUP);
-  pinMode(PIN_BUTTON_B, INPUT_PULLUP);
 
   setup_menu();
 }

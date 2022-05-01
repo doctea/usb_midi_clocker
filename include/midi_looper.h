@@ -6,11 +6,18 @@
 #include "ConfigMidi.h"
 #include "MidiMappings.h"
 
+#include "storage.h"
+//#include "menu.h"
+//#include "mymenu.h"
+
 //#include <MIDI.h>
 //#include "USBHost_t36.h"
 
 #define LOOP_LENGTH (PPQN*4*4)
+#define MAX_INSTRUCTIONS            100
+#define MAX_INSTRUCTION_ARGUMENTS   4
 
+using namespace storage;
 /*
 void recordInstruction(byte instruction_type, byte channel, byte arg0, byte arg1);
 void playInstruction(int index);
@@ -60,6 +67,8 @@ class midi_track {
     midi_output_wrapper *output;
 
     bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
+
+    int loaded_recording_number = -1;
     
     public: 
         midi_track(midi_output_wrapper *default_output) {
@@ -79,7 +88,7 @@ class midi_track {
             frames[time%LOOP_LENGTH].add(m);
         }
         void record_event(unsigned long time, midi_message midi_event) {
-            Serial.printf("Recording event at\t%i", time);
+            //Serial.printf("Recording event at\t%i", time);
             frames[time%LOOP_LENGTH].add(midi_event);
         }
 
@@ -151,7 +160,128 @@ class midi_track {
             Serial.println("mpk49 started recording");
             // uhhh nothing to do rn?
         }
-        
+
+        // save+load stuff !
+        bool save_state(int recording_number) {
+            //Serial.println("save_state not implemented on teensy");
+            File myFile;
+
+            char filename[255] = "";
+            sprintf(filename, FILEPATH_LOOP, recording_number);
+            Serial.printf("midi_looper::save_state(%i) writing to %s\n", recording_number, filename);
+            if (SD.exists(filename)) {
+                Serial.printf("%s exists, deleting first\n", filename);
+                SD.remove(filename);
+            }
+            myFile = SD.open(filename, FILE_WRITE_BEGIN | O_TRUNC); //FILE_WRITE_BEGIN);
+            if (!myFile) {    
+                Serial.printf("Error: couldn't open %s for writing\n", filename);
+                return false;
+            }
+            myFile.println("; begin loop");
+            //myFile.printf("id=%i\n",input->id);
+            myFile.println("starts_at=0");
+            bool last_written = false;
+            int lines_written = 0;
+            for (int x = 0 ; x < LOOP_LENGTH ; x++) {
+                /*if (!last_written) {
+                    myFile.printf("starts_at=%i\n",x);
+                }*/
+                //myFile.printf("%1x", input->sequence_data[i][x]);
+                if (frames[x].size()==0) {      // only write lines that have data
+                    last_written = false;
+                    continue;
+                } else if (!last_written) {
+                    myFile.printf("starts_at=%i\n",x);
+                }
+                myFile.printf("loop_data="); //%2x:", frames[x].size());
+                for(int i = 0 ; i < frames[x].size() ; i++) {
+                    midi_message m = frames[x].get(i);
+                    myFile.printf("%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
+                }
+                lines_written++;
+                myFile.println("");
+            }
+            myFile.println("; end loop");
+            myFile.close();
+            Serial.printf("Finished saving, %i lines written!\n", lines_written);
+
+            loaded_recording_number = recording_number;
+            return true;
+        }
+
+        bool load_state(int recording_number) {
+            File myFile;
+
+            char filename[255] = "";
+            sprintf(filename, FILEPATH_LOOP, recording_number);
+            Serial.printf("midi_looper::load_state(%i) opening %s\n", recording_number, filename);
+            myFile = SD.open(filename, FILE_READ);
+            myFile.setTimeout(0);
+
+            if (!myFile) {
+                Serial.printf("Error: Couldn't open %s for reading!\n", filename);
+                /*#ifdef ENABLE_SCREEN
+                    menu.set_last_message("Error loading recording!");//, recording_number);
+                    menu.set_message_colour(ST77XX_RED);
+                #endif*/
+                return false;
+            }
+
+            clear_all();
+
+            int total_frames, total_messages;
+            String line;
+            int time = 0;
+            while (line = myFile.readStringUntil('\n')) {
+                //load_state_parse_line(line, output);
+                if (line.startsWith("starts_at=")) {
+                    time = line.remove(0,String("starts_at=").length()).toInt();
+                } else if (line.startsWith("loop_data=")) {
+                    Serial.printf("reading line %s\n", line.c_str());
+                    total_frames++;
+                    //if (debug) Serial.printf("Read id %i\n", output->id);
+                    line = line.remove(0,String("loop_data=").length());
+                    char c_line[(1+sizeof(midi_message)) * MAX_INSTRUCTIONS];// = line.c_str();
+                    strcpy(c_line, line.c_str());
+                    midi_message m;
+                    int messages_count = 0;
+
+                    char *tok;
+                    tok = strtok(c_line,",;:");
+                    while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
+                        Serial.printf("for token '%s', ", tok);
+                        int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
+                        sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
+                        m.message_type = tmp_message_type;
+                        m.channel = tmp_channel;
+                        m.pitch = tmp_pitch;
+                        m.velocity = tmp_velocity;
+                        Serial.printf("read message bytes: %02x, %02x, %02x, %02x\n", m.message_type, m.channel, m.pitch, m.velocity);
+                        record_event(time, m);
+                        messages_count++;
+                        tok = strtok(NULL,",;:");
+                    }
+                    total_messages+=messages_count;
+                    time++;
+                }
+            }
+            Serial.println("Closing file..");
+            myFile.close();
+            Serial.println("File closed");
+
+            //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
+            /*#ifdef ENABLE_SCREEN
+                menu.set_last_message("Loaded recording %i"); //, recording_number);
+                menu.set_message_colour(ST77XX_GREEN);
+            #endif*/
+            Serial.printf("Loaded recording from [%s] - [%i] frames with total [%i] messages\n", filename, total_frames, total_messages);
+            
+            loaded_recording_number = recording_number;
+
+            return true;
+        }       
+
 };
 
 extern midi_track mpk49_loop_track;
@@ -160,16 +290,7 @@ extern midi_track mpk49_loop_track;
  * @var {byte} the maximum number of instructions
  *      its possible to loop around while loops are still playing, if so instructions in the lower loop will be overwritten
  */
-const unsigned long MAX_INSTRUCTIONS = (LOOP_LENGTH); //100;
-#define MAX_INSTRUCTION_ARGUMENTS 4
+//const unsigned long MAX_INSTRUCTIONS = (LOOP_LENGTH); //100;
 
-/***************************
- * LOOP INSTRUCTION DATA   *
- ***************************/
-/**
- * @var {Byte[][]} the instructions for each loop 
- *                 loop_instructions[instruction_index] = byte args[]
- */
-extern byte loop_instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_ARGUMENTS];
 
 #endif

@@ -39,6 +39,10 @@ namespace storage {
       Serial.println("Folder 'sequences' doesn't exist on SD, creating!");
       SD.mkdir("sequences");
     }
+    if (!SD.exists("loops")) {
+      Serial.println("Folder 'loops' doesn't exist on SD, creating!");
+      SD.mkdir("loops");
+    }
   }
 
   bool save_state(uint8_t preset_number, savestate *input) {

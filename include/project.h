@@ -2,13 +2,18 @@
 #define PROJECT__INCLUDED
 
 #include "storage.h"
+#include "midi_looper.h"
 
-#define NUM_STATES_PER_PROJECT 8
+#define NUM_STATES_PER_PROJECT  8
+#define NUM_LOOPS_PER_PROJECT   8
 
 using namespace storage;
 
+class Project;
+
 class Project {
     bool sequence_slot_has_file[NUM_STATES_PER_PROJECT];
+    bool loop_slot_has_file[NUM_LOOPS_PER_PROJECT];
 
     void initialise_sequence_slots() {
         for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
@@ -18,9 +23,20 @@ class Project {
             Serial.printf("sequence_slot_has_file[i] = %i for %s\n", sequence_slot_has_file[i], filepath);
         }
     }
+    void initialise_loop_slots() {
+        for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
+            char filepath[255];
+            sprintf(filepath, FILEPATH_LOOP, i);
+            loop_slot_has_file[i] = SD.exists(filepath);
+            Serial.printf("loop_slot_has_file[i] = %i for %s\n", loop_slot_has_file[i], filepath);
+        }
+    }
     public:
         int selected_sequence_number = 0;
         int loaded_sequence_number = -1;
+
+        int selected_loop_number = 0;
+        int loaded_loop_number = -1;
         
         Project() {
             //initialise_sequence_slots();
@@ -28,8 +44,10 @@ class Project {
 
         void setup_project() {
             initialise_sequence_slots();
+            initialise_loop_slots();
         }
 
+        ////////////// clocks / sequences
         void select_sequence_number(int sn) {
             Serial.printf("select_sequence_number %i\n", sn);
             selected_sequence_number = sn % NUM_STATES_PER_PROJECT;
@@ -64,8 +82,43 @@ class Project {
             return result;
         }
 
-};
+        //////// loops/recordings
+        void select_loop_number(int sn) {
+            Serial.printf("select_loop_number %i\n", sn);
+            selected_sequence_number = sn % NUM_LOOPS_PER_PROJECT;
+        }
 
+        bool is_selected_loop_number_empty(int sn) {
+            return !loop_slot_has_file[sn];
+        }
+
+        // load and save sequences / clock settings etc
+        bool load_loop() {
+            return load_loop(selected_loop_number, &mpk49_loop_track);
+        }
+        bool save_loop() {
+            return save_loop(selected_loop_number, &mpk49_loop_track);
+        }
+
+        bool load_loop(int selected_loop_number, midi_track *track) {
+            Serial.printf("load for selected_sequence_number %i\n", selected_loop_number);
+            //bool result = storage::load_state(selected_loop_number, &storage::current_state);
+            bool result = track->load_state(selected_loop_number);
+            if (result)
+                loaded_loop_number = selected_loop_number;
+            return result;
+        }
+        bool save_loop(int selected_loop_number, midi_track *track) {
+            Serial.printf("save for selected_sequence_number %i\n", selected_loop_number);
+            //bool result = storage::save_state(selected_loop_number, &storage::current_state);
+            bool result = track->save_state(selected_loop_number);
+            if (result) {
+                loop_slot_has_file[selected_loop_number] = true;
+                loaded_loop_number = selected_loop_number;
+            }
+            return result;
+        }
+};
 
 extern Project project;
 

@@ -6,6 +6,14 @@
     #define tft_print(X) Serial.println(X)
 #endif
 
+#ifdef ENABLE_SCREEN
+    #define PIN_BUTTON_A    4   // encoder button
+    #define PIN_BUTTON_B    5   // back button
+    #define PIN_BUTTON_C    26  // right-hand / save button
+    #define ENCODER_KNOB_L  2
+    #define ENCODER_KNOB_R  3
+#endif
+
 #define ENABLE_USB
 #define ENABLE_CV
 
