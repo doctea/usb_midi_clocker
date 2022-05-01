@@ -38,6 +38,60 @@ class LooperRecStatus : public MenuItem {
         }
 };
 
+ // todo: make this part of the LooperStatus object, ie allow sub-menus
+class LooperQuantizeChanger : public MenuItem {
+    #define NUM_QUANTIZE_VALUES 4
+    int available_values[NUM_QUANTIZE_VALUES] = { 1, 2, 3, 4 };
+    int selected_value = 3; //mpk49_loop_track.quantize_value();
+
+    public:
+        LooperQuantizeChanger() : MenuItem("Looper quantization") {};
+
+        virtual int display(Coord pos, bool selected, bool opened) override {
+            pos.y = header(label, pos, selected, opened);
+            tft.setTextSize(2);
+
+            for (int i = 0 ; i < NUM_QUANTIZE_VALUES ; i++) {
+                int col;
+                if (available_values[i]==mpk49_loop_track.get_quantization_value()) {
+                    col = ST7735_GREEN;
+                }
+                colours(opened && selected_value==i, col, ST7735_BLACK);
+                tft.printf("%i", available_values[i]);
+                tft.setTextColor(ST77XX_BLACK);
+                tft.printf(" ");
+            }
+            tft.println();
+
+            return tft.getCursorY();
+        }
+
+        virtual bool knob_left() {
+            selected_value--;
+            if (selected_value < 0)
+                selected_value = NUM_QUANTIZE_VALUES-1;
+            //project.select_loop_number(selected_value);
+            return true;
+        }
+
+        virtual bool knob_right() {
+            selected_value++;
+            if (selected_value >= NUM_QUANTIZE_VALUES)
+                selected_value = 0;
+            //project.select_loop_number(selected_value);
+            return true;
+        }
+
+        virtual bool button_select() {
+            mpk49_loop_track.set_quantization_value(available_values[selected_value]);
+            char msg[20];
+            sprintf(msg,"Set quant to %i", available_values[selected_value]);
+            menu.set_last_message(msg);
+            menu.set_message_colour(ST77XX_GREEN);
+            return true;
+        }
+};
+
 // todo: merge functionality with SequencerStatus to share selection code
 class LooperStatus : public MenuItem {
     int ui_selected_loop_number = 0;

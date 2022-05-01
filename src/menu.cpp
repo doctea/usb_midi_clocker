@@ -14,6 +14,7 @@ PositionIndicator posbar = PositionIndicator();
 HarmonyStatus beatstep_notes = HarmonyStatus();
 SequencerStatus sequencer_status = SequencerStatus();
 LooperStatus    mpk49_looper_status = LooperStatus();
+LooperQuantizeChanger quantizer_setting = LooperQuantizeChanger();   // todo: make this part of the LooperStatus object
 USBDevicesPanel usbdevices_panel = USBDevicesPanel();
 
 //MenuItem test_item_1 = MenuItem("test 1");
@@ -26,6 +27,7 @@ void setup_menu() {
     menu.add(&beatstep_notes);
     menu.add(&sequencer_status);
     menu.add(&mpk49_looper_status);
+    menu.add(&quantizer_setting);   // todo: make this part of the LooperStatus object
     menu.add(&usbdevices_panel);
 
     //todo: move this to menu

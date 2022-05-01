@@ -70,13 +70,11 @@ class midi_track {
     bool recorded_hanging_notes[127];
     int loaded_recording_number = -1;
 
+    int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
+
     //int quantization = 6;   // quantise to nearest step...?
 
     int find_nearest_quantized_time(int time, int quantization) {
-        int step_of_phrase = (time / (PPQN/4));
-        int beat_of_bar = (time % (PPQN*4) / PPQN);
-        int step_of_beat = (time % (PPQN*4) / PPQN);
-
         int step_num = time / quantization; //(PPQN/4)
         int step_start_at_tick = step_num * quantization;
         int diff = time - step_start_at_tick;
@@ -94,10 +92,12 @@ class midi_track {
         //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
         return quantized_time % LOOP_LENGTH;
     }
-    int quantize_time(int time, int quantization = 4) {
+    int quantize_time(int time, int quantization = -1) {
+        if (quantization==-1)
+            quantization = quantization_value;
         return find_nearest_quantized_time(time, PPQN/quantization) % LOOP_LENGTH;
     }
-    
+
     public: 
         midi_track(midi_output_wrapper *default_output) {
             output = default_output;
@@ -107,6 +107,15 @@ class midi_track {
             }*/
         };
 
+        // for getting and setting from menu
+        int get_quantization_value() {
+            return quantization_value;
+        }
+        void set_quantization_value(int qv) {
+            quantization_value = qv;
+        }
+
+        // for recording values (also used for reloading)
         void record_event(midi_message midi_event) {
             unsigned long time = ticks % (LOOP_LENGTH);
             //time = quantize_time(time);
@@ -132,6 +141,7 @@ class midi_track {
             }
         }
 
+        // clear any notes that we're recording
         void clear_hanging() {
             for (int i = 0 ; i < 127 ; i++) {
                 recorded_hanging_notes[i] = false;
@@ -191,7 +201,7 @@ class midi_track {
 
         void stop_recording() {
             Serial.println("mpk49 stopped recording");
-            // send & record note-offs for all playing notes
+            // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
                     output->sendNoteOff(i, 0);
