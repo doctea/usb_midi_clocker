@@ -75,7 +75,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     #endif
 #ifdef ENABLE_RECORDING
   } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
-    clear_recording();
+    mpk49_loop_track.clear_all();
 #endif
   } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
     // restart/resync immediately

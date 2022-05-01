@@ -1,4 +1,5 @@
 #include <midi.h>
+#include <MIDI.h>
 
 #include "bpm.h"
 #include "midi_looper.h"
@@ -17,35 +18,24 @@
 //      quantizing (time)
 //      quantizing (scale)
 
-byte loop_instructions[MAX_INSTRUCTIONS][MAX_INSTRUCTION_ARGUMENTS];
+
+/*typedef struct midi_frame {
+    //unsigned long time;
+    LinkedList<midi_message> messages = LinkedList<midi_message>();
+};*/
+
+
+midi_track mpk49_loop_track = midi_track();
 
 // from https://github.com/LesserChance/arduino-midi-looper/blob/master/instruction.ino
 
 void stop_all_notes() {
-    for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-        if (loop_instructions[i][0]==midi::NoteOn) {
-            midi_out_bitbox->sendNoteOff(
-                loop_instructions[i][2], 
-                loop_instructions[i][3], 
-                3
-            );
-        }
-    }
+    mpk49_loop_track.stop_all_notes();
 }
 
 void clear_recording() {
-    for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-        // turn off notes that might be playing
-        if (loop_instructions[i][0]==midi::NoteOn) {
-            midi_out_bitbox->sendNoteOff(
-                loop_instructions[i][2], 
-                loop_instructions[i][3], 
-                3
-            );
-        }
-        // clear the note
-        loop_instructions[i][0] = 0;
-    }
+    mpk49_loop_track.stop_all_notes();
+    mpk49_loop_track.clear_all();
 }
 
 /**
@@ -59,6 +49,8 @@ void recordInstruction(byte instruction_type, byte channel, byte arg0, byte arg1
     loop_instructions[loop_record_instruction_position][1] = channel;
     loop_instructions[loop_record_instruction_position][2] = arg0;
     loop_instructions[loop_record_instruction_position][3] = arg1;
+
+    mpk49_loop_track.record_event(loop_record_instruction_position, instruction_type, channel, arg0, arg1);
 }
 
 /**
@@ -67,6 +59,10 @@ void recordInstruction(byte instruction_type, byte channel, byte arg0, byte arg1
 void playInstruction(int index) {
     bool debug = false;
     index = index%LOOP_LENGTH;
+
+    mpk49_loop_track.play_events(index, midi_out_bitbox);
+
+    /*
     if (is_bpm_on_beat(index)) {
         if (debug) Serial.printf("Beat for %i\n", step_number_from_ticks(index));
     }
@@ -93,5 +89,5 @@ void playInstruction(int index) {
         
         //Send pad instruction
         //sendPadNoteOff(channel, pitch, velocity);
-    }
+    }*/
 }

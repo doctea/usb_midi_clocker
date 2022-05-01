@@ -51,7 +51,7 @@ void MPK49_on_tick(uint32_t ticks) {
   // playLoop(ticks%(PPQN*4*4*4));
   #ifdef ENABLE_RECORDING
     if (mpk49_playing)
-      playInstruction(ticks); //%(LOOP_LENGTH));
+      mpk49_loop_track.play_events(ticks, midi_out_bitbox); //%(LOOP_LENGTH));
   #endif
 }
 
@@ -71,7 +71,7 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
 
   #ifdef ENABLE_RECORDING
     if (mpk49_recording)
-      recordInstruction(midi::NoteOn, channel, note, velocity);
+      mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOn, channel, note, velocity);
   #endif
 
   #ifdef ENABLE_BITBOX
@@ -89,7 +89,7 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
   #ifdef ENABLE_RECORDING
   if (mpk49_recording)
-    recordInstruction(midi::NoteOff, channel, note, velocity);
+    mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOff, channel, note, velocity);
   #endif
     
   #ifdef ENABLE_BITBOX
@@ -120,7 +120,7 @@ void mpk49_handle_mmc_stop() {
   mpk49_playing = false;
 
   if (!mpk49_playing) {
-    stop_all_notes();
+    mpk49_loop_track.stop_all_notes();
     //midi_out_bitbox->sendControlChange(123,0,3);
   }
 }
