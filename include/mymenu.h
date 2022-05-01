@@ -12,6 +12,8 @@
 //#include "midi_helpers.h"
 //#include "menu.h"
 
+#include "debug.h"
+
 #include "tft.h"
 #include "bpm.h"
 
@@ -199,10 +201,11 @@ class Menu {
                 // control debug output (knob positions / button presses)
                 tft.setCursor(0, y);
                 tft.setTextColor(ST77XX_WHITE, ST77XX_BLACK);
-                tft.println();
+                //tft.println();
                 tft.setTextSize(2);
                 tft.printf("K:%2i B:%2i\n", last_knob_position, button_count);
                 tft.printf("S:%2i O:%2i\n", currently_selected, currently_opened);
+                tft.printf("Mem:%i\n", freeRam());
             }
 
             tft.updateScreenAsync(false);
@@ -425,9 +428,9 @@ class USBDevicesPanel : public MenuItem {
                     //tft.printf("%08x\n", usb_midi_connected[i]);  // packed usb vendor+product id
                 }            
             }
-            for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) { // blank unused rows
+            /*for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) { // blank unused rows
                 tft.printf("%21s\n","");
-            }
+            }*/
             return tft.getCursorY();
         }
 };
