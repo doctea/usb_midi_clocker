@@ -9,10 +9,10 @@
 #include "midi_outs.h"
 
 // TODO: rewrite all this to work a lot better, ie:-
-//      >1 event per tick
+//      [DONE    >1 event per tick]
 //      record as midi file
 //      load as midi file
-//      make stop_all_notes
+//      [DONE    make stop_all_notes]
 //      able to track multiple devices / channels
 //      transpose
 //      quantizing (time)
@@ -23,7 +23,8 @@
     LinkedList<midi_message> messages = LinkedList<midi_message>();
 };*/
 
-midi_track mpk49_loop_track = midi_track();
+midi_output_wrapper midi_out_bitbox_wrapper = midi_output_wrapper(midi_out_bitbox, 3);
+midi_track mpk49_loop_track = midi_track(&midi_out_bitbox_wrapper); //&midi_output_wrapper(midi_out_bitbox, 3));
 
 // from https://github.com/LesserChance/arduino-midi-looper/blob/master/instruction.ino
 

@@ -51,7 +51,7 @@ void MPK49_on_tick(uint32_t ticks) {
   // playLoop(ticks%(PPQN*4*4*4));
   #ifdef ENABLE_RECORDING
     if (mpk49_playing)
-      mpk49_loop_track.play_events(ticks, midi_out_bitbox); //%(LOOP_LENGTH));
+      mpk49_loop_track.play_events(ticks); //, midi_out_bitbox); //%(LOOP_LENGTH));
   #endif
 }
 
@@ -71,7 +71,7 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
 
   #ifdef ENABLE_RECORDING
     if (mpk49_recording)
-      mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOn, channel, note, velocity);
+      mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOn, /*channel,*/ note, velocity);
   #endif
 
   #ifdef ENABLE_BITBOX
@@ -89,7 +89,7 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
   #ifdef ENABLE_RECORDING
   if (mpk49_recording)
-    mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOff, channel, note, velocity);
+    mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOff, /*channel,*/ note, velocity);
   #endif
     
   #ifdef ENABLE_BITBOX
@@ -103,45 +103,46 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 }
 
 #ifdef ENABLE_RECORDING
-void mpk49_handle_mmc_record() {
-  mpk49_recording = !mpk49_recording;
-  if (mpk49_recording) {
-    Serial.println("mpk49 recording");
-  } else {
-    Serial.println("mpk49 stop recording");
-  }
-}
-
-void mpk49_handle_mmc_start() {
-  mpk49_playing = true;
-}
-
-void mpk49_handle_mmc_stop() {
-  mpk49_playing = false;
-
-  if (!mpk49_playing) {
-    mpk49_loop_track.stop_all_notes();
-    //midi_out_bitbox->sendControlChange(123,0,3);
-  }
-}
-
-void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
-  Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
-  for (unsigned int i = 0 ; i < size ; i++) {
-    Serial.printf("%02x ", data[i]);
-  }
-  Serial.println("]");
-
-  if (data[3]==0x06) {
-    if (data[4]==0x06) { // record pressed
-      mpk49_handle_mmc_record();
-    } else if (data[4]==0x01) { // stop pressed
-      mpk49_handle_mmc_stop();
-    } else if (data[4]==0x02) { // start pressed
-      mpk49_handle_mmc_start();
+  void mpk49_handle_mmc_record() {
+    mpk49_recording = !mpk49_recording;
+    if (mpk49_recording) {
+      mpk49_loop_track.start_recording();
+    } else {
+      mpk49_loop_track.stop_recording();
     }
   }
-}
+
+  void mpk49_handle_mmc_start() {
+    mpk49_playing = true;
+  }
+
+  void mpk49_handle_mmc_stop() {
+    mpk49_playing = false;
+
+    if (!mpk49_playing) {
+      mpk49_loop_track.stop_all_notes();
+      //mpk49_loop_track.stop_recording();
+      //midi_out_bitbox->sendControlChange(123,0,3);
+    }
+  }
+
+  void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
+    Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
+    for (unsigned int i = 0 ; i < size ; i++) {
+      Serial.printf("%02x ", data[i]);
+    }
+    Serial.println("]");
+
+    if (data[3]==0x06) {
+      if (data[4]==0x06) { // record pressed
+        mpk49_handle_mmc_record();
+      } else if (data[4]==0x01) { // stop pressed
+        mpk49_handle_mmc_stop();
+      } else if (data[4]==0x02) { // start pressed
+        mpk49_handle_mmc_start();
+      }
+    }
+  }
 #endif
 
 void MPK49_init() {

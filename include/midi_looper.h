@@ -25,25 +25,57 @@ typedef struct midi_message {
     uint8_t channel;
 };
 
+class midi_output_wrapper {
+    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi;
+    MIDIDevice_BigBuffer *output_usb;
+    byte default_channel = 1;
+
+    public:
+        midi_output_wrapper(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
+            output_serialmidi = in_output_serialmidi;
+            default_channel = channel;
+        }
+        midi_output_wrapper(MIDIDevice_BigBuffer *in_output_usb, byte channel = 1) {
+            output_usb = in_output_usb;
+            default_channel = channel;
+        }
+
+        void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
+            if (channel==0) channel = default_channel;
+            if (output_serialmidi) output_serialmidi->sendNoteOn(pitch, velocity, channel);
+            if (output_usb)        output_usb->sendNoteOn(pitch, velocity, channel);
+        }
+
+        void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
+            if (channel==0) channel = default_channel;
+            if (output_serialmidi) output_serialmidi->sendNoteOff(pitch, velocity, channel);
+            if (output_usb)        output_usb->sendNoteOff(pitch, velocity, channel);
+        }
+};
+
 class midi_track {
     //LinkedList<midi_frame> frames = LinkedList<midi_frame> ();
     //midi_frame frames[LOOP_LENGTH];
     LinkedList<midi_message> frames[LOOP_LENGTH];
+    midi_output_wrapper *output;
 
+    bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
+    
     public: 
-        midi_track() {
+        midi_track(midi_output_wrapper *default_output) {
+            output = default_output;
             //frames[0].time = 0;
             /*for (int i = 0 ; i < LOOP_LENGTH ; i++) {
                 frames[i] = new LinkedList<midi_message>();
             }*/
         };
 
-        void record_event(unsigned long time, uint8_t instruction_type, uint8_t channel, uint8_t arg0, uint8_t arg1) {
+        void record_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ uint8_t pitch, uint8_t velocity) {
             midi_message m;
             m.message_type = instruction_type;
-            m.channel = 3; //channel;
-            m.pitch = arg0;
-            m.velocity = arg1;
+            //m.channel = 3; //channel;
+            m.pitch = pitch;
+            m.velocity = velocity;
             frames[time%LOOP_LENGTH].add(m);
         }
         void record_event(unsigned long time, midi_message midi_event) {
@@ -55,45 +87,71 @@ class midi_track {
             return this->frames[time];
         }
 
-        void play_events(unsigned long time, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output) {
-            if (frames[time%LOOP_LENGTH].size()>0) 
-                Serial.printf("for frame\t%i got\t%i messages to play\n", time%LOOP_LENGTH, frames[time%LOOP_LENGTH].size());
+        void play_events(unsigned long time) { //, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *specified_output = nullptr) {
+            //if (!specified_output)
+            //    specified_output = output;
 
-            for (int i = 0 ; i < frames[time%LOOP_LENGTH].size() ; i++) {
-                midi_message m = frames[time%LOOP_LENGTH].get(i);
+            int position = time%LOOP_LENGTH;
+            int number_messages = frames[position].size();
+
+            if (frames[position].size()>0) 
+                Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages);
+
+            for (int i = 0 ; i < number_messages ; i++) {
+                midi_message m = frames[position].get(i);
                 
-                if (m.message_type==midi::NoteOn)
-                    output->sendNoteOn(m.pitch, m.velocity, m.channel);
-                else if (m.message_type==midi::NoteOff)
-                    output->sendNoteOff(m.pitch, m.velocity, m.channel);
-                else
-                    Serial.printf("\t%i: Unknown message type %i\n", i, 3); //m.message_type);
+                switch (m.message_type) {
+                    case midi::NoteOn:
+                        output->sendNoteOn(m.pitch, m.velocity); //, m.channel);
+                        playing_notes[m.pitch] = true;
+                        break;
+                    case midi::NoteOff:
+                        output->sendNoteOff(m.pitch, m.velocity); //, m.channel);
+                        playing_notes[m.pitch] = false;
+                        break;
+                    default:
+                        Serial.printf("\t%i: Unhandled message type %i\n", i, 3); //m.message_type);
+                        break;
+                }
             }
         }
 
         void clear_all() {
+            stop_all_notes();
             Serial.println("clearing recording");
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-                /*for (int x = 0 ; x < frames[i].size() ; x++) {
-                    delete frames[i].get(x);
-                }*/
+                // todo: actually free the recorded memory..?
                 frames[i].clear();
             }
         }
 
         void stop_all_notes() {
-            for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-                LinkedList<midi_message> *messages = &frames[i];
-                for (int x = 0 ; x < messages->size() ; x++) {
-                    midi_message m = messages->get(x);
-                    midi_out_bitbox->sendNoteOff(
-                        m.pitch, 
-                        m.velocity, 
-                        m.channel
-                    );
+            // todo: probably move this into the wrapper, so that can have multiple sources playing into the same output?
+            for (byte i = 0 ; i < 127 ; i++) {
+                if (playing_notes[i]) {
+                    output->sendNoteOff(i, 0);
+                    playing_notes[i] = false;
                 }
             }
         }
+
+        void stop_recording() {
+            Serial.println("mpk49 stopped recording");
+            // send & record note-offs for all playing notes
+            for (byte i = 0 ; i < 127 ; i++) {
+                if (playing_notes[i]) {
+                    output->sendNoteOff(i, 0);
+                    record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
+                    playing_notes[i] = false;
+                }
+            }
+        }
+
+        void start_recording() {
+            Serial.println("mpk49 started recording");
+            // uhhh nothing to do rn?
+        }
+        
 };
 
 extern midi_track mpk49_loop_track;
