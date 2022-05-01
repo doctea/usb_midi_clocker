@@ -200,7 +200,7 @@ class Menu {
             // draw the last status message
             tft.setTextColor(message_colour,ST77XX_BLACK);
             tft.setTextSize(0);
-            tft.printf("[%-19s]\n",last_message);
+            tft.printf("[%-20s]",last_message);
             y = tft.getCursorY();
             
             // now draw the menu
