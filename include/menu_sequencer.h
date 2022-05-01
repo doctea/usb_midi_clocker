@@ -17,23 +17,40 @@ class SequencerStatus : public MenuItem {
             header(label, pos, selected, opened);
             int x = pos.x, y = tft.getCursorY(); //.y;
 
-            int button_size = 12;
+            int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
             y++;
+            #define ROUNDED yes
             for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
                 int col = (project.loaded_sequence_number==i) ? ST77XX_GREEN :    // if currently loaded 
                              (ui_selected_sequence_number==i) ? ST77XX_YELLOW :   // if selected
                                                                 ST77XX_BLUE;        
 
                 if (i==ui_selected_sequence_number) {
-                    tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
+                    #ifdef ROUNDED
+                        tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
+                    #else
+                        tft.drawRect(x-1, y-1, button_size+2, button_size+2, ST77XX_WHITE);
+                    #endif
                 } else {
-                    tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+                    #ifdef ROUNDED
+                        tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+                    #else  
+                        tft.fillRect(x-1, y-1, button_size+2, button_size+2, ST77XX_BLACK);
+                    #endif
                 }
                 if (project.is_selected_sequence_number_empty(i)) {
-                    tft.drawRoundRect(x, y, button_size, button_size, 3, col);
+                    #ifdef ROUNDED
+                        tft.drawRect(x, y, button_size, button_size, col);
+                    #else  
+                        tft.drawRoundRect(x, y, button_size, button_size, 3, col);
+                    #endif
                 } else {
-                    tft.fillRoundRect(x, y, button_size, button_size, 3, col);
+                    #ifdef ROUNDED
+                        tft.fillRect(x, y, button_size, button_size, col);
+                    #else  
+                        tft.fillRoundRect(x, y, button_size, button_size, 3, col);
+                    #endif
                 }
                 x += button_size + 2;
             }
