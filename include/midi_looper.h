@@ -99,6 +99,10 @@ class midi_track {
     }
 
     public: 
+
+        int last_note = -1;
+        int current_note = -1;
+
         midi_track(midi_output_wrapper *default_output) {
             output = default_output;
             //frames[0].time = 0;
@@ -166,10 +170,14 @@ class midi_track {
                 
                 switch (m.message_type) {
                     case midi::NoteOn:
+                        current_note = m.pitch;
                         output->sendNoteOn(m.pitch, m.velocity); //, m.channel);
                         playing_notes[m.pitch] = true;
                         break;
                     case midi::NoteOff:
+                        last_note = m.pitch;
+                        if (m.pitch==current_note) // todo: properly check that there are no other notes playing
+                            current_note = -1;
                         output->sendNoteOff(m.pitch, m.velocity); //, m.channel);
                         playing_notes[m.pitch] = false;
                         break;
@@ -289,7 +297,7 @@ class midi_track {
 
             clear_all();
 
-            int total_frames, total_messages;
+            int total_frames = 0, total_messages = 0;
             String line;
             int time = 0;
             while (line = myFile.readStringUntil('\n')) {

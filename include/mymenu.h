@@ -267,26 +267,37 @@ class Menu {
 #ifdef ENABLE_BEATSTEP
     // BEATSTEP NOTES 
     #include "midi_beatstep.h"
-    String get_note_name(int pitch);
-    class HarmonyStatus : public MenuItem {
-        public:
-            HarmonyStatus() : MenuItem("beatstep harmony") {};
-
-            virtual int display(Coord pos, bool selected, bool opened) override {
-                tft.setCursor(pos.x, pos.y);
-                header(label, pos, selected, opened);
-                //tft.setTextColor(rgb(0xFFFFFF),0);
-                tft.setTextSize(2);
-                colours(opened);
-
-                tft.printf("%4s : %4s",     // \n not needed because already fills row..
-                    get_note_name(last_beatstep_note).c_str(), 
-                    get_note_name(current_beatstep_note).c_str()
-                );
-                return tft.getCursorY();
-            }
-    };
 #endif
+String get_note_name(int pitch);
+class HarmonyStatus : public MenuItem {
+    int *last_note;
+    int *current_note;
+
+    public:
+        HarmonyStatus() : MenuItem("Harmony") {};
+        HarmonyStatus(const char *label, int *last_note, int *current_note) : MenuItem(label) {
+            //MenuItem(label);
+            this->last_note = last_note;
+            this->current_note = current_note;
+        }
+        virtual int display(Coord pos, bool selected, bool opened) override {
+            tft.setCursor(pos.x, pos.y);
+            header(label, pos, selected, opened);
+            //tft.setTextColor(rgb(0xFFFFFF),0);
+            tft.setTextSize(2);
+            colours(opened);
+
+            if (!last_note || !current_note) {
+                tft.printf("[not set]\n");
+            } else {
+                tft.printf("%4s : %4s",     // \n not needed because already fills row..
+                    get_note_name(*last_note).c_str(), 
+                    get_note_name(*current_note).c_str()
+                );
+            }
+            return tft.getCursorY();
+        }
+};
 
 // BPM indicator
 class PositionIndicator : public MenuItem {
