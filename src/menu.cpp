@@ -16,6 +16,7 @@ SequencerStatus sequencer_status = SequencerStatus();
 LooperStatus    mpk49_looper_status = LooperStatus();
 LooperQuantizeChanger quantizer_setting = LooperQuantizeChanger();   // todo: make this part of the LooperStatus object
 HarmonyStatus looper_harmony_status = HarmonyStatus("looper harmony", &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
+TransposeControl transpose_control = TransposeControl("Looper transpose", &mpk49_loop_track); // todo: make this part of the LooperStatus object
 USBDevicesPanel usbdevices_panel = USBDevicesPanel();
 
 //MenuItem test_item_1 = MenuItem("test 1");
@@ -30,6 +31,7 @@ void setup_menu() {
     menu.add(&mpk49_looper_status);
     menu.add(&quantizer_setting);       // todo: make this part of the LooperStatus object
     menu.add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
+    menu.add(&transpose_control);
     menu.add(&usbdevices_panel);
 
     //todo: move this to menu

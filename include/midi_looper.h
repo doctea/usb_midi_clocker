@@ -71,7 +71,7 @@ class midi_track {
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
-
+    
     //int quantization = 6;   // quantise to nearest step...?
 
     int find_nearest_quantized_time(int time, int quantization) {
@@ -103,6 +103,8 @@ class midi_track {
         int last_note = -1;
         int current_note = -1;
 
+        int transpose = 0;
+
         midi_track(midi_output_wrapper *default_output) {
             output = default_output;
             //frames[0].time = 0;
@@ -117,6 +119,11 @@ class midi_track {
         }
         void set_quantization_value(int qv) {
             quantization_value = qv;
+        }
+
+        void set_transpose(int transpose) {
+            stop_all_notes();
+            this->transpose = transpose;
         }
 
         // for recording values (also used for reloading)
@@ -168,18 +175,20 @@ class midi_track {
             for (int i = 0 ; i < number_messages ; i++) {
                 midi_message m = frames[position].get(i);
                 
+                int pitch = m.pitch + transpose;
+
                 switch (m.message_type) {
                     case midi::NoteOn:
-                        current_note = m.pitch;
-                        output->sendNoteOn(m.pitch, m.velocity); //, m.channel);
-                        playing_notes[m.pitch] = true;
+                        current_note = pitch;
+                        output->sendNoteOn(pitch, m.velocity); //, m.channel);
+                        playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
-                        last_note = m.pitch;
+                        last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
-                        output->sendNoteOff(m.pitch, m.velocity); //, m.channel);
-                        playing_notes[m.pitch] = false;
+                        output->sendNoteOff(pitch, m.velocity); //, m.channel);
+                        playing_notes[pitch] = false;
                         break;
                     default:
                         Serial.printf("\t%i: Unhandled message type %i\n", i, 3); //m.message_type);
@@ -244,6 +253,7 @@ class midi_track {
             myFile.println("; begin loop");
             //myFile.printf("id=%i\n",input->id);
             myFile.println("starts_at=0");
+            myFile.printf("transpose=%i\n", transpose);
             bool last_written = false;
             int lines_written = 0;
             for (int x = 0 ; x < LOOP_LENGTH ; x++) {
@@ -303,7 +313,9 @@ class midi_track {
             while (line = myFile.readStringUntil('\n')) {
                 //load_state_parse_line(line, output);
                 if (line.startsWith("starts_at=")) {
-                    time = line.remove(0,String("starts_at=").length()).toInt();
+                    time =      line.remove(0,String("starts_at=").length()).toInt();
+                } if (line.startsWith("transpose=")) {
+                    transpose = line.remove(0,String("transpose=").length()).toInt();
                 } else if (line.startsWith("loop_data=")) {
                     Serial.printf("reading line %s\n", line.c_str());
                     total_frames++;

@@ -92,6 +92,54 @@ class LooperQuantizeChanger : public MenuItem {
         }
 };
 
+class TransposeControl : public MenuItem {
+    midi_track *target;
+
+    int internal_value = 0;// = target->transpose;
+
+    public: 
+        TransposeControl(const char* label, midi_track *target) : MenuItem(label) {
+            this->target = target;
+            internal_value = target->transpose;
+        };
+
+        virtual int display(Coord pos, bool selected, bool opened) override {
+            pos.y = header(label, pos, selected, opened);
+            tft.setCursor(pos.x,pos.y);
+
+            colours(opened, opened?ST77XX_GREEN : ST77XX_WHITE, ST77XX_BLACK);
+            tft.setTextSize(2);
+            if (selected) {
+                tft.printf("%*i\n", 4, internal_value);
+            } else {
+                tft.printf("%*i\n", 4, target->transpose);
+            }
+
+            return tft.getCursorY();
+        }
+
+        virtual bool knob_left() {
+            internal_value--;
+            if (internal_value < -127)
+                internal_value = -127; // = NUM_LOOPS_PER_PROJECT-1;
+            //project.select_loop_number(ui_selected_loop_number);
+            return true;
+        }
+
+        virtual bool knob_right() {
+            internal_value++;
+            if (internal_value >= 127)
+                internal_value = 127;
+            //project.select_loop_number(internal_value);
+            return true;
+        }
+
+        virtual bool button_select() {
+            this->target->set_transpose(internal_value);
+        }
+
+};
+
 // todo: merge functionality with SequencerStatus to share selection code
 class LooperStatus : public MenuItem {
     int ui_selected_loop_number = 0;
