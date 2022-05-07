@@ -136,6 +136,7 @@ class TransposeControl : public MenuItem {
 
         virtual bool button_select() {
             this->target->set_transpose(internal_value);
+            return true;
         }
 
 };

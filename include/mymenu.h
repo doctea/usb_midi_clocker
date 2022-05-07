@@ -101,6 +101,8 @@ class Menu {
     int currently_opened    = -1;
     LinkedList<MenuItem*> items = LinkedList<MenuItem*>();
 
+    int panel_height[20];
+
     int last_knob_position;
     int button_count;
 
@@ -208,13 +210,44 @@ class Menu {
                 // let the currently opened item take care of drawing all of the display
                 items.get(currently_opened)->display(Coord(0,y), true, true);
             } else {
+                static int panel_bottom[20];
+                static bool bottoms_computed = false;
+
+                // find number of panels to offset in order to ensure that selected panel is on screen?
+                int start_panel = 0;
+                if (currently_selected>0 && panel_bottom[currently_selected] > tft.height()) {
+                    start_panel = currently_selected - 1;
+                    // count backwards to find number of panels we have to go to fit currently_selected on screen...
+                    int count_y = panel_bottom[currently_selected];
+                    for (int i = currently_selected ; i > 0 ; i--) {
+                        count_y -= panel_bottom[i];
+                        if (count_y + panel_bottom[currently_selected] < tft.height()) {
+                            start_panel = i;
+                            break;
+                        }
+                    }
+                    //tft.fillWindow(ST77XX_BLACK);
+                    tft.fillRect(0, 0, tft.width(), tft.height(), ST77XX_BLACK);
+                    start_panel = constrain(start_panel, 0, items.size()-1);
+                } else {
+                    start_panel = 0;
+                    tft.fillRect(0, 0, tft.width(), tft.height(), ST77XX_BLACK);
+                }
+
                 // draw each menu item's panel
-                for (int i = 0 ; i < items.size() ; i++) {
+                int start_y = 0;
+                for (int i = start_panel ; i < items.size() ; i++) {
                     MenuItem *item = items.get(i);
                     //int time = millis();
                     y = item->display(Coord(0,y), i==currently_selected, i==currently_opened) + 1;
+
+                    if (!bottoms_computed) {
+                        panel_bottom[i] = y;// - start_y;
+                        start_y = y;
+                    }
                     //Serial.printf("menuitem %i took %i to refresh\n", i, millis()-time);
                 }
+                bottoms_computed = true;
 
                 // control debug output (knob positions / button presses)
                 tft.setCursor(0, y);
