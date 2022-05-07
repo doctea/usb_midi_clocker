@@ -12,6 +12,10 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &E
 //MIDIDevice *midi_out_cv12_poly   = midi_bamble;
 //#endif
 
+#ifdef ENABLE_BASS_TRANSPOSE
+midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
+#endif
+
 #ifdef ENABLE_LESTRUM
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum      = &ENABLE_LESTRUM;
 #endif

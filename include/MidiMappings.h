@@ -8,6 +8,7 @@
 
 //#ifdef ENABLE_BITBOX
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox;//      = &ENABLE_BITBOX;
+#define BITBOX_MIDI_CHANNEL 3
 //#endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 //#ifdef ENABLE_BAMBLE
@@ -22,13 +23,14 @@ extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum;//
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit;//      = &ENABLE_DRUMKIT;
 //#endif
 
+extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass;//      = &ENABLE_BASS_TRANSPOSE;
+#define BASS_MIDI_CHANNEL   4
 
 #ifdef ENABLE_LESTRUM
 // configure incoming lestrum to output to midimuso via bamble
 void lestrum_note_on(byte channel, byte note, byte velocity);
 void lestrum_note_off(byte channel, byte note, byte velocity);
 #endif
-
 
 #ifdef ENABLE_DRUMKIT
 // configure incoming drumkit on input 2 to go out to drums on bamble

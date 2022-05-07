@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "Config.h"
+#include "ConfigMidi.h"
+#include "MidiMappings.h"
 #include "USBHost_t36.h"
 #include "midi_beatstep.h"
 #include "bpm.h"
@@ -92,16 +94,42 @@ void beatstep_on_restart() {
   }
 }
 
-void beatstep_handle_note_on(byte channel, byte note, byte velocity) {
+void beatstep_handle_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
   current_beatstep_note = note;
   //Serial.printf("beatstep got note on %i\n", note);
+
+  // send incoming notes from beatstep back out to neutron on serial3, but transposed down
+
+  #ifdef ENABLE_BASS_TRANSPOSE
+    if(midi_out_bass) {
+      /*int note2 = note - 24;
+      if (note2<=0) 
+        note2 += 12;*/
+      int note2 = note & 12;
+      note2 += 24;
+      //Serial.printf("beatstep note on %i : %i : %i\n", BASS_MIDI_CHANNEL, note, velocity);
+      //Serial.printf("beatstep note2 is %i\n", note2);
+      midi_out_bass->sendNoteOn((uint8_t)note2, 127, BASS_MIDI_CHANNEL);
+    }
+  #endif
 }
-#
-void beatstep_handle_note_off(byte channel, byte note, byte velocity) {
+
+void beatstep_handle_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
   if (current_beatstep_note==note) 
     current_beatstep_note = -1;
   last_beatstep_note = note;
   //Serial.printf("beatstep got note off %i\n", note);
+
+  #ifdef ENABLE_BASS_TRANSPOSE
+    if(midi_out_bass) {
+      /*int note2 = note - 24;
+      if (note2<=0) 
+        note2 += 12;*/
+      int note2 = note & 12;
+      note2 += 24;
+      midi_out_bass->sendNoteOff((uint8_t)note2, velocity, BASS_MIDI_CHANNEL);
+    }
+  #endif
 }
 
 void beatstep_init() {
