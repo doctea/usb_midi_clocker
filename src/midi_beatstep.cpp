@@ -17,6 +17,8 @@ volatile bool beatstep_started = false;
 int current_beatstep_note = -1;
 int last_beatstep_note = -1;
 
+int bass_transpose_octave = 2;
+
 void beatstep_loop(unsigned long ticks) {
   if ( ixBeatStep == 0xff) {
     return;
@@ -106,7 +108,7 @@ void beatstep_handle_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
       if (note2<=0) 
         note2 += 12;*/
       int note2 = note & 12;
-      note2 += 24;
+      note2 += (bass_transpose_octave*12); //24;
       //Serial.printf("beatstep note on %i : %i : %i\n", BASS_MIDI_CHANNEL, note, velocity);
       //Serial.printf("beatstep note2 is %i\n", note2);
       midi_out_bass->sendNoteOn((uint8_t)note2, 127, BASS_MIDI_CHANNEL);
@@ -126,7 +128,7 @@ void beatstep_handle_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
       if (note2<=0) 
         note2 += 12;*/
       int note2 = note & 12;
-      note2 += 24;
+      note2 += (bass_transpose_octave*12);// note2 += 24;
       midi_out_bass->sendNoteOff((uint8_t)note2, velocity, BASS_MIDI_CHANNEL);
     }
   #endif
