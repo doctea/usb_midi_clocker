@@ -92,15 +92,24 @@ class LooperQuantizeChanger : public MenuItem {
         }
 };
 
-class TransposeControl : public MenuItem {
-    midi_track *target;
+class NumberControl : public MenuItem {
+    int *target_variable = nullptr;
+    int internal_value = 0;
+    int minimum_value = 0;
+    int maximum_value = 4;
 
-    int internal_value = 0;// = target->transpose;
-
-    public: 
-        TransposeControl(const char* label, midi_track *target) : MenuItem(label) {
-            this->target = target;
-            internal_value = target->transpose;
+    public:
+        NumberControl(const char* label, int in_start_value, int min_value, int max_value) : MenuItem(label) {
+            internal_value = in_start_value;
+            minimum_value = min_value;
+            maximum_value = max_value;
+        };
+        NumberControl(const char* label, int *in_target_variable, int start_value, int min_value, int max_value) : MenuItem(label) {
+            //NumberControl(label, start_value, min_value, max_value) {
+            internal_value = start_value;
+            minimum_value = min_value;
+            maximum_value = max_value; 
+            target_variable = in_target_variable;
         };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
@@ -109,10 +118,10 @@ class TransposeControl : public MenuItem {
 
             colours(opened, opened?ST77XX_GREEN : ST77XX_WHITE, ST77XX_BLACK);
             tft.setTextSize(2);
-            if (selected) {
+            if (opened) {
                 tft.printf("%*i\n", 4, internal_value);
             } else {
-                tft.printf("%*i\n", 4, target->transpose);
+                tft.printf("%*i\n", 4, get_current_value()); //*target_variable); //target->transpose);
             }
 
             return tft.getCursorY();
@@ -120,25 +129,56 @@ class TransposeControl : public MenuItem {
 
         virtual bool knob_left() {
             internal_value--;
-            if (internal_value < -127)
-                internal_value = -127; // = NUM_LOOPS_PER_PROJECT-1;
+            if (internal_value < minimum_value)
+                internal_value = minimum_value; // = NUM_LOOPS_PER_PROJECT-1;
             //project.select_loop_number(ui_selected_loop_number);
             return true;
         }
-
         virtual bool knob_right() {
             internal_value++;
-            if (internal_value >= 127)
-                internal_value = 127;
+            if (internal_value >= maximum_value)
+                internal_value = maximum_value;
             //project.select_loop_number(internal_value);
             return true;
         }
-
         virtual bool button_select() {
-            this->target->set_transpose(internal_value);
+            //this->target->set_transpose(internal_value);
+            set_current_value(internal_value);
             return true;
         }
 
+        // override in subclass if need to do something special eg getter/setter
+        virtual int get_current_value() {
+            if (target_variable!=nullptr)
+                //return 0;
+                return *target_variable;
+            else
+                return 0;
+        }
+
+        // override in subclass if need to do something special eg getter/setter
+        virtual void set_current_value(int value) { 
+            if (target_variable!=nullptr)
+                *target_variable = value;
+        }
+};
+
+class TransposeControl : public NumberControl {
+    midi_track *target;
+
+    public:
+        TransposeControl(const char* label, midi_track *target, int start_value, int min_value, int max_value) : NumberControl(label, start_value, min_value, max_value) {
+            this->target = target;
+        };
+        TransposeControl(const char* label, midi_track *target) : TransposeControl(label, target, 0, -127, 127) {};
+        
+        virtual int get_current_value() override {
+            return target->transpose;
+        }
+
+        virtual void set_current_value(int value) override { 
+            target->set_transpose(value);
+        }
 };
 
 // todo: merge functionality with SequencerStatus to share selection code

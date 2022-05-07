@@ -16,6 +16,8 @@ extern volatile bool beatstep_started; //= false;
 extern int current_beatstep_note;
 extern int last_beatstep_note;
 
+extern int bass_transpose_octave;
+
 void beatstep_loop(unsigned long ticks);
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue);
 void beatstep_handle_start();
