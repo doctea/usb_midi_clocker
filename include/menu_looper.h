@@ -198,6 +198,7 @@ class LooperStatus : public MenuItem {
             int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
             y++;
+
             for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
                 int col = (project.loaded_loop_number==i) ?  ST77XX_GREEN :    // if currently loaded 
                              (ui_selected_loop_number==i)  ? ST77XX_YELLOW :   // if selected

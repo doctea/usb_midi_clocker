@@ -195,11 +195,36 @@ class Menu {
         }
 
         virtual int draw_message() {
+            //tft.setCursor(0,0);
             // draw the last status message
             tft.setTextColor(message_colour,ST77XX_BLACK);
             tft.setTextSize(0);
             tft.printf("[%-20s]",last_message);
             return tft.getCursorY();
+        }
+
+        virtual int draw_loop_markers() { //Coord pos) {
+            //tft.setCursor(pos.x,pos.y);
+            int LOOP_LENGTH = PPQN * BEATS_PER_BAR * BARS_PER_PHRASE;
+            int y = 0;
+            for (int i = 0 ; i < tft.width() ; i+=(tft.width()/(BEATS_PER_BAR*BARS_PER_PHRASE))) {
+                tft.drawLine(i, y, i, y+2, ST7735_CYAN);
+                //if (i%BEATS_PER_BAR==0)
+                    //tft.drawLine(i, y, i, y+4, ST7735_CYAN);
+            }
+            y+=2;
+            float percent = float(ticks % LOOP_LENGTH) / (float)LOOP_LENGTH;
+            //tft.drawFastHLine(0, tft.width(), 3, ST77XX_WHITE);
+            //tft.drawFastHLine(0, tft.width() * percent, 2, ST77XX_RED);
+            tft.fillRect(0, y, (percent*(float)tft.width()), 4, ST77XX_RED);
+
+            for (int i = 0 ; i < tft.width() ; i+=(tft.width()/4)) {
+                tft.drawLine(i, y, i, y+2, ST7735_WHITE);
+            }
+
+            //Serial.printf("percent %f, width %i\n", percent, tft.width());
+            y += 4;
+            return y;
         }
 
         // draw the menu display
@@ -208,6 +233,7 @@ class Menu {
             
             // now draw the menu
             if (currently_opened>=0 && items.get(currently_opened)->allow_takeover()) {
+                y = draw_loop_markers();
                 y = draw_message();
                 // let the currently opened item take care of drawing all of the display
                 items.get(currently_opened)->display(Coord(0,y), true, true);
@@ -238,6 +264,8 @@ class Menu {
 
                 tft.setCursor(0,0);
 
+                y = draw_loop_markers();
+                tft.setCursor(0, y);
                 y = draw_message();
 
                 // draw each menu item's panel

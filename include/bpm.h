@@ -4,7 +4,8 @@
 #include <Arduino.h>
 
 #define PPQN  24
-#define BEATS_PER_BAR 4
+#define BEATS_PER_BAR   4
+#define BARS_PER_PHRASE 4
 
 #define BPM_MINIMUM   60.0
 #define BPM_MAXIMUM   140.0
