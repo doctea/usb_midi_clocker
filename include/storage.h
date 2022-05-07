@@ -58,7 +58,7 @@ namespace storage {
     };
   } savestate;
 
-  bool save_state(uint8_t preset_number, savestate *input);
+  bool save_sequence(uint8_t preset_number, savestate *input);
   bool load_state(uint8_t preset_number, savestate *input);
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/

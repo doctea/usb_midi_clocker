@@ -167,8 +167,8 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
         apcmini_update_clock_display();
     #endif
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
-    //save_state(project.selected_sequence_number, &project.current_state);
-    project.save_state(); //project.selected_sequence_number);
+    //save_sequence(project.selected_sequence_number, &project.current_state);
+    project.save_sequence(); //project.selected_sequence_number);
 #ifdef ENABLE_SEQUENCER
   } else if (!apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
     Serial.println("---- debug");

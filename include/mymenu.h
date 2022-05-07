@@ -194,19 +194,21 @@ class Menu {
             strcpy(last_message, msg);
         }
 
-        // draw the menu display
-        virtual int display() {
-            int y = 0;
-            tft.setCursor(0,0);
-
+        virtual int draw_message() {
             // draw the last status message
             tft.setTextColor(message_colour,ST77XX_BLACK);
             tft.setTextSize(0);
             tft.printf("[%-20s]",last_message);
-            y = tft.getCursorY();
+            return tft.getCursorY();
+        }
+
+        // draw the menu display
+        virtual int display() {
+            int y = 0;
             
             // now draw the menu
             if (currently_opened>=0 && items.get(currently_opened)->allow_takeover()) {
+                y = draw_message();
                 // let the currently opened item take care of drawing all of the display
                 items.get(currently_opened)->display(Coord(0,y), true, true);
             } else {
@@ -233,6 +235,10 @@ class Menu {
                     start_panel = 0;
                     tft.fillRect(0, 0, tft.width(), tft.height(), ST77XX_BLACK);
                 }
+
+                tft.setCursor(0,0);
+
+                y = draw_message();
 
                 // draw each menu item's panel
                 int start_y = 0;

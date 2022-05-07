@@ -45,13 +45,13 @@ namespace storage {
     }
   }
 
-  bool save_state(uint8_t preset_number, savestate *input) {
-    //Serial.println("save_state not implemented on teensy");
+  bool save_sequence(uint8_t preset_number, savestate *input) {
+    //Serial.println("save_sequence not implemented on teensy");
     File myFile;
 
     char filename[255] = "";
     sprintf(filename, FILEPATH_SEQUENCE, preset_number);
-    Serial.printf("save_state(%i) writing to %s\n", preset_number, filename);
+    Serial.printf("save_sequence(%i) writing to %s\n", preset_number, filename);
     if (SD.exists(filename)) {
       Serial.printf("%s exists, deleting first\n", filename);
       SD.remove(filename);
@@ -236,9 +236,9 @@ namespace storage {
     // nothing to do for Arduino
   }
 
-  void save_state(uint8_t preset_number, savestate *input) {
+  void save_sequence(uint8_t preset_number, savestate *input) {
     int eeAddress = 16 + (preset_number * sizeof(savestate));
-    Serial.print(F("save_state at "));
+    Serial.print(F("save_sequence at "));
     Serial.println(eeAddress);
     EEPROM.put(eeAddress, *input);
   }

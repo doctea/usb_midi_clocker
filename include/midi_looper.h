@@ -152,6 +152,14 @@ class midi_track {
             }
         }
 
+        int count_events() {
+            int count = 0;
+            for (int i = 0 ; i < LOOP_LENGTH ; i++) {
+                count += frames[i].size();
+            }
+            return count;
+        }
+
         // clear any notes that we're recording
         void clear_hanging() {
             for (int i = 0 ; i < 127 ; i++) {
@@ -234,13 +242,13 @@ class midi_track {
         }
 
         // save+load stuff !
-        bool save_state(int recording_number) {
-            //Serial.println("save_state not implemented on teensy");
+        bool save_sequence(int recording_number) {
+            //Serial.println("save_sequence not implemented on teensy");
             File myFile;
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP, recording_number);
-            Serial.printf("midi_looper::save_state(%i) writing to %s\n", recording_number, filename);
+            Serial.printf("midi_looper::save_sequence(%i) writing to %s\n", recording_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf("%s exists, deleting first\n", filename);
                 SD.remove(filename);

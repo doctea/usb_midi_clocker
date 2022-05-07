@@ -24,12 +24,23 @@ class Project {
         }
     }
     void initialise_loop_slots() {
+        //midi_track temp_track = midi_track(&midi_output_wrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
+
         for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
             char filepath[255];
             sprintf(filepath, FILEPATH_LOOP, i);
             loop_slot_has_file[i] = SD.exists(filepath);
+            if (loop_slot_has_file[i]) {        // test whether file is actually empty or not
+                Serial.printf("checking if slot %i is actually empty...\n");
+                mpk49_loop_track.load_state(i);
+                Serial.printf("loaded ok\n");
+                if (mpk49_loop_track.count_events()==0)
+                    loop_slot_has_file[i] = false;
+                Serial.printf("did count_events\n");
+            }
             Serial.printf("loop_slot_has_file[i] = %i for %s\n", loop_slot_has_file[i], filepath);
         }
+        mpk49_loop_track.clear_all();
     }
     public:
         int selected_sequence_number = 0;
@@ -61,8 +72,8 @@ class Project {
         bool load_state() {
             return load_state(selected_sequence_number);
         }
-        bool save_state() {
-            return save_state(selected_sequence_number);
+        bool save_sequence() {
+            return save_sequence(selected_sequence_number);
         }
 
         bool load_state(int selected_sequence_number) {
@@ -72,9 +83,9 @@ class Project {
                 loaded_sequence_number = selected_sequence_number;
             return result;
         }
-        bool save_state(int selected_sequence_number) {
+        bool save_sequence(int selected_sequence_number) {
             Serial.printf("save for selected_sequence_number %i\n", selected_sequence_number);
-            bool result = storage::save_state(selected_sequence_number, &storage::current_state);
+            bool result = storage::save_sequence(selected_sequence_number, &storage::current_state);
             if (result) {
                 sequence_slot_has_file[selected_sequence_number] = true;
                 loaded_sequence_number = selected_sequence_number;
@@ -90,6 +101,9 @@ class Project {
 
         bool is_selected_loop_number_empty(int sn) {
             return !loop_slot_has_file[sn];
+        }
+        void set_loop_slot_has_file(int slot, bool state = true) {
+            loop_slot_has_file[slot] = state;
         }
 
         // load and save sequences / clock settings etc
@@ -110,10 +124,11 @@ class Project {
         }
         bool save_loop(int selected_loop_number, midi_track *track) {
             Serial.printf("save for selected_sequence_number %i\n", selected_loop_number);
-            //bool result = storage::save_state(selected_loop_number, &storage::current_state);
-            bool result = track->save_state(selected_loop_number);
+            //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
+            bool result = track->save_sequence(selected_loop_number);
             if (result) {
-                loop_slot_has_file[selected_loop_number] = true;
+                if (track->count_events()>0)
+                    loop_slot_has_file[selected_loop_number] = true;
                 loaded_loop_number = selected_loop_number;
             }
             return result;

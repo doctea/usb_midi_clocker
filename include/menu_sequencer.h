@@ -58,7 +58,7 @@ class SequencerStatus : public MenuItem {
             return y; //tft.getCursorY() + 8;
         }
 
-        virtual bool knob_left() {
+        virtual bool knob_left() override {
             ui_selected_sequence_number--;
             if (ui_selected_sequence_number < 0)
                 ui_selected_sequence_number = NUM_STATES_PER_PROJECT-1;
@@ -66,7 +66,7 @@ class SequencerStatus : public MenuItem {
             return true;
         }
 
-        virtual bool knob_right() {
+        virtual bool knob_right() override {
             ui_selected_sequence_number++;
             if (ui_selected_sequence_number >= NUM_STATES_PER_PROJECT)
                 ui_selected_sequence_number = 0;
@@ -74,7 +74,7 @@ class SequencerStatus : public MenuItem {
             return true;
         }
 
-        virtual bool button_select() {
+        virtual bool button_select() override {
             project.select_sequence_number(ui_selected_sequence_number);
             bool success = project.load_state(); //selected_sequence_number);
             if (success) {
@@ -89,6 +89,25 @@ class SequencerStatus : public MenuItem {
                 menu.set_message_colour(ST77XX_RED);
                 menu.set_last_message(msg);
             }
+            return true;
+        }
+
+        virtual bool button_right() override {
+            project.select_sequence_number(ui_selected_sequence_number);
+            bool success = project.save_sequence(ui_selected_sequence_number); //, &mpk49_loop_track);
+            if (success) {
+                //loaded_sequence_number = ui_selected_sequence_number;
+                char msg[20] = "";
+                sprintf(msg, "Saved sequence %i", project.loaded_sequence_number);
+                menu.set_message_colour(ST77XX_GREEN);
+                menu.set_last_message(msg);
+            } else {
+                char msg[20] = "";
+                sprintf(msg, "Error saving sequence %i", ui_selected_sequence_number);
+                menu.set_message_colour(ST77XX_RED);
+                menu.set_last_message(msg);
+            }
+
             return true;
         }
 };
