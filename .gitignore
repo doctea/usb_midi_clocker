@@ -8,3 +8,5 @@
 *.orig
 *.rej
 *.patch
+*.swo
+*.swp

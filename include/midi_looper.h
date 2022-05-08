@@ -44,9 +44,15 @@ class midi_track {
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
-    
-    //int quantization = 6;   // quantise to nearest step...?
-
+    /*  
+        # -2 = quantize to bar          (note)          TODO
+        # -1 = quantize to half-bar     (half-note)     TODO
+        # 0 = no quantization
+        # 1 = quantize to beat          (quarter-note)
+        # 2 = quantize to half-beat     (eighth-note)
+        # 3 = quantize to third-beat    (sixteenth-note)
+        # 4 = quantize to quarter-beat  (thirty-second-note)
+    */
     int find_nearest_quantized_time(int time, int quantization) {
         if (quantization==0) // if quantization is 0 then don't quantize at all
             return time;
@@ -68,17 +74,19 @@ class midi_track {
 
         int quantized_time = step % LOOP_LENGTH;    // wrap around
         //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
+        if (debug)
+            Serial.printf("Quantize level\t%i: quantized time\t%i to\t%i\n", quantization, time, quantized_time);
         return quantized_time;
     }
     int quantize_time(int time, int quantization = -1) {
         if (quantization==-1)
             quantization = quantization_value;
-        int quantized_time = find_nearest_quantized_time(time, PPQN/quantization) % LOOP_LENGTH;
-        Serial.printf("Quantized time %i to %i\n", time, quantized_time);
+        int quantized_time = find_nearest_quantized_time(time, quantization) % LOOP_LENGTH;
         return quantized_time;
     }
 
     public: 
+        bool debug = false;
 
         int last_note = -1;
         int current_note = -1;

@@ -22,12 +22,12 @@ Menu menu = Menu();
 
 PositionIndicator posbar = PositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
-HarmonyStatus beatstep_notes =          HarmonyStatus("beatstep harmony",   &last_beatstep_note,          &current_beatstep_note);
+HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &last_beatstep_note,          &current_beatstep_note);
 SequencerStatus sequencer_status =      SequencerStatus();
 LooperStatus    mpk49_looper_status =   LooperStatus();
-LooperQuantizeChanger quantizer_setting = LooperQuantizeChanger();   // todo: make this part of the LooperStatus object
-HarmonyStatus looper_harmony_status =   HarmonyStatus("looper harmony",      &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
-TransposeControl transpose_control =    TransposeControl("Looper transpose", &mpk49_loop_track); // todo: make this part of the LooperStatus object
+LooperQuantizeChanger quantizer_setting = LooperQuantizeChanger("Loop quant", &mpk49_loop_track);   // todo: make this part of the LooperStatus object
+HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",      &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
+TransposeControl transpose_control =    TransposeControl("Loop transpose", &mpk49_loop_track); // todo: make this part of the LooperStatus object
 NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
 USBDevicesPanel usbdevices_panel = USBDevicesPanel();
 
