@@ -63,20 +63,12 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     if (!playing)
       on_restart();
       
-    playing = !playing;
-    
-    #ifdef USE_UCLOCK
-        if (playing) {
-          on_restart();
-          //uClock.start();
-        } else {
-          //uClock.stop();
-        }
-    #endif
-#ifdef ENABLE_LOOPER
-  } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
-    mpk49_loop_track.clear_all();
-#endif
+    playing = !playing;    
+
+  #ifdef ENABLE_LOOPER
+    } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
+      mpk49_loop_track.clear_all();
+  #endif
   } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
     // restart/resync immediately
     Serial.println(F("APCmini pressed, restarting downbeat"));

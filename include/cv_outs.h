@@ -27,8 +27,7 @@ const byte cv_out_clock_pin[NUM_CLOCKS] = {
 #define CLOCK_MULTIPLIER_MAX  16.0
 #define CLOCK_DELAY_MAX 15
 
-#define NUM_CLOCK_MULTIPLIER_VALUES 8
-#define CLOCK_MULTIPLIER_OFF        32.0  // if clock multipler is set to this value then actually turn it off completely
+#define NUM_CLOCK_MULTIPLIER_VALUES 9
 extern float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES];
 extern int duration;
 

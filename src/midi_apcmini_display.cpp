@@ -49,23 +49,38 @@ void apcmini_update_position_display(int ticks) {
 
 
 #ifdef ENABLE_CLOCKS
+
+byte get_colour_for_clock_multiplier(float cm) {
+  if (cm<=0.25) {
+    return get_colour(LEVEL_3);
+  } else if (cm<=0.5) {
+    return get_colour(LEVEL_2);
+  } else if (cm<=1.0) {
+    return get_colour(LEVEL_1);
+  } else if (cm>16.0) {
+    return get_colour(LEVEL_3);
+  } else if (cm>8.0) {
+    return get_colour(LEVEL_2);
+  } else if (cm>4.0) {
+    return get_colour(LEVEL_1);
+  }
+  return get_colour(LEVEL_1);
+}
+
 void redraw_clock_row(byte c) {
     byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       byte io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
       float cm = get_clock_multiplier(c);
-      if (cm<=0.25) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(LEVEL_3), 1));
-      } else if (cm<=0.5) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(LEVEL_2), 1));
+      if (is_clock_off(c)) {
+        midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);
       } else if (cm<=1.0) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(LEVEL_1), 1));
-      } else if (!is_clock_off(c) && io%(byte)cm==0) {
-        byte colour =  cm  > 8.0 ? get_colour(LEVEL_2) : 
-                      (cm  > 4.0 ? get_colour(LEVEL_1) : get_colour(LEVEL_1));
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, colour, 1));
-      } else {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1));  // turn the led off
+        midi_apcmini->sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
+      } else if (io%(byte)cm==0) {
+        midi_apcmini->sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
+      } else { // shouldn't reach this
+        Serial.printf("WARNING: reached unexpected branch for clock %i\n", c);
+        midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);  // turn the led off
       }
     }
 }

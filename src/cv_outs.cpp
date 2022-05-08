@@ -12,15 +12,17 @@ using namespace storage;
 int duration = PPQN/8;
 
 float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
-  0.25,     // 0
-  0.5,      // 1
-  1,        // 2
-  2,        // 3
-  4,        // 4
-  8,        // 5
-  16,       // 6
-  32,       // 7
+  0.25,     // 0 - 16th notes
+  0.5,      // 1 - 8th notes
+  1,        // 2 - quarter notes
+  2,        // 3 - every two beats
+  4,        // 4 - every four beats    (1 bar)
+  8,        // 5 - every eight beats   (2 bars)
+  16,       // 6 - every sixteen beats (4 bars, 1 phrase)
+  32,       // 7 - every thirty two beats (8 bars, 2 phrases)
+  64,       // 8 - clock is completely off (would be every 64 beats, except we don't have enough colours to represent this on the apcmini display)
 };
+#define CLOCK_MULTIPLIER_OFF        64.0  // if clock multipler is set to this value, then actually turn it off completely
 
 float get_clock_multiplier(byte i) { 
   return clock_multiplier_values[current_state.clock_multiplier[i]];
