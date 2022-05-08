@@ -25,7 +25,7 @@ void playInstruction(int index);
 void clear_recording();
 void stop_all_notes();*/
 
-typedef struct midi_message {
+struct midi_message {
     uint8_t message_type;
     uint8_t pitch;
     uint8_t velocity;
@@ -243,7 +243,7 @@ class midi_track {
                 Serial.printf("%s exists, deleting first\n", filename);
                 SD.remove(filename);
             }
-            myFile = SD.open(filename, FILE_WRITE_BEGIN | O_TRUNC); //FILE_WRITE_BEGIN);
+            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!myFile) {    
                 Serial.printf("Error: couldn't open %s for writing\n", filename);
                 return false;

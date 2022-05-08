@@ -17,7 +17,8 @@
 #define ENABLE_USB
 #define ENABLE_CV
 
-#define ENABLE_RECORDING
+// enable MIDI looping for MPK49
+#define ENABLE_LOOPER
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI

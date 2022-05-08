@@ -56,7 +56,7 @@ namespace storage {
       Serial.printf("%s exists, deleting first\n", filename);
       SD.remove(filename);
     }
-    myFile = SD.open(filename, FILE_WRITE_BEGIN | O_TRUNC); //FILE_WRITE_BEGIN);
+    myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
     if (!myFile) {    
       Serial.printf("Error: couldn't open %s for writing\n", filename);
       return false;

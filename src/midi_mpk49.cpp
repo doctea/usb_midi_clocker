@@ -50,7 +50,7 @@ void MPK49_on_tick(uint32_t ticks) {
     midi_MPK49->send_now();*/
   }
   // playLoop(ticks%(PPQN*4*4*4));
-  #ifdef ENABLE_RECORDING
+  #ifdef ENABLE_LOOPER
     if (mpk49_playing)
       mpk49_loop_track.play_events(ticks); //, midi_out_bitbox); //%(LOOP_LENGTH));
   #endif
@@ -70,7 +70,7 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
   static int counter = 0;
   Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
 
-  #ifdef ENABLE_RECORDING
+  #ifdef ENABLE_LOOPER
     if (mpk49_recording)
       mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOn, /*channel,*/ note, velocity);
   #endif
@@ -89,7 +89,7 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
-  #ifdef ENABLE_RECORDING
+  #ifdef ENABLE_LOOPER
   if (mpk49_recording)
     mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOff, /*channel,*/ note, velocity);
   #endif
@@ -105,7 +105,7 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
   #endif
 }
 
-#ifdef ENABLE_RECORDING
+#ifdef ENABLE_LOOPER
   void mpk49_handle_mmc_record() {
     mpk49_recording = !mpk49_recording;
     if (mpk49_recording) {
@@ -158,7 +158,7 @@ void MPK49_init() {
     //midi_MPK49->setHandleStart(MPK49_handle_start);
     midi_MPK49->setHandleNoteOn(mpk49_handle_note_on);
     midi_MPK49->setHandleNoteOff(mpk49_handle_note_off);
-    #ifdef ENABLE_RECORDING
+    #ifdef ENABLE_LOOPER
       midi_MPK49->setHandleSystemExclusive(mpk49_handle_system_exclusive);
     #endif
 }

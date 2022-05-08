@@ -164,9 +164,9 @@ void loop()
   loop_serial_usb_devices();
 
   #ifdef ENABLE_USB
-  update_usb_device_connections();
-  read_midi_usb_devices();
-  loop_midi_usb_devices();
+    update_usb_device_connections();
+    read_midi_usb_devices();
+    loop_midi_usb_devices();
   #endif
 
   //Serial.println(F("."));
@@ -182,63 +182,63 @@ void loop()
 
 // called inside interrupt
 void do_tick(uint32_t in_ticks) {
-/*#ifdef DEBUG_TICKS
-    unsigned int delta = millis()-t1;
+  /*#ifdef DEBUG_TICKS
+      unsigned int delta = millis()-t1;
 
-    Serial.print(ticks);
-    Serial.print(F(":\tTicked with delta\t"));
-    Serial.print(delta);
-    Serial.print(F("!\t(ms_per_tick is "));
-    Serial.print(ms_per_tick);
-    Serial.print(F(") sending clock for [ "));
-#endif*/
-    //Serial.println("ticked");
+      Serial.print(ticks);
+      Serial.print(F(":\tTicked with delta\t"));
+      Serial.print(delta);
+      Serial.print(F("!\t(ms_per_tick is "));
+      Serial.print(ms_per_tick);
+      Serial.print(F(") sending clock for [ "));
+  #endif*/
+  //Serial.println("ticked");
 
-    #ifndef USE_UCLOCK
-      ticks = in_ticks;
-    #endif
-   
-    // original restart check+code went here? -- seems like better timing with bamble etc when call this here
-    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
-      //in_ticks = ticks = 0;
-      on_restart();
-      //ATOMIC(
-        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-      //)
-      restart_on_next_bar = false;
-    }
+  #ifndef USE_UCLOCK
+    ticks = in_ticks;
+  #endif
+  
+  // original restart check+code went here? -- seems like better timing with bamble etc when call this here
+  if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+    //in_ticks = ticks = 0;
+    on_restart();
+    //ATOMIC(
+      //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+    //)
+    restart_on_next_bar = false;
+  }
 
-    send_midi_serial_clocks();
+  send_midi_serial_clocks();
 
-    #ifdef ENABLE_USB
-      send_midi_usb_clocks();
-    #endif
+  #ifdef ENABLE_USB
+    send_midi_usb_clocks();
+  #endif
 
-    #ifdef ENABLE_CV
-    update_cv_outs(in_ticks);
-    #endif
+  #ifdef ENABLE_CV
+  update_cv_outs(in_ticks);
+  #endif
 
-    #ifdef ENABLE_MPK49
-      MPK49_on_tick(in_ticks);
-    #endif
+  #ifdef ENABLE_MPK49
+    MPK49_on_tick(in_ticks);
+  #endif
 
-    #ifdef ENABLE_USB
-      #ifdef ENABLE_BEATSTEP
-          beatstep_on_tick(in_ticks);
-      #endif
-
-      #ifdef ENABLE_BAMBLE
-          bamble_on_tick(in_ticks);
-      #endif
-
-      #ifdef ENABLE_APCMINI
-          apcmini_on_tick(in_ticks);
-      #endif
+  #ifdef ENABLE_USB
+    #ifdef ENABLE_BEATSTEP
+        beatstep_on_tick(in_ticks);
     #endif
 
-#ifdef DEBUG_TICKS
-  Serial.println(F(" ]"));
-#endif 
+    #ifdef ENABLE_BAMBLE
+        bamble_on_tick(in_ticks);
+    #endif
+
+    #ifdef ENABLE_APCMINI
+        apcmini_on_tick(in_ticks);
+    #endif
+  #endif
+
+  #ifdef DEBUG_TICKS
+    Serial.println(F(" ]"));
+  #endif 
 
   //last_processed_tick = ticks;
   //ticks++;

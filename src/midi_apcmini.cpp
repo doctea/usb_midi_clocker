@@ -73,7 +73,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
           //uClock.stop();
         }
     #endif
-#ifdef ENABLE_RECORDING
+#ifdef ENABLE_LOOPER
   } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
     mpk49_loop_track.clear_all();
 #endif

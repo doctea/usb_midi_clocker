@@ -111,44 +111,6 @@ void tft_update(int ticks) {
     //time = millis();
     menu.update_inputs();
     //Serial.printf("input update took %ims\n",(millis()-time));
-
-    //return;
-
-    /*
-    long t = millis();
-    tft.setCursor(0,0);
-    tft.setTextSize(2);
-    if (playing) {
-        tft.setTextColor(rgb(0, 0xFF, 0), 0x00);
-    } else {
-        tft.setTextColor(rgb(0, 0, 0xFF), 0x00);
-    }
-    tft.printf("%04i:%02i:%02i @ %03.2f\n", 
-        (ticks / (PPQN*4*4)) + 1, 
-        (ticks % (PPQN*4*4) / (PPQN*4)) + 1,
-        (ticks % (PPQN*4) / PPQN) + 1,
-        bpm_current
-    );*/
-
-    /*
-    #if defined(ENABLE_MPK49) && defined(ENABLE_RECORDING)
-        mpk49_display_looper_status(&tft);
-    #endif
-
-    #if defined(ENABLE_BEATSTEP)
-        beatstep_display_key_status(&tft);
-    #endif
-*/
-    /*#ifdef ENABLE_USB
-        display_usb_device_list(&tft);
-    #endif*/
-
-
-    //tft.printf("ticks: %i", ticks);
-
-    static int f = 0;
-    /*if (f++%100==0)
-        Serial.printf("gfx took %i\n", millis()-t);*/
 } 
 
 #endif
