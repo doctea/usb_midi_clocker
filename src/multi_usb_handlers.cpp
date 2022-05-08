@@ -194,6 +194,11 @@ void send_midi_usb_clocks() {
       //midi_beatstep->send_now();
     }
   #endif
+  #ifdef ENABLE_KEYSTEP
+    if(ixKeystep!=0XFF) {
+      midi_keystep->sendRealTime(midi::Clock);
+    }
+  #endif
   /*if(ixAPCmini!=0xFF) {
     midi_apcmini->sendRealTime(midi::Clock);
   }*/

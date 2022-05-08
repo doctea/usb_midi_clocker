@@ -5,6 +5,7 @@
 #include "Config.h"
 #include "ConfigMidi.h"
 #include "MidiMappings.h"
+#include "midi_out_wrapper.h"
 
 #include "storage.h"
 //#include "menu.h"
@@ -24,7 +25,6 @@ void playInstruction(int index);
 void clear_recording();
 void stop_all_notes();*/
 
-
 typedef struct midi_message {
     uint8_t message_type;
     uint8_t pitch;
@@ -32,33 +32,6 @@ typedef struct midi_message {
     uint8_t channel;
 };
 
-class midi_output_wrapper {
-    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi;
-    MIDIDevice_BigBuffer *output_usb;
-    byte default_channel = 1;
-
-    public:
-        midi_output_wrapper(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
-            output_serialmidi = in_output_serialmidi;
-            default_channel = channel;
-        }
-        midi_output_wrapper(MIDIDevice_BigBuffer *in_output_usb, byte channel = 1) {
-            output_usb = in_output_usb;
-            default_channel = channel;
-        }
-
-        void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-            if (channel==0) channel = default_channel;
-            if (output_serialmidi) output_serialmidi->sendNoteOn(pitch, velocity, channel);
-            if (output_usb)        output_usb->sendNoteOn(pitch, velocity, channel);
-        }
-
-        void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
-            if (channel==0) channel = default_channel;
-            if (output_serialmidi) output_serialmidi->sendNoteOff(pitch, velocity, channel);
-            if (output_usb)        output_usb->sendNoteOff(pitch, velocity, channel);
-        }
-};
 
 class midi_track {
     //LinkedList<midi_frame> frames = LinkedList<midi_frame> ();
@@ -66,7 +39,7 @@ class midi_track {
     LinkedList<midi_message> frames[LOOP_LENGTH];
     midi_output_wrapper *output;
 
-    bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
+    //bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
     bool recorded_hanging_notes[127];
     int loaded_recording_number = -1;
 
@@ -75,27 +48,34 @@ class midi_track {
     //int quantization = 6;   // quantise to nearest step...?
 
     int find_nearest_quantized_time(int time, int quantization) {
-        int step_num = time / quantization; //(PPQN/4)
-        int step_start_at_tick = step_num * quantization;
-        int diff = time - step_start_at_tick;
+        if (quantization==0) // if quantization is 0 then don't quantize at all
+            return time;
+
+        int ticks_per_quant_level = PPQN/quantization;      // get number of ticks per quantized unit
+
+        int step_num = time / ticks_per_quant_level;        // break ticks into quantized unit
+        int step_start_at_tick = step_num * ticks_per_quant_level;  // find the start of the quantized unit
+        int diff = time - step_start_at_tick;               // get how many ticks we are away from the start of nearest quantized unit
         //Serial.printf("for time\t%i, got step_num\t%i, step_start_at\t%i, diff\t%i\n", time, step_num, step_start_at_tick, diff);
 
         int step;
-        if (diff<quantization/2) {
+        if (diff < (ticks_per_quant_level/2)) {     // quantize to current quantized unit
             step = step_start_at_tick;
-        } else {
-            step = step_start_at_tick+1; //(quantization/2);
+        } else {                                    // quantize to next quantized unit
+            step = step_start_at_tick + ticks_per_quant_level;
         }
         //Serial.printf("for time\t%i, got step\t%i\n", time, step);
 
-        int quantized_time = step;// * quantization;
+        int quantized_time = step % LOOP_LENGTH;    // wrap around
         //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
-        return quantized_time % LOOP_LENGTH;
+        return quantized_time;
     }
     int quantize_time(int time, int quantization = -1) {
         if (quantization==-1)
             quantization = quantization_value;
-        return find_nearest_quantized_time(time, PPQN/quantization) % LOOP_LENGTH;
+        int quantized_time = find_nearest_quantized_time(time, PPQN/quantization) % LOOP_LENGTH;
+        Serial.printf("Quantized time %i to %i\n", time, quantized_time);
+        return quantized_time;
     }
 
     public: 
@@ -178,7 +158,8 @@ class midi_track {
             int position = time%LOOP_LENGTH;
             int number_messages = frames[position].size();
 
-            if (frames[position].size()>0) Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages);
+            if (frames[position].size()>0) 
+                Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages);
 
             for (int i = 0 ; i < number_messages ; i++) {
                 midi_message m = frames[position].get(i);
@@ -189,14 +170,14 @@ class midi_track {
                     case midi::NoteOn:
                         current_note = pitch;
                         output->sendNoteOn(pitch, m.velocity); //, m.channel);
-                        playing_notes[pitch] = true;
+                        //playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
                         output->sendNoteOff(pitch, m.velocity); //, m.channel);
-                        playing_notes[pitch] = false;
+                        //playing_notes[pitch] = false;
                         break;
                     default:
                         Serial.printf("\t%i: Unhandled message type %i\n", i, 3); //m.message_type);
@@ -216,12 +197,13 @@ class midi_track {
 
         void stop_all_notes() {
             // todo: probably move this into the wrapper, so that can have multiple sources playing into the same output?
-            for (byte i = 0 ; i < 127 ; i++) {
+            this->output->stop_all_notes();
+            /*for (byte i = 0 ; i < 127 ; i++) {
                 if (playing_notes[i]) {
                     output->sendNoteOff(i, 0);
                     playing_notes[i] = false;
                 }
-            }
+            }*/
         }
 
         void stop_recording() {

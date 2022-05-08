@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "ConfigMidi.h"
+#include "midi_out_wrapper.h"
 
 //#ifdef ENABLE_BITBOX
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox;//      = &ENABLE_BITBOX;
@@ -24,6 +25,7 @@ extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit;//
 //#endif
 
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass;//      = &ENABLE_BASS_TRANSPOSE;
+extern midi_output_wrapper midi_out_bass_wrapper;
 #define BASS_MIDI_CHANNEL   4
 
 #ifdef ENABLE_LESTRUM

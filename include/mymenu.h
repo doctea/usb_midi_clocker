@@ -207,23 +207,25 @@ class Menu {
             //tft.setCursor(pos.x,pos.y);
             int LOOP_LENGTH = PPQN * BEATS_PER_BAR * BARS_PER_PHRASE;
             int y = 0;
-            for (int i = 0 ; i < tft.width() ; i+=(tft.width()/(BEATS_PER_BAR*BARS_PER_PHRASE))) {
-                tft.drawLine(i, y, i, y+2, ST7735_CYAN);
-                //if (i%BEATS_PER_BAR==0)
-                    //tft.drawLine(i, y, i, y+4, ST7735_CYAN);
-            }
-            y+=2;
+            //y+=2;
             float percent = float(ticks % LOOP_LENGTH) / (float)LOOP_LENGTH;
             //tft.drawFastHLine(0, tft.width(), 3, ST77XX_WHITE);
             //tft.drawFastHLine(0, tft.width() * percent, 2, ST77XX_RED);
-            tft.fillRect(0, y, (percent*(float)tft.width()), 4, ST77XX_RED);
+            tft.fillRect(0, y, (percent*(float)tft.width()), 6, ST77XX_RED);
+
+            for (int i = 0 ; i < tft.width() ; i+=(tft.width()/(BEATS_PER_BAR*BARS_PER_PHRASE))) {
+                tft.drawLine(i, y, i, y+2, ST7735_WHITE);
+                //if (i%BEATS_PER_BAR==0)
+                    //tft.drawLine(i, y, i, y+4, ST7735_CYAN);
+            }
 
             for (int i = 0 ; i < tft.width() ; i+=(tft.width()/4)) {
-                tft.drawLine(i, y, i, y+2, ST7735_WHITE);
+                //tft.drawLine(i, y, i, y+4, ST7735_WHITE);
+                tft.fillRect(i, y, 2, 5, ST7735_WHITE);
             }
 
             //Serial.printf("percent %f, width %i\n", percent, tft.width());
-            y += 4;
+            y += 6;
             return y;
         }
 

@@ -55,6 +55,8 @@ class LooperQuantizeChanger : public MenuItem {
                 int col;
                 if (available_values[i]==mpk49_loop_track.get_quantization_value()) {
                     col = ST7735_GREEN;
+                } else {
+                    col = ST77XX_WHITE;
                 }
                 colours(opened && selected_value==i, col, ST7735_BLACK);
                 tft.printf("%i", available_values[i]);
@@ -98,18 +100,22 @@ class NumberControl : public MenuItem {
     int minimum_value = 0;
     int maximum_value = 4;
 
+    void (*on_change_handler)(int last_value, int new_value);
+
     public:
         NumberControl(const char* label, int in_start_value, int min_value, int max_value) : MenuItem(label) {
             internal_value = in_start_value;
             minimum_value = min_value;
             maximum_value = max_value;
         };
-        NumberControl(const char* label, int *in_target_variable, int start_value, int min_value, int max_value) : MenuItem(label) {
+        NumberControl(const char* label, int *in_target_variable, int start_value, int min_value, int max_value, void (*on_change_handler)(int last_value, int new_value)) 
+            : MenuItem(label) {
             //NumberControl(label, start_value, min_value, max_value) {
             internal_value = start_value;
             minimum_value = min_value;
             maximum_value = max_value; 
             target_variable = in_target_variable;
+            this->on_change_handler = on_change_handler;
         };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
@@ -143,7 +149,12 @@ class NumberControl : public MenuItem {
         }
         virtual bool button_select() {
             //this->target->set_transpose(internal_value);
+            int last_value = get_current_value();
             set_current_value(internal_value);
+            if (on_change_handler!=nullptr) {
+                Serial.println("calling on_change_handler");
+                on_change_handler(last_value, internal_value);
+            }
             return true;
         }
 
