@@ -1,5 +1,17 @@
 #!/bin/python3
 
+import sys
+
+# 1 = quantize to beat
+# 2 = quantize to half-beat
+# 3 = quantize to third-beat
+# 4 = quantize to quarter-beat
+
+if len(sys.argv)>1:
+    quantize_level = int(sys.argv[1])
+else:
+    quantize_level = 1
+
 PPQN = 24
 BARS_PER_PHRASE = 4
 BEATS_PER_BAR = 4
@@ -23,25 +35,21 @@ def find_nearest_quantized_time(time, quantization):
 
     print("step_num:\t%s\tstep_start_at_tick:\t%s\tdiff:\t%s" % (step_num, step_start_at_tick, diff), end='\t')
 
-    if (diff < ticks_per_quant_level/2):
-        print ("diff is less than quantization/2 (%s)" % (ticks_per_quant_level/2), end='\t')
+    if (diff < int(ticks_per_quant_level/2)):
+        print ("diff is <  quantization/2 (%s)" % (ticks_per_quant_level/2), end='\t')
         step = step_start_at_tick
     else:
-        print ("diff is more than or equal to quantization/2 (%s)" % (ticks_per_quant_level/2), end='\t')
-        step = step_start_at_tick+1 * ticks_per_quant_level
+        print ("diff is >= quantization/2 (%s)" % (ticks_per_quant_level/2), end='\t')
+        step = step_start_at_tick + ticks_per_quant_level
     
-    quantized_time = step
+    quantized_time = step % LOOP_LENGTH
 
-    print ("got result %s" % quantized_time)
+    print ("got result %s (beat number %s)" % (quantized_time, int(quantized_time/PPQN)))
 
     return quantized_time % LOOP_LENGTH
 
-# 1 = quantize to beat
-# 2 = quantize to half-beat
-# 3 = quantize to third-beat
-# 4 = quantize to quarter-beat
 
 for x in range(0,LOOP_LENGTH):
     if (is_bpm_on_multiplier(x, 1)):
-        print ("BEAT!")
-    find_nearest_quantized_time(x, 2)
+        print ("BEAT! number %s at tick %s" % (int(x/PPQN), x))
+    find_nearest_quantized_time(x, quantize_level)
