@@ -1,4 +1,4 @@
-#include <midi.h>
+//#include <midi.h>
 #include <MIDI.h>
 
 #include "bpm.h"
@@ -23,8 +23,7 @@
     LinkedList<midi_message> messages = LinkedList<midi_message>();
 };*/
 
-midi_output_wrapper midi_out_bitbox_wrapper = midi_output_wrapper(midi_out_bitbox, 3);
-midi_track mpk49_loop_track = midi_track(&midi_out_bitbox_wrapper); //&midi_output_wrapper(midi_out_bitbox, 3));
+MIDITrack mpk49_loop_track = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
 
 // from https://github.com/LesserChance/arduino-midi-looper/blob/master/instruction.ino
 

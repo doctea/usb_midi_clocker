@@ -6,7 +6,7 @@
 #include <LinkedList.h>
 #include <Adafruit_GFX.h>
 #include "ST7789_t3.h"
-#include "Vector.h"
+//#include "Vector.h"
 //#include "menu.h"
 
 #include "midi_helpers.h"
@@ -417,6 +417,7 @@ class NumberControl : public MenuItem {
 };
 
 // generic control for selecting one option from a selection of values
+// TODO: keep currently selected option centred in display and scroll through the rest
 class SelectorControl : public MenuItem {
     public:
         int num_values;

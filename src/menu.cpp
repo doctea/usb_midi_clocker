@@ -36,9 +36,9 @@ PositionIndicator posbar = PositionIndicator();
 #endif
 #ifdef ENABLE_LOOPER
     LooperStatus    mpk49_looper_status =   LooperStatus();
-    LooperQuantizeChanger quantizer_setting = LooperQuantizeChanger("Loop quant",   &mpk49_loop_track);   // todo: make this part of the LooperStatus object
+    LooperQuantizeControl quantizer_setting = LooperQuantizeControl("Loop quant",   &mpk49_loop_track);   // todo: make this part of the LooperStatus object
     HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
-    TransposeControl transpose_control =    TransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
+    LooperTransposeControl transpose_control =    LooperTransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
 #endif
 
 #ifdef ENABLE_USB

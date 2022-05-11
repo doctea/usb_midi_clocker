@@ -24,7 +24,7 @@ class Project {
         }
     }
     void initialise_loop_slots() {
-        //midi_track temp_track = midi_track(&midi_output_wrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
+        //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
 
         for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
             char filepath[255];
@@ -114,7 +114,7 @@ class Project {
             return save_loop(selected_loop_number, &mpk49_loop_track);
         }
 
-        bool load_loop(int selected_loop_number, midi_track *track) {
+        bool load_loop(int selected_loop_number, MIDITrack *track) {
             Serial.printf("load for selected_sequence_number %i\n", selected_loop_number);
             //bool result = storage::load_state(selected_loop_number, &storage::current_state);
             bool result = track->load_state(selected_loop_number);
@@ -122,7 +122,7 @@ class Project {
                 loaded_loop_number = selected_loop_number;
             return result;
         }
-        bool save_loop(int selected_loop_number, midi_track *track) {
+        bool save_loop(int selected_loop_number, MIDITrack *track) {
             Serial.printf("save for selected_sequence_number %i\n", selected_loop_number);
             //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
             bool result = track->save_sequence(selected_loop_number);

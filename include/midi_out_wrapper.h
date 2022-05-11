@@ -4,7 +4,15 @@
 #include <MIDI.h>
 #include <USBHost_t36.h>
 
-class midi_output_wrapper {
+// generic wrapper around a MIDI output object
+// tracks playing notes and provides methods to kill them so can eg kill all notes when transposition is changed
+// used by looper tracks, and for echoing beatstep input to the neutron bass output
+// TODO: handle transposition here
+//      multiple transposition modes:
+//          transpose chord? / transpose/quantize within key?
+//          transpose key? / outright transposition by semitone amount (ala current midi looper method)
+//          tranpose to target octave (ala current beatstep->neutron bass transposition)
+class MIDIOutputWrapper {
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi;
     MIDIDevice_BigBuffer *output_usb;
     byte default_channel = 1;
@@ -12,11 +20,11 @@ class midi_output_wrapper {
     bool playing_notes[127];
 
     public:
-        midi_output_wrapper(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
+        MIDIOutputWrapper(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
             output_serialmidi = in_output_serialmidi;
             default_channel = channel;
         }
-        midi_output_wrapper(MIDIDevice_BigBuffer *in_output_usb, byte channel = 1) {
+        MIDIOutputWrapper(MIDIDevice_BigBuffer *in_output_usb, byte channel = 1) {
             output_usb = in_output_usb;
             default_channel = channel;
         }

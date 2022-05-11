@@ -19,12 +19,9 @@
 #define MAX_INSTRUCTION_ARGUMENTS   4
 
 using namespace storage;
-/*
-void recordInstruction(byte instruction_type, byte channel, byte arg0, byte arg1);
-void playInstruction(int index);
-void clear_recording();
-void stop_all_notes();*/
 
+// for storing messages for recording+playback by midi looper
+// todo: expand to handle other message types (CCs?)
 struct midi_message {
     uint8_t message_type;
     uint8_t pitch;
@@ -32,12 +29,11 @@ struct midi_message {
     uint8_t channel;
 };
 
-
-class midi_track {
+class MIDITrack {
     //LinkedList<midi_frame> frames = LinkedList<midi_frame> ();
     //midi_frame frames[LOOP_LENGTH];
     LinkedList<midi_message> frames[LOOP_LENGTH];
-    midi_output_wrapper *output;
+    MIDIOutputWrapper *output;
 
     //bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
     bool recorded_hanging_notes[127];
@@ -45,8 +41,8 @@ class midi_track {
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
     /*  
-        # -2 = quantize to bar          (note)          TODO
-        # -1 = quantize to half-bar     (half-note)     TODO
+        # UNTESTED: -2 = quantize to bar          (note)          
+        # UNTESTED: -1 = quantize to half-bar     (half-note)     
         # 0 = no quantization
         # 1 = quantize to beat          (quarter-note)
         # 2 = quantize to half-beat     (eighth-note)
@@ -57,7 +53,16 @@ class midi_track {
         if (quantization==0) // if quantization is 0 then don't quantize at all
             return time;
 
-        int ticks_per_quant_level = PPQN/quantization;      // get number of ticks per quantized unit
+        int ticks_per_quant_level;
+        if (quantization>0) {
+            ticks_per_quant_level = PPQN/quantization;      // get number of ticks per quantized unit
+        } else {
+            if (quantization==-1)
+                ticks_per_quant_level = PPQN * 2;
+            else if (quantization==-2) {
+                ticks_per_quant_level = PPQN * 4;
+            }
+        }
 
         int step_num = time / ticks_per_quant_level;        // break ticks into quantized unit
         int step_start_at_tick = step_num * ticks_per_quant_level;  // find the start of the quantized unit
@@ -93,7 +98,7 @@ class midi_track {
 
         int transpose = 0;
 
-        midi_track(midi_output_wrapper *default_output) {
+        MIDITrack(MIDIOutputWrapper *default_output) {
             output = default_output;
             //frames[0].time = 0;
             /*for (int i = 0 ; i < LOOP_LENGTH ; i++) {
@@ -364,7 +369,7 @@ class midi_track {
 
 };
 
-extern midi_track mpk49_loop_track;
+extern MIDITrack mpk49_loop_track;
 
 /**
  * @var {byte} the maximum number of instructions

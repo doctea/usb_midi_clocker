@@ -7,6 +7,7 @@
 
 #ifdef ENABLE_BITBOX
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
+MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL);
 #endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 //#ifdef ENABLE_BAMBLE
@@ -15,7 +16,7 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &E
 
 #ifdef ENABLE_BASS_TRANSPOSE
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
-midi_output_wrapper midi_out_bass_wrapper = midi_output_wrapper(midi_out_bass, BASS_MIDI_CHANNEL);
+MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper(midi_out_bass, BASS_MIDI_CHANNEL);
 #endif
 
 #ifdef ENABLE_LESTRUM

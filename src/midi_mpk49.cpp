@@ -78,7 +78,7 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
   #ifdef ENABLE_BITBOX
     if (midi_out_bitbox) {
         Serial.printf("sending to midi_out_bitbox\n");
-        midi_out_bitbox->sendNoteOn(note, velocity, BITBOX_MIDI_CHANNEL);
+        midi_out_bitbox_wrapper.sendNoteOn(note, velocity, BITBOX_MIDI_CHANNEL);
         //midi_out_bass->sendNoteOn(note, velocity, BASS_MIDI_CHANNEL);
     } else {
         Serial.println();
@@ -97,7 +97,7 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
   #ifdef ENABLE_BITBOX
     if (midi_out_bitbox) {
         Serial.printf("sending note off to midi_out_bitbox\n");
-        midi_out_bitbox->sendNoteOff(note, velocity, BITBOX_MIDI_CHANNEL);
+        midi_out_bitbox_wrapper.sendNoteOff(note, velocity, BITBOX_MIDI_CHANNEL);
         //midi_out_bass->sendNoteOff(note, velocity, BASS_MIDI_CHANNEL);
     }
   #else

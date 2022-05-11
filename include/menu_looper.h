@@ -38,13 +38,14 @@ class LooperRecStatus : public MenuItem {
         }
 };
 
-class LooperQuantizeChanger : public SelectorControl {
-    midi_track *target;
+class LooperQuantizeControl : public SelectorControl {
+    MIDITrack *target;
 
+    // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?
     int quantizer_available_values[5] = { 0, 4, 3, 2, 1 };
 
     public:
-        LooperQuantizeChanger(const char *label, midi_track *target) : SelectorControl(label) {
+        LooperQuantizeControl(const char *label, MIDITrack *target) : SelectorControl(label) {
             //num_values = sizeof(*available_values);
             this->target = target;
             available_values = &quantizer_available_values[0];
@@ -58,7 +59,7 @@ class LooperQuantizeChanger : public SelectorControl {
             Serial.printf("did set!");
         }
         virtual int getter () {
-            return mpk49_loop_track.get_quantization_value();
+            return target->get_quantization_value();
         }
         /*int on_change() {
             Serial.printf("SelectorControl %s changed to %i!\n", label, available_values[selected_value_index]);
@@ -69,17 +70,17 @@ class LooperQuantizeChanger : public SelectorControl {
             //Serial.printf("get_label_for_value(%i) returning '%s'\n", value, value_label);
             //return value_label;
             static char l[3] = "?";
+            // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?
             if (value==0) {
                 strcpy(l, "N");
             } else if (value==1) {
-                //return "¼";
-                strcpy(l, "q");
+                strcpy(l, "q"); //return "¼";
             } else if (value==2) {
-                strcpy(l, "8"); //return "8";
+                strcpy(l, "8");
             } else if (value==3) {
-                strcpy(l, "16"); //return "16";
+                strcpy(l, "16");
             } else if (value==4) {
-                strcpy(l, "32"); //return "32";
+                strcpy(l, "32");
             } 
             //Serial.printf("get_label_for_value(%i) returning '%s'\n", value, l);
             return l;
@@ -89,14 +90,14 @@ class LooperQuantizeChanger : public SelectorControl {
 
 
 
-class TransposeControl : public NumberControl {
-    midi_track *target;
+class LooperTransposeControl : public NumberControl {
+    MIDITrack *target;
 
     public:
-        TransposeControl(const char* label, midi_track *target, int start_value, int min_value, int max_value) : NumberControl(label, start_value, min_value, max_value) {
+        LooperTransposeControl(const char* label, MIDITrack *target, int start_value, int min_value, int max_value) : NumberControl(label, start_value, min_value, max_value) {
             this->target = target;
         };
-        TransposeControl(const char* label, midi_track *target) : TransposeControl(label, target, 0, -127, 127) {};
+        LooperTransposeControl(const char* label, MIDITrack *target) : LooperTransposeControl(label, target, 0, -127, 127) {};
         
         virtual int get_current_value() override {
             return target->transpose;
@@ -108,6 +109,7 @@ class TransposeControl : public NumberControl {
 };
 
 // todo: merge functionality with SequencerStatus to share selection code
+//          maybe even make subclasses of SelectorControl?
 class LooperStatus : public MenuItem {
     int ui_selected_loop_number = 0;
     LooperRecStatus lrs = LooperRecStatus();
