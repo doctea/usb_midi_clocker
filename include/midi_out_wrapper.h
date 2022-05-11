@@ -12,6 +12,8 @@
 //          transpose chord? / transpose/quantize within key?
 //          transpose key? / outright transposition by semitone amount (ala current midi looper method)
 //          tranpose to target octave (ala current beatstep->neutron bass transposition)
+// TODO: handle currently_playing_note / last_played_note stuff here too?
+// TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
 class MIDIOutputWrapper {
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi;
     MIDIDevice_BigBuffer *output_usb;
