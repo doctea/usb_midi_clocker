@@ -11,7 +11,7 @@ extern bool mpk49_recording;
 extern bool mpk49_playing;
 class LooperRecStatus : public MenuItem {   
     public:
-        LooperRecStatus() : MenuItem("mpk49_looper") {};
+        LooperRecStatus() : MenuItem("Loop status / slot") {};
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft.setCursor(pos.x,pos.y);

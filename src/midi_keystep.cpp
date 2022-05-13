@@ -45,12 +45,12 @@ void keystep_on_tick(uint32_t ticks) {
 
 // called inside interrupt
 void keystep_on_restart() {
-  /*if (midi_keystep) {
+  if (ixKeystep!=0xFF) {
     //ATOMIC(
       midi_keystep->sendRealTime(usbMIDI.Stop); //sendStop();
       midi_keystep->sendRealTime(usbMIDI.Start); //sendStart();
     //)
-  }*/
+  }
 }
 
 void keystep_handle_note_on(byte channel, byte note, byte velocity) {

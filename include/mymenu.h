@@ -444,6 +444,7 @@ class SelectorControl : public MenuItem {
             this->selected_value_index = initial_selected_value_index;
         }
 
+        // classic fixed display version
         virtual int display(Coord pos, bool selected, bool opened) override {
             pos.y = header(label, pos, selected, opened);
             tft.setTextSize(2);
@@ -467,6 +468,36 @@ class SelectorControl : public MenuItem {
                 tft.println();
             return tft.getCursorY();
         }
+
+        // cool, non-working rotating-option version
+        /*virtual int display(Coord pos, bool selected, bool opened) override {
+            pos.y = header(label, pos, selected, opened);
+            tft.setTextSize(2);
+
+            int start_item = selected_value_index - 2;
+
+            int current_value = this->getter();
+
+            for (int i = start_item ; i < selected_value_index ; i++) {
+                int actual_item = i;
+                if (i<0) actual_item = num_values - i;
+                if (i>=num_values) actual_item = selected_value_index + (num_values - i);
+
+                bool is_current_value_selected = available_values[actual_item]==current_value; //getter();
+                int col = is_current_value_selected ? ST7735_GREEN : ST7735_WHITE;
+                colours(opened && selected_value_index==actual_item, col, ST7735_BLACK);
+                tft.printf("%s", get_label_for_value(available_values[actual_item]));
+                tft.setTextColor(ST77XX_BLACK);
+                if (actual_item<num_values-1) 
+                    tft.printf(" ");
+                if (tft.getCursorX()>=tft.width()) 
+                    break;
+            }
+
+            if (tft.getCursorX()>0) // if we haven't wrapped onto next line then do it manually
+                tft.println();
+            return tft.getCursorY();
+        }*/
 
         virtual bool knob_left() {
             selected_value_index--;

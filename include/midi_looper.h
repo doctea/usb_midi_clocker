@@ -56,12 +56,10 @@ class MIDITrack {
         int ticks_per_quant_level;
         if (quantization>0) {
             ticks_per_quant_level = PPQN/quantization;      // get number of ticks per quantized unit
-        } else {
-            if (quantization==-1)
-                ticks_per_quant_level = PPQN * 2;
-            else if (quantization==-2) {
-                ticks_per_quant_level = PPQN * 4;
-            }
+        } else if (quantization==-1) {
+            ticks_per_quant_level = PPQN * 2;
+        } else if (quantization==-2) {
+            ticks_per_quant_level = PPQN * 4;
         }
 
         int step_num = time / ticks_per_quant_level;        // break ticks into quantized unit
