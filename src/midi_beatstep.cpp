@@ -211,6 +211,7 @@ void beatstep_init() {
   //)
 }
 
+/*
 #ifdef ENABLE_SCREEN
   void beatstep_display_key_status(ST7789_t3 *tft) {
     tft_header(tft, "beatstep:");
@@ -221,3 +222,4 @@ void beatstep_init() {
     //Serial.printf("beatstep_display_key_status got %i aka %4s : %4s\n", current_beatstep_note, get_note_name(last_beatstep_note).c_str(), get_note_name(current_beatstep_note).c_str());
   }
 #endif
+*/
