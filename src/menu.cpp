@@ -7,8 +7,9 @@
 
 #include "menu_looper.h"
 #include "menu_sequencer.h"
-#include "midi_beatstep.h"
+#include "menu_bpm.h"
 
+#include "midi_beatstep.h"
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
 
@@ -21,7 +22,9 @@
     }
 #endif
 
-Menu menu = Menu();
+//DisplayTranslator *tft;
+DisplayTranslator_STeensy *tft;
+Menu *menu; // = Menu();
 
 PositionIndicator posbar = PositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
@@ -50,20 +53,35 @@ PositionIndicator posbar = PositionIndicator();
 //MenuItem test_item_3 = MenuItem("test 3");
 
 void setup_menu() {
-    menu.add(&posbar);
+
+    Serial.println("Instantiating DisplayTranslator_STeensy..");
+    tft = new DisplayTranslator_STeensy();
+    delay(50);
+    Serial.println("Finished DisplayTranslator_SS_OLED constructor");
+    Serial.flush();
+    Serial.println("Creating Menu object..");
+    Serial.flush();
+    menu = new Menu(tft);
+    Serial.println("Created Menu object..");
+    Serial.flush();
+
+    menu->add(&posbar);
     //menu.add(&mpk49_looper);
-    menu.add(&beatstep_notes);
-    menu.add(&bass_transpose_control);  // beatstep transposed to neutron control
-    menu.add(&sequencer_status);
-    menu.add(&mpk49_looper_status);
-    menu.add(&quantizer_setting);       // todo: make this part of the LooperStatus object
-    menu.add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
-    menu.add(&transpose_control);
-    menu.add(&usbdevices_panel);
+    menu->add(&beatstep_notes);
+    menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+    menu->add(&sequencer_status);
+    menu->add(&mpk49_looper_status);
+    menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
+    menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
+    menu->add(&transpose_control);
+    menu->add(&usbdevices_panel);
 
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
     pinMode(PIN_BUTTON_C, INPUT_PULLUP);
+
+    Serial.println("Exiting setup_menu");
+    Serial.flush();
 
     //menu.add(&test_item_1);
     //menu.add(&test_item_2);

@@ -14,7 +14,8 @@
 #include "storage.h"
 
 #ifdef ENABLE_SCREEN
-  #include "tft.h"
+  //#include "tft.h"
+  #include "menu.h"
 #endif
 #include "project.h"
 
@@ -54,7 +55,8 @@ void setup() {
   //while (!Serial);
 
   #ifdef ENABLE_SCREEN
-    setup_tft();
+    //setup_tft();
+    setup_menu();
   #endif
 
   #ifdef ENABLE_CV
@@ -95,7 +97,7 @@ void setup() {
   #ifdef ENABLE_SCREEN
   tft_print("Ready!");
   tft_clear();
-  tft_start();
+  //tft_start();
   #endif
 }
 
@@ -144,7 +146,8 @@ void loop()
       t1 = millis();
     } else {
       #ifdef ENABLE_SCREEN
-        tft_update(ticks);
+        //tft_update(ticks);
+        menu->display(); //update(ticks);
       #endif
     }
   #else

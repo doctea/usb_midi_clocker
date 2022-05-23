@@ -5,7 +5,7 @@
 
 #include "midi_mpk49.h"
 #include "project.h"
-#include "menu.h"
+#include "mymenu.h"
 
 extern bool mpk49_recording;
 extern bool mpk49_playing;
@@ -14,27 +14,27 @@ class LooperRecStatus : public MenuItem {
         LooperRecStatus() : MenuItem("Loop status / slot") {};
 
         virtual int display(Coord pos, bool selected, bool opened) override {
-            tft.setCursor(pos.x,pos.y);
+            tft->setCursor(pos.x,pos.y);
             header(label, pos, selected, opened);
 
-            tft.setTextSize(2);
+            tft->setTextSize(2);
             if (mpk49_recording) {
-                colours(opened, ST77XX_RED);
-                tft.print("[Rec]");
+                colours(opened, tft->RED);
+                tft->print("[Rec]");
             } else {
-                colours(opened, ST77XX_WHITE);
-                tft.print("     ");
+                colours(opened, tft->WHITE);
+                tft->print("     ");
             }
-            colours(ST77XX_WHITE,ST77XX_BLACK);
-            tft.print("  ");
+            colours(tft->WHITE,tft->BLACK);
+            tft->print("  ");
             if (mpk49_playing) {
-                colours(opened, ST77XX_GREEN);
-                tft.print("[>>]");
+                colours(opened, tft->GREEN);
+                tft->print("[>>]");
             } else {
-                colours(opened, ST77XX_BLUE);
-                tft.print("[##]");
+                colours(opened, tft->BLUE);
+                tft->print("[##]");
             }
-            return tft.getCursorY();// + 10;
+            return tft->getCursorY();// + 10;
         }
 };
 
@@ -118,10 +118,10 @@ class LooperStatus : public MenuItem {
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             pos.y = lrs.display(pos,selected,opened);
-            tft.setCursor(pos.x,pos.y);
+            tft->setCursor(pos.x,pos.y);
             //colours(selected);
             //header(label, pos, selected, opened);
-            int x = pos.x, y = tft.getCursorY(); //.y;
+            int x = pos.x, y = tft->getCursorY(); //.y;
 
             int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
@@ -133,14 +133,14 @@ class LooperStatus : public MenuItem {
                                                              ST77XX_BLUE;        
 
                 if (i==ui_selected_loop_number) {
-                    tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_WHITE);
+                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_WHITE);
                 } else {
-                    tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_BLACK);
+                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_BLACK);
                 }
                 if (project.is_selected_loop_number_empty(i)) {
-                    tft.drawRoundRect(x, y, button_size, button_size, 3, col);
+                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x, y, button_size, button_size, 3, col);
                 } else {
-                    tft.fillRoundRect(x, y, button_size, button_size, 3, col);
+                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x, y, button_size, button_size, 3, col);
                 }
                 x += button_size + 2;
             }
@@ -171,13 +171,13 @@ class LooperStatus : public MenuItem {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
                 sprintf(msg, "Loaded loop %i", project.loaded_loop_number);
-                menu.set_message_colour(ST77XX_GREEN);
-                menu.set_last_message(msg);
+                menu->set_message_colour(tft->GREEN);
+                menu->set_last_message(msg);
             } else {
                 char msg[20] = "";
                 sprintf(msg, "Error loading loop %i", ui_selected_loop_number);
-                menu.set_message_colour(ST77XX_RED);
-                menu.set_last_message(msg);
+                menu->set_message_colour(tft->RED);
+                menu->set_last_message(msg);
             }
             return true;
         }
@@ -189,13 +189,13 @@ class LooperStatus : public MenuItem {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
                 sprintf(msg, "Saved loop %i", project.loaded_loop_number);
-                menu.set_message_colour(ST77XX_GREEN);
-                menu.set_last_message(msg);
+                menu->set_message_colour(tft->GREEN);
+                menu->set_last_message(msg);
             } else {
                 char msg[20] = "";
                 sprintf(msg, "Error saving loop %i", ui_selected_loop_number);
-                menu.set_message_colour(ST77XX_RED);
-                menu.set_last_message(msg);
+                menu->set_message_colour(tft->RED);
+                menu->set_last_message(msg);
             }
 
             return true;

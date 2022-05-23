@@ -5,17 +5,17 @@
 #include "sequencer.h"
 #include "storage.h"
 #include "project.h"
-extern Menu menu;
+extern Menu *menu;
 class SequencerStatus : public MenuItem {
     int ui_selected_sequence_number = 0;
     public: 
         SequencerStatus() : MenuItem("Sequencer") {};
 
         virtual int display(Coord pos, bool selected, bool opened) override {
-            tft.setCursor(pos.x,pos.y);
+            tft->setCursor(pos.x,pos.y);
             //colours(selected);
             header(label, pos, selected, opened);
-            int x = pos.x, y = tft.getCursorY(); //.y;
+            int x = pos.x, y = tft->getCursorY(); //.y;
 
             int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
@@ -28,26 +28,26 @@ class SequencerStatus : public MenuItem {
 
                 if (i==ui_selected_sequence_number) {
                     #ifdef ROUNDED
-                        tft.drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
+                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
                     #else
                         tft.drawRect(x-1, y-1, button_size+2, button_size+2, ST77XX_WHITE);
                     #endif
                 } else {
                     #ifdef ROUNDED
-                        tft.fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
                     #else  
                         tft.fillRect(x-1, y-1, button_size+2, button_size+2, ST77XX_BLACK);
                     #endif
                 }
                 if (project.is_selected_sequence_number_empty(i)) {
                     #ifdef ROUNDED
-                        tft.drawRect(x, y, button_size, button_size, col);
+                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRect(x, y, button_size, button_size, col);
                     #else  
                         tft.drawRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
                 } else {
                     #ifdef ROUNDED
-                        tft.fillRect(x, y, button_size, button_size, col);
+                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x, y, button_size, button_size, col);
                     #else  
                         tft.fillRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
@@ -81,13 +81,13 @@ class SequencerStatus : public MenuItem {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
                 sprintf(msg, "Loaded %i", project.loaded_sequence_number);
-                menu.set_message_colour(ST77XX_GREEN);
-                menu.set_last_message(msg);
+                menu->set_message_colour(ST77XX_GREEN);
+                menu->set_last_message(msg);
             } else {
                 char msg[20] = "";
                 sprintf(msg, "Error loading %i", ui_selected_sequence_number);
-                menu.set_message_colour(ST77XX_RED);
-                menu.set_last_message(msg);
+                menu->set_message_colour(ST77XX_RED);
+                menu->set_last_message(msg);
             }
             return true;
         }
@@ -99,13 +99,13 @@ class SequencerStatus : public MenuItem {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
                 sprintf(msg, "Saved sequence %i", project.loaded_sequence_number);
-                menu.set_message_colour(ST77XX_GREEN);
-                menu.set_last_message(msg);
+                menu->set_message_colour(ST77XX_GREEN);
+                menu->set_last_message(msg);
             } else {
                 char msg[20] = "";
                 sprintf(msg, "Error saving sequence %i", ui_selected_sequence_number);
-                menu.set_message_colour(ST77XX_RED);
-                menu.set_last_message(msg);
+                menu->set_message_colour(ST77XX_RED);
+                menu->set_last_message(msg);
             }
 
             return true;

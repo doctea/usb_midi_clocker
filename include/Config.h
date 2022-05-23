@@ -1,12 +1,16 @@
 //#define USE_UCLOCK  // experimental: crashes a lot
 
 #define ENABLE_SCREEN       // tft
+#ifdef ENABLE_SCREEN
+    #define TFT_ST7789_T3
+#endif
 
 #ifndef ENABLE_SCREEN
     #define tft_print(X) Serial.println(X)
 #endif
 
 #ifdef ENABLE_SCREEN
+    #define ENCODER_STEP_DIVISOR    4
     #define PIN_BUTTON_A    4   // encoder button
     #define PIN_BUTTON_B    5   // back button
     #define PIN_BUTTON_C    26  // right-hand / save button

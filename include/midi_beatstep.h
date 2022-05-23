@@ -25,10 +25,10 @@ void beatstep_on_tick(volatile uint32_t ticks);
 void beatstep_on_restart(); 
 void beatstep_init();
 
-#ifdef ENABLE_SCREEN
+/*#ifdef ENABLE_SCREEN
   #include "tft.h"
   void beatstep_display_key_status(ST7789_t3 *tft);
-#endif
+#endif*/
 
 #endif
 
