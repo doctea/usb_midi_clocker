@@ -52,7 +52,7 @@ void do_tick(uint32_t ticks);
 
 void setup() {
   Serial.begin(115200);
-  //while (!Serial);
+  while (!Serial);
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
@@ -60,7 +60,7 @@ void setup() {
   #endif
 
   #ifdef ENABLE_CV
-    tft_print("Setting up CV..\n");
+    tft_print((char*)"Setting up CV..\n");
     setup_cv();
   #endif
 
@@ -97,6 +97,8 @@ void setup() {
   #ifdef ENABLE_SCREEN
   tft_print("Ready!");
   tft_clear();
+
+  menu->start();
   //tft_start();
   #endif
 }
@@ -108,6 +110,8 @@ void setup() {
 // -----------------------------------------------------------------------------
 void loop()
 {
+  Serial.println("start of loop!"); Serial.flush();
+
   static int loop_counter;
   static bool lit = false;
   loop_counter++;
@@ -171,6 +175,8 @@ void loop()
     read_midi_usb_devices();
     loop_midi_usb_devices();
   #endif
+
+  Serial.println("end of loop!"); Serial.flush();
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {

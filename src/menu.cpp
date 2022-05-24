@@ -48,14 +48,16 @@ PositionIndicator posbar = PositionIndicator();
     USBDevicesPanel usbdevices_panel = USBDevicesPanel();
 #endif
 
-//MenuItem test_item_1 = MenuItem("test 1");
-//MenuItem test_item_2 = MenuItem("test 2");
-//MenuItem test_item_3 = MenuItem("test 3");
+MenuItem test_item_1 = MenuItem("test 1");
+MenuItem test_item_2 = MenuItem("test 2");
+MenuItem test_item_3 = MenuItem("test 3");
+
+DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
 
 void setup_menu() {
 
     Serial.println("Instantiating DisplayTranslator_STeensy..");
-    tft = new DisplayTranslator_STeensy();
+    tft = &steensy; //DisplayTranslator_STeensy();
     delay(50);
     Serial.println("Finished DisplayTranslator_SS_OLED constructor");
     Serial.flush();
@@ -65,8 +67,7 @@ void setup_menu() {
     Serial.println("Created Menu object..");
     Serial.flush();
 
-    menu->add(&posbar);
-    //menu.add(&mpk49_looper);
+    /*menu->add(&posbar);
     menu->add(&beatstep_notes);
     menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
     menu->add(&sequencer_status);
@@ -74,7 +75,7 @@ void setup_menu() {
     menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
     menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
     menu->add(&transpose_control);
-    menu->add(&usbdevices_panel);
+    menu->add(&usbdevices_panel);*/
 
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
@@ -83,9 +84,9 @@ void setup_menu() {
     Serial.println("Exiting setup_menu");
     Serial.flush();
 
-    //menu.add(&test_item_1);
-    //menu.add(&test_item_2);
-    //menu.add(&test_item_3);
+    menu->add(&test_item_1);
+    menu->add(&test_item_2);
+    menu->add(&test_item_3);
 }
 
 #endif
