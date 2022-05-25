@@ -27,7 +27,7 @@ class LooperRecStatus : public MenuItem {
                 tft->print((char*)"     ");
             }
             colours(C_WHITE, BLACK);
-            tft->print("  ");
+            tft->print((char*)"  ");
             if (mpk49_playing) {
                 colours(opened, GREEN);
                 tft->print((char*)"[>>]");
@@ -115,7 +115,11 @@ class LooperStatus : public MenuItem {
     int ui_selected_loop_number = 0;
     LooperRecStatus lrs = LooperRecStatus();
     public: 
-        LooperStatus() : MenuItem("Looper") {};
+        LooperStatus() : MenuItem("Looper") {}
+
+        virtual void on_add() override {
+            lrs.set_tft(this->tft);
+        };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             pos.y = lrs.display(pos,selected,opened);
@@ -128,20 +132,22 @@ class LooperStatus : public MenuItem {
             x = 2;
             y++;
 
+            const int radius = 3, offset_leftup = -1, offset_downright = 2;
+
             for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
-                int col = (project.loaded_loop_number==i) ?  ST77XX_GREEN :    // if currently loaded 
-                             (ui_selected_loop_number==i)  ? ST77XX_YELLOW :   // if selected
-                                                             ST77XX_BLUE;        
+                int col = (project.loaded_loop_number==i) ?  GREEN :    // if currently loaded 
+                             (ui_selected_loop_number==i)  ? YELLOW :   // if selected
+                                                             BLUE;        
 
                 if (i==ui_selected_loop_number) {
-                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_WHITE);
+                    tft->drawRoundRect(x-offset_leftup, y-offset_leftup, button_size+offset_downright, button_size+offset_downright, radius, C_WHITE);
                 } else {
-                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x-1, y-1, button_size+2, button_size+2, 3, ST77XX_BLACK);
+                    tft->fillRoundRect(x-offset_leftup, y-offset_leftup, button_size+offset_downright, button_size+offset_downright, radius, BLACK);
                 }
                 if (project.is_selected_loop_number_empty(i)) {
-                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x, y, button_size, button_size, 3, col);
+                    tft->drawRoundRect(x, y, button_size, button_size, 3, col);
                 } else {
-                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x, y, button_size, button_size, 3, col);
+                    tft->fillRoundRect(x, y, button_size, button_size, 3, col);
                 }
                 x += button_size + 2;
             }

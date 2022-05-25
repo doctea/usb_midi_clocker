@@ -52,7 +52,7 @@ void do_tick(uint32_t ticks);
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial);
+  //while (!Serial);
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
@@ -154,6 +154,7 @@ void loop()
         ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
         static unsigned long last_drawn;
         if (millis() - last_drawn > 50) {
+          menu->update_inputs();
           menu->display(); //update(ticks);
           last_drawn = millis();
         }

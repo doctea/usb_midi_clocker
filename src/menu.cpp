@@ -26,6 +26,24 @@
 DisplayTranslator_STeensy *tft;
 Menu *menu; // = Menu();
 
+
+#ifdef ENCODER_KNOB_L
+    Encoder knob(ENCODER_KNOB_L, ENCODER_KNOB_R);
+    //extern Encoder knob;
+#endif
+#ifdef PIN_BUTTON_A
+    Bounce pushButtonA = Bounce(PIN_BUTTON_A, 10); // 10ms debounce
+    //extern Bounce pushButtonA;
+#endif
+#ifdef PIN_BUTTON_B
+    Bounce pushButtonB = Bounce(PIN_BUTTON_B, 10); // 10ms debounce
+    //extern Bounce pushButtonB; 
+#endif
+#ifdef PIN_BUTTON_C
+    Bounce pushButtonC = Bounce(PIN_BUTTON_C, 10); // 10ms debounce
+    //extern Bounce pushButtonC;
+#endif
+
 PositionIndicator posbar = PositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
@@ -67,15 +85,15 @@ void setup_menu() {
     Serial.println("Created Menu object..");
     Serial.flush();
 
-    /*menu->add(&posbar);
+    menu->add(&posbar);
     menu->add(&beatstep_notes);
     menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
     menu->add(&sequencer_status);
-    menu->add(&mpk49_looper_status);
+    menu->add(&mpk49_looper_status);    
     menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
     menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
     menu->add(&transpose_control);
-    menu->add(&usbdevices_panel);*/
+    menu->add(&usbdevices_panel);
 
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
