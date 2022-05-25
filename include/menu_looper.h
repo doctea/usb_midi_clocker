@@ -6,6 +6,8 @@
 #include "midi_mpk49.h"
 #include "project.h"
 #include "mymenu.h"
+#include "menu.h"
+#include "colours.h"
 
 extern bool mpk49_recording;
 extern bool mpk49_playing;
@@ -19,20 +21,20 @@ class LooperRecStatus : public MenuItem {
 
             tft->setTextSize(2);
             if (mpk49_recording) {
-                colours(opened, tft->RED);
-                tft->print("[Rec]");
+                colours(opened, RED);
+                tft->print((char*)"[Rec]");
             } else {
-                colours(opened, tft->WHITE);
-                tft->print("     ");
+                colours(opened, C_WHITE);
+                tft->print((char*)"     ");
             }
-            colours(tft->WHITE,tft->BLACK);
+            colours(C_WHITE, BLACK);
             tft->print("  ");
             if (mpk49_playing) {
-                colours(opened, tft->GREEN);
-                tft->print("[>>]");
+                colours(opened, GREEN);
+                tft->print((char*)"[>>]");
             } else {
-                colours(opened, tft->BLUE);
-                tft->print("[##]");
+                colours(opened, BLUE);
+                tft->print((char*)"[##]");
             }
             return tft->getCursorY();// + 10;
         }
@@ -171,12 +173,12 @@ class LooperStatus : public MenuItem {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
                 sprintf(msg, "Loaded loop %i", project.loaded_loop_number);
-                menu->set_message_colour(tft->GREEN);
+                menu->set_message_colour(GREEN);
                 menu->set_last_message(msg);
             } else {
                 char msg[20] = "";
                 sprintf(msg, "Error loading loop %i", ui_selected_loop_number);
-                menu->set_message_colour(tft->RED);
+                menu->set_message_colour(RED);
                 menu->set_last_message(msg);
             }
             return true;
@@ -189,12 +191,12 @@ class LooperStatus : public MenuItem {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
                 sprintf(msg, "Saved loop %i", project.loaded_loop_number);
-                menu->set_message_colour(tft->GREEN);
+                menu->set_message_colour(GREEN);
                 menu->set_last_message(msg);
             } else {
                 char msg[20] = "";
                 sprintf(msg, "Error saving loop %i", ui_selected_loop_number);
-                menu->set_message_colour(tft->RED);
+                menu->set_message_colour(RED);
                 menu->set_last_message(msg);
             }
 

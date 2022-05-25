@@ -1,5 +1,7 @@
 #include "Config.h"
 
+#include "menu.h"
+#include "colours.h"
 #include "menuitems.h"
 #include "bpm.h"
 
@@ -14,9 +16,9 @@ class PositionIndicator : public MenuItem {
             header("position", pos, selected, opened);
             tft->setTextSize(2);
             if (playing) {
-                colours(opened, tft->GREEN, tft->BLACK);
+                colours(opened, GREEN,   BLACK);
             } else {
-                colours(opened, tft->RED, tft->BLACK);
+                colours(opened, RED,     BLACK);
             }
             tft->printf("%04i:%02i:%02i @ %03.2f\n", 
                 BPM_CURRENT_PHRASE + 1, 

@@ -95,11 +95,11 @@ void setup() {
 
   Serial.println(F("Arduino ready."));
   #ifdef ENABLE_SCREEN
-  tft_print("Ready!");
-  tft_clear();
+    tft_print("Ready!");
+    tft_clear();
 
-  menu->start();
-  //tft_start();
+    menu->start();
+    //tft_start();
   #endif
 }
 
@@ -110,7 +110,7 @@ void setup() {
 // -----------------------------------------------------------------------------
 void loop()
 {
-  Serial.println("start of loop!"); Serial.flush();
+  //Serial.println("start of loop!"); Serial.flush();
 
   static int loop_counter;
   static bool lit = false;
@@ -151,7 +151,13 @@ void loop()
     } else {
       #ifdef ENABLE_SCREEN
         //tft_update(ticks);
-        menu->display(); //update(ticks);
+        ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
+        static unsigned long last_drawn;
+        if (millis() - last_drawn > 50) {
+          menu->display(); //update(ticks);
+          last_drawn = millis();
+        }
+        //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
       #endif
     }
   #else
@@ -176,7 +182,7 @@ void loop()
     loop_midi_usb_devices();
   #endif
 
-  Serial.println("end of loop!"); Serial.flush();
+  //Serial.println("end of loop!"); Serial.flush();
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
@@ -186,6 +192,10 @@ void loop()
   loop_counter++;*/
 
   //storage::load_state_update();  // read next bit of file
+
+        //Serial.println("sleeping before end of loop 1000ms: "); Serial.flush();
+        //delay(1000);
+        //Serial.println("exiting sleep before end of loop"); Serial.flush();
 
 }
 
