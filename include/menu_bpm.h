@@ -1,7 +1,6 @@
 #include "Config.h"
 
 #include "menu.h"
-#include "colours.h"
 #include "menuitems.h"
 #include "bpm.h"
 

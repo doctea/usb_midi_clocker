@@ -7,7 +7,6 @@
 #include "project.h"
 #include "mymenu.h"
 #include "menu.h"
-#include "colours.h"
 
 extern bool mpk49_recording;
 extern bool mpk49_playing;
