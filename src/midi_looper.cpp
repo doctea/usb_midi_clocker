@@ -14,8 +14,8 @@
 //      load as midi file
 //      [DONE    make stop_all_notes]
 //      able to track multiple devices / channels
-//      transpose
-//      quantizing (time)
+//      [DONE] transpose
+//      [DONE] quantizing (time)
 //      quantizing (scale)
 
 /*typedef struct midi_frame {

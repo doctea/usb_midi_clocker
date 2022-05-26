@@ -43,6 +43,7 @@ class LooperQuantizeControl : public SelectorControl {
     MIDITrack *target;
 
     // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?
+    //       to do this, will need to scroll thru selectors horizontally
     int quantizer_available_values[5] = { 0, 4, 3, 2, 1 };
 
     public:

@@ -79,7 +79,7 @@ void redraw_clock_row(byte c) {
       } else if (io%(byte)cm==0) {
         midi_apcmini->sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
       } else { // shouldn't reach this
-        Serial.printf("WARNING: reached unexpected branch for clock %i\n", c);
+        //Serial.printf("WARNING: reached unexpected branch for clock %i: cm is %0.2f\n", c, cm);
         midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);  // turn the led off
       }
     }
