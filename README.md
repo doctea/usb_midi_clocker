@@ -28,6 +28,14 @@ This project keeps time and sends clock divisions on the CV outs, but also detec
 
 It also has a very rudimentary sequencer, using Akai APCMini for input+display, currently overlaid over the clock outputs.
 
+## Requirements
+
+- Teensy 4.1 with Deftaudio 8x8 midi board
+- ST7789 oled screen (Adafruit is the one i'm using) + rotary encoder + two wired buttons for control
+  - https://github.com/doctea/mymenu
+- SD card in the onboard Teensy SD card reader
+- 
+
 ## Features
 
 - ST7899 display using ST7899_t3 for info + custom menu system
