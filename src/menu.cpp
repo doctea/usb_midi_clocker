@@ -26,7 +26,6 @@
 DisplayTranslator_STeensy *tft;
 Menu *menu; // = Menu();
 
-
 #ifdef ENCODER_KNOB_L
     Encoder knob(ENCODER_KNOB_L, ENCODER_KNOB_R);
     //extern Encoder knob;
@@ -44,7 +43,10 @@ Menu *menu; // = Menu();
     //extern Bounce pushButtonC;
 #endif
 
-PositionIndicator posbar = PositionIndicator();
+
+LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH, PPQN, BEATS_PER_BAR, BARS_PER_PHRASE);
+
+BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
     HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &last_beatstep_note,          &current_beatstep_note);
@@ -84,6 +86,8 @@ void setup_menu() {
     menu = new Menu(tft);
     Serial.println("Created Menu object..");
     Serial.flush();
+
+    menu->add_pinned(&top_loop_marker_panel); 
 
     menu->add(&posbar);
     menu->add(&beatstep_notes);

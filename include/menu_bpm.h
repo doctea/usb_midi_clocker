@@ -5,9 +5,9 @@
 #include "bpm.h"
 
 // BPM indicator
-class PositionIndicator : public MenuItem {
+class BPMPositionIndicator : public MenuItem {
     public:
-        PositionIndicator() : MenuItem("position") {};
+        BPMPositionIndicator() : MenuItem("position") {};
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             //Serial.printf("positionindicator display for %s\n", label);
