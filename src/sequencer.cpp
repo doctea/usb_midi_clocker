@@ -17,6 +17,13 @@ void init_sequence() {
   }*/
 }
 
+void cv_out_sequence_pin_off(byte i) {
+  digitalWrite(cv_out_sequence_pin[i], LOW);
+}
+void cv_out_sequence_pin_on(byte i) {
+  digitalWrite(cv_out_sequence_pin[i], HIGH);
+}
+
 byte read_sequence(byte row, byte col) {
   return current_state.sequence_data[row][col];
 }

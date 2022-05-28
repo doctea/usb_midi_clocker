@@ -28,4 +28,7 @@ void write_sequence(byte row, byte col, byte value);
 void sequencer_press(byte row, byte col, bool shift = false);
 bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0);
 
+void cv_out_sequence_pin_on(byte i);
+void cv_out_sequence_pin_off(byte i);
+
 #endif

@@ -24,6 +24,14 @@ float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
 };
 #define CLOCK_MULTIPLIER_OFF        64.0  // if clock multipler is set to this value, then actually turn it off completely
 
+void cv_out_clock_pin_off(byte i) {
+  digitalWrite(cv_out_clock_pin[i], LOW);
+}
+void cv_out_clock_pin_on(byte i) {
+  digitalWrite(cv_out_clock_pin[i], HIGH);
+}
+
+/*  get / manipulate clock multipliers */
 float get_clock_multiplier(byte i) { 
   return clock_multiplier_values[current_state.clock_multiplier[i]];
 }
@@ -31,16 +39,21 @@ void increase_clock_multiplier(byte i) {
   current_state.clock_multiplier[i]++;
   if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES)
     current_state.clock_multiplier[i] = 0;
+  cv_out_clock_pin_off(i);
 }
 void decrease_clock_multiplier(byte i) {
   current_state.clock_multiplier[i]--;
   if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES) // ie has wrapped around to 255
     current_state.clock_multiplier[i] = NUM_CLOCK_MULTIPLIER_VALUES-1;
+  cv_out_clock_pin_off(i);
 }
+
+// check if multiplier is set to 'never trigger'
 bool is_clock_off(byte i) {
   return ((byte)get_clock_multiplier(i)>=CLOCK_MULTIPLIER_OFF);
 }
 
+// clock offsets offset
 byte get_clock_delay(byte i) {
   return current_state.clock_delay[i];
 }
@@ -162,8 +175,8 @@ void update_cv_outs(unsigned long ticks) {
         should_go_low = true;
       }
 
-      if (should_go_high)     digitalWrite(cv_out_sequence_pin[i], HIGH);
-      else if (should_go_low) digitalWrite(cv_out_sequence_pin[i], LOW);
+      if (should_go_high)     cv_out_sequence_pin_on(i); //digitalWrite(cv_out_sequence_pin[i], HIGH);
+      else if (should_go_low) cv_out_sequence_pin_off(i); //digitalWrite(cv_out_sequence_pin[i], LOW);
     }
   #endif
   #ifdef ENABLE_CLOCKS
@@ -177,8 +190,8 @@ void update_cv_outs(unsigned long ticks) {
         should_go_low = true;
       }
 
-      if (should_go_high)     digitalWrite(cv_out_clock_pin[i], HIGH);
-      else if (should_go_low) digitalWrite(cv_out_clock_pin[i], LOW);
+      if (should_go_high)     cv_out_clock_pin_on(i); //digitalWrite(cv_out_clock_pin[i], HIGH);
+      else if (should_go_low) cv_out_clock_pin_off(i); //digitalWrite(cv_out_clock_pin[i], LOW);
     }
   #endif
 }
