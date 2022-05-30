@@ -18,10 +18,10 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_
 };
 
 bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
-    true,
-    false,
-    false,
-    false,
+    true,       // bitbox
+    false,      // blue (currently unused)
+    true,       // neutron
+    true,       // disting ex
     false,
     false,
     false,

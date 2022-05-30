@@ -25,6 +25,7 @@
 
 MIDITrack mpk49_loop_track = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
 
+
 // from https://github.com/LesserChance/arduino-midi-looper/blob/master/instruction.ino
 
 void stop_all_notes() {

@@ -52,7 +52,9 @@ void do_tick(uint32_t ticks);
 
 void setup() {
   Serial.begin(115200);
-  //while (!Serial);
+  #ifdef WAIT_FOR_SERIAL
+    while (!Serial);
+  #endif
 
   #ifdef ENABLE_SCREEN
     //setup_tft();

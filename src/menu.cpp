@@ -8,6 +8,7 @@
 #include "menu_looper.h"
 #include "menu_sequencer.h"
 #include "menu_bpm.h"
+#include "midi_mapper.h"
 
 #include "midi_beatstep.h"
 #include "midi_out_wrapper.h"
@@ -62,6 +63,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     LooperQuantizeControl quantizer_setting = LooperQuantizeControl("Loop quant",   &mpk49_loop_track);   // todo: make this part of the LooperStatus object
     HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
     LooperTransposeControl transpose_control =    LooperTransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
+    MidiOutputSelectorControl looper_output_selector = MidiOutputSelectorControl("Looper MIDI Output", mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
 #endif
 
 #ifdef ENABLE_USB
@@ -96,6 +98,7 @@ void setup_menu() {
     menu->add(&mpk49_looper_status);    
     menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
     menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
+    menu->add(&looper_output_selector);
     menu->add(&transpose_control);
     menu->add(&usbdevices_panel);
 

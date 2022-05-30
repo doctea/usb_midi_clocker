@@ -89,7 +89,7 @@ class SequencerStatus : public MenuItem {
                 menu->set_message_colour(ST77XX_RED);
                 menu->set_last_message(msg);
             }
-            return true;
+            return false;
         }
 
         virtual bool button_right() override {

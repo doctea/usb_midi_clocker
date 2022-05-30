@@ -33,7 +33,6 @@ class MIDITrack {
     //LinkedList<midi_frame> frames = LinkedList<midi_frame> ();
     //midi_frame frames[LOOP_LENGTH];
     LinkedList<midi_message> frames[LOOP_LENGTH];
-    MIDIOutputWrapper *output;
 
     //bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
     bool recorded_hanging_notes[127];
@@ -89,6 +88,8 @@ class MIDITrack {
     }
 
     public: 
+        MIDIOutputWrapper *output;
+
         bool debug = false;
 
         int last_note = -1;
@@ -103,6 +104,10 @@ class MIDITrack {
                 frames[i] = new LinkedList<midi_message>();
             }*/
         };
+
+        void setOutputWrapper(MIDIOutputWrapper *output) {
+            this->output = output;
+        }
 
         // for getting and setting from menu
         int get_quantization_value() {
@@ -165,21 +170,38 @@ class MIDITrack {
         void play_events(unsigned long time) { //, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *specified_output = nullptr) {
             //if (!specified_output)
             //    specified_output = output;
+            #ifdef DEBUG_LOOPER
+                Serial.printf("play_events with time %u\n", time); Serial.flush();
+            #endif
 
             int position = time%LOOP_LENGTH;
+            #ifdef DEBUG_LOOPER
+                Serial.printf("play_events with position %u\n", position); Serial.flush();
+            #endif
             int number_messages = frames[position].size();
-
-            if (frames[position].size()>0) 
-                Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages);
+            #ifdef DEBUG_LOOPER
+                Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
+                if (frames[position].size()>0) 
+                    Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages); Serial.flush();
+            #endif
 
             for (int i = 0 ; i < number_messages ; i++) {
+                #ifdef DEBUG_LOOPER
+                    Serial.printf("\tprocessing message number %i/%i..\n", i, number_messages); Serial.flush();
+                #endif
                 midi_message m = frames[position].get(i);
                 
                 int pitch = m.pitch + transpose;
+                #ifdef DEBUG_LOOPER
+                    Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
+                #endif
 
                 switch (m.message_type) {
                     case midi::NoteOn:
                         current_note = pitch;
+                        #ifdef DEBUG_LOOPER
+                            Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
+                        #endif
                         output->sendNoteOn(pitch, m.velocity); //, m.channel);
                         //playing_notes[pitch] = true;
                         break;
@@ -187,11 +209,16 @@ class MIDITrack {
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
+                        #ifdef DEBUG_LOOPER
+                            Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
+                        #endif
                         output->sendNoteOff(pitch, m.velocity); //, m.channel);
                         //playing_notes[pitch] = false;
                         break;
                     default:
-                        Serial.printf("\t%i: Unhandled message type %i\n", i, 3); //m.message_type);
+                        #ifdef DEBUG_LOOPER
+                            Serial.printf("\t%i: Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
+                        #endif
                         break;
                 }
             }
