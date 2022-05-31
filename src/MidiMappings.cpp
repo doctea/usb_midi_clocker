@@ -8,8 +8,8 @@
 //#include "midi_bamble.h"
 
 #ifdef ENABLE_BITBOX
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
-MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"bitbox [ch3]", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
+    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
+    MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
 #endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 //#ifdef ENABLE_BAMBLE
@@ -17,12 +17,12 @@ MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"bitbox [ch
 //#endif
 
 #ifdef ENABLE_BASS_TRANSPOSE
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
-MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper((char*)"neutron [ch4]", midi_out_bass, BASS_MIDI_CHANNEL);
+    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
+    MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_bass, BASS_MIDI_CHANNEL);
 #endif
 
 #ifdef ENABLE_DRUMKIT
-midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &ENABLE_DRUMKIT;
+    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &ENABLE_DRUMKIT;
 #endif
 
 

@@ -151,7 +151,7 @@ void beatstep_handle_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
       /*int note2 = note - 24;
       if (note2<=0) 
         note2 += 12;*/
-      int note2 = note & 12;
+      uint8_t note2 = note & 12;
       note2 += (bass_transpose_octave*12);// note2 += 24;
       beatstep_output->sendNoteOff((uint8_t)note2, velocity); //, BASS_MIDI_CHANNEL);
     //}

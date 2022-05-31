@@ -10,3 +10,4 @@
 *.patch
 *.swo
 *.swp
+.vscode/*

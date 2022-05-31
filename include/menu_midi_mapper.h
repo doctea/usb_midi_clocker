@@ -25,7 +25,7 @@ class MidiOutputSelectorControl : public SelectorControl {
     virtual void configure (MIDIOutputWrapper *initial_selected_output_wrapper, void (*setter_func)(MIDIOutputWrapper*)) {
         this->initial_selected_output_wrapper = initial_selected_output_wrapper;
         this->setter_func = setter_func;
-        Serial.println("configured..");
+        Serial.printf("configured %s @ ", initial_selected_output_wrapper->label);
         Serial.printf("%u and %u\n", this->initial_selected_output_wrapper, this->setter_func);
     }
 
@@ -34,7 +34,11 @@ class MidiOutputSelectorControl : public SelectorControl {
         Serial.println("on_add()");
         Serial.printf("MidiOutputSelectorControl@ %u...\n", initial_selected_output_wrapper);
         Serial.printf("MidiOutputSelectorControl looking for '%s' at %u...\n", initial_selected_output_wrapper->label, *initial_selected_output_wrapper);
-        for (unsigned int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
+
+        this->actual_value_index = find_wrapper_index_for_label(initial_selected_output_wrapper->label);
+        this->selected_value_index = this->actual_value_index;
+
+        /*for (unsigned int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
             Serial.printf("Looping over %s at %u\n", available_outputs[i].label, &available_outputs[i]);
             //if (&(*available_outputs[i])==initial_selected_output_wrapper) {
             //if (available_outputs[i].same_as(initial_selected_output_wrapper)) {
@@ -44,9 +48,9 @@ class MidiOutputSelectorControl : public SelectorControl {
             }
         }
         if (actual_value_index==-1) {
-            Serial.printf("Didn't find a match for %u aka '%s'\n", initial_selected_output_wrapper, initial_selected_output_wrapper->label);
             while(1);
-        }
+                Serial.printf("Didn't find a match for %u aka '%s'\n", initial_selected_output_wrapper, initial_selected_output_wrapper->label);
+        }*/
     }
 
     virtual const char* get_label_for_index(int index) {
@@ -58,6 +62,7 @@ class MidiOutputSelectorControl : public SelectorControl {
     virtual void setter (int new_value) {
         Serial.printf("MidiOutputSelectorControl changing from %i to %i\n", this->actual_value_index, new_value);
         actual_value_index = new_value;
+        selected_value_index = actual_value_index;
         if (this->setter_func!=nullptr) {
             Serial.printf("setting new output\n");
             this->setter_func(&available_outputs[new_value]);

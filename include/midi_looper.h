@@ -362,26 +362,36 @@ class MIDITrack {
                     char *tok;
                     tok = strtok(c_line,",;:");
                     while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
-                        Serial.printf("at time %i: for token '%s', sizeof is already %i, ", time, tok, frames[time].size());
+                        #ifdef DEBUG_LOOP_LOADER
+                            Serial.printf("at time %i: for token '%s', sizeof is already %i, ", time, tok, frames[time].size());
+                        #endif
                         int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
                         sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
                         m.message_type = tmp_message_type;
                         m.channel = tmp_channel;
                         m.pitch = tmp_pitch;
                         m.velocity = tmp_velocity;
-                        Serial.printf("read message bytes: %02x, %02x, %02x, %02x\n", m.message_type, m.channel, m.pitch, m.velocity);
+                        #ifdef DEBUG_LOOP_LOADER
+                            Serial.printf("read message bytes: %02x, %02x, %02x, %02x\n", m.message_type, m.channel, m.pitch, m.velocity);
+                        #endif
                         record_event(time, m);
                         messages_count++;
                         tok = strtok(NULL,",;:");
                     }
-                    Serial.printf("for time\t%i read\t%i messages\n", time, messages_count);
+                    #ifdef DEBUG_LOOP_LOADER
+                        Serial.printf("for time\t%i read\t%i messages\n", time, messages_count);
+                    #endif
                     total_messages += messages_count;
                     time++;
                 }
             }
-            Serial.println("Closing file..");
+            #ifdef DEBUG_LOOP_LOADER
+                Serial.println("Closing file..");
+            #endif
             myFile.close();
-            Serial.println("File closed");
+            #ifdef DEBUG_LOOP_LOADER
+                Serial.println("File closed");
+            #endif
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
             /*#ifdef ENABLE_SCREEN

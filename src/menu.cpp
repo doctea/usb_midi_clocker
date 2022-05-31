@@ -55,7 +55,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
     HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &last_beatstep_note,          &current_beatstep_note);
-    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep MIDI Output");
+    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
     #ifdef ENABLE_BASS_TRANSPOSE
         NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
     #endif
@@ -84,8 +84,8 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #endif
 
 #ifdef ENABLE_LESTRUM
-    MidiOutputSelectorControl lestrum_pads_output_selector = MidiOutputSelectorControl("LeStrum pads MIDI Output");
-    MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp MIDI Output");
+    MidiOutputSelectorControl lestrum_pads_output_selector = MidiOutputSelectorControl("LeStrum pads Output");
+    MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp Output");
 #endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
