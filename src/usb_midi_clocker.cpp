@@ -33,6 +33,7 @@ void do_tick(uint32_t ticks);
 #endif
 
 #include "usb.h"
+#include "midi_pc_usb.h"
 
 #include "Config.h"
 
@@ -90,6 +91,9 @@ void setup() {
   tft_print((char*)"..clock..\n");
   setup_cheapclock();
 #endif
+
+  tft_print((char*)"..PC USB..\n");
+  setup_pc_usb();
 
   tft_print((char*)"..USB..");
   setup_multi_usb();
@@ -182,6 +186,7 @@ void loop()
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
+    read_usb_from_computer();
     read_midi_usb_devices();
     loop_midi_usb_devices();
   #endif

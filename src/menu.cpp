@@ -16,6 +16,7 @@
 #include "midi_beatstep.h"
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
+#include "midi_pc_usb.h"
 
 
 #ifdef ENABLE_BASS_TRANSPOSE
@@ -81,6 +82,8 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 
 #ifdef ENABLE_USB
     USBDevicesPanel usbdevices_panel = USBDevicesPanel();
+    MidiOutputSelectorControl pc_usb_input_1_selector = MidiOutputSelectorControl("PC USB 1 MIDI Output");
+    MidiOutputSelectorControl pc_usb_input_2_selector = MidiOutputSelectorControl("PC USB 2 MIDI Output");
 #endif
 
 #ifdef ENABLE_LESTRUM
@@ -117,6 +120,8 @@ void setup_menu() {
     mpk49_output_selector.configure(mpk49_output, mpk49_setOutputWrapper);
     lestrum_pads_output_selector.configure(lestrum_pads_output, lestrum_pads_setOutputWrapper);
     lestrum_arp_output_selector.configure(lestrum_arp_output, lestrum_arp_setOutputWrapper);
+    pc_usb_input_1_selector.configure(pc_usb_1_output, pc_usb_1_setOutputWrapper);
+    pc_usb_input_2_selector.configure(pc_usb_2_output, pc_usb_2_setOutputWrapper);
     
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
@@ -140,6 +145,9 @@ void setup_menu() {
 
     menu->add(&lestrum_pads_output_selector);
     menu->add(&lestrum_arp_output_selector);
+
+    menu->add(&pc_usb_input_1_selector);
+    menu->add(&pc_usb_input_2_selector);
 
     menu->add(&usbdevices_panel);
 
