@@ -32,15 +32,17 @@
     void drumkit_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
         Serial.printf("drumkit_note_on(\tchannel %i,\tnote %i,\tvelocity %i): ", channel, note, velocity);
         if (note==GM_NOTE_ACOUSTIC_SNARE) note = GM_NOTE_ELECTRIC_SNARE;
+        if (note==41) note = GM_NOTE_HI_MID_TOM;
         #ifdef ENABLE_BAMBLE
             if (midi_bamble) {
-                Serial.println("sending!");
+                //Serial.println("sending!");
                 midi_bamble->sendNoteOn(note&0b01111111, velocity&0b01111111, GM_CHANNEL_DRUMS);
             }
         #endif
     }
     void drumkit_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
         if (note==GM_NOTE_ACOUSTIC_SNARE) note = GM_NOTE_ELECTRIC_SNARE;
+        if (note==41) note = GM_NOTE_HI_MID_TOM;
         #ifdef ENABLE_BAMBLE
             if (midi_bamble) {
                 midi_bamble->sendNoteOff(note&0b01111111, velocity&0b01111111, GM_CHANNEL_DRUMS);
