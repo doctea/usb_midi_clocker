@@ -68,18 +68,18 @@ void setup() {
 
   delay( 100 );
 
-  tft_print("..serial MIDI..\n");
+  tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
 
-  tft_print("..storage..\n");
+  tft_print((char*)"..storage..\n");
   storage::setup_storage();
 
-  tft_print("..setup project..\n");
+  tft_print((char*)"..setup project..\n");
   project.setup_project();
 
 #ifdef ENABLE_SEQUENCER
-  tft_print("..Sequencer..\n");
+  tft_print((char*)"..Sequencer..\n");
   init_sequence();
 #endif
 
@@ -87,17 +87,17 @@ void setup() {
   Serial.println(F("Initialising uClock.."));
   setup_uclock();
 #else
-  tft_print("..clock..\n");
+  tft_print((char*)"..clock..\n");
   setup_cheapclock();
 #endif
 
-  tft_print("..USB..");
+  tft_print((char*)"..USB..");
   setup_multi_usb();
   Serial.println(F("USB ready."));
 
   Serial.println(F("Arduino ready."));
   #ifdef ENABLE_SCREEN
-    tft_print("Ready!");
+    tft_print((char*)"Ready!");
     tft_clear();
 
     menu->start();
