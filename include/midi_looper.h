@@ -59,6 +59,9 @@ class MIDITrack {
             ticks_per_quant_level = PPQN * 2;
         } else if (quantization==-2) {
             ticks_per_quant_level = PPQN * 4;
+        } else {
+            Serial.printf("quantization level %i not known - disabling?\n", quantization);
+            return time;
         }
 
         int step_num = time / ticks_per_quant_level;        // break ticks into quantized unit

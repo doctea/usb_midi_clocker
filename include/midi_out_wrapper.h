@@ -15,8 +15,9 @@
 // TODO: handle currently_playing_note / last_played_note stuff here too?
 // TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
 class MIDIOutputWrapper {
-    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi;
-    MIDIDevice_BigBuffer *output_usb;
+    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
+    MIDIDevice_BigBuffer *output_usb = nullptr;
+    MIDIDevice_BigBuffer **output_usb_pointer = nullptr;  // for late binding usb
     byte default_channel = 1;
 
     int playing_notes[127];
@@ -34,18 +35,38 @@ class MIDIOutputWrapper {
             output_usb = in_output_usb;
             default_channel = channel;
         }
+        MIDIOutputWrapper(char *label, MIDIDevice_BigBuffer **in_output_usb, byte channel = 1) {
+            strcpy(this->label, label);
+            output_usb_pointer = in_output_usb;
+            default_channel = channel;
+        }
 
         void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
+            Serial.printf("sendNoteOn in %s...\n", label); Serial.flush();
             if (channel==0) channel = default_channel;
-            if (output_serialmidi) output_serialmidi->sendNoteOn(pitch, velocity, channel);
-            if (output_usb)        output_usb->sendNoteOn(pitch, velocity, channel);
+            if (output_serialmidi)    {
+                Serial.println("sendNoteOn using non-null output_serialmidi!"); Serial.flush();
+                output_serialmidi->sendNoteOn(pitch, velocity, channel);
+            }
+            if (output_usb)           {
+                Serial.println("sendNoteOn using non-null output_usb!"); Serial.flush();
+                output_usb->sendNoteOn(pitch, velocity, channel);
+            }
+            if ((*output_usb_pointer)!=nullptr)   {
+                Serial.println("sendNoteOn using non-null output_usb_pointer!"); Serial.flush();
+                (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
+            }
             playing_notes[pitch]++;
         }
 
         void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
             if (channel==0) channel = default_channel;
-            if (output_serialmidi) output_serialmidi->sendNoteOff(pitch, velocity, channel);
-            if (output_usb)        output_usb->sendNoteOff(pitch, velocity, channel);
+            if (output_serialmidi!=nullptr)     output_serialmidi->sendNoteOff(pitch, velocity, channel);
+            if (output_usb!=nullptr)            output_usb->sendNoteOff(pitch, velocity, channel);
+            if ((*output_usb_pointer)!=nullptr)   {
+                Serial.println("sendNoteOff using non-null output_usb_pointer!"); Serial.flush();
+                (*output_usb_pointer)->sendNoteOff(pitch, velocity, channel);
+            }
             if (playing_notes[pitch]>0) playing_notes[pitch]--;
         }
 

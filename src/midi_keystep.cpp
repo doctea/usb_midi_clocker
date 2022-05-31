@@ -61,12 +61,13 @@ void keystep_on_restart() {
 
 void keystep_handle_note_on(byte channel, byte note, byte velocity) {
     static int counter = 0;
-    Serial.printf("%i: keystep_handle_note_on %i, %i, %i: ", counter++, channel, note, velocity);
+    Serial.printf("%i: keystep_handle_note_on %i, %i, %i: ", counter++, channel, note, velocity); Serial.flush();
     
     #ifdef ENABLE_BITBOX
       if (keystep_output) {
-          Serial.printf("sending to midi_out_bitbox\n");
+          Serial.printf("sending to midi_out_bitbox\n"); Serial.flush();
           keystep_output->sendNoteOn(note, velocity); //, MIDI_CHANNEL_BITBOX 3);
+          Serial.printf("sent to midi_out_bitbox\n"); Serial.flush();
       } else {
           Serial.println();
       }

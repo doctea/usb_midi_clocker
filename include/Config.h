@@ -1,6 +1,6 @@
 //#define USE_UCLOCK  // experimental: crashes a lot
 
-#define WAIT_FOR_SERIAL     // wait for serial terminal before starting setup -- for debugging
+//#define WAIT_FOR_SERIAL     // wait for serial terminal before starting setup -- for debugging
 
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN

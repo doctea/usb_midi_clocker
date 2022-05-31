@@ -8,7 +8,7 @@
 #include "menu_looper.h"
 #include "menu_sequencer.h"
 #include "menu_bpm.h"
-#include "midi_mapper.h"
+#include "menu_midi_mapper.h"
 
 #include "midi_lestrum.h"
 
@@ -16,6 +16,7 @@
 #include "midi_beatstep.h"
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
+
 
 #ifdef ENABLE_BASS_TRANSPOSE
     void bass_transpose_changed(int last_value, int new_value) {

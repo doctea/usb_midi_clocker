@@ -1,13 +1,18 @@
 #include "Config.h"
 #include "midi_out_wrapper.h"
 #include "midi_bamble.h"
+#include "midi_lestrum.h"
+
+#include "midi_mapper.h"
 
 #include "ConfigMidi.h"
 
 #ifdef ENABLE_LESTRUM
 
-extern MIDIOutputWrapper *lestrum_pads_output  = &MIDIOutputWrapper("USB : Bamble : ch 1", midi_bamble, 1); //midi_out_bitbox_wrapper;
-extern MIDIOutputWrapper *lestrum_arp_output   = &MIDIOutputWrapper("USB : Bamble : ch 2", midi_bamble, 2);
+//MIDIOutputWrapper *lestrum_pads_output  = &MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &midi_bamble, 1); //midi_out_bitbox_wrapper;
+//MIDIOutputWrapper *lestrum_arp_output   = &MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &midi_bamble, 2);
+MIDIOutputWrapper *lestrum_pads_output = &available_outputs[6];
+MIDIOutputWrapper *lestrum_arp_output  = &available_outputs[7];
 
 void lestrum_pads_setOutputWrapper(MIDIOutputWrapper *output) {
     lestrum_pads_output->stop_all_notes();

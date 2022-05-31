@@ -9,7 +9,7 @@
 
 #ifdef ENABLE_BITBOX
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
-MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper("bitbox [ch3]", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
+MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"bitbox [ch3]", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
 #endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 //#ifdef ENABLE_BAMBLE
@@ -18,7 +18,7 @@ MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper("bitbox [ch3]", mi
 
 #ifdef ENABLE_BASS_TRANSPOSE
 midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
-MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper("neutron [ch4]", midi_out_bass, BASS_MIDI_CHANNEL);
+MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper((char*)"neutron [ch4]", midi_out_bass, BASS_MIDI_CHANNEL);
 #endif
 
 #ifdef ENABLE_DRUMKIT

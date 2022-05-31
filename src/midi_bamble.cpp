@@ -7,8 +7,13 @@
 #include "midi_outs.h"
 #include "midi_bamble.h"
 
+#include "midi_out_wrapper.h"
+
 MIDIDevice_BigBuffer *midi_bamble;  
 uint8_t ixBamble   = 0xff;
+
+//MIDIOutputWrapper *bamble_1_output  = &MIDIOutputWrapper("USB : Bamble : ch 1", &midi_bamble, 1); // late binding pointer to usb
+//MIDIOutputWrapper *bamble_2_output  = &MIDIOutputWrapper("USB : Bamble : ch 2", &midi_bamble, 2); // late binding pointer to usb
 
 bool bamble_started = false;
 
