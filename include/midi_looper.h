@@ -106,6 +106,7 @@ class MIDITrack {
         };
 
         void setOutputWrapper(MIDIOutputWrapper *output) {
+            this->output->stop_all_notes();
             this->output = output;
         }
 

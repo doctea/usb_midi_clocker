@@ -19,6 +19,12 @@ int last_beatstep_note = -1;
 
 int bass_transpose_octave = 2;
 
+MIDIOutputWrapper *beatstep_output = &midi_out_bass_wrapper;
+void beatstep_setOutputWrapper(MIDIOutputWrapper *wrapper) {
+  beatstep_output->stop_all_notes();
+  beatstep_output = wrapper;    
+}
+
 void beatstep_loop(unsigned long ticks) {
   if ( ixBeatStep == 0xff) {
     return;
@@ -129,7 +135,7 @@ void beatstep_handle_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
       note2 += (bass_transpose_octave*12); //24;
       //Serial.printf("beatstep note on %i : %i : %i\n", BASS_MIDI_CHANNEL, note, velocity);
       //Serial.printf("beatstep note2 is %i\n", note2);
-      midi_out_bass_wrapper.sendNoteOn((uint8_t)note2, 127, BASS_MIDI_CHANNEL);
+      beatstep_output->sendNoteOn((uint8_t)note2, 127); //, BASS_MIDI_CHANNEL);
     //}
   #endif
 }
@@ -147,7 +153,7 @@ void beatstep_handle_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
         note2 += 12;*/
       int note2 = note & 12;
       note2 += (bass_transpose_octave*12);// note2 += 24;
-      midi_out_bass_wrapper.sendNoteOff((uint8_t)note2, velocity, BASS_MIDI_CHANNEL);
+      beatstep_output->sendNoteOff((uint8_t)note2, velocity); //, BASS_MIDI_CHANNEL);
     //}
   #endif
 }

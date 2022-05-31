@@ -10,10 +10,10 @@
 
 #include "midi_outs.h"
 
-#define ENABLE_LESTRUM  MIDI1
-#define ENABLE_DRUMKIT  MIDI2
+#define ENABLE_LESTRUM          MIDI1
+#define ENABLE_DRUMKIT          MIDI2
 
-#define ENABLE_BITBOX   MIDI1
+#define ENABLE_BITBOX           MIDI1
 #define ENABLE_BASS_TRANSPOSE   MIDI3
 
 #include "midi_beatstep.h"

@@ -18,6 +18,9 @@ extern int last_beatstep_note;
 
 extern int bass_transpose_octave;
 
+extern MIDIOutputWrapper *beatstep_output;
+void beatstep_setOutputWrapper(MIDIOutputWrapper *);
+
 void beatstep_loop(unsigned long ticks);
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue);
 void beatstep_handle_start();

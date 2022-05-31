@@ -16,6 +16,12 @@ bool MPK49_started = false;
 bool mpk49_recording = false;
 bool mpk49_playing = true;
 
+MIDIOutputWrapper *mpk49_output = &midi_out_bitbox_wrapper;
+void mpk49_setOutputWrapper(MIDIOutputWrapper *wrapper) {
+  mpk49_output->stop_all_notes();
+  mpk49_output = wrapper;    
+}
+
 void MPK49_loop(unsigned long ticks) {
   if ( ixMPK49 == 0xff ) {
     return;
@@ -75,17 +81,19 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
       mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOn, /*channel,*/ note, velocity);
   #endif
 
-  #ifdef ENABLE_BITBOX
+  mpk49_output->sendNoteOn(note, velocity);
+  /*#ifdef ENABLE_BITBOX 
     if (midi_out_bitbox) {
         Serial.printf("sending to midi_out_bitbox\n");
-        midi_out_bitbox_wrapper.sendNoteOn(note, velocity, BITBOX_MIDI_CHANNEL);
+        //midi_out_bitbox_wrapper.sendNoteOn(note, velocity, BITBOX_MIDI_CHANNEL);
+        mpk49_output->sendNoteOn(note, velocity);
         //midi_out_bass->sendNoteOn(note, velocity, BASS_MIDI_CHANNEL);
     } else {
         Serial.println();
     }
   #else
     Serial.println("No output device configured");
-  #endif
+  #endif*/
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
@@ -93,8 +101,10 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
   if (mpk49_recording)
     mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOff, /*channel,*/ note, velocity);
   #endif
-    
-  #ifdef ENABLE_BITBOX
+
+  mpk49_output->sendNoteOff(note, velocity);
+
+  /*#ifdef ENABLE_BITBOX 
     if (midi_out_bitbox) {
         Serial.printf("sending note off to midi_out_bitbox\n");
         midi_out_bitbox_wrapper.sendNoteOff(note, velocity, BITBOX_MIDI_CHANNEL);
@@ -102,7 +112,7 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
     }
   #else
     Serial.println("mpk49_handle_note_off: no output device configured");
-  #endif
+  #endif*/
 }
 
 #ifdef ENABLE_LOOPER

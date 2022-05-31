@@ -29,6 +29,9 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity);
 
 void MPK49_init();
 
+extern MIDIOutputWrapper *mpk49_output; // = &midi_out_bitbox_wrapper;
+void mpk49_setOutputWrapper(MIDIOutputWrapper *wrapper);
+
 /*#ifdef ENABLE_SCREEN
   void mpk49_display_looper_status(ST7789_t3 *tft);
 #endif*/

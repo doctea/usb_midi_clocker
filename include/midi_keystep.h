@@ -23,6 +23,10 @@ void keystep_handle_note_on(byte channel, byte note, byte velocity);
 void keystep_handle_note_off(byte channel, byte note, byte velocity);
 
 void keystep_init();
+
+extern MIDIOutputWrapper *keystep_output;
+void keystep_setOutputWrapper(MIDIOutputWrapper *wrapper);
+
 #endif
 
 

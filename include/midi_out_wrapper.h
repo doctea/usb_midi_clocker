@@ -46,7 +46,7 @@ class MIDIOutputWrapper {
             if (channel==0) channel = default_channel;
             if (output_serialmidi) output_serialmidi->sendNoteOff(pitch, velocity, channel);
             if (output_usb)        output_usb->sendNoteOff(pitch, velocity, channel);
-            playing_notes[pitch]--;
+            if (playing_notes[pitch]>0) playing_notes[pitch]--;
         }
 
         inline bool is_note_playing(byte note_number) {
@@ -54,9 +54,12 @@ class MIDIOutputWrapper {
         }
 
         void stop_all_notes() {
+            Serial.printf("stop_all_notes in %s...\n", label);
             for (int i = 0 ; i < 127 ; i++) {
-                while (is_note_playing(i))
+                while (is_note_playing(i)) {
+                    Serial.printf("stopping %i notes of pitch %i on channel %i..\n", playing_notes[i], i, default_channel);
                     sendNoteOff(i, 0, default_channel);
+                }
             }
         }
 

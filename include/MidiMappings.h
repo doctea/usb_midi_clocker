@@ -29,16 +29,10 @@ extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass;//  
 extern MIDIOutputWrapper midi_out_bass_wrapper;
 #define BASS_MIDI_CHANNEL   4
 
-#ifdef ENABLE_LESTRUM
-// configure incoming lestrum to output to midimuso via bamble
-void lestrum_note_on(byte channel, byte note, byte velocity);
-void lestrum_note_off(byte channel, byte note, byte velocity);
-#endif
-
 #ifdef ENABLE_DRUMKIT
-// configure incoming drumkit on input 2 to go out to drums on bamble
-void drumkit_note_on(byte channel, byte note, byte velocity);
-void drumkit_note_off(byte channel, byte note, byte velocity);
+    // configure incoming drumkit on input 2 to go out to drums on bamble
+    void drumkit_note_on(byte channel, byte note, byte velocity);
+    void drumkit_note_off(byte channel, byte note, byte velocity);
 #endif
 
 void setup_midi_serial_devices();
