@@ -19,7 +19,7 @@ class BPMPositionIndicator : public MenuItem {
             } else {
                 colours(opened, RED,     BLACK);
             }
-            tft->printf("%04i:%02i:%02i @ %03.2f\n", 
+            tft->printf((char*)"%04i:%02i:%02i @ %03.2f\n", 
                 BPM_CURRENT_PHRASE + 1, 
                 BPM_CURRENT_BAR_OF_PHRASE + 1,
                 BPM_CURRENT_BEAT_OF_BAR + 1,
