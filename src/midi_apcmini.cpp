@@ -7,6 +7,8 @@
 
 #include "midi_looper.h"
 
+#include "midi_drums.h"
+
 #include "project.h"
 
 extern storage::savestate current_state;
@@ -169,6 +171,16 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
         Serial.printf("usb_midi_device[%i] is %04X:%04X aka %s:%s\n", i, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct(), usb_midi_device[i]->manufacturer(), usb_midi_device[i]->product() );
     }
     Serial.println("---- debug");
+  } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_SEND) {
+    // toggle drums recording status?
+    drums_loop_track.toggle_recording();
+  } else if (inNumber==APCMINI_BUTTON_PAN) {
+    if (apcmini_shift_held) 
+      drum_loop_track.stop_playing();
+    else
+      drum_loop_track.start_playing();
+    //// toggle drums playing
+    //drums_loop_track.toggle_recording();
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
     Serial.print(F("For inNumber "));

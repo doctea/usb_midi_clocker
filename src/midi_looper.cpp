@@ -8,6 +8,8 @@
 #include "ConfigMidi.h"
 #include "midi_outs.h"
 
+#include "midi_drums.h"
+
 // TODO: rewrite all this to work a lot better, ie:-
 //      [DONE    >1 event per tick]
 //      record as midi file
@@ -25,11 +27,13 @@
 
 MIDITrack mpk49_loop_track = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
 
-void stop_all_notes() {
+MIDITrack drum_loop_track = MIDITrack(&midi_drums_out_wrapper); //midi_bamble);
+
+/*void stop_all_notes() {
     mpk49_loop_track.stop_all_notes();
 }
 
 void clear_recording() {
     mpk49_loop_track.stop_all_notes();
     mpk49_loop_track.clear_all();
-}
+}*/

@@ -4,6 +4,8 @@
 #include "midi_outs.h"
 #include "midi_out_wrapper.h"
 
+#include "midi_drums.h"
+
 #include "midi_lestrum.h"
 //#include "midi_bamble.h"
 
@@ -36,18 +38,22 @@
         #ifdef ENABLE_BAMBLE
             if (midi_bamble) {
                 //Serial.println("sending!");
-                midi_bamble->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
+                //midi_bamble->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
             }
+            midi_drums_output.sendNoteOn(note, velocity);
         #endif
+        drum_loop_track.record_event(ticks, midi::NoteOn, note, velocity);
     }
     void drumkit_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
         if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;      // map acoustic to electric so drum2musocv will use it
         if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HIGH_TOM;            // remap tom 
         #ifdef ENABLE_BAMBLE
-            if (midi_bamble) {
+            /*if (midi_bamble) {
                 midi_bamble->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
-            }
+            }*/
+            midi_drums_output.sendNoteOff(note, velocity);
         #endif
+        drum_loop_track.record_event(ticks, midi::NoteOff, note, velocity);
     }
 #endif
 

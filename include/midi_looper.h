@@ -92,6 +92,7 @@ class MIDITrack {
 
     public: 
         MIDIOutputWrapper *output;
+        MIDIOutputWrapper **output_deferred;
 
         bool debug = false;
 
@@ -99,6 +100,9 @@ class MIDITrack {
         int current_note = -1;
 
         int transpose = 0;
+
+        bool is_recording = false;
+        bool is_playing = false;
 
         MIDITrack(MIDIOutputWrapper *default_output) {
             output = default_output;
@@ -108,8 +112,18 @@ class MIDITrack {
             }*/
         };
 
+        MIDITrack(MIDIOutputWrapper **default_output_deferred) {
+            output_deferred = default_output_deferred;
+        };
+
         void setOutputWrapper(MIDIOutputWrapper *output) {
-            this->output->stop_all_notes();
+            stop_all_notes();
+            /*if (this->output!=nullptr)
+                this->output->stop_all_notes();
+            if (this->output_deferred!=nullptr && (*this->output_deferred)!=nullptr) {
+                this->output_deferred = nullptr;
+                this->output->stop_all_notes();
+            }*/
             this->output = output;
         }
 
@@ -128,11 +142,13 @@ class MIDITrack {
 
         // for recording values (also used for reloading)
         void record_event(midi_message midi_event) {
+            if (!is_recording) return;
             unsigned long time = ticks % (LOOP_LENGTH);
             //time = quantize_time(time);
             record_event(time, midi_event);
         }
         void record_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ uint8_t pitch, uint8_t velocity) {
+            if (!is_recording) return;
             midi_message m;
             m.message_type = instruction_type;
             //m.channel = 3; //channel;
@@ -142,6 +158,7 @@ class MIDITrack {
             record_event(time, m);
         }
         void record_event(unsigned long time, midi_message midi_event) {
+            if (!is_recording) return;
             //Serial.printf("Recording event at\t%i", time);
             time = quantize_time(time);
             frames[time%LOOP_LENGTH].add(midi_event);
@@ -169,6 +186,11 @@ class MIDITrack {
 
         LinkedList<midi_message> get_frames(unsigned long time) {
             return this->frames[time];
+        }
+
+        void update(unsigned long time) {
+            if (is_playing)
+                play_events(time);
         }
 
         void play_events(unsigned long time) { //, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *specified_output = nullptr) {
@@ -206,7 +228,7 @@ class MIDITrack {
                         #ifdef DEBUG_LOOPER
                             Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         #endif
-                        output->sendNoteOn(pitch, m.velocity); //, m.channel);
+                        sendNoteOn(pitch, m.velocity); //, m.channel);
                         //playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
@@ -216,7 +238,7 @@ class MIDITrack {
                         #ifdef DEBUG_LOOPER
                             Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         #endif
-                        output->sendNoteOff(pitch, m.velocity); //, m.channel);
+                        sendNoteOff(pitch, m.velocity); //, m.channel);
                         //playing_notes[pitch] = false;
                         break;
                     default:
@@ -227,6 +249,7 @@ class MIDITrack {
                 }
             }
         }
+
 
         void clear_all() {
             stop_all_notes();
@@ -239,7 +262,9 @@ class MIDITrack {
 
         void stop_all_notes() {
             // todo: probably move this into the wrapper, so that can have multiple sources playing into the same output?
-            this->output->stop_all_notes();
+            if (output!=nullptr) this->output->stop_all_notes();
+            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->stop_all_notes();
+
             /*for (byte i = 0 ; i < 127 ; i++) {
                 if (playing_notes[i]) {
                     output->sendNoteOff(i, 0);
@@ -248,12 +273,30 @@ class MIDITrack {
             }*/
         }
 
+        void sendNoteOn(int pitch, int velocity, int channel = 0) {
+            if (output!=nullptr) output->sendNoteOn(pitch, velocity, channel);
+            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->sendNoteOn(pitch, velocity, channel);
+        }
+        void sendNoteOff(int pitch, int velocity, int channel = 0) {
+            if (output!=nullptr) output->sendNoteOff(pitch, velocity, channel);
+            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->sendNoteOff(pitch, velocity, channel);
+        }
+
+        void toggle_recording() {
+            bool previously_recording = this->is_recording;
+            this->is_recording = !this->is_recording;
+            if (this->is_recording==true && !previously_recording)
+                this->start_recording();
+            if (!this->is_recording && previously_recording) 
+                this->stop_recording();
+        }
+
         void stop_recording() {
             Serial.println("mpk49 stopped recording");
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
-                    output->sendNoteOff(i, 0);
+                    sendNoteOff(i, 0);
                     record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
                     recorded_hanging_notes[i] = false;
                 }
@@ -263,6 +306,15 @@ class MIDITrack {
         void start_recording() {
             Serial.println("mpk49 started recording");
             // uhhh nothing to do rn?
+        }
+
+        void start_playing() {
+            this->is_playing = true;
+        }
+        void stop_playing() {
+            if (this->is_playing)
+                this->stop_all_notes();
+            this->is_playing = false;
         }
 
         // save+load stuff !
@@ -409,6 +461,7 @@ class MIDITrack {
 };
 
 extern MIDITrack mpk49_loop_track;
+extern MIDITrack drums_loop_track;
 
 /**
  * @var {byte} the maximum number of instructions

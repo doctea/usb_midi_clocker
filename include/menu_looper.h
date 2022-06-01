@@ -8,18 +8,22 @@
 #include "mymenu.h"
 #include "menu.h"
 
-extern bool mpk49_recording;
-extern bool mpk49_playing;
-class LooperRecStatus : public MenuItem {   
+/*extern bool mpk49_recording;
+extern bool mpk49_playing;*/
+class LooperRecStatus : public MenuItem {
+    MIDITrack *looper;
     public:
-        LooperRecStatus() : MenuItem("Loop status / slot") {};
+        LooperRecStatus() : MenuItem("Looper default") {};
+        LooperRecStatus(char *label, MIDITrack *looper) : MenuItem(label) {
+            this->looper = looper;
+        };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);
             header(label, pos, selected, opened);
 
             tft->setTextSize(2);
-            if (mpk49_recording) {
+            if (looper->is_recording) {
                 colours(opened, RED);
                 tft->print((char*)"[Rec]");
             } else {
@@ -28,7 +32,7 @@ class LooperRecStatus : public MenuItem {
             }
             colours(C_WHITE, BLACK);
             tft->print((char*)"  ");
-            if (mpk49_playing) {
+            if (looper->is_playing) {
                 colours(opened, GREEN);
                 tft->print((char*)"[>>]");
             } else {
@@ -114,11 +118,16 @@ class LooperTransposeControl : public NumberControl {
 //          maybe even make subclasses of SelectorControl?
 class LooperStatus : public MenuItem {
     int ui_selected_loop_number = 0;
-    LooperRecStatus lrs = LooperRecStatus();
+    LooperRecStatus lrs;// = LooperRecStatus();
+    MIDITrack *looper;
     public: 
-        LooperStatus() : MenuItem("Looper") {}
+        LooperStatus(char *label, MIDITrack *looper) : MenuItem(label) {
+            looper = looper;
+            lrs = LooperRecStatus(label, looper);
+        }
 
         virtual void on_add() override {
+            lrs = LooperRecStatus("", this->looper);
             lrs.set_tft(this->tft);
         };
 

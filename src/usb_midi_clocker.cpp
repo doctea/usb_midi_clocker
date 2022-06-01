@@ -246,6 +246,11 @@ void do_tick(uint32_t in_ticks) {
   update_cv_outs(in_ticks);
   #endif
 
+  #ifdef ENABLE_LOOPER
+    mpk49_loop_track.play_events(ticks);
+    drums_loop_track.play_events(ticks);
+  #endif
+
   #ifdef ENABLE_MPK49
     MPK49_on_tick(in_ticks);
   #endif

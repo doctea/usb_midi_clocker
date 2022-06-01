@@ -12,9 +12,9 @@
 MIDIDevice_BigBuffer *midi_MPK49;  
 uint8_t ixMPK49   = 0xff;
 
-bool MPK49_started = false;
+/*bool MPK49_started = false;
 bool mpk49_recording = false;
-bool mpk49_playing = true;
+bool mpk49_playing = true;*/
 
 MIDIOutputWrapper *mpk49_output = &midi_out_bitbox_wrapper;
 void mpk49_setOutputWrapper(MIDIOutputWrapper *wrapper) {
@@ -56,10 +56,10 @@ void MPK49_on_tick(uint32_t ticks) {
     midi_MPK49->send_now();*/
   }
   // playLoop(ticks%(PPQN*4*4*4));
-  #ifdef ENABLE_LOOPER
+  /*#ifdef ENABLE_LOOPER
     if (mpk49_playing)
       mpk49_loop_track.play_events(ticks); //, midi_out_bitbox); //%(LOOP_LENGTH));
-  #endif
+  #endif*/
 }
 
 // called inside interrupt
@@ -76,10 +76,10 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
   static int counter = 0;
   Serial.printf("%i: mpk49_handle_note_on %i, %i, %i: \n", counter++, channel, note, velocity);
 
-  #ifdef ENABLE_LOOPER
-    if (mpk49_recording)
+  /*#ifdef ENABLE_LOOPER
+    if (mpk49_recording)*/
       mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOn, /*channel,*/ note, velocity);
-  #endif
+  //#endif
 
   mpk49_output->sendNoteOn(note, velocity);
   /*#ifdef ENABLE_BITBOX 
@@ -97,10 +97,10 @@ void mpk49_handle_note_on(byte channel, byte note, byte velocity) {
 }
 void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
-  #ifdef ENABLE_LOOPER
-  if (mpk49_recording)
+  //#ifdef ENABLE_LOOPER
+  //if (mpk49_recording)
     mpk49_loop_track.record_event(ticks%LOOP_LENGTH, midi::NoteOff, /*channel,*/ note, velocity);
-  #endif
+  //#endif
 
   mpk49_output->sendNoteOff(note, velocity);
 
@@ -117,26 +117,29 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 
 #ifdef ENABLE_LOOPER
   void mpk49_handle_mmc_record() {
-    mpk49_recording = !mpk49_recording;
+    mpk49_loop_track.toggle_recording();
+    /*mpk49_recording = !mpk49_recording;
     if (mpk49_recording) {
       mpk49_loop_track.start_recording();
     } else {
       mpk49_loop_track.stop_recording();
-    }
+    }*/
   }
 
   void mpk49_handle_mmc_start() {
-    mpk49_playing = true;
+    mpk49_loop_track.start_playing();
+    //mpk49_playing = true;
   }
 
   void mpk49_handle_mmc_stop() {
-    mpk49_playing = false;
+    //mpk49_playing = false;
+    mpk49_loop_track.stop_playing();
 
-    if (!mpk49_playing) {
+    /*if (!mpk49_playing) {
       mpk49_loop_track.stop_all_notes();
       //mpk49_loop_track.stop_recording();
       //midi_out_bitbox->sendControlChange(123,0,3);
-    }
+    }*/
   }
 
   void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
@@ -159,7 +162,7 @@ void mpk49_handle_note_off(byte channel, byte note, byte velocity) {
 #endif
 
 void MPK49_init() {
-    MPK49_started = false;
+    //MPK49_started = false;
 
     //midi_out_cv12_poly = midi_MPK49;
     //midi_MPK49->begin();
