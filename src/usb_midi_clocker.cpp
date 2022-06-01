@@ -247,8 +247,8 @@ void do_tick(uint32_t in_ticks) {
   #endif
 
   #ifdef ENABLE_LOOPER
-    mpk49_loop_track.play_events(ticks);
-    drums_loop_track.play_events(ticks);
+    mpk49_loop_track.update(ticks);
+    drums_loop_track.update(ticks);
   #endif
 
   #ifdef ENABLE_MPK49

@@ -27,7 +27,8 @@
 
 MIDITrack mpk49_loop_track = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
 
-MIDITrack drum_loop_track = MIDITrack(&midi_drums_out_wrapper); //midi_bamble);
+MIDIOutputWrapper midi_drums_output = MIDIOutputWrapper((char*)"Bamble drums", &midi_bamble, 10);
+MIDITrack drums_loop_track = MIDITrack(&midi_drums_output); //midi_bamble);
 
 /*void stop_all_notes() {
     mpk49_loop_track.stop_all_notes();

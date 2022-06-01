@@ -175,10 +175,11 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     // toggle drums recording status?
     drums_loop_track.toggle_recording();
   } else if (inNumber==APCMINI_BUTTON_PAN) {
-    if (apcmini_shift_held) 
-      drum_loop_track.stop_playing();
-    else
-      drum_loop_track.start_playing();
+    if (apcmini_shift_held) {
+      drums_loop_track.stop_playing();
+    } else {
+      drums_loop_track.start_playing();
+    }
     //// toggle drums playing
     //drums_loop_track.toggle_recording();
   } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {

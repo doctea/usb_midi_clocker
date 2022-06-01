@@ -65,11 +65,14 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     SequencerStatus sequencer_status =      SequencerStatus();
 #endif
 #ifdef ENABLE_LOOPER
-    LooperStatus    mpk49_looper_status =   LooperStatus();
+    /*LooperStatus    mpk49_looper_status =   LooperStatus("MPK49 looper", &mpk49_loop_track);
     LooperQuantizeControl quantizer_setting = LooperQuantizeControl("Loop quant",   &mpk49_loop_track);   // todo: make this part of the LooperStatus object
     HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
     LooperTransposeControl looper_transpose_control =    LooperTransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
-    MidiOutputSelectorControl looper_output_selector = MidiOutputSelectorControl("Looper MIDI Output"); 
+    MidiOutputSelectorControl looper_output_selector = MidiOutputSelectorControl("Looper MIDI Output"); */
+
+    LooperStatus    drum_looper_status  =   LooperStatus("Drum looper", &drums_loop_track);
+    LooperQuantizeControl drum_loop_quantizer_setting = LooperQuantizeControl("Drum Loop quant",   &drums_loop_track);   // todo: make this part of the LooperStatus object
 #endif
 
 #ifdef ENABLE_KEYSTEP
@@ -114,7 +117,6 @@ void setup_menu() {
     Serial.println("Created Menu object..");
     Serial.flush();
 
-    looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
     beatstep_output_selector.configure(beatstep_output, beatstep_setOutputWrapper);
     keystep_output_selector.configure(keystep_output, keystep_setOutputWrapper);
     mpk49_output_selector.configure(mpk49_output, mpk49_setOutputWrapper);
@@ -133,11 +135,15 @@ void setup_menu() {
     menu->add(&sequencer_status);
 
     // looper stuff
+    /*looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
     menu->add(&mpk49_looper_status);    
     menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
     menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
     menu->add(&looper_output_selector);
-    menu->add(&looper_transpose_control);
+    menu->add(&looper_transpose_control);*/
+
+    menu->add(&drum_looper_status);
+    menu->add(&drum_loop_quantizer_setting);
 
     menu->add(&beatstep_output_selector);
     menu->add(&keystep_output_selector);

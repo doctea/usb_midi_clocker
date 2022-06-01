@@ -1,9 +1,8 @@
 #include "Config.h"
 
-// MPK49 loop indicator
 #if defined(ENABLE_LOOPER)
 
-#include "midi_mpk49.h"
+//#include "midi_mpk49.h"
 #include "project.h"
 #include "mymenu.h"
 #include "menu.h"
@@ -183,7 +182,7 @@ class LooperStatus : public MenuItem {
 
         virtual bool button_select() {
             project.select_loop_number(ui_selected_loop_number);
-            bool success = project.load_loop(ui_selected_loop_number, &mpk49_loop_track);
+            bool success = project.load_loop(ui_selected_loop_number, looper);
             if (success) {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";
@@ -201,7 +200,7 @@ class LooperStatus : public MenuItem {
 
         virtual bool button_right() {
             project.select_loop_number(ui_selected_loop_number);
-            bool success = project.save_loop(ui_selected_loop_number, &mpk49_loop_track);
+            bool success = project.save_loop(ui_selected_loop_number, looper); 
             if (success) {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";

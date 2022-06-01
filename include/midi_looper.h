@@ -292,7 +292,7 @@ class MIDITrack {
         }
 
         void stop_recording() {
-            Serial.println("mpk49 stopped recording");
+            Serial.println("Looper: stopped recording");
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
@@ -304,14 +304,16 @@ class MIDITrack {
         }
 
         void start_recording() {
-            Serial.println("mpk49 started recording");
+            Serial.println("Looper: Started recording");
             // uhhh nothing to do rn?
         }
 
         void start_playing() {
+            Serial.println("Looper: Start playing!");
             this->is_playing = true;
         }
         void stop_playing() {
+            Serial.println("Looper: Stop playing!");
             if (this->is_playing)
                 this->stop_all_notes();
             this->is_playing = false;
