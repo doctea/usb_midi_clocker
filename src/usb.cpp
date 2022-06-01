@@ -23,7 +23,9 @@ uint64_t usb_midi_connected[8] = { 0,0,0,0,0,0,0,0 };
 #include "midi_out_wrapper.h"
 #include "MidiMappings.h"
 
-MIDIOutputWrapper *pc_usb_1_output = &midi_out_bitbox_wrapper; //&midi_out_bass_wrapper;
+// set the incoming midi from the USB host (ie computer) to go out to first Bamble pitch channel
+MIDIOutputWrapper midi_bamble_ch1_wrapper = MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &midi_bamble, 1);
+MIDIOutputWrapper *pc_usb_1_output = &midi_bamble_ch1_wrapper; //midi_out_bitbox_wrapper; //&midi_out_bass_wrapper;
 void pc_usb_1_setOutputWrapper(MIDIOutputWrapper *wrapper) {
   pc_usb_1_output->stop_all_notes();
   pc_usb_1_output = wrapper;    

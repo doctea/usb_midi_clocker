@@ -64,6 +64,24 @@ void bamble_on_restart() {
 void bamble_init() {
     bamble_started = false;
 
+    // this should disable euclidian pulses on the pitch outputs ch1 + ch2
+    midi_bamble->sendControlChange(78, 0, 10);
+    midi_bamble->sendControlChange(79, 0, 10);
+    midi_bamble->sendControlChange(50, 0, 10);
+    midi_bamble->sendControlChange(51, 0, 10);
+
+    // sustain to max for the envelope outputs
+    midi_bamble->sendControlChange(67, 127, 10);
+    midi_bamble->sendControlChange(67, 127, 11);
+    midi_bamble->sendControlChange(75, 127, 10);
+    midi_bamble->sendControlChange(75, 127, 11);
+    midi_bamble->sendControlChange(83, 127, 10);
+    midi_bamble->sendControlChange(83, 127, 11);
+    midi_bamble->sendControlChange(91, 127, 10);
+    midi_bamble->sendControlChange(91, 127, 11);
+    midi_bamble->sendControlChange(99, 127, 10);
+    midi_bamble->sendControlChange(99, 127, 11);
+
     //midi_out_cv12_poly = midi_bamble;
 
     //midi_bamble->turnThruOff();
