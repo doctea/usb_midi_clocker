@@ -1,5 +1,5 @@
 - This branch for porting to Teensy 4.1 using [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
-- This is the version that works on an Arduino Uno with a USB Host Shield.  Worked pretty well, but wanted to expand it to do more advanced sequencing and deal with more devices, now porting to Teensy instead.
+- Look in branches for the version that works on an Arduino Uno with a USB Host Shield.  Worked pretty well, but wanted to expand it to do more advanced sequencing and deal with more devices, so this branch is for porting to Teensy instead, with many more features.
 
 # usb_midi_clocker
 
