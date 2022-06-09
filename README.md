@@ -59,7 +59,7 @@ It also has a very rudimentary sequencer, using Akai APCMini for input+display, 
 - Sequencer that records and playback MIDI notes or CV
   - rudimentary MIDI looper working
   - improve by writing & saving real MIDI files?
-- ~~TFT display~~ (basically working now using the Adafruit ST7789_t3 library)
+- ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
 - Give better control over Beatstep via sysex if possible?
