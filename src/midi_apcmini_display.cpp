@@ -23,6 +23,7 @@ byte get_colour(byte lev) {
 }
 
 void apcmini_update_position_display(int ticks) {
+  if (midi_apcmini==nullptr) return;
   byte beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
   if (is_bpm_on_beat(ticks)) {
     //#define DEBUG_TICKS yes
@@ -68,6 +69,7 @@ byte get_colour_for_clock_multiplier(float cm) {
 }
 
 void redraw_clock_row(byte c) {
+    if (midi_apcmini==nullptr) return;
     byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
     for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       byte io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
@@ -86,6 +88,7 @@ void redraw_clock_row(byte c) {
 }
 
 void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
+  if (midi_apcmini==nullptr) return;
   ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + old_clock_selected, APCMINI_OFF, 1);)
   ATOMIC(midi_apcmini->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_selected,     APCMINI_ON,  1);)
 }
@@ -93,21 +96,23 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
 
 #ifdef ENABLE_SEQUENCER
 void redraw_sequence_row(byte c) {
-    byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
-    for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-      byte v = read_sequence(c,i);
-      if (v) { //should_trigger_sequence(i*PPQN,c)) {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
-      } else {
-        ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);)
-      }
+  if (midi_apcmini==nullptr) return;
+  byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
+  for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+    byte v = read_sequence(c,i);
+    if (v) { //should_trigger_sequence(i*PPQN,c)) {
+      ATOMIC(midi_apcmini->sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
+    } else {
+      ATOMIC(midi_apcmini->sendNoteOn(start_row+i, APCMINI_OFF, 1);)
     }
+  }
 }
 #endif
 
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_clear_display() {
+  if (midi_apcmini==nullptr) return;
   Serial.println(F("Clearing APC display.."));
   for (uint8_t x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
     for (uint8_t y = 0 ; y < APCMINI_DISPLAY_WIDTH ; y++) {

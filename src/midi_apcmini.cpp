@@ -9,6 +9,8 @@
 
 #include "project.h"
 
+#include "clock.h"
+
 extern storage::savestate current_state;
 
 MIDIDevice_BigBuffer *midi_apcmini;
@@ -42,7 +44,7 @@ void apcmini_loop(unsigned long ticks) {
   if (last_processed_tick!=ticks) {
     apcmini_update_position_display(ticks);
  
-    if (midi_apcmini && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
+    if (midi_apcmini!=nullptr && (redraw_immediately || millis() - last_updated_display > 50)) { // || ticks - last_updated_display > PPQN) {
       //Serial.println(F("redraw_immediately is set!"));
       apcmini_update_clock_display();
       redraw_immediately = false;
@@ -213,7 +215,8 @@ void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
 
 #ifdef ENABLE_BPM
   if (inNumber==56) {   // 56 == "master" fader set bpm 
-    set_bpm(map(inValue, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
+    if(clock_mode==CLOCK_INTERNAL)
+      set_bpm(map(inValue, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
   }
 #endif
 }
@@ -229,7 +232,7 @@ void apcmini_on_tick(volatile uint32_t ticks) {
 
 // called inside interrupt
 void apcmini_on_restart() {
-  if (midi_apcmini) {
+  if (midi_apcmini!=nullptr) {
     //ATOMIC(
       //midi_apcmini->sendRealTime(usbMIDI.Stop); //sendStop();
       //midi_apcmini->sendRealTime(usbMIDI.Start);
@@ -244,6 +247,7 @@ void apcmini_on_restart() {
 
 
 void apcmini_init() {
+  if (midi_apcmini==nullptr) return;
     //midi_apcmini->turnThruOff();
     Serial.println("apcmini_init()");
     midi_apcmini->setHandleControlChange(apcmini_control_change);

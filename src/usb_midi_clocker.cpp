@@ -140,7 +140,7 @@ void loop()
   else if (clock_mode==CLOCK_INTERNAL && playing && millis()-t1 >= ms_per_tick)
     ticked = true;
   
-  if ( ticked ) {
+  if ( playing && ticked ) {
     /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
       Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
     }*/
