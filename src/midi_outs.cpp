@@ -22,7 +22,7 @@ bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
     false,      // blue (currently unused)
     true,       // neutron
     true,       // disting ex
-    false,
+    true,       // dazb guitar
     false,
     false,
     false

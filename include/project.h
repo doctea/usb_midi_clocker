@@ -18,7 +18,7 @@ class Project {
     void initialise_sequence_slots() {
         for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
             char filepath[255];
-            sprintf(filepath, FILEPATH_SEQUENCE, i);
+            sprintf(filepath, FILEPATH_SEQUENCE, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
             Serial.printf("sequence_slot_has_file[i] = %i for %s\n", sequence_slot_has_file[i], filepath);
         }
@@ -28,11 +28,11 @@ class Project {
 
         for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
             char filepath[255];
-            sprintf(filepath, FILEPATH_LOOP, i);
+            sprintf(filepath, FILEPATH_LOOP, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf("checking if slot %i is actually empty...\n");
-                mpk49_loop_track.load_state(i);
+                mpk49_loop_track.load_state(this->current_project_number, i);
                 Serial.printf("loaded ok\n");
                 if (mpk49_loop_track.count_events()==0)
                     loop_slot_has_file[i] = false;
@@ -43,6 +43,8 @@ class Project {
         mpk49_loop_track.clear_all();
     }
     public:
+        int current_project_number = 0;
+
         int selected_sequence_number = 0;
         int loaded_sequence_number = -1;
 
@@ -56,6 +58,16 @@ class Project {
         void setup_project() {
             initialise_sequence_slots();
             initialise_loop_slots();
+
+            setProjectNumber(this->current_project_number);
+        }
+
+        void setProjectNumber(int number) {
+            this->current_project_number = number;
+            make_project_folders(number);
+        }
+        int getProjectNumber() {
+            return this->current_project_number;
         }
 
         ////////////// clocks / sequences
@@ -78,14 +90,14 @@ class Project {
 
         bool load_state(int selected_sequence_number) {
             Serial.printf("load for selected_sequence_number %i\n", selected_sequence_number);
-            bool result = storage::load_state(selected_sequence_number, &storage::current_state);
+            bool result = storage::load_state(current_project_number, selected_sequence_number, &storage::current_state);
             if (result)
                 loaded_sequence_number = selected_sequence_number;
             return result;
         }
         bool save_sequence(int selected_sequence_number) {
             Serial.printf("save for selected_sequence_number %i\n", selected_sequence_number);
-            bool result = storage::save_sequence(selected_sequence_number, &storage::current_state);
+            bool result = storage::save_sequence(current_project_number, selected_sequence_number, &storage::current_state);
             if (result) {
                 sequence_slot_has_file[selected_sequence_number] = true;
                 loaded_sequence_number = selected_sequence_number;
@@ -115,17 +127,17 @@ class Project {
         }
 
         bool load_loop(int selected_loop_number, MIDITrack *track) {
-            Serial.printf("load for selected_sequence_number %i\n", selected_loop_number);
+            Serial.printf("load for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
             //bool result = storage::load_state(selected_loop_number, &storage::current_state);
-            bool result = track->load_state(selected_loop_number);
+            bool result = track->load_state(current_project_number, selected_loop_number);
             if (result)
                 loaded_loop_number = selected_loop_number;
             return result;
         }
         bool save_loop(int selected_loop_number, MIDITrack *track) {
-            Serial.printf("save for selected_sequence_number %i\n", selected_loop_number);
+            Serial.printf("save for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
             //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
-            bool result = track->save_sequence(selected_loop_number);
+            bool result = track->save_sequence(current_project_number, selected_loop_number);
             if (result) {
                 if (track->count_events()>0)
                     loop_slot_has_file[selected_loop_number] = true;

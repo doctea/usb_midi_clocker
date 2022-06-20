@@ -32,6 +32,36 @@ namespace storage {
 
   const int chipSelect = BUILTIN_SDCARD;
 
+  void make_project_folders(int project_number) {
+    char path[255];
+    sprintf(path, "project%i", project_number);
+    Serial.printf("Checking exists %s..");
+    if (!SD.exists(path)) {
+      Serial.println("making!\n");
+      SD.mkdir(path);
+    } else {
+      Serial.println("exists!\n");
+    }
+    
+    sprintf(path, "project%i/sequences", project_number);
+    Serial.printf("Checking exists %s..");
+    if (!SD.exists(path)) {
+      Serial.println("making!\n");
+      SD.mkdir(path);
+    } else {
+      Serial.println("exists!\n");
+    }
+
+    sprintf(path, "project%i/loops", project_number);
+    Serial.printf("Checking exists %s..");
+    if (!SD.exists(path)) {
+      Serial.println("making!\n");
+      SD.mkdir(path);
+    } else {
+      Serial.println("exists!\n");
+    }
+  }
+
   void setup_storage() {
     SD.begin(chipSelect);
 
@@ -45,13 +75,13 @@ namespace storage {
     }
   }
 
-  bool save_sequence(uint8_t preset_number, savestate *input) {
+  bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
     //Serial.println("save_sequence not implemented on teensy");
     File myFile;
 
     char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE, preset_number);
-    Serial.printf("save_sequence(%i) writing to %s\n", preset_number, filename);
+    sprintf(filename, FILEPATH_SEQUENCE, project_number, preset_number);
+    Serial.printf("save_sequence(%i, %i) writing to %s\n", project_number, preset_number, filename);
     if (SD.exists(filename)) {
       Serial.printf("%s exists, deleting first\n", filename);
       SD.remove(filename);
@@ -197,12 +227,12 @@ namespace storage {
     }
   }
 
-  bool load_state(uint8_t preset_number, savestate *output) {
+  bool load_state(int project_number, uint8_t preset_number, savestate *output) {
     File myFile;
 
     char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE, preset_number);
-    Serial.printf("load_state(%i) opening %s\n", preset_number, filename);
+    sprintf(filename, FILEPATH_SEQUENCE, project_number, preset_number);
+    Serial.printf("load_state(%i,%i) opening %s\n", project_number, preset_number, filename);
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);
 
@@ -228,6 +258,46 @@ namespace storage {
     Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
     return true;
   }
+
+  /*bool copy_directory(char *sourceDirectory, char *destinationDirectory) {
+    SdFile dir;
+    if (!dir.open(sourceDirectory)){
+      Serial.printf("copy_directory: error opening source %s\n", sourceDirectory);
+    }
+    while (dir.openNext(&dir, O_RDONLY)) {
+      copy_file(dir.getName(), destinationDirectory);
+    }
+  }*/
+
+  bool copy_file(const char *sourceFile, const char *destnFile) {
+    SdFile myOrigFile;
+    SdFile myDestFile;
+
+    if (!myOrigFile.open(sourceFile, FILE_READ)) {
+      //SD.errorHalt("opening source file for read failed");
+      Serial.printf("Error opening source file for copy '%s'\n", sourceFile);
+      return false;
+    }
+
+    if (!myDestFile.open(destnFile, FILE_WRITE)) {
+      //SD.errorHalt("opening destn file for write failed");
+      Serial.printf("Error opening dest file for copy '%s'\n", destnFile);
+      return false;
+    }    
+
+    size_t n;  
+    uint8_t buf[64];
+    while ((n = myOrigFile.read(buf, sizeof(buf))) > 0) {
+      myDestFile.write(buf, n);
+    }
+
+    myOrigFile.close();
+    myDestFile.close();    
+
+    return true;
+  }
+
+
   #else
   // Arduino, save to EEPROM
   #include <EEPROM.h>

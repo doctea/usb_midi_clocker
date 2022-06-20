@@ -266,12 +266,12 @@ class MIDITrack {
         }
 
         // save+load stuff !
-        bool save_sequence(int recording_number) {
+        bool save_sequence(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             File myFile;
 
             char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP, recording_number);
+            sprintf(filename, FILEPATH_LOOP, project_number, recording_number);
             Serial.printf("midi_looper::save_sequence(%i) writing to %s\n", recording_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf("%s exists, deleting first\n", filename);
@@ -319,11 +319,11 @@ class MIDITrack {
             return true;
         }
 
-        bool load_state(int recording_number) {
+        bool load_state(int project_number, int recording_number) {
             File myFile;
 
             char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP, recording_number);
+            sprintf(filename, FILEPATH_LOOP, project_number, recording_number);
             Serial.printf("midi_looper::load_state(%i) opening %s\n", recording_number, filename);
             myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);
