@@ -19,9 +19,9 @@ class ClockSourceSelectorControl : public SelectorControl {
 
     virtual const char* get_label_for_index(int index) {
         if (index==CLOCK_INTERNAL)
-            return "Int";
+            return "Internal";
         if (index==CLOCK_EXTERNAL_USB_HOST)
-            return "USB";
+            return "External";
         return "??";
     }
 
@@ -43,7 +43,7 @@ class ClockSourceSelectorControl : public SelectorControl {
 
         num_values = NUM_CLOCK_SOURCES;
 
-        tft->setTextSize(1);
+        tft->setTextSize(2);
 
         if (!opened) {
             // not opened, so just show the current value
