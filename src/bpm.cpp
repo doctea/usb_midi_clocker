@@ -12,6 +12,8 @@ bool playing = true;
 bool single_step = false;
 bool restart_on_next_bar = false;
 
+//TapBPMTracker tap_tempo_tracker = TapBPMTracker();
+
 void set_bpm(float new_bpm) {
   if (bpm_current!=new_bpm) {
     bpm_current = new_bpm;
