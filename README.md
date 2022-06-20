@@ -1,5 +1,5 @@
 - This branch for porting to Teensy 4.1 using [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
-- This is the version that works on an Arduino Uno with a USB Host Shield.  Worked pretty well, but wanted to expand it to do more advanced sequencing and deal with more devices, now porting to Teensy instead.
+- Look in branches for the version that works on an Arduino Uno with a USB Host Shield.  Worked pretty well, but wanted to expand it to do more advanced sequencing and deal with more devices, so this branch is for porting to Teensy instead, with many more features.
 
 # usb_midi_clocker
 
@@ -59,7 +59,7 @@ It also has a very rudimentary sequencer, using Akai APCMini for input+display, 
 - Sequencer that records and playback MIDI notes or CV
   - rudimentary MIDI looper working
   - improve by writing & saving real MIDI files?
-- ~~TFT display~~ (basically working now using the Adafruit ST7789_t3 library)
+- ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
 - Give better control over Beatstep via sysex if possible?
