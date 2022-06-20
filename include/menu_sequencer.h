@@ -21,7 +21,7 @@ class SequencerStatus : public MenuItem {
             x = 2;
             y++;
             #define ROUNDED yes
-            for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
+            for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
                 int col = (project.loaded_sequence_number==i) ? ST77XX_GREEN :    // if currently loaded 
                              (ui_selected_sequence_number==i) ? ST77XX_YELLOW :   // if selected
                                                                 ST77XX_BLUE;        
@@ -52,6 +52,9 @@ class SequencerStatus : public MenuItem {
                         tft.fillRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
                 }
+                if(project.selected_sequence_number==i) {
+                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x+(button_size/2), y+(button_size/2), 1+button_size/2, 1+button_size/2, ST77XX_ORANGE);
+                }
                 x += button_size + 2;
             }
             y += button_size + 4;
@@ -61,14 +64,14 @@ class SequencerStatus : public MenuItem {
         virtual bool knob_left() override {
             ui_selected_sequence_number--;
             if (ui_selected_sequence_number < 0)
-                ui_selected_sequence_number = NUM_STATES_PER_PROJECT-1;
+                ui_selected_sequence_number = NUM_SEQUENCE_SLOTS_PER_PROJECT-1;
             project.select_sequence_number(ui_selected_sequence_number);
             return true;
         }
 
         virtual bool knob_right() override {
             ui_selected_sequence_number++;
-            if (ui_selected_sequence_number >= NUM_STATES_PER_PROJECT)
+            if (ui_selected_sequence_number >= NUM_SEQUENCE_SLOTS_PER_PROJECT)
                 ui_selected_sequence_number = 0;
             project.select_sequence_number(ui_selected_sequence_number);
             return true;
@@ -76,7 +79,7 @@ class SequencerStatus : public MenuItem {
 
         virtual bool button_select() override {
             project.select_sequence_number(ui_selected_sequence_number);
-            bool success = project.load_state(); //selected_sequence_number);
+            bool success = project.load_sequence(); //selected_sequence_number);
             if (success) {
                 //loaded_sequence_number = ui_selected_sequence_number;
                 char msg[20] = "";

@@ -135,7 +135,7 @@ class LooperStatus : public MenuItem {
 
             const int radius = 3, offset_leftup = -1, offset_downright = 2;
 
-            for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
+            for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
                 int col = (project.loaded_loop_number==i) ?  GREEN :    // if currently loaded 
                              (ui_selected_loop_number==i)  ? YELLOW :   // if selected
                                                              BLUE;        
@@ -159,14 +159,14 @@ class LooperStatus : public MenuItem {
         virtual bool knob_left() {
             ui_selected_loop_number--;
             if (ui_selected_loop_number < 0)
-                ui_selected_loop_number = NUM_LOOPS_PER_PROJECT-1;
+                ui_selected_loop_number = NUM_LOOP_SLOTS_PER_PROJECT-1;
             project.select_loop_number(ui_selected_loop_number);
             return true;
         }
 
         virtual bool knob_right() {
             ui_selected_loop_number++;
-            if (ui_selected_loop_number >= NUM_LOOPS_PER_PROJECT)
+            if (ui_selected_loop_number >= NUM_LOOP_SLOTS_PER_PROJECT)
                 ui_selected_loop_number = 0;
             project.select_loop_number(ui_selected_loop_number);
             return true;

@@ -58,6 +58,8 @@ ClockSourceSelectorControl clock_selector = ClockSourceSelectorControl("Clock so
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
 
+ObjectToggleControl<Project> project_autoadvance = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance, &Project::is_auto_advance, nullptr);
+
 BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
@@ -135,6 +137,7 @@ void setup_menu() {
     menu->add(&clock_selector);
 
     menu->add(&project_selector);
+    menu->add(&project_autoadvance);
 
     menu->add(&beatstep_notes);
     menu->add(&bass_transpose_control);  // beatstep transposed to neutron control

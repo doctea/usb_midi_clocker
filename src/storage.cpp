@@ -135,8 +135,8 @@ namespace storage {
     String line;
     if(line = load_state_file.readStringUntil('\n')) {
       Serial.printf("%i: parsing line %s\n", millis(), line.c_str());
-      load_state_parse_line(line, load_state_output);
-      Serial.printf("%i: finished load_state_parse_line\n", millis());
+      load_sequence_parse_line(line, load_state_output);
+      Serial.printf("%i: finished load_sequence_parse_line\n", millis());
     } else {
       Serial.printf("%i: Finished loading file\n", millis());
       load_state_current = load_states::NONE;
@@ -146,7 +146,7 @@ namespace storage {
   }
   void load_state_start(uint8_t preset_number, savestate *output) {
     //bool debug = false;
-    //Serial.println("load_state not implemented on teensy");
+    //Serial.println("load_sequence not implemented on teensy");
     if (load_state_current==load_states::LOADING) {
       load_state_file.close();
       load_state_current = load_states::NONE;
@@ -168,7 +168,7 @@ namespace storage {
     load_state_output = output;
   }*/
 
-  void load_state_parse_line(String line, savestate *output) {
+  void load_sequence_parse_line(String line, savestate *output) {
     bool debug = false;
     if (line.charAt(0)==';') 
       return;  // skip comment lines
@@ -227,12 +227,12 @@ namespace storage {
     }
   }
 
-  bool load_state(int project_number, uint8_t preset_number, savestate *output) {
+  bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
     File myFile;
 
     char filename[255] = "";
     sprintf(filename, FILEPATH_SEQUENCE, project_number, preset_number);
-    Serial.printf("load_state(%i,%i) opening %s\n", project_number, preset_number, filename);
+    Serial.printf("load_sequence(%i,%i) opening %s\n", project_number, preset_number, filename);
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);
 
@@ -245,7 +245,7 @@ namespace storage {
 
     String line;
     while (line = myFile.readStringUntil('\n')) {
-      load_state_parse_line(line, output);
+      load_sequence_parse_line(line, output);
     }
     Serial.println("Closing file..");
     myFile.close();
@@ -313,7 +313,7 @@ namespace storage {
     EEPROM.put(eeAddress, *input);
   }
 
-  bool load_state(uint8_t preset_number, savestate *output) {
+  bool load_sequence(uint8_t preset_number, savestate *output) {
     int eeAddress = 16 + (preset_number * sizeof(savestate));
     byte id = EEPROM.read(eeAddress);
     if (id==SAVE_ID_BYTE_V0 || id==SAVE_ID_BYTE_V1) {

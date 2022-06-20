@@ -266,7 +266,7 @@ class MIDITrack {
         }
 
         // save+load stuff !
-        bool save_sequence(int project_number, int recording_number) {
+        bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             File myFile;
 
@@ -319,12 +319,12 @@ class MIDITrack {
             return true;
         }
 
-        bool load_state(int project_number, int recording_number) {
+        bool load_loop(int project_number, int recording_number) {
             File myFile;
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP, project_number, recording_number);
-            Serial.printf("midi_looper::load_state(%i) opening %s\n", recording_number, filename);
+            Serial.printf("midi_looper::load_sequence(%i) opening %s\n", recording_number, filename);
             myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);
 
@@ -343,7 +343,7 @@ class MIDITrack {
             String line;
             int time = 0;
             while (line = myFile.readStringUntil('\n')) {
-                //load_state_parse_line(line, output);
+                //load_sequence_parse_line(line, output);
                 if (line.startsWith("starts_at=")) {
                     time =      line.remove(0,String("starts_at=").length()).toInt();
                 } if (line.startsWith("transpose=")) {

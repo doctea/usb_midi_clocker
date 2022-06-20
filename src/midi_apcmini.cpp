@@ -156,7 +156,7 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     Serial.println(ticks);*/
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
     //load_state_start(project.selected_sequence_number, &project.current_state);
-    project.load_state(); //project.selected_sequence_number);
+    project.load_sequence(); //project.selected_sequence_number);
     #ifdef ENABLE_APCMINI_DISPLAY
         apcmini_update_clock_display();
     #endif

@@ -230,6 +230,9 @@ void do_tick(uint32_t in_ticks) {
     restart_on_next_bar = false;
   }
 
+  if (is_bpm_on_phrase(ticks))
+    project.on_phrase(BPM_CURRENT_PHRASE);
+
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
