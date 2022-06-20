@@ -23,6 +23,8 @@ uint64_t usb_midi_connected[8] = { 0,0,0,0,0,0,0,0 };
 #include "midi_out_wrapper.h"
 #include "MidiMappings.h"
 
+#include "clock.h"
+
 // set the incoming midi from the USB host (ie computer) to go out to first Bamble pitch channel
 MIDIOutputWrapper midi_bamble_ch1_wrapper = MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &midi_bamble, 1);
 MIDIOutputWrapper *pc_usb_1_output = &midi_bamble_ch1_wrapper; //midi_out_bitbox_wrapper; //&midi_out_bass_wrapper;
@@ -54,9 +56,46 @@ void pc_usb_handle_note_off(byte channel, byte note, byte velocity) { //, byte c
     pc_usb_2_output->sendNoteOff(note, velocity); //, channel);
 }
 
+// for handling external midi clock from host's usb
+bool usb_midi_clock_ticked = false;
+unsigned long last_usb_midi_clock_ticked_at;
+void usb_midi_handle_clock() {
+  if (usb_midi_clock_ticked) {
+    Serial.printf("WARNING: received a usb midi clock tick at %u, but last one from %u was not yet processed (didn't process within gap of %u)!", millis(), last_usb_midi_clock_ticked_at, millis()-last_usb_midi_clock_ticked_at);
+  }
+  last_usb_midi_clock_ticked_at = millis();
+  usb_midi_clock_ticked = true;
+}
+bool check_and_unset_usb_midi_clock_ticked() {
+  bool v = usb_midi_clock_ticked;
+  usb_midi_clock_ticked = false;
+  return v;
+}
+void usb_midi_handle_start() {
+  if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
+    playing = true;
+    on_restart();
+  }
+}
+void usb_midi_handle_continue() {
+  if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
+    playing = true;
+  }
+}
+void usb_midi_handle_stop() {
+  if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
+    playing = false;
+  }
+}
+
 void setup_pc_usb() {
   usbMIDI.setHandleNoteOn(pc_usb_handle_note_on);
   usbMIDI.setHandleNoteOff(pc_usb_handle_note_off);
+
+  usbMIDI.setHandleClock(usb_midi_handle_clock);
+  usbMIDI.setHandleStart(usb_midi_handle_start);
+  usbMIDI.setHandleStop(usb_midi_handle_stop);
+  usbMIDI.setHandleContinue(usb_midi_handle_continue);
 }
 
 void read_usb_from_computer() {

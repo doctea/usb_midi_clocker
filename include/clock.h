@@ -2,6 +2,10 @@
 #include "bpm.h"
 //#include "midi_outs.h"
 
+#define CLOCK_INTERNAL 0
+#define CLOCK_EXTERNAL_USB_HOST 1
+#define NUM_CLOCK_SOURCES 2
+
 #ifdef USE_UCLOCK
 
   //void send_midi_serial_clocks();
@@ -36,6 +40,8 @@
 
 #else
   
+  extern int clock_mode;// = DEFAULT_CLOCK_MODE;
+
   /// use cheapclock clock
   extern unsigned long t1;
   void setup_cheapclock();

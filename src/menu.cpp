@@ -9,6 +9,7 @@
 #include "menu_sequencer.h"
 #include "menu_bpm.h"
 #include "menu_midi_mapper.h"
+#include "menu_clock_source.h"
 
 #include "midi_lestrum.h"
 
@@ -18,6 +19,7 @@
 #include "midi_outs.h"
 #include "midi_pc_usb.h"
 
+#include "clock.h"
 
 #ifdef ENABLE_BASS_TRANSPOSE
     void bass_transpose_changed(int last_value, int new_value) {
@@ -53,6 +55,8 @@ Menu *menu; // = Menu();
 LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH, PPQN, BEATS_PER_BAR, BARS_PER_PHRASE);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
+
+ClockSourceSelectorControl clock_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
@@ -127,6 +131,8 @@ void setup_menu() {
     
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
+
+    menu->add(&clock_selector);
 
     menu->add(&project_selector);
 

@@ -118,77 +118,71 @@ void loop()
 {
   //Serial.println("start of loop!"); Serial.flush();
 
-  static int loop_counter;
-  static bool lit = false;
-  loop_counter++;
-  if (loop_counter%1000000==0) {
-    digitalWrite(LED_BUILTIN, lit);
-    lit = !lit;
-    //Serial.println(F("100000th loop()"));
-  }
-  //ATOMIC(
-  Usb.Task();
-  while (usbMIDI.read());
-  //)
-
-  #ifndef USE_UCLOCK
-    static unsigned long last_ticked_time;
-
-    if ( playing && millis()-t1 >= ms_per_tick ) {
-      /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
-        Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
-      }*/
-      do_tick(ticks);
-      last_ticked_time = millis();
-      ticks++;
-
-      /*  // but thing maths works out better if this is called here?
-      if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
-        //in_ticks = ticks = 0;
-        on_restart();
-        //ATOMIC(
-          //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-        //)
-        restart_on_next_bar = false;
-      }
-      */
-
-      t1 = millis();
-    } else {
-      #ifdef ENABLE_SCREEN
-        //tft_update(ticks);
-        ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
-        static unsigned long last_drawn;
-        if (millis() - last_drawn > 50) {
-          menu->update_ticks(ticks);
-          menu->update_inputs();
-          menu->display(); //update(ticks);
-          last_drawn = millis();
-        }
-        //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
-      #endif
-    }
-  #else
-    noInterrupts();
-    signed long temp_tick = ticks;
-    interrupts();
-    if ((signed long) temp_tick > last_processed_tick) {
-      Serial.println("SHOULD TICK!");
-      do_tick(temp_tick);
-      last_processed_tick = temp_tick;
-    } else {
-      //Serial.printf("not ticking because %i is <= %i\n", ticks, last_processed_tick);
+  #ifdef DEBUG_LED
+    static int loop_counter;
+    static bool lit = false;
+    loop_counter++;
+    if (loop_counter%1000000==0) {
+      digitalWrite(LED_BUILTIN, lit);
+      lit = !lit;
+      //Serial.println(F("100000th loop()"));
     }
   #endif
+
+  Usb.Task();
+  //while (usbMIDI.read());
+
+  static unsigned long last_ticked_time;
+
+  bool ticked = false;
+  if (clock_mode==CLOCK_EXTERNAL_USB_HOST && check_and_unset_usb_midi_clock_ticked())
+    ticked = true;
+  else if (clock_mode==CLOCK_INTERNAL && playing && millis()-t1 >= ms_per_tick)
+    ticked = true;
+  
+  if ( ticked ) {
+    /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
+      Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
+    }*/
+    do_tick(ticks);
+    last_ticked_time = millis();
+    ticks++;
+
+    /*  // but thing maths works out better if this is called here?
+    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+      //in_ticks = ticks = 0;
+      on_restart();
+      //ATOMIC(
+        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+      //)
+      restart_on_next_bar = false;
+    }
+    */
+
+    t1 = millis();
+  } else {
+    #ifdef ENABLE_SCREEN
+      //tft_update(ticks);
+      ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
+      static unsigned long last_drawn;
+      if (millis() - last_drawn > 50) {
+        menu->update_ticks(ticks);
+        menu->update_inputs();
+        menu->display(); //update(ticks);
+        last_drawn = millis();
+      }
+      //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
+    #endif
+  }
 
   read_midi_serial_devices();
   loop_serial_usb_devices();
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
-    read_usb_from_computer();
     read_midi_usb_devices();
     loop_midi_usb_devices();
+    read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
 
   //Serial.println("end of loop!"); Serial.flush();

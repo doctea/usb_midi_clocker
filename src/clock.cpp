@@ -33,6 +33,8 @@
 
 #else
   
+  int clock_mode = DEFAULT_CLOCK_MODE;
+
   /// use cheapclock clock
   unsigned long t1 = millis();
   void setup_cheapclock() {

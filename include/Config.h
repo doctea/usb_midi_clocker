@@ -5,6 +5,10 @@
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 
+
+
+#define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
+
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN
     #define TFT_ST7789_T3
