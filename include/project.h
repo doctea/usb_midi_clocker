@@ -15,6 +15,8 @@ class Project {
     bool sequence_slot_has_file[NUM_STATES_PER_PROJECT];
     bool loop_slot_has_file[NUM_LOOPS_PER_PROJECT];
 
+    bool debug = false;
+
     void initialise_sequence_slots() {
         for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
             char filepath[255];
@@ -23,14 +25,14 @@ class Project {
             Serial.printf("sequence_slot_has_file[i] = %i for %s\n", sequence_slot_has_file[i], filepath);
         }
     }
-    void initialise_loop_slots() {
+    void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
 
         for (int i = 0 ; i < NUM_LOOPS_PER_PROJECT ; i++) {
             char filepath[255];
             sprintf(filepath, FILEPATH_LOOP, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
-            if (loop_slot_has_file[i]) {        // test whether file is actually empty or not
+            if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf("checking if slot %i is actually empty...\n");
                 mpk49_loop_track.load_state(this->current_project_number, i);
                 Serial.printf("loaded ok\n");
@@ -56,15 +58,21 @@ class Project {
         }
 
         void setup_project() {
-            initialise_sequence_slots();
-            initialise_loop_slots();
-
             setProjectNumber(this->current_project_number);
+
+            initialise_sequence_slots();
+            initialise_loop_slots(false);
         }
 
         void setProjectNumber(int number) {
-            this->current_project_number = number;
-            make_project_folders(number);
+            if (this->debug) Serial.printf("Project#setProjectNumber(%i)...\n", number);
+            if (this->current_project_number!=number) {
+                this->current_project_number = number;
+                if (this->debug) Serial.printf("Switched to project number %i\n", this->current_project_number);
+                this->initialise_loop_slots();
+                this->initialise_sequence_slots();
+                make_project_folders(number);
+            }
         }
         int getProjectNumber() {
             return this->current_project_number;

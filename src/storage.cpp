@@ -35,7 +35,7 @@ namespace storage {
   void make_project_folders(int project_number) {
     char path[255];
     sprintf(path, "project%i", project_number);
-    Serial.printf("Checking exists %s..");
+    Serial.printf("Checking exists %s..", path);
     if (!SD.exists(path)) {
       Serial.println("making!\n");
       SD.mkdir(path);
@@ -44,7 +44,7 @@ namespace storage {
     }
     
     sprintf(path, "project%i/sequences", project_number);
-    Serial.printf("Checking exists %s..");
+    Serial.printf("Checking exists %s..", path);
     if (!SD.exists(path)) {
       Serial.println("making!\n");
       SD.mkdir(path);
@@ -53,7 +53,7 @@ namespace storage {
     }
 
     sprintf(path, "project%i/loops", project_number);
-    Serial.printf("Checking exists %s..");
+    Serial.printf("Checking exists %s..", path);
     if (!SD.exists(path)) {
       Serial.println("making!\n");
       SD.mkdir(path);
