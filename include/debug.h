@@ -1,3 +1,4 @@
+#include <Arduino.h>
 
 #if defined(__arm__) && defined(CORE_TEENSY)
   void debug_free_ram() {

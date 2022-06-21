@@ -1,3 +1,6 @@
+#ifndef USB__INCLUDED
+#define USB__INCLUDED
+
 #include <UHS2-MIDI.h>
 #include <usbhub.h>
 
@@ -14,3 +17,5 @@ UHS2MIDI_CREATE_INSTANCE(&Usb, 0, Midi3);
 MIDI_NAMESPACE::MidiInterface<UHS2MIDI_NAMESPACE::uhs2MidiTransport> *Midi[] {&Midi1, &Midi2, &Midi3};
 //The instance name of uhs2MidiTransport is prefixed with __uhs2.  Can also fetch this from eg Midi1->getTransport()
 UHS2MIDI_NAMESPACE::uhs2MidiTransport *MidiTransports[] {&__uhs2Midi1, &__uhs2Midi2, &__uhs2Midi3};
+
+#endif

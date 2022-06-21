@@ -35,10 +35,13 @@ int duration = 2;
 
 #include "multi_usb_handlers.h"
 
+#include "midi_input.h"
+
 void setup()
 {
-  Serial.begin(115200);
-  while (!Serial);
+  /*Serial.begin(115200);
+  while (!Serial);*/
+  setup_serial_midi_input();
 
   pinMode(PIN_CLOCK_1, OUTPUT);
   pinMode(PIN_CLOCK_2, OUTPUT);
@@ -46,7 +49,9 @@ void setup()
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
 
-  setup_multi_usb();
+  #ifdef ENABLE_USB_HOST
+    setup_multi_usb();
+  #endif
   delay( 1000 );
   
   Serial.println(F("Arduino ready."));
@@ -77,23 +82,27 @@ void loop()
     Usb.Task();
   )
 
-  #ifdef ENABLE_BEATSTEP
-      beatstep_loop();
-  #endif
+  loop_serial_midi();
 
-  #ifdef ENABLE_APCMINI
-      apcmini_loop();
-  #endif
+  #ifdef ENABLE_USB_HOST
+    #ifdef ENABLE_BEATSTEP
+        beatstep_loop();
+    #endif
 
-  #ifdef ENABLE_BAMBLE
-      bamble_loop();
+    #ifdef ENABLE_APCMINI
+        apcmini_loop();
+    #endif
+
+    #ifdef ENABLE_BAMBLE
+        bamble_loop();
+    #endif
   #endif
 
   #ifndef USE_UCLOCK
     bool should_tick = false;
-    if (mode_clock==CLOCK_EXTERNAL_USB_HOST && check_and_unset_usb_midi_clock_ticked())
+    if (clock_mode==CLOCK_EXTERNAL_USB_HOST && check_and_unset_usb_midi_clock_ticked())
       should_tick = playing && true;
-    else if (mode_clock==CLOCK_INTERNAL) 
+    else if (clock_mode==CLOCK_INTERNAL) 
       should_tick = playing && millis()-t1 > ms_per_tick;
 
     if ( should_tick ) {
@@ -137,16 +146,18 @@ void do_tick(volatile uint32_t in_ticks) {
 
   update_cv_outs(in_ticks);
 
-  #ifdef ENABLE_BEATSTEP
-      beatstep_on_tick(in_ticks);
-  #endif
+  #ifdef ENABLE_USB_HOST
+    #ifdef ENABLE_BEATSTEP
+        beatstep_on_tick(in_ticks);
+    #endif
 
-  #ifdef ENABLE_BAMBLE
-      bamble_on_tick(in_ticks);
-  #endif
+    #ifdef ENABLE_BAMBLE
+        bamble_on_tick(in_ticks);
+    #endif
 
-  #ifdef ENABLE_APCMINI
-      apcmini_on_tick(in_ticks);
+    #ifdef ENABLE_APCMINI
+        apcmini_on_tick(in_ticks);
+    #endif
   #endif
 
   #ifdef DEBUG_TICKS

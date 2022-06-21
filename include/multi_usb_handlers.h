@@ -1,9 +1,13 @@
+#include <Arduino.h>
+
 #include "bpm.h"
 /*
 BEATSTEP:   Initialised device vendorid: 7285   productid: 518
 BAMBLEWEENY:  Initialised device vendorid: 10374    productid: 32779
 AKAI APCMINI: Initialised device vendorid: 2536   productid: 40
 */
+
+#include "usb.h"
 
 void setupmidi(uint8_t idx)
 {
