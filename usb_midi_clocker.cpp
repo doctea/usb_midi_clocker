@@ -22,9 +22,9 @@ void on_restart();
 void do_tick(uint32_t ticks);
 
 #ifdef USE_UCLOCK
-#include <uClock.h>
+  #include <uClock.h>
 #else
-#define ATOMIC(X) X
+  #define ATOMIC(X) X
 #endif
 
 int duration = 2;
@@ -35,7 +35,7 @@ int duration = 2;
 #include "clock.h"
 
 #ifdef ENABLE_SEQUENCER
-#include "sequencer.h"
+  #include "sequencer.h"
 #endif
 #include "cv_outs.h"
 
@@ -61,16 +61,16 @@ void setup()
   
   Serial.println(F("Arduino ready."));
 
-#ifdef ENABLE_SEQUENCER
-  init_sequence();
-#endif
+  #ifdef ENABLE_SEQUENCER
+    init_sequence();
+  #endif
 
-#ifdef USE_UCLOCK
-  Serial.println(F("Initialising uClock.."));
-  setup_uclock();
-#else
-  setup_cheapclock();
-#endif
+  #ifdef USE_UCLOCK
+    Serial.println(F("Initialising uClock.."));
+    setup_uclock();
+  #else
+    setup_cheapclock();
+  #endif
 
   Serial.println(F("Arduino ready."));
 }
@@ -87,25 +87,25 @@ void loop()
     Usb.Task();
   )
 
-#ifdef ENABLE_BEATSTEP
-    beatstep_loop();
-#endif
+  #ifdef ENABLE_BEATSTEP
+      beatstep_loop();
+  #endif
 
-#ifdef ENABLE_APCMINI
-    apcmini_loop();
-#endif
+  #ifdef ENABLE_APCMINI
+      apcmini_loop();
+  #endif
 
-#ifdef ENABLE_BAMBLE
-    bamble_loop();
-#endif
+  #ifdef ENABLE_BAMBLE
+      bamble_loop();
+  #endif
 
-#ifndef USE_UCLOCK
-    if ( playing && millis()-t1 > ms_per_tick ) {
-      do_tick(ticks);
-      ticks++;
-      t1 = millis();
-    }
-#endif
+  #ifndef USE_UCLOCK
+      if ( playing && millis()-t1 > ms_per_tick ) {
+        do_tick(ticks);
+        ticks++;
+        t1 = millis();
+      }
+  #endif
 
   //Serial.println(F("."));
   /*if (!playing && single_step) {
@@ -117,45 +117,45 @@ void loop()
 
 // called inside interrupt
 void do_tick(volatile uint32_t in_ticks) {  
-/*#ifdef DEBUG_TICKS
-    unsigned int delta = millis()-t1;
+  /*#ifdef DEBUG_TICKS
+      unsigned int delta = millis()-t1;
 
-    Serial.print(ticks);
-    Serial.print(F(":\tTicked with delta\t"));
-    Serial.print(delta);
-    Serial.print(F("!\t(ms_per_tick is "));
-    Serial.print(ms_per_tick);
-    Serial.print(F(") sending clock for [ "));
-#endif*/
+      Serial.print(ticks);
+      Serial.print(F(":\tTicked with delta\t"));
+      Serial.print(delta);
+      Serial.print(F("!\t(ms_per_tick is "));
+      Serial.print(ms_per_tick);
+      Serial.print(F(") sending clock for [ "));
+  #endif*/
 
-    ticks = in_ticks;
-    
-    if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
-      //in_ticks = ticks = 0;
-      on_restart();
-      //ATOMIC(
-        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-      //)
-      restart_on_next_bar = false;
-    }
+  ticks = in_ticks;
+  
+  if (restart_on_next_bar && is_bpm_on_bar(in_ticks)) {
+    //in_ticks = ticks = 0;
+    on_restart();
+    //ATOMIC(
+      //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+    //)
+    restart_on_next_bar = false;
+  }
 
-    update_cv_outs(in_ticks);
+  update_cv_outs(in_ticks);
 
-#ifdef ENABLE_BEATSTEP
-    beatstep_on_tick(in_ticks);
-#endif
+  #ifdef ENABLE_BEATSTEP
+      beatstep_on_tick(in_ticks);
+  #endif
 
-#ifdef ENABLE_BAMBLE
-    bamble_on_tick(in_ticks);
-#endif
+  #ifdef ENABLE_BAMBLE
+      bamble_on_tick(in_ticks);
+  #endif
 
-#ifdef ENABLE_APCMINI
-    apcmini_on_tick(in_ticks);
-#endif
+  #ifdef ENABLE_APCMINI
+      apcmini_on_tick(in_ticks);
+  #endif
 
-#ifdef DEBUG_TICKS
-  Serial.println(F(" ]"));
-#endif 
+  #ifdef DEBUG_TICKS
+      Serial.println(F(" ]"));
+  #endif 
 
   //ticks++;
   //t1 = millis();
