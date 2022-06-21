@@ -10,7 +10,7 @@
 #define CLOCK_MULTIPLIER_MAX  16.0
 #define CLOCK_DELAY_MAX 15
 
-#define NUM_CLOCK_MULTIPLIER_VALUES 8
+#define NUM_CLOCK_MULTIPLIER_VALUES 9
 float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
   0.25,     // 0
   0.5,      // 1
@@ -20,8 +20,9 @@ float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
   8,        // 5
   16,       // 6
   32,       // 7
+  64,       // 8
 };
-#define CLOCK_MULTIPLIER_OFF  32.0
+#define CLOCK_MULTIPLIER_OFF  64.0
 
 float get_clock_multiplier(byte i) {
   return clock_multiplier_values[current_state.clock_multiplier[i]];
@@ -52,7 +53,7 @@ void decrease_clock_delay(byte clock_selected, byte amount = 1) {
 }
 void increase_clock_delay(byte clock_selected, byte amount = 1) {
   current_state.clock_delay[clock_selected] += amount;
-  if (current_state.clock_delay[clock_selected]>7)
+  if (current_state.clock_delay[clock_selected]>MAX_CLOCK_DELAY)
     current_state.clock_delay[clock_selected] = 0;
   Serial.print(F("Increased selected clock delay to "));
   Serial.println(current_state.clock_delay[clock_selected]);
@@ -69,7 +70,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset = 0) {
 }
 
 #ifdef ENABLE_SEQUENCER
-#include "sequencer.h"
+  #include "sequencer.h"
 #endif
 
 void update_cv_outs(unsigned long ticks) {
@@ -79,27 +80,27 @@ void update_cv_outs(unsigned long ticks) {
     bool should_go_low  = false;
 
     if (
-#ifdef ENABLE_SEQUENCER
-      should_trigger_sequence(ticks, i)
-#endif
-#if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
-      ||
-#endif
-#ifdef ENABLE_CLOCKS
-      should_trigger_clock(ticks, i)
-#endif
+      #ifdef ENABLE_SEQUENCER
+            should_trigger_sequence(ticks, i)
+      #endif
+      #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+            ||
+      #endif
+      #ifdef ENABLE_CLOCKS
+            should_trigger_clock(ticks, i)
+      #endif
     ) {
         should_go_high = true;
     } else if (
-#ifdef ENABLE_SEQUENCER
-      should_trigger_sequence(ticks, i, duration)
-#endif
-#if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
-      ||
-#endif
-#ifdef ENABLE_CLOCKS
-      should_trigger_clock(ticks, i, duration)
-#endif
+      #ifdef ENABLE_SEQUENCER
+            should_trigger_sequence(ticks, i, duration)
+      #endif
+      #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+            ||
+      #endif
+      #ifdef ENABLE_CLOCKS
+            should_trigger_clock(ticks, i, duration)
+      #endif
     ) {
       should_go_low = true;
     }
@@ -108,6 +109,5 @@ void update_cv_outs(unsigned long ticks) {
     else if (should_go_low)  digitalWrite(PIN_CLOCK_START+i, LOW);
         
   }
-
 
 }
