@@ -6,6 +6,9 @@
 
 // midi settings
 //#define TRUE_MIDI_SERIAL        // use true MIDI baud rate, for when eg uno controller has been flashed with usbmidiklik
+//#define TRUE_MIDI_SERIAL true   // use true MIDI baud rate, for when eg uno controller has been flashed with usbmidiklik
+#define TRUE_MIDI_SERIAL false  // for using Hairless
+
 #define BAUDRATE_HAIRLESS 115200  // for use with Hairless MIDI Serial Bridge
 
 // midi / time signature settings

@@ -19,7 +19,9 @@ void do_tick(uint32_t ticks);
 
 int duration = 2;
 
-#include "usb.h"
+#ifdef ENABLE_USB_HOST
+  #include "usb.h"
+#endif
 
 #include "bpm.h"
 #include "clock.h"
@@ -41,13 +43,13 @@ void setup()
 {
   /*Serial.begin(115200);
   while (!Serial);*/
-  setup_serial_midi_input();
-
   pinMode(PIN_CLOCK_1, OUTPUT);
   pinMode(PIN_CLOCK_2, OUTPUT);
 
   pinMode(PIN_CLOCK_3, OUTPUT);
   pinMode(PIN_CLOCK_4, OUTPUT);
+
+  setup_serial_midi_input();
 
   #ifdef ENABLE_USB_HOST
     setup_multi_usb();
@@ -77,10 +79,17 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
-  //if (loop_counter%100==0) Serial.println(F("100th loop()"));
-  ATOMIC(
-    Usb.Task();
-  )
+  //static long loop_count = 0;
+  if ((millis()/1000)%2==0) 
+    digitalWrite(LED_BUILTIN, HIGH);
+  else
+    digitalWrite(LED_BUILTIN, LOW);
+  //if (loop_counter%100==0) Serial.println(F("1g  00th loop()"));
+  #ifdef ENABLE_USE_HOST
+    ATOMIC(
+      Usb.Task();
+    )
+  #endif
 
   loop_serial_midi();
 

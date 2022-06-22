@@ -14,11 +14,42 @@ void setup_serial_midi_input() {
   MIDI.setHandleContinue(serial_midi_handle_continue);
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
-  #ifdef TRUE_MIDI_SERIAL
+  
+  pinMode(PIN_A0, INPUT_PULLUP);
+  pinMode(PIN_A1, INPUT_PULLUP);
+
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  digitalWrite(LED_BUILTIN, LOW);
+  delay(250);
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  if (TRUE_MIDI_SERIAL || (digitalRead(PIN_A0) && !digitalRead(PIN_A1))) {
+    Serial.begin(31250);
+    digitalWrite(PIN_CLOCK_1, HIGH);
+    digitalWrite(PIN_CLOCK_2, HIGH);
+    digitalWrite(PIN_CLOCK_3, HIGH);
+    digitalWrite(PIN_CLOCK_4, HIGH);
+    delay(1000);
+    digitalWrite(PIN_CLOCK_1, LOW);
+    digitalWrite(PIN_CLOCK_2, LOW);
+    digitalWrite(PIN_CLOCK_3, LOW);
+    digitalWrite(PIN_CLOCK_4, LOW);
+  } else {
+    Serial.begin(BAUDRATE_HAIRLESS);
+    /*while (!Serial);
+    Serial.println("Started..");*/
+  }
+
+  delay(1000);
+  digitalWrite(LED_BUILTIN, LOW);
+
+
+  /*#ifdef TRUE_MIDI_SERIAL
     Serial.begin(32150);
   #else
     Serial.begin(BAUDRATE_HAIRLESS);
-  #endif
+  #endif*/
 }
 
 void loop_serial_midi() {
