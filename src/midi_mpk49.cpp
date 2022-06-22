@@ -64,12 +64,12 @@ void MPK49_on_tick(uint32_t ticks) {
 
 // called inside interrupt
 void MPK49_on_restart() {
-  /*if (midi_MPK49) {
+  if (ixMPK49!=0xFF && midi_MPK49!=nullptr) {
     //ATOMIC(
       midi_MPK49->sendRealTime(usbMIDI.Stop); //sendStop();
       midi_MPK49->sendRealTime(usbMIDI.Start); //sendStart();
     //)
-  }*/
+  }
 }
 
 void mpk49_handle_note_on(byte channel, byte note, byte velocity) {

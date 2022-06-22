@@ -53,7 +53,7 @@ void bamble_on_tick(uint32_t ticks) {
 
 // called inside interrupt
 void bamble_on_restart() {
-  if (midi_bamble) {
+  if (midi_bamble!=nullptr) {
     //ATOMIC(
       midi_bamble->sendRealTime(usbMIDI.Stop); //sendStop();
       midi_bamble->sendRealTime(usbMIDI.Start); //sendStart();

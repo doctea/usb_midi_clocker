@@ -109,7 +109,7 @@ void beatstep_on_tick(volatile uint32_t ticks) {
 
 // called inside interrupt
 void beatstep_on_restart() {
-  if (midi_beatstep) {
+  if (midi_beatstep!=nullptr) {
     Serial.println(F("beatstep_on_restart()"));
     //ATOMIC(
       midi_beatstep->sendRealTime(usbMIDI.Stop); //sendStop();
