@@ -26,6 +26,7 @@ Proof-of-concept of clocking multiple USB MIDI devices and outputting Eurorack C
   - Akai MPK49 (clock+MIDI looping functions)
   - Akai APCMini (used as interface for sequencer+clock divisions)
   - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
+  - A [mystery device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 for info + [custom menu system](https://github.com/doctea/mymenu)
   - Controlled with rotary encoder + buttons and via APCMini 
