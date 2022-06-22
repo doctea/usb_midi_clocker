@@ -1,6 +1,8 @@
 - This version is for running on an Arduino Uno with a USB Host Shield 2.0.  I'm now working mostly on the Teensy version but this branch might still be of interest and use to someone.
 - This branch now includes optional experimental uClock mode -- which works so long as you don't send any CC messages :( https://github.com/midilab/uClock/issues/4#issuecomment-1066212517
 - Non-uClock mode seems stable, but sending CC messages (eg faders on AKAI APCMini) causes noticeable stutter, lag and timing problems
+- Look in Config.h to configure features & settings, including turning on USB Host mode!
+- Get in touch if you are interested in using or contributing
 
 # usb_midi_clocker
 
@@ -8,6 +10,7 @@ Proof-of-concept of clocking multiple USB MIDI devices and outputing Eurorack CV
 
 - Works with Arturia Beatstep (requires receiving a MIDI start message externally before it will listen to external clock!)
 - note: as of 2022-02-28, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
+- now syncs with external MIDI clock over incoming USB serial from host (check Config.h to switch between using Hairless Serial Bridge and real MIDI baudrate
 
 ## Explanation
 
@@ -31,9 +34,10 @@ It also has a very rudimentary sequencer, using Akai APCMini for input+display, 
 
 ### TODO/Future 
 
-- Port to Teensy 4.1 and merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
+- Port to Teensy 4.1 DONE in the main branch where most dev will continue - Uno became too limited for what I wanted to do
+- Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
 - Get it working in uClock mode without crashes
-- Sync from external input (MIDI and CV)
+- Sync from external CV
 - More outputs
 - MIDI DIN or TRS input + output
 - Better sequencer
