@@ -21,26 +21,26 @@ Proof-of-concept of clocking multiple USB MIDI devices and outputting Eurorack C
 ## Features
 
 - Support USB MIDI devices (more can be added in code):
- - Arturia BeatStep (original, clock+note routing/transposition)
- - Arturia KeyStep (clock)
- - Akai MPK49 (clock+MIDI looping functions)
- - Akai APCMini (used as interface for sequencer+clock divisions)
- - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
+  - Arturia BeatStep (original, clock+note routing/transposition)
+  - Arturia KeyStep (clock)
+  - Akai MPK49 (clock+MIDI looping functions)
+  - Akai APCMini (used as interface for sequencer+clock divisions)
+  - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
 - Feedback & configuration via UI
- - ST7899 display using ST7899_t3 for info + [custom menu system](https://github.com/doctea/mymenu)
- - Controlled with rotary encoder + buttons and via APCMini 
+  - ST7899 display using ST7899_t3 for info + [custom menu system](https://github.com/doctea/mymenu)
+  - Controlled with rotary encoder + buttons and via APCMini 
 - Option to sync to external MIDI clock and obey start/stop from USB host (ie PC)
 - Or play from internal clock, with BPM controlled by APCMini slider
   - With APCMini shortcuts to 'send restarts' to synced devices to get everything in sync
 - CV outputs for clock divisions and sequencer tracks
- - on Teensy's digital pins via level shifter *TODO:* schematic/instructions- 
- - 4 tracks of an 8-beat sequencer, controllable via APCMini
-   - trigger once per beat, twice per beat, 4 times per beat, 0 times per beat
- - 4 clock division outputs, configurable on-the-fly via APCMini
-  - 32nds, 16ths, 8ths, 4ths, whole note, half bar, bar, 2-bar, phrase, two phrases
-  - offset up to +/-7 beats from start of phrase
- - Save sequences and clock settings to SD card
- - 8 save slots for sequencer+clock settings per project
+  - on Teensy's digital pins via level shifter *TODO:* schematic/instructions- 
+  - 4 tracks of an 8-beat sequencer, controllable via APCMini
+    - trigger once per beat, twice per beat, 4 times per beat, 0 times per beat
+  - 4 clock division outputs, configurable on-the-fly via APCMini
+    - 32nds, 16ths, 8ths, 4ths, whole note, half bar, bar, 2-bar, phrase, two phrases
+    - offset up to +/-7 beats from start of phrase
+  - Save sequences and clock settings to SD card
+  - 8 save slots for sequencer+clock settings per project
 - Multiple (effectively unlimited?) projects
 - Configurable MIDI device routing (device:channel input to device:channel output)
 - Transposition of routed MIDI (eg currently maps all notes incoming from Beatstep to C2-C3 range on MIDI serial output that goes to my Neutron)
