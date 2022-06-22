@@ -5,9 +5,8 @@
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 
-
-
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
+#define DEFAULT_SUBCLOCKER_DIVISOR    4
 
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN
@@ -39,6 +38,7 @@
     #define ENABLE_BAMBLE
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
+    #define ENABLE_SUBCLOCKER
 
     #define ENABLE_APCMINI_DISPLAY
 #endif

@@ -3,6 +3,7 @@
 
 #include "midi_bamble.h"
 #include "midi_beatstep.h"
+#include "midi_subclocker.h"
 
 #include "tft.h"
 
@@ -52,57 +53,66 @@ void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {
     return;
   }
 
-#ifdef ENABLE_BEATSTEP
-  if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
-    ixBeatStep = idx;
-    Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
-    midi_beatstep = usb_midi_device[idx];
-    usb_midi_connected[idx] = packed_id;
-    beatstep_init();
-    Serial.println(F("completed Beatstep init"));
-    return;
-  } 
-#endif
-#ifdef ENABLE_APCMINI
-  if ( vid == 0x09e8 && pid == 0x0028 ) {   //is AKAI APCmini?
-    ixAPCmini = idx;
-    Serial.printf(F("AKAI APCmini connected on idx %i...\n"),idx);
-    midi_apcmini = usb_midi_device[idx];
-    usb_midi_connected[idx] = packed_id;
-    apcmini_init();
-    return;
-  }
-#endif
-#ifdef ENABLE_BAMBLE
-  if ( vid == 0x2886 && pid == 0x800B ) {            //is BAMBLE?
-    ixBamble = idx;
-    Serial.printf(F("BAMBLEWEENY connected on idx %i....\n"),idx);
-    midi_bamble = usb_midi_device[idx];
-    usb_midi_connected[idx] = packed_id;
-    bamble_init();
-    return;
-  }
-#endif
-#ifdef ENABLE_MPK49
-  if (vid == 0x09E8 && pid== 0x006B) {
-    ixMPK49 = idx;
-    Serial.printf(F("MPK49 connected on idx %i....\n"),idx);
-    midi_MPK49 = usb_midi_device[idx];
-    usb_midi_connected[idx] = packed_id;
-    MPK49_init();
-    return;
-  }
-#endif
-#ifdef ENABLE_KEYSTEP
-  if (vid == 0x1C75 && pid== 0x0288) {
-    ixKeystep = idx;
-    Serial.printf(F("Keystep connected on idx %i....\n"),idx);
-    midi_keystep = usb_midi_device[idx];
-    usb_midi_connected[idx] = packed_id;
-    keystep_init();
-    return;
-  }
-#endif
+  #ifdef ENABLE_BEATSTEP
+    if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
+      ixBeatStep = idx;
+      Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
+      midi_beatstep = usb_midi_device[idx];
+      usb_midi_connected[idx] = packed_id;
+      beatstep_init();
+      Serial.println(F("completed Beatstep init"));
+      return;
+    } 
+  #endif
+  #ifdef ENABLE_APCMINI
+    if ( vid == 0x09e8 && pid == 0x0028 ) {   //is AKAI APCmini?
+      ixAPCmini = idx;
+      Serial.printf(F("AKAI APCmini connected on idx %i...\n"),idx);
+      midi_apcmini = usb_midi_device[idx];
+      usb_midi_connected[idx] = packed_id;
+      apcmini_init();
+      return;
+    }
+  #endif
+  #ifdef ENABLE_BAMBLE
+    if ( vid == 0x2886 && pid == 0x800B ) {            //is BAMBLE?
+      ixBamble = idx;
+      Serial.printf(F("BAMBLEWEENY connected on idx %i....\n"),idx);
+      midi_bamble = usb_midi_device[idx];
+      usb_midi_connected[idx] = packed_id;
+      bamble_init();
+      return;
+    }
+  #endif
+  #ifdef ENABLE_MPK49
+    if (vid == 0x09E8 && pid== 0x006B) {
+      ixMPK49 = idx;
+      Serial.printf(F("MPK49 connected on idx %i....\n"),idx);
+      midi_MPK49 = usb_midi_device[idx];
+      usb_midi_connected[idx] = packed_id;
+      MPK49_init();
+      return;
+    }
+  #endif
+  #ifdef ENABLE_KEYSTEP
+    if (vid == 0x1C75 && pid== 0x0288) {
+      ixKeystep = idx;
+      Serial.printf(F("Keystep connected on idx %i....\n"),idx);
+      midi_keystep = usb_midi_device[idx];
+      usb_midi_connected[idx] = packed_id;
+      keystep_init();
+      return;
+    }
+  #endif
+  #ifdef ENABLE_SUBCLOCKER
+    if ( vid == 0x1337 && pid == 0x1337 ) {            //is SUBCLOCKER?
+      ixSubclocker = idx;
+      Serial.printf(F("SUBCLOCKER connected on idx %i.\n"),idx);
+      midi_subclocker = usb_midi_device[idx];
+      subclocker_init();
+      return;
+    }
+  #endif
 
   usb_midi_connected[idx] = packed_id;
   Serial.print(F("Detected unknown (or disabled) device vid="));
@@ -120,39 +130,46 @@ void update_usb_device_connections() {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
       // unassign the midi_xxx helper pointers if appropriate
       #ifdef ENABLE_BAMBLE
-      if (midi_bamble==usb_midi_device[port]) {
-        Serial.printf("Nulling ixBamble and midi_bamble\n");
-        ixBamble = 0xFF;
-        midi_bamble = nullptr;
-      }
+        if (midi_bamble==usb_midi_device[port]) {
+          Serial.printf("Nulling ixBamble and midi_bamble\n");
+          ixBamble = 0xFF;
+          midi_bamble = nullptr;
+        }
       #endif
       #ifdef ENABLE_BEATSTEP
-      if (midi_beatstep==usb_midi_device[port]) {
-        Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
-        ixBeatStep = 0xFF;
-        midi_beatstep = nullptr;
-      }
+        if (midi_beatstep==usb_midi_device[port]) {
+          Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
+          ixBeatStep = 0xFF;
+          midi_beatstep = nullptr;
+        }
       #endif
       #ifdef ENABLE_APCMINI
-      if (midi_apcmini==usb_midi_device[port]) {
-        Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
-        ixAPCmini = 0xFF;
-        midi_apcmini = nullptr;
-      }
+        if (midi_apcmini==usb_midi_device[port]) {
+          Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
+          ixAPCmini = 0xFF;
+          midi_apcmini = nullptr;
+        }
       #endif
       #ifdef ENABLE_MPK49
-      if (midi_MPK49==usb_midi_device[port]) {
-        Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
-        ixMPK49 = 0xFF;
-        midi_MPK49 = nullptr;
-      }
+        if (midi_MPK49==usb_midi_device[port]) {
+          Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
+          ixMPK49 = 0xFF;
+          midi_MPK49 = nullptr;
+        }
       #endif
       #ifdef ENABLE_KEYSTEP
-      if (midi_keystep==usb_midi_device[port]) {
-        Serial.printf("Nulling ixKeystep and midi_keystep\n");
-        ixKeystep = 0xFF;
-        midi_keystep = nullptr;
-      }
+        if (midi_keystep==usb_midi_device[port]) {
+          Serial.printf("Nulling ixKeystep and midi_keystep\n");
+          ixKeystep = 0xFF;
+          midi_keystep = nullptr;
+        }
+      #endif
+      #ifdef ENABLE_SUBCLOCKER
+        if (midi_subclocker==usb_midi_device[port]) {
+          Serial.printf("Nulling ixSubclocker and midi_subclocker\n");
+          ixSubclocker = 0xFF;
+          midi_subclocker = nullptr;
+        }
       #endif
 
       Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_connected[port]);
@@ -213,6 +230,12 @@ void send_midi_usb_clocks() {
       midi_MPK49->sendRealTime(midi::Clock);
     }
   #endif
+  #ifdef ENABLE_SUBCLOCKER
+    if (ixSubclocker!=0xFF) {
+      subclocker_send_clock(ticks);
+      //midi_subclocker->sendRealTime(midi::Clock);
+    }
+  #endif
 }
 
 void loop_midi_usb_devices() {
@@ -247,15 +270,15 @@ void on_restart() {
 
   Serial.println(F("on_restart()==>"));
 
-#ifdef USE_UCLOCK
-  /*uClock.setTempo(bpm_current); // todo: probably not needed?
-  Serial.println(F("reset tempo"));
-  uClock.resetCounters();
-  Serial.println(F("reset counters"));*/
-#else
-  ticks = 0;
-  Serial.println(F("reset ticks"));
-#endif
+  #ifdef USE_UCLOCK
+    /*uClock.setTempo(bpm_current); // todo: probably not needed?
+    Serial.println(F("reset tempo"));
+    uClock.resetCounters();
+    Serial.println(F("reset counters"));*/
+  #else
+    ticks = 0;
+    Serial.println(F("reset ticks"));
+  #endif
   //noInterrupts();
   ticks = 0;
   //interrupts();
@@ -263,27 +286,37 @@ void on_restart() {
   
   send_midi_serial_stop_start();
 
-#ifdef ENABLE_BEATSTEP
-  Serial.print(F("restart beatstep..."));
-  beatstep_on_restart();
-  Serial.println(F("restarted"));
-#endif
-#ifdef ENABLE_BAMBLE
-  Serial.print(F("restart bamble..."));
-  bamble_on_restart();
-  Serial.println(F("restarted"));
-#endif
-#ifdef ENABLE_APCMINI
-  Serial.print(F("restart apcmini..."));
-  apcmini_on_restart();
-  Serial.println(F("restarted"));
-  redraw_immediately = true;
-#endif
-#ifdef ENABLE_KEYSTEP
-  Serial.print(F("restart keystep..."));
-  keystep_on_restart();
-  Serial.println(F("restarted"));
-#endif
+  #ifdef ENABLE_BEATSTEP
+    Serial.print(F("restart beatstep..."));
+    beatstep_on_restart();
+    Serial.println(F("restarted"));
+  #endif
+  #ifdef ENABLE_BAMBLE
+    Serial.print(F("restart bamble..."));
+    bamble_on_restart();
+    Serial.println(F("restarted"));
+  #endif
+  #ifdef ENABLE_APCMINI
+    Serial.print(F("restart apcmini..."));
+    apcmini_on_restart();
+    Serial.println(F("restarted"));
+    redraw_immediately = true;
+  #endif
+  #ifdef ENABLE_KEYSTEP
+    Serial.print(F("restart keystep..."));
+    keystep_on_restart();
+    Serial.println(F("restarted"));
+  #endif
+  #ifdef ENABLE_MPK49
+    Serial.print(F("restart mpk49..."));
+    MPK49_on_restart();
+    Serial.println(F("restarted"));
+  #endif
+  #ifdef ENABLE_SUBCLOCKER
+    Serial.print(F("restart subclocker..."));
+    subclocker_on_restart();
+    Serial.println(F("restarted"));
+  #endif
 
   Serial.println(F("<==on_restart()"));
 }
@@ -299,7 +332,6 @@ void setup_multi_usb() {
     digitalWrite(LED_BUILTIN, LOW);
   }
   tft_print((char*)"\n");
-
 }
 
 /*
