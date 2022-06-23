@@ -24,7 +24,7 @@ extern MIDIDevice_BigBuffer * usb_midi_device[8];/* = {
 
 extern uint64_t usb_midi_connected[8]; //= { 0,0,0,0,0,0,0,0 };
 
-bool check_and_unset_usb_midi_clock_ticked();
+bool check_and_unset_pc_usb_midi_clock_ticked();
 
 
 #endif

@@ -135,7 +135,7 @@ void loop()
   static unsigned long last_ticked_time;
 
   bool ticked = false;
-  if (clock_mode==CLOCK_EXTERNAL_USB_HOST && check_and_unset_usb_midi_clock_ticked())
+  if (clock_mode==CLOCK_EXTERNAL_USB_HOST && check_and_unset_pc_usb_midi_clock_ticked())
     ticked = true;
   else if (clock_mode==CLOCK_INTERNAL && playing && millis()-t1 >= ms_per_tick)
     ticked = true;

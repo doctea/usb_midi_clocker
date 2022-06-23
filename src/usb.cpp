@@ -61,7 +61,7 @@ void pc_usb_handle_note_off(byte channel, byte note, byte velocity) { //, byte c
 // for handling external midi clock from host's usb
 bool usb_midi_clock_ticked = false;
 unsigned long last_usb_midi_clock_ticked_at;
-void usb_midi_handle_clock() {
+void pc_usb_midi_handle_clock() {
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST && usb_midi_clock_ticked) {
     Serial.printf("WARNING: received a usb midi clock tick at %u, but last one from %u was not yet processed (didn't process within gap of %u)!\n", millis(), last_usb_midi_clock_ticked_at, millis()-last_usb_midi_clock_ticked_at);
   }
@@ -71,7 +71,7 @@ void usb_midi_handle_clock() {
   last_usb_midi_clock_ticked_at = millis();
   usb_midi_clock_ticked = true;
 }
-bool check_and_unset_usb_midi_clock_ticked() {
+bool check_and_unset_pc_usb_midi_clock_ticked() {
   bool v = usb_midi_clock_ticked;
   usb_midi_clock_ticked = false;
   /*if(clock_mode==CLOCK_EXTERNAL_USB_HOST && ticks%PPQN==0) {  // TODO: figure out why this isn't working and fix
@@ -79,19 +79,19 @@ bool check_and_unset_usb_midi_clock_ticked() {
   }*/
   return v;
 }
-void usb_midi_handle_start() {
+void pc_usb_midi_handle_start() {
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
     //tap_tempo_tracker.reset();
     playing = true;
     on_restart();
   }
 }
-void usb_midi_handle_continue() {
+void pc_usb_midi_handle_continue() {
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
     playing = true;
   }
 }
-void usb_midi_handle_stop() {
+void pc_usb_midi_handle_stop() {
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
     playing = false;
   }
@@ -101,10 +101,10 @@ void setup_pc_usb() {
   usbMIDI.setHandleNoteOn(pc_usb_handle_note_on);
   usbMIDI.setHandleNoteOff(pc_usb_handle_note_off);
 
-  usbMIDI.setHandleClock(usb_midi_handle_clock);
-  usbMIDI.setHandleStart(usb_midi_handle_start);
-  usbMIDI.setHandleStop(usb_midi_handle_stop);
-  usbMIDI.setHandleContinue(usb_midi_handle_continue);
+  usbMIDI.setHandleClock(pc_usb_midi_handle_clock);
+  usbMIDI.setHandleStart(pc_usb_midi_handle_start);
+  usbMIDI.setHandleStop(pc_usb_midi_handle_stop);
+  usbMIDI.setHandleContinue(pc_usb_midi_handle_continue);
 }
 
 void read_usb_from_computer() {
