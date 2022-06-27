@@ -6,7 +6,7 @@
 #include "midi_outs.h"
 
 #include "MidiMappings.h"
-#include "usb.h"
+//#include "usb.h"
 
 #include "midi_outs.h"
 

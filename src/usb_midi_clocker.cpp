@@ -32,7 +32,7 @@ void do_tick(uint32_t ticks);
 #define ATOMIC(X) X
 #endif
 
-#include "usb.h"
+//#include "usb.h"
 #include "midi_pc_usb.h"
 
 #include "Config.h"

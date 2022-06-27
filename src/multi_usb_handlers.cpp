@@ -1,6 +1,8 @@
 #include "bpm.h"
 #include "midi_outs.h"
 
+#include "multi_usb_handlers.h"
+
 #include "midi_bamble.h"
 #include "midi_beatstep.h"
 #include "midi_subclocker.h"
@@ -15,7 +17,25 @@ usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI
 usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 */
 
-#define NUM_USB_DEVICES 8
+USBHost Usb;
+USBHub hub1(Usb);
+USBHub hub2(Usb);
+USBHub hub3(Usb);
+USBHub hub4(Usb);
+MIDIDevice_BigBuffer midi01(Usb);
+MIDIDevice_BigBuffer midi02(Usb);
+MIDIDevice_BigBuffer midi03(Usb);
+MIDIDevice_BigBuffer midi04(Usb);
+MIDIDevice_BigBuffer midi05(Usb);
+MIDIDevice_BigBuffer midi06(Usb);
+MIDIDevice_BigBuffer midi07(Usb);
+MIDIDevice_BigBuffer midi08(Usb);
+
+MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
+  &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
+};
+
+uint64_t usb_midi_connected[NUM_USB_DEVICES] = { 0,0,0,0,0,0,0,0 };
 
 // assign device to port and set appropriate handlers
 void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {

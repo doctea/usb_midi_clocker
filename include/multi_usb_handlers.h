@@ -22,3 +22,23 @@ void send_midi_usb_clocks();
 
 void on_restart();
 void setup_multi_usb();
+
+#include <MIDI.h>
+#include <USBHost_t36.h> // access to USB MIDI devices (plugged into 2nd USB port)
+
+// Create the ports for USB devices plugged into Teensy's 2nd USB port (via hubs)
+extern USBHost Usb;
+extern USBHub hub1;
+extern USBHub hub2;
+extern USBHub hub3;
+extern USBHub hub4;
+extern MIDIDevice_BigBuffer midi01;
+extern MIDIDevice_BigBuffer midi02;
+extern MIDIDevice_BigBuffer midi03;
+extern MIDIDevice_BigBuffer midi04;
+extern MIDIDevice_BigBuffer midi05;
+extern MIDIDevice_BigBuffer midi06;
+extern MIDIDevice_BigBuffer midi07;
+extern MIDIDevice_BigBuffer midi08;
+extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES];
+extern uint64_t usb_midi_connected[NUM_USB_DEVICES];
