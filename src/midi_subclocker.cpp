@@ -37,8 +37,18 @@ void subclocker_loop(unsigned long ticks) {
 }*/
 
 int subclocker_divisor = DEFAULT_SUBCLOCKER_DIVISOR;
+int subclocker_delay_ticks = DEFAULT_SUBCLOCKER_DELAY_TICKS;
+
+void on_subclocker_divisor_changed(int new_value, int old_value) {
+
+}
+
+/*void update_subclocker_divisor(int divisor) {
+    subclocker_divisor = divisor;
+}*/
 
 void subclocker_send_clock(unsigned long ticks) {
+    if (ticks<subclocker_delay_ticks) return;
     if (ixSubclocker!=0xFF) 
         if (ticks==0 || ticks % subclocker_divisor == 0)
             midi_subclocker->sendRealTime(usbMIDI.Clock);

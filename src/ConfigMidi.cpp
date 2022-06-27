@@ -16,7 +16,4 @@
 #include "midi_keystep.h"
 */
 
-
-
-
 #endif
