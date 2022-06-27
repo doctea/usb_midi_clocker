@@ -8,8 +8,8 @@ class USBMidiDeviceManager {
 
         LinkedList<IUSBMidiDevice *> devices = LinkedList<IUSBMidiDevice *>();
 
-        void registerDevice(IUSBMIDIDevice *device) {
-            this->devices->add(device);
+        void registerDevice(IUSBMidiDevice *device) {
+            this->devices.add(device);
         }
 
     private:
