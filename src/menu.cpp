@@ -58,7 +58,6 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH, PPQN, BEATS
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
-
 ObjectToggleControl<Project> project_autoadvance = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance, &Project::is_auto_advance, nullptr);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
@@ -153,6 +152,7 @@ void setup_menu() {
 
     menu->add(&clock_source_selector);
 
+    //project_selector.go_back_on_select = true;
     menu->add(&project_selector);
     menu->add(&project_autoadvance);
 
@@ -194,6 +194,7 @@ void setup_menu() {
     menu->add(&pc_usb_input_2_selector);
 
     #ifdef ENABLE_SUBCLOCKER
+        subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
         menu->add(&subclocker_divisor_control);
         menu->add(&subclocker_delay_ticks_control);
     #endif
