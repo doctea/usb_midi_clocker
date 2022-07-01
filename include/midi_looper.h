@@ -271,7 +271,7 @@ class MIDITrack {
             File myFile;
 
             char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP, project_number, recording_number);
+            sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf("midi_looper::save_sequence(%i) writing to %s\n", recording_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf("%s exists, deleting first\n", filename);
@@ -323,7 +323,7 @@ class MIDITrack {
             File myFile;
 
             char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP, project_number, recording_number);
+            sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf("midi_looper::load_sequence(%i) opening %s\n", recording_number, filename);
             myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);

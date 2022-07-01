@@ -4,6 +4,8 @@
 #include "storage.h"
 #include "midi_looper.h"
 
+#include "midi_subclocker.h"
+
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
 
@@ -20,7 +22,7 @@ class Project {
     void initialise_sequence_slots() {
         for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];
-            sprintf(filepath, FILEPATH_SEQUENCE, this->current_project_number, i);
+            sprintf(filepath, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
             Serial.printf("sequence_slot_has_file[i] = %i for %s\n", sequence_slot_has_file[i], filepath);
         }
@@ -30,7 +32,7 @@ class Project {
 
         for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];
-            sprintf(filepath, FILEPATH_LOOP, this->current_project_number, i);
+            sprintf(filepath, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf("checking if slot %i is actually empty...\n");
@@ -69,9 +71,10 @@ class Project {
             if (this->current_project_number!=number) {
                 this->current_project_number = number;
                 if (this->debug) Serial.printf("Switched to project number %i\n", this->current_project_number);
+                make_project_folders(number);
+                this->load_project_settings(number);
                 this->initialise_loop_slots();
                 this->initialise_sequence_slots();
-                make_project_folders(number);
             }
         }
         int getProjectNumber() {
@@ -179,8 +182,92 @@ class Project {
             this->auto_advance = auto_advance;
         }
 
+        bool save_project_settings() {
+            return this->save_project_settings(current_project_number);
+        }
+        bool save_project_settings(int save_to_project_number) {
+            File myFile;
+
+            char filename[255] = "";
+            sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
+            Serial.printf("save_sequence(%i) writing to %s\n", save_to_project_number, filename);
+            if (SD.exists(filename)) {
+                Serial.printf("%s exists, deleting first\n", filename);
+                SD.remove(filename);
+            }
+            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
+            if (!myFile) {    
+                Serial.printf("Error: couldn't open %s for writing\n", filename);
+                return false;
+            }
+            myFile.println("; begin project");
+            myFile.printf("id=%i\n", save_to_project_number);
+            /*myFile.printf("size_clocks=%i\n",     input->size_clocks);
+            myFile.printf("size_sequences=%i\n",  input->size_sequences);
+            myFile.printf("size_steps=%i\n",      input->size_steps);
+            for (int i = 0 ; i < input->size_clocks ; i++) {
+                myFile.printf("clock_multiplier=%i\n", input->clock_multiplier[i]);
+            }
+            for (int i = 0 ; i < input->size_clocks ; i++) {
+                myFile.printf("clock_delay=%i\n", input->clock_delay[i]);
+            }
+            for (int i = 0 ; i < input->size_sequences ; i++) {
+                myFile.printf("sequence_data=");
+                for (int x = 0 ; x < input->size_steps ; x++) {
+                    myFile.printf("%1x", input->sequence_data[i][x]);
+                }
+                myFile.println("");
+            }*/
+            myFile.printf("subclocker_divisor=%i\n", subclocker_divisor);
+            myFile.printf("subclocker_delay_ticks=%i\n", subclocker_delay_ticks);
+            myFile.println("; end project");
+            myFile.close();
+            Serial.println("Finished saving.");
+            return true;
+        }
+
+        bool load_project_settings(int project_number) {
+            File myFile;
+
+            char filename[255] = "";
+            sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
+            Serial.printf("load_project_settings(%i) opening %s\n", project_number, filename);
+            myFile = SD.open(filename, FILE_READ);
+            myFile.setTimeout(0);
+
+            if (!myFile) {
+                Serial.printf("Error: Couldn't open %s for reading!\n", filename);
+                return false;
+            }
+
+            String line;
+            while (line = myFile.readStringUntil('\n')) {
+                load_project_parse_line(line);
+            }
+            Serial.println("Closing file..");
+            myFile.close();
+            Serial.println("File closed");
+
+            //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
+            current_project_number = project_number;
+            Serial.printf("Loaded project settings.\n");
+            return true;
+        }
+
+        void load_project_parse_line(String line) {
+            if (line.charAt(0)==';') 
+                return;  // skip comment lines
+            else if (line.startsWith("subclocker_divisor=")) {
+                subclocker_divisor = (uint8_t) line.remove(0,String("subclocker_divisor=").length()).toInt();
+            } else if (line.startsWith("subclocker_delay_ticks=")) {
+                subclocker_delay_ticks = (uint8_t) line.remove(0,String("subclocker_delay_ticks=").length()).toInt();
+            } 
+        }
 };
 
 extern Project project;
+
+// for use by the Menu
+void save_project_settings();
 
 #endif

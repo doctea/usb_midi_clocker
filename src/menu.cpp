@@ -59,6 +59,7 @@ ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("C
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
 ObjectToggleControl<Project> project_autoadvance = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance, &Project::is_auto_advance, nullptr);
+ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
@@ -155,6 +156,7 @@ void setup_menu() {
     //project_selector.go_back_on_select = true;
     menu->add(&project_selector);
     menu->add(&project_autoadvance);
+    menu->add(&project_save);
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);

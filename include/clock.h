@@ -2,9 +2,10 @@
 #include "bpm.h"
 //#include "midi_outs.h"
 
-#define CLOCK_INTERNAL 0
+#define CLOCK_INTERNAL          0
 #define CLOCK_EXTERNAL_USB_HOST 1
-#define NUM_CLOCK_SOURCES 2
+#define CLOCK_NONE              2
+#define NUM_CLOCK_SOURCES       3
 
 #ifdef USE_UCLOCK
 
