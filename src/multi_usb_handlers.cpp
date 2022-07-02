@@ -38,7 +38,7 @@ MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
 uint64_t usb_midi_connected[NUM_USB_DEVICES] = { 0,0,0,0,0,0,0,0 };
 
 // assign device to port and set appropriate handlers
-void setupmidi(uint8_t idx, uint32_t packed_id = 0x0000) {
+void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   uint16_t vid, pid;
   if (packed_id==0) {
     vid = usb_midi_device[idx]->idVendor();
@@ -194,8 +194,8 @@ void update_usb_device_connections() {
 
       Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_connected[port]);
 
-      // call setupmidi() to assign device to port and set handlers
-      setupmidi(port, packed_id);
+      // call setup_usb_midi_device() to assign device to port and set handlers
+      setup_usb_midi_device(port, packed_id);
       Serial.println("-----");
     }
   }

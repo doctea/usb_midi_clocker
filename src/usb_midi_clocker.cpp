@@ -2,8 +2,8 @@
 // proof of concept for syncing multiple USB Midi devices wit
 
 #if defined(__arm__) && defined(CORE_TEENSY)
-//#define byte uint8_t
-#define F(X) X
+  //#define byte uint8_t
+  #define F(X) X
 #endif
 
 #include <Arduino.h>
@@ -26,10 +26,10 @@
 void do_tick(uint32_t ticks);
 
 #ifdef USE_UCLOCK
-//#include <uClock.h>
+  //#include <uClock.h>
 #else
-//#define ATOMIC(X) noInterrupts(); X; interrupts();
-#define ATOMIC(X) X
+  //#define ATOMIC(X) noInterrupts(); X; interrupts();
+  #define ATOMIC(X) X
 #endif
 
 //#include "usb.h"
@@ -44,10 +44,9 @@ void do_tick(uint32_t ticks);
 #include "clock.h"
 
 #ifdef ENABLE_SEQUENCER
-#include "sequencer.h"
+  #include "sequencer.h"
 #endif
 #include "cv_outs.h"
-
 
 #include "multi_usb_handlers.h"
 
@@ -79,22 +78,25 @@ void setup() {
   tft_print((char*)"..setup project..\n");
   project.setup_project();
 
-#ifdef ENABLE_SEQUENCER
-  tft_print((char*)"..Sequencer..\n");
-  init_sequence();
-#endif
+  #ifdef ENABLE_SEQUENCER
+    tft_print((char*)"..Sequencer..\n");
+    init_sequence();
+  #endif
 
-#ifdef USE_UCLOCK
-  Serial.println(F("Initialising uClock.."));
-  setup_uclock();
-#else
-  tft_print((char*)"..clock..\n");
-  setup_cheapclock();
-#endif
+  #ifdef USE_UCLOCK
+    Serial.println(F("Initialising uClock.."));
+    setup_uclock();
+  #else
+    tft_print((char*)"..clock..\n");
+    setup_cheapclock();
+  #endif
 
   tft_print((char*)"..PC USB..\n");
   setup_pc_usb();
 
+  tft_print((char*)"..USB device handler..");
+  setup_usb_device_handler();
+  
   tft_print((char*)"..USB..");
   setup_multi_usb();
   Serial.println(F("USB ready."));
@@ -242,7 +244,7 @@ void do_tick(uint32_t in_ticks) {
   #endif
 
   #ifdef ENABLE_CV
-  update_cv_outs(in_ticks);
+    update_cv_outs(in_ticks);
   #endif
 
   #ifdef ENABLE_MPK49
@@ -251,15 +253,15 @@ void do_tick(uint32_t in_ticks) {
 
   #ifdef ENABLE_USB
     #ifdef ENABLE_BEATSTEP
-        beatstep_on_tick(in_ticks);
+      beatstep_on_tick(in_ticks);
     #endif
 
     #ifdef ENABLE_BAMBLE
-        bamble_on_tick(in_ticks);
+      bamble_on_tick(in_ticks);
     #endif
 
     #ifdef ENABLE_APCMINI
-        apcmini_on_tick(in_ticks);
+      apcmini_on_tick(in_ticks);
     #endif
   #endif
 
