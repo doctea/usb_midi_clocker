@@ -178,7 +178,7 @@ void loop()
   }
 
   read_midi_serial_devices();
-  loop_serial_usb_devices();
+  loop_serial_midi_devices();
 
   #ifdef ENABLE_USB
     update_usb_device_connections();

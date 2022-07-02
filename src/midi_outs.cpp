@@ -67,7 +67,7 @@ void read_midi_serial_devices() {
     #endif
 }
 
-void loop_serial_usb_devices() {
+void loop_serial_midi_devices() {
     // anything that should be done per-loop for serial midi devices
 
 }
