@@ -7,8 +7,9 @@
 
 namespace storage {
 
-  #define FILEPATH_SEQUENCE "project%i/sequences/sequence%i.txt"
-  #define FILEPATH_LOOP     "project%i/loops/loop%i.txt"
+  #define FILEPATH_SEQUENCE_FORMAT          "project%i/sequences/sequence%i.txt"
+  #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
+  #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
 
   //#include <SD.h>
   //#include <SdFat.h>

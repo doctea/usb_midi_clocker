@@ -22,6 +22,8 @@ class ClockSourceSelectorControl : public SelectorControl {
             return "Internal";
         if (index==CLOCK_EXTERNAL_USB_HOST)
             return "External";
+        if (index==CLOCK_NONE)
+            return "None";
         return "??";
     }
 

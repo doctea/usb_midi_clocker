@@ -10,6 +10,7 @@
 
 
 extern int subclocker_divisor;
+extern int subclocker_delay_ticks;
 
 extern MIDIDevice_BigBuffer *midi_subclocker;
 extern volatile uint8_t ixSubclocker; //= 0xff;

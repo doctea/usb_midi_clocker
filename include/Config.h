@@ -6,7 +6,8 @@
 //#define DEBUG_LOOPER          // debug LOOPER playback
 
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
-#define DEFAULT_SUBCLOCKER_DIVISOR    4
+#define DEFAULT_SUBCLOCKER_DIVISOR      4
+#define DEFAULT_SUBCLOCKER_DELAY_TICKS    0   // don't send clock to the subclocker device until this many ticks have elapsed
 
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN

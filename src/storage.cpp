@@ -80,7 +80,7 @@ namespace storage {
     File myFile;
 
     char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE, project_number, preset_number);
+    sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
     Serial.printf("save_sequence(%i, %i) writing to %s\n", project_number, preset_number, filename);
     if (SD.exists(filename)) {
       Serial.printf("%s exists, deleting first\n", filename);
@@ -231,7 +231,7 @@ namespace storage {
     File myFile;
 
     char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE, project_number, preset_number);
+    sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
     Serial.printf("load_sequence(%i,%i) opening %s\n", project_number, preset_number, filename);
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);

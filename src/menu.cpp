@@ -19,6 +19,8 @@
 #include "midi_outs.h"
 #include "midi_pc_usb.h"
 
+#include "midi_subclocker.h"
+
 #include "clock.h"
 
 #ifdef ENABLE_BASS_TRANSPOSE
@@ -51,14 +53,13 @@ Menu *menu; // = Menu();
     //extern Bounce pushButtonC;
 #endif
 
-
 LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH, PPQN, BEATS_PER_BAR, BARS_PER_PHRASE);
 
-ClockSourceSelectorControl clock_selector = ClockSourceSelectorControl("Clock source", clock_mode);
+ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
-
 ObjectToggleControl<Project> project_autoadvance = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance, &Project::is_auto_advance, nullptr);
+ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
@@ -99,6 +100,12 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp Output");
 #endif
 
+#ifdef ENABLE_SUBCLOCKER
+    NumberControl subclocker_divisor_control =      NumberControl("Subclocker div",     &subclocker_divisor,        subclocker_divisor,     1, 24, nullptr); //&on_subclocker_divisor_changed);
+    NumberControl subclocker_delay_ticks_control =  NumberControl("Subclocker delay",   &subclocker_delay_ticks,    subclocker_delay_ticks, 0, PPQN*BEATS_PER_BAR, nullptr); //&on_subclocker_divisor_changed);
+
+#endif
+
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
@@ -122,45 +129,77 @@ void setup_menu() {
     Serial.println("Created Menu object..");
     Serial.flush();
 
-    looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
-    beatstep_output_selector.configure(beatstep_output, beatstep_setOutputWrapper);
-    keystep_output_selector.configure(keystep_output, keystep_setOutputWrapper);
-    mpk49_output_selector.configure(mpk49_output, mpk49_setOutputWrapper);
-    lestrum_pads_output_selector.configure(lestrum_pads_output, lestrum_pads_setOutputWrapper);
-    lestrum_arp_output_selector.configure(lestrum_arp_output, lestrum_arp_setOutputWrapper);
+    #ifdef ENABLE_LOOPER
+        looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
+    #endif
+    #ifdef ENABLE_BEATSTEP    
+        beatstep_output_selector.configure(beatstep_output, beatstep_setOutputWrapper);
+    #endif
+    #ifdef ENABLE_KEYSTEP
+        keystep_output_selector.configure(keystep_output, keystep_setOutputWrapper);
+    #endif
+    #ifdef ENABLE_MPK49
+        mpk49_output_selector.configure(mpk49_output, mpk49_setOutputWrapper);
+    #endif
+    #ifdef ENABLE_LESTRUM
+        lestrum_pads_output_selector.configure(lestrum_pads_output, lestrum_pads_setOutputWrapper);
+        lestrum_arp_output_selector.configure(lestrum_arp_output, lestrum_arp_setOutputWrapper);
+    #endif
     pc_usb_input_1_selector.configure(pc_usb_1_output, pc_usb_1_setOutputWrapper);
     pc_usb_input_2_selector.configure(pc_usb_2_output, pc_usb_2_setOutputWrapper);
     
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
 
-    menu->add(&clock_selector);
+    menu->add(&clock_source_selector);
 
+    //project_selector.go_back_on_select = true;
     menu->add(&project_selector);
     menu->add(&project_autoadvance);
+    menu->add(&project_save);
 
-    menu->add(&beatstep_notes);
-    menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+    #ifdef ENABLE_BEATSTEP
+        menu->add(&beatstep_notes);
+        menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+    #endif
 
     // sequencer
-    menu->add(&sequencer_status);
+    #ifdef ENABLE_SEQUENCER
+        menu->add(&sequencer_status);
+    #endif
 
     // looper stuff
-    menu->add(&mpk49_looper_status);    
-    menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
-    menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
-    menu->add(&looper_output_selector);
-    menu->add(&looper_transpose_control);
+    #ifdef ENABLE_LOOPER
+        menu->add(&mpk49_looper_status);    
+        menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
+        menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
+        menu->add(&looper_output_selector);
+        menu->add(&looper_transpose_control);
+    #endif
 
-    menu->add(&beatstep_output_selector);
-    menu->add(&keystep_output_selector);
-    menu->add(&mpk49_output_selector);
+    #ifdef ENABLE_BEATSTEP
+        menu->add(&beatstep_output_selector);
+    #endif
+    #ifdef ENABLE_KEYSTEP
+        menu->add(&keystep_output_selector);
+    #endif
+    #ifdef ENABLE_MPK49
+        menu->add(&mpk49_output_selector);
+    #endif
 
-    menu->add(&lestrum_pads_output_selector);
-    menu->add(&lestrum_arp_output_selector);
+    #ifdef ENABLE_LESTRUM
+        menu->add(&lestrum_pads_output_selector);
+        menu->add(&lestrum_arp_output_selector);
+    #endif
 
     menu->add(&pc_usb_input_1_selector);
     menu->add(&pc_usb_input_2_selector);
+
+    #ifdef ENABLE_SUBCLOCKER
+        subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
+        menu->add(&subclocker_divisor_control);
+        menu->add(&subclocker_delay_ticks_control);
+    #endif
 
     menu->add(&usbdevices_panel);
 
