@@ -1,7 +1,12 @@
+#ifndef MULTI_USB_HANDLERS__INCLUDED
+#define MULTI_USB_HANDLERS__INCLUDED
+
 #include "Config.h"
 #include "ConfigMidi.h"
 #include "bpm.h"
 #include "midi_outs.h"
+
+//#include "usb_device_handler.h"
 
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
@@ -17,13 +22,14 @@ usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id);
 void update_usb_device_connections();
 void read_midi_usb_devices();
-void loop_midi_usb_devices();
-void send_midi_usb_clocks();
+void behaviours_loop();
+void behaviours_send_clock();
+void behaviours_do_tick(unsigned long in_ticks);
 
 void global_on_restart();
 void setup_multi_usb();
 
-#include <MIDI.h>
+//#include <MIDI.h>
 #include <USBHost_t36.h> // access to USB MIDI devices (plugged into 2nd USB port)
 
 // Create the ports for USB devices plugged into Teensy's 2nd USB port (via hubs)
@@ -40,5 +46,21 @@ extern MIDIDevice_BigBuffer midi05;
 extern MIDIDevice_BigBuffer midi06;
 extern MIDIDevice_BigBuffer midi07;
 extern MIDIDevice_BigBuffer midi08;
-extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES];
-extern uint64_t usb_midi_connected[NUM_USB_DEVICES];
+//extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES];
+//extern uint64_t usb_midi_connected[NUM_USB_DEVICES];
+
+//#include "behaviour_base.h"
+
+class DeviceBehaviourBase;
+
+struct usb_midi_slot {
+    uint16_t vid = 0x00;
+    uint16_t pid = 0x00;
+    uint32_t packed_id = 0x00;
+    MIDIDeviceBase *device = nullptr;
+    DeviceBehaviourBase *behaviour = nullptr;
+};
+
+extern usb_midi_slot usb_midi_slots[NUM_USB_DEVICES];
+
+#endif

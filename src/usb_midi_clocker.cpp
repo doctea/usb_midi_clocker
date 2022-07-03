@@ -50,6 +50,8 @@ void do_tick(uint32_t ticks);
 
 #include "multi_usb_handlers.h"
 
+#include "behaviour_manager.h"
+
 void setup() {
   Serial.begin(115200);
   #ifdef WAIT_FOR_SERIAL
@@ -95,7 +97,7 @@ void setup() {
   setup_pc_usb();
 
   tft_print((char*)"..USB device handler..");
-  setup_usb_device_handler();
+  setup_behaviour_manager();
   
   tft_print((char*)"..USB..");
   setup_multi_usb();
@@ -185,7 +187,7 @@ void loop()
   #ifdef ENABLE_USB
     update_usb_device_connections();
     read_midi_usb_devices();
-    loop_midi_usb_devices();
+    behaviours_loop();
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
 
@@ -240,29 +242,38 @@ void do_tick(uint32_t in_ticks) {
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
-    send_midi_usb_clocks();
+    behaviours_send_clock();
   #endif
 
   #ifdef ENABLE_CV
     update_cv_outs(in_ticks);
   #endif
 
-  #ifdef ENABLE_MPK49
-    MPK49_on_tick(in_ticks);
-  #endif
-
   #ifdef ENABLE_USB
-    #ifdef ENABLE_BEATSTEP
-      beatstep_on_tick(in_ticks);
+    behaviours_do_tick(in_ticks);
+    /*#ifdef ENABLE_APCMINI
+      apcmini_on_tick(in_ticks);
     #endif
 
     #ifdef ENABLE_BAMBLE
       bamble_on_tick(in_ticks);
     #endif
 
-    #ifdef ENABLE_APCMINI
-      apcmini_on_tick(in_ticks);
+    #ifdef ENABLE_BEATSTEP
+      beatstep_on_tick(in_ticks);
     #endif
+
+    #ifdef ENABLE_KEYSTEP
+      keystep_on_tick(in_ticks);
+    #endif
+
+    #ifdef ENABLE_MPK49
+      MPK49_on_tick(in_ticks);
+    #endif
+
+    #ifdef ENABLE_SUBCLOCKER
+      subclocker_on_tick(in_ticks);
+    #endif*/
   #endif
 
   #ifdef DEBUG_TICKS

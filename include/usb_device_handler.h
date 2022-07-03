@@ -1,21 +1,14 @@
-#include "midi_device_usb_handler.h"
+#include "behaviour_manager.h"
 
-#include "midi_usb_apcmini.h"
+//#include "behaviour_apcmini.h"
 /*#include "midi_usb_bamble.h"
 #include "midi_usb_beatstep.h"
 #include "midi_usb_keystep.h"
 #include "midi_usb_mpk49.h"
 #include "midi_usb_subclocker.h"*/
 
-USBMidiDeviceManager* usb_manager;
+//#include "midi_looper.h"
 
-void setup_usb_device_handler() {
-    usb_manager = USBMidiDeviceManager::getInstance();
+DeviceBehaviourManager* behaviour_manager;
 
-    usb_manager->registerDevice(new USBDevice_APCMini());
-    /*usb_manager->registerDevice(new USBDevice_Bamble());
-    usb_manager->registerDevice(new USBDevice_Beatstep());
-    usb_manager->registerDevice(new USBDevice_Keystep());
-    usb_manager->registerDevice(new USBDevice_MPK49());
-    usb_manager->registerDevice(new USBDevice_Subclocker());*/
-}
+void setup_behaviour_manager();

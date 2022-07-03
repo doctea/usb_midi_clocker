@@ -8,7 +8,7 @@
     ticks++;
     //Serial.printf("ticked %i\n", ticks); 
     //send_midi_serial_clocks();
-    //send_midi_usb_clocks();
+    //behaviours_send_clock();
   }
   
   void setup_uclock() {

@@ -1,17 +1,18 @@
-#include "Config.h"
+/*#include "Config.h"
 #include "midi_apcmini.h"
 #include "cv_outs.h"
 #include "storage.h"
-#include <MIDI.h>
-#include "USBHost_t36.h"
+//#include <MIDI.h>
+//#include "USBHost_t36.h"
 
 #include "midi_looper.h"
 
 #include "project.h"
 
 #include "clock.h"
+*/
 
-extern storage::savestate current_state;
+/*extern storage::savestate current_state;
 
 MIDIDevice_BigBuffer *midi_apcmini;
 volatile uint8_t ixAPCmini  = 0xff;
@@ -25,19 +26,12 @@ byte clock_selected = 0;
 
 bool redraw_immediately = false;
 unsigned long last_updated_display = 0;
-
+*/
+/*
 void apcmini_loop(unsigned long ticks) {
   if ( ixAPCmini == 0xff ) {
     return;
   }
-  /*if ( ixAPCmini != 0xff) {
-    //ATOMIC(
-      while (usb_midi_device[ixAPCmini]->read());
-    //)
-  } else {
-    return;
-  }*/
-
   #ifdef ENABLE_APCMINI_DISPLAY
     static unsigned long last_processed_tick;
 
@@ -136,11 +130,6 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
           //clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
         }
         
-        /*if (clock_multiplier[clock_number]>CLOCK_MULTIPLIER_MAX)
-          clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MIN;
-        else if (clock_multiplier[clock_number]<CLOCK_MULTIPLIER_MIN) 
-          clock_multiplier[clock_number] = CLOCK_MULTIPLIER_MAX;*/
-
         #ifdef ENABLE_APCMINI_DISPLAY
             redraw_clock_row(clock_selected);
             redraw_clock_selected(old_clock_selected, clock_selected);
@@ -148,12 +137,6 @@ void apcmini_note_on(byte inChannel, byte inNumber, byte inVelocity) {
     #endif
   } else if (inNumber==APCMINI_BUTTON_SHIFT) {
     apcmini_shift_held = true;
-/*  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
-    // for debugging -- single-step through a tick
-    single_step = true;
-    //ticks += 1;
-    Serial.print(F("Single-stepped to tick "));
-    Serial.println(ticks);*/
   } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
     //load_state_start(project.selected_sequence_number, &project.current_state);
     project.load_sequence(); //project.selected_sequence_number);
@@ -204,12 +187,6 @@ void apcmini_note_off(byte inChannel, byte inNumber, byte inVelocity) {
 // called from loop, already inside ATOMIC, so don't use ATOMIC here
 void apcmini_control_change (byte inChannel, byte inNumber, byte inValue) {
   //ATOMIC(
-    /*Serial.print(F("APCMINI CC ch"));
-    Serial.print(inChannel);
-    Serial.print(F("\tnum "));
-    Serial.print(inNumber);
-    Serial.print(F("\tvalue: "));
-    Serial.println(inValue);*/
   //)
   //debug_free_ram();
 
@@ -245,7 +222,6 @@ void apcmini_on_restart() {
   }
 }
 
-
 void apcmini_init() {
   if (midi_apcmini==nullptr) return;
   //midi_apcmini->turnThruOff();
@@ -258,3 +234,5 @@ void apcmini_init() {
       redraw_immediately = true;
   #endif
 }
+
+*/

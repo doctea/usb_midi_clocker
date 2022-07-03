@@ -11,7 +11,7 @@
 
 using namespace storage;
 
-class Project;
+//class Project;
 
 class Project {
     bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];

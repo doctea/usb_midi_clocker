@@ -1,26 +1,42 @@
+#ifndef BEHAVIOUR_APCMINI__INCLUDED
+#define BEHAVIOUR_APCMINI__INCLUDED
+
 #include <Arduino.h>
 
 #include "Config.h"
-#include "midi_device_usb.h"
+#include "behaviour_base.h"
 #include "midi_apcmini.h"
 #include "project.h"
 #include "clock.h"
 
-#define ETL_NO_STL
-#include "etl/delegate.h"
-using namespace etl;
+#include "multi_usb_handlers.h"
 
-using ptr_cc        = etl::delegate<void(uint8_t,uint8_t,uint8_t)>;
-using ptr_note_on   = etl::delegate<void(uint8_t,uint8_t,uint8_t)>;
-using ptr_note_off  = etl::delegate<void(uint8_t,uint8_t,uint8_t)>;
+#include "midi_looper.h"
 
-class USBDevice_APCMini;
+#include "midi_apcmini_display.h"
 
-class USBDevice_APCMini : public IUSBMidiDevice {
+//extern MIDITrack mpk49_loop_track;
+//class MIDITrack;
+
+class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
     public:
-        bool redraw_immediately = false;
+        bool apcmini_started = false;
+        bool apcmini_shift_held = false;
 
-        virtual void setup_callbacks() override;
+        MIDITrack *loop_track = nullptr;
+
+        #ifdef ENABLE_CLOCKS
+            byte clock_selected = 0;
+        #endif
+        bool redraw_immediately = false;
+        unsigned long last_updated_display = 0;
+
+        virtual void setup_callbacks() override {
+            //behaviour_apcmini = this;
+            this->device->setHandleControlChange(apcmini_control_change);
+            this->device->setHandleNoteOn(apcmini_note_on);
+            this->device->setHandleNoteOff(apcmini_note_off);
+        };
 
         virtual void loop(unsigned long ticks) override {
             if ( this->device == nullptr ) {
@@ -57,7 +73,9 @@ class USBDevice_APCMini : public IUSBMidiDevice {
 
             #ifdef ENABLE_LOOPER
                 } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
-                mpk49_loop_track.clear_all();
+                    if (this->loop_track!=nullptr) 
+                        this->loop_track->clear_all();
+                //mpk49_loop_track.clear_all();
             #endif
             } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
                 // restart/resync immediately
@@ -68,7 +86,7 @@ class USBDevice_APCMini : public IUSBMidiDevice {
                 Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
                 #ifdef ENABLE_APCMINI_DISPLAY
                     //ATOMIC(
-                    midi_apcmini->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
+                    this->device->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
                     //)  // turn on the 'going to restart on next bar' flashing indicator
                 #endif
                 restart_on_next_bar = true;
@@ -155,8 +173,8 @@ class USBDevice_APCMini : public IUSBMidiDevice {
                 } else if (!apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
                     Serial.println("---- debug");
                     for (int i = 0 ; i < 8 ; i++) {
-                    if (usb_midi_device[i])
-                        Serial.printf("usb_midi_device[%i] is %04X:%04X aka %s:%s\n", i, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct(), usb_midi_device[i]->manufacturer(), usb_midi_device[i]->product() );
+                        if (usb_midi_slots[i].device!=nullptr)
+                            Serial.printf("usb_midi_device[%i] is %04X:%04X aka %s:%s\n", i, usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct(), usb_midi_slots[i].device->manufacturer(), usb_midi_slots[i].device->product() );
                     }
                     Serial.println("---- debug");
                 } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
@@ -223,3 +241,11 @@ class USBDevice_APCMini : public IUSBMidiDevice {
         }
 
 };
+
+extern DeviceBehaviour_APCMini *behaviour_apcmini;
+
+void apcmini_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+void apcmini_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+
+#endif

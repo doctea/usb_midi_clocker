@@ -73,10 +73,10 @@ class BPMPositionIndicator : public MenuItem {
                 tft->setTextSize(1);
                 int connected = 0;
                 for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-                    if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
+                    if (usb_midi_slots[i].packed_id && usb_midi_slots[i].device && usb_midi_slots[i].device->idVendor()>0) {
                         connected++;
                         char buf[100];
-                        sprintf(buf, "%i %19s\n", i, usb_midi_device[i]->product());
+                        sprintf(buf, "%i %19s\n", i, usb_midi_slots[i].device->product());
                         tft->printf(buf);
                         //tft->printf("%i %19s\n", i, *usb_midi_device[i]->product());
                         //tft->printf("%08x\n", usb_midi_connected[i]);  // packed usb vendor+product id

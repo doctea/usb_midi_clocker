@@ -3,11 +3,13 @@
 
 #include "multi_usb_handlers.h"
 
-#include "midi_bamble.h"
+/*#include "midi_bamble.h"
 #include "midi_beatstep.h"
-#include "midi_subclocker.h"
+#include "midi_subclocker.h"*/
 
 #include "tft.h"
+
+#include "behaviour_manager.h"
 
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
@@ -31,54 +33,76 @@ MIDIDevice_BigBuffer midi06(Usb);
 MIDIDevice_BigBuffer midi07(Usb);
 MIDIDevice_BigBuffer midi08(Usb);
 
-MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
+/*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
+};*/
+
+usb_midi_slot usb_midi_slots[NUM_USB_DEVICES] = {
+  { 0x00, 0x00, 0x0000, &midi01, nullptr },
+  { 0x00, 0x00, 0x0000, &midi02, nullptr },
+  { 0x00, 0x00, 0x0000, &midi03, nullptr },
+  { 0x00, 0x00, 0x0000, &midi04, nullptr },
+  { 0x00, 0x00, 0x0000, &midi05, nullptr },
+  { 0x00, 0x00, 0x0000, &midi06, nullptr },
+  { 0x00, 0x00, 0x0000, &midi07, nullptr },
+  { 0x00, 0x00, 0x0000, &midi08, nullptr },
 };
 
-uint64_t usb_midi_connected[NUM_USB_DEVICES] = { 0,0,0,0,0,0,0,0 };
+//uint64_t usb_midi_connected[NUM_USB_DEVICES] = { 0,0,0,0,0,0,0,0 };
 
 // assign device to port and set appropriate handlers
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   uint16_t vid, pid;
   if (packed_id==0) {
-    vid = usb_midi_device[idx]->idVendor();
-    pid = usb_midi_device[idx]->idProduct();
-    packed_id = (usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct());
+    vid = usb_midi_slots[idx].device->idVendor();
+    pid = usb_midi_slots[idx].device->idProduct();
+    packed_id = (usb_midi_slots[idx].device->idVendor()<<16) | (usb_midi_slots[idx].device->idProduct());
   } else {
     vid = packed_id >> 16;
     pid = 0x0000FFFF & packed_id;
   }
-  if ((uint32_t)((usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct())) != packed_id) {
+  if ((uint32_t)((usb_midi_slots[idx].device->idVendor()<<16) | (usb_midi_slots[idx].device->idProduct())) != packed_id) {
       Serial.printf("packed_id %08X and newly-generated packed_id %08X don't match already?!", 
-      (usb_midi_device[idx]->idVendor()<<16) | (usb_midi_device[idx]->idProduct()),
-      packed_id 
-    );
+        (usb_midi_slots[idx].device->idVendor()<<16) | (usb_midi_slots[idx].device->idProduct()),
+        packed_id 
+      );
       return;
   }
-  Serial.printf("USB Port %d changed from %08X to %08X (now ", idx, usb_midi_connected[idx], packed_id);
-  Serial.printf("'%s' '%s')\n", usb_midi_device[idx]->manufacturer(), usb_midi_device[idx]->product());
-  usb_midi_connected[idx] = packed_id;
+  Serial.printf("USB Port %d changed from %08X to %08X (now ", idx, usb_midi_slots[idx].packed_id, packed_id);
+  Serial.printf("'%s' '%s')\n", usb_midi_slots[idx].device->manufacturer(), usb_midi_slots[idx].device->product());
+  usb_midi_slots[idx].packed_id = packed_id;
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
-  usb_midi_device[idx]->setHandleNoteOn(nullptr);
-  usb_midi_device[idx]->setHandleNoteOff(nullptr);
-  usb_midi_device[idx]->setHandleControlChange(nullptr);
-  usb_midi_device[idx]->setHandleClock(nullptr);
-  usb_midi_device[idx]->setHandleStart(nullptr);
-  usb_midi_device[idx]->setHandleStop(nullptr);
+  if (usb_midi_slots[idx].device!=nullptr) {
+    usb_midi_slots[idx].behaviour->disconnect_device();
+    /*usb_midi_slots[idx].device->setHandleNoteOn(nullptr);
+    usb_midi_slots[idx].device->setHandleNoteOff(nullptr);
+    usb_midi_slots[idx].device->setHandleControlChange(nullptr);
+    usb_midi_slots[idx].device->setHandleClock(nullptr);
+    usb_midi_slots[idx].device->setHandleStart(nullptr);
+    usb_midi_slots[idx].device->setHandleStop(nullptr);*/
+  }
 
   if (packed_id==0) {
-    usb_midi_connected[idx] = 0;
+    usb_midi_slots[idx].packed_id = 0;
     Serial.printf("Disconnected device on port %i\n", idx);
     return;
   }
 
-  #ifdef ENABLE_BEATSTEP
+  // loop over the registered behaviours and if the correct one is found, set it up
+  for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
+    DeviceBehaviourBase *behaviour = behaviour_manager->behaviours.get(i);
+    if (behaviour->matches_identifiers(packed_id)) {
+      behaviour->connect_device(usb_midi_slots[idx].device);
+    }
+  }
+
+  /*#ifdef ENABLE_BEATSTEP
     if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
       ixBeatStep = idx;
       Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
-      midi_beatstep = usb_midi_device[idx];
-      usb_midi_connected[idx] = packed_id;
+      midi_beatstep = usb_midi_slots[idx].device;
+      usb_midi_slots[idx].packed_id = packed_id;
       beatstep_init();
       Serial.println(F("completed Beatstep init"));
       return;
@@ -132,9 +156,11 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
       subclocker_init();
       return;
     }
-  #endif
+  #endif*/
 
-  usb_midi_connected[idx] = packed_id;
+  //usb_midi_connected[idx] = packed_id;
+  usb_midi_slots[idx].packed_id = packed_id;
+
   Serial.print(F("Detected unknown (or disabled) device vid="));
   Serial.print(vid);
   Serial.print(F(", pid="));
@@ -144,55 +170,56 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
 
 void update_usb_device_connections() {
   for (int port=0; port < NUM_USB_DEVICES; port++) {
-    uint32_t packed_id = (usb_midi_device[port]->idVendor()<<16) | (usb_midi_device[port]->idProduct());
-    //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_device[port]->idVendor(),  usb_midi_device[port]->idProduct(), packed_id);
-    if (usb_midi_connected[port] != packed_id) {
+    uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
+    //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
+    if (usb_midi_slots[port].packed_id != packed_id) {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
       // unassign the midi_xxx helper pointers if appropriate
-      #ifdef ENABLE_BAMBLE
-        if (midi_bamble==usb_midi_device[port]) {
+      usb_midi_slots[port].behaviour = nullptr;
+      /*#ifdef ENABLE_BAMBLE
+        if (midi_bamble==usb_midi_slots[port].device) {
           Serial.printf("Nulling ixBamble and midi_bamble\n");
           ixBamble = 0xFF;
           midi_bamble = nullptr;
         }
       #endif
       #ifdef ENABLE_BEATSTEP
-        if (midi_beatstep==usb_midi_device[port]) {
+        if (midi_beatstep==usb_midi_slots[port].device) {
           Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
           ixBeatStep = 0xFF;
           midi_beatstep = nullptr;
         }
       #endif
       #ifdef ENABLE_APCMINI
-        if (midi_apcmini==usb_midi_device[port]) {
+        if (midi_apcmini==usb_midi_slots[port].device) {
           Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
           ixAPCmini = 0xFF;
           midi_apcmini = nullptr;
         }
       #endif
       #ifdef ENABLE_MPK49
-        if (midi_MPK49==usb_midi_device[port]) {
+        if (midi_MPK49==usb_midi_slots[port].device) {
           Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
           ixMPK49 = 0xFF;
           midi_MPK49 = nullptr;
         }
       #endif
       #ifdef ENABLE_KEYSTEP
-        if (midi_keystep==usb_midi_device[port]) {
+        if (midi_keystep==usb_midi_slots[port].device) {
           Serial.printf("Nulling ixKeystep and midi_keystep\n");
           ixKeystep = 0xFF;
           midi_keystep = nullptr;
         }
       #endif
       #ifdef ENABLE_SUBCLOCKER
-        if (midi_subclocker==usb_midi_device[port]) {
+        if (midi_subclocker==usb_midi_slots[port].device) {
           Serial.printf("Nulling ixSubclocker and midi_subclocker\n");
           ixSubclocker = 0xFF;
           midi_subclocker = nullptr;
         }
-      #endif
+      #endif*/
 
-      Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_connected[port]);
+      Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_slots[port].packed_id);
 
       // call setup_usb_midi_device() to assign device to port and set handlers
       setup_usb_midi_device(port, packed_id);
@@ -208,7 +235,7 @@ void read_midi_usb_devices() {
     static int counter;
     for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
       //while(usb_midi_device[i]->read());
-      if (usb_midi_device[i]->read()) {
+      if (usb_midi_slots[i].device->read()) {
         //usb_midi_device[counter%NUM_USB_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
         counter++;
         //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
@@ -224,7 +251,11 @@ void read_midi_usb_devices() {
   #endif
 }
 
-void send_midi_usb_clocks() {
+void behaviours_send_clock() {
+  for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
+    behaviour_manager->behaviours.get(i)->send_clock(ticks);
+  }
+  /*
   #ifdef ENABLE_BEATSTEP
     if(ixBeatStep!=0xFF) {
       midi_beatstep->sendRealTime(midi::Clock);
@@ -236,9 +267,9 @@ void send_midi_usb_clocks() {
       midi_keystep->sendRealTime(midi::Clock);
     }
   #endif
-  /*if(ixAPCmini!=0xFF) {
-    midi_apcmini->sendRealTime(midi::Clock);
-  }*/
+  //if(ixAPCmini!=0xFF) {
+  //  midi_apcmini->sendRealTime(midi::Clock);
+  //}
   #ifdef ENABLE_BAMBLE
     if (ixBamble!=0xFF) {
       midi_bamble->sendRealTime(midi::Clock);
@@ -255,13 +286,17 @@ void send_midi_usb_clocks() {
       subclocker_send_clock(ticks);
       //midi_subclocker->sendRealTime(midi::Clock);
     }
-  #endif
+  #endif*/
 }
 
-void loop_midi_usb_devices() {
+void behaviours_loop() {
   unsigned long temp_tick;
   //noInterrupts();
   temp_tick = ticks;
+  for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
+      behaviour_manager->behaviours.get(i)->loop(temp_tick);
+  }
+  /*
   //interrupts();
   #ifdef ENABLE_BEATSTEP
       beatstep_loop(temp_tick);
@@ -282,6 +317,13 @@ void loop_midi_usb_devices() {
   #ifdef ENABLE_KEYSTEP
       keystep_loop(temp_tick);
   #endif
+  */
+}
+
+void behaviours_do_tick(unsigned long in_ticks) {
+    for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
+        behaviour_manager->behaviours.get(i)->on_tick(in_ticks);
+    }
 }
 
 // call this when global clock should be reset
@@ -306,7 +348,12 @@ void global_on_restart() {
   
   send_midi_serial_stop_start();
 
-  #ifdef ENABLE_BEATSTEP
+  for(int i = 0 ; i < behaviour_manager->behaviours.size()  ; i++) {
+    if (behaviour_manager->behaviours.get(i)->device) {
+      behaviour_manager->behaviours.get(i)->on_restart();
+    }
+  }
+  /*#ifdef ENABLE_BEATSTEP
     Serial.print(F("restart beatstep..."));
     beatstep_on_restart();
     Serial.println(F("restarted"));
@@ -336,7 +383,7 @@ void global_on_restart() {
     Serial.print(F("restart subclocker..."));
     subclocker_on_restart();
     Serial.println(F("restarted"));
-  #endif
+  #endif*/
 
   Serial.println(F("<==on_restart()"));
 }
