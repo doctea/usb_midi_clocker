@@ -2,6 +2,8 @@
 
 #include "behaviour_bamble.h"
 
+#include "midi_mapper_update_wrapper_menus.h"
+
 // NOTE: you gotta be careful with the names of these things!
 // if there is a used MIDIOutputWrapper somewhere that doesnt have a label that matches these strings EXACTLY, the midi_mapper menu item will crash and apparently 
 // never tell us about it in console!!
@@ -38,7 +40,58 @@ int find_wrapper_index_for_label(char *label_to_find) {
             return i;
         }
     }
-    while (1)
+    //while (1)
         Serial.printf("find_wrapper_index_for_label('%s') didn't find anything!\n", label_to_find);
     return -1;
 }
+
+#include "behaviour_beatstep.h"
+#include "behaviour_keystep.h"
+#include "behaviour_mpk49.h"
+
+/*#include "menu_midi_mapper.h"
+
+extern MidiOutputSelectorControl beatstep_output_selector;
+extern MidiOutputSelectorControl keystep_output_selector;
+extern MidiOutputSelectorControl mpk49_output_selector;
+extern MidiOutputSelectorControl lestrum_pads_output_selector;
+extern MidiOutputSelectorControl lestrum_arp_output_selector;
+extern MidiOutputSelectorControl pc_usb_1_selector;
+extern MidiOutputSelectorControl pc_usb_2_selector;*/
+
+void set_target_wrapper_for_names(String source_label, String target_label) {
+    Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str());
+    MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
+    int index = find_wrapper_index_for_label((char*)target_label.c_str());
+    if (source_label.equals("beatstep_output")) {
+        beatstep_setOutputWrapper(target);
+        //beatstep_output_selector.actual_value_index = index;
+    } else if (source_label.equals("keystep_output")) {
+        keystep_setOutputWrapper(target);
+        //keystep_output_selector.actual_value_index = index;
+    } else if (source_label.equals("mpk49_output")) {
+        mpk49_setOutputWrapper(target);
+        //mpk49_output_selector.actual_value_index = index;
+    } else if (source_label.equals("lestrum_pads_output")) {
+        lestrum_pads_setOutputWrapper(target);
+        //lestrum_pads_output_selector.actual_value_index = index;
+    } else if (source_label.equals("lestrum_arp_output")) {
+        lestrum_arp_setOutputWrapper(target);
+        //lestrum_arp_output_selector.actual_value_index = index;
+    } else if (source_label.equals("pc_usb_1_output")) {
+        pc_usb_1_setOutputWrapper(target);
+        //pc_usb_1_selector.actual_value_index = index;
+    } else if (source_label.equals("pc_usb_2_output")) {
+        pc_usb_2_setOutputWrapper(target);
+        //pc_usb_2_selector.actual_value_index = index;
+    } else
+        Serial.printf("set_target_wrapper_for_names: Couldn't match source_label '%s' with anything!\n", source_label.c_str());
+    update_wrapper_menus_for_name(source_label, index);
+}
+
+/*char *find_wrapper_name_for_object(MIDIOutputWrapper *obj_to_find) {
+    for (int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
+        if (available_outputs[i]==obj_to_find) 
+            return available_outputs[i].
+    }
+}*/

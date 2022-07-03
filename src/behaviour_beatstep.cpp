@@ -27,6 +27,6 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 MIDIOutputWrapper *beatstep_output = &midi_out_bass_wrapper;
 void beatstep_setOutputWrapper(MIDIOutputWrapper *wrapper) {
   beatstep_output->stop_all_notes();
-  beatstep_output = wrapper;    
+  beatstep_output = wrapper;
 }
 

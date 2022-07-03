@@ -9,11 +9,11 @@
 #include "menuitems.h"
 
 class MidiOutputSelectorControl : public SelectorControl {
-    int actual_value_index;
     void (*setter_func)(MIDIOutputWrapper *midi_output);
     MIDIOutputWrapper *initial_selected_output_wrapper;
 
     public:
+    int actual_value_index;
 
     MidiOutputSelectorControl(const char *label) : SelectorControl(label, 0) {};
 /*        SelectorControl(label, 0) {

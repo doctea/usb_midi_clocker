@@ -5,6 +5,14 @@
 #include "midi_looper.h"
 
 #include "behaviour_subclocker.h"
+#include "behaviour_beatstep.h"
+#include "behaviour_keystep.h"
+#include "behaviour_mpk49.h"
+
+#include "midi_mapper.h"
+
+#include "midi_lestrum.h"
+#include "midi_pc_usb.h"
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
@@ -220,8 +228,20 @@ class Project {
                 myFile.println("");
             }*/
             //behaviour_subclocker->get_divisor();
+
+            // subclocker settings
             myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
             myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
+
+            // midi output mappings
+            if(beatstep_output!=nullptr)        myFile.printf("midi_output_map=beatstep_output|%s\n",       beatstep_output->label);
+            if(keystep_output!=nullptr)         myFile.printf("midi_output_map=keystep_output|%s\n",        keystep_output->label);
+            if(mpk49_output!=nullptr)           myFile.printf("midi_output_map=mpk49_output|%s\n",          mpk49_output->label);
+            if(lestrum_pads_output!=nullptr)    myFile.printf("midi_output_map=lestrum_pads_output|%s\n",   lestrum_pads_output->label);
+            if(lestrum_arp_output!=nullptr)     myFile.printf("midi_output_map=lestrum_arp_output|%s\n",    lestrum_arp_output->label);
+            if(pc_usb_1_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_1_output->label);
+            if(pc_usb_2_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_2_output->label);
+
             myFile.println("; end project");
             myFile.close();
             Serial.println("Finished saving.");
@@ -263,7 +283,14 @@ class Project {
                 behaviour_subclocker->set_divisor((int) line.remove(0,String("subclocker_divisor=").length()).toInt());
             } else if (line.startsWith("subclocker_delay_ticks=")) {
                 behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
-            } 
+            } else if (line.startsWith("midi_output_map=")) {
+                line = line.remove(0,String("midi_output_map=").length());
+                int split = line.indexOf('|');
+                String source_label = line.substring(0,split);
+                String target_label = line.substring(split+1,line.length());
+                //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
+                set_target_wrapper_for_names(source_label, target_label);
+            }
         }
 };
 

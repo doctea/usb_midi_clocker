@@ -12,6 +12,8 @@ extern MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS];
 MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
 int find_wrapper_index_for_label(char *to_find);
 
+//void set_output_wrapper_for_names(char*source_label, char*target_label);
+void set_target_wrapper_for_names(String source_label, String target_label);
 /*class MIDIOutputWrapperManager {
     public:
 
@@ -43,6 +45,5 @@ int find_wrapper_index_for_label(char *to_find);
         return nullptr;
     }
 }*/
-
 
 #endif
