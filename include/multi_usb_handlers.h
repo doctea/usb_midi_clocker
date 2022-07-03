@@ -20,7 +20,7 @@ void read_midi_usb_devices();
 void loop_midi_usb_devices();
 void send_midi_usb_clocks();
 
-void on_restart();
+void global_on_restart();
 void setup_multi_usb();
 
 #include <MIDI.h>

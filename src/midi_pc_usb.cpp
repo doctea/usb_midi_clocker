@@ -63,7 +63,7 @@ void pc_usb_midi_handle_start() {
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
     //tap_tempo_tracker.reset();
     playing = true;
-    on_restart();
+    global_on_restart();
   }
 }
 void pc_usb_midi_handle_continue() {

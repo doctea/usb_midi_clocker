@@ -285,7 +285,7 @@ void loop_midi_usb_devices() {
 }
 
 // call this when global clock should be reset
-void on_restart() {
+void global_on_restart() {
   restart_on_next_bar = false;
 
   Serial.println(F("on_restart()==>"));
