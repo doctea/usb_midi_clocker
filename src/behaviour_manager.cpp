@@ -2,6 +2,7 @@
 
 #include "behaviour_apcmini.h"
 #include "behaviour_bamble.h"
+#include "behaviour_beatstep.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -26,6 +27,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_BAMBLE
         behaviour_bamble = new DeviceBehaviour_Bamble();
         behaviour_manager->registerDevice(behaviour_bamble);
+    #endif
+
+    #ifdef ENABLE_BEATSTEP
+        behaviour_beatstep = new DeviceBehaviour_Beatstep();
+        behaviour_manager->registerDevice(behaviour_beatstep);
     #endif
     
     /*usb_manager->registerDevice(new USBDevice_Bamble());
