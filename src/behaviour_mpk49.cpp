@@ -7,17 +7,17 @@ DeviceBehaviour_mpk49 *behaviour_mpk49 = nullptr;
 }*/
 
 void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
-    Serial.println("mpk49_handle_note_on");
+    //Serial.println("mpk49_handle_note_on");
     if (behaviour_mpk49!=nullptr) behaviour_mpk49->note_on(inChannel, inNumber, inVelocity);
 }
 
 void mpk49_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
-    Serial.println("mpk49_handle_note_off");
+    //Serial.println("mpk49_handle_note_off");
     if (behaviour_mpk49!=nullptr) behaviour_mpk49->note_off(inChannel, inNumber, inVelocity);
 }
 
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
-    Serial.println("mpk49_handle_system_exclusive");
+    //Serial.println("mpk49_handle_system_exclusive");
     if (behaviour_mpk49!=nullptr) behaviour_mpk49->handle_system_exclusive(data, size);
 }
 
