@@ -5,7 +5,7 @@
 #include "midi_out_wrapper.h"
 
 #include "midi_lestrum.h"
-//#include "midi_bamble.h"
+#include "behaviour_bamble.h"
 
 #ifdef ENABLE_BITBOX
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
@@ -34,9 +34,9 @@
         if (note==GM_NOTE_ACOUSTIC_SNARE) note = GM_NOTE_ELECTRIC_SNARE;
         if (note==41) note = GM_NOTE_HI_MID_TOM;
         #ifdef ENABLE_BAMBLE
-            if (midi_bamble) {
+            if (behaviour_bamble->device) {
                 //Serial.println("sending!");
-                midi_bamble->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
+                behaviour_bamble->device->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
             }
         #endif
     }
@@ -44,8 +44,8 @@
         if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;      // map acoustic to electric so drum2musocv will use it
         if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HIGH_TOM;            // remap tom 
         #ifdef ENABLE_BAMBLE
-            if (midi_bamble) {
-                midi_bamble->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
+            if (behaviour_bamble->device) {
+                behaviour_bamble->device->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
             }
         #endif
     }

@@ -1,5 +1,7 @@
 #include "midi_mapper.h"
 
+#include "behaviour_bamble.h"
+
 // NOTE: you gotta be careful with the names of these things!
 // if there is a used MIDIOutputWrapper somewhere that doesnt have a label that matches these strings EXACTLY, the midi_mapper menu item will crash and apparently 
 // never tell us about it in console!!
@@ -13,8 +15,8 @@ MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS] = {
     //MIDIOutputWrapper("Serial 4 [unused ch 1]", midi_out_serial[3], 1),
     //MIDIOutputWrapper("Serial 5 [unused ch 1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch 1]", midi_out_serial[5], 1),
-    MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &midi_bamble, 1),
-    MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &midi_bamble, 2),
+    MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1),
+    MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2),
 };
 
 MIDIOutputWrapper *find_wrapper_for_name(char *label_to_find) {

@@ -16,8 +16,8 @@
 // TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
 class MIDIOutputWrapper {
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
-    MIDIDevice_BigBuffer *output_usb = nullptr;
-    MIDIDevice_BigBuffer **output_usb_pointer = nullptr;  // for late binding usb
+    MIDIDeviceBase *output_usb = nullptr;
+    MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
     byte default_channel = 1;
 
     int playing_notes[127];
@@ -30,12 +30,12 @@ class MIDIOutputWrapper {
             output_serialmidi = in_output_serialmidi;
             default_channel = channel;
         }
-        MIDIOutputWrapper(char *label, MIDIDevice_BigBuffer *in_output_usb, byte channel = 1) {
+        MIDIOutputWrapper(char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) {
             strcpy(this->label, label);
             output_usb = in_output_usb;
             default_channel = channel;
         }
-        MIDIOutputWrapper(char *label, MIDIDevice_BigBuffer **in_output_usb, byte channel = 1) {
+        MIDIOutputWrapper(char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) {
             strcpy(this->label, label);
             output_usb_pointer = in_output_usb;
             default_channel = channel;

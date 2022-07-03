@@ -18,16 +18,19 @@ class DeviceBehaviourBase {
         DeviceBehaviourBase() = default;
         virtual ~DeviceBehaviourBase() = default;
 
+        virtual uint32_t get_packed_id () { return (this->vid<<16 | this->pid); }
+
         // interface methods - static
         virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
             return vid==this->vid && pid==this->pid;
         }
         virtual bool matches_identifiers(uint32_t packed_id) {
-            uint32_t my_packed = (0x09e8<<16 | 0x0028);
+            return (this->get_packed_id()==packed_id);
+            /*uint32_t my_packed = (0x09e8<<16 | 0x0028);
             Serial.printf("DeviceBehaviourBase#matches_identifiers checking my_packed %08X against %08X\n", my_packed, packed_id);
             //return packed_id>>8 == this->vid && ((0b0000000011111111 & packed_id) == this->pid);
             //if ( vid == 0x09e8 && pid == 0x0028 ) {
-            return my_packed == packed_id;
+            return my_packed == packed_id;*/
         }
 
         virtual void setup_callbacks();
@@ -35,6 +38,7 @@ class DeviceBehaviourBase {
             Serial.printf("DeviceBehaviourBase#connected_device connecting %p\n", device);
             this->device = device;
             this->setup_callbacks();
+            this->init();
         }
         virtual void disconnect_device() {
             if (this->device!=nullptr) {
@@ -63,17 +67,33 @@ class DeviceBehaviourBase {
         virtual void loop(uint32_t ticks) {};
         virtual void on_tick(uint32_t ticks) {};
         virtual void on_restart() {};
-        virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {}
-        virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {}
-        virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {}
+        virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
+        virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
+        virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {};
+        virtual void init() {};
 
 };
 
-class ClockedUSBMidiDevice : public DeviceBehaviourBase {
+class ClockedBehaviour : public DeviceBehaviourBase {
     public:
+        bool started = false;
+
         virtual void send_clock(uint32_t ticks) override {
+            //Serial.println("send_clock() in ClockedBehaviour");
             if (this->device!=nullptr) {
                 this->device->sendRealTime(MIDIDevice::Clock);
+            } else {
+                //Serial.println("in clocked behaviour send_clock, no device!");
+            }
+        }
+
+        virtual void on_restart() override {
+            //Serial.println("\ton_restart() in ClockedBehaviour");
+            if (this->device!=nullptr) {
+                this->device->sendRealTime(MIDIDevice::Stop); //sendStop();
+                this->device->sendRealTime(MIDIDevice::Start); //sendStart();
+            } else {
+                //Serial.println("\tin clocked behaviour on_restart, no device!");
             }
         }
 };

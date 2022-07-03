@@ -9,8 +9,10 @@
 
 #include "multi_usb_handlers.h"
 
+#include "behaviour_bamble.h"
+
 // set the incoming midi from the USB host (ie computer) to go out to first Bamble pitch channel
-MIDIOutputWrapper midi_bamble_ch1_wrapper = MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &midi_bamble, 1);
+MIDIOutputWrapper midi_bamble_ch1_wrapper = MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &behaviour_bamble->device, 1);
 MIDIOutputWrapper *pc_usb_1_output = &midi_bamble_ch1_wrapper; //midi_out_bitbox_wrapper; //&midi_out_bass_wrapper;
 void pc_usb_1_setOutputWrapper(MIDIOutputWrapper *wrapper) {
   pc_usb_1_output->stop_all_notes();
