@@ -5,6 +5,7 @@
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
+#include "behaviour_subclocker.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -45,6 +46,11 @@ void setup_behaviour_manager() {
         behaviour_mpk49 = new DeviceBehaviour_mpk49();
         behaviour_mpk49->loop_track = &mpk49_loop_track;
         behaviour_manager->registerDevice(behaviour_mpk49);
+    #endif
+
+    #ifdef ENABLE_SUBCLOCKER
+        behaviour_subclocker = new DeviceBehaviour_Subclocker();
+        behaviour_manager->registerDevice(behaviour_subclocker);
     #endif
     
     /*usb_manager->registerDevice(new USBDevice_Bamble());

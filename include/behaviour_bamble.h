@@ -25,8 +25,6 @@ class DeviceBehaviour_Bamble : public ClockedBehaviour {
 
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
-        bool bamble_started = false;
-
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             this->device->setHandleControlChange(bamble_control_change);
@@ -35,7 +33,7 @@ class DeviceBehaviour_Bamble : public ClockedBehaviour {
         };
 
         virtual void init() override {
-            bamble_started = false;
+            started = false;
 
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2
             this->device->sendControlChange(78, 0, 10);

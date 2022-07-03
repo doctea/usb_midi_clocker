@@ -16,12 +16,13 @@
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
-//#include "midi_mpk49.h"
+#include "behaviour_subclocker.h"
+
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
 #include "midi_pc_usb.h"
 
-#include "midi_subclocker.h"
+#include "behaviour_subclocker.h"
 
 #include "clock.h"
 
@@ -103,9 +104,24 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #endif
 
 #ifdef ENABLE_SUBCLOCKER
-    NumberControl subclocker_divisor_control =      NumberControl("Subclocker div",     &subclocker_divisor,        subclocker_divisor,     1, 24, nullptr); //&on_subclocker_divisor_changed);
-    NumberControl subclocker_delay_ticks_control =  NumberControl("Subclocker delay",   &subclocker_delay_ticks,    subclocker_delay_ticks, 0, PPQN*BEATS_PER_BAR, nullptr); //&on_subclocker_divisor_changed);
-
+    //NumberControl subclocker_divisor_control =      NumberControl("Subclocker div",     &subclocker_divisor,        subclocker_divisor,     1, 24, nullptr); //&on_subclocker_divisor_changed);
+    ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_divisor_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
+        "Subclocker div", 
+        behaviour_subclocker, 
+        &DeviceBehaviour_Subclocker::set_divisor, 
+        &DeviceBehaviour_Subclocker::get_divisor, 
+        nullptr, //on_subclocker_divisor_changed
+        1,  //min
+        48  //max
+    );
+    //NumberControl subclocker_delay_ticks_control =  NumberControl("Subclocker delay",   &subclocker_delay_ticks,    subclocker_delay_ticks, 0, PPQN*BEATS_PER_BAR, nullptr); //&on_subclocker_divisor_changed);
+    ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_delay_ticks_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
+        "Subclocker delay",
+        behaviour_subclocker,
+        &DeviceBehaviour_Subclocker::set_delay_ticks,
+        &DeviceBehaviour_Subclocker::get_delay_ticks,
+        nullptr
+    );
 #endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
@@ -199,6 +215,7 @@ void setup_menu() {
 
     #ifdef ENABLE_SUBCLOCKER
         subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
+        subclocker_divisor_control.target_object     = subclocker_delay_ticks_control.target_object     = behaviour_subclocker;   // because behaviour_subclocker pointer won't be set yet..?
         menu->add(&subclocker_divisor_control);
         menu->add(&subclocker_delay_ticks_control);
     #endif

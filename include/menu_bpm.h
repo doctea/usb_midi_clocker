@@ -35,7 +35,7 @@ class BPMPositionIndicator : public MenuItem {
                     BPM_CURRENT_BEAT_OF_BAR + 1
                 );
                 tft->setTextSize(1);
-                tft->println("from External USB Host");
+                tft->println((char*)"from External USB Host");
             } else {
                 tft->printf((char*)"%04i:%02i:%02i\n",
                     BPM_CURRENT_PHRASE + 1, 

@@ -58,6 +58,12 @@ void setup() {
     while (!Serial);
   #endif
 
+  //tft_print((char*)"..USB device handler..");
+  // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
+  // TODO: have the behaviours add their menu items
+  Serial.println("..USB device handler..");
+  setup_behaviour_manager();
+
   #ifdef ENABLE_SCREEN
     //setup_tft();
     setup_menu();
@@ -95,9 +101,6 @@ void setup() {
 
   tft_print((char*)"..PC USB..\n");
   setup_pc_usb();
-
-  tft_print((char*)"..USB device handler..");
-  setup_behaviour_manager();
   
   tft_print((char*)"..USB..");
   setup_multi_usb();

@@ -33,7 +33,7 @@ class DeviceBehaviourBase {
             return my_packed == packed_id;*/
         }
 
-        virtual void setup_callbacks();
+        virtual void setup_callbacks() {};
         virtual void connect_device(MIDIDeviceBase *device) {
             Serial.printf("DeviceBehaviourBase#connected_device connecting %p\n", device);
             this->device = device;

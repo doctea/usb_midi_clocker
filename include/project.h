@@ -4,7 +4,8 @@
 #include "storage.h"
 #include "midi_looper.h"
 
-#include "midi_subclocker.h"
+#include "behaviour_subclocker.h"
+//extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
@@ -218,8 +219,9 @@ class Project {
                 }
                 myFile.println("");
             }*/
-            myFile.printf("subclocker_divisor=%i\n", subclocker_divisor);
-            myFile.printf("subclocker_delay_ticks=%i\n", subclocker_delay_ticks);
+            //behaviour_subclocker->get_divisor();
+            myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
+            myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
             myFile.println("; end project");
             myFile.close();
             Serial.println("Finished saving.");
@@ -255,12 +257,12 @@ class Project {
         }
 
         void load_project_parse_line(String line) {
-            if (line.charAt(0)==';') 
+            if (line.charAt(0)==';') {
                 return;  // skip comment lines
-            else if (line.startsWith("subclocker_divisor=")) {
-                subclocker_divisor = (uint8_t) line.remove(0,String("subclocker_divisor=").length()).toInt();
+            } else if (line.startsWith("subclocker_divisor=")) {
+                behaviour_subclocker->set_divisor((int) line.remove(0,String("subclocker_divisor=").length()).toInt());
             } else if (line.startsWith("subclocker_delay_ticks=")) {
-                subclocker_delay_ticks = (uint8_t) line.remove(0,String("subclocker_delay_ticks=").length()).toInt();
+                behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
             } 
         }
 };
