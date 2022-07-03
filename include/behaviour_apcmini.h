@@ -20,6 +20,8 @@
 
 class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
     public:
+        uint16_t vid = 0x09e8, pid = 0x0028;
+
         bool apcmini_started = false;
         bool apcmini_shift_held = false;
 
@@ -47,10 +49,12 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
                 static unsigned long last_processed_tick;
 
                 if (last_processed_tick!=ticks) {
+                    Serial.println("about to call apcmini_update_position_display()"); Serial.flush();
                     apcmini_update_position_display(ticks);
                 
                     if (this->device!=nullptr && (redraw_immediately || millis() - last_updated_display > 50)) {
                         //Serial.println(F("redraw_immediately is set!"));
+                        Serial.println("about to call apcmini_update_clock_display()"); Serial.flush();
                         apcmini_update_clock_display();
                         redraw_immediately = false;
                     }

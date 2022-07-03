@@ -26,7 +26,13 @@ byte get_colour(byte lev) {
 
 void apcmini_update_position_display(int ticks) {
   if (behaviour_apcmini==nullptr) return;
-  
+  //Serial.println("apcmini_update_position_display behaviour_apcmini isn't nullptr");
+
+  if (behaviour_apcmini->device==nullptr) {
+    //Serial.println("behaviour_apcmini->device IS nullptr!");
+    return;
+  }
+
   byte beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
   if (is_bpm_on_beat(ticks)) {
     //#define DEBUG_TICKS yes

@@ -19,7 +19,7 @@ void setup_behaviour_manager() {
     behaviour_apcmini = new DeviceBehaviour_APCMini();
     behaviour_apcmini->loop_track = &mpk49_loop_track;
 
-    behaviour_manager->registerDevice(new DeviceBehaviour_APCMini());
+    behaviour_manager->registerDevice(behaviour_apcmini);
     /*usb_manager->registerDevice(new USBDevice_Bamble());
     usb_manager->registerDevice(new USBDevice_Beatstep());
     usb_manager->registerDevice(new USBDevice_Keystep());

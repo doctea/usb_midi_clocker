@@ -23,11 +23,16 @@ class DeviceBehaviourBase {
             return vid==this->vid && pid==this->pid;
         }
         virtual bool matches_identifiers(uint32_t packed_id) {
-            return packed_id>>8 == this->vid && ((0b0000000011111111 & packed_id) == this->pid);
+            uint32_t my_packed = (0x09e8<<16 | 0x0028);
+            Serial.printf("DeviceBehaviourBase#matches_identifiers checking my_packed %08X against %08X\n", my_packed, packed_id);
+            //return packed_id>>8 == this->vid && ((0b0000000011111111 & packed_id) == this->pid);
+            //if ( vid == 0x09e8 && pid == 0x0028 ) {
+            return my_packed == packed_id;
         }
 
-        virtual void setup_callbacks() {}
+        virtual void setup_callbacks();
         virtual void connect_device(MIDIDeviceBase *device) {
+            Serial.printf("DeviceBehaviourBase#connected_device connecting %p\n", device);
             this->device = device;
             this->setup_callbacks();
         }

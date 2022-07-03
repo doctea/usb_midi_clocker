@@ -73,7 +73,8 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   usb_midi_slots[idx].packed_id = packed_id;
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
-  if (usb_midi_slots[idx].device!=nullptr) {
+  if (usb_midi_slots[idx].behaviour!=nullptr) {
+    Serial.printf("Disconnecting usb_midi_slot %i behaviour\n", idx);
     usb_midi_slots[idx].behaviour->disconnect_device();
     /*usb_midi_slots[idx].device->setHandleNoteOn(nullptr);
     usb_midi_slots[idx].device->setHandleNoteOff(nullptr);
@@ -92,8 +93,16 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   // loop over the registered behaviours and if the correct one is found, set it up
   for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
     DeviceBehaviourBase *behaviour = behaviour_manager->behaviours.get(i);
+    Serial.printf("Checking behaviour %i -- does it match %08X?\n", i, packed_id);
+    usb_midi_slots[idx].packed_id = packed_id;
     if (behaviour->matches_identifiers(packed_id)) {
+      Serial.printf("\tDetected!  Behaviour %i on usb midi idx %i\n", i, idx); //-- does it match %u?\n", i, packed_id);
+      /*if (usb_midi_slots[idx].device==nullptr) {
+        while(1)
+          Serial.printf("idx %i device is nullptr!\n", idx);
+      }*/
       behaviour->connect_device(usb_midi_slots[idx].device);
+      return;
     }
   }
 
@@ -253,7 +262,9 @@ void read_midi_usb_devices() {
 
 void behaviours_send_clock() {
   for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
+    //Serial.printf("behaviours_send_clock calling send_clock on behaviour %i\n", i); Serial.flush();
     behaviour_manager->behaviours.get(i)->send_clock(ticks);
+    //Serial.printf("behaviours_send_clock called send_clock on behaviour %i\n", i); Serial.flush();
   }
   /*
   #ifdef ENABLE_BEATSTEP
@@ -294,7 +305,12 @@ void behaviours_loop() {
   //noInterrupts();
   temp_tick = ticks;
   for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
+    DeviceBehaviourBase *behaviour = behaviour_manager->behaviours.get(i);
+    if (behaviour!=nullptr) {
+      //Serial.printf("behaviours_loop calling loop on behaviour %i\n", i); Serial.flush();
       behaviour_manager->behaviours.get(i)->loop(temp_tick);
+      //Serial.printf("behaviours_loop called loop on behaviour %i\n", i); Serial.flush();
+    }
   }
   /*
   //interrupts();
@@ -322,7 +338,9 @@ void behaviours_loop() {
 
 void behaviours_do_tick(unsigned long in_ticks) {
     for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
-        behaviour_manager->behaviours.get(i)->on_tick(in_ticks);
+      //Serial.printf("behaviours_do_tick calling on_tick on behaviour %i\n", i); Serial.flush();
+      behaviour_manager->behaviours.get(i)->on_tick(in_ticks);
+      //Serial.printf("behaviours_do_tick called on_tick on behaviour %i\n", i); Serial.flush();
     }
 }
 
@@ -348,9 +366,11 @@ void global_on_restart() {
   
   send_midi_serial_stop_start();
 
-  for(int i = 0 ; i < behaviour_manager->behaviours.size()  ; i++) {
+  for(int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
     if (behaviour_manager->behaviours.get(i)->device) {
+      Serial.printf("global_on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
       behaviour_manager->behaviours.get(i)->on_restart();
+      Serial.printf("global_on_restart called on_restart on behaviour %i\n", i); Serial.flush();
     }
   }
   /*#ifdef ENABLE_BEATSTEP
