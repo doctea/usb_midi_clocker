@@ -8,6 +8,11 @@
 
 #include "multi_usb_handlers.h"
 
+extern int current_beatstep_note;
+extern int last_beatstep_note;
+
+extern int bass_transpose_octave;
+
 extern MIDIOutputWrapper *beatstep_output;
 void beatstep_setOutputWrapper(MIDIOutputWrapper *);
 

@@ -13,8 +13,9 @@
 
 #include "midi_lestrum.h"
 
+#include "behaviour_beatstep.h"
+#include "behaviour_keystep.h"
 #include "midi_mpk49.h"
-#include "midi_beatstep.h"
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
 #include "midi_pc_usb.h"
