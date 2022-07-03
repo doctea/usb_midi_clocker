@@ -3,13 +3,12 @@
 // MPK49 loop indicator
 #if defined(ENABLE_LOOPER)
 
-#include "midi_mpk49.h"
+//#include "midi_mpk49.h"
+#include "behaviour_mpk49.h"
 #include "project.h"
 #include "mymenu.h"
 #include "menu.h"
 
-extern bool mpk49_recording;
-extern bool mpk49_playing;
 class LooperRecStatus : public MenuItem {   
     public:
         LooperRecStatus() : MenuItem("Loop status / slot") {};
@@ -19,7 +18,7 @@ class LooperRecStatus : public MenuItem {
             header(label, pos, selected, opened);
 
             tft->setTextSize(2);
-            if (mpk49_recording) {
+            if (behaviour_mpk49->recording) {
                 colours(opened, RED);
                 tft->print((char*)"[Rec]");
             } else {
@@ -28,7 +27,7 @@ class LooperRecStatus : public MenuItem {
             }
             colours(C_WHITE, BLACK);
             tft->print((char*)"  ");
-            if (mpk49_playing) {
+            if (behaviour_mpk49->playing) {
                 colours(opened, GREEN);
                 tft->print((char*)"[>>]");
             } else {

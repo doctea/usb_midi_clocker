@@ -7,6 +7,8 @@
 #include "MidiMappings.h"
 #include "midi_out_wrapper.h"
 
+#include "bpm.h"
+
 #include "storage.h"
 //#include "menu.h"
 //#include "mymenu.h"
