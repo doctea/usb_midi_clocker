@@ -76,12 +76,6 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   if (usb_midi_slots[idx].behaviour!=nullptr) {
     Serial.printf("Disconnecting usb_midi_slot %i behaviour\n", idx);
     usb_midi_slots[idx].behaviour->disconnect_device();
-    /*usb_midi_slots[idx].device->setHandleNoteOn(nullptr);
-    usb_midi_slots[idx].device->setHandleNoteOff(nullptr);
-    usb_midi_slots[idx].device->setHandleControlChange(nullptr);
-    usb_midi_slots[idx].device->setHandleClock(nullptr);
-    usb_midi_slots[idx].device->setHandleStart(nullptr);
-    usb_midi_slots[idx].device->setHandleStop(nullptr);*/
   }
 
   if (packed_id==0) {
@@ -90,82 +84,9 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
     return;
   }
 
-  // loop over the registered behaviours and if the correct one is found, set it up
-  for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
-    DeviceBehaviourBase *behaviour = behaviour_manager->behaviours.get(i);
-    Serial.printf("Checking behaviour %i -- does it match %08X?\n", i, packed_id);
-    usb_midi_slots[idx].packed_id = packed_id;
-    if (behaviour->matches_identifiers(packed_id)) {
-      Serial.printf("\tDetected!  Behaviour %i on usb midi idx %i\n", i, idx); //-- does it match %u?\n", i, packed_id);
-      /*if (usb_midi_slots[idx].device==nullptr) {
-        while(1)
-          Serial.printf("idx %i device is nullptr!\n", idx);
-      }*/
-      behaviour->connect_device(usb_midi_slots[idx].device);
-      return;
-    }
-  }
-
-  /*#ifdef ENABLE_BEATSTEP
-    if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
-      ixBeatStep = idx;
-      Serial.printf(F("BeatStep connected on idx %i...\n"),idx);
-      midi_beatstep = usb_midi_slots[idx].device;
-      usb_midi_slots[idx].packed_id = packed_id;
-      beatstep_init();
-      Serial.println(F("completed Beatstep init"));
-      return;
-    } 
-  #endif
-  #ifdef ENABLE_APCMINI
-    if ( vid == 0x09e8 && pid == 0x0028 ) {   //is AKAI APCmini?
-      ixAPCmini = idx;
-      Serial.printf(F("AKAI APCmini connected on idx %i...\n"),idx);
-      midi_apcmini = usb_midi_device[idx];
-      usb_midi_connected[idx] = packed_id;
-      apcmini_init();
-      return;
-    }
-  #endif
-  #ifdef ENABLE_BAMBLE
-    if ( vid == 0x2886 && pid == 0x800B ) {            //is BAMBLE?
-      ixBamble = idx;
-      Serial.printf(F("BAMBLEWEENY connected on idx %i....\n"),idx);
-      midi_bamble = usb_midi_device[idx];
-      usb_midi_connected[idx] = packed_id;
-      bamble_init();
-      return;
-    }
-  #endif
-  #ifdef ENABLE_MPK49
-    if (vid == 0x09E8 && pid== 0x006B) {
-      ixMPK49 = idx;
-      Serial.printf(F("MPK49 connected on idx %i....\n"),idx);
-      midi_MPK49 = usb_midi_device[idx];
-      usb_midi_connected[idx] = packed_id;
-      MPK49_init();
-      return;
-    }
-  #endif
-  #ifdef ENABLE_KEYSTEP
-    if (vid == 0x1C75 && pid== 0x0288) {
-      ixKeystep = idx;
-      Serial.printf(F("Keystep connected on idx %i....\n"),idx);
-      midi_keystep = usb_midi_device[idx];
-      usb_midi_connected[idx] = packed_id;
-      keystep_init();
-      return;
-    }
-  #endif
-  #ifdef ENABLE_SUBCLOCKER
-    if ( vid == 0x1337 && pid == 0x1337 ) {            //is SUBCLOCKER?
-      ixSubclocker = idx;
-      Serial.printf(F("SUBCLOCKER connected on idx %i.\n"),idx);
-      midi_subclocker = usb_midi_device[idx];
-      subclocker_init();
-      return;
-    }
-  #endif*/
+  // attempt to connect this device to a registered behaviour type
+  if (behaviour_manager->attempt_device_connect(idx, packed_id))
+    return;
 
   //usb_midi_connected[idx] = packed_id;
   usb_midi_slots[idx].packed_id = packed_id;
@@ -185,51 +106,7 @@ void update_usb_device_connections() {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
       // unassign the midi_xxx helper pointers if appropriate
       usb_midi_slots[port].behaviour = nullptr;
-      /*#ifdef ENABLE_BAMBLE
-        if (midi_bamble==usb_midi_slots[port].device) {
-          Serial.printf("Nulling ixBamble and midi_bamble\n");
-          ixBamble = 0xFF;
-          midi_bamble = nullptr;
-        }
-      #endif
-      #ifdef ENABLE_BEATSTEP
-        if (midi_beatstep==usb_midi_slots[port].device) {
-          Serial.printf("Nulling ixBeatStep and midi_beatstep\n");
-          ixBeatStep = 0xFF;
-          midi_beatstep = nullptr;
-        }
-      #endif
-      #ifdef ENABLE_APCMINI
-        if (midi_apcmini==usb_midi_slots[port].device) {
-          Serial.printf("Nulling ixAPCmini and midi_apcmini\n");
-          ixAPCmini = 0xFF;
-          midi_apcmini = nullptr;
-        }
-      #endif
-      #ifdef ENABLE_MPK49
-        if (midi_MPK49==usb_midi_slots[port].device) {
-          Serial.printf("Nulling ixMPK49 and midi_MPK49\n");
-          ixMPK49 = 0xFF;
-          midi_MPK49 = nullptr;
-        }
-      #endif
-      #ifdef ENABLE_KEYSTEP
-        if (midi_keystep==usb_midi_slots[port].device) {
-          Serial.printf("Nulling ixKeystep and midi_keystep\n");
-          ixKeystep = 0xFF;
-          midi_keystep = nullptr;
-        }
-      #endif
-      #ifdef ENABLE_SUBCLOCKER
-        if (midi_subclocker==usb_midi_slots[port].device) {
-          Serial.printf("Nulling ixSubclocker and midi_subclocker\n");
-          ixSubclocker = 0xFF;
-          midi_subclocker = nullptr;
-        }
-      #endif*/
-
       Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_slots[port].packed_id);
-
       // call setup_usb_midi_device() to assign device to port and set handlers
       setup_usb_midi_device(port, packed_id);
       Serial.println("-----");
@@ -260,89 +137,7 @@ void read_midi_usb_devices() {
   #endif
 }
 
-void behaviours_send_clock() {
-  for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
-    //Serial.printf("behaviours_send_clock calling send_clock on behaviour %i\n", i); Serial.flush();
-    behaviour_manager->behaviours.get(i)->send_clock(ticks);
-    //Serial.printf("behaviours_send_clock called send_clock on behaviour %i\n", i); Serial.flush();
-  }
-  /*
-  #ifdef ENABLE_BEATSTEP
-    if(ixBeatStep!=0xFF) {
-      midi_beatstep->sendRealTime(midi::Clock);
-      //midi_beatstep->send_now();
-    }
-  #endif
-  #ifdef ENABLE_KEYSTEP
-    if(ixKeystep!=0XFF) {
-      midi_keystep->sendRealTime(midi::Clock);
-    }
-  #endif
-  //if(ixAPCmini!=0xFF) {
-  //  midi_apcmini->sendRealTime(midi::Clock);
-  //}
-  #ifdef ENABLE_BAMBLE
-    if (ixBamble!=0xFF) {
-      midi_bamble->sendRealTime(midi::Clock);
-      //midi_bamble->send_now();
-    }
-  #endif
-  #ifdef ENABLE_MPK49
-    if (ixMPK49!=0xFF) {
-      midi_MPK49->sendRealTime(midi::Clock);
-    }
-  #endif
-  #ifdef ENABLE_SUBCLOCKER
-    if (ixSubclocker!=0xFF) {
-      subclocker_send_clock(ticks);
-      //midi_subclocker->sendRealTime(midi::Clock);
-    }
-  #endif*/
-}
 
-void behaviours_loop() {
-  unsigned long temp_tick;
-  //noInterrupts();
-  temp_tick = ticks;
-  for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
-    DeviceBehaviourBase *behaviour = behaviour_manager->behaviours.get(i);
-    if (behaviour!=nullptr) {
-      //Serial.printf("behaviours_loop calling loop on behaviour %i\n", i); Serial.flush();
-      behaviour_manager->behaviours.get(i)->loop(temp_tick);
-      //Serial.printf("behaviours_loop called loop on behaviour %i\n", i); Serial.flush();
-    }
-  }
-  /*
-  //interrupts();
-  #ifdef ENABLE_BEATSTEP
-      beatstep_loop(temp_tick);
-  #endif
-
-  #ifdef ENABLE_APCMINI
-      apcmini_loop(temp_tick);
-  #endif
-
-  #ifdef ENABLE_BAMBLE
-      bamble_loop(temp_tick);
-  #endif
-
-  #ifdef ENABLE_MPK49
-      MPK49_loop(temp_tick);
-  #endif
-
-  #ifdef ENABLE_KEYSTEP
-      keystep_loop(temp_tick);
-  #endif
-  */
-}
-
-void behaviours_do_tick(unsigned long in_ticks) {
-    for (int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
-      //Serial.printf("behaviours_do_tick calling on_tick on behaviour %i\n", i); Serial.flush();
-      behaviour_manager->behaviours.get(i)->on_tick(in_ticks);
-      //Serial.printf("behaviours_do_tick called on_tick on behaviour %i\n", i); Serial.flush();
-    }
-}
 
 // call this when global clock should be reset
 void global_on_restart() {
@@ -366,44 +161,7 @@ void global_on_restart() {
   
   send_midi_serial_stop_start();
 
-  for(int i = 0 ; i < behaviour_manager->behaviours.size() ; i++) {
-    if (behaviour_manager->behaviours.get(i)->device) {
-      Serial.printf("global_on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
-      behaviour_manager->behaviours.get(i)->on_restart();
-      Serial.printf("global_on_restart called on_restart on behaviour %i\n", i); Serial.flush();
-    }
-  }
-  /*#ifdef ENABLE_BEATSTEP
-    Serial.print(F("restart beatstep..."));
-    beatstep_on_restart();
-    Serial.println(F("restarted"));
-  #endif
-  #ifdef ENABLE_BAMBLE
-    Serial.print(F("restart bamble..."));
-    bamble_on_restart();
-    Serial.println(F("restarted"));
-  #endif
-  #ifdef ENABLE_APCMINI
-    Serial.print(F("restart apcmini..."));
-    apcmini_on_restart();
-    Serial.println(F("restarted"));
-    redraw_immediately = true;
-  #endif
-  #ifdef ENABLE_KEYSTEP
-    Serial.print(F("restart keystep..."));
-    keystep_on_restart();
-    Serial.println(F("restarted"));
-  #endif
-  #ifdef ENABLE_MPK49
-    Serial.print(F("restart mpk49..."));
-    MPK49_on_restart();
-    Serial.println(F("restarted"));
-  #endif
-  #ifdef ENABLE_SUBCLOCKER
-    Serial.print(F("restart subclocker..."));
-    subclocker_on_restart();
-    Serial.println(F("restarted"));
-  #endif*/
+  behaviour_manager->on_restart();
 
   Serial.println(F("<==on_restart()"));
 }

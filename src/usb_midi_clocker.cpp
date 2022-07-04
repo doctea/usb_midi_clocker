@@ -190,7 +190,7 @@ void loop()
   #ifdef ENABLE_USB
     update_usb_device_connections();
     read_midi_usb_devices();
-    behaviours_loop();
+    behaviour_manager->do_loops();
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
 
@@ -245,7 +245,7 @@ void do_tick(uint32_t in_ticks) {
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
-    behaviours_send_clock();
+    behaviour_manager->send_clocks();
   #endif
 
   #ifdef ENABLE_CV
@@ -253,30 +253,7 @@ void do_tick(uint32_t in_ticks) {
   #endif
 
   #ifdef ENABLE_USB
-    behaviours_do_tick(in_ticks);
-    /*#ifdef ENABLE_APCMINI
-      apcmini_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_BAMBLE
-      bamble_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_BEATSTEP
-      beatstep_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_KEYSTEP
-      keystep_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_MPK49
-      MPK49_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_SUBCLOCKER
-      subclocker_on_tick(in_ticks);
-    #endif*/
+    behaviour_manager->do_ticks(in_ticks);
   #endif
 
   #ifdef DEBUG_TICKS
