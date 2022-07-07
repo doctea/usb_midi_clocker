@@ -44,7 +44,7 @@
   extern int clock_mode;// = DEFAULT_CLOCK_MODE;
 
   /// use cheapclock clock
-  extern unsigned long t1;
+  extern unsigned long last_ticked_at_micros;
   void setup_cheapclock();
 
 #endif

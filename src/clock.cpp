@@ -36,7 +36,7 @@
   int clock_mode = DEFAULT_CLOCK_MODE;
 
   /// use cheapclock clock
-  unsigned long t1 = millis();
+  unsigned long last_ticked_at_micros = micros();
   void setup_cheapclock() {
     ticks = 0;
     set_bpm(bpm_current);

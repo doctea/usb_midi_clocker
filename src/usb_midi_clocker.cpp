@@ -139,22 +139,24 @@ void loop()
   Usb.Task();
   //while (usbMIDI.read());
 
-  static unsigned long last_ticked_time;
+  //static unsigned long last_ticked_at_micros = 0;
 
   bool ticked = false;
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST && /*playing && */check_and_unset_pc_usb_midi_clock_ticked())
     ticked = true;
-  else if (clock_mode==CLOCK_INTERNAL && playing && millis()-t1 >= ms_per_tick)
+  else if (clock_mode==CLOCK_INTERNAL && playing && micros()-last_ticked_at_micros >= micros_per_tick)
     ticked = true;
   else if (clock_mode==CLOCK_NONE)
     ticked = false;
   
   if ( playing && ticked ) {
-    /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
-      Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
-    }*/
+    if (micros()-last_ticked_at_micros > micros_per_tick+1000) { //((unsigned long)micros_per_tick)+1) {
+      //Serial.printf("WARNING: tick took %ius, more than micros_per_tick of %ius!\n", micros()-last_ticked_at_micros, (unsigned long)micros_per_tick);
+      Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
+    }
     do_tick(ticks);
-    last_ticked_time = millis();
+    //last_ticked_at_micros = micros();
+    last_ticked_at_micros = micros();
     ticks++;
 
     /*  // but thing maths works out better if this is called here?
@@ -168,7 +170,6 @@ void loop()
     }
     */
 
-    t1 = millis();
   } else {
     #ifdef ENABLE_SCREEN
       //tft_update(ticks);
@@ -214,7 +215,7 @@ void loop()
 // called inside interrupt
 void do_tick(uint32_t in_ticks) {
   /*#ifdef DEBUG_TICKS
-      unsigned int delta = millis()-t1;
+      unsigned int delta = millis()-last_ticked_at_micros;
 
       Serial.print(ticks);
       Serial.print(F(":\tTicked with delta\t"));
@@ -262,6 +263,6 @@ void do_tick(uint32_t in_ticks) {
 
   //last_processed_tick = ticks;
   //ticks++;
-  //t1 = millis();
+  //last_ticked_at_micros = millis();
   //single_step = false;
 }
