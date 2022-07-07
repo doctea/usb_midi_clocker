@@ -49,7 +49,7 @@ class DeviceBehaviourBase {
                 this->device->setHandleClock(nullptr);
                 this->device->setHandleStart(nullptr);
                 this->device->setHandleStop(nullptr);
-                this->device->setHandleSystemExclusive(nullptr);
+                this->device->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
             }
             this->device = nullptr;
         }
