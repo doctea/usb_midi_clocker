@@ -12,6 +12,8 @@
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN
     #define TFT_ST7789_T3
+    #define TFT_ST7789_T3_BIG
+    #define MENU_MS_BETWEEN_REDRAW  75
 #endif
 
 #ifndef ENABLE_SCREEN

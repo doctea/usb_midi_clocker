@@ -25,6 +25,7 @@ class LooperRecStatus : public MenuItem {
                 colours(opened, C_WHITE);
                 tft->print((char*)"     ");
             }
+            //tft->print("\n");
             colours(C_WHITE, BLACK);
             tft->print((char*)"  ");
             if (behaviour_mpk49->playing) {
@@ -34,6 +35,7 @@ class LooperRecStatus : public MenuItem {
                 colours(opened, BLUE);
                 tft->print((char*)"[##]");
             }
+            tft->print("\n");
             return tft->getCursorY();// + 10;
         }
 };

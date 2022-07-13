@@ -36,7 +36,7 @@
 #endif
 
 //DisplayTranslator *tft;
-DisplayTranslator_STeensy *tft;
+DisplayTranslator_STeensy_Big *tft;
 Menu *menu; // = Menu();
 
 #ifdef ENCODER_KNOB_L
@@ -128,7 +128,8 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
 
-DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
+//DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
+DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
 
 void mpk49_loop_track_setOutputWrapper(MIDIOutputWrapper *wrapper) {
     mpk49_loop_track.setOutputWrapper(wrapper);

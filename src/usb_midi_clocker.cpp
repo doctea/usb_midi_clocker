@@ -152,7 +152,9 @@ void loop()
   if ( playing && ticked ) {
     if (micros()-last_ticked_at_micros > micros_per_tick+1000) { //((unsigned long)micros_per_tick)+1) {
       //Serial.printf("WARNING: tick took %ius, more than micros_per_tick of %ius!\n", micros()-last_ticked_at_micros, (unsigned long)micros_per_tick);
-      Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
+      #ifdef DEBUG
+        Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
+      #endif
     }
     do_tick(ticks);
     //last_ticked_at_micros = micros();
@@ -175,10 +177,12 @@ void loop()
       //tft_update(ticks);
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
       static unsigned long last_drawn;
-      if (millis() - last_drawn > 50) {
+      menu->update_inputs();
+      if (millis() - last_drawn > 75) {
         menu->update_ticks(ticks);
-        menu->update_inputs();
+        //long before_display = millis();
         menu->display(); //update(ticks);
+        //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
       }
       //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
