@@ -20,9 +20,7 @@ void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
 class DeviceBehaviour_Bamble : public ClockedBehaviour {
     public:
-        //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x2886, pid = 0x800B;
-
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
         virtual void setup_callbacks() override {

@@ -60,11 +60,11 @@ class MidiOutputSelectorControl : public SelectorControl {
     }
 
     virtual void setter (int new_value) {
-        Serial.printf("MidiOutputSelectorControl changing from %i to %i\n", this->actual_value_index, new_value);
+        Serial.printf("MidiOutputSelectorControl changing from %i to %i\n", this->actual_value_index, new_value); Serial.flush();
         actual_value_index = new_value;
         selected_value_index = actual_value_index;
         if (this->setter_func!=nullptr) {
-            Serial.printf("setting new output\n");
+            Serial.printf("setting new output to number %i\n", new_value); Serial.flush();
             this->setter_func(&available_outputs[new_value]);
         }
     }

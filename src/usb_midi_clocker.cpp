@@ -121,9 +121,9 @@ void setup() {
 // -----------------------------------------------------------------------------`
 //
 // -----------------------------------------------------------------------------
-void loop()
-{
+void loop() {
   //Serial.println("start of loop!"); Serial.flush();
+  bool debug = false;
 
   #ifdef DEBUG_LED
     static int loop_counter;
@@ -135,8 +135,9 @@ void loop()
       //Serial.println(F("100000th loop()"));
     }
   #endif
-
+  if (debug) { Serial.println("about to Usb.Task()"); Serial.flush(); }
   Usb.Task();
+  if (debug) { Serial.println("just did Usb.Task()"); Serial.flush(); }
   //while (usbMIDI.read());
 
   //static unsigned long last_ticked_at_micros = 0;
@@ -156,7 +157,9 @@ void loop()
         Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
       #endif
     }
+    if (debug) { Serial.println("about to do_tick"); Serial.flush(); }
     do_tick(ticks);
+    if (debug) { Serial.println("just did do_tick"); Serial.flush(); }
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();
     ticks++;
@@ -178,10 +181,12 @@ void loop()
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
       static unsigned long last_drawn;
       menu->update_inputs();
-      if (millis() - last_drawn > 75) {
+      if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         menu->update_ticks(ticks);
         //long before_display = millis();
+        Serial.println("about to menu->display"); Serial.flush();
         menu->display(); //update(ticks);
+        Serial.println("just did menu->display"); Serial.flush();
         //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
       }
@@ -250,7 +255,9 @@ void do_tick(uint32_t in_ticks) {
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
+    //Serial.println("in do_tick() about to behaviour_manager->send_clocks()"); Serial.flush();
     behaviour_manager->send_clocks();
+    //Serial.println("in do_tick() just did behaviour_manager->send_clocks()"); Serial.flush();
   #endif
 
   #ifdef ENABLE_CV
@@ -258,7 +265,9 @@ void do_tick(uint32_t in_ticks) {
   #endif
 
   #ifdef ENABLE_USB
+    //Serial.println("in do_tick() about to behaviour_manager->do_ticks()"); Serial.flush();
     behaviour_manager->do_ticks(in_ticks);
+    //Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush();
   #endif
 
   #ifdef DEBUG_TICKS

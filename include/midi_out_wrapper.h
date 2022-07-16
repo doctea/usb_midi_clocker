@@ -42,13 +42,15 @@ class MIDIOutputWrapper {
         }
 
         void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-            //Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
+            Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
             if (channel==0) channel = default_channel;
-            if (output_serialmidi)              output_serialmidi->sendNoteOn(pitch, velocity, channel);
-            if (output_usb)                     output_usb->sendNoteOn(pitch, velocity, channel);
-            if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)
+            if (output_serialmidi!=nullptr)              output_serialmidi->sendNoteOn(pitch, velocity, channel);
+            if (output_usb!=nullptr)                     output_usb->sendNoteOn(pitch, velocity, channel);
+            if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr) {
+                Serial.println("got an output_usb_pointer..");
                                                 (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
-                                                
+            }
+            Serial.println("sent NoteOn");                                    
             playing_notes[pitch]++;
         }
 

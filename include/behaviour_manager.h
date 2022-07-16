@@ -14,6 +14,10 @@ class DeviceBehaviourManager {
         LinkedList<DeviceBehaviourBase *> behaviours = LinkedList<DeviceBehaviourBase *>();
 
         void registerDevice(DeviceBehaviourBase *device) {
+            if (device==nullptr) {
+                Serial.println("registerDevice passed a nullptr!"); Serial.flush();
+                return;
+            }
             this->behaviours.add(device);
         }
 
@@ -27,6 +31,8 @@ class DeviceBehaviourManager {
                     Serial.printf("\tDetected!  Behaviour %i on usb midi idx %i\n", i, idx); //-- does it match %u?\n", i, packed_id);
                     behaviour->connect_device(usb_midi_slots[idx].device);
                     return true;
+                } else {
+                    Serial.printf("Didn't find a behaviour for %u, %08X!", idx, packed_id);
                 }
             }
             return false;
@@ -65,9 +71,9 @@ class DeviceBehaviourManager {
         void on_restart() {
             for(int i = 0 ; i < behaviours.size() ; i++) {
                 if (behaviours.get(i)->device) {
-                Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
                 behaviours.get(i)->on_restart();
-                Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
                 }
             }
         }
