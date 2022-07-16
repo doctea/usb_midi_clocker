@@ -17,6 +17,7 @@
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
 #include "behaviour_subclocker.h"
+#include "behaviour_craftsynth.h"
 
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
@@ -124,6 +125,10 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     );
 #endif
 
+/*#ifdef ENABLE_CRAFTSYNTH
+    MidiOutputSelectorControl craftsynth_output_selector = MidiOutputSelectorControl("CraftSynth Output");
+#endif*/
+
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
@@ -164,6 +169,9 @@ void setup_menu() {
         lestrum_pads_output_selector.configure(lestrum_pads_output, lestrum_pads_setOutputWrapper);
         lestrum_arp_output_selector.configure(lestrum_arp_output, lestrum_arp_setOutputWrapper);
     #endif
+    /*#ifdef ENABLE_CRAFTSYNTH
+        craftsynth_output_selector.configure(craftsynth_output, craftsynth_setOutputWrapper);
+    #endif*/
     pc_usb_input_1_selector.configure(pc_usb_1_output, pc_usb_1_setOutputWrapper);
     pc_usb_input_2_selector.configure(pc_usb_2_output, pc_usb_2_setOutputWrapper);
     

@@ -6,6 +6,7 @@
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
 #include "behaviour_subclocker.h"
+#include "behaviour_craftsynth.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -28,7 +29,7 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_BAMBLE
-        behaviour_bamble = new DeviceBehaviour_Bamble();
+        //behaviour_bamble = new DeviceBehaviour_Bamble();      // can be used as an output so has to be instantiated at compile time
         behaviour_manager->registerDevice(behaviour_bamble);
     #endif
 
@@ -51,6 +52,13 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_SUBCLOCKER
         behaviour_subclocker = new DeviceBehaviour_Subclocker();
         behaviour_manager->registerDevice(behaviour_subclocker);
+    #endif
+
+    #ifdef ENABLE_CRAFTSYNTH
+        Serial.println("about to register DeviceBehaviour_CraftSynth..."); Serial.flush();
+        //behaviour_craftsynth = new DeviceBehaviour_CraftSynth();  // can be used as an output so has to be instantiated at compile time
+        behaviour_manager->registerDevice(behaviour_craftsynth);
+        Serial.println("Finished registering"); Serial.flush();
     #endif
     
     /*usb_manager->registerDevice(new USBDevice_Bamble());

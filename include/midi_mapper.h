@@ -5,9 +5,12 @@
 #include "midi_outs.h"
 #include "midi_out_wrapper.h"
 
-#define NUM_AVAILABLE_OUTPUTS 8
+#ifdef ENABLE_CRAFTSYNTH
+    #define NUM_AVAILABLE_OUTPUTS 9
+#else
+    #define NUM_AVAILABLE_OUTPUTS 8
+#endif
 extern MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS]; 
-//#define NUM_AVAILABLE_OUTPUTS (sizeof(available_outputs)/sizeof(MIDIOutputWrapper))
 
 MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
 int find_wrapper_index_for_label(char *to_find);
