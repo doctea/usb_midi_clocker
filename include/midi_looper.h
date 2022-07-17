@@ -245,8 +245,8 @@ class MIDITrack {
         }
 
         void stop_all_notes() {
-            // todo: probably move this into the wrapper, so that can have multiple sources playing into the same output?
-            this->output->stop_all_notes();
+            if (output!=nullptr)
+                this->output->stop_all_notes();
             /*for (byte i = 0 ; i < 127 ; i++) {
                 if (playing_notes[i]) {
                     output->sendNoteOff(i, 0);
@@ -260,7 +260,8 @@ class MIDITrack {
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
-                    output->sendNoteOff(i, 0);
+                    if (output!=nullptr)
+                        output->sendNoteOff(i, 0);
                     record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
                     recorded_hanging_notes[i] = false;
                 }
