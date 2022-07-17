@@ -3,10 +3,12 @@
 
 # usb_midi_clocker
 
-Proof-of-concept of clocking multiple USB MIDI devices and outputting Eurorack CV clock, using a Teensy 4.1 mounted to a Deftaudio 8x8 breakout board (available on Tindie).  The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beatstep), acting as master clock for USB MIDI, to output Eurorack CV clock, with shiftable generator/divider, and other neat features like sequencer, looping, stuff like that..
+The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beatstep), acting as master clock for USB MIDI, to output Eurorack CV clock, with shiftable generator/divider, and other neat features like a sequencer, looping, stuff like that..
+
+(Way more than a) proof-of-concept of clocking multiple USB MIDI devices and outputting Eurorack CV clock, using a Teensy 4.1 mounted to a Deftaudio 8x8 breakout board (available on Tindie).  
 
 - Works with Arturia Beatstep (requires receiving a MIDI start message externally before it will listen to external clock!)
-- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
+- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36/tree/fixing-midi-clock due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
 ## Requirements
 
@@ -27,6 +29,7 @@ Proof-of-concept of clocking multiple USB MIDI devices and outputting Eurorack C
   - Akai APCMini (used as interface for sequencer+clock divisions)
   - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
   - A [mystery device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
+  - Modal CraftSynth 2.0
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 for info + [custom menu system](https://github.com/doctea/mymenu)
   - Controlled with rotary encoder + buttons and via APCMini 
