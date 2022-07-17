@@ -1,12 +1,19 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices wit
 
+
 #if defined(__arm__) && defined(CORE_TEENSY)
   //#define byte uint8_t
   #define F(X) X
 #endif
 
 #include <Arduino.h>
+
+#define GDB_DEBUG
+#ifdef GDB_DEBUG
+  #include "TeensyDebug.h"
+  #pragma GCC optimize ("O0")
+#endif
 
 #include "Config.h"
 
@@ -52,10 +59,15 @@ void do_tick(uint32_t ticks);
 
 #include "behaviour_manager.h"
 
+
 void setup() {
   Serial.begin(115200);
   #ifdef WAIT_FOR_SERIAL
     while (!Serial);
+  #endif
+
+  #ifdef GDB_DEBUG
+    debug.begin(SerialUSB1);
   #endif
 
   //tft_print((char*)"..USB device handler..");
@@ -160,6 +172,9 @@ void loop() {
     if (debug) { Serial.println("about to do_tick"); Serial.flush(); }
     do_tick(ticks);
     if (debug) { Serial.println("just did do_tick"); Serial.flush(); }
+
+    menu->update_ticks(ticks);
+
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();
     ticks++;
@@ -182,7 +197,6 @@ void loop() {
       static unsigned long last_drawn;
       menu->update_inputs();
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
-        menu->update_ticks(ticks);
         //long before_display = millis();
         Serial.println("about to menu->display"); Serial.flush();
         menu->display(); //update(ticks);

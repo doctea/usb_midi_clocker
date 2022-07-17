@@ -4,6 +4,9 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_BEATSTEP
+
 #include "behaviour_base.h"
 
 #include "multi_usb_handlers.h"
@@ -11,7 +14,7 @@
 extern int current_beatstep_note;
 extern int last_beatstep_note;
 
-extern int bass_transpose_octave;
+//extern int bass_transpose_octave;
 
 extern MIDIOutputWrapper *beatstep_output;
 void beatstep_setOutputWrapper(MIDIOutputWrapper *);
@@ -92,5 +95,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
 };
 
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
+
+#endif
 
 #endif

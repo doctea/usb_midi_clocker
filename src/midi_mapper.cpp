@@ -21,10 +21,10 @@ MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS] = {
     //MIDIOutputWrapper("Serial 6 [unused ch 1]", midi_out_serial[5], 1),
     MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1),
     MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2),
-    //MIDIOutputWrapper((char*)"USB : Bamble : ch 3", &(behaviour_bamble->device), 3),
-    #ifdef ENABLE_CRAFTSYNTH
+    MIDIOutputWrapper((char*)"USB : Bamble : ch 3", &(behaviour_bamble->device), 3),
+    /*#ifdef ENABLE_CRAFTSYNTH
         MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1),
-    #endif
+    #endif*/
 }; 
     
 //#define NUM_AVAILABLE_OUTPUTS sizeof(available_outputs)
@@ -70,30 +70,57 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str()); Serial.flush();
     MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
     int index = find_wrapper_index_for_label((char*)target_label.c_str());
-    if (source_label.equals("beatstep_output")) {
-        beatstep_setOutputWrapper(target);
-        //beatstep_output_selector.actual_value_index = index;
-    } else if (source_label.equals("keystep_output")) {
-        keystep_setOutputWrapper(target);
-        //keystep_output_selector.actual_value_index = index;
-    } else if (source_label.equals("mpk49_output")) {
-        mpk49_setOutputWrapper(target);
-        //mpk49_output_selector.actual_value_index = index;
-    } else if (source_label.equals("lestrum_pads_output")) {
-        lestrum_pads_setOutputWrapper(target);
-        //lestrum_pads_output_selector.actual_value_index = index;
-    } else if (source_label.equals("lestrum_arp_output")) {
-        lestrum_arp_setOutputWrapper(target);
-        //lestrum_arp_output_selector.actual_value_index = index;
-    } else if (source_label.equals("pc_usb_1_output")) {
+    #ifdef ENABLE_BEATSTEP
+        if (source_label.equals("beatstep_output")) {
+            beatstep_setOutputWrapper(target);
+            //beatstep_output_selector.actual_value_index = index;
+            update_wrapper_menus_for_name(source_label, index);
+            return;
+        } 
+    #endif
+    #ifdef ENABLE_KEYSTEP
+        if (source_label.equals("keystep_output")) {
+            keystep_setOutputWrapper(target);
+            //keystep_output_selector.actual_value_index = index;
+            update_wrapper_menus_for_name(source_label, index);
+            return;
+        } 
+    #endif
+    #ifdef ENABLE_MPK49
+        if (source_label.equals("mpk49_output")) {
+            mpk49_setOutputWrapper(target);
+            //mpk49_output_selector.actual_value_index = index;
+            update_wrapper_menus_for_name(source_label, index);
+            return;
+        } 
+    #endif
+    #ifdef ENABLE_LESTRUM
+        if (source_label.equals("lestrum_pads_output")) {
+            lestrum_pads_setOutputWrapper(target);
+            //lestrum_pads_output_selector.actual_value_index = index;
+            update_wrapper_menus_for_name(source_label, index);
+            return;
+        } else if (source_label.equals("lestrum_arp_output")) {
+            lestrum_arp_setOutputWrapper(target);
+            //lestrum_arp_output_selector.actual_value_index = index;
+            update_wrapper_menus_for_name(source_label, index);
+            return;
+        } 
+    #endif
+    if (source_label.equals("pc_usb_1_output")) {
         pc_usb_1_setOutputWrapper(target);
         //pc_usb_1_selector.actual_value_index = index;
+        update_wrapper_menus_for_name(source_label, index);
+        return;
     } else if (source_label.equals("pc_usb_2_output")) {
         pc_usb_2_setOutputWrapper(target);
         //pc_usb_2_selector.actual_value_index = index;
-    } else
-        Serial.printf("set_target_wrapper_for_names: Couldn't match source_label '%s' with anything!\n", source_label.c_str()); Serial.flush();
-    update_wrapper_menus_for_name(source_label, index);
+        update_wrapper_menus_for_name(source_label, index);
+        return;
+    }
+
+    Serial.printf("set_target_wrapper_for_names: Couldn't match source_label '%s' with anything!\n", source_label.c_str()); Serial.flush();
+    //update_wrapper_menus_for_name(source_label, index);
 }
 
 /*char *find_wrapper_name_for_object(MIDIOutputWrapper *obj_to_find) {

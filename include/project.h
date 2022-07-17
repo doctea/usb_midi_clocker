@@ -234,11 +234,19 @@ class Project {
             myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
 
             // midi output mappings
-            if(beatstep_output!=nullptr)        myFile.printf("midi_output_map=beatstep_output|%s\n",       beatstep_output->label);
-            if(keystep_output!=nullptr)         myFile.printf("midi_output_map=keystep_output|%s\n",        keystep_output->label);
-            if(mpk49_output!=nullptr)           myFile.printf("midi_output_map=mpk49_output|%s\n",          mpk49_output->label);
-            if(lestrum_pads_output!=nullptr)    myFile.printf("midi_output_map=lestrum_pads_output|%s\n",   lestrum_pads_output->label);
-            if(lestrum_arp_output!=nullptr)     myFile.printf("midi_output_map=lestrum_arp_output|%s\n",    lestrum_arp_output->label);
+            #ifdef ENABLE_BEATSTEP
+                if(beatstep_output!=nullptr)        myFile.printf("midi_output_map=beatstep_output|%s\n",       beatstep_output->label);
+            #endif
+            #ifdef ENABLE_KEYSTEP
+                if(keystep_output!=nullptr)         myFile.printf("midi_output_map=keystep_output|%s\n",        keystep_output->label);
+            #endif
+            #ifdef ENABLE_MPK49
+                if(mpk49_output!=nullptr)           myFile.printf("midi_output_map=mpk49_output|%s\n",          mpk49_output->label);
+            #endif
+            #ifdef ENABLE_LESTRUM
+                if(lestrum_pads_output!=nullptr)    myFile.printf("midi_output_map=lestrum_pads_output|%s\n",   lestrum_pads_output->label);
+                if(lestrum_arp_output!=nullptr)     myFile.printf("midi_output_map=lestrum_arp_output|%s\n",    lestrum_arp_output->label);
+            #endif
             if(pc_usb_1_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_1_output->label);
             if(pc_usb_2_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_2_output->label);
 

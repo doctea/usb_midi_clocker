@@ -35,6 +35,9 @@
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
 
+// enable transposing beatstep to a particular octave
+#define ENABLE_BASS_TRANSPOSE MIDI3
+
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
@@ -42,7 +45,7 @@
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
-    //#define ENABLE_CRAFTSYNTH
+    #define ENABLE_CRAFTSYNTH
 
     #define ENABLE_APCMINI_DISPLAY
 #endif

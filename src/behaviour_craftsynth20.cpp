@@ -2,7 +2,8 @@
 
 #include "behaviour_craftsynth.h"
 
-DeviceBehaviour_CraftSynth *behaviour_craftsynth = new DeviceBehaviour_CraftSynth(); //nullptr;
+//DeviceBehaviour_CraftSynth behaviour_craftsynth_actual = DeviceBehaviour_CraftSynth();
+DeviceBehaviour_CraftSynth *behaviour_craftsynth = new DeviceBehaviour_CraftSynth(); //new DeviceBehaviour_CraftSynth(); //nullptr;
 
 /*void craftsynth_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
     if (behaviour_craftsynth!=nullptr) behaviour_craftsynth->control_change(inChannel, inNumber, inValue);

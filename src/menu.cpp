@@ -73,7 +73,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     #ifdef ENABLE_BASS_TRANSPOSE
         //NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
         ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
-            "Bass octave",
+            "TBass octave",
             behaviour_beatstep, 
             &DeviceBehaviour_Beatstep::setTransposeOctave, 
             &DeviceBehaviour_Beatstep::getTransposeOctave, 
