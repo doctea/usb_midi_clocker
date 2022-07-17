@@ -34,7 +34,7 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_BEATSTEP
-        behaviour_beatstep = new DeviceBehaviour_Beatstep();
+        //behaviour_beatstep = new DeviceBehaviour_Beatstep();  // referred to by menu controls so has to be instantiated at compile time
         behaviour_manager->registerDevice(behaviour_beatstep);
     #endif
 

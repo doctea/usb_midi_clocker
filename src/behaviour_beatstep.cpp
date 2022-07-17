@@ -10,7 +10,7 @@ int last_beatstep_note = -1;
 
 int bass_transpose_octave = 2;
 
-DeviceBehaviour_Beatstep *behaviour_beatstep = nullptr;
+DeviceBehaviour_Beatstep *behaviour_beatstep = new DeviceBehaviour_Beatstep();
 
 /*void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->control_change(inChannel, inNumber, inValue);

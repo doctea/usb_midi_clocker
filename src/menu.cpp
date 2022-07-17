@@ -27,14 +27,15 @@
 
 #include "clock.h"
 
-#ifdef ENABLE_BASS_TRANSPOSE
+/*#ifdef ENABLE_BASS_TRANSPOSE
     void bass_transpose_changed(int last_value, int new_value) {
         if (last_value!=new_value) {
-            Serial.printf("bass_transpose_changed(%i, %i)\n", last_value, new_value);
-            midi_out_bass_wrapper.stop_all_notes();
+            Serial.printf("bass_transpose_changed(%i, %i)\n", last_value, new_value); Serial.flush();
+            //if (midi_out_bass_wrapper!=nullptr)
+                midi_out_bass_wrapper.stop_all_notes();
         }
     }
-#endif
+#endif*/
 
 //DisplayTranslator *tft;
 DisplayTranslator_STeensy_Big *tft;
@@ -69,9 +70,20 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
     HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &last_beatstep_note,          &current_beatstep_note);
-    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
     #ifdef ENABLE_BASS_TRANSPOSE
-        NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
+        //NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
+        ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
+            "Bass octave",
+            behaviour_beatstep, 
+            &DeviceBehaviour_Beatstep::setTransposeOctave, 
+            &DeviceBehaviour_Beatstep::getTransposeOctave, 
+            nullptr,
+            0,
+            8
+        );
+        //ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = 
+            //ObjectNumberControl<DeviceBehaviour_Beatstep,int>("Bass octave test", behaviour_beatstep, &DeviceBehaviour_Beatstep::setTransposeOctave, &DeviceBehaviour_Beatstep::getTransposeOctave, nullptr);
+        //ObjectNumberControl<Project,int> bass_transpose_control = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
     #endif
 #endif
 #ifdef ENABLE_SEQUENCER
@@ -83,6 +95,12 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
     LooperTransposeControl looper_transpose_control =    LooperTransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
     MidiOutputSelectorControl looper_output_selector = MidiOutputSelectorControl("Looper MIDI Output"); 
+#endif
+
+// MIDI output selectors
+
+#ifdef ENABLE_BEATSTEP
+     MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
 #endif
 
 #ifdef ENABLE_KEYSTEP
@@ -104,18 +122,20 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp Output");
 #endif
 
+/*#ifdef ENABLE_CRAFTSYNTH  // only need this if we want to listen to craftsynth midi *input*
+    MidiOutputSelectorControl craftsynth_output_selector = MidiOutputSelectorControl("CraftSynth Output");
+#endif*/
+
 #ifdef ENABLE_SUBCLOCKER
-    //NumberControl subclocker_divisor_control =      NumberControl("Subclocker div",     &subclocker_divisor,        subclocker_divisor,     1, 24, nullptr); //&on_subclocker_divisor_changed);
     ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_divisor_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
         "Subclocker div", 
         behaviour_subclocker, 
         &DeviceBehaviour_Subclocker::set_divisor, 
         &DeviceBehaviour_Subclocker::get_divisor, 
-        nullptr, //on_subclocker_divisor_changed
+        nullptr, // change callback on_subclocker_divisor_changed
         1,  //min
         48  //max
     );
-    //NumberControl subclocker_delay_ticks_control =  NumberControl("Subclocker delay",   &subclocker_delay_ticks,    subclocker_delay_ticks, 0, PPQN*BEATS_PER_BAR, nullptr); //&on_subclocker_divisor_changed);
     ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_delay_ticks_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
         "Subclocker delay",
         behaviour_subclocker,
@@ -125,9 +145,11 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     );
 #endif
 
-/*#ifdef ENABLE_CRAFTSYNTH
-    MidiOutputSelectorControl craftsynth_output_selector = MidiOutputSelectorControl("CraftSynth Output");
-#endif*/
+
+void mpk49_loop_track_setOutputWrapper(MIDIOutputWrapper *wrapper) {
+    mpk49_loop_track.setOutputWrapper(wrapper);
+}
+
 
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
@@ -135,10 +157,6 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 
 //DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
 DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
-
-void mpk49_loop_track_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-    mpk49_loop_track.setOutputWrapper(wrapper);
-}
 
 void setup_menu() {
 

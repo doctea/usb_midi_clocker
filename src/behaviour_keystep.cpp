@@ -1,15 +1,5 @@
 #include "behaviour_keystep.h"
 
-/*extern int current_keystep_note;
-extern int last_keystep_note;
-
-extern int bass_transpose_octave;
-
-int current_keystep_note = -1;
-int last_keystep_note = -1;
-
-int bass_transpose_octave = 2;*/
-
 DeviceBehaviour_Keystep *behaviour_keystep = nullptr;
 
 /*void keystep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
