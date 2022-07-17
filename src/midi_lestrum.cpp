@@ -10,8 +10,8 @@
 
 //MIDIOutputWrapper *lestrum_arp_output  = &available_outputs[7];
 //MIDIOutputWrapper *lestrum_pads_output = &available_outputs[6];
-MIDIOutputWrapper *lestrum_arp_output  = midi_output_wrapper_manager->find(7);
-MIDIOutputWrapper *lestrum_pads_output = midi_output_wrapper_manager->find(6);
+MIDIOutputWrapper *lestrum_arp_output  = nullptr; //midi_output_wrapper_manager->find(7);
+MIDIOutputWrapper *lestrum_pads_output = nullptr; //midi_output_wrapper_manager->find(6);
 
 void lestrum_pads_setOutputWrapper(MIDIOutputWrapper *output) {
     lestrum_pads_output->stop_all_notes();

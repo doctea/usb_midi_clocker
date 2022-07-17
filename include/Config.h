@@ -1,15 +1,15 @@
 //#define USE_UCLOCK  // experimental: crashes a lot
 
 ///// DEBUG options
-//#define WAIT_FOR_SERIAL       // wait for serial terminal before starting setup -- for debugging startup
+#define WAIT_FOR_SERIAL       // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 
 //#define GDB_DEBUG
 
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
-#define DEFAULT_SUBCLOCKER_DIVISOR      4
-#define DEFAULT_SUBCLOCKER_DELAY_TICKS    0   // don't send clock to the subclocker device until this many ticks have elapsed
+#define DEFAULT_SUBCLOCKER_DIVISOR          4
+#define DEFAULT_SUBCLOCKER_DELAY_TICKS      0   // don't send clock to the subclocker device until this many ticks have elapsed
 
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN

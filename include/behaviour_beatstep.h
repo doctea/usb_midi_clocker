@@ -83,7 +83,9 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 Serial.printf("Beatstep_Behaviour#setTransposeOctave(%i)!", octave); Serial.flush();
                 //if (midi_out_bass_wrapper!=nullptr) // isn't a pointer!
                 if (octave!=this->bass_transpose_octave) {
-                    midi_out_bass_wrapper.stop_all_notes();
+                    //midi_out_bass_wrapper.stop_all_notes();
+                    if (beatstep_output!=nullptr)
+                        beatstep_output->stop_all_notes();
                     this->bass_transpose_octave = octave;
                 }
             }

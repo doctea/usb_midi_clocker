@@ -34,8 +34,11 @@ class MIDIOutputWrapperManager {
     }
     MIDIOutputWrapper* find(char *name) {
         for (int i = 0 ; i < available_outputs.size() ; i++) {
-            if (strcmp(name, available_outputs.get(i)->label))
+            //Serial.printf("Looking for '%s', comparing to '%s'..\n", name, available_outputs.get(i)->label);
+            if (0==strcmp(name, available_outputs.get(i)->label)) {
+                //Serial.printf("Found it at index %i!\n", i);
                 return available_outputs.get(i);
+            }
         }
         return nullptr;
     }
@@ -61,7 +64,7 @@ class MIDIOutputWrapperManager {
     private:
         static MIDIOutputWrapperManager* inst_;
         MIDIOutputWrapperManager() {
-            setup_midi_output_wrapper_manager();
+            //setup_midi_output_wrapper_manager();
         }
         MIDIOutputWrapperManager(const MIDIOutputWrapperManager&);
         MIDIOutputWrapperManager& operator=(const MIDIOutputWrapperManager&);

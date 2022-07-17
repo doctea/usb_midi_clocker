@@ -14,9 +14,10 @@ void keystep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelo
     if (behaviour_keystep!=nullptr) behaviour_keystep->note_off(inChannel, inNumber, inVelocity);
 }
 
-MIDIOutputWrapper *keystep_output = &midi_out_bitbox_wrapper;
+MIDIOutputWrapper *keystep_output = nullptr; //&midi_out_bitbox_wrapper;
 void keystep_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-  keystep_output->stop_all_notes();
-  keystep_output = wrapper;    
+    if (keystep_output!=nullptr)
+        keystep_output->stop_all_notes();
+    keystep_output = wrapper;    
 }
 

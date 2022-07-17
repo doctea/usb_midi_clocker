@@ -1,0 +1,51 @@
+; PlatformIO Project Configuration File
+;
+;   Build options: build flags, source filter
+;   Upload options: custom upload port, speed and extra flags
+;   Library options: dependencies, extra library storages
+;   Advanced options: extra scripting
+;
+; Please visit documentation for the other options and examples
+; https://docs.platformio.org/page/projectconf.html
+
+[env:teensy41]
+platform = teensy
+board = teensy41
+framework = arduino
+build_flags = -D USB_MIDI16_SERIAL
+lib_deps = midi, usbhost_t36, Adafruit GFX Library, Adafruit ST7735 and ST7789 Library@^1.9.3, SD @ 2.0.0, ST7735_t3, LinkedList, MD_MIDIFile @ 2.5.3, mymenu
+;lib_deps = midi, usbhost_t36, SD @ 2.0.0, Adafruit_GFX, ST7735_t3, LinkedList, mymenu
+;lib_deps = midi, usbhost_t36, 
+;lib_deps = midi, usbhost_t36, SD @ 2.0.0, ST7735_t3, LinkedList, MD_MIDIFile @ 2.5.3, mymenu
+lib_extra_dirs = C:\Users\docte\Documents\Arduino\my_libraries
+
+[env:debug]
+platform = teensy
+board = teensy41
+framework = arduino
+build_unflags = -D USB_SERIAL
+build_flags = -D USB_MIDI16_DUAL_SERIAL
+;lib_deps = midi, usbhost_t36, Adafruit ST7735 and ST7789 Library@^1.9.3, SD @ 2.0.0, ST7735_t3, LinkedList, MD_MIDIFile @ 2.5.3, mymenu
+;, etlcpp/Embedded Template Library
+lib_extra_dirs = C:\Users\docte\Documents\Arduino\my_libraries
+                 ;C:\Users\docte\Documents\Arduino\libraries\TeensyDebug
+
+build_type = debug
+; See https://github.com/platformio/platform-teensy/issues/65
+debug_port = \\.\COM12
+debug_tool = custom
+debug_load_mode = manual
+debug_server = 
+debug_init_cmds =
+  target extended-remote $DEBUG_PORT
+  $INIT_BREAK
+  define pio_reset_run_target
+  interrupt
+  tbreak loop
+  continue
+  end
+  define pio_restart_target
+  echo Restart is undefined for now.
+  end
+
+debug_init_break =

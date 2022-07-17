@@ -102,6 +102,8 @@ class MIDITrack {
 
         int transpose = 0;
 
+        MIDITrack() {};
+
         MIDITrack(MIDIOutputWrapper *default_output) {
             output = default_output;
             //frames[0].time = 0;
@@ -111,7 +113,8 @@ class MIDITrack {
         };
 
         void setOutputWrapper(MIDIOutputWrapper *output) {
-            this->output->stop_all_notes();
+            if (this->output!=nullptr)
+                this->output->stop_all_notes();
             this->output = output;
         }
 
@@ -208,7 +211,8 @@ class MIDITrack {
                         #ifdef DEBUG_LOOPER
                             Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         #endif
-                        output->sendNoteOn(pitch, m.velocity); //, m.channel);
+                        if (output!=nullptr)
+                            output->sendNoteOn(pitch, m.velocity); //, m.channel);
                         //playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
@@ -218,7 +222,8 @@ class MIDITrack {
                         #ifdef DEBUG_LOOPER
                             Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         #endif
-                        output->sendNoteOff(pitch, m.velocity); //, m.channel);
+                        if (output!=nullptr)
+                            output->sendNoteOff(pitch, m.velocity); //, m.channel);
                         //playing_notes[pitch] = false;
                         break;
                     default:

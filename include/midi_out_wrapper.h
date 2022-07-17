@@ -20,22 +20,22 @@ class MIDIOutputWrapper {
     MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
     byte default_channel = 1;
 
-    int playing_notes[127];
+    byte playing_notes[127];
 
     public:
         char label[20];
 
-        MIDIOutputWrapper(char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
+        MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
             strcpy(this->label, label);
             output_serialmidi = in_output_serialmidi;
             default_channel = channel;
         }
-        MIDIOutputWrapper(char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) {
+        MIDIOutputWrapper(const char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) {
             strcpy(this->label, label);
             output_usb = in_output_usb;
             default_channel = channel;
         }
-        MIDIOutputWrapper(char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) {
+        MIDIOutputWrapper(const char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) {
             strcpy(this->label, label);
             output_usb_pointer = in_output_usb;
             default_channel = channel;
@@ -50,8 +50,9 @@ class MIDIOutputWrapper {
                 Serial.println("got an output_usb_pointer..");
                                                 (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
             }
-            Serial.println("sent NoteOn");                                    
-            playing_notes[pitch]++;
+            Serial.println("sent NoteOn");
+            if (playing_notes[pitch]<8)
+                playing_notes[pitch]++;
         }
 
         void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {

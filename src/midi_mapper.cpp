@@ -17,17 +17,17 @@ MIDIOutputWrapperManager* MIDIOutputWrapperManager::getInstance() {
 }
 
 void setup_midi_output_wrapper_manager() {
+    Serial.println("setup_midi_output_wrapper_manager.."); Serial.flush();
     midi_output_wrapper_manager = MIDIOutputWrapperManager::getInstance();
-    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1", midi_out_serial[0], 1));
-    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2", midi_out_serial[0], 2));
-    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_serial[0], 3));
-    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  midi_out_serial[0], 1));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  midi_out_serial[0], 2));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  midi_out_serial[0], 3));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S2 : unused : ch 1",  midi_out_serial[1], 1));
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_serial[2], 4));
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
     //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
     //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
-    
     #ifdef ENABLE_BAMBLE
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1));
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));
@@ -36,6 +36,33 @@ void setup_midi_output_wrapper_manager() {
     #ifdef ENABLE_CRAFTSYNTH
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1));
     #endif
+
+    pc_usb_1_output = midi_output_wrapper_manager->find("USB : Bamble : ch 1");
+    pc_usb_2_output = midi_output_wrapper_manager->find("USB : Bamble : ch 2");
+
+    #ifdef ENABLE_LESTRUM
+        lestrum_arp_output =    midi_output_wrapper_manager->find("USB : Bamble : ch 1");
+        lestrum_pads_output =   midi_output_wrapper_manager->find("USB : Bamble : ch 1");
+    #endif
+
+    #ifdef ENABLE_MPK49
+        mpk49_output = midi_output_wrapper_manager->find("S1 : Bitbox : ch 3");
+        mpk49_loop_track.setOutputWrapper(mpk49_output);
+    #endif
+
+    #ifdef ENABLE_BEATSTEP
+        beatstep_output = midi_output_wrapper_manager->find("S3 : Neutron : ch 4");
+        //while(1) {};
+    #endif
+
+    #ifdef ENABLE_KEYSTEP
+        keystep_output = midi_output_wrapper_manager->find("S1 : Bitbox : ch 3");
+    #endif
+
+    #ifdef ENABLE_LOOPER
+        mpk49_loop_track = MIDITrack(midi_output_wrapper_manager->find("S1 : Bitbox : ch 3"));
+    #endif
+ 
 }
     
 //#define NUM_AVAILABLE_OUTPUTS sizeof(available_outputs)

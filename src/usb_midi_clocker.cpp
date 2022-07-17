@@ -75,7 +75,7 @@ void setup() {
   Serial.println("..USB device handler..");
   setup_behaviour_manager();
 
-  Serial.println("MIDIOutputWrapper manager..");
+  Serial.println("..MIDIOutputWrapper manager..");
   setup_midi_output_wrapper_manager();
 
   #ifdef ENABLE_SCREEN
