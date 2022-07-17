@@ -9,7 +9,8 @@
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
 
-#include "midi_mapper.h"
+#include "midi_mapper_manager.h""
+
 
 #include "midi_lestrum.h"
 #include "midi_pc_usb.h"

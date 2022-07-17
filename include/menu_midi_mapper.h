@@ -4,7 +4,7 @@
 #include "Config.h"
 #include "midi_outs.h"
 #include "midi_out_wrapper.h"
-#include "midi_mapper.h"
+#include "midi_mapper_manager.h""
 
 #include "menuitems.h"
 
