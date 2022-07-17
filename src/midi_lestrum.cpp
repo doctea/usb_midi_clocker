@@ -2,7 +2,7 @@
 #include "midi_out_wrapper.h"
 #include "midi_lestrum.h"
 
-#include "midi_mapper_manager.h""
+#include "midi_mapper_manager.h"
 
 #include "ConfigMidi.h"
 

@@ -200,9 +200,9 @@ void loop() {
       menu->update_inputs();
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
-        Serial.println("about to menu->display"); Serial.flush();
+        //Serial.println("about to menu->display"); Serial.flush();
         menu->display(); //update(ticks);
-        Serial.println("just did menu->display"); Serial.flush();
+        //Serial.println("just did menu->display"); Serial.flush();
         //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
       }

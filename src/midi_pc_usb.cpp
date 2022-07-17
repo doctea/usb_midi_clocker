@@ -11,7 +11,7 @@
 
 #include "behaviour_bamble.h"
 
-#include "midi_mapper_manager.h""
+#include "midi_mapper_manager.h"
 
 // set the incoming midi from the USB host (ie computer) to go out to first Bamble pitch channel
 //MIDIOutputWrapper *midi_bamble_ch1_wrapper = nullptr; // = midi_output_wrapper_manager->find(6); //[6]; //MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &behaviour_bamble->device, 1);

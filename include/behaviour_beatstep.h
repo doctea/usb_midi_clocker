@@ -80,7 +80,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
         #ifdef ENABLE_BASS_TRANSPOSE
             int bass_transpose_octave = 2;  // absolute octave to transpose all notes to
             void setTransposeOctave(int octave) {
-                Serial.printf("Beatstep_Behaviour#setTransposeOctave(%i)!", octave); Serial.flush();
+                //Serial.printf("Beatstep_Behaviour#setTransposeOctave(%i)!", octave); Serial.flush();
                 //if (midi_out_bass_wrapper!=nullptr) // isn't a pointer!
                 if (octave!=this->bass_transpose_octave) {
                     //midi_out_bass_wrapper.stop_all_notes();
@@ -90,7 +90,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 }
             }
             int getTransposeOctave() {
-                Serial.println("Beatstep_Behaviour#getTransposeOctave!"); Serial.flush();
+                //Serial.println("Beatstep_Behaviour#getTransposeOctave!"); Serial.flush();
                 return this->bass_transpose_octave;
             }
         #endif

@@ -50,7 +50,7 @@
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
-    //#define ENABLE_CRAFTSYNTH
+    #define ENABLE_CRAFTSYNTH
 
     #define ENABLE_APCMINI_DISPLAY
 #endif
