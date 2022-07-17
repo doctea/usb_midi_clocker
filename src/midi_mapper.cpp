@@ -5,44 +5,48 @@
 
 #include "midi_mapper_update_wrapper_menus.h"
 
-// NOTE: you gotta be careful with the names of these things!
-// if there is a used MIDIOutputWrapper somewhere that doesnt have a label that matches these strings EXACTLY, the midi_mapper menu item will crash and apparently 
-// never tell us about it in console!!
-// update NUM_AVAILABLE_OUTPUTS in midi_mapper.h
-MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS] = {
-    MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  midi_out_serial[0], 1),
-    MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  midi_out_serial[0], 2),
-    MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  midi_out_serial[0], 3),
-    MIDIOutputWrapper((char*)"S2 : unused : ch 1",  midi_out_serial[1], 1),
-    MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_serial[2], 4),
-    MIDIOutputWrapper((char*)"S4 : Disting : ch 1", midi_out_serial[3], 1),
-    //MIDIOutputWrapper("Serial 4 [unused ch 1]", midi_out_serial[3], 1),di
-    //MIDIOutputWrapper("Serial 5 [unused ch 1]", midi_out_serial[4], 1),
-    //MIDIOutputWrapper("Serial 6 [unused ch 1]", midi_out_serial[5], 1),
-    MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1),
-    MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2),
-    MIDIOutputWrapper((char*)"USB : Bamble : ch 3", &(behaviour_bamble->device), 3),
-    /*#ifdef ENABLE_CRAFTSYNTH
-        MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1),
-    #endif*/
-}; 
+
+MIDIOutputWrapperManager *midi_output_wrapper_manager = nullptr;
+MIDIOutputWrapperManager* MIDIOutputWrapperManager::inst_ = nullptr;
+
+MIDIOutputWrapperManager* MIDIOutputWrapperManager::getInstance() {
+    if (inst_ == nullptr) {
+        inst_ = new MIDIOutputWrapperManager();
+    }
+    return inst_;
+}
+
+void setup_midi_output_wrapper_manager() {
+    midi_output_wrapper_manager = MIDIOutputWrapperManager::getInstance();
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1", midi_out_serial[0], 1));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2", midi_out_serial[0], 2));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_serial[0], 3));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_serial[2], 4));
+    midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
+    //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
+    //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
+    //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
+    
+    #ifdef ENABLE_BAMBLE
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1));
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));
+    #endif
+
+    #ifdef ENABLE_CRAFTSYNTH
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1));
+    #endif
+}
     
 //#define NUM_AVAILABLE_OUTPUTS sizeof(available_outputs)
 
 MIDIOutputWrapper *find_wrapper_for_name(char *label_to_find) {
-    /*for (int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
-        if (strcmp(to_find, available_outputs[i].label))
-            return &available_outputs[i];
-    }
-    return nullptr;*/
-    int f = find_wrapper_index_for_label(label_to_find);
-    if (f>=0) 
-        return &available_outputs[f];
-    return nullptr;
+    return midi_output_wrapper_manager->find(label_to_find);
 }
 
 int find_wrapper_index_for_label(char *label_to_find) {
-    for (int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
+    return midi_output_wrapper_manager->find_index(label_to_find);
+    /*for (int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
         if (0==strcmp(label_to_find, available_outputs[i].label)) {
             Serial.printf("find_wrapper_index_for_label() found '%s' in '%s' at index %i!\n", label_to_find, available_outputs[i].label, i); Serial.flush();
             return i;
@@ -50,21 +54,12 @@ int find_wrapper_index_for_label(char *label_to_find) {
     }
     //while (1)
         Serial.printf("find_wrapper_index_for_label('%s') didn't find anything!\n", label_to_find);
-    return -1;
+    return -1;*/
 }
 
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
-
-/*#include "menu_midi_mapper.h"
-extern MidiOutputSelectorControl beatstep_output_selector;
-extern MidiOutputSelectorControl keystep_output_selector;
-extern MidiOutputSelectorControl mpk49_output_selector;
-extern MidiOutputSelectorControl lestrum_pads_output_selector;
-extern MidiOutputSelectorControl lestrum_arp_output_selector;
-extern MidiOutputSelectorControl pc_usb_1_selector;
-extern MidiOutputSelectorControl pc_usb_2_selector;*/
 
 void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str()); Serial.flush();

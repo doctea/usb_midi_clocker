@@ -2,8 +2,8 @@
 #include "midi_out_wrapper.h"
 
 #ifdef ENABLE_LESTRUM
-    extern MIDIOutputWrapper *lestrum_pads_output; //  = &MIDIOutputWrapper("USB : Bamble : ch 1", midi_bamble, 1); //midi_out_bitbox_wrapper;
-    extern MIDIOutputWrapper *lestrum_arp_output; //   = &MIDIOutputWrapper("USB : Bamble : ch 2", midi_bamble, 2);
+    extern MIDIOutputWrapper *lestrum_pads_output; 
+    extern MIDIOutputWrapper *lestrum_arp_output;
     void lestrum_pads_setOutputWrapper(MIDIOutputWrapper *output);
     void lestrum_arp_setOutputWrapper(MIDIOutputWrapper *output);
 

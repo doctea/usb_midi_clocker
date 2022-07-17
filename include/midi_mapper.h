@@ -5,40 +5,32 @@
 #include "midi_outs.h"
 #include "midi_out_wrapper.h"
 
-#ifdef ENABLE_CRAFTSYNTH
+#include "behaviour_bamble.h"
+
+/*#ifdef ENABLE_CRAFTSYNTH
     #define NUM_AVAILABLE_OUTPUTS 9
 #else
     #define NUM_AVAILABLE_OUTPUTS 8
 #endif
-extern MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS]; 
+extern MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS]; */
 
 MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
 int find_wrapper_index_for_label(char *to_find);
-
-//void set_output_wrapper_for_names(char*source_label, char*target_label);
+void setup_midi_output_wrapper_manager();
 void set_target_wrapper_for_names(String source_label, String target_label);
-/*class MIDIOutputWrapperManager {
+
+class MIDIOutputWrapperManager {
     public:
+
+    static MIDIOutputWrapperManager* getInstance();
 
     LinkedList<MIDIOutputWrapper *> available_outputs;
 
-    void setup() {
-        add(MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1", midi_out_serial[0], 1));
-        add(MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2", midi_out_serial[0], 2));
-        add(MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_serial[0], 3));
-        add(MIDIOutputWrapper((char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
-        add(MIDIOutputWrapper((char*)"S3 : Neutron : ch4 ", midi_out_serial[2], 4));
-        add(MIDIOutputWrapper((char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
-        //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
-        //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
-        //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
-        
-        add(MIDIOutputWrapper((char*)"USB : Bamble : ch1 ", &midi_bamble, 1));
-        add(MIDIOutputWrapper((char*)"USB : Bamble : ch2 ", &midi_bamble, 2);)
-    }
-
     void add(MIDIOutputWrapper *to_add) {
         available_outputs.add(to_add);
+    }
+    MIDIOutputWrapper* find(int index) {
+        return available_outputs.get(index);
     }
     MIDIOutputWrapper* find(char *name) {
         for (int i = 0 ; i < available_outputs.size() ; i++) {
@@ -47,6 +39,34 @@ void set_target_wrapper_for_names(String source_label, String target_label);
         }
         return nullptr;
     }
-}*/
+    int find_index(char *label_to_find) {
+        for (int i = 0 ; i < available_outputs.size() ; i++) {
+            if (0==strcmp(label_to_find, available_outputs.get(i)->label)) {
+                Serial.printf("find_wrapper_index_for_label() found '%s' in '%s' at index %i!\n", label_to_find, available_outputs.get(i)->label, i); Serial.flush();
+                return i;
+            }
+        }
+        //while (1)
+            Serial.printf("find_wrapper_index_for_label('%s') didn't find anything!\n", label_to_find);
+        return -1;
+    }
+    char *get_label_for_index(int index) {
+        return this->available_outputs.get(index)->label;
+    }
+
+    int get_num_available() {
+        return this->available_outputs.size();
+    }
+
+    private:
+        static MIDIOutputWrapperManager* inst_;
+        MIDIOutputWrapperManager() {
+            setup_midi_output_wrapper_manager();
+        }
+        MIDIOutputWrapperManager(const MIDIOutputWrapperManager&);
+        MIDIOutputWrapperManager& operator=(const MIDIOutputWrapperManager&);
+};
+
+extern MIDIOutputWrapperManager *midi_output_wrapper_manager;
 
 #endif

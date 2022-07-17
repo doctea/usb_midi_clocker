@@ -56,7 +56,8 @@ class MidiOutputSelectorControl : public SelectorControl {
     virtual const char* get_label_for_index(int index) {
         //Serial.printf("MidiOutputSelectorControl->get_label_for_index(%i)..\n", index); Serial.flush();
         //Serial.printf("got label %s..\n", available_outputs[index].label); Serial.flush();
-        return available_outputs[index].label;
+        //return available_outputs[index].label;
+        return midi_output_wrapper_manager->get_label_for_index(index);
     }
 
     virtual void setter (int new_value) {
@@ -65,7 +66,8 @@ class MidiOutputSelectorControl : public SelectorControl {
         selected_value_index = actual_value_index;
         if (this->setter_func!=nullptr) {
             Serial.printf("setting new output to number %i\n", new_value); Serial.flush();
-            this->setter_func(&available_outputs[new_value]);
+            //this->setter_func(&available_outputs[new_value]);
+            this->setter_func(midi_output_wrapper_manager->find(new_value));
         }
     }
     virtual int getter () {
@@ -79,7 +81,8 @@ class MidiOutputSelectorControl : public SelectorControl {
         pos.y = header(label, pos, selected, opened);
         tft->setTextSize(2);
 
-        num_values = NUM_AVAILABLE_OUTPUTS;
+        //num_values = NUM_AVAILABLE_OUTPUTS;
+        num_values = midi_output_wrapper_manager->get_num_available();
 
         tft->setTextSize(1);
 

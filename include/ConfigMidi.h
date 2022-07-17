@@ -10,25 +10,19 @@
 
 #include "midi_outs.h"
 
-#ifdef ENABLE_LESTRUM
-    #undef ENABLE_LESTRUM
-    #define ENABLE_LESTRUM          MIDI1
-#endif
-#ifdef ENABLE_DRUMKIT
-    #undef ENABLE_DRUMKIT
-    #define ENABLE_DRUMKIT          MIDI2
-#endif
-
-#define ENABLE_BITBOX           MIDI1
-//#ifdef ENABLE_BASS_TRANSPOSE
-//    #undef ENABLE_BASS_TRANSPOSE
-    #define ENABLE_BASS_TRANSPOSE   MIDI3
+//#ifdef ENABLE_LESTRUM
+    //#undef ENABLE_LESTRUM
+    #define ENABLE_LESTRUM          MIDI1   // used for input
+//#endif
+//#ifdef ENABLE_DRUMKIT
+//    #undef ENABLE_DRUMKIT
+    #define ENABLE_DRUMKIT          MIDI2   // used for input
 //#endif
 
-//#include "midi_beatstep.h"
-//#include "midi_apcmini.h"
-//#include "midi_bamble.h"
-//#include "midi_mpk49.h"
-//#include "midi_keystep.h"
+#define ENABLE_BITBOX           MIDI1       // used for output
+//#ifdef ENABLE_BASS_TRANSPOSE
+//    #undef ENABLE_BASS_TRANSPOSE
+    #define ENABLE_BASS_TRANSPOSE   MIDI3   // used for output
+//#endif
 
 #endif

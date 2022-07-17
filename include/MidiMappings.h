@@ -13,9 +13,7 @@ extern MIDIOutputWrapper midi_out_bitbox_wrapper;
 #define BITBOX_MIDI_CHANNEL 3
 //#endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
-//#ifdef ENABLE_BAMBLE
-//MIDIDevice *midi_out_cv12_poly   = midi_bamble;
-//#endif
+
 
 //#ifdef ENABLE_LESTRUM
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum;//      = &ENABLE_LESTRUM;

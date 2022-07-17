@@ -3,10 +3,6 @@
 
 #include "multi_usb_handlers.h"
 
-/*#include "midi_bamble.h"
-#include "midi_beatstep.h"
-#include "midi_subclocker.h"*/
-
 #include "tft.h"
 
 #include "behaviour_manager.h"
@@ -178,20 +174,3 @@ void setup_multi_usb() {
   }
   tft_print((char*)"\n");
 }
-
-/*
-void start_clocks_if_stopped() {
-  if (!beatstep_started && midi_beatstep) {
-    Serial.println("BEATSTEP not started -- starting!");
-    midi_beatstep->sendStart();
-    beatstep_started = true;
-  }
-  if (!bamble_started && midi_bamble) {
-    midi_bamble->sendStart();
-    bamble_started = true;
-  }
-  if (!apcmini_started && midi_apcmini) {
-    apcmini_started = true;
-  }
-}
-*/

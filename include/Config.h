@@ -5,6 +5,8 @@
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 
+//#define GDB_DEBUG
+
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
 #define DEFAULT_SUBCLOCKER_DIVISOR      4
 #define DEFAULT_SUBCLOCKER_DELAY_TICKS    0   // don't send clock to the subclocker device until this many ticks have elapsed
@@ -38,6 +40,9 @@
 // enable transposing beatstep to a particular octave
 #define ENABLE_BASS_TRANSPOSE MIDI3
 
+//#define ENABLE_LESTRUM
+//#define ENABLE_DRUMKIT
+
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
@@ -45,7 +50,7 @@
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
-    #define ENABLE_CRAFTSYNTH
+    //#define ENABLE_CRAFTSYNTH
 
     #define ENABLE_APCMINI_DISPLAY
 #endif

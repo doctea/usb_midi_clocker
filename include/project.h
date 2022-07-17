@@ -22,6 +22,8 @@ using namespace storage;
 
 //class Project;
 
+void set_target_wrapper_for_names(String source_label, String target_label);
+
 class Project {
     bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];

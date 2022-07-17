@@ -9,13 +9,12 @@
 
 #include <Arduino.h>
 
-#define GDB_DEBUG
+#include "Config.h"
+
 #ifdef GDB_DEBUG
   #include "TeensyDebug.h"
   #pragma GCC optimize ("O0")
 #endif
-
-#include "Config.h"
 
 #include "debug.h"
 #include "storage.h"
@@ -75,6 +74,9 @@ void setup() {
   // TODO: have the behaviours add their menu items
   Serial.println("..USB device handler..");
   setup_behaviour_manager();
+
+  Serial.println("MIDIOutputWrapper manager..");
+  setup_midi_output_wrapper_manager();
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
