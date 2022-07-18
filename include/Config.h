@@ -5,7 +5,7 @@
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 
-//#define GDB_DEBUG
+//#define GDB_DEBUG             // to enable TeensyDebug 
 
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
 #define DEFAULT_SUBCLOCKER_DIVISOR          4

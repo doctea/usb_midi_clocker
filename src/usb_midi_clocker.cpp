@@ -1,7 +1,6 @@
 // note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
 // proof of concept for syncing multiple USB Midi devices wit
 
-
 #if defined(__arm__) && defined(CORE_TEENSY)
   //#define byte uint8_t
   #define F(X) X
