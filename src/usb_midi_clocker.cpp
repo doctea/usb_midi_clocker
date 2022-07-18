@@ -10,7 +10,7 @@
 
 #include "Config.h"
 
-#ifdef GDB_DEBUG
+#if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
   #include "TeensyDebug.h"
   #pragma GCC optimize ("O0")
 #endif
@@ -64,7 +64,7 @@ void setup() {
     while (!Serial);
   #endif
 
-  #ifdef GDB_DEBUG
+  #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif
 

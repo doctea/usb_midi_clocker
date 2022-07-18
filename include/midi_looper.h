@@ -116,6 +116,7 @@ class MIDITrack {
             if (this->output!=nullptr)
                 this->output->stop_all_notes();
             this->output = output;
+            Serial.printf("MIDITrack#setOutputWrapper in midi_looper wrapper to '%s'\n", this->output->label);
         }
 
         // for getting and setting from menu
