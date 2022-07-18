@@ -37,30 +37,30 @@ void setup_midi_output_wrapper_manager() {
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1));
     #endif
 
-    pc_usb_1_output = midi_output_wrapper_manager->find("USB : Bamble : ch 1");
-    pc_usb_2_output = midi_output_wrapper_manager->find("USB : Bamble : ch 2");
+    pc_usb_1_output = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
+    pc_usb_2_output = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 2");
 
     #ifdef ENABLE_LESTRUM
-        lestrum_arp_output =    midi_output_wrapper_manager->find("USB : Bamble : ch 1");
-        lestrum_pads_output =   midi_output_wrapper_manager->find("USB : Bamble : ch 1");
+        lestrum_arp_output =    midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
+        lestrum_pads_output =   midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
     #endif
 
     #ifdef ENABLE_MPK49
-        mpk49_output = midi_output_wrapper_manager->find("S1 : Bitbox : ch 3");
+        mpk49_output = midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3");
         mpk49_loop_track.setOutputWrapper(mpk49_output);
     #endif
 
     #ifdef ENABLE_BEATSTEP
-        beatstep_output = midi_output_wrapper_manager->find("S3 : Neutron : ch 4");
+        beatstep_output = midi_output_wrapper_manager->find((char*)"S3 : Neutron : ch 4");
         //while(1) {};
     #endif
 
     #ifdef ENABLE_KEYSTEP
-        keystep_output = midi_output_wrapper_manager->find("S1 : Bitbox : ch 3");
+        keystep_output = midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3");
     #endif
 
     #ifdef ENABLE_LOOPER
-        mpk49_loop_track = MIDITrack(midi_output_wrapper_manager->find("S1 : Bitbox : ch 3"));
+        mpk49_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3"));
     #endif
  
 }
