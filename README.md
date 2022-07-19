@@ -56,6 +56,13 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
   - with quantization on recording and recall
   - 8 slots per project
 
+### Known bugs
+
+- MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the serial output?!
+  - but MIDI that comes in from USB device eg beatstep seems ok regardless?
+  - something to do with MIDI buffers I guess?  maybe isn't getting flushed properly or messages get trashed before being sent?
+  - but why would that only affect loops that are playing back?
+
 ### TODO/Future 
 
 - Update docs to reflect all features
