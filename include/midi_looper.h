@@ -202,6 +202,14 @@ class MIDITrack {
                 midi_message m = frames[position].get(i);
                 
                 int pitch = m.pitch + transpose;
+                if (pitch<0 || pitch > 127) {
+                    //#ifdef DEBUG_LOOPER
+                        Serial.printf("\ttransposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
+                    //#endif
+                    return;
+                } else {
+                    Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush();
+                }
                 #ifdef DEBUG_LOOPER
                     Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
                 #endif
@@ -213,7 +221,7 @@ class MIDITrack {
                             Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         #endif
                         if (output!=nullptr)
-                            output->sendNoteOn(pitch, m.velocity); //, m.channel);
+                            output->sendNoteOn((uint8_t)pitch, (byte)m.velocity); //, m.channel);
                         //playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
@@ -224,7 +232,7 @@ class MIDITrack {
                             Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         #endif
                         if (output!=nullptr)
-                            output->sendNoteOff(pitch, m.velocity); //, m.channel);
+                            output->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
                         //playing_notes[pitch] = false;
                         break;
                     default:
