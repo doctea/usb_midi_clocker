@@ -94,6 +94,8 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
 - ~~Save and recall MIDI device+channel routings~~
   - Improve saving and recalling of MIDI device+channel routing, rather than having it hardcoded
 - Full configuration of MIDI device+channel routing
+- Output MIDI notes from the sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
+- CV to MIDI for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
 
 
 ## Explanation/demo
