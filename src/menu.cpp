@@ -125,6 +125,15 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 /*#ifdef ENABLE_CRAFTSYNTH  // only need this if we want to listen to craftsynth midi *input*
     MidiOutputSelectorControl craftsynth_output_selector = MidiOutputSelectorControl("CraftSynth Output");
 #endif*/
+#ifdef ENABLE_CRAFTSYNTH_USB
+    ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
+        "CraftSynth clock enable",
+        behaviour_craftsynth,
+        &ClockedBehaviour::setClockEnabled,
+        &ClockedBehaviour::isClockEnabled,
+        nullptr
+    );
+#endif
 
 #ifdef ENABLE_SUBCLOCKER
     ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_divisor_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
@@ -235,6 +244,10 @@ void setup_menu() {
     #ifdef ENABLE_LESTRUM
         menu->add(&lestrum_pads_output_selector);
         menu->add(&lestrum_arp_output_selector);
+    #endif
+
+    #ifdef ENABLE_CRAFTSYNTH_USB
+        menu->add(&craftsynth_clock_toggle);
     #endif
 
     menu->add(&pc_usb_input_1_selector);

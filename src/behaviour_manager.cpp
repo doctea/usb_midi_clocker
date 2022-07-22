@@ -54,7 +54,7 @@ void setup_behaviour_manager() {
         behaviour_manager->registerDevice(behaviour_subclocker);
     #endif
 
-    #ifdef ENABLE_CRAFTSYNTH
+    #ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println("about to register DeviceBehaviour_CraftSynth..."); Serial.flush();
         //behaviour_craftsynth = new DeviceBehaviour_CraftSynth();  // can be used as an output so has to be instantiated at compile time
         behaviour_manager->registerDevice(behaviour_craftsynth);

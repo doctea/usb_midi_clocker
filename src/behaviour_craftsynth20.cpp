@@ -1,5 +1,9 @@
 // Modal CraftSynth v2.0 vid=04D8 pid=EE1F
 
+#include "Config.h"
+
+#ifdef ENABLE_CRAFTSYNTH_USB
+
 #include "behaviour_craftsynth.h"
 
 //DeviceBehaviour_CraftSynth behaviour_craftsynth_actual = DeviceBehaviour_CraftSynth();
@@ -21,3 +25,5 @@ void craftsynth_setOutputWrapper(MIDIOutputWrapper *wrapper) {
   craftsynth_output->stop_all_notes();
   craftsynth_output = wrapper;    
 }*/
+
+#endif

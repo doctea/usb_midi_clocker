@@ -33,8 +33,12 @@ void setup_midi_output_wrapper_manager() {
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));
     #endif
 
-    #ifdef ENABLE_CRAFTSYNTH
+    #ifdef ENABLE_CRAFTSYNTH_USB
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1));
+    #endif
+    #if defined(ENABLE_CRAFTSYNTH) && !defined(ENABLE_CRAFTSYNTH_USB)
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S6 : CraftSynth : ch1", midi_out_serial[5], 1));
+        midi_out_serial_clock_enabled[5] = true;
     #endif
 
     pc_usb_1_output = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
@@ -128,6 +132,14 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
             update_wrapper_menus_for_name(source_label, index);
             return;
         } 
+    #endif
+    #ifdef ENABLE_LOOPER
+        if (source_label.equals("mpk49_loop_track")) {
+            Serial.printf("\tsetting for 'mpk49_loop_track' with %s at %i\n", source_label.c_str(), index);
+            mpk49_loop_track.setOutputWrapper(target);
+            update_wrapper_menus_for_name(source_label, index);
+            return;
+        }
     #endif
     if (source_label.equals("pc_usb_1_output")) {
         pc_usb_1_setOutputWrapper(target);

@@ -249,8 +249,15 @@ class Project {
                 if(lestrum_pads_output!=nullptr)    myFile.printf("midi_output_map=lestrum_pads_output|%s\n",   lestrum_pads_output->label);
                 if(lestrum_arp_output!=nullptr)     myFile.printf("midi_output_map=lestrum_arp_output|%s\n",    lestrum_arp_output->label);
             #endif
+            #ifdef ENABLE_LOOPER
+                if(mpk49_loop_track.output!=nullptr) {
+                    Serial.printf("saving midi_output_map=mpk49_loop_track|%s\n", mpk49_loop_track.output->label);
+                    myFile.printf("midi_output_map=mpk49_loop_track|%s\n",    mpk49_loop_track.output->label);
+                }
+            #endif
             if(pc_usb_1_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_1_output->label);
             if(pc_usb_2_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_2_output->label);
+                        //midi_output_wrapper_manager->save_to_file(myFile);
 
             myFile.println("; end project");
             myFile.close();
@@ -294,6 +301,7 @@ class Project {
             } else if (line.startsWith("subclocker_delay_ticks=")) {
                 behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
             } else if (line.startsWith("midi_output_map=")) {
+                Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_output_map=").length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);

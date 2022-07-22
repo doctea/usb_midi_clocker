@@ -7,13 +7,6 @@
 
 #include "behaviour_bamble.h"
 
-/*#ifdef ENABLE_CRAFTSYNTH
-    #define NUM_AVAILABLE_OUTPUTS 9
-#else
-    #define NUM_AVAILABLE_OUTPUTS 8
-#endif
-extern MIDIOutputWrapper available_outputs[NUM_AVAILABLE_OUTPUTS]; */
-
 MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
 int find_wrapper_index_for_label(char *to_find);
 void setup_midi_output_wrapper_manager();
@@ -60,6 +53,10 @@ class MIDIOutputWrapperManager {
     int get_num_available() {
         return this->available_outputs.size();
     }
+
+    /*bool save_to_file(File myFile) {
+        
+    }*/
 
     private:
         static MIDIOutputWrapperManager* inst_;

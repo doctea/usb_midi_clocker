@@ -4,6 +4,9 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_CRAFTSYNTH_USB
+
 #include "behaviour_base.h"
 #include "project.h"
 #include "clock.h"
@@ -14,7 +17,7 @@
 //void craftsynth_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void craftsynth_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_CraftSynth : public ClockedBehaviour {
+class DeviceBehaviour_CraftSynth : public ClockedBehaviour { // public DeviceBehaviourBase { //
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x04D8, pid = 0xEE1F;
@@ -28,10 +31,10 @@ class DeviceBehaviour_CraftSynth : public ClockedBehaviour {
             Serial.println("DeviceBehaviour_CraftSynth#setup_callbacks()"); Serial.flush();
         };
 
-        virtual void init() override {
+        /*virtual void init() override {
             Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial.flush();
             started = false;
-        }
+        }*/
 
         /*virtual void read() { Serial.println("CraftSynth#read"); };
         virtual void send_clock(uint32_t ticks) { Serial.println("CraftSynth#send_clock"); };
@@ -46,5 +49,7 @@ class DeviceBehaviour_CraftSynth : public ClockedBehaviour {
 
 //void craftsynth_setOutputWrapper(MIDIOutputWrapper *);
 extern DeviceBehaviour_CraftSynth *behaviour_craftsynth;
+
+#endif
 
 #endif

@@ -40,8 +40,10 @@
 // enable transposing beatstep to a particular octave
 #define ENABLE_BASS_TRANSPOSE MIDI3
 
-//#define ENABLE_LESTRUM
-//#define ENABLE_DRUMKIT
+//#define ENABLE_LESTRUM    // these are define din ConfigMidi.h instead
+//#define ENABLE_DRUMKIT    // these are define din ConfigMidi.h instead
+
+#define ENABLE_CRAFTSYNTH   // serial MIDI version
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
@@ -50,9 +52,13 @@
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
-    #define ENABLE_CRAFTSYNTH
+    //#define ENABLE_CRAFTSYNTH_USB
 
     #define ENABLE_APCMINI_DISPLAY
+#endif
+
+#if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
+    #error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
 #endif
 
 #define ENABLE_BPM

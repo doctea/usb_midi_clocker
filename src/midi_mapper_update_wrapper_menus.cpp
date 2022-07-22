@@ -15,6 +15,9 @@
     extern MidiOutputSelectorControl lestrum_pads_output_selector;
     extern MidiOutputSelectorControl lestrum_arp_output_selector;
 #endif
+#ifdef ENABLE_LOOPER
+    extern MidiOutputSelectorControl looper_output_selector;
+#endif
 extern MidiOutputSelectorControl pc_usb_input_1_selector;
 extern MidiOutputSelectorControl pc_usb_input_2_selector;
 
@@ -56,6 +59,15 @@ void update_wrapper_menus_for_name(String source_label, int index) {
             //lestrum_arp_setOutputWrapper(target);
             lestrum_arp_output_selector.actual_value_index = index;
             lestrum_arp_output_selector.selected_value_index = index;
+            return;
+        }
+    #endif
+    #ifdef ENABLE_LOOPER
+        if (source_label.equals("mpk49_loop_track")) {
+            Serial.printf("!!!! source_label matches 'mpk49_loop_track', so setting looper_output_selector index to %i\n", index);
+            Serial.printf("!!!! actual_value_index is %i and selected_value_index is %i - replacing with %i\n", looper_output_selector.actual_value_index, looper_output_selector.selected_value_index, index);
+            looper_output_selector.actual_value_index = index;
+            looper_output_selector.selected_value_index = index;
             return;
         }
     #endif

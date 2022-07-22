@@ -3,6 +3,7 @@
 
 #include <MIDI.h>
 #include <USBHost_t36.h>
+#include <SdFat.h>
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 30
 
@@ -44,19 +45,26 @@ class MIDIOutputWrapper {
         }
 
         void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-            //Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
+            Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
             if (channel==0) channel = default_channel;
-            if (output_serialmidi!=nullptr)              
+            if (output_serialmidi!=nullptr) {
+                Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);
                 output_serialmidi->sendNoteOn(pitch, velocity, channel);
-            if (output_usb!=nullptr)                     
+            }
+            if (output_usb!=nullptr) {
+                Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb, pitch, velocity, channel);
                 output_usb->sendNoteOn(pitch, velocity, channel);
+            }
             if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr) {
-                //Serial.println("got an output_usb_pointer..");
+                Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb_pointer\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb_pointer, pitch, velocity, channel);
                 (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
             }
             //Serial.println("sent NoteOn");
-            if (playing_notes[pitch]<8)
+            if (playing_notes[pitch]<8) {
                 playing_notes[pitch]++;
+            } else {
+                Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+            }
         }
 
         void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {

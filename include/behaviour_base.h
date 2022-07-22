@@ -99,6 +99,7 @@ class ClockedBehaviour : public DeviceBehaviourBase {
                 this->device->sendRealTime(MIDIDevice::Stop); //sendStop();
                 this->device->sendRealTime(MIDIDevice::Start); //sendStart();
                 this->device->send_now();
+                this->started = true;
             } else {
                 //Serial.println("\tin clocked behaviour on_restart, no device!");
             }

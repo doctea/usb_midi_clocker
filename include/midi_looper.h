@@ -16,9 +16,13 @@
 //#include <MIDI.h>
 //#include "USBHost_t36.h"
 
+//#define DEBUG_LOOPER
+
 #define LOOP_LENGTH (PPQN*4*4)
 #define MAX_INSTRUCTIONS            100
 #define MAX_INSTRUCTION_ARGUMENTS   4
+
+//#include "midi_mapper_manager.h"
 
 using namespace storage;
 
@@ -181,17 +185,17 @@ class MIDITrack {
             //if (!specified_output)
             //    specified_output = output;
             #ifdef DEBUG_LOOPER
-                Serial.printf("play_events with time %u\n", time); Serial.flush();
+            //    Serial.printf("play_events with time %u\n", time); Serial.flush();
             #endif
 
             int position = time%LOOP_LENGTH;
             #ifdef DEBUG_LOOPER
-                Serial.printf("play_events with position %u\n", position); Serial.flush();
+                //Serial.printf("play_events with position %u\n", position); Serial.flush();
             #endif
             int number_messages = frames[position].size();
             #ifdef DEBUG_LOOPER
-                Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
-                if (frames[position].size()>0) 
+                //Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
+                if (number_messages>0) 
                     Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages); Serial.flush();
             #endif
 
@@ -222,6 +226,9 @@ class MIDITrack {
                         #endif
                         if (output!=nullptr)
                             output->sendNoteOn((uint8_t)pitch, (byte)m.velocity); //, m.channel);
+
+                        //midi_output_wrapper_manager->getInstance()->find("USB : CraftSynth : ch 1")->sendNoteOn(pitch, m.velocity); //, channel);
+
                         //playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
@@ -233,6 +240,8 @@ class MIDITrack {
                         #endif
                         if (output!=nullptr)
                             output->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
+
+                        //midi_output_wrapper_manager->getInstance()->find("USB : CraftSynth : ch 2")->sendNoteOff(pitch, m.velocity); //, channel);
                         //playing_notes[pitch] = false;
                         break;
                     default:
