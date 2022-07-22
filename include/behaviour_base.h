@@ -63,7 +63,9 @@ class DeviceBehaviourBase {
             this->device = nullptr;
             // remove all hooks from device
         }*/
-        virtual void read() {};
+        virtual void read() {
+             //if (this->device!=nullptr) while(this->device->read()); 
+        };
         virtual void send_clock(uint32_t ticks) {};
         virtual void loop(uint32_t ticks) {};
         virtual void on_tick(uint32_t ticks) {};
@@ -79,10 +81,13 @@ class ClockedBehaviour : public DeviceBehaviourBase {
     public:
         bool started = false;
 
+        bool clock_enabled = true;
+
         virtual void send_clock(uint32_t ticks) override {
             //Serial.println("send_clock() in ClockedBehaviour");
-            if (this->device!=nullptr) {
+            if (this->device!=nullptr && this->clock_enabled) {
                 this->device->sendRealTime(MIDIDevice::Clock);
+                this->device->send_now();
             } else {
                 //Serial.println("in clocked behaviour send_clock, no device!");
             }
@@ -90,12 +95,20 @@ class ClockedBehaviour : public DeviceBehaviourBase {
 
         virtual void on_restart() override {
             //Serial.println("\ton_restart() in ClockedBehaviour");
-            if (this->device!=nullptr) {
+            if (this->device!=nullptr && this->clock_enabled) {
                 this->device->sendRealTime(MIDIDevice::Stop); //sendStop();
                 this->device->sendRealTime(MIDIDevice::Start); //sendStart();
+                this->device->send_now();
             } else {
                 //Serial.println("\tin clocked behaviour on_restart, no device!");
             }
+        }
+
+        virtual void setClockEnabled(bool enabled) {
+            this->clock_enabled = enabled;
+        }
+        virtual bool isClockEnabled() {
+            return this->clock_enabled;
         }
 };
 

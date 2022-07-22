@@ -90,7 +90,7 @@ class MidiOutputSelectorControl : public SelectorControl {
             // not selected, so just show the current value
             //colours(opened && selected_value_index==i, col, BLACK);
 
-            tft->printf((char*)"%s", (char*)get_label_for_index(selected_value_index));
+            tft->printf((char*)"%s", (char*)get_label_for_index(this->actual_value_index));
             tft->println((char*)"");
         } else {
             int current_value = actual_value_index; //this->getter();
