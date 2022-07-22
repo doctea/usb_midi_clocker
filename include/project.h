@@ -141,11 +141,14 @@ class Project {
         }
 
         // load and save sequences / clock settings etc
-        bool load_loop() {
+        bool load_loop(int selected_loop_number) {
             return load_loop(selected_loop_number, &mpk49_loop_track);
         }
+        bool load_loop() {
+            return load_loop(this->selected_loop_number, &mpk49_loop_track);
+        }
         bool save_loop() {
-            return save_loop(selected_loop_number, &mpk49_loop_track);
+            return save_loop(this->selected_loop_number, &mpk49_loop_track);
         }
 
         bool load_loop(int selected_loop_number, MIDITrack *track) {
@@ -169,14 +172,18 @@ class Project {
         }
 
         // callbacks so project can respond to events eg on_phrase...
-        bool auto_advance = false;
+        bool auto_advance_sequencer = false;
         void on_phrase(int phrase) {
             phrase = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
-            if (auto_advance) {
-                this->selected_sequence_number = phrase;
+            if (auto_advance_sequencer) {
+                this->selected_sequence_number = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
                 this->load_sequence(this->selected_sequence_number);
             }
-            /*if (auto_advance) {
+            if (auto_advance_looper) {
+                this->selected_loop_number = phrase % NUM_LOOP_SLOTS_PER_PROJECT;
+                this->load_loop(this->selected_loop_number);
+            }
+            /*if (auto_advance_sequencer) {
                 int tested = 0;
                 do {
                     this->selected_sequence_number++;
@@ -186,11 +193,19 @@ class Project {
                 this->load_sequence(this->selected_sequence_number);
             }*/
         }
-        bool is_auto_advance() {
-            return this->auto_advance;
+        bool is_auto_advance_sequencer() {
+            return this->auto_advance_sequencer;
         }
-        void set_auto_advance(bool auto_advance) {
-            this->auto_advance = auto_advance;
+        void set_auto_advance_sequencer(bool auto_advance_sequencer) {
+            this->auto_advance_sequencer = auto_advance_sequencer;
+        }
+
+        bool auto_advance_looper = false;
+        bool is_auto_advance_looper() {
+            return this->auto_advance_looper;
+        }
+        void set_auto_advance_looper(bool auto_advance_looper) {
+            this->auto_advance_looper = auto_advance_looper;
         }
 
         bool save_project_settings() {

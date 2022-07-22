@@ -63,7 +63,8 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH, PPQN, BEATS
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
-ObjectToggleControl<Project> project_autoadvance  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance, &Project::is_auto_advance, nullptr);
+ObjectToggleControl<Project> project_autoadvance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
+ObjectToggleControl<Project> project_autoadvance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
 ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
@@ -209,7 +210,8 @@ void setup_menu() {
 
     //project_selector.go_back_on_select = true;
     menu->add(&project_selector);
-    menu->add(&project_autoadvance);
+    menu->add(&project_autoadvance_sequencer);
+    menu->add(&project_autoadvance_looper);
     menu->add(&project_save);
 
     #ifdef ENABLE_BEATSTEP

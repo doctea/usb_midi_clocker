@@ -155,6 +155,7 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
 
     Serial.printf("set_target_wrapper_for_names: Couldn't match source_label '%s' with anything!\n", source_label.c_str()); Serial.flush();
     //update_wrapper_menus_for_name(source_label, index);
+    update_wrapper_menus_for_name(source_label, -1);
 }
 
 /*char *find_wrapper_name_for_object(MIDIOutputWrapper *obj_to_find) {
