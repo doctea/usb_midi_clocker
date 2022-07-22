@@ -44,7 +44,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 //int note2 = note - 24;
                 //if (note2<=0) 
                 //    note2 += 12;
-                uint8_t note2 = note & 12;
+                uint8_t note2 = note % 12;
                 note2 += (bass_transpose_octave*12); //24;
                 //Serial.printf("beatstep note on %i : %i : %i\n", BASS_MIDI_CHANNEL, note, velocity);
                 //Serial.printf("beatstep note2 is %i\n", note2);
@@ -67,7 +67,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 //int note2 = note - 24;
                 //if (note2<=0) 
                 //    note2 += 12;
-                uint8_t note2 = note & 12;
+                uint8_t note2 = note % 12;
                 note2 += (bass_transpose_octave*12);// note2 += 24;
                 note = note2;
                 //}
