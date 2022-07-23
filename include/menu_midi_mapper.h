@@ -31,8 +31,13 @@ class MidiOutputSelectorControl : public SelectorControl {
 
     virtual void on_add() {
         actual_value_index = -1;
-        Serial.println("on_add()");
-        Serial.printf("MidiOutputSelectorControl@ %u...\n", initial_selected_output_wrapper);
+        Serial.println("MidiOutputSelectorControl#on_add()");
+        if (initial_selected_output_wrapper==nullptr) {
+            Serial.printf("No initial output wrapper passed to %s\n", this->label);
+            this->selected_value_index = this->actual_value_index = -1;
+            return;
+        }
+        Serial.printf("MidiOutputSelectorControl@ %p...\n", initial_selected_output_wrapper);
         Serial.printf("MidiOutputSelectorControl looking for '%s' at %u...\n", initial_selected_output_wrapper->label, *initial_selected_output_wrapper);
 
         this->actual_value_index = find_wrapper_index_for_label(initial_selected_output_wrapper->label);
