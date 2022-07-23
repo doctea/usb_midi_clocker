@@ -46,7 +46,7 @@ class MIDIOutputWrapper {
         }
 
         void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-            Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
+            if (this->debug) Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
             if (channel==0) channel = default_channel;
             if (output_serialmidi!=nullptr) {
                 if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);

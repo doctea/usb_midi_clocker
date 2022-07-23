@@ -208,14 +208,14 @@ class MIDITrack {
                 int pitch = m.pitch + transpose;
                 if (pitch<0 || pitch > 127) {
                     //#ifdef DEBUG_LOOPER
-                        Serial.printf("\ttransposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
+                        if (this->debug) Serial.printf("\ttransposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
                     //#endif
                     return;
                 } else {
-                    Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush();
+                    if (this->debug) Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush();
                 }
                 #ifdef DEBUG_LOOPER
-                    Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
+                    if (this->debug) Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
                 #endif
 
                 switch (m.message_type) {
