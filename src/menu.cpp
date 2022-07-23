@@ -115,7 +115,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 /*#ifdef ENABLE_CRAFTSYNTH  // only need this if we want to listen to craftsynth midi *input*
     MidiOutputSelectorControl craftsynth_output_selector = MidiOutputSelectorControl("CraftSynth Output");
 #endif*/
-#ifdef ENABLE_CRAFTSYNTH_USB
+#if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
     ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
         "CraftSynth clock enable",
         behaviour_craftsynth,
@@ -198,10 +198,8 @@ void setup_menu() {
     menu->add(&clock_source_selector);
 
     //project_selector.go_back_on_select = true;
-    menu->add(&project_selector);
-    menu->add(&project_autoadvance_sequencer);
-    menu->add(&project_autoadvance_looper);
     menu->add(&project_save);
+    menu->add(&project_selector);
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
@@ -210,12 +208,14 @@ void setup_menu() {
 
     // sequencer
     #ifdef ENABLE_SEQUENCER
+        menu->add(&project_autoadvance_sequencer);
         menu->add(&sequencer_status);
     #endif
 
     // looper stuff
     #ifdef ENABLE_LOOPER
         //looper_submenu.set_tft(tft);
+        menu->add(&project_autoadvance_looper);
         menu->add(&mpk49_looper_status); 
         menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
         menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
@@ -239,7 +239,7 @@ void setup_menu() {
         menu->add(&lestrum_arp_output_selector);
     #endif
 
-    #ifdef ENABLE_CRAFTSYNTH_USB
+    #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
         menu->add(&craftsynth_clock_toggle);
     #endif
 
