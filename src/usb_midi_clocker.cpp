@@ -267,6 +267,11 @@ void do_tick(uint32_t in_ticks) {
   if (is_bpm_on_phrase(ticks))
     project.on_phrase(BPM_CURRENT_PHRASE);
 
+  #ifdef ENABLE_LOOPER
+    behaviour_manager->do_pre_clock(in_ticks);
+    //behaviour_mpk49->process_looper_events(in_ticks);
+  #endif
+
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB

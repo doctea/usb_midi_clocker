@@ -69,6 +69,7 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
   - but why would that only affect loops that are playing back?
   - really don't know what's going on here :(
   - workaround for the time being is to use hardware serial MIDI when notes+clock are needed
+  - hmm, may have worked around this by sending looper notes before sending clocks, in a do_pre_clock() function...?
 
 ### TODO/Future 
 

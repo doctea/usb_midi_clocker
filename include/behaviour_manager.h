@@ -60,6 +60,12 @@ class DeviceBehaviourManager {
             }
         }
 
+        void do_pre_clock(unsigned long in_ticks) {
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                behaviours.get(i)->on_pre_clock(in_ticks);
+            }
+        }
+
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
             for (int i = 0 ; i < behaviours.size() ; i++) {
                 //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial.flush();

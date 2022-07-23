@@ -43,7 +43,7 @@
 //#define ENABLE_LESTRUM    // these are define din ConfigMidi.h instead
 //#define ENABLE_DRUMKIT    // these are define din ConfigMidi.h instead
 
-#define ENABLE_CRAFTSYNTH   // serial MIDI version
+//#define ENABLE_CRAFTSYNTH   // serial MIDI version
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
@@ -52,7 +52,7 @@
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
-    //#define ENABLE_CRAFTSYNTH_USB
+    #define ENABLE_CRAFTSYNTH_USB
 
     #define ENABLE_APCMINI_DISPLAY
 #endif

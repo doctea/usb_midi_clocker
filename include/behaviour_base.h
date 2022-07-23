@@ -64,14 +64,23 @@ class DeviceBehaviourBase {
             // remove all hooks from device
         }*/
         virtual void read() {
-             //if (this->device!=nullptr) while(this->device->read()); 
+             if (this->device!=nullptr) while(this->device->read()); 
         };
-        virtual void send_clock(uint32_t ticks) {};
+        // called every loop
         virtual void loop(uint32_t ticks) {};
+        // on_pre_clock called before the clocks are sent
+        virtual void on_pre_clock(uint32_t ticks) {};
+        // called during tick when behaviour_manager send_clocks is called
+        virtual void send_clock(uint32_t ticks) {};
+        // called every tick, after clocks sent
         virtual void on_tick(uint32_t ticks) {};
+        // called when the clock is restarted
         virtual void on_restart() {};
+        // called when a note_on message is received from the device
         virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
+        // called when a note_off message is received from the device
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
+        // called when a control_change message is received from the device
         virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {};
         virtual void init() {};
 

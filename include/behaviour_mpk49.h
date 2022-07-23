@@ -53,13 +53,12 @@ class DeviceBehaviour_mpk49 : public ClockedBehaviour {
             mpk49_output->sendNoteOff(note, velocity);
         }
 
-        void on_tick(unsigned long ticks) override {
-            ClockedBehaviour::on_tick(ticks);
-            #ifdef ENABLE_LOOPER
+        #ifdef ENABLE_LOOPER
+            void on_pre_clock(unsigned long ticks) {
                 if (playing)
                     this->loop_track->play_events(ticks); //, midi_out_bitbox); //%(LOOP_LENGTH));
-            #endif
-        }
+            }
+        #endif
 
         void handle_system_exclusive(uint8_t *data, unsigned int size) {
             Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
