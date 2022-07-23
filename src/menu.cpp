@@ -77,7 +77,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     #endif
     #ifdef ENABLE_BEATSTEP_SYSEX
         ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = ObjectToggleControl<DeviceBehaviour_Beatstep> (
-            "Beatstep pattern advance",
+            "Beatstep auto-advance",
             behaviour_beatstep,
             &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
             &DeviceBehaviour_Beatstep::is_auto_advance_pattern,
@@ -183,9 +183,9 @@ void setup_menu() {
     #ifdef ENABLE_LOOPER
         looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
     #endif
-    /*#ifdef ENABLE_BEATSTEP    
+    #ifdef ENABLE_BEATSTEP    
         beatstep_output_selector.configure(beatstep_output, beatstep_setOutputWrapper);
-    #endif*/
+    #endif
     #ifdef ENABLE_KEYSTEP
         keystep_output_selector.configure(keystep_output, keystep_setOutputWrapper);
     #endif
