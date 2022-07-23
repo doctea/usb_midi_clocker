@@ -25,6 +25,9 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 
 class DeviceBehaviour_Beatstep : public ClockedBehaviour {
     public:
+        #define NUM_PATTERNS 16
+        bool auto_advance_pattern = true;   // todo: make configurable!
+
         uint16_t vid = 0x1c75, pid = 0x0206;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
@@ -32,6 +35,39 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
             this->device->setHandleNoteOn(beatstep_handle_note_on);
             this->device->setHandleNoteOff(beatstep_handle_note_off);
         }
+
+        void set_auto_advance_pattern(bool auto_advance_pattern) {
+            this->auto_advance_pattern = auto_advance_pattern;
+        }
+        bool is_auto_advance_pattern() {
+            return this->auto_advance_pattern;
+        }
+
+        #ifdef ENABLE_BEATSTEP_SYSEX
+            void on_phrase(uint32_t phrase) override {
+                if (this->device==nullptr) return;
+
+                if (this->auto_advance_pattern) {
+                    on_restart(); //TODO: which of these is actually doing the work??
+
+                    uint8_t phrase_number = (uint8_t)(phrase % NUM_PATTERNS);
+                    this->send_preset_change(phrase_number);
+
+                    on_restart(); //TODO: which of these is actually doing the work??
+                    //Serial.printf("sending sysex to switch to phrase_number %i?\n", phrase_number);
+                }
+            }
+
+            void send_preset_change(uint8_t phrase_number) {
+                if (this->device==nullptr) return;
+                Serial.printf("beatstep#send_preset_change switching to pattern %i\n", phrase_number % NUM_PATTERNS);
+
+                uint8_t data[] = {
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, phrase_number % (uint8_t)NUM_PATTERNS, 0xF7
+                };
+                this->device->sendSysEx(sizeof(data), data, true);
+            }
+        #endif
 
         void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
             current_beatstep_note = note;

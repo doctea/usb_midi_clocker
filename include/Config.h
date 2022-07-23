@@ -48,6 +48,7 @@
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
+    #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     #define ENABLE_BAMBLE
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
@@ -60,6 +61,8 @@
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
 #error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
 #endif
+
+//#define ENABLE_CRAFTSYNTH_CLOCKTOGGLE   // enable menu item to enable/disable clock output to CraftSynth - only really useful for debug i think?
 
 #define ENABLE_BPM
 #define ENABLE_SEQUENCER

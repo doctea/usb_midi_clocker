@@ -76,6 +76,8 @@ class DeviceBehaviourBase {
         virtual void on_tick(uint32_t ticks) {};
         // called when the clock is restarted
         virtual void on_restart() {};
+        // called when we change phrase
+        virtual void on_phrase(uint32_t phrase) {};
         // called when a note_on message is received from the device
         virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
         // called when a note_off message is received from the device

@@ -66,7 +66,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     #ifdef ENABLE_BASS_TRANSPOSE
         //NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
         ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
-            "TBass octave",
+            "Bass octave",
             behaviour_beatstep, 
             &DeviceBehaviour_Beatstep::setTransposeOctave, 
             &DeviceBehaviour_Beatstep::getTransposeOctave, 
@@ -75,6 +75,16 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
             8
         );
     #endif
+    #ifdef ENABLE_BEATSTEP_SYSEX
+        ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = ObjectToggleControl<DeviceBehaviour_Beatstep> (
+            "Beatstep pattern advance",
+            behaviour_beatstep,
+            &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
+            &DeviceBehaviour_Beatstep::is_auto_advance_pattern,
+            nullptr
+        );
+    #endif
+    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
 #endif
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
@@ -173,9 +183,9 @@ void setup_menu() {
     #ifdef ENABLE_LOOPER
         looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
     #endif
-    #ifdef ENABLE_BEATSTEP    
+    /*#ifdef ENABLE_BEATSTEP    
         beatstep_output_selector.configure(beatstep_output, beatstep_setOutputWrapper);
-    #endif
+    #endif*/
     #ifdef ENABLE_KEYSTEP
         keystep_output_selector.configure(keystep_output, keystep_setOutputWrapper);
     #endif
@@ -204,6 +214,10 @@ void setup_menu() {
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
         menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+        #ifdef ENABLE_BEATSTEP_SYSEX
+            menu->add(&beatstep_auto_advance);
+        #endif
+        menu->add(&beatstep_output_selector);
     #endif
 
     // sequencer
@@ -224,9 +238,9 @@ void setup_menu() {
         //menu->add(&looper_submenu);
     #endif
 
-    #ifdef ENABLE_BEATSTEP
+    /*#ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_output_selector);
-    #endif
+    #endif*/
     #ifdef ENABLE_KEYSTEP
         menu->add(&keystep_output_selector);
     #endif

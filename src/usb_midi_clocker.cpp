@@ -264,8 +264,11 @@ void do_tick(uint32_t in_ticks) {
     restart_on_next_bar = false;
   }
 
-  if (is_bpm_on_phrase(ticks))
+  //TODO: which of these is actually doing the work??
+  if (is_bpm_on_phrase(ticks)) {
     project.on_phrase(BPM_CURRENT_PHRASE);
+    behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);
+  }
 
   #ifdef ENABLE_LOOPER
     behaviour_manager->do_pre_clock(in_ticks);
@@ -289,6 +292,13 @@ void do_tick(uint32_t in_ticks) {
     behaviour_manager->do_ticks(in_ticks);
     //Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush();
   #endif
+
+  //TODO: which of these is actually doing the work??
+  /*#ifdef ENABLE_USB
+    if (is_bpm_on_phrase(ticks+1)) {
+      behaviour_manager->do_phrase(BPM_CURRENT_PHRASE+1);
+    }
+  #endif*/
 
   #ifdef DEBUG_TICKS
     Serial.println(F(" ]"));

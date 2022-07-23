@@ -23,7 +23,8 @@ class DeviceBehaviourManager {
 
         bool attempt_device_connect(uint8_t idx, uint32_t packed_id) {
             // loop over the registered behaviours and if the correct one is found, set it up
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourBase *behaviour = behaviours.get(i);
                 Serial.printf("DeviceBehaviourManager#attempt_device_connect(): checking behaviour %i -- does it match %08X?\n", i, packed_id);
                 usb_midi_slots[idx].packed_id = packed_id;
@@ -39,18 +40,27 @@ class DeviceBehaviourManager {
         }
 
         void send_clocks() {    // replaces behaviours_send_clock
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial.flush();
                 behaviours.get(i)->send_clock(ticks);
                 //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial.flush();
             }  
         }
 
+        void do_phrase(int phrase) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
+                behaviours.get(i)->on_phrase(phrase);
+            }
+        }
+
         void do_loops() {       // replaces behaviours_loop
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourBase *behaviour = behaviours.get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
@@ -61,13 +71,15 @@ class DeviceBehaviourManager {
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 behaviours.get(i)->on_pre_clock(in_ticks);
             }
         }
 
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial.flush();
                 behaviours.get(i)->on_tick(in_ticks);
                 //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial.flush();
@@ -75,12 +87,13 @@ class DeviceBehaviourManager {
         }
 
         void on_restart() {
-            for(int i = 0 ; i < behaviours.size() ; i++) {
-                if (behaviours.get(i)->device) {
-                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
-                behaviours.get(i)->on_restart();
-                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
-                }
+            const int size = behaviours.size();
+            for(int i = 0 ; i < size ; i++) {
+                //if (behaviours.get(i)->device) {
+                    //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
+                    behaviours.get(i)->on_restart();
+                    //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
+                //}
             }
         }
 
