@@ -13,16 +13,20 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
 ## Requirements
 
 - Teensy 4.1 with Deftaudio 8x8 midi board
-- ST7789 oled screen (Adafruit is the one i'm using) + rotary encoder + two wired buttons for control
-- https://github.com/doctea/mymenu
+- ST7789 oled screen + rotary encoder + two wired buttons for control
+ - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789
+ - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu
+ - https://github.com/doctea/mymenu
 - Rotary encoder
 - SD card in the onboard Teensy SD card reader
 - DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers
+ - I'm using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
 ## Features
 
 - Support USB MIDI devices (more can be added in code):
+  - (see Known issues)
   - Arturia BeatStep (original, clock+note routing/transposition)
   - Arturia KeyStep (clock)
   - Akai MPK49 (clock+MIDI looping functions)
@@ -56,12 +60,15 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
   - with quantization on recording and recall
   - 8 slots per project
 
-### Known bugs
+### Known issues
 
-- MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the serial output?!
-  - but MIDI that comes in from USB device eg beatstep seems ok regardless?
-  - something to do with MIDI buffers I guess?  maybe isn't getting flushed properly or messages get trashed before being sent?
+- MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the debug serial output?!
+  - notes work fine though if sending clock is disabled?!
+  - and MIDI that comes in from USB device eg beatstep and then sent to the same output device seems to work ok regardless?
+  - something to do with USB/MIDI buffers I guess?  maybe isn't getting flushed properly or messages get trashed before being sent?
   - but why would that only affect loops that are playing back?
+  - really don't know what's going on here :(
+  - workaround for the time being is to use hardware serial MIDI when notes+clock are needed
 
 ### TODO/Future 
 
