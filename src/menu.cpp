@@ -27,16 +27,6 @@
 
 #include "clock.h"
 
-/*#ifdef ENABLE_BASS_TRANSPOSE
-    void bass_transpose_changed(int last_value, int new_value) {
-        if (last_value!=new_value) {
-            Serial.printf("bass_transpose_changed(%i, %i)\n", last_value, new_value); Serial.flush();
-            //if (midi_out_bass_wrapper!=nullptr)
-                midi_out_bass_wrapper.stop_all_notes();
-        }
-    }
-#endif*/
-
 //DisplayTranslator *tft;
 DisplayTranslator_STeensy_Big *tft;
 Menu *menu; // = Menu();
@@ -82,16 +72,13 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
             0,
             8
         );
-        //ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = 
-            //ObjectNumberControl<DeviceBehaviour_Beatstep,int>("Bass octave test", behaviour_beatstep, &DeviceBehaviour_Beatstep::setTransposeOctave, &DeviceBehaviour_Beatstep::getTransposeOctave, nullptr);
-        //ObjectNumberControl<Project,int> bass_transpose_control = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
     #endif
 #endif
 #ifdef ENABLE_SEQUENCER
-    SequencerStatus sequencer_status =      SequencerStatus();
+    SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
 #endif
 #ifdef ENABLE_LOOPER
-    LooperStatus    mpk49_looper_status =   LooperStatus();
+    LooperStatus    mpk49_looper_status =   LooperStatus("Looper");
     LooperQuantizeControl quantizer_setting = LooperQuantizeControl("Loop quant",   &mpk49_loop_track);   // todo: make this part of the LooperStatus object
     HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
     LooperTransposeControl looper_transpose_control =    LooperTransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
@@ -99,7 +86,6 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #endif
 
 // MIDI output selectors
-
 #ifdef ENABLE_BEATSTEP
      MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
 #endif

@@ -93,16 +93,33 @@ class Project {
         }
 
         ////////////// clocks / sequences
-        void select_sequence_number(int sn) {
+        bool select_sequence_number(int sn) {
             Serial.printf("select_sequence_number %i\n", sn);
             selected_sequence_number = sn % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+            return sn == selected_sequence_number;
         }
 
         bool is_selected_sequence_number_empty(int sn) {
             return !sequence_slot_has_file[sn];
         }
 
+        int get_selected_sequence_number() {
+            return this->selected_sequence_number;
+        }
+        int get_loaded_sequence_number() {
+            return this->loaded_sequence_number;
+        }
+        int get_max_sequence_slots() {
+            return NUM_SEQUENCE_SLOTS_PER_PROJECT;
+        }
+
         // load and save sequences / clock settings etc
+        bool load_selected_sequence() {
+            return load_sequence(selected_sequence_number);
+        }
+        bool save_selected_sequence() {
+            return save_sequence(selected_sequence_number);
+        }
         bool load_sequence() {
             return load_sequence(selected_sequence_number);
         }
@@ -128,9 +145,10 @@ class Project {
         }
 
         //////// loops/recordings
-        void select_loop_number(int sn) {
+        bool select_loop_number(int sn) {
             Serial.printf("select_loop_number %i\n", sn);
-            selected_sequence_number = sn % NUM_LOOP_SLOTS_PER_PROJECT;
+            selected_loop_number = sn % NUM_LOOP_SLOTS_PER_PROJECT;
+            return selected_loop_number == sn;
         }
 
         bool is_selected_loop_number_empty(int sn) {
@@ -149,6 +167,9 @@ class Project {
         }
         bool save_loop() {
             return save_loop(this->selected_loop_number, &mpk49_loop_track);
+        }
+        bool save_loop(int selected_loop_number) {
+            return this->save_loop(selected_loop_number, &mpk49_loop_track);
         }
 
         bool load_loop(int selected_loop_number, MIDITrack *track) {

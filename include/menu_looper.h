@@ -9,6 +9,8 @@
 #include "mymenu.h"
 #include "menu.h"
 
+#include "menu_slotcontroller.h"
+
 class LooperRecStatus : public MenuItem {   
     public:
         LooperRecStatus() : MenuItem("Loop status / slot") {};
@@ -113,17 +115,45 @@ class LooperTransposeControl : public NumberControl {
 
 // todo: merge functionality with SequencerStatus to share selection code
 //          maybe even make subclasses of SelectorControl?
-class LooperStatus : public MenuItem {
+class LooperStatus : public SlotController {
     int ui_selected_loop_number = 0;
     LooperRecStatus lrs = LooperRecStatus();
     public: 
-        LooperStatus() : MenuItem("Looper") {}
+        LooperStatus(char *label) : SlotController(label) {}
 
         virtual void on_add() override {
             lrs.set_tft(this->tft);
         };
 
+        virtual int get_max_slots() override {
+            return NUM_LOOP_SLOTS_PER_PROJECT;
+        };
+        virtual int get_loaded_slot() override {
+            return project.loaded_loop_number;
+        };
+        virtual int get_selected_slot() override {
+            return project.selected_loop_number;
+        };
+        virtual bool is_slot_empty(int i) override {
+            return project.is_selected_loop_number_empty(i);
+        };
+        virtual bool move_to_slot_number(int i) override {
+            return project.select_loop_number(i);
+        };
+        virtual bool load_slot_number(int i) override {
+            return project.load_loop(i);
+        };
+        virtual bool save_to_slot_number(int i) override {
+            return project.save_loop(i);
+        };
+
         virtual int display(Coord pos, bool selected, bool opened) override {
+            pos.y = lrs.display(pos,selected,opened);
+            show_header = false;
+            return SlotController::display(pos, selected, opened);
+        }
+
+        /*virtual int display(Coord pos, bool selected, bool opened) override {
             pos.y = lrs.display(pos,selected,opened);
             tft->setCursor(pos.x,pos.y);
             //colours(selected);
@@ -208,6 +238,6 @@ class LooperStatus : public MenuItem {
             }
 
             return true;
-        }
+        }*/
 };
 #endif
