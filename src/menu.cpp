@@ -99,9 +99,9 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #endif
 
 // MIDI output selectors
-#ifdef ENABLE_BEATSTEP
+/*#ifdef ENABLE_BEATSTEP
      MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
-#endif
+#endif*/
 
 #ifdef ENABLE_KEYSTEP
     MidiOutputSelectorControl keystep_output_selector = MidiOutputSelectorControl("KeyStep MIDI Output");
