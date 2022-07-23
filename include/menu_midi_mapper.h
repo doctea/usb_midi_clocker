@@ -95,9 +95,15 @@ class MidiOutputSelectorControl : public SelectorControl {
             // not selected, so just show the current value
             //colours(opened && selected_value_index==i, col, BLACK);
             char *label = (char*)get_label_for_index(this->actual_value_index);
-            if (label==nullptr || this->actual_value_index == -1) label = "[invalid]";
+            if (label==nullptr || this->actual_value_index == -1) {
+                tft->setTextColor(RED, BLACK);
+                label = "[invalid]";
+            } else {
+                tft->setTextColor(YELLOW, BLACK);
+            }
             tft->printf((char*)"%s", (char*)label);
             tft->println((char*)"");
+            tft->setTextColor(C_WHITE, BLACK);
         } else {
             int current_value = actual_value_index; //this->getter();
 
