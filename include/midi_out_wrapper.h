@@ -26,6 +26,7 @@ class MIDIOutputWrapper {
     byte playing_notes[127];
 
     public:
+        bool debug = false;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
         MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
@@ -48,22 +49,22 @@ class MIDIOutputWrapper {
             Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
             if (channel==0) channel = default_channel;
             if (output_serialmidi!=nullptr) {
-                Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);
+                if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);
                 output_serialmidi->sendNoteOn(pitch, velocity, channel);
             }
             if (output_usb!=nullptr) {
-                Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb, pitch, velocity, channel);
+                if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb, pitch, velocity, channel);
                 output_usb->sendNoteOn(pitch, velocity, channel);
             }
             if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr) {
-                Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb_pointer\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb_pointer, pitch, velocity, channel);
+                if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb_pointer\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb_pointer, pitch, velocity, channel);
                 (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
             }
             //Serial.println("sent NoteOn");
             if (playing_notes[pitch]<8) {
                 playing_notes[pitch]++;
             } else {
-                Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+                if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
             }
         }
 
@@ -85,7 +86,7 @@ class MIDIOutputWrapper {
             Serial.printf("stop_all_notes in %s...\n", label);
             for (int i = 0 ; i < 127 ; i++) {
                 while (is_note_playing(i)) {
-                    Serial.printf("stopping %i notes of pitch %i on channel %i..\n", playing_notes[i], i, default_channel);
+                    if (this->debug) Serial.printf("stopping %i notes of pitch %i on channel %i..\n", playing_notes[i], i, default_channel);
                     sendNoteOff(i, 0, default_channel);
                 }
             }
