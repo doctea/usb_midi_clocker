@@ -123,6 +123,7 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 - Output MIDI notes from the sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CV to MIDI for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
 - Record and playback CCs
+- Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets
 
 ## Explanation/demo
 
