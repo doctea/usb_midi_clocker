@@ -55,6 +55,13 @@ class DeviceBehaviourManager {
             }
         }
 
+        void do_bar(int bar) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
+                behaviours.get(i)->on_bar(bar);
+            }
+        }
+
         void do_loops() {       // replaces behaviours_loop
             unsigned long temp_tick;
             //noInterrupts();

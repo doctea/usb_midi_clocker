@@ -44,6 +44,7 @@ class DeviceBehaviour_Subclocker : public ClockedBehaviour {
             if (ticks==0 || ticks % clock_divisor == 0)
                 ClockedBehaviour::send_clock(ticks - clock_delay_ticks);
         }
+        
 };
 
 extern DeviceBehaviour_Subclocker *behaviour_subclocker;

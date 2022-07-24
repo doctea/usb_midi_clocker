@@ -152,6 +152,16 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
         &DeviceBehaviour_Subclocker::get_delay_ticks,
         nullptr
     );
+    ObjectActionItem<DeviceBehaviour_Subclocker> subclocker_restart_action = ObjectActionItem<DeviceBehaviour_Subclocker>(
+        "Restart Subclocker on bar",
+        behaviour_subclocker,
+        &DeviceBehaviour_Subclocker::set_restart_on_bar,
+        &DeviceBehaviour_Subclocker::is_set_restart_on_bar,
+        "Restarting.."
+    );
+
+    //ObjectActionItem<DeviceBehaviour_Subclocker> subclocker_restart_action = ObjectActionItem<DeviceBehaviour_Subclocker> ()
+
 #endif
 
 
@@ -262,9 +272,13 @@ void setup_menu() {
 
     #ifdef ENABLE_SUBCLOCKER
         subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
-        subclocker_divisor_control.target_object     = subclocker_delay_ticks_control.target_object     = behaviour_subclocker;   // because behaviour_subclocker pointer won't be set yet..?
+        subclocker_restart_action.target_object = 
+            subclocker_divisor_control.target_object = 
+                subclocker_delay_ticks_control.target_object = 
+                    behaviour_subclocker;   // because behaviour_subclocker pointer won't be set yet..?
         menu->add(&subclocker_divisor_control);
         menu->add(&subclocker_delay_ticks_control);
+        menu->add(&subclocker_restart_action);
     #endif
 
     menu->add(&usbdevices_panel);

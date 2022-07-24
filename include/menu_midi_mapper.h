@@ -97,7 +97,7 @@ class MidiOutputSelectorControl : public SelectorControl {
             char *label = (char*)get_label_for_index(this->actual_value_index);
             if (label==nullptr || this->actual_value_index == -1) {
                 tft->setTextColor(RED, BLACK);
-                label = "[invalid]";
+                label = (char*)"[invalid]";
             } else {
                 tft->setTextColor(YELLOW, BLACK);
             }

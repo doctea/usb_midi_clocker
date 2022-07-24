@@ -15,6 +15,7 @@ class DeviceBehaviourBase {
         MIDIDeviceBase *device = nullptr;
         //byte idx = 0xFF;
 
+
         DeviceBehaviourBase() = default;
         virtual ~DeviceBehaviourBase() = default;
 
@@ -74,6 +75,8 @@ class DeviceBehaviourBase {
         virtual void send_clock(uint32_t ticks) {};
         // called every tick, after clocks sent
         virtual void on_tick(uint32_t ticks) {};
+        // called when new bar starts
+        virtual void on_bar(int bar_number) {}
         // called when the clock is restarted
         virtual void on_restart() {};
         // called when we change phrase
@@ -90,8 +93,8 @@ class DeviceBehaviourBase {
 
 class ClockedBehaviour : public DeviceBehaviourBase {
     public:
+        bool restart_on_bar = true;
         bool started = false;
-
         bool clock_enabled = true;
 
         virtual void send_clock(uint32_t ticks) override {
@@ -102,6 +105,23 @@ class ClockedBehaviour : public DeviceBehaviourBase {
             } else {
                 //Serial.println("in clocked behaviour send_clock, no device!");
             }
+        }
+
+        virtual void on_bar(int bar_number) override {
+            if (this->restart_on_bar) {
+                this->restart_on_bar = false;
+                this->on_restart();
+            }
+        }
+        virtual bool is_set_restart_on_bar() {
+            return this->restart_on_bar;
+        }
+        virtual void set_restart_on_bar(bool v = true) {
+            this->restart_on_bar = v;
+        }
+        virtual const char *get_restart_on_bar_status_label(bool value) {
+            if (value) return "Restarting on bar..";
+            else return "Trigger restart on bar";
         }
 
         virtual void on_restart() override {

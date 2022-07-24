@@ -58,12 +58,12 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 }
             }
 
-            void send_preset_change(uint8_t phrase_number) {
+            void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
                 Serial.printf("beatstep#send_preset_change switching to pattern %i\n", phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
-                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, phrase_number % (uint8_t)NUM_PATTERNS, 0xF7
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)(phrase_number % NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
             }

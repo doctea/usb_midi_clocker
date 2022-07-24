@@ -16,7 +16,7 @@ class SlotController : public MenuItem {
     using GetterCallback =      int(TargetClass::*a)(void);
     */
     public:
-        SlotController(char *label) : MenuItem(label) {};
+        SlotController(const char *label) : MenuItem(label) {};
 
         virtual int get_max_slots();
         virtual int get_loaded_slot();

@@ -12,7 +12,7 @@ extern Menu *menu;
 class SequencerStatus : public SlotController {
     //int ui_selected_sequence_number = 0;
     public: 
-        SequencerStatus(char *label) : SlotController(label) {};
+        SequencerStatus(const char *label) : SlotController(label) {};
 
         virtual int get_max_slots() override {
             return NUM_SEQUENCE_SLOTS_PER_PROJECT;

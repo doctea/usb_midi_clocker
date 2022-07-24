@@ -37,7 +37,7 @@ class LooperRecStatus : public MenuItem {
                 colours(opened, BLUE);
                 tft->print((char*)"[##]");
             }
-            tft->print("\n");
+            tft->print((char*)"\n");
             return tft->getCursorY();// + 10;
         }
 };
@@ -119,7 +119,7 @@ class LooperStatus : public SlotController {
     int ui_selected_loop_number = 0;
     LooperRecStatus lrs = LooperRecStatus();
     public: 
-        LooperStatus(char *label) : SlotController(label) {}
+        LooperStatus(const char *label) : SlotController(label) {}
 
         virtual void on_add() override {
             lrs.set_tft(this->tft);

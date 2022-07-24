@@ -59,13 +59,14 @@ void do_tick(uint32_t ticks);
 
 
 void setup() {
-  Serial.begin(115200);
-  #ifdef WAIT_FOR_SERIAL
-    while (!Serial);
-  #endif
 
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
+  #endif
+
+  Serial.begin(115200);
+  #ifdef WAIT_FOR_SERIAL
+    while (!Serial);
   #endif
 
   //tft_print((char*)"..USB device handler..");
@@ -250,9 +251,7 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
   //Serial.println("ticked");
 
-  #ifndef USE_UCLOCK
-    ticks = in_ticks;
-  #endif
+  ticks = in_ticks;
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
@@ -264,15 +263,21 @@ void do_tick(uint32_t in_ticks) {
     restart_on_next_bar = false;
   }
 
-  //TODO: which of these is actually doing the work??
   if (is_bpm_on_phrase(ticks)) {
     project.on_phrase(BPM_CURRENT_PHRASE);
-    behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);
+    #ifdef ENABLE_USB
+      behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
+    #endif
+  }
+  if (is_bpm_on_bar(ticks)) {
+    //project.on_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    #ifdef ENABLE_USB
+      behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    #endif
   }
 
-  #ifdef ENABLE_LOOPER
+  #ifdef ENABLE_USB
     behaviour_manager->do_pre_clock(in_ticks);
-    //behaviour_mpk49->process_looper_events(in_ticks);
   #endif
 
   send_midi_serial_clocks();
@@ -293,10 +298,9 @@ void do_tick(uint32_t in_ticks) {
     //Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush();
   #endif
 
-  //TODO: which of these is actually doing the work??
-  /*#ifdef ENABLE_USB
+  /*#ifdef ENABLE_USB2
     if (is_bpm_on_phrase(ticks+1)) {
-      behaviour_manager->do_phrase(BPM_CURRENT_PHRASE+1);
+      behaviour_manager->do_phrase(BPM_CURRENT_PHRASE+1);   //TODO: which of these is actually doing the work??
     }
   #endif*/
 
