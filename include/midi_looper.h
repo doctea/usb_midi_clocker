@@ -10,19 +10,12 @@
 #include "bpm.h"
 
 #include "storage.h"
-//#include "menu.h"
-//#include "mymenu.h"
-
-//#include <MIDI.h>
-//#include "USBHost_t36.h"
 
 //#define DEBUG_LOOPER
 
 #define LOOP_LENGTH (PPQN*4*4)
 #define MAX_INSTRUCTIONS            100
 #define MAX_INSTRUCTION_ARGUMENTS   4
-
-//#include "midi_mapper_manager.h"
 
 using namespace storage;
 
@@ -36,11 +29,8 @@ struct midi_message {
 };
 
 class MIDITrack {
-    //LinkedList<midi_frame> frames = LinkedList<midi_frame> ();
-    //midi_frame frames[LOOP_LENGTH];
     LinkedList<midi_message> frames[LOOP_LENGTH];
 
-    //bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
     bool recorded_hanging_notes[127];
     int loaded_recording_number = -1;
 
@@ -101,6 +91,9 @@ class MIDITrack {
 
         bool debug = false;
 
+        bool recording = false;
+        bool playing = false;
+
         int last_note = -1;
         int current_note = -1;
 
@@ -110,10 +103,6 @@ class MIDITrack {
 
         MIDITrack(MIDIOutputWrapper *default_output) {
             output = default_output;
-            //frames[0].time = 0;
-            /*for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-                frames[i] = new LinkedList<midi_message>();
-            }*/
         };
 
         void setOutputWrapper(MIDIOutputWrapper *output) {
@@ -131,12 +120,16 @@ class MIDITrack {
             quantization_value = qv;
         }
 
+        // set the loop transposition
         void set_transpose(int transpose) {
             stop_all_notes();
             this->transpose = transpose;
         }
+        int get_transpose() {
+            return this->transpose;
+        }
 
-        // for recording values (also used for reloading)
+        // for actually recording values (also used when reloading from save)
         void record_event(midi_message midi_event) {
             unsigned long time = ticks % (LOOP_LENGTH);
             //time = quantize_time(time);
@@ -148,7 +141,6 @@ class MIDITrack {
             //m.channel = 3; //channel;
             m.pitch = pitch;
             m.velocity = velocity;
-            //frames[time%LOOP_LENGTH].add(m);
             record_event(time, m);
         }
         void record_event(unsigned long time, midi_message midi_event) {
@@ -162,6 +154,7 @@ class MIDITrack {
             }
         }
 
+        // get total event count across entire loop
         int count_events() {
             int count = 0;
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
@@ -177,26 +170,25 @@ class MIDITrack {
             }
         }
 
+        // get the frames for a specific loop point
         LinkedList<midi_message> get_frames(unsigned long time) {
-            return this->frames[time];
+            return this->frames[time%LOOP_LENGTH];
         }
 
-        void play_events(unsigned long time) { //, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *specified_output = nullptr) {
+        // actually play events for a specified loop point
+        void play_events(unsigned long time) {
             //if (!specified_output)
             //    specified_output = output;
-            #ifdef DEBUG_LOOPER
-            //    Serial.printf("play_events with time %u\n", time); Serial.flush();
-            #endif
-
             int position = time%LOOP_LENGTH;
             #ifdef DEBUG_LOOPER
-                //Serial.printf("play_events with position %u\n", position); Serial.flush();
+                Serial.printf("play_events with time %u becomes position %u\n", time, position); Serial.flush();
             #endif
+
             int number_messages = frames[position].size();
             #ifdef DEBUG_LOOPER
                 //Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
                 if (number_messages>0) 
-                    Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages); Serial.flush();
+                    Serial.printf("\tfor frame\t%u got\t%i messages to play\n", position, number_messages); Serial.flush();
             #endif
 
             for (int i = 0 ; i < number_messages ; i++) {
@@ -207,47 +199,32 @@ class MIDITrack {
                 
                 int pitch = m.pitch + transpose;
                 if (pitch<0 || pitch > 127) {
-                    //#ifdef DEBUG_LOOPER
-                        if (this->debug) Serial.printf("\ttransposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
-                    //#endif
+                    if (this->debug) Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
                     return;
                 } else {
                     if (this->debug) Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush();
                 }
-                #ifdef DEBUG_LOOPER
-                    if (this->debug) Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
-                #endif
+                if (this->debug) Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
 
                 switch (m.message_type) {
                     case midi::NoteOn:
                         current_note = pitch;
-                        #ifdef DEBUG_LOOPER
-                            Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
-                        #endif
+                        if (this->debug) Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         if (output!=nullptr)
                             output->sendNoteOn((uint8_t)pitch, (byte)m.velocity); //, m.channel);
 
-                        //midi_output_wrapper_manager->getInstance()->find("USB : CraftSynth : ch 1")->sendNoteOn(pitch, m.velocity); //, channel);
-
-                        //playing_notes[pitch] = true;
                         break;
                     case midi::NoteOff:
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
-                        #ifdef DEBUG_LOOPER
-                            Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
-                        #endif
+                        if (this->debug) Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         if (output!=nullptr)
                             output->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
 
-                        //midi_output_wrapper_manager->getInstance()->find("USB : CraftSynth : ch 2")->sendNoteOff(pitch, m.velocity); //, channel);
-                        //playing_notes[pitch] = false;
                         break;
                     default:
-                        #ifdef DEBUG_LOOPER
-                            Serial.printf("\t%i: Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
-                        #endif
+                        if (this->debug) Serial.printf("\t%i: !!Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
                         break;
                 }
             }
@@ -265,16 +242,10 @@ class MIDITrack {
         void stop_all_notes() {
             if (output!=nullptr)
                 this->output->stop_all_notes();
-            /*for (byte i = 0 ; i < 127 ; i++) {
-                if (playing_notes[i]) {
-                    output->sendNoteOff(i, 0);
-                    playing_notes[i] = false;
-                }
-            }*/
         }
 
         void stop_recording() {
-            Serial.println("mpk49 stopped recording");
+            Serial.println("looper stopped recording");
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
@@ -286,9 +257,49 @@ class MIDITrack {
             }
         }
 
+        bool isPlaying() {
+            return this->playing;
+        }
+        bool isRecording() {
+            return this->recording;
+        }
+
         void start_recording() {
-            Serial.println("mpk49 started recording");
+            Serial.println("looper started recording");
             // uhhh nothing to do rn?
+        }
+        void toggle_recording() {
+            recording = !recording;
+            if (recording) {
+                this->start_recording();
+            } else {
+                this->stop_recording();
+            }
+        }
+
+        void start_playing() {
+            playing = true;
+        }
+        void stop_playing() {
+            playing = false;
+
+            if (!playing) {
+                this->stop_all_notes();
+                //mpk49_loop_track.stop_recording();
+                //midi_out_bitbox->sendControlChange(123,0,3);
+            }
+        }
+        
+        // called by external code to inform the looper about a note being played; looper decides whether to record it or not
+        void in_event(uint32_t ticks, byte message, byte note, byte velocity) {
+            if (recording)
+                this->record_event(ticks%LOOP_LENGTH, midi::NoteOn, note, velocity);
+        }
+
+        // called by external code to inform looper of a tick happening; looper decides whether to play its events or not
+        void process_tick(uint32_t ticks) {
+            if (playing)
+                this->play_events(ticks);
         }
 
         // save+load stuff !
@@ -433,14 +444,5 @@ class MIDITrack {
         }       
 
 };
-
-extern MIDITrack mpk49_loop_track;
-
-/**
- * @var {byte} the maximum number of instructions
- *      its possible to loop around while loops are still playing, if so instructions in the lower loop will be overwritten
- */
-//const unsigned long MAX_INSTRUCTIONS = (LOOP_LENGTH); //100;
-
 
 #endif

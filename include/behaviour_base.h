@@ -10,11 +10,10 @@
 
 class DeviceBehaviourBase {
     public:
-        const uint32_t vid = 0x0000, pid = 0x0000;
-        //MIDIDevice *device = nullptr;
-        MIDIDeviceBase *device = nullptr;
-        //byte idx = 0xFF;
+        bool debug = false;
 
+        const uint32_t vid = 0x0000, pid = 0x0000;
+        MIDIDeviceBase *device = nullptr;
 
         DeviceBehaviourBase() = default;
         virtual ~DeviceBehaviourBase() = default;
@@ -27,11 +26,6 @@ class DeviceBehaviourBase {
         }
         virtual bool matches_identifiers(uint32_t packed_id) {
             return (this->get_packed_id()==packed_id);
-            /*uint32_t my_packed = (0x09e8<<16 | 0x0028);
-            Serial.printf("DeviceBehaviourBase#matches_identifiers checking my_packed %08X against %08X\n", my_packed, packed_id);
-            //return packed_id>>8 == this->vid && ((0b0000000011111111 & packed_id) == this->pid);
-            //if ( vid == 0x09e8 && pid == 0x0028 ) {
-            return my_packed == packed_id;*/
         }
 
         virtual void setup_callbacks() {};

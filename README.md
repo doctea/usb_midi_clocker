@@ -8,7 +8,7 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
 (Way more than a) proof-of-concept of clocking multiple USB MIDI devices and outputting Eurorack CV clock, using a Teensy 4.1 mounted to a Deftaudio 8x8 breakout board (available on Tindie).  
 
 - Works with Arturia Beatstep (requires receiving a MIDI start message externally before it will listen to external clock!)
-- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36/tree/fixing-midi-clock due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
+- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36/tree/maybe-working-3 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
 ## Requirements
 
@@ -70,13 +70,15 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
   - really don't know what's going on here :(
   - workaround for the time being is to use hardware serial MIDI when notes+clock are needed
   - hmm, may have worked around this by sending looper notes before sending clocks, in a do_pre_clock() function...?
-- BeatStep auto-advance via SYSEX seems unreliable -- had it working a few times but couldn't work out rhyme or reason why?  Left in as option..
+    - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
+- BeatStep auto-advance via SYSEX seems unreliable -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
 
 ### TODO/Future 
 
 - Update docs to reflect all features
 - ~~Enable switching between multiple projects~~ done
 - ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
+- Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
 - Get it working in uClock/interrupts mode without crashes
@@ -89,13 +91,13 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
   - configurable chaining of sequences ie 'song mode'?
 - ~~Configurable routing of MIDI data and notes from device X to device Y?~~ Basically done but UI could probably do with improvement
 - Sequencer that records and playback MIDI notes or CV
-  - ~~rudimentary MIDI looper~~ working, and saves to SD
+  - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
   - improve by writing & saving real MIDI files?
   - Genericise MIDI looper functionality, so can eg record and loop drums 
 - ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
-- Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
 - Give better control over Beatstep via sysex if possible?
+  - added auto-advance pattern mode, but isn't working reliably -- might be something weird with the USB MIDI problems discovered mentioned in Known issues?
   - ie, change pattern, change speed..?
 - Better way to define custom behaviour in order to add new USB MIDI devices
 - Configurable per-device MIDI clock divisions/multiplier
@@ -103,13 +105,16 @@ The purpose is to make use of USB-MIDI devices (eg Akai APCMini and Arturia Beat
 - ~~Save and recall MIDI device+channel routings~~
   - Improve saving and recalling of MIDI device+channel routing, rather than having it hardcoded
 - Full configuration of MIDI device+channel routing
+- Allow input/loops to be redirected to multiple MIDI outputs.
 - Output MIDI notes from the sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CV to MIDI for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
-
+- Record and playback CCs
 
 ## Explanation/demo
 
 (Note that the below mostly applies to the Arduino Uno version, Teensy version has a lot more going on)
+
+Turning into a bit of a sequencer/MIDI+USB interface/brain for controlling Eurorack and MIDI devices.
 
 This allows a Teensy 4.1 equipped with a Deftaudio 8x8 MIDI+USB interface board to act as a USB MIDI *host* -- like an intelligent USB hub with multiple ports, so that USB MIDI devices connected to it (say keyboards or sequencers or synths) are sent MIDI clock.  This way you can sync USB MIDI devices, that don't have a normal MIDI DIN input, without connecting to a computer for DAWless usage.  Also outputs Eurorack CV clock/sequences.
 
@@ -122,7 +127,9 @@ There's an 8-port powered USB hub plugged into the port of the USB Host Shield. 
 This project keeps time and sends clock divisions on the CV outs, but also detects the USB MIDI devices connected to the USB hub and does a different thing for each one:-
 
 - For the Beatstep, Keystep, Bamble, MPK49 and Subclocker it sends MIDI start, stop and clock.
+- Modal CraftSynth 2.0 detected and used as a MIDI/looper output option.
 - Configurable divider and delay for the Subclocker.
+- MPK49 input can be recorded + saved as loops to be replayed out to selected device.
 - For the APCmini it sends a display indicating the settings of the clock outputs, receives MIDI messages from the APCmini to change those settings, and lights up to indicate the current step of the sequence.
 - Can use the 'master' fader on the APCmini to change tempo.
 - There's also a function to resync - either immediately or at the start of the next bar -- that sends a stop followed immediately by a start to the MIDI devices, and resets the internal clock, so that everything restarts in sync (hopefully!) at beat 1.

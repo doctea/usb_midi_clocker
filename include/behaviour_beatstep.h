@@ -26,7 +26,7 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 class DeviceBehaviour_Beatstep : public ClockedBehaviour {
     public:
         #define NUM_PATTERNS 16
-        bool auto_advance_pattern = true;   // todo: make configurable!
+        bool auto_advance_pattern = false;   // todo: make configurable!
 
         uint16_t vid = 0x1c75, pid = 0x0206;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }

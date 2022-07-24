@@ -55,8 +55,8 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH, PPQN, BEATS
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
-ObjectToggleControl<Project> project_autoadvance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
-ObjectToggleControl<Project> project_autoadvance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
+ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
+ObjectToggleControl<Project> project_auto_advance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
 ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
@@ -84,24 +84,20 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
             nullptr
         );
     #endif
-    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
+    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("Beatstep Output");
 #endif
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
 #endif
 #ifdef ENABLE_LOOPER
     //SubMenuItem     looper_submenu = SubMenuItem("Looper Submenu");
-    LooperStatus    mpk49_looper_status =   LooperStatus("Looper");
-    LooperQuantizeControl quantizer_setting = LooperQuantizeControl("Loop quant",   &mpk49_loop_track);   // todo: make this part of the LooperStatus object
-    HarmonyStatus looper_harmony_status =   HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); // todo: make this part of the LooperStatus object
-    LooperTransposeControl looper_transpose_control =    LooperTransposeControl("Loop transpose",      &mpk49_loop_track); // todo: make this part of the LooperStatus object
-    MidiOutputSelectorControl looper_output_selector = MidiOutputSelectorControl("Looper MIDI Output"); 
+    LooperStatus            mpk49_looper_status =       LooperStatus("Looper",                  &mpk49_loop_track);
+    LooperQuantizeControl   quantizer_setting =         LooperQuantizeControl("Loop quant",     &mpk49_loop_track);   
+    HarmonyStatus           looper_harmony_status =     HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); 
+    LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
+    MidiOutputSelectorControl looper_output_selector =  MidiOutputSelectorControl("Looper MIDI Output"); 
 #endif
 
-// MIDI output selectors
-/*#ifdef ENABLE_BEATSTEP
-     MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("BeatStep Output");
-#endif*/
 
 #ifdef ENABLE_KEYSTEP
     MidiOutputSelectorControl keystep_output_selector = MidiOutputSelectorControl("KeyStep MIDI Output");
@@ -232,14 +228,14 @@ void setup_menu() {
 
     // sequencer
     #ifdef ENABLE_SEQUENCER
-        menu->add(&project_autoadvance_sequencer);
+        menu->add(&project_auto_advance_sequencer);
         menu->add(&sequencer_status);
     #endif
 
     // looper stuff
     #ifdef ENABLE_LOOPER
         //looper_submenu.set_tft(tft);
-        menu->add(&project_autoadvance_looper);
+        menu->add(&project_auto_advance_looper);
         menu->add(&mpk49_looper_status); 
         menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
         menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object

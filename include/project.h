@@ -20,7 +20,7 @@
 
 using namespace storage;
 
-//class Project;
+extern MIDITrack mpk49_loop_track;
 
 void set_target_wrapper_for_names(String source_label, String target_label);
 
@@ -204,15 +204,6 @@ class Project {
                 this->selected_loop_number = phrase % NUM_LOOP_SLOTS_PER_PROJECT;
                 this->load_loop(this->selected_loop_number);
             }
-            /*if (auto_advance_sequencer) {
-                int tested = 0;
-                do {
-                    this->selected_sequence_number++;
-                    if (this->selected_sequence_number>NUM_SEQUENCE_SLOTS_PER_PROJECT) this->selected_sequence_number = 0;
-                    tested++;
-                } while(tested<NUM_SEQUENCE_SLOTS_PER_PROJECT && this->is_selected_sequence_number_empty(this->selected_sequence_number));
-                this->load_sequence(this->selected_sequence_number);
-            }*/
         }
         bool is_auto_advance_sequencer() {
             return this->auto_advance_sequencer;

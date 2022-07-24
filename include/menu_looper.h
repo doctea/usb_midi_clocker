@@ -13,14 +13,17 @@
 
 class LooperRecStatus : public MenuItem {   
     public:
-        LooperRecStatus() : MenuItem("Loop status / slot") {};
+        MIDITrack *loop_track = nullptr;
+        LooperRecStatus(const char *label, MIDITrack *loop_track) : MenuItem(label) {
+            this->loop_track = loop_track;
+        };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);
             header(label, pos, selected, opened);
 
             tft->setTextSize(2);
-            if (behaviour_mpk49->recording) {
+            if (this->loop_track->isRecording()) {
                 colours(opened, RED);
                 tft->print((char*)"[Rec]");
             } else {
@@ -30,7 +33,7 @@ class LooperRecStatus : public MenuItem {
             //tft->print("\n");
             colours(C_WHITE, BLACK);
             tft->print((char*)"  ");
-            if (behaviour_mpk49->playing) {
+            if (this->loop_track->isPlaying()) {
                 colours(opened, GREEN);
                 tft->print((char*)"[>>]");
             } else {
@@ -43,7 +46,7 @@ class LooperRecStatus : public MenuItem {
 };
 
 class LooperQuantizeControl : public SelectorControl {
-    MIDITrack *target;
+    MIDITrack *loop_track = nullptr;
 
     // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?
     //       to do this, will need to scroll thru selectors horizontally
@@ -52,7 +55,7 @@ class LooperQuantizeControl : public SelectorControl {
     public:
         LooperQuantizeControl(const char *label, MIDITrack *target) : SelectorControl(label) {
             //num_values = sizeof(*available_values);
-            this->target = target;
+            this->loop_track = target;
             available_values = &quantizer_available_values[0];
             
             num_values = sizeof(quantizer_available_values)/sizeof(int);
@@ -60,11 +63,11 @@ class LooperQuantizeControl : public SelectorControl {
 
         virtual void setter (int new_value) {
             Serial.printf("LooperQuantizerChanger setting quantize value to %i\n", new_value);
-            target->set_quantization_value(new_value); //available_values[selected_value]);
+            loop_track->set_quantization_value(new_value); //available_values[selected_value]);
             Serial.printf("did set!");
         }
         virtual int getter () {
-            return target->get_quantization_value();
+            return loop_track->get_quantization_value();
         }
         /*int on_change() {
             Serial.printf("SelectorControl %s changed to %i!\n", label, available_values[selected_value_index]);
@@ -96,20 +99,20 @@ class LooperQuantizeControl : public SelectorControl {
 
 
 class LooperTransposeControl : public NumberControl {
-    MIDITrack *target;
+    MIDITrack *loop_track = nullptr;
 
     public:
         LooperTransposeControl(const char* label, MIDITrack *target, int start_value, int min_value, int max_value) : NumberControl(label, start_value, min_value, max_value) {
-            this->target = target;
+            this->loop_track = target;
         };
         LooperTransposeControl(const char* label, MIDITrack *target) : LooperTransposeControl(label, target, 0, -127, 127) {};
         
         virtual int get_current_value() override {
-            return target->transpose;
+            return loop_track->transpose;
         }
 
         virtual void set_current_value(int value) override { 
-            target->set_transpose(value);
+            loop_track->set_transpose(value);
         }
 };
 
@@ -117,12 +120,14 @@ class LooperTransposeControl : public NumberControl {
 //          maybe even make subclasses of SelectorControl?
 class LooperStatus : public SlotController {
     int ui_selected_loop_number = 0;
-    LooperRecStatus lrs = LooperRecStatus();
+    LooperRecStatus *lrs = nullptr; //LooperRecStatus();
     public: 
-        LooperStatus(const char *label) : SlotController(label) {}
+        LooperStatus(const char *label, MIDITrack *mpk49_loop_track) : SlotController(label) {
+            this->lrs = new LooperRecStatus("Looper status", mpk49_loop_track);
+        }
 
         virtual void on_add() override {
-            lrs.set_tft(this->tft);
+            lrs->set_tft(this->tft);
         };
 
         virtual int get_max_slots() override {
@@ -148,96 +153,9 @@ class LooperStatus : public SlotController {
         };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
-            pos.y = lrs.display(pos,selected,opened);
+            pos.y = lrs->display(pos,selected,opened);
             show_header = false;
             return SlotController::display(pos, selected, opened);
         }
-
-        /*virtual int display(Coord pos, bool selected, bool opened) override {
-            pos.y = lrs.display(pos,selected,opened);
-            tft->setCursor(pos.x,pos.y);
-            //colours(selected);
-            //header(label, pos, selected, opened);
-            int x = pos.x, y = tft->getCursorY(); //.y;
-
-            int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
-            x = 2;
-            y++;
-
-            const int radius = 3, offset_leftup = -1, offset_downright = 2;
-
-            for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
-                int col = (project.loaded_loop_number==i) ?  GREEN :    // if currently loaded 
-                             (ui_selected_loop_number==i)  ? YELLOW :   // if selected
-                                                             BLUE;        
-
-                if (i==ui_selected_loop_number) {
-                    tft->drawRoundRect(x-offset_leftup, y-offset_leftup, button_size+offset_downright, button_size+offset_downright, radius, C_WHITE);
-                } else {
-                    tft->fillRoundRect(x-offset_leftup, y-offset_leftup, button_size+offset_downright, button_size+offset_downright, radius, BLACK);
-                }
-                if (project.is_selected_loop_number_empty(i)) {
-                    tft->drawRoundRect(x, y, button_size, button_size, 3, col);
-                } else {
-                    tft->fillRoundRect(x, y, button_size, button_size, 3, col);
-                }
-                x += button_size + 2;
-            }
-            y += button_size + 4;
-            return y; //tft.getCursorY() + 8;
-        }
-
-        virtual bool knob_left() {
-            ui_selected_loop_number--;
-            if (ui_selected_loop_number < 0)
-                ui_selected_loop_number = NUM_LOOP_SLOTS_PER_PROJECT-1;
-            project.select_loop_number(ui_selected_loop_number);
-            return true;
-        }
-
-        virtual bool knob_right() {
-            ui_selected_loop_number++;
-            if (ui_selected_loop_number >= NUM_LOOP_SLOTS_PER_PROJECT)
-                ui_selected_loop_number = 0;
-            project.select_loop_number(ui_selected_loop_number);
-            return true;
-        }
-
-        virtual bool button_select() {
-            project.select_loop_number(ui_selected_loop_number);
-            bool success = project.load_loop(ui_selected_loop_number, &mpk49_loop_track);
-            if (success) {
-                //loaded_sequence_number = ui_selected_sequence_number;
-                char msg[20] = "";
-                sprintf(msg, "Loaded loop %i", project.loaded_loop_number);
-                menu->set_message_colour(GREEN);
-                menu->set_last_message(msg);
-            } else {
-                char msg[20] = "";
-                sprintf(msg, "Error loading loop %i", ui_selected_loop_number);
-                menu->set_message_colour(RED);
-                menu->set_last_message(msg);
-            }
-            return true;
-        }
-
-        virtual bool button_right() {
-            project.select_loop_number(ui_selected_loop_number);
-            bool success = project.save_loop(ui_selected_loop_number, &mpk49_loop_track);
-            if (success) {
-                //loaded_sequence_number = ui_selected_sequence_number;
-                char msg[20] = "";
-                sprintf(msg, "Saved loop %i", project.loaded_loop_number);
-                menu->set_message_colour(GREEN);
-                menu->set_last_message(msg);
-            } else {
-                char msg[20] = "";
-                sprintf(msg, "Error saving loop %i", ui_selected_loop_number);
-                menu->set_message_colour(RED);
-                menu->set_last_message(msg);
-            }
-
-            return true;
-        }*/
 };
 #endif
