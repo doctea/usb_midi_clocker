@@ -7,11 +7,11 @@
 #include "midi_drums.h"
 
 #include "midi_lestrum.h"
-//#include "midi_bamble.h"
+#include "behaviour_bamble.h"
 
 #ifdef ENABLE_BITBOX
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
-    MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
+    //MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
 #endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 //#ifdef ENABLE_BAMBLE
@@ -20,27 +20,27 @@
 
 #ifdef ENABLE_BASS_TRANSPOSE
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
-    MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_bass, BASS_MIDI_CHANNEL);
+    //MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_bass, BASS_MIDI_CHANNEL);
 #endif
 
 #ifdef ENABLE_DRUMKIT
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &ENABLE_DRUMKIT;
+    //MIDIOutputWrapper midi_drums_output;
 #endif
-
 
 #ifdef ENABLE_DRUMKIT
     #include "Drums.h"
-    // configure incoming drumkit on input 2 to go out to drums on bamble
+    // hardcode incoming drumkit on input 2 to go out to drums on bamble
     void drumkit_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
         Serial.printf("drumkit_note_on(\tchannel %i,\tnote %i,\tvelocity %i): ", channel, note, velocity);
         if (note==GM_NOTE_ACOUSTIC_SNARE) note = GM_NOTE_ELECTRIC_SNARE;
-        if (note==41) note = GM_NOTE_HI_MID_TOM;
+        if (note==GM_NOTE_LOW_FLOOR_TOM) note = GM_NOTE_HI_MID_TOM;
         #ifdef ENABLE_BAMBLE
-            if (midi_bamble) {
+            if (behaviour_bamble->device) {
                 //Serial.println("sending!");
-                //midi_bamble->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
+                behaviour_bamble->device->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
             }
-            midi_drums_output.sendNoteOn(note, velocity);
+            //midi_drums_output.sendNoteOn(note, velocity);
         #endif
         drums_loop_track.record_event(ticks, midi::NoteOn, note, velocity);
     }
@@ -48,10 +48,9 @@
         if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;      // map acoustic to electric so drum2musocv will use it
         if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HIGH_TOM;            // remap tom 
         #ifdef ENABLE_BAMBLE
-            /*if (midi_bamble) {
-                midi_bamble->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
-            }*/
-            midi_drums_output.sendNoteOff(note, velocity);
+            if (behaviour_bamble->device) {
+                behaviour_bamble->device->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
+            }
         #endif
         drums_loop_track.record_event(ticks, midi::NoteOff, note, velocity);
     }

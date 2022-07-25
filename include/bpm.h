@@ -8,7 +8,7 @@
 #define BARS_PER_PHRASE 4
 
 #define BPM_MINIMUM   60.0
-#define BPM_MAXIMUM   140.0
+#define BPM_MAXIMUM   180.0
 
 extern bool playing;
 extern bool single_step;
@@ -21,7 +21,8 @@ extern long last_processed_tick;
 // tracking which beat we're on
 extern float bpm_current; //BPM_MINIMUM; //60.0f;
 #ifndef USE_UCLOCK
-extern double ms_per_tick; // = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+  //extern double ms_per_tick; // = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
+  extern double micros_per_tick; // = 1000.0f * (60.0f / (double)(bpm_current * (double)PPQN));
 #endif
 
 #define BPM_CURRENT_PHRASE          (ticks / (PPQN*4*4))

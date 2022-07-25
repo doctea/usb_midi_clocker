@@ -4,6 +4,8 @@
 #include "menuitems.h"
 #include "bpm.h"
 
+#include "clock.h"
+
 // BPM indicator
 class BPMPositionIndicator : public MenuItem {
     public:
@@ -19,22 +21,40 @@ class BPMPositionIndicator : public MenuItem {
             } else {
                 colours(opened, RED,     BLACK);
             }
-            tft->printf((char*)"%04i:%02i:%02i @ %03.2f\n", 
-                BPM_CURRENT_PHRASE + 1, 
-                BPM_CURRENT_BAR_OF_PHRASE + 1,
-                BPM_CURRENT_BEAT_OF_BAR + 1,
-                bpm_current
-            );
+            if (clock_mode==CLOCK_INTERNAL) {
+                tft->printf((char*)"%04i:%02i:%02i @ %03.2f\n", 
+                    BPM_CURRENT_PHRASE + 1, 
+                    BPM_CURRENT_BAR_OF_PHRASE + 1,
+                    BPM_CURRENT_BEAT_OF_BAR + 1,
+                    bpm_current
+                );
+            } else if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
+                tft->printf((char*)"%04i:%02i:%02i\n",
+                    BPM_CURRENT_PHRASE + 1, 
+                    BPM_CURRENT_BAR_OF_PHRASE + 1,
+                    BPM_CURRENT_BEAT_OF_BAR + 1
+                );
+                tft->setTextSize(1);
+                tft->println((char*)"from External USB Host");
+            } else {
+                tft->printf((char*)"%04i:%02i:%02i\n",
+                    BPM_CURRENT_PHRASE + 1, 
+                    BPM_CURRENT_BAR_OF_PHRASE + 1,
+                    BPM_CURRENT_BEAT_OF_BAR + 1
+                );
+            }
 
             return tft->getCursorY();
         }
 
         virtual bool knob_left() {
-            set_bpm(bpm_current-1);
+            if (clock_mode==CLOCK_INTERNAL)
+                set_bpm(bpm_current-1);
             return true;
         }
         virtual bool knob_right() {
-            set_bpm(bpm_current+1);
+            if (clock_mode==CLOCK_INTERNAL)
+                set_bpm(bpm_current+1);
             return true;
         }
 };
@@ -53,10 +73,10 @@ class BPMPositionIndicator : public MenuItem {
                 tft->setTextSize(1);
                 int connected = 0;
                 for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-                    if (usb_midi_connected[i] && usb_midi_device[i] && usb_midi_device[i]->idVendor()>0) {
+                    if (usb_midi_slots[i].packed_id && usb_midi_slots[i].device && usb_midi_slots[i].device->idVendor()>0) {
                         connected++;
                         char buf[100];
-                        sprintf(buf, "%i %19s\n", i, usb_midi_device[i]->product());
+                        sprintf(buf, "%i %19s\n", i, usb_midi_slots[i].device->product());
                         tft->printf(buf);
                         //tft->printf("%i %19s\n", i, *usb_midi_device[i]->product());
                         //tft->printf("%08x\n", usb_midi_connected[i]);  // packed usb vendor+product id

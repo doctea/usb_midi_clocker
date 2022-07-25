@@ -8,7 +8,7 @@
     ticks++;
     //Serial.printf("ticked %i\n", ticks); 
     //send_midi_serial_clocks();
-    //send_midi_usb_clocks();
+    //behaviours_send_clock();
   }
   
   void setup_uclock() {
@@ -33,8 +33,10 @@
 
 #else
   
+  int clock_mode = DEFAULT_CLOCK_MODE;
+
   /// use cheapclock clock
-  unsigned long t1 = millis();
+  unsigned long last_ticked_at_micros = micros();
   void setup_cheapclock() {
     ticks = 0;
     set_bpm(bpm_current);

@@ -51,7 +51,7 @@ void send_midi_serial_clocks();
 void send_midi_serial_stop_start();
 void read_midi_serial_devices();
 
-void loop_serial_usb_devices();
+void loop_midi_serial_devices();
 
 #include "ConfigMidi.h"
 

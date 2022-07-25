@@ -25,10 +25,10 @@
     LinkedList<midi_message> messages = LinkedList<midi_message>();
 };*/
 
-MIDITrack mpk49_loop_track = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
+MIDITrack mpk49_loop_track = MIDITrack(); // = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
 
-MIDIOutputWrapper midi_drums_output = MIDIOutputWrapper((char*)"Bamble drums", &midi_bamble, 10);
-MIDITrack drums_loop_track = MIDITrack(&midi_drums_output); //midi_bamble);
+//MIDIOutputWrapper midi_drums_output = MIDIOutputWrapper((char*)"Bamble drums", &midi_bamble, 10);
+MIDITrack drums_loop_track = MIDITrack(); //&midi_drums_output); //midi_bamble);
 
 /*void stop_all_notes() {
     mpk49_loop_track.stop_all_notes();

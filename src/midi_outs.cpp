@@ -22,7 +22,7 @@ bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
     false,      // blue (currently unused)
     true,       // neutron
     true,       // disting ex
-    false,
+    true,       // dazb guitar
     false,
     false,
     false
@@ -67,7 +67,7 @@ void read_midi_serial_devices() {
     #endif
 }
 
-void loop_serial_usb_devices() {
+void loop_midi_serial_devices() {
     // anything that should be done per-loop for serial midi devices
 
 }

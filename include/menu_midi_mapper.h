@@ -4,16 +4,16 @@
 #include "Config.h"
 #include "midi_outs.h"
 #include "midi_out_wrapper.h"
-#include "midi_mapper.h"
+#include "midi_mapper_manager.h"
 
 #include "menuitems.h"
 
 class MidiOutputSelectorControl : public SelectorControl {
-    int actual_value_index;
     void (*setter_func)(MIDIOutputWrapper *midi_output);
-    MIDIOutputWrapper *initial_selected_output_wrapper;
+    MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
     public:
+    int actual_value_index;
 
     MidiOutputSelectorControl(const char *label) : SelectorControl(label, 0) {};
 /*        SelectorControl(label, 0) {
@@ -31,41 +31,33 @@ class MidiOutputSelectorControl : public SelectorControl {
 
     virtual void on_add() {
         actual_value_index = -1;
-        Serial.println("on_add()");
-        Serial.printf("MidiOutputSelectorControl@ %u...\n", initial_selected_output_wrapper);
+        Serial.println("MidiOutputSelectorControl#on_add()");
+        if (initial_selected_output_wrapper==nullptr) {
+            Serial.printf("No initial output wrapper passed to %s\n", this->label);
+            this->selected_value_index = this->actual_value_index = -1;
+            return;
+        }
+        Serial.printf("MidiOutputSelectorControl@ %p...\n", initial_selected_output_wrapper);
         Serial.printf("MidiOutputSelectorControl looking for '%s' at %u...\n", initial_selected_output_wrapper->label, *initial_selected_output_wrapper);
 
-        this->actual_value_index = find_wrapper_index_for_label(initial_selected_output_wrapper->label);
-        this->selected_value_index = this->actual_value_index;
-
-        /*for (unsigned int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
-            Serial.printf("Looping over %s at %u\n", available_outputs[i].label, &available_outputs[i]);
-            //if (&(*available_outputs[i])==initial_selected_output_wrapper) {
-            //if (available_outputs[i].same_as(initial_selected_output_wrapper)) {
-            if (strcmp(available_outputs[i].label, initial_selected_output_wrapper->label)) {   // todo: compare by pointer instead of string?
-                Serial.printf("MidiOutputSelectorControl() found output index %i matches passed wrapper\n", i);
-                actual_value_index = i;
-            }
-        }
-        if (actual_value_index==-1) {
-            while(1);
-                Serial.printf("Didn't find a match for %u aka '%s'\n", initial_selected_output_wrapper, initial_selected_output_wrapper->label);
-        }*/
+        this->actual_value_index = this->selected_value_index = midi_output_wrapper_manager->find_index(initial_selected_output_wrapper->label);
     }
 
     virtual const char* get_label_for_index(int index) {
         //Serial.printf("MidiOutputSelectorControl->get_label_for_index(%i)..\n", index); Serial.flush();
         //Serial.printf("got label %s..\n", available_outputs[index].label); Serial.flush();
-        return available_outputs[index].label;
+        //return available_outputs[index].label;
+        return midi_output_wrapper_manager->get_label_for_index(index);
     }
 
     virtual void setter (int new_value) {
-        Serial.printf("MidiOutputSelectorControl changing from %i to %i\n", this->actual_value_index, new_value);
+        Serial.printf("MidiOutputSelectorControl changing from %i to %i\n", this->actual_value_index, new_value); Serial.flush();
         actual_value_index = new_value;
         selected_value_index = actual_value_index;
         if (this->setter_func!=nullptr) {
-            Serial.printf("setting new output\n");
-            this->setter_func(&available_outputs[new_value]);
+            Serial.printf("setting new output to number %i\n", new_value); Serial.flush();
+            //this->setter_func(&available_outputs[new_value]);
+            this->setter_func(midi_output_wrapper_manager->find(new_value));
         }
     }
     virtual int getter () {
@@ -79,16 +71,24 @@ class MidiOutputSelectorControl : public SelectorControl {
         pos.y = header(label, pos, selected, opened);
         tft->setTextSize(2);
 
-        num_values = NUM_AVAILABLE_OUTPUTS;
+        //num_values = NUM_AVAILABLE_OUTPUTS;
+        num_values = midi_output_wrapper_manager->get_num_available();
 
         tft->setTextSize(1);
 
         if (!opened) {
             // not selected, so just show the current value
             //colours(opened && selected_value_index==i, col, BLACK);
-
-            tft->printf((char*)"%s", (char*)get_label_for_index(selected_value_index));
+            char *label = (char*)get_label_for_index(this->actual_value_index);
+            if (label==nullptr || this->actual_value_index == -1) {
+                tft->setTextColor(RED, BLACK);
+                label = (char*)"[invalid]";
+            } else {
+                tft->setTextColor(YELLOW, BLACK);
+            }
+            tft->printf((char*)"%s", (char*)label);
             tft->println((char*)"");
+            tft->setTextColor(C_WHITE, BLACK);
         } else {
             int current_value = actual_value_index; //this->getter();
 

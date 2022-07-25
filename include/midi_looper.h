@@ -7,12 +7,11 @@
 #include "MidiMappings.h"
 #include "midi_out_wrapper.h"
 
-#include "storage.h"
-//#include "menu.h"
-//#include "mymenu.h"
+#include "bpm.h"
 
-//#include <MIDI.h>
-//#include "USBHost_t36.h"
+#include "storage.h"
+
+//#define DEBUG_LOOPER
 
 #define LOOP_LENGTH (PPQN*4*4)
 #define MAX_INSTRUCTIONS            100
@@ -30,11 +29,8 @@ struct midi_message {
 };
 
 class MIDITrack {
-    //LinkedList<midi_frame> frames = LinkedList<midi_frame> ();
-    //midi_frame frames[LOOP_LENGTH];
     LinkedList<midi_message> frames[LOOP_LENGTH];
 
-    //bool playing_notes[127];    // track what notes are playing so we can turn them off / record ends appropriately
     bool recorded_hanging_notes[127];
     int loaded_recording_number = -1;
 
@@ -96,20 +92,18 @@ class MIDITrack {
 
         bool debug = false;
 
+        bool recording = false;
+        bool playing = false;
+
         int last_note = -1;
         int current_note = -1;
 
         int transpose = 0;
 
-        bool is_recording = false;
-        bool is_playing = false;
+        MIDITrack() {};
 
         MIDITrack(MIDIOutputWrapper *default_output) {
             output = default_output;
-            //frames[0].time = 0;
-            /*for (int i = 0 ; i < LOOP_LENGTH ; i++) {
-                frames[i] = new LinkedList<midi_message>();
-            }*/
         };
 
         MIDITrack(MIDIOutputWrapper **default_output_deferred) {
@@ -117,14 +111,10 @@ class MIDITrack {
         };
 
         void setOutputWrapper(MIDIOutputWrapper *output) {
-            stop_all_notes();
-            /*if (this->output!=nullptr)
+            if (this->output!=nullptr)
                 this->output->stop_all_notes();
-            if (this->output_deferred!=nullptr && (*this->output_deferred)!=nullptr) {
-                this->output_deferred = nullptr;
-                this->output->stop_all_notes();
-            }*/
             this->output = output;
+            Serial.printf("MIDITrack#setOutputWrapper in midi_looper wrapper to '%s'\n", this->output->label);
         }
 
         // for getting and setting from menu
@@ -135,30 +125,30 @@ class MIDITrack {
             quantization_value = qv;
         }
 
+        // set the loop transposition
         void set_transpose(int transpose) {
             stop_all_notes();
             this->transpose = transpose;
         }
+        int get_transpose() {
+            return this->transpose;
+        }
 
-        // for recording values (also used for reloading)
+        // for actually recording values (also used when reloading from save)
         void record_event(midi_message midi_event) {
-            if (!is_recording) return;
             unsigned long time = ticks % (LOOP_LENGTH);
             //time = quantize_time(time);
             record_event(time, midi_event);
         }
         void record_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ uint8_t pitch, uint8_t velocity) {
-            if (!is_recording) return;
             midi_message m;
             m.message_type = instruction_type;
             //m.channel = 3; //channel;
             m.pitch = pitch;
             m.velocity = velocity;
-            //frames[time%LOOP_LENGTH].add(m);
             record_event(time, m);
         }
         void record_event(unsigned long time, midi_message midi_event) {
-            if (!is_recording) return;
             //Serial.printf("Recording event at\t%i", time);
             time = quantize_time(time);
             frames[time%LOOP_LENGTH].add(midi_event);
@@ -169,6 +159,7 @@ class MIDITrack {
             }
         }
 
+        // get total event count across entire loop
         int count_events() {
             int count = 0;
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
@@ -184,31 +175,25 @@ class MIDITrack {
             }
         }
 
+        // get the frames for a specific loop point
         LinkedList<midi_message> get_frames(unsigned long time) {
-            return this->frames[time];
+            return this->frames[time%LOOP_LENGTH];
         }
 
-        void update(unsigned long time) {
-            if (is_playing)
-                play_events(time);
-        }
-
-        void play_events(unsigned long time) { //, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *specified_output = nullptr) {
+        // actually play events for a specified loop point
+        void play_events(unsigned long time) {
             //if (!specified_output)
             //    specified_output = output;
-            #ifdef DEBUG_LOOPER
-                Serial.printf("play_events with time %u\n", time); Serial.flush();
-            #endif
-
             int position = time%LOOP_LENGTH;
             #ifdef DEBUG_LOOPER
-                Serial.printf("play_events with position %u\n", position); Serial.flush();
+                Serial.printf("play_events with time %u becomes position %u\n", time, position); Serial.flush();
             #endif
+
             int number_messages = frames[position].size();
             #ifdef DEBUG_LOOPER
-                Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
-                if (frames[position].size()>0) 
-                    Serial.printf("for frame\t%i got\t%i messages to play\n", position, number_messages); Serial.flush();
+                //Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
+                if (number_messages>0) 
+                    Serial.printf("\tfor frame\t%u got\t%i messages to play\n", position, number_messages); Serial.flush();
             #endif
 
             for (int i = 0 ; i < number_messages ; i++) {
@@ -218,33 +203,37 @@ class MIDITrack {
                 midi_message m = frames[position].get(i);
                 
                 int pitch = m.pitch + transpose;
-                #ifdef DEBUG_LOOPER
-                    Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
-                #endif
+                if (pitch<0 || pitch > 127) {
+                    if (this->debug) Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
+                    return;
+                } else {
+                    if (this->debug) Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush();
+                }
+                if (this->debug) Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
 
                 switch (m.message_type) {
                     case midi::NoteOn:
                         current_note = pitch;
-                        #ifdef DEBUG_LOOPER
-                            Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
-                        #endif
-                        sendNoteOn(pitch, m.velocity); //, m.channel);
-                        //playing_notes[pitch] = true;
+                        if (this->debug) Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
+                        if (output!=nullptr) {
+                            Serial.printf("looper sending to output %p (%s)\n", output, output->label);
+                            output->sendNoteOn((uint8_t)pitch, (byte)m.velocity); //, m.channel);
+                        } else {
+                            Serial.printf("looper output is nullptr!\n");
+                        }
+
                         break;
                     case midi::NoteOff:
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
-                        #ifdef DEBUG_LOOPER
-                            Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
-                        #endif
-                        sendNoteOff(pitch, m.velocity); //, m.channel);
-                        //playing_notes[pitch] = false;
+                        if (this->debug) Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
+                        if (output!=nullptr)
+                            output->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
+
                         break;
                     default:
-                        #ifdef DEBUG_LOOPER
-                            Serial.printf("\t%i: Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
-                        #endif
+                        if (this->debug) Serial.printf("\t%i: !!Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
                         break;
                 }
             }
@@ -261,16 +250,8 @@ class MIDITrack {
         }
 
         void stop_all_notes() {
-            // todo: probably move this into the wrapper, so that can have multiple sources playing into the same output?
-            if (output!=nullptr) this->output->stop_all_notes();
-            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->stop_all_notes();
-
-            /*for (byte i = 0 ; i < 127 ; i++) {
-                if (playing_notes[i]) {
-                    output->sendNoteOff(i, 0);
-                    playing_notes[i] = false;
-                }
-            }*/
+            if (output!=nullptr)
+                this->output->stop_all_notes();
         }
 
         void sendNoteOn(int pitch, int velocity, int channel = 0) {
@@ -282,50 +263,78 @@ class MIDITrack {
             if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->sendNoteOff(pitch, velocity, channel);
         }
 
-        void toggle_recording() {
+        /*void toggle_recording() {
             bool previously_recording = this->is_recording;
             this->is_recording = !this->is_recording;
             if (this->is_recording==true && !previously_recording)
                 this->start_recording();
             if (!this->is_recording && previously_recording) 
                 this->stop_recording();
-        }
+        }*/
 
         void stop_recording() {
-            Serial.println("Looper: stopped recording");
+            Serial.println("looper stopped recording");
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
-                    sendNoteOff(i, 0);
+                    if (output!=nullptr)
+                        output->sendNoteOff(i, 0);
                     record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
                     recorded_hanging_notes[i] = false;
                 }
             }
         }
 
+        bool isPlaying() {
+            return this->playing;
+        }
+        bool isRecording() {
+            return this->recording;
+        }
+
         void start_recording() {
             Serial.println("Looper: Started recording");
             // uhhh nothing to do rn?
         }
+        void toggle_recording() {
+            recording = !recording;
+            if (recording) {
+                this->start_recording();
+            } else {
+                this->stop_recording();
+            }
+        }
+       
+        // called by external code to inform the looper about a note being played; looper decides whether to record it or not
+        void in_event(uint32_t ticks, byte message, byte note, byte velocity) {
+            if (recording)
+                this->record_event(ticks%LOOP_LENGTH, midi::NoteOn, note, velocity);
+        }
+
+        // called by external code to inform looper of a tick happening; looper decides whether to play its events or not
+        void process_tick(uint32_t ticks) {
+            if (playing)
+                this->play_events(ticks);
+        }
 
         void start_playing() {
             Serial.println("Looper: Start playing!");
-            this->is_playing = true;
+            this->playing = true;
         }
         void stop_playing() {
             Serial.println("Looper: Stop playing!");
-            if (this->is_playing)
+            if (this->playing)
                 this->stop_all_notes();
-            this->is_playing = false;
+            this->playing = false;
         }
 
         // save+load stuff !
-        bool save_sequence(int recording_number) {
+        bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             File myFile;
 
             char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP, recording_number);
+            sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf("midi_looper::save_sequence(%i) writing to %s\n", recording_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf("%s exists, deleting first\n", filename);
@@ -373,12 +382,12 @@ class MIDITrack {
             return true;
         }
 
-        bool load_state(int recording_number) {
+        bool load_loop(int project_number, int recording_number) {
             File myFile;
 
             char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP, recording_number);
-            Serial.printf("midi_looper::load_state(%i) opening %s\n", recording_number, filename);
+            sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
+            Serial.printf("midi_looper::load_sequence(%i) opening %s\n", recording_number, filename);
             myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);
 
@@ -397,7 +406,7 @@ class MIDITrack {
             String line;
             int time = 0;
             while (line = myFile.readStringUntil('\n')) {
-                //load_state_parse_line(line, output);
+                //load_sequence_parse_line(line, output);
                 if (line.startsWith("starts_at=")) {
                     time =      line.remove(0,String("starts_at=").length()).toInt();
                 } if (line.startsWith("transpose=")) {
@@ -461,15 +470,5 @@ class MIDITrack {
         }       
 
 };
-
-extern MIDITrack mpk49_loop_track;
-extern MIDITrack drums_loop_track;
-
-/**
- * @var {byte} the maximum number of instructions
- *      its possible to loop around while loops are still playing, if so instructions in the lower loop will be overwritten
- */
-//const unsigned long MAX_INSTRUCTIONS = (LOOP_LENGTH); //100;
-
 
 #endif

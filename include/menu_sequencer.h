@@ -2,114 +2,39 @@
 
 #ifdef ENABLE_SEQUENCER
 
+#include "menu_slotcontroller.h"
+
 #include "sequencer.h"
 #include "storage.h"
 #include "project.h"
 extern Menu *menu;
-class SequencerStatus : public MenuItem {
-    int ui_selected_sequence_number = 0;
+//extern Project project;
+class SequencerStatus : public SlotController {
+    //int ui_selected_sequence_number = 0;
     public: 
-        SequencerStatus() : MenuItem("Sequencer") {};
+        SequencerStatus(const char *label) : SlotController(label) {};
 
-        virtual int display(Coord pos, bool selected, bool opened) override {
-            tft->setCursor(pos.x,pos.y);
-            //colours(selected);
-            header(label, pos, selected, opened);
-            int x = pos.x, y = tft->getCursorY(); //.y;
-
-            int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
-            x = 2;
-            y++;
-            #define ROUNDED yes
-            for (int i = 0 ; i < NUM_STATES_PER_PROJECT ; i++) {
-                int col = (project.loaded_sequence_number==i) ? ST77XX_GREEN :    // if currently loaded 
-                             (ui_selected_sequence_number==i) ? ST77XX_YELLOW :   // if selected
-                                                                ST77XX_BLUE;        
-
-                if (i==ui_selected_sequence_number) {
-                    #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
-                    #else
-                        tft.drawRect(x-1, y-1, button_size+2, button_size+2, ST77XX_WHITE);
-                    #endif
-                } else {
-                    #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
-                    #else  
-                        tft.fillRect(x-1, y-1, button_size+2, button_size+2, ST77XX_BLACK);
-                    #endif
-                }
-                if (project.is_selected_sequence_number_empty(i)) {
-                    #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRect(x, y, button_size, button_size, col);
-                    #else  
-                        tft.drawRoundRect(x, y, button_size, button_size, 3, col);
-                    #endif
-                } else {
-                    #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x, y, button_size, button_size, col);
-                    #else  
-                        tft.fillRoundRect(x, y, button_size, button_size, 3, col);
-                    #endif
-                }
-                x += button_size + 2;
-            }
-            y += button_size + 4;
-            return y; //tft.getCursorY() + 8;
-        }
-
-        virtual bool knob_left() override {
-            ui_selected_sequence_number--;
-            if (ui_selected_sequence_number < 0)
-                ui_selected_sequence_number = NUM_STATES_PER_PROJECT-1;
-            project.select_sequence_number(ui_selected_sequence_number);
-            return true;
-        }
-
-        virtual bool knob_right() override {
-            ui_selected_sequence_number++;
-            if (ui_selected_sequence_number >= NUM_STATES_PER_PROJECT)
-                ui_selected_sequence_number = 0;
-            project.select_sequence_number(ui_selected_sequence_number);
-            return true;
-        }
-
-        virtual bool button_select() override {
-            project.select_sequence_number(ui_selected_sequence_number);
-            bool success = project.load_state(); //selected_sequence_number);
-            if (success) {
-                //loaded_sequence_number = ui_selected_sequence_number;
-                char msg[20] = "";
-                sprintf(msg, "Loaded %i", project.loaded_sequence_number);
-                menu->set_message_colour(ST77XX_GREEN);
-                menu->set_last_message(msg);
-            } else {
-                char msg[20] = "";
-                sprintf(msg, "Error loading %i", ui_selected_sequence_number);
-                menu->set_message_colour(ST77XX_RED);
-                menu->set_last_message(msg);
-            }
-            return false;
-        }
-
-        virtual bool button_right() override {
-            project.select_sequence_number(ui_selected_sequence_number);
-            bool success = project.save_sequence(ui_selected_sequence_number); //, &mpk49_loop_track);
-            if (success) {
-                //loaded_sequence_number = ui_selected_sequence_number;
-                char msg[20] = "";
-                sprintf(msg, "Saved sequence %i", project.loaded_sequence_number);
-                menu->set_message_colour(ST77XX_GREEN);
-                menu->set_last_message(msg);
-            } else {
-                char msg[20] = "";
-                sprintf(msg, "Error saving sequence %i", ui_selected_sequence_number);
-                menu->set_message_colour(ST77XX_RED);
-                menu->set_last_message(msg);
-            }
-
-            return true;
-        }
+        virtual int get_max_slots() override {
+            return NUM_SEQUENCE_SLOTS_PER_PROJECT;
+        };
+        virtual int get_loaded_slot() override {
+            return project.loaded_sequence_number;
+        };
+        virtual int get_selected_slot() override {
+            return project.selected_sequence_number;
+        };
+        virtual bool is_slot_empty(int i) override {
+            return project.is_selected_sequence_number_empty(i);
+        };
+        virtual bool move_to_slot_number(int i) override {
+            return project.select_sequence_number(i);
+        };
+        virtual bool load_slot_number(int i) override {
+            return project.load_sequence(i);
+        };
+        virtual bool save_to_slot_number(int i) override {
+            return project.save_sequence(i);
+        };
 };
 
 #endif

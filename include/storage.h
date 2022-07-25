@@ -7,8 +7,9 @@
 
 namespace storage {
 
-  #define FILEPATH_SEQUENCE "sequences/sequence%i.txt"
-  #define FILEPATH_LOOP     "loops/loop%i.txt"
+  #define FILEPATH_SEQUENCE_FORMAT          "project%i/sequences/sequence%i.txt"
+  #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
+  #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
 
   //#include <SD.h>
   //#include <SdFat.h>
@@ -58,12 +59,16 @@ namespace storage {
     };
   } savestate;
 
-  bool save_sequence(uint8_t preset_number, savestate *input);
-  bool load_state(uint8_t preset_number, savestate *input);
+  bool save_sequence(int project_number, uint8_t preset_number, savestate *input);
+  bool load_sequence(int project_number, uint8_t preset_number, savestate *input);
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/
-  void load_state_parse_line(String line, savestate *output);
+  void load_sequence_parse_line(String line, savestate *output);
   void setup_storage();
+
+  void make_project_folders(int project_number);
+
+  bool copy_file(char *src, char *dst);
 
   extern savestate current_state;
 }

@@ -5,9 +5,17 @@
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 #define DEBUG_LOOPER          // debug LOOPER playback
 
+//#define GDB_DEBUG             // to enable TeensyDebug 
+
+#define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
+#define DEFAULT_SUBCLOCKER_DIVISOR          4
+#define DEFAULT_SUBCLOCKER_DELAY_TICKS      0   // don't send clock to the subclocker device until this many ticks have elapsed
+
 #define ENABLE_SCREEN       // tft
 #ifdef ENABLE_SCREEN
     #define TFT_ST7789_T3
+    #define TFT_ST7789_T3_BIG
+    #define MENU_MS_BETWEEN_REDRAW  75
 #endif
 
 #ifndef ENABLE_SCREEN
@@ -29,15 +37,32 @@
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
 
+// enable transposing beatstep to a particular octave
+#define ENABLE_BASS_TRANSPOSE MIDI3
+
+//#define ENABLE_LESTRUM    // these are define din ConfigMidi.h instead
+//#define ENABLE_DRUMKIT    // these are define din ConfigMidi.h instead
+
+//#define ENABLE_CRAFTSYNTH   // serial MIDI version
+
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
+    #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     #define ENABLE_BAMBLE
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
+    #define ENABLE_SUBCLOCKER
+    #define ENABLE_CRAFTSYNTH_USB
 
     #define ENABLE_APCMINI_DISPLAY
 #endif
+
+#if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
+#error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
+#endif
+
+//#define ENABLE_CRAFTSYNTH_CLOCKTOGGLE   // enable menu item to enable/disable clock output to CraftSynth - only really useful for debug i think?
 
 #define ENABLE_BPM
 #define ENABLE_SEQUENCER

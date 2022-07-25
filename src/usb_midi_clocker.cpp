@@ -2,13 +2,18 @@
 // proof of concept for syncing multiple USB Midi devices wit
 
 #if defined(__arm__) && defined(CORE_TEENSY)
-//#define byte uint8_t
-#define F(X) X
+  //#define byte uint8_t
+  #define F(X) X
 #endif
 
 #include <Arduino.h>
 
 #include "Config.h"
+
+#if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
+  #include "TeensyDebug.h"
+  #pragma GCC optimize ("O0")
+#endif
 
 #include "debug.h"
 #include "storage.h"
@@ -26,13 +31,13 @@
 void do_tick(uint32_t ticks);
 
 #ifdef USE_UCLOCK
-//#include <uClock.h>
+  //#include <uClock.h>
 #else
-//#define ATOMIC(X) noInterrupts(); X; interrupts();
-#define ATOMIC(X) X
+  //#define ATOMIC(X) noInterrupts(); X; interrupts();
+  #define ATOMIC(X) X
 #endif
 
-#include "usb.h"
+//#include "usb.h"
 #include "midi_pc_usb.h"
 
 #include "Config.h"
@@ -44,18 +49,34 @@ void do_tick(uint32_t ticks);
 #include "clock.h"
 
 #ifdef ENABLE_SEQUENCER
-#include "sequencer.h"
+  #include "sequencer.h"
 #endif
 #include "cv_outs.h"
 
-
 #include "multi_usb_handlers.h"
 
+#include "behaviour_manager.h"
+
+
 void setup() {
+
+  #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
+    debug.begin(SerialUSB1);
+  #endif
+
   Serial.begin(115200);
   #ifdef WAIT_FOR_SERIAL
     while (!Serial);
   #endif
+
+  //tft_print((char*)"..USB device handler..");
+  // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
+  // TODO: have the behaviours add their menu items
+  Serial.println("..USB device handler..");
+  setup_behaviour_manager();
+
+  Serial.println("..MIDIOutputWrapper manager..");
+  setup_midi_output_wrapper_manager();
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
@@ -79,22 +100,22 @@ void setup() {
   tft_print((char*)"..setup project..\n");
   project.setup_project();
 
-#ifdef ENABLE_SEQUENCER
-  tft_print((char*)"..Sequencer..\n");
-  init_sequence();
-#endif
+  #ifdef ENABLE_SEQUENCER
+    tft_print((char*)"..Sequencer..\n");
+    init_sequence();
+  #endif
 
-#ifdef USE_UCLOCK
-  Serial.println(F("Initialising uClock.."));
-  setup_uclock();
-#else
-  tft_print((char*)"..clock..\n");
-  setup_cheapclock();
-#endif
+  #ifdef USE_UCLOCK
+    Serial.println(F("Initialising uClock.."));
+    setup_uclock();
+  #else
+    tft_print((char*)"..clock..\n");
+    setup_cheapclock();
+  #endif
 
   tft_print((char*)"..PC USB..\n");
   setup_pc_usb();
-
+  
   tft_print((char*)"..USB..");
   setup_multi_usb();
   Serial.println(F("USB ready."));
@@ -114,81 +135,89 @@ void setup() {
 // -----------------------------------------------------------------------------`
 //
 // -----------------------------------------------------------------------------
-void loop()
-{
+void loop() {
   //Serial.println("start of loop!"); Serial.flush();
+  bool debug = false;
 
-  static int loop_counter;
-  static bool lit = false;
-  loop_counter++;
-  if (loop_counter%1000000==0) {
-    digitalWrite(LED_BUILTIN, lit);
-    lit = !lit;
-    //Serial.println(F("100000th loop()"));
-  }
-  //ATOMIC(
-  Usb.Task();
-  while (usbMIDI.read());
-  //)
-
-  #ifndef USE_UCLOCK
-    static unsigned long last_ticked_time;
-
-    if ( playing && millis()-t1 >= ms_per_tick ) {
-      /*if (millis()-last_ticked_time > ((unsigned long)ms_per_tick)+1) {
-        Serial.printf("WARNING: tick took %ims, more than ms_per_tick of %ims!\n", millis()-last_ticked_time, (unsigned long)ms_per_tick);
-      }*/
-      do_tick(ticks);
-      last_ticked_time = millis();
-      ticks++;
-
-      /*  // but thing maths works out better if this is called here?
-      if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
-        //in_ticks = ticks = 0;
-        on_restart();
-        //ATOMIC(
-          //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-        //)
-        restart_on_next_bar = false;
-      }
-      */
-
-      t1 = millis();
-    } else {
-      #ifdef ENABLE_SCREEN
-        //tft_update(ticks);
-        ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
-        static unsigned long last_drawn;
-        if (millis() - last_drawn > 50) {
-          menu->update_ticks(ticks);
-          menu->update_inputs();
-          menu->display(); //update(ticks);
-          last_drawn = millis();
-        }
-        //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
-      #endif
-    }
-  #else
-    noInterrupts();
-    signed long temp_tick = ticks;
-    interrupts();
-    if ((signed long) temp_tick > last_processed_tick) {
-      Serial.println("SHOULD TICK!");
-      do_tick(temp_tick);
-      last_processed_tick = temp_tick;
-    } else {
-      //Serial.printf("not ticking because %i is <= %i\n", ticks, last_processed_tick);
+  #ifdef DEBUG_LED
+    static int loop_counter;
+    static bool lit = false;
+    loop_counter++;
+    if (loop_counter%1000000==0) {
+      digitalWrite(LED_BUILTIN, lit);
+      lit = !lit;
+      //Serial.println(F("100000th loop()"));
     }
   #endif
+  if (debug) { Serial.println("about to Usb.Task()"); Serial.flush(); }
+  Usb.Task();
+  if (debug) { Serial.println("just did Usb.Task()"); Serial.flush(); }
+  //while (usbMIDI.read());
+
+  //static unsigned long last_ticked_at_micros = 0;
+
+  bool ticked = false;
+  if (clock_mode==CLOCK_EXTERNAL_USB_HOST && /*playing && */check_and_unset_pc_usb_midi_clock_ticked())
+    ticked = true;
+  else if (clock_mode==CLOCK_INTERNAL && playing && micros()-last_ticked_at_micros >= micros_per_tick)
+    ticked = true;
+  else if (clock_mode==CLOCK_NONE)
+    ticked = false;
+  
+  if ( playing && ticked ) {
+    if (micros()-last_ticked_at_micros > micros_per_tick+1000) { //((unsigned long)micros_per_tick)+1) {
+      //Serial.printf("WARNING: tick took %ius, more than micros_per_tick of %ius!\n", micros()-last_ticked_at_micros, (unsigned long)micros_per_tick);
+      #ifdef DEBUG
+        Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
+      #endif
+    }
+    if (debug) { Serial.println("about to do_tick"); Serial.flush(); }
+    do_tick(ticks);
+    if (debug) { Serial.println("just did do_tick"); Serial.flush(); }
+
+    menu->update_ticks(ticks);
+
+    //last_ticked_at_micros = micros();
+    last_ticked_at_micros = micros();
+    ticks++;
+
+    /*  // but thing maths works out better if this is called here?
+    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+      //in_ticks = ticks = 0;
+      on_restart();
+      //ATOMIC(
+        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
+      //)
+      restart_on_next_bar = false;
+    }
+    */
+
+  } else {
+    #ifdef ENABLE_SCREEN
+      //tft_update(ticks);
+      ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
+      static unsigned long last_drawn;
+      menu->update_inputs();
+      if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
+        //long before_display = millis();
+        //Serial.println("about to menu->display"); Serial.flush();
+        menu->display(); //update(ticks);
+        //Serial.println("just did menu->display"); Serial.flush();
+        //Serial.printf("display() took %ums..", millis()-before_display);
+        last_drawn = millis();
+      }
+      //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
+    #endif
+  }
 
   read_midi_serial_devices();
-  loop_serial_usb_devices();
+  loop_midi_serial_devices();
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
-    read_usb_from_computer();
     read_midi_usb_devices();
-    loop_midi_usb_devices();
+    behaviour_manager->do_loops();
+    read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
 
   //Serial.println("end of loop!"); Serial.flush();
@@ -211,7 +240,7 @@ void loop()
 // called inside interrupt
 void do_tick(uint32_t in_ticks) {
   /*#ifdef DEBUG_TICKS
-      unsigned int delta = millis()-t1;
+      unsigned int delta = millis()-last_ticked_at_micros;
 
       Serial.print(ticks);
       Serial.print(F(":\tTicked with delta\t"));
@@ -222,52 +251,62 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
   //Serial.println("ticked");
 
-  #ifndef USE_UCLOCK
-    ticks = in_ticks;
-  #endif
+  ticks = in_ticks;
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
     //in_ticks = ticks = 0;
-    on_restart();
+    global_on_restart();
     //ATOMIC(
       //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
     //)
     restart_on_next_bar = false;
   }
 
+  if (is_bpm_on_phrase(ticks)) {
+    project.on_phrase(BPM_CURRENT_PHRASE);
+    #ifdef ENABLE_USB
+      behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
+    #endif
+  }
+  if (is_bpm_on_bar(ticks)) {
+    //project.on_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    #ifdef ENABLE_USB
+      behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    #endif
+  }
+
+  #ifdef ENABLE_USB
+    behaviour_manager->do_pre_clock(in_ticks);
+  #endif
+
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
-    send_midi_usb_clocks();
+    //Serial.println("in do_tick() about to behaviour_manager->send_clocks()"); Serial.flush();
+    behaviour_manager->send_clocks();
+    //Serial.println("in do_tick() just did behaviour_manager->send_clocks()"); Serial.flush();
   #endif
 
   #ifdef ENABLE_CV
-  update_cv_outs(in_ticks);
+    update_cv_outs(in_ticks);
   #endif
 
   #ifdef ENABLE_LOOPER
-    mpk49_loop_track.update(ticks);
-    drums_loop_track.update(ticks);
-  #endif
-
-  #ifdef ENABLE_MPK49
-    MPK49_on_tick(in_ticks);
+    drums_loop_track.process_tick(ticks);
   #endif
 
   #ifdef ENABLE_USB
-    #ifdef ENABLE_BEATSTEP
-        beatstep_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_BAMBLE
-        bamble_on_tick(in_ticks);
-    #endif
-
-    #ifdef ENABLE_APCMINI
-        apcmini_on_tick(in_ticks);
-    #endif
+    //Serial.println("in do_tick() about to behaviour_manager->do_ticks()"); Serial.flush();
+    behaviour_manager->do_ticks(in_ticks);
+    //Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush();
   #endif
+
+  /*#ifdef ENABLE_USB2
+    if (is_bpm_on_phrase(ticks+1)) {
+      behaviour_manager->do_phrase(BPM_CURRENT_PHRASE+1);   //TODO: which of these is actually doing the work??
+    }
+  #endif*/
 
   #ifdef DEBUG_TICKS
     Serial.println(F(" ]"));
@@ -275,6 +314,6 @@ void do_tick(uint32_t in_ticks) {
 
   //last_processed_tick = ticks;
   //ticks++;
-  //t1 = millis();
+  //last_ticked_at_micros = millis();
   //single_step = false;
 }
