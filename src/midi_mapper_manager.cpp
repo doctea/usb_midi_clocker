@@ -16,6 +16,7 @@ MIDIOutputWrapperManager* MIDIOutputWrapperManager::getInstance() {
     return inst_;
 }
 
+// initialise the output pointers, initialise the outputs and assign them to their defaults
 void setup_midi_output_wrapper_manager() {
     Serial.println("setup_midi_output_wrapper_manager.."); Serial.flush();
     midi_output_wrapper_manager = MIDIOutputWrapperManager::getInstance();
@@ -74,6 +75,7 @@ void setup_midi_output_wrapper_manager() {
 #include "behaviour_mpk49.h"
 
 //TODO: move this into MIDIOutputWrapperManager...
+// sets the designated output wrapper pointer to a different actual wrapper; takes the handle handle names eg 'beatstep_output' as the source
 void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str()); Serial.flush();
     MIDIOutputWrapper *target = midi_output_wrapper_manager->find((char*)target_label.c_str());
@@ -137,6 +139,5 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
     }
 
     Serial.printf("set_target_wrapper_for_names: Couldn't match source_label '%s' with anything!\n", source_label.c_str()); Serial.flush();
-    //update_wrapper_menus_for_name(source_label, index);
     update_wrapper_menus_for_name(source_label, -1);
 }
