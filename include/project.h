@@ -278,8 +278,8 @@ class Project {
             #endif
             #ifdef ENABLE_LOOPER
                 if(mpk49_loop_track.output!=nullptr) {
-                    Serial.printf("saving midi_output_map=mpk49_loop_track|%s\n", mpk49_loop_track.output->label);
-                    myFile.printf("midi_output_map=mpk49_loop_track|%s\n",    mpk49_loop_track.output->label);
+                    Serial.printf("saving midi_output_map=mpk49_loop_track|%s\n",   mpk49_loop_track.output->label);
+                    myFile.printf("midi_output_map=mpk49_loop_track|%s\n",          mpk49_loop_track.output->label);
                 }
             #endif
             if(pc_usb_1_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_1_output->label);

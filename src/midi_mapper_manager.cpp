@@ -20,6 +20,7 @@ MIDIOutputWrapperManager* MIDIOutputWrapperManager::getInstance() {
 void setup_midi_output_wrapper_manager() {
     Serial.println("setup_midi_output_wrapper_manager.."); Serial.flush();
     midi_output_wrapper_manager = MIDIOutputWrapperManager::getInstance();
+
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  midi_out_serial[0], 1));
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  midi_out_serial[0], 2));
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  midi_out_serial[0], 3));
@@ -67,15 +68,18 @@ void setup_midi_output_wrapper_manager() {
     #ifdef ENABLE_LOOPER
         mpk49_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3"));
     #endif
- 
 }
+
+/*void setup_midi_input_wrapper_manager() {
+    // set up the inputs...
+}*/
 
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
 
 //TODO: move this into MIDIOutputWrapperManager...
-// sets the designated output wrapper pointer to a different actual wrapper; takes the handle handle names eg 'beatstep_output' as the source
+// sets the designated output wrapper pointer to a different actual wrapper; takes the handle names eg 'beatstep_output' as the source
 void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str()); Serial.flush();
     MIDIOutputWrapper *target = midi_output_wrapper_manager->find((char*)target_label.c_str());

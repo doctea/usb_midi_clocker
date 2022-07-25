@@ -51,7 +51,7 @@ void pc_usb_midi_handle_clock() {
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST && usb_midi_clock_ticked) {
     Serial.printf("WARNING: received a usb midi clock tick at %u, but last one from %u was not yet processed (didn't process within gap of %u)!\n", millis(), last_usb_midi_clock_ticked_at, millis()-last_usb_midi_clock_ticked_at);
   }
-  /*if (CLOCK_EXTERNAL_USB_HOST) {  // TODO: figure out why this isn't working and fix
+  /*if (CLOCK_EXTERNAL_USB_HOST) {  // TODO: figure out why tempo estimation isn't working and fix
     tap_tempo_tracker.push_beat();
   }*/
   last_usb_midi_clock_ticked_at = millis();
