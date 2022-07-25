@@ -68,34 +68,17 @@ void setup_midi_output_wrapper_manager() {
     #endif
  
 }
-    
-//#define NUM_AVAILABLE_OUTPUTS sizeof(available_outputs)
-
-MIDIOutputWrapper *find_wrapper_for_name(char *label_to_find) {
-    return midi_output_wrapper_manager->find(label_to_find);
-}
-
-int find_wrapper_index_for_label(char *label_to_find) {
-    return midi_output_wrapper_manager->find_index(label_to_find);
-    /*for (int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
-        if (0==strcmp(label_to_find, available_outputs[i].label)) {
-            Serial.printf("find_wrapper_index_for_label() found '%s' in '%s' at index %i!\n", label_to_find, available_outputs[i].label, i); Serial.flush();
-            return i;
-        }
-    }
-    //while (1)
-        Serial.printf("find_wrapper_index_for_label('%s') didn't find anything!\n", label_to_find);
-    return -1;*/
-}
 
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
 
+//TODO: move this into MIDIOutputWrapperManager...
 void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str()); Serial.flush();
-    MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
-    int index = find_wrapper_index_for_label((char*)target_label.c_str());
+    MIDIOutputWrapper *target = midi_output_wrapper_manager->find((char*)target_label.c_str());
+    int index = midi_output_wrapper_manager->find_index((char*)target_label.c_str());
+
     #ifdef ENABLE_BEATSTEP
         if (source_label.equals("beatstep_output")) {
             beatstep_setOutputWrapper(target);
@@ -157,10 +140,3 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
     //update_wrapper_menus_for_name(source_label, index);
     update_wrapper_menus_for_name(source_label, -1);
 }
-
-/*char *find_wrapper_name_for_object(MIDIOutputWrapper *obj_to_find) {
-    for (int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
-        if (available_outputs[i]==obj_to_find) 
-            return available_outputs[i].
-    }
-}*/

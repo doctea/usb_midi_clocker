@@ -21,6 +21,7 @@
 extern MidiOutputSelectorControl pc_usb_input_1_selector;
 extern MidiOutputSelectorControl pc_usb_input_2_selector;
 
+//TODO: move this into MIDIOutputWrapperManager...
 void update_wrapper_menus_for_name(String source_label, int index) {
     Serial.printf("update_wrapper_menus_for_name(%s, %i)\n", source_label.c_str(), index);
     //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());

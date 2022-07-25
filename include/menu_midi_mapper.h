@@ -10,7 +10,7 @@
 
 class MidiOutputSelectorControl : public SelectorControl {
     void (*setter_func)(MIDIOutputWrapper *midi_output);
-    MIDIOutputWrapper *initial_selected_output_wrapper;
+    MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
     public:
     int actual_value_index;
@@ -40,22 +40,7 @@ class MidiOutputSelectorControl : public SelectorControl {
         Serial.printf("MidiOutputSelectorControl@ %p...\n", initial_selected_output_wrapper);
         Serial.printf("MidiOutputSelectorControl looking for '%s' at %u...\n", initial_selected_output_wrapper->label, *initial_selected_output_wrapper);
 
-        this->actual_value_index = find_wrapper_index_for_label(initial_selected_output_wrapper->label);
-        this->selected_value_index = this->actual_value_index;
-
-        /*for (unsigned int i = 0 ; i < NUM_AVAILABLE_OUTPUTS ; i++) {
-            Serial.printf("Looping over %s at %u\n", available_outputs[i].label, &available_outputs[i]);
-            //if (&(*available_outputs[i])==initial_selected_output_wrapper) {
-            //if (available_outputs[i].same_as(initial_selected_output_wrapper)) {
-            if (strcmp(available_outputs[i].label, initial_selected_output_wrapper->label)) {   // todo: compare by pointer instead of string?
-                Serial.printf("MidiOutputSelectorControl() found output index %i matches passed wrapper\n", i);
-                actual_value_index = i;
-            }
-        }
-        if (actual_value_index==-1) {
-            while(1);
-                Serial.printf("Didn't find a match for %u aka '%s'\n", initial_selected_output_wrapper, initial_selected_output_wrapper->label);
-        }*/
+        this->actual_value_index = this->selected_value_index = midi_output_wrapper_manager->find_index(initial_selected_output_wrapper->label);
     }
 
     virtual const char* get_label_for_index(int index) {

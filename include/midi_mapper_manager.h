@@ -7,8 +7,8 @@
 
 #include "behaviour_bamble.h"
 
-MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
-int find_wrapper_index_for_label(char *to_find);
+//MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
+//int find_wrapper_index_for_label(char *to_find);
 void setup_midi_output_wrapper_manager();
 void set_target_wrapper_for_names(String source_label, String target_label);
 
