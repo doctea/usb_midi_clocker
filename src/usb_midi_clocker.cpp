@@ -280,6 +280,10 @@ void do_tick(uint32_t in_ticks) {
     behaviour_manager->do_pre_clock(in_ticks);
   #endif
 
+  #ifdef ENABLE_LOOPER
+    drums_loop_track.process_tick(ticks);
+  #endif
+
   send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
@@ -290,10 +294,6 @@ void do_tick(uint32_t in_ticks) {
 
   #ifdef ENABLE_CV
     update_cv_outs(in_ticks);
-  #endif
-
-  #ifdef ENABLE_LOOPER
-    drums_loop_track.process_tick(ticks);
   #endif
 
   #ifdef ENABLE_USB
