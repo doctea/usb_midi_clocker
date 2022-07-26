@@ -3,7 +3,7 @@
 
 # usb_midi_clocker
 
-This can be used as the clock generator and a USB MIDI hub to your Eurorack system, and more.  It allows making use of USB-MIDI devices (eg Akai APCMini and MPK49, original Arturia Beatstep and Keystep, Modal CraftSynth 2.0), syncing USB and din MIDI devices as well as Euroack CV clock and triggers on multiple outputs with selectable divisions and sequencer controlled by APCMini interface.
+This can be used as the clock generator and a USB MIDI hub to your Eurorack system, and more.  It allows making use of USB-MIDI devices (eg Akai APCMini and MPK49, original Arturia Beatstep and Keystep, Modal CraftSynth 2.0), syncing USB and din MIDI devices as well as Eurorack CV clock and triggers on multiple outputs with selectable divisions and sequencer controlled by APCMini interface.
 
 Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to SD with functions such as unlimited projects, per-project sequences that store and recall clock divisions and sequencer patterns, a MIDI looper, etc.  Option to auto-advance through these sequences/loops for rudimentary song chaining.
 
