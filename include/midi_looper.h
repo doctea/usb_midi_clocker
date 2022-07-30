@@ -215,22 +215,14 @@ class MIDITrack {
                     case midi::NoteOn:
                         current_note = pitch;
                         if (this->debug) Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
-                        if (output!=nullptr) {
-                            Serial.printf("looper sending to output %p (%s)\n", output, output->label);
-                            output->sendNoteOn((uint8_t)pitch, (byte)m.velocity); //, m.channel);
-                        } else {
-                            Serial.printf("looper output is nullptr!\n");
-                        }
-
+                        this->sendNoteOn((uint8_t)pitch, (byte)m.velocity);
                         break;
                     case midi::NoteOff:
+                        if (this->debug) Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
-                        if (this->debug) Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
-                        if (output!=nullptr)
-                            output->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
-
+                        this->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
                         break;
                     default:
                         if (this->debug) Serial.printf("\t%i: !!Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
@@ -255,12 +247,16 @@ class MIDITrack {
         }
 
         void sendNoteOn(int pitch, int velocity, int channel = 0) {
-            if (output!=nullptr) output->sendNoteOn(pitch, velocity, channel);
-            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->sendNoteOn(pitch, velocity, channel);
+            if (output!=nullptr) 
+                output->sendNoteOn(pitch, velocity, channel);
+            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
+                (*output_deferred)->sendNoteOn(pitch, velocity, channel);
         }
         void sendNoteOff(int pitch, int velocity, int channel = 0) {
-            if (output!=nullptr) output->sendNoteOff(pitch, velocity, channel);
-            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) (*output_deferred)->sendNoteOff(pitch, velocity, channel);
+            if (output!=nullptr) 
+                output->sendNoteOff(pitch, velocity, channel);
+            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
+                (*output_deferred)->sendNoteOff(pitch, velocity, channel);
         }
 
         /*void toggle_recording() {
@@ -278,7 +274,7 @@ class MIDITrack {
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
                     if (output!=nullptr)
-                        output->sendNoteOff(i, 0);
+                        this->sendNoteOff(i, 0);
                     record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
                     recorded_hanging_notes[i] = false;
                 }
