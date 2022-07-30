@@ -33,17 +33,17 @@ class DeviceBehaviour_mpk49 : public ClockedBehaviour {
         }
 
         void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            this->loop_track->in_event(ticks%LOOP_LENGTH, midi::NoteOn, /*channel,*/ note, velocity);
+            mpk49_output->sendNoteOn(note, velocity);            
             #ifdef ENABLE_LOOPER
-                mpk49_output->sendNoteOn(note, velocity);
+                this->loop_track->in_event(ticks%LOOP_LENGTH, midi::NoteOn, /*channel,*/ note, velocity);
             #endif
         }
 
         void note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            this->loop_track->in_event(ticks%LOOP_LENGTH, midi::NoteOff, /*channel,*/ note, velocity);
+            mpk49_output->sendNoteOff(note, velocity);
 
             #ifdef ENABLE_LOOPER
-                mpk49_output->sendNoteOff(note, velocity);
+                this->loop_track->in_event(ticks%LOOP_LENGTH, midi::NoteOff, /*channel,*/ note, velocity);
             #endif
         }
 

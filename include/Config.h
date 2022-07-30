@@ -37,6 +37,9 @@
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
 
+// enable MIDI looping for drumkit
+#define ENABLE_DRUM_LOOPER
+
 // enable transposing beatstep to a particular octave
 #define ENABLE_BASS_TRANSPOSE MIDI3
 

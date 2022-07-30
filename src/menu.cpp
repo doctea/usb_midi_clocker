@@ -96,7 +96,9 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     HarmonyStatus           looper_harmony_status =     HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); 
     LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
     MidiOutputSelectorControl looper_output_selector =  MidiOutputSelectorControl("Looper MIDI Output"); 
+#endif
 
+#ifdef ENABLE_DRUM_LOOPER
     LooperStatus            drum_looper_status  =   LooperStatus("Drum looper", &drums_loop_track);
     LooperQuantizeControl   drum_loop_quantizer_setting = LooperQuantizeControl("Drum Loop quant",   &drums_loop_track);   // todo: make this part of the LooperStatus object
 #endif
@@ -245,7 +247,8 @@ void setup_menu() {
         menu->add(&looper_output_selector);
         menu->add(&looper_transpose_control);
         //menu->add(&looper_submenu);
-
+    #endif
+    #ifdef ENABLE_DRUM_LOOPER
         menu->add(&drum_looper_status);
         menu->add(&drum_loop_quantizer_setting);
     #endif

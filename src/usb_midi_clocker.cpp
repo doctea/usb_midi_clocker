@@ -280,7 +280,7 @@ void do_tick(uint32_t in_ticks) {
     behaviour_manager->do_pre_clock(in_ticks);
   #endif
 
-  #ifdef ENABLE_LOOPER
+  #ifdef ENABLE_DRUM_LOOPER
     drums_loop_track.process_tick(ticks);
   #endif
 

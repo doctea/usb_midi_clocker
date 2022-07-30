@@ -68,6 +68,8 @@ void setup_midi_output_wrapper_manager() {
 
     #ifdef ENABLE_LOOPER
         mpk49_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3"));
+    #endif
+    #ifdef ENABLE_DRUM_LOOPER
         drums_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 10"));
         drums_loop_track.set_quantization_value(0);
         drums_loop_track.debug = true;

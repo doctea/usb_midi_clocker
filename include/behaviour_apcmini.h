@@ -195,6 +195,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
                         redraw_sequence_row(row);
                     #endif
                 #endif 
+            #ifdef ENABLE_DRUM_LOOPER
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_SEND) {
                 // toggle drums recording status?
                 drums_loop_track.toggle_recording();
@@ -204,6 +205,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
                 } else {
                     drums_loop_track.start_playing();
                 }
+            #endif
             } else {
                 Serial.print(F("Unknown akaiAPC button with note number "));
                 Serial.println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
