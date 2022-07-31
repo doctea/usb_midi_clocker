@@ -57,21 +57,25 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 ## Requirements
 
 - Teensy 4.1
- - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs)
+  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs)
 - ST7789 oled screen + rotary encoder + two wired buttons for control
- - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789
- - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu
- - https://github.com/doctea/mymenu
+  - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789
+  - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu
+  - https://github.com/doctea/mymenu
 - Rotary encoder and some buttons for controlling the screen and options
 - Akai APCMini for controlling the sequencer and clocks
 - SD card in the onboard Teensy SD card reader
 - DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers
- - I'm using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377
+  - I'm using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
-### Known issues
+### Known issues (current)
 
-- BeatStep auto-advance via SYSEX seems unreliable -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
+- BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
+ - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
+
+## Known issues (may be solved)
+
 - Although it has been known run for many hours solidly, been getting some occasional crashes lately (especially while working on the looper code, though unsure if this is related).  Might be because of bugs in my attempt to patch the problem with the USBHost_t36 USB MIDI clock problem...
 - MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the debug serial output?!  Think maybe a problem in the underlying USBHost_t36 code?
   - notes work fine though if sending clock is disabled?!
@@ -82,7 +86,6 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
   - workaround for the time being is to use hardware serial MIDI when notes+clock are needed
   - hmm, may have worked around this by sending looper notes before sending clocks, in a do_pre_clock() function...?
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
- - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
 
 
 ### TODO/Future 
