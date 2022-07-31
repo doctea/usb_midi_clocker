@@ -110,7 +110,8 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 - Sequencer that records and playback MIDI notes or CV
   - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
   - improve by writing & saving real MIDI files?
-  - Genericise MIDI looper functionality, so can eg record and loop drums 
+  - ~~Genericise MIDI looper functionality, so can eg record and loop drums ~~
+  - Make a looper manager or something to allow easier adding of multiple loopers with controls
 - ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
 - Give better control over Beatstep via sysex if possible?
@@ -129,6 +130,8 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 - Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets
 
 ## Explanation/demo
+
+![my unit](https://github.com/doctea/usb_midi_clocker/blob/main/media/my%20unit.jpg "My unit")
 
 (Note that the below mostly applies to the Arduino Uno version, Teensy version has a lot more going on)
 
