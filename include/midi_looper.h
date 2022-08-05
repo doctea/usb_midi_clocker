@@ -87,8 +87,8 @@ class MIDITrack {
     }
 
     public: 
-        MIDIOutputWrapper *output;
-        MIDIOutputWrapper **output_deferred;
+        MIDIOutputWrapper *output = nullptr;
+        //MIDIOutputWrapper **output_deferred = nullptr;
 
         bool debug = false;
 
@@ -106,9 +106,9 @@ class MIDITrack {
             output = default_output;
         };
 
-        MIDITrack(MIDIOutputWrapper **default_output_deferred) {
+        /*MIDITrack(MIDIOutputWrapper **default_output_deferred) {
             output_deferred = default_output_deferred;
-        };
+        };*/
 
         void setOutputWrapper(MIDIOutputWrapper *output) {
             if (this->output!=nullptr)
@@ -204,21 +204,21 @@ class MIDITrack {
                 
                 int pitch = m.pitch + transpose;
                 if (pitch<0 || pitch > 127) {
-                    if (this->debug) Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush();
+                    if (this->debug) { Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush(); }
                     return;
                 } else {
-                    if (this->debug) Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush();
+                    if (this->debug) { Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush(); }
                 }
-                if (this->debug) Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush();
+                if (this->debug) { Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush(); }
 
                 switch (m.message_type) {
                     case midi::NoteOn:
                         current_note = pitch;
-                        if (this->debug) Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush();
+                        if (this->debug) { Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush(); }
                         this->sendNoteOn((uint8_t)pitch, (byte)m.velocity);
                         break;
                     case midi::NoteOff:
-                        if (this->debug) Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush();
+                        if (this->debug) { Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush(); }
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
@@ -249,14 +249,15 @@ class MIDITrack {
         void sendNoteOn(int pitch, int velocity, int channel = 0) {
             if (output!=nullptr) 
                 output->sendNoteOn(pitch, velocity, channel);
-            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
-                (*output_deferred)->sendNoteOn(pitch, velocity, channel);
+            //if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
+            //    (*output_deferred)->sendNoteOn(pitch, velocity, channel);
         }
         void sendNoteOff(int pitch, int velocity, int channel = 0) {
+            //Serial.printf("sendNoteOff: output is %p, output_deferred is %p, *output_deferred is %p\n", output, output_deferred, *output_deferred);
             if (output!=nullptr) 
                 output->sendNoteOff(pitch, velocity, channel);
-            if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
-                (*output_deferred)->sendNoteOff(pitch, velocity, channel);
+            //if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
+                //(*output_deferred)->sendNoteOff(pitch, velocity, channel);
         }
 
         /*void toggle_recording() {
