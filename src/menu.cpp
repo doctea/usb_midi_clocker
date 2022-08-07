@@ -116,6 +116,8 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     USBDevicesPanel usbdevices_panel = USBDevicesPanel();
     MidiOutputSelectorControl pc_usb_input_1_selector = MidiOutputSelectorControl("PC USB 1 MIDI Output");
     MidiOutputSelectorControl pc_usb_input_2_selector = MidiOutputSelectorControl("PC USB 2 MIDI Output");
+    MidiOutputSelectorControl pc_usb_input_3_selector = MidiOutputSelectorControl("PC USB 3 MIDI Output");
+    MidiOutputSelectorControl pc_usb_input_4_selector = MidiOutputSelectorControl("PC USB 4 MIDI Output");
 #endif
 
 #ifdef ENABLE_LESTRUM
@@ -210,8 +212,12 @@ void setup_menu() {
     /*#ifdef ENABLE_CRAFTSYNTH
         craftsynth_output_selector.configure(craftsynth_output, craftsynth_setOutputWrapper);
     #endif*/
-    pc_usb_input_1_selector.configure(pc_usb_1_output, pc_usb_1_setOutputWrapper);
-    pc_usb_input_2_selector.configure(pc_usb_2_output, pc_usb_2_setOutputWrapper);
+    #ifdef ENABLE_USB
+        pc_usb_input_1_selector.configure(pc_usb_outputs[0], pc_usb_1_setOutputWrapper);
+        pc_usb_input_2_selector.configure(pc_usb_outputs[1], pc_usb_2_setOutputWrapper);
+        pc_usb_input_3_selector.configure(pc_usb_outputs[2], pc_usb_3_setOutputWrapper);
+        pc_usb_input_4_selector.configure(pc_usb_outputs[3], pc_usb_4_setOutputWrapper);
+    #endif
     
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
@@ -272,8 +278,12 @@ void setup_menu() {
         menu->add(&craftsynth_clock_toggle);
     #endif
 
-    menu->add(&pc_usb_input_1_selector);
-    menu->add(&pc_usb_input_2_selector);
+    #ifdef ENABLE_USB
+        menu->add(&pc_usb_input_1_selector);
+        menu->add(&pc_usb_input_2_selector);
+        menu->add(&pc_usb_input_3_selector);
+        menu->add(&pc_usb_input_4_selector);
+    #endif
 
     #ifdef ENABLE_SUBCLOCKER
         subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 

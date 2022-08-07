@@ -283,8 +283,10 @@ class Project {
                     myFile.printf("midi_output_map=mpk49_loop_track|%s\n",          mpk49_loop_track.output->label);
                 }
             #endif
-            if(pc_usb_1_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_1_output->label);
-            if(pc_usb_2_output!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_2_output->label);
+            if(pc_usb_outputs[0]!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_outputs[0]->label);
+            if(pc_usb_outputs[1]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[1]->label);
+            if(pc_usb_outputs[2]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[2]->label);
+            if(pc_usb_outputs[3]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[3]->label);
                         //midi_output_wrapper_manager->save_to_file(myFile);
 
             myFile.println("; end project");

@@ -78,6 +78,15 @@ class MIDIOutputWrapper {
             if (playing_notes[pitch]>0) playing_notes[pitch]--;
         }
 
+        void sendControlChange(byte pitch, byte velocity, byte channel = 0) {
+            if (channel==0) channel = default_channel;
+            if (output_serialmidi!=nullptr)     output_serialmidi->sendControlChange(pitch, velocity, channel);
+            if (output_usb!=nullptr)            output_usb->sendControlChange(pitch, velocity, channel);
+            if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)
+                                                (*output_usb_pointer)->sendControlChange(pitch, velocity, channel);
+
+        }
+
         inline bool is_note_playing(byte note_number) {
             return playing_notes[note_number]>0;
         }

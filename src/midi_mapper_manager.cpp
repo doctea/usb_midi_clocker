@@ -5,6 +5,7 @@
 
 #include "midi_mapper_update_wrapper_menus.h"
 
+#include "midi_pc_usb.h"
 
 MIDIOutputWrapperManager *midi_output_wrapper_manager = nullptr;
 MIDIOutputWrapperManager* MIDIOutputWrapperManager::inst_ = nullptr;
@@ -21,6 +22,8 @@ void setup_midi_output_wrapper_manager() {
     Serial.println("setup_midi_output_wrapper_manager.."); Serial.flush();
     midi_output_wrapper_manager = MIDIOutputWrapperManager::getInstance();
 
+    // first, add all the output options that will exist
+
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  midi_out_serial[0], 1));
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  midi_out_serial[0], 2));
     midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  midi_out_serial[0], 3));
@@ -33,7 +36,8 @@ void setup_midi_output_wrapper_manager() {
     #ifdef ENABLE_BAMBLE
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1));
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));
-        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 10", &(behaviour_bamble->device), 10));
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : drums", &(behaviour_bamble->device), 10));
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 4", &(behaviour_bamble->device), 4));
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
@@ -44,8 +48,12 @@ void setup_midi_output_wrapper_manager() {
         midi_out_serial_clock_enabled[5] = true;
     #endif
 
-    pc_usb_1_output = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
-    pc_usb_2_output = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 2");
+    // then, set the output wrapper pointers to the default wrappers
+
+    pc_usb_outputs[0] = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
+    pc_usb_outputs[1] = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 2");
+    pc_usb_outputs[2] = midi_output_wrapper_manager->find((char*)"USB : Bamble : drums");
+    pc_usb_outputs[3] = midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 4");
 
     #ifdef ENABLE_LESTRUM
         lestrum_arp_output =    midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 1");
@@ -66,11 +74,12 @@ void setup_midi_output_wrapper_manager() {
         keystep_output = midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3");
     #endif
 
+    // instantiate the loop tracks and point them at their default output wrappers
     #ifdef ENABLE_LOOPER
         mpk49_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"S1 : Bitbox : ch 3"));
     #endif
     #ifdef ENABLE_DRUM_LOOPER
-        drums_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"USB : Bamble : ch 10"));
+        drums_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"USB : Bamble : drums"));
         drums_loop_track.set_quantization_value(0);
         drums_loop_track.debug = true;
     #endif
@@ -85,7 +94,7 @@ void setup_midi_output_wrapper_manager() {
 #include "behaviour_mpk49.h"
 
 //TODO: move this into MIDIOutputWrapperManager...
-// sets the designated output wrapper pointer to a different actual wrapper; takes the handle names eg 'beatstep_output' as the source
+// sets the designated output wrapper pointer to a different actual wrapper; takes the handle names eg 'beatstep_output' as the source, so can load/save this info to project file
 void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names(%s, %s)\n", source_label.c_str(), target_label.c_str()); Serial.flush();
     MIDIOutputWrapper *target = midi_output_wrapper_manager->find((char*)target_label.c_str());
@@ -136,6 +145,8 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
             return;
         }
     #endif
+
+    // MIDI input from PC host
     if (source_label.equals("pc_usb_1_output")) {
         pc_usb_1_setOutputWrapper(target);
         //pc_usb_1_selector.actual_value_index = index;
@@ -143,6 +154,16 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
         return;
     } else if (source_label.equals("pc_usb_2_output")) {
         pc_usb_2_setOutputWrapper(target);
+        //pc_usb_2_selector.actual_value_index = index;
+        update_wrapper_menus_for_name(source_label, index);
+        return;
+    } else if (source_label.equals("pc_usb_3_output")) {
+        pc_usb_3_setOutputWrapper(target);
+        //pc_usb_1_selector.actual_value_index = index;
+        update_wrapper_menus_for_name(source_label, index);
+        return;
+    } else if (source_label.equals("pc_usb_4_output")) {
+        pc_usb_4_setOutputWrapper(target);
         //pc_usb_2_selector.actual_value_index = index;
         update_wrapper_menus_for_name(source_label, index);
         return;

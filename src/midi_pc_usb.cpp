@@ -13,35 +13,37 @@
 
 #include "midi_mapper_manager.h"
 
-// set the incoming midi from the USB host (ie computer) to go out to first Bamble pitch channel
-//MIDIOutputWrapper *midi_bamble_ch1_wrapper = nullptr; // = midi_output_wrapper_manager->find(6); //[6]; //MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &behaviour_bamble->device, 1);
-MIDIOutputWrapper *pc_usb_1_output = nullptr; //midi_bamble_ch1_wrapper; //midi_out_bitbox_wrapper; //&midi_out_bass_wrapper;
-void pc_usb_1_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-  pc_usb_1_output->stop_all_notes();
-  pc_usb_1_output = wrapper;    
+MIDIOutputWrapper *pc_usb_outputs[NUM_PC_INPUTS];
+
+void pc_usb_x_setOutputWrapper(int index, MIDIOutputWrapper *wrapper) { 
+  if (pc_usb_outputs[index]!=nullptr) 
+    pc_usb_outputs[index]->stop_all_notes();
+  pc_usb_outputs[index] = wrapper;
 }
 
-MIDIOutputWrapper *pc_usb_2_output = nullptr; //&midi_out_bitbox_wrapper; //&midi_out_bass_wrapper;
-void pc_usb_2_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-  pc_usb_2_output->stop_all_notes();
-  pc_usb_2_output = wrapper;    
-}
+void pc_usb_1_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(0, wrapper); }
+void pc_usb_2_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(1, wrapper); }
+void pc_usb_3_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(2, wrapper); }
+void pc_usb_4_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(3, wrapper); }
+
 
 void pc_usb_handle_note_on(byte channel, byte note, byte velocity) { //, byte cable) {
   byte cable = usbMIDI.getCable();
   //Serial.printf("pc_usb_handle_note_on (%i, %i, %i, %i)!\n", channel, note, velocity, cable);
-  if (cable==1)
-    pc_usb_1_output->sendNoteOn(note, velocity); //, channel);
-  else
-    pc_usb_2_output->sendNoteOn(note, velocity); //, channel);
+  if (pc_usb_outputs[cable]!=nullptr)
+    pc_usb_outputs[cable]->sendNoteOn(note, velocity);
 }
 void pc_usb_handle_note_off(byte channel, byte note, byte velocity) { //, byte cable) {
   byte cable = usbMIDI.getCable();
   //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
-  if (cable==1)
-    pc_usb_1_output->sendNoteOff(note, velocity); //, channel);
-  else
-    pc_usb_2_output->sendNoteOff(note, velocity); //, channel);
+  if (pc_usb_outputs[cable]!=nullptr)
+    pc_usb_outputs[cable]->sendNoteOff(note, velocity);
+}
+void pc_usb_handle_control_change(byte channel, byte cc, byte value) { //, byte cable) {
+  byte cable = usbMIDI.getCable();
+  //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
+  if (pc_usb_outputs[cable]!=nullptr)
+    pc_usb_outputs[cable]->sendControlChange(cc, value, channel);
 }
 
 // for handling external midi clock from host's usb
@@ -86,6 +88,7 @@ void pc_usb_midi_handle_stop() {
 void setup_pc_usb() {
   usbMIDI.setHandleNoteOn(pc_usb_handle_note_on);
   usbMIDI.setHandleNoteOff(pc_usb_handle_note_off);
+  usbMIDI.setHandleControlChange(pc_usb_handle_control_change);
 
   usbMIDI.setHandleClock(pc_usb_midi_handle_clock);
   usbMIDI.setHandleStart(pc_usb_midi_handle_start);
