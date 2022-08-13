@@ -314,6 +314,12 @@ class MIDITrack {
                 this->play_events(ticks);
         }
 
+        void toggle_playing() {
+            if (this->playing) 
+                this->stop_playing();
+            else 
+                this->start_playing();
+        }
         void start_playing() {
             Serial.println("Looper: Start playing!");
             this->playing = true;
