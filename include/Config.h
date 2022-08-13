@@ -43,8 +43,8 @@
 // enable transposing beatstep to a particular octave
 #define ENABLE_BASS_TRANSPOSE MIDI3
 
-//#define ENABLE_LESTRUM    // these are define din ConfigMidi.h instead
-//#define ENABLE_DRUMKIT    // these are define din ConfigMidi.h instead
+//#define ENABLE_LESTRUM    // these are defined in ConfigMidi.h instead
+//#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead
 
 //#define ENABLE_CRAFTSYNTH   // serial MIDI version
 
@@ -57,6 +57,7 @@
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
     #define ENABLE_CRAFTSYNTH_USB
+    #define ENABLE_CHOCOLATEFEET_USB
 
     #define ENABLE_APCMINI_DISPLAY
 #endif

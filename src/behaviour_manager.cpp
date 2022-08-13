@@ -7,6 +7,7 @@
 #include "behaviour_mpk49.h"
 #include "behaviour_subclocker.h"
 #include "behaviour_craftsynth.h"
+#include "behaviour_chocolate.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -58,6 +59,13 @@ void setup_behaviour_manager() {
         Serial.println("about to register DeviceBehaviour_CraftSynth..."); Serial.flush();
         //behaviour_craftsynth = new DeviceBehaviour_CraftSynth();  // can be used as an output so has to be instantiated at compile time
         behaviour_manager->registerDevice(behaviour_craftsynth);
+        Serial.println("Finished registering"); Serial.flush();
+    #endif
+
+    #ifdef ENABLE_CHOCOLATEFEET_USB
+        Serial.println("about to register DeviceBehaviour_Chocolate..."); Serial.flush();
+        behaviour_chocolate = new DeviceBehaviour_Chocolate();
+        behaviour_manager->registerDevice(behaviour_chocolate);
         Serial.println("Finished registering"); Serial.flush();
     #endif
     

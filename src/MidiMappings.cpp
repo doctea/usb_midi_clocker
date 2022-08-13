@@ -5,9 +5,9 @@
 #include "midi_out_wrapper.h"
 
 #include "midi_drums.h"
-
 #include "midi_lestrum.h"
 #include "behaviour_bamble.h"
+#include "midi_chocolatefeet.h"
 
 #ifdef ENABLE_BITBOX
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
@@ -71,5 +71,10 @@ void setup_midi_serial_devices() {
     #ifdef ENABLE_DRUMKIT
         midi_in_drumkit->setHandleNoteOn(drumkit_note_on);
         midi_in_drumkit->setHandleNoteOff(drumkit_note_off);
+    #endif
+
+    #ifdef ENABLE_CHOCOLATEFEET_SERIAL
+        midi_in_footswitch->setHandleNoteOn(footswitch_note_on);
+        midi_in_footswitch->setHandleNoteOff(footswitch_note_off);
     #endif
 }

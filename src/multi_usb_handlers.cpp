@@ -28,6 +28,13 @@ MIDIDevice_BigBuffer midi05(Usb);
 MIDIDevice_BigBuffer midi06(Usb);
 MIDIDevice_BigBuffer midi07(Usb);
 MIDIDevice_BigBuffer midi08(Usb);
+MIDIDevice_BigBuffer midi09(Usb);
+MIDIDevice_BigBuffer midi10(Usb);
+MIDIDevice_BigBuffer midi11(Usb);
+MIDIDevice_BigBuffer midi12(Usb);
+MIDIDevice_BigBuffer midi13(Usb);
+MIDIDevice_BigBuffer midi14(Usb);
+MIDIDevice_BigBuffer midi15(Usb);
 
 /*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
@@ -42,6 +49,13 @@ usb_midi_slot usb_midi_slots[NUM_USB_DEVICES] = {
   { 0x00, 0x00, 0x0000, &midi06, nullptr },
   { 0x00, 0x00, 0x0000, &midi07, nullptr },
   { 0x00, 0x00, 0x0000, &midi08, nullptr },
+  { 0x00, 0x00, 0x0000, &midi09, nullptr },
+  { 0x00, 0x00, 0x0000, &midi10, nullptr },
+  { 0x00, 0x00, 0x0000, &midi11, nullptr },
+  { 0x00, 0x00, 0x0000, &midi12, nullptr },
+  { 0x00, 0x00, 0x0000, &midi13, nullptr },
+  { 0x00, 0x00, 0x0000, &midi14, nullptr },
+  { 0x00, 0x00, 0x0000, &midi15, nullptr },
 };
 
 //uint64_t usb_midi_connected[NUM_USB_DEVICES] = { 0,0,0,0,0,0,0,0 };
@@ -95,7 +109,7 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
 
 
 void update_usb_device_connections() {
-  for (int port=0; port < NUM_USB_DEVICES; port++) {
+  for (int port = 0 ; port < NUM_USB_DEVICES ; port++) {
     uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
     //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
     if (usb_midi_slots[port].packed_id != packed_id) {
@@ -110,26 +124,33 @@ void update_usb_device_connections() {
   }
 }
 
-#define SINGLE_FRAME_READ
+//#define SINGLE_FRAME_READ_ONCE
+#define SINGLE_FRAME_READ_ALL
 
 void read_midi_usb_devices() {
-  #ifdef SINGLE_FRAME_READ
-    static int counter;
+  #ifdef SINGLE_FRAME_READ_ALL
     for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
-      //while(usb_midi_device[i]->read());
-      if (usb_midi_slots[i].device->read()) {
-        //usb_midi_device[counter%NUM_USB_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
-        counter++;
-        //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
-      }
+      while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
     }
   #else
-    static int counter;
-    // only process one device per loop
-    if (counter>=NUM_USB_DEVICES)
-      counter = 0;
-    while(usb_midi_device[counter]->read());
-    counter++;
+    #ifdef SINGLE_FRAME_READ_ONCE
+      //static int counter;
+      for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+        //while(usb_midi_device[i]->read());
+        if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
+          //usb_midi_device[counter%NUM_USB_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
+          //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
+        }
+        //counter++;
+      }
+    #else
+      static int counter;
+      // only all messages from one device per loop
+      if (counter>=NUM_USB_DEVICES)
+        counter = 0;
+      while(usb_midi_slots[counter].read());
+      counter++;
+    #endif
   #endif
 }
 
