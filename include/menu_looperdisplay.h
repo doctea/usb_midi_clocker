@@ -14,7 +14,7 @@ class LooperDisplay : public MenuItem {
 
     //GFXcanvas16 *canvas;
 
-    LooperDisplay(char *label, MIDITrack *loop_track) : MenuItem(label) {
+    LooperDisplay(const char *label, MIDITrack *loop_track) : MenuItem(label) {
         this->loop_track = loop_track;
     }
 
@@ -22,7 +22,7 @@ class LooperDisplay : public MenuItem {
         //canvas = new GFXcanvas16(this->tft->width(), this->tft->getRowHeight()*2);
     }*/
     virtual int display(Coord pos, bool selected, bool opened) override {
-        Serial.println("LooperDisplay#display!");
+        //Serial.println("LooperDisplay#display!");
         //pos.y += MenuItem::display(pos, selected, opened);
         pos.y = header(label, pos, selected, opened);
         /*this->canvas->setCursor(20,10);
@@ -30,20 +30,20 @@ class LooperDisplay : public MenuItem {
         this->canvas->setTextSize(2);
         this->canvas->drawRect(5,5,10,20, RED);
         this->canvas->println("drawn to canvas");*/
-        Serial.println("menu_looperdisplay display()");
+        //Serial.println("menu_looperdisplay display()");
 
         tft->setCursor(pos.x, pos.y);
         //tft->printf("display %i?", ticks);
 
         if (is_bpm_on_beat(ticks)) {
-            Serial.println("rendering piano roll bitmap");
+            //Serial.println("rendering piano roll bitmap");
             loop_track->draw_piano_roll_bitmap();
         }
         //DisplayTranslator_STeensy *a = (DisplayTranslator_STeensy*) tft;
         //a->drawBitmap(pos.x, pos.y, this->canvas);
 
         //int ticks_per_pixel = round(tft->width() / LOOP_LENGTH);
-        int ticks_per_pixel = round((float)LOOP_LENGTH / (float)tft->width());
+        /*int ticks_per_pixel = round((float)LOOP_LENGTH / (float)tft->width());
         Serial.printf("ticks_per_pixel = %i / %i = %i\n", tft->width(), LOOP_LENGTH, ticks_per_pixel);
 
         for (int i = 0 ; i < tft->width() ; i++) {
@@ -64,9 +64,42 @@ class LooperDisplay : public MenuItem {
                     }
                 }
             }
-        }
+        }*/
 
-        return pos.y + 127;
+        float ticks_per_pixel = (float)LOOP_LENGTH / (float)tft->width();
+        int first_found = -1;
+        int last_found = 0;
+
+        int row = pos.y;
+
+        for (int i = 0 ; i < tft->width() ; i++) {
+            //Serial.printf("for real pixel %i: \n", i);
+            // for each pixel, process ticks_per_pixel ticks
+            for (int pitch = 0 ; pitch < 127 ; pitch++) {
+                bool held = false;
+                //Serial.printf("\tfor pitch %i:\n", pitch);
+                int tick_for_pixel = (float)i * ticks_per_pixel;
+                if (loop_track->piano_roll_bitmap[tick_for_pixel][pitch]) {
+                    if (pitch>first_found)
+                        first_found = pitch;
+                    last_found = pitch;
+
+                    //row = pos.y + (first_found-pitch);
+                    row = pos.y + (127-pitch);
+
+                    tft->drawLine(
+                        i, 
+                        row, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
+                        i+1, 
+                        row, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
+                        YELLOW + pitch*16
+                    );
+                }
+            }
+        }
+        //Serial.printf("first_found = %i, last_found = %i, height = %i\n", first_found, last_found, first_found - last_found);
+
+        return pos.y + 127; //row + 12; //pos.y + (first_found - last_found); //127;  
     }
 
 };

@@ -369,20 +369,14 @@ class MIDITrack {
 
         bool piano_roll_bitmap[LOOP_LENGTH][127];
         bool piano_roll_held[127];
+        int piano_roll_highest = 0;
+        int piano_roll_lowest = 127;
+
+        // render a bitmap of the loop to array
         void draw_piano_roll_bitmap() {
-            /*for (int p = 0 ; p < 127 ; p++) {       // for each pitch
-                for (int x = 0 ; x < LOOP_LENGTH ; x++) {   // for each column
-                    bool note_held = false;
-                    for (int m = 0 ; m < frames[x].size() ; m++) {
-                        midi_message message = frames[x].get(m);
-                        if (message.pitch == p && message.message_type==midi::NoteOn) {
-                            note_held = true;
-                        } else if (message.pitch == p && message.message_type==midi::NoteOff) {
-                            note_held = false;
-                        }
-                    }
-                }
-            }*/
+            piano_roll_highest = 0;
+            piano_roll_lowest = 127;
+
             for (int p = 0 ; p < 127; p++) {
                 for (int x = 0  ; x < LOOP_LENGTH ; x++) {
                     piano_roll_bitmap[x][p] = false;
@@ -393,6 +387,10 @@ class MIDITrack {
                 for (int m = 0 ; m < frames[x].size() ; m++) {
                     midi_message message = frames[x].get(m);
                     if (message.message_type==midi::NoteOn) {
+                        if (piano_roll_highest < message.pitch)
+                            piano_roll_lowest = message.pitch;
+                        if (piano_roll_lowest > message.pitch)
+                            piano_roll_lowest = message.pitch;
                         piano_roll_held[message.pitch] = true;
                     } else if (message.message_type==midi::NoteOff) {
                         piano_roll_held[message.pitch] = false;
@@ -403,7 +401,7 @@ class MIDITrack {
                 }
             }
 
-            Serial.println("draw bitmap:");
+            /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {
                 for (int x = 0 ; x < LOOP_LENGTH ; x++) {
                     if (piano_roll_bitmap[x][p])
@@ -412,7 +410,7 @@ class MIDITrack {
                         Serial.print("_");
                 }
                 Serial.println();
-            }
+            }*/
         }
 
         /* erasing status */
