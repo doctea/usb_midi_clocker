@@ -131,6 +131,9 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 - CV to MIDI for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
 - Record and playback CCs
 - Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets
+- Better looper overwriting logic to handle playing notes..
+- Looper display of what's recorded
+- Subclocker clock multipliers as well as division (need to calculate time between ticks and send clock on steps in between...)
 
 ## Explanation/demo
 
