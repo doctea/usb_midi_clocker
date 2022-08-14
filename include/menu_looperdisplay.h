@@ -66,12 +66,10 @@ class LooperDisplay : public MenuItem {
             }
         }*/
 
-        float ticks_per_pixel = (float)LOOP_LENGTH / (float)tft->width();
-        int first_found = -1;
-        int last_found = 0;
-
+        static float ticks_per_pixel = (float)LOOP_LENGTH / (float)tft->width();
         int row = pos.y;
 
+        // TODO: centering/resizing of piano roll based on what notes are in it
         for (int i = 0 ; i < tft->width() ; i++) {
             //Serial.printf("for real pixel %i: \n", i);
             // for each pixel, process ticks_per_pixel ticks
@@ -80,11 +78,6 @@ class LooperDisplay : public MenuItem {
                 //Serial.printf("\tfor pitch %i:\n", pitch);
                 int tick_for_pixel = (float)i * ticks_per_pixel;
                 if (loop_track->piano_roll_bitmap[tick_for_pixel][pitch]) {
-                    if (pitch>first_found)
-                        first_found = pitch;
-                    last_found = pitch;
-
-                    //row = pos.y + (first_found-pitch);
                     row = pos.y + (127-pitch);
 
                     tft->drawLine(
