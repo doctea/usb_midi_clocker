@@ -16,7 +16,10 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
   - Akai APCMini (used as interface for sequencer+clock divisions)
   - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
   - A [mystery device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
-  - Modal CraftSynth 2.0 (route input/looper to play CraftSynth notes)
+    - With divider control and offset delay
+  - Modal CraftSynth 2.0 (route an input or looper to play CraftSynth notes, with tempo sync for arpeggiation etc)
+  - M-Vave/Cuvave Chocolate footswitch controller - controls the MIDI looper from left to right: play (toggle), record (toggle), overwrite (momentary), record (momentary)
+    - Use the app to configure it as a custom config that outputs note on/note offs on notes 0,1,2,3
 - Support for MIDI DIN devices (clock and note in/outs), eg
   - Route USB MIDI from Beatstep to DIN Behringer Neutron, while transposing all notes to target octave range
   - Sync a 1010 bitbox mk2 with clock
