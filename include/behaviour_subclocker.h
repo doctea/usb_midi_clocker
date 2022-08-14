@@ -25,26 +25,55 @@ class DeviceBehaviour_Subclocker : public ClockedBehaviour {
         unsigned long clock_delay_ticks = DEFAULT_SUBCLOCKER_DELAY_TICKS;
         int clock_divisor = DEFAULT_SUBCLOCKER_DIVISOR;
 
-        void set_delay_ticks(int delay_ticks) {
+        virtual void set_delay_ticks(int delay_ticks) {
             this->clock_delay_ticks = delay_ticks;
         }
-        int get_delay_ticks() {
+        virtual int get_delay_ticks() {
             return this->clock_delay_ticks;
         }
-        void set_divisor (int divisor) {
+        virtual void set_divisor (int divisor) {
             this->clock_divisor = divisor;
         }
-        int get_divisor() {
+        virtual int get_divisor() {
             return this->clock_divisor;
         }
 
-        void send_clock(unsigned long ticks) override {
+        int32_t real_ticks = 0;
+        virtual void send_clock(unsigned long ticks) override {
+            this->real_ticks = ticks;
             if (ticks<clock_delay_ticks) return;
 
-            if (ticks==0 || ticks % clock_divisor == 0)
+            /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
+                DeviceBehaviourBase::on_phrase(BPM_CURRENT_PHRASE);
+            }*/
+            if (is_bpm_on_bar(real_ticks - clock_delay_ticks)) {
+                ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
+            }
+
+            if (/*ticks==0 || */ticks % clock_divisor == 0)
                 ClockedBehaviour::send_clock(ticks - clock_delay_ticks);
         }
         
+        virtual void on_bar(int bar_number) override {
+            // don't do anything - handle the delayed clocks in send_clock
+            //if (is_bpm_on_bar(real_ticks - clock_delay_ticks))
+        }
+        virtual void on_phrase(uint32_t phrase_number) override {
+            // don't do anything - handle the delayed clocks in send_clock
+        }
+
+        virtual void on_restart() override {
+            //Serial.println("\ton_restart() in ClockedBehaviour");
+            if (this->device!=nullptr && this->clock_enabled) {
+                this->device->sendRealTime(MIDIDevice::Stop); //sendStop();
+                this->device->sendRealTime(MIDIDevice::Start); //sendStart();
+                this->device->send_now();
+                this->started = true;
+            } else {
+                //Serial.println("\tin clocked behaviour on_restart, no device!");
+            }
+        }
+
 };
 
 extern DeviceBehaviour_Subclocker *behaviour_subclocker;
