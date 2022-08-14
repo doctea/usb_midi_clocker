@@ -221,6 +221,7 @@ class MIDITrack {
                         current_note = pitch;
                         if (this->debug) { Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush(); }
                         this->sendNoteOn((uint8_t)pitch, (byte)m.velocity);
+                        track_playing_on(ticks, pitch, m.velocity);
                         break;
                     case midi::NoteOff:
                         if (this->debug) { Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush(); }
@@ -228,6 +229,7 @@ class MIDITrack {
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
                         this->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
+                        track_playing_off(ticks, pitch, m.velocity);
                         break;
                     default:
                         if (this->debug) Serial.printf("\t%i: !!Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
@@ -326,25 +328,6 @@ class MIDITrack {
             this->playing = false;
         }
 
-        /* erasing status */
-        void toggle_overwriting() {
-            if (this->isOverwriting())
-                this->stop_overwriting();
-            else
-                this->start_overwriting();
-        }
-        // enable 'erase head'
-        void start_overwriting() {
-            // TODO: better overwriting logic to handle playing notes..
-            //          like, record note offs for any playing notes?
-            if (this->playing)
-                stop_all_notes();
-            this->overwrite = true;
-        }
-        // disable 'erase head'
-        void stop_overwriting() {
-            this->overwrite = false;
-        }
 
         /* recording status */
         void toggle_recording() {
@@ -383,6 +366,56 @@ class MIDITrack {
             if (!this->is_recording && previously_recording) 
                 this->stop_recording();
         }*/
+
+
+
+        /* erasing status */
+        void toggle_overwriting() {
+            if (this->isOverwriting())
+                this->stop_overwriting();
+            else
+                this->start_overwriting();
+        }
+        // enable 'erase head'
+        void start_overwriting() {
+            if (this->playing) {
+                stop_all_notes();
+            }
+            fix_overwrite(ticks%LOOP_LENGTH);
+            this->overwrite = true;
+        }
+        // disable 'erase head'
+        void stop_overwriting() {
+            this->overwrite = false;
+        }
+
+        struct tracked_note {
+            bool playing = false;
+            uint32_t started_at = -1;
+        };
+        tracked_note track_playing[127];
+
+        // track when a playing note began
+        void track_playing_on(uint32_t ticks, byte pitch, byte velocity) {
+            track_playing[pitch].playing = true;
+            track_playing[pitch].started_at = ticks;
+        }
+        // stop tracking a playing note
+        void track_playing_off(uint32_t ticks, byte pitch, byte velocity) {
+            track_playing[pitch].playing = false;
+            track_playing[pitch].started_at = -1;
+        }
+        // check all playing notes and write a note off at current position
+        void fix_overwrite(uint32_t ticks) {
+            for (int i = 0 ; i < 127 ; i++) {
+                if (track_playing[i].playing) {
+                    fix_overwrite_pitch(ticks, i);
+                }
+            }
+        }
+        void fix_overwrite_pitch(uint32_t ticks, byte pitch) {
+            this->record_event(ticks, midi::NoteOff, pitch, 0);
+        }
 
         /* save+load stuff to filesystem */
         bool save_loop(int project_number, int recording_number) {
