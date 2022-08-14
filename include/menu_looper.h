@@ -22,7 +22,13 @@ class LooperRecStatus : public MenuItem {
             header(label, pos, selected, opened);
 
             tft->setTextSize(2);
-            if (this->loop_track->isRecording()) {
+            if (this->loop_track->isOverwriting()        && !this->loop_track->isRecording()) {
+                colours(opened, ORANGE);
+                tft->print((char*)"[Wip]");
+            } else if (this->loop_track->isOverwriting() &&  this->loop_track->isRecording()) {
+                colours(opened, RED);
+                tft->print((char*)"[OvR]");
+            } else if (this->loop_track->isRecording()) {
                 colours(opened, RED);
                 tft->print((char*)"[Rec]");
             } else {
@@ -33,7 +39,11 @@ class LooperRecStatus : public MenuItem {
             colours(C_WHITE, BLACK);
             tft->print((char*)"  ");
             if (this->loop_track->isPlaying()) {
-                colours(opened, GREEN);
+                if (this->loop_track->isOverwriting()) {
+                    colours(opened, ORANGE);
+                } else {
+                    colours(opened, GREEN);
+                }
                 tft->print((char*)"[>>]");
             } else {
                 colours(opened, BLUE);

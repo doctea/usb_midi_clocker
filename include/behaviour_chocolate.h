@@ -21,6 +21,11 @@ void chocolate_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 void chocolate_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void chocolate_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 
+#define CHOC_NOTE_TOGGLEPLAY    0
+#define CHOC_NOTE_TOGGLEREC     1
+#define CHOC_NOTE_OVERWRITE_MOM 2
+#define CHOC_NOTE_RECORD_MOM    3
+
 class DeviceBehaviour_Chocolate : public DeviceBehaviourBase {
     public:
         uint16_t vid = 0x4353, pid = 0x4B4D;
@@ -60,10 +65,14 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourBase {
 
             already_processed[note] = false;
 
-            if (note==0) {
+            if (note==CHOC_NOTE_TOGGLEPLAY) {
                 mpk49_loop_track.toggle_playing();
-            } else if (note==1) {
+            } else if (note==CHOC_NOTE_TOGGLEREC) {
                 mpk49_loop_track.toggle_recording();
+            } else if (note==CHOC_NOTE_RECORD_MOM) {
+                mpk49_loop_track.start_recording();
+            } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
+                mpk49_loop_track.start_overwriting();
             }
 
             /*if (note==0 && note_pressed_at[note+1]>=0) {
@@ -87,6 +96,12 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourBase {
             note_pressed_at[note] = -1;
 
             already_processed[note] = false;
+
+            if (note==CHOC_NOTE_RECORD_MOM) {
+                mpk49_loop_track.stop_recording();
+            } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
+                mpk49_loop_track.stop_overwriting();
+            }
 
             /*if (note==0 && note_released_at[note+1]>=0) {
                 // trigger double action E

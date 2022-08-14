@@ -95,6 +95,8 @@ class MIDITrack {
         bool recording = false;
         bool playing = false;
 
+        bool overwrite = false;
+
         int last_note = -1;
         int current_note = -1;
 
@@ -134,12 +136,13 @@ class MIDITrack {
             return this->transpose;
         }
 
-        // for actually recording values (also used when reloading from save)
+        // for actually storing values into buffer (also used when reloading from save)
         void record_event(midi_message midi_event) {
             unsigned long time = ticks % (LOOP_LENGTH);
             //time = quantize_time(time);
             record_event(time, midi_event);
         }
+        // for actually storing values into buffer (also used when reloading from save)
         void record_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ uint8_t pitch, uint8_t velocity) {
             midi_message m;
             m.message_type = instruction_type;
@@ -148,6 +151,7 @@ class MIDITrack {
             m.velocity = velocity;
             record_event(time, m);
         }
+        // for actually storing values into buffer (also used when reloading from save)
         void record_event(unsigned long time, midi_message midi_event) {
             //Serial.printf("Recording event at\t%i", time);
             time = quantize_time(time);
@@ -175,7 +179,7 @@ class MIDITrack {
             }
         }
 
-        // get the frames for a specific loop point
+        // get the list of events for a specific loop point
         LinkedList<midi_message> get_frames(unsigned long time) {
             return this->frames[time%LOOP_LENGTH];
         }
@@ -185,6 +189,7 @@ class MIDITrack {
             //if (!specified_output)
             //    specified_output = output;
             int position = time%LOOP_LENGTH;
+            //LinkedList<midi_message> frame = get_frames(position);
             #ifdef DEBUG_LOOPER
                 Serial.printf("play_events with time %u becomes position %u\n", time, position); Serial.flush();
             #endif
@@ -231,13 +236,24 @@ class MIDITrack {
             }
         }
 
-
+        // wipe all recorded events
         void clear_all() {
             stop_all_notes();
             Serial.println("clearing recording");
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
                 // todo: actually free the recorded memory..?
-                frames[i].clear();
+                //frames[i].clear();
+                clear_tick(i);
+            }
+        }
+
+        // wipe events at specific tick; only wipe once per tick so that erase head only wipes previous take and not any new events we've received 
+        void clear_tick(uint32_t tick) {
+            tick = tick % LOOP_LENGTH;
+            static uint32_t last_cleared_tick = -1;
+            if (tick!=last_cleared_tick) {
+                frames[tick].clear();
+                last_cleared_tick = tick;
             }
         }
 
@@ -246,12 +262,14 @@ class MIDITrack {
                 this->output->stop_all_notes();
         }
 
+        // for sending passthrough or recorded noteOns to actual output
         void sendNoteOn(int pitch, int velocity, int channel = 0) {
             if (output!=nullptr) 
                 output->sendNoteOn(pitch, velocity, channel);
             //if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
             //    (*output_deferred)->sendNoteOn(pitch, velocity, channel);
         }
+        // for sending passthrough or recorded noteOffs to actual output
         void sendNoteOff(int pitch, int velocity, int channel = 0) {
             //Serial.printf("sendNoteOff: output is %p, output_deferred is %p, *output_deferred is %p\n", output, output_deferred, *output_deferred);
             if (output!=nullptr) 
@@ -260,17 +278,93 @@ class MIDITrack {
                 //(*output_deferred)->sendNoteOff(pitch, velocity, channel);
         }
 
-        /*void toggle_recording() {
-            bool previously_recording = this->is_recording;
-            this->is_recording = !this->is_recording;
-            if (this->is_recording==true && !previously_recording)
-                this->start_recording();
-            if (!this->is_recording && previously_recording) 
-                this->stop_recording();
-        }*/
 
+        // called by external code to inform the looper about a note being played; looper decides whether to record, overwrite
+        void in_event(uint32_t ticks, byte message, byte note, byte velocity) {
+            if (this->isOverwriting()) 
+                this->clear_tick(ticks);
+            if (this->isRecording())
+                this->record_event(ticks%LOOP_LENGTH, midi::NoteOn, note, velocity);
+        }
+
+        // called by external code to inform looper of a tick happening; looper decides whether to play, overwrite
+        void process_tick(uint32_t ticks) {
+            if (this->isOverwriting())
+                this->clear_tick(ticks);
+            if (this->isPlaying())
+                this->play_events(ticks);
+        }
+
+
+        bool isPlaying() {
+            return this->playing;
+        }
+        bool isRecording() {
+            return this->recording;
+        }
+        bool isOverwriting() {
+            return this->overwrite;
+        }
+
+        /* playing status */
+        void toggle_playing() {
+            if (this->isPlaying()) 
+                this->stop_playing();
+            else 
+                this->start_playing();
+        }
+        // enable 'play head'
+        void start_playing() {
+            Serial.println("Looper: Start playing!");
+            this->playing = true;
+        }
+        // disable 'play head'
+        void stop_playing() {
+            Serial.println("Looper: Stop playing!");
+            if (this->playing)
+                this->stop_all_notes();
+            this->playing = false;
+        }
+
+        /* erasing status */
+        void toggle_overwriting() {
+            if (this->isOverwriting())
+                this->stop_overwriting();
+            else
+                this->start_overwriting();
+        }
+        // enable 'erase head'
+        void start_overwriting() {
+            // TODO: better overwriting logic to handle playing notes..
+            //          like, record note offs for any playing notes?
+            if (this->playing)
+                stop_all_notes();
+            this->overwrite = true;
+        }
+        // disable 'erase head'
+        void stop_overwriting() {
+            this->overwrite = false;
+        }
+
+        /* recording status */
+        void toggle_recording() {
+            recording = !recording;
+            if (recording) {
+                this->start_recording();
+            } else {
+                this->stop_recording();
+            }
+        }
+        // enable 'record head'
+        void start_recording() {
+            Serial.println("Looper: Started recording");
+            // uhhh nothing to do rn?
+            recording = true;
+        }
+        // disable 'record head' and stop playing any notes that
         void stop_recording() {
             Serial.println("looper stopped recording");
+            recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i]) {
@@ -281,57 +375,16 @@ class MIDITrack {
                 }
             }
         }
-
-        bool isPlaying() {
-            return this->playing;
-        }
-        bool isRecording() {
-            return this->recording;
-        }
-
-        void start_recording() {
-            Serial.println("Looper: Started recording");
-            // uhhh nothing to do rn?
-        }
-        void toggle_recording() {
-            recording = !recording;
-            if (recording) {
+        /*void toggle_recording() {
+            bool previously_recording = this->is_recording;
+            this->is_recording = !this->is_recording;
+            if (this->is_recording==true && !previously_recording)
                 this->start_recording();
-            } else {
+            if (!this->is_recording && previously_recording) 
                 this->stop_recording();
-            }
-        }
-       
-        // called by external code to inform the looper about a note being played; looper decides whether to record it or not
-        void in_event(uint32_t ticks, byte message, byte note, byte velocity) {
-            if (recording)
-                this->record_event(ticks%LOOP_LENGTH, midi::NoteOn, note, velocity);
-        }
+        }*/
 
-        // called by external code to inform looper of a tick happening; looper decides whether to play its events or not
-        void process_tick(uint32_t ticks) {
-            if (playing)
-                this->play_events(ticks);
-        }
-
-        void toggle_playing() {
-            if (this->playing) 
-                this->stop_playing();
-            else 
-                this->start_playing();
-        }
-        void start_playing() {
-            Serial.println("Looper: Start playing!");
-            this->playing = true;
-        }
-        void stop_playing() {
-            Serial.println("Looper: Stop playing!");
-            if (this->playing)
-                this->stop_all_notes();
-            this->playing = false;
-        }
-
-        // save+load stuff !
+        /* save+load stuff to filesystem */
         bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             File myFile;
@@ -355,18 +408,20 @@ class MIDITrack {
             bool last_written = false;
             int lines_written = 0;
             for (int x = 0 ; x < LOOP_LENGTH ; x++) {
+                int size = frames[x].size();
                 /*if (!last_written) {
                     myFile.printf("starts_at=%i\n",x);
                 }*/
                 //myFile.printf("%1x", input->sequence_data[i][x]);
-                if (frames[x].size()==0) {      // only write lines that have data
+                if (size==0) {      // only write lines that have data
                     last_written = false;
                     continue;
                 } else if (!last_written) {
                     myFile.printf("starts_at=%i\n",x);
                 }
                 myFile.printf("loop_data="); //%2x:", frames[x].size());
-                for(int i = 0 ; i < frames[x].size() ; i++) {
+                
+                for(int i = 0 ; i < size ; i++) {
                     midi_message m = frames[x].get(i);
                     myFile.printf("%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
                 }
@@ -385,6 +440,7 @@ class MIDITrack {
             return true;
         }
 
+        // load file on disk into loop
         bool load_loop(int project_number, int recording_number) {
             File myFile;
 
