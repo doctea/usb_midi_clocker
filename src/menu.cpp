@@ -8,6 +8,7 @@
 #include "submenuitem.h"
 
 #include "menu_looper.h"
+#include "menu_looperdisplay.h"
 #include "menu_sequencer.h"
 #include "menu_bpm.h"
 #include "menu_midi_mapper.h"
@@ -92,6 +93,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #ifdef ENABLE_LOOPER
     //SubMenuItem     looper_submenu = SubMenuItem("Looper Submenu");
     LooperStatus            mpk49_looper_status =       LooperStatus("Looper",                  &mpk49_loop_track);
+    LooperDisplay           looper_pianoroll         =  LooperDisplay("Piano roll",             &mpk49_loop_track);
     LooperQuantizeControl   quantizer_setting =         LooperQuantizeControl("Loop quant",     &mpk49_loop_track);   
     HarmonyStatus           looper_harmony_status =     HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); 
     LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
@@ -248,6 +250,7 @@ void setup_menu() {
         //looper_submenu.set_tft(tft);
         menu->add(&project_auto_advance_looper);
         menu->add(&mpk49_looper_status); 
+        menu->add(&looper_pianoroll);
         menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
         menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
         menu->add(&looper_output_selector);

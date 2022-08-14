@@ -367,7 +367,53 @@ class MIDITrack {
                 this->stop_recording();
         }*/
 
+        bool piano_roll_bitmap[LOOP_LENGTH][127];
+        bool piano_roll_held[127];
+        void draw_piano_roll_bitmap() {
+            /*for (int p = 0 ; p < 127 ; p++) {       // for each pitch
+                for (int x = 0 ; x < LOOP_LENGTH ; x++) {   // for each column
+                    bool note_held = false;
+                    for (int m = 0 ; m < frames[x].size() ; m++) {
+                        midi_message message = frames[x].get(m);
+                        if (message.pitch == p && message.message_type==midi::NoteOn) {
+                            note_held = true;
+                        } else if (message.pitch == p && message.message_type==midi::NoteOff) {
+                            note_held = false;
+                        }
+                    }
+                }
+            }*/
+            for (int p = 0 ; p < 127; p++) {
+                for (int x = 0  ; x < LOOP_LENGTH ; x++) {
+                    piano_roll_bitmap[x][p] = false;
+                }
+                piano_roll_held[p] = false;
+            }
+            for (int x = 0 ; x < LOOP_LENGTH ; x++) {   // for each column
+                for (int m = 0 ; m < frames[x].size() ; m++) {
+                    midi_message message = frames[x].get(m);
+                    if (message.message_type==midi::NoteOn) {
+                        piano_roll_held[message.pitch] = true;
+                    } else if (message.message_type==midi::NoteOff) {
+                        piano_roll_held[message.pitch] = false;
+                    }
+                }
+                for (int p = 0 ; p < 127 ; p++) {
+                    piano_roll_bitmap[x][p] = piano_roll_held[p];
+                }
+            }
 
+            Serial.println("draw bitmap:");
+            for (int p = 0 ; p < 127 ; p++) {
+                for (int x = 0 ; x < LOOP_LENGTH ; x++) {
+                    if (piano_roll_bitmap[x][p])
+                        Serial.print("x");
+                    else
+                        Serial.print("_");
+                }
+                Serial.println();
+            }
+        }
 
         /* erasing status */
         void toggle_overwriting() {
@@ -557,6 +603,8 @@ class MIDITrack {
             
             loaded_recording_number = recording_number;
             clear_hanging();
+
+            draw_piano_roll_bitmap();
 
             return true;
         }       
