@@ -282,11 +282,11 @@ class MIDITrack {
 
 
         // called by external code to inform the looper about a note being played; looper decides whether to record, overwrite
-        void in_event(uint32_t ticks, byte message, byte note, byte velocity) {
+        void in_event(uint32_t ticks, byte message_type, byte note, byte velocity) {
             if (this->isOverwriting()) 
                 this->clear_tick(ticks);
             if (this->isRecording())
-                this->record_event(ticks%LOOP_LENGTH, midi::NoteOn, note, velocity);
+                this->record_event(ticks%LOOP_LENGTH, message_type, note, velocity);
         }
 
         // called by external code to inform looper of a tick happening; looper decides whether to play, overwrite
