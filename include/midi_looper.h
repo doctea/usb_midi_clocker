@@ -282,11 +282,11 @@ class MIDITrack {
 
 
         // called by external code to inform the looper about a note being played; looper decides whether to record, overwrite
-        void in_event(uint32_t ticks, byte message, byte note, byte velocity) {
+        void in_event(uint32_t ticks, byte message_type, byte note, byte velocity) {
             if (this->isOverwriting()) 
                 this->clear_tick(ticks);
             if (this->isRecording())
-                this->record_event(ticks%LOOP_LENGTH, midi::NoteOn, note, velocity);
+                this->record_event(ticks%LOOP_LENGTH, message_type, note, velocity);
         }
 
         // called by external code to inform looper of a tick happening; looper decides whether to play, overwrite
@@ -452,6 +452,11 @@ class MIDITrack {
         }
         // check all playing notes and write a note off at current position
         void fix_overwrite(uint32_t ticks) {
+            // TODO: for this to work properly, we need to know what notes might be playing at this time
+            // TODO: so we need a data structure that will allow to easily look up whether the note is playing at point 'ticks'
+            // TODO: i guess the bitmap structure would work for this...?
+            // TODO: so for that to work, we'll need to incrementally redraw the bitmap from record_event and clear_tick (and from here, too)
+            // TODO: and also i guess from process_tick -- ie if a note is being recorded, we don't yet know when it will end, so we need to update the bitmap on a tick-by-tick basis
             for (int i = 0 ; i < 127 ; i++) {
                 if (track_playing[i].playing) {
                     fix_overwrite_pitch(ticks, i);
