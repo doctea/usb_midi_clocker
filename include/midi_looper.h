@@ -357,6 +357,7 @@ class MIDITrack {
                     recorded_hanging_notes[i] = false;
                 }
             }
+            this->draw_piano_roll_bitmap();
         }
         /*void toggle_recording() {
             bool previously_recording = this->is_recording;
