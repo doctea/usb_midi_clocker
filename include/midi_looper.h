@@ -19,6 +19,9 @@
 
 using namespace storage;
 
+//#define LOWEST_LOOPER_NOTE  24
+//#define HIGHEST_LOOPER_NOTE 96
+
 // for storing messages for recording+playback by midi looper
 // todo: expand to handle other message types (CCs?)
 struct midi_message {
@@ -28,10 +31,16 @@ struct midi_message {
     uint8_t channel;
 };
 
+struct tracked_note {
+    bool playing = false;
+    byte velocity = 0;
+    uint32_t started_at = -1;
+};
+
 class MIDITrack {
     LinkedList<midi_message> frames[LOOP_LENGTH];
 
-    bool recorded_hanging_notes[127];
+    tracked_note recorded_hanging_notes[127];
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
@@ -106,6 +115,7 @@ class MIDITrack {
 
         MIDITrack(MIDIOutputWrapper *default_output) {
             output = default_output;
+            this->wipe_piano_roll_bitmap();
         };
 
         /*MIDITrack(MIDIOutputWrapper **default_output_deferred) {
@@ -154,12 +164,16 @@ class MIDITrack {
         // for actually storing values into buffer (also used when reloading from save)
         void record_event(unsigned long time, midi_message midi_event) {
             //Serial.printf("Recording event at\t%i", time);
-            time = quantize_time(time);
-            frames[time%LOOP_LENGTH].add(midi_event);
+            time = quantize_time(time) % LOOP_LENGTH;
+            frames[time].add(midi_event);
             if (midi_event.message_type==midi::NoteOn) {
-                recorded_hanging_notes[midi_event.pitch] = true;
+                recorded_hanging_notes[midi_event.pitch].playing = true;
+                recorded_hanging_notes[midi_event.pitch].velocity = midi_event.velocity;
+                recorded_hanging_notes[midi_event.pitch].started_at = time;
             } else if (midi_event.message_type==midi::NoteOff) {
-                recorded_hanging_notes[midi_event.pitch] = false;
+                recorded_hanging_notes[midi_event.pitch].playing = false;
+                recorded_hanging_notes[midi_event.pitch].velocity = 0; //midi_event.velocity;
+                recorded_hanging_notes[midi_event.pitch].started_at = -1; //time;
             }
         }
 
@@ -175,7 +189,9 @@ class MIDITrack {
         // clear any notes that we're recording
         void clear_hanging() {
             for (int i = 0 ; i < 127 ; i++) {
-                recorded_hanging_notes[i] = false;
+                recorded_hanging_notes[i].playing = false;
+                recorded_hanging_notes[i].velocity = 0;
+                recorded_hanging_notes[i].started_at = -1;
             }
         }
 
@@ -185,7 +201,7 @@ class MIDITrack {
         }
 
         // actually play events for a specified loop point
-        void play_events(unsigned long time) {
+        /*void play_events(unsigned long time) {
             //if (!specified_output)
             //    specified_output = output;
             int position = time%LOOP_LENGTH;
@@ -236,7 +252,23 @@ class MIDITrack {
                         break;
                 }
             }
+        }*/
+
+        void play_events(unsigned long time) {
+            time = time % LOOP_LENGTH;
+            for (int i = 0 ; i < 127 ; i++) {
+                if (track_playing[i].playing && piano_roll_bitmap[time][i]==0) {
+                    Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
+                    this->sendNoteOff(i, 0);
+                    track_playing_off(ticks, i, 0);
+                } else if (!track_playing[i].playing && piano_roll_bitmap[time][i]>0) {
+                    Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
+                    this->sendNoteOn(i, piano_roll_bitmap[time][i]);
+                    track_playing_on(ticks, i, piano_roll_bitmap[time][i]);
+                }
+            }
         }
+
 
         // wipe all recorded events
         void clear_all() {
@@ -244,8 +276,8 @@ class MIDITrack {
             Serial.println("clearing recording");
             for (int i = 0 ; i < LOOP_LENGTH ; i++) {
                 // todo: actually free the recorded memory..?
-                //frames[i].clear();
-                clear_tick(i);
+                frames[i].clear();
+                //clear_tick(i);
             }
         }
 
@@ -254,6 +286,9 @@ class MIDITrack {
             tick = tick % LOOP_LENGTH;
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
+                for (int i = 0 ; i < 127 ; i++) {
+                    piano_roll_bitmap[tick][i] = false;
+                }
                 frames[tick].clear();
                 last_cleared_tick = tick;
             }
@@ -265,14 +300,20 @@ class MIDITrack {
         }
 
         // for sending passthrough or recorded noteOns to actual output
-        void sendNoteOn(int pitch, int velocity, int channel = 0) {
-            if (output!=nullptr) 
+        void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
+            if (output!=nullptr) {
+                Serial.printf("\tsending to output %s\tpitch=%i,\tvel=%i,\tchan=%i\n", output->label);;
+                output->debug = true;
                 output->sendNoteOn(pitch, velocity, channel);
+                output->debug = false;
+            } else {
+                Serial.println("\tno output?");
+            }
             //if (output_deferred!=nullptr && (*output_deferred)!=nullptr) 
             //    (*output_deferred)->sendNoteOn(pitch, velocity, channel);
         }
         // for sending passthrough or recorded noteOffs to actual output
-        void sendNoteOff(int pitch, int velocity, int channel = 0) {
+        void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
             //Serial.printf("sendNoteOff: output is %p, output_deferred is %p, *output_deferred is %p\n", output, output_deferred, *output_deferred);
             if (output!=nullptr) 
                 output->sendNoteOff(pitch, velocity, channel);
@@ -293,10 +334,18 @@ class MIDITrack {
         void process_tick(uint32_t ticks) {
             if (this->isOverwriting())
                 this->clear_tick(ticks);
+            this->update_bitmap(ticks);
             if (this->isPlaying())
                 this->play_events(ticks);
         }
 
+        void update_bitmap(uint32_t ticks) {
+            for (int i = 0 ; i < 127 ; i++) {
+                if (recorded_hanging_notes[i].playing) {
+                    piano_roll_bitmap[ticks%LOOP_LENGTH][i] = recorded_hanging_notes[i].velocity;
+                }
+            }
+        }
 
         bool isPlaying() {
             return this->playing;
@@ -350,14 +399,14 @@ class MIDITrack {
             recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
-                if (recorded_hanging_notes[i]) {
+                if (recorded_hanging_notes[i].playing) {
                     if (output!=nullptr)
                         this->sendNoteOff(i, 0);
                     record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
-                    recorded_hanging_notes[i] = false;
+                    recorded_hanging_notes[i].playing = false;
                 }
             }
-            this->draw_piano_roll_bitmap();
+            //this->draw_piano_roll_bitmap();
         }
         /*void toggle_recording() {
             bool previously_recording = this->is_recording;
@@ -368,22 +417,27 @@ class MIDITrack {
                 this->stop_recording();
         }*/
 
-        bool piano_roll_bitmap[LOOP_LENGTH][127];
-        bool piano_roll_held[127];
+        byte piano_roll_bitmap[LOOP_LENGTH][127];    // velocity of note at this moment
+        byte piano_roll_held[127];
         int piano_roll_highest = 0;
         int piano_roll_lowest = 127;
 
+        void wipe_piano_roll_bitmap() {
+            for (int p = 0 ; p < 127; p++) {
+                for (int x = 0  ; x < LOOP_LENGTH ; x++) {
+                    piano_roll_bitmap[x][p] = 0;
+                }
+                piano_roll_held[p] = 0;
+            }
+        }
+
         // render a bitmap of the loop to array
-        void draw_piano_roll_bitmap() {
+        void draw_piano_roll_bitmap_from_save() {
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
 
-            for (int p = 0 ; p < 127; p++) {
-                for (int x = 0  ; x < LOOP_LENGTH ; x++) {
-                    piano_roll_bitmap[x][p] = false;
-                }
-                piano_roll_held[p] = false;
-            }
+            this->wipe_piano_roll_bitmap();
+
             for (int x = 0 ; x < LOOP_LENGTH ; x++) {   // for each column
                 for (int m = 0 ; m < frames[x].size() ; m++) {
                     midi_message message = frames[x].get(m);
@@ -392,9 +446,9 @@ class MIDITrack {
                             piano_roll_lowest = message.pitch;
                         if (piano_roll_lowest > message.pitch)
                             piano_roll_lowest = message.pitch;
-                        piano_roll_held[message.pitch] = true;
+                        piano_roll_held[message.pitch] = message.velocity;
                     } else if (message.message_type==midi::NoteOff) {
-                        piano_roll_held[message.pitch] = false;
+                        piano_roll_held[message.pitch] = 0;
                     }
                 }
                 for (int p = 0 ; p < 127 ; p++) {
@@ -434,21 +488,19 @@ class MIDITrack {
             this->overwrite = false;
         }
 
-        struct tracked_note {
-            bool playing = false;
-            uint32_t started_at = -1;
-        };
         tracked_note track_playing[127];
 
         // track when a playing note began
         void track_playing_on(uint32_t ticks, byte pitch, byte velocity) {
             track_playing[pitch].playing = true;
             track_playing[pitch].started_at = ticks;
+            track_playing[pitch].velocity = velocity;
         }
         // stop tracking a playing note
         void track_playing_off(uint32_t ticks, byte pitch, byte velocity) {
             track_playing[pitch].playing = false;
             track_playing[pitch].started_at = -1;
+            track_playing[pitch].velocity = velocity;
         }
         // check all playing notes and write a note off at current position
         void fix_overwrite(uint32_t ticks) {
@@ -458,14 +510,18 @@ class MIDITrack {
             // TODO: so for that to work, we'll need to incrementally redraw the bitmap from record_event and clear_tick (and from here, too)
             // TODO: and also i guess from process_tick -- ie if a note is being recorded, we don't yet know when it will end, so we need to update the bitmap on a tick-by-tick basis
             for (int i = 0 ; i < 127 ; i++) {
+                if (piano_roll_bitmap[ticks%LOOP_LENGTH][i])
+                    this->record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
+                /*
                 if (track_playing[i].playing) {
                     fix_overwrite_pitch(ticks, i);
-                }
+                }*/
             }
         }
-        void fix_overwrite_pitch(uint32_t ticks, byte pitch) {
-            this->record_event(ticks, midi::NoteOff, pitch, 0);
-        }
+        /*void fix_overwrite_pitch(uint32_t ticks, byte pitch) {
+            if (piano_roll_bitmap[ticks][pitch])
+                this->record_event(ticks, midi::NoteOff, pitch, 0);
+        }*/
 
         /* save+load stuff to filesystem */
         bool save_loop(int project_number, int recording_number) {
@@ -608,7 +664,7 @@ class MIDITrack {
             loaded_recording_number = recording_number;
             clear_hanging();
 
-            draw_piano_roll_bitmap();
+            this->draw_piano_roll_bitmap_from_save();
 
             return true;
         }       

@@ -35,10 +35,10 @@ class LooperDisplay : public MenuItem {
         tft->setCursor(pos.x, pos.y);
         //tft->printf("display %i?", ticks);
 
-        if (is_bpm_on_beat(ticks)) {
+        /*if (is_bpm_on_beat(ticks)) {
             //Serial.println("rendering piano roll bitmap");
             loop_track->draw_piano_roll_bitmap();
-        }
+        }*/
         //DisplayTranslator_STeensy *a = (DisplayTranslator_STeensy*) tft;
         //a->drawBitmap(pos.x, pos.y, this->canvas);
 
@@ -74,9 +74,13 @@ class LooperDisplay : public MenuItem {
             //Serial.printf("for real pixel %i: \n", i);
             // for each pixel, process ticks_per_pixel ticks
             for (int pitch = 0 ; pitch < 127 ; pitch++) {
+
                 bool held = false;
                 //Serial.printf("\tfor pitch %i:\n", pitch);
                 int tick_for_pixel = (float)i * ticks_per_pixel;
+                int colour = YELLOW + pitch*16;
+                if (ticks%LOOP_LENGTH==tick_for_pixel || ((int)(ticks+ticks_per_pixel))%LOOP_LENGTH==tick_for_pixel)
+                    colour = YELLOW;
                 if (loop_track->piano_roll_bitmap[tick_for_pixel][pitch]) {
                     row = pos.y + (127-pitch);
 
@@ -85,9 +89,16 @@ class LooperDisplay : public MenuItem {
                         row, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
                         i+1, 
                         row, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
-                        YELLOW + pitch*16
+                        colour
                     );
                 }
+
+                if (this->loop_track->track_playing[pitch].velocity>0) {
+                    tft->drawLine(0, pos.y+(127-pitch), 2, pos.y+(127-pitch), C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
+                } else {
+                    //tft->drawLine(0, pos.y+(127-pitch), 2, pos.y+(127-pitch), BLACK); // + (this->loop_track->track_playing[pitch].velocity<<8));
+                }
+
             }
         }
         //Serial.printf("first_found = %i, last_found = %i, height = %i\n", first_found, last_found, first_found - last_found);
