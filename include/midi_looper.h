@@ -423,7 +423,7 @@ class MIDITrack {
         int piano_roll_lowest = 127;
 
         void wipe_piano_roll_bitmap() {
-            for (int p = 0 ; p < 127; p++) {
+            for (int p = 0 ; p < 127 ; p++) {
                 for (int x = 0  ; x < LOOP_LENGTH ; x++) {
                     piano_roll_bitmap[x][p] = 0;
                 }
@@ -480,7 +480,7 @@ class MIDITrack {
             if (this->playing) {
                 stop_all_notes();
             }
-            fix_overwrite(ticks%LOOP_LENGTH);
+            //fix_overwrite(ticks%LOOP_LENGTH);
             this->overwrite = true;
         }
         // disable 'erase head'
@@ -503,7 +503,7 @@ class MIDITrack {
             track_playing[pitch].velocity = velocity;
         }
         // check all playing notes and write a note off at current position
-        void fix_overwrite(uint32_t ticks) {
+        /*void fix_overwrite(uint32_t ticks) {
             // TODO: for this to work properly, we need to know what notes might be playing at this time
             // TODO: so we need a data structure that will allow to easily look up whether the note is playing at point 'ticks'
             // TODO: i guess the bitmap structure would work for this...?
@@ -512,21 +512,48 @@ class MIDITrack {
             for (int i = 0 ; i < 127 ; i++) {
                 if (piano_roll_bitmap[ticks%LOOP_LENGTH][i])
                     this->record_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
-                /*
-                if (track_playing[i].playing) {
-                    fix_overwrite_pitch(ticks, i);
-                }*/
             }
-        }
+        }*/
         /*void fix_overwrite_pitch(uint32_t ticks, byte pitch) {
             if (piano_roll_bitmap[ticks][pitch])
                 this->record_event(ticks, midi::NoteOff, pitch, 0);
         }*/
 
+        // convert bitmap to save format
+        void convert_from_bitmap() {
+            Serial.println("Converting from bitmap...");
+            bool held_state[127];
+            int note_on_count = 0, note_off_count = 0;
+
+            for (int i = 0 ; i < 127; i++) {
+                held_state[i] = false;
+            }
+
+            for (int t = 0 ; t < LOOP_LENGTH ; t++) {
+                frames[t].clear();
+                for (int p = 0 ; p < 127 ; p++) {
+                    //if (piano_roll_bitmap[t][p]>0           && !held_state[p]) { // note on
+                    if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
+                        held_state[p] = true;
+                        note_on_count++;
+                        this->record_event(t, midi::NoteOn, p, piano_roll_bitmap[t][p]);
+                    //} else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {
+                    } else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
+                        held_state[p] = false;
+                        note_off_count++;
+                        this->record_event(t, midi::NoteOff, p, 0);
+                    } 
+                }
+            }
+            Serial.printf("Converted: found %i note ons, %i note offs\n", note_on_count, note_off_count);
+        }
+
         /* save+load stuff to filesystem */
         bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             File myFile;
+            clear_hanging();
+            convert_from_bitmap();
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
@@ -574,6 +601,11 @@ class MIDITrack {
             if (lines_written==0) {
                 // TODO:  delete the empty file / update project availability so it displays the slot as empty
             }
+
+            Serial.println("Re-drawing bitmap from save...");
+            clear_hanging();
+            this->draw_piano_roll_bitmap_from_save();
+            clear_hanging();
 
             loaded_recording_number = recording_number;
             return true;
@@ -665,6 +697,8 @@ class MIDITrack {
             clear_hanging();
 
             this->draw_piano_roll_bitmap_from_save();
+
+            clear_hanging();
 
             return true;
         }       
