@@ -522,50 +522,62 @@ class MIDITrack {
 
         // convert bitmap to the linkedlist-of-messages save format
         void convert_from_bitmap() {
-            int previous_quant = this->quantization_value;
+            if (this->debug) Serial.println("Converting from bitmap...");
+
+            // store current quantization setting so that we don't quantize during conversion, else shit gets all fucked up!
+            int previous_quant = this->quantization_value;  
             this->quantization_value = 0;
-            Serial.println("Converting from bitmap...");
-            bool held_state[127];
+
+            bool held_state[127];   // for tracking what notes are held
             int note_on_count = 0, note_off_count = 0;
 
             for (int i = 0 ; i < 127; i++) {
                 held_state[i] = false;
             }
 
+            // todo: fix notes that wrap around from end of loop?
+            //          maybe just set initial held_state to be the last frame..?
             for (int t = 0 ; t < LOOP_LENGTH ; t++) {
                 Serial.printf("doing time %i:\n", t);
                 frames[t].clear();
                 for (int p = 0 ; p < 127 ; p++) {
                     if (piano_roll_bitmap[t][p]>0           && !held_state[p]) { // note on
                     //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
-                        Serial.printf("Found note on with\tpitch %i\t", p);
+                        if (this->debug) Serial.printf("Found note on with\tpitch %i\t", p);
                         held_state[p] = true;
                         note_on_count++;
                         this->store_event(t, midi::NoteOn, p, piano_roll_bitmap[t][p]);
                     } else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {
-                        Serial.printf("\tFound note off with\tpitch %i\t\n", p);
+                        if (this->debug) Serial.printf("\tFound note off with\tpitch %i\t\n", p);
                     //} else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
                         held_state[p] = false;
                         note_off_count++;
                         this->store_event(t, midi::NoteOff, p, 0);
                     } else {
                         //Serial.printf("\tno change - held_state is %i\n", held_state[p]);
-                        Serial.print(".");
+                        if (this->debug) Serial.print(".");
                     }
                 }
             }
-            Serial.printf("Converted: found %i note ons, %i note offs\n", note_on_count, note_off_count);
+            if (this->debug) Serial.printf("Converted: found %i note ons, %i note offs\n", note_on_count, note_off_count);
+            if (note_on_count>note_off_count) {
+                Serial.printf("WARNING in MIDITrack#convert_from_bitmap: found more note ons than note offs!");
+                // todo: fix note on/off mismatches
+            }
 
-            for (int t = 0 ; t < LOOP_LENGTH ; t++) {
-                if (frames[t].size()>0) {
-                    Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());
-                    for (int i = 0 ; i < frames[t].size() ; i++) {
-                        Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);
+            if (this->debug) { 
+                for (int t = 0 ; t < LOOP_LENGTH ; t++) {
+                    if (frames[t].size()>0) {
+                        if (this->debug) Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());
+                        for (int i = 0 ; i < frames[t].size() ; i++) {
+                            if (this->debug) Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);
+                        }
                     }
                 }
+                Serial.println("Done convert_from_bitmap");
             }
-            Serial.println("done convert_from_bitmap");
-            this->quantization_value = previous_quant;
+
+            this->quantization_value = previous_quant;  // restore original quantization setting
         }
 
         /* save+load stuff to filesystem - linkedlist-of-message format */
