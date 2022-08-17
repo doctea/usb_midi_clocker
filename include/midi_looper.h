@@ -283,6 +283,7 @@ class MIDITrack {
                 frames[i].clear();
                 //clear_tick(i);
             }
+            this->wipe_piano_roll_bitmap();
         }
 
         // wipe events at specific tick; only wipe once per tick, so that erase head only wipes previous take and not any new events we've received 
@@ -417,12 +418,14 @@ class MIDITrack {
         // wipe all of the bitmap, ready for redrawing etc
         // TODO: speed this up (memset?)
         void wipe_piano_roll_bitmap() {
-            for (int p = 0 ; p < 127 ; p++) {
+            memset(this->piano_roll_bitmap, 0, LOOP_LENGTH*127);
+            memset(piano_roll_held, 0, 127);
+            /*for (int p = 0 ; p < 127 ; p++) {
                 for (int x = 0  ; x < LOOP_LENGTH ; x++) {
                     piano_roll_bitmap[x][p] = 0;
                 }
                 piano_roll_held[p] = 0;
-            }
+            }*/
         }
 
         // render the frames (array of linked list of messages) to a 'bitmap' 2d array of time * pitch
@@ -531,9 +534,10 @@ class MIDITrack {
             bool held_state[127];   // for tracking what notes are held
             int note_on_count = 0, note_off_count = 0;
 
-            for (int i = 0 ; i < 127; i++) {
+            memset(held_state, false, 127);
+            /*for (int i = 0 ; i < 127; i++) {
                 held_state[i] = false;
-            }
+            }*/
 
             // todo: fix notes that wrap around from end of loop?
             //          maybe just set initial held_state to be the last frame..?
@@ -568,9 +572,9 @@ class MIDITrack {
             if (this->debug) { 
                 for (int t = 0 ; t < LOOP_LENGTH ; t++) {
                     if (frames[t].size()>0) {
-                        if (this->debug) Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());
+                        Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());
                         for (int i = 0 ; i < frames[t].size() ; i++) {
-                            if (this->debug) Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);
+                            Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);
                         }
                     }
                 }
@@ -730,7 +734,7 @@ class MIDITrack {
 
             this->draw_piano_roll_bitmap_from_save();
 
-            clear_hanging();
+            //clear_hanging();
 
             return true;
         }       

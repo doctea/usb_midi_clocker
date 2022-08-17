@@ -5,7 +5,13 @@
 
 This can be used as the clock generator and a USB MIDI hub to your Eurorack system, and more.  It allows making use of USB-MIDI devices (eg Akai APCMini and MPK49, original Arturia Beatstep and Keystep, Modal CraftSynth 2.0), syncing USB and din MIDI devices as well as Eurorack CV clock and triggers on multiple outputs with selectable divisions and sequencer controlled by APCMini interface.
 
+Fundamentally I guess the aim is to try and tie together and make useful in a Eurorack context multiple cheap MIDI devices by clocking MIDI and eurorack from the same source.
+
 Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to SD with functions such as unlimited projects, per-project sequences that store and recall clock divisions and sequencer patterns, a MIDI looper, etc.  Option to auto-advance through these sequences/loops for rudimentary song chaining.
+
+# Use and contributing
+
+Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message if you're thinking of giving it a try.
 
 ## Features
 
@@ -56,6 +62,10 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
   - transpose loop (chromatic)
   - 8 slots per project
   - auto-advance loops option
+  - control via the M-Vave footswitch buttons, including momentary hold for overwriting + recording
+  - recorded notes are shown on display in piano roll style
+  - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
+  - momentary overwrite mode that cuts notes
 
 ## Requirements
 
@@ -76,6 +86,8 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 
 - BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
  - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
+- MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is created
+- Get crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers?
 
 ## Known issues (may be solved)
 
@@ -89,10 +101,12 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
   - workaround for the time being is to use hardware serial MIDI when notes+clock are needed
   - hmm, may have worked around this by sending looper notes before sending clocks, in a do_pre_clock() function...?
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
-
+- Beatstep sysex commands don't work, probably for the same reason?
+- MIDI looper uses a LOT (all?!) of RAM (~48k for 1 phrase -- 384*127)
 
 ### TODO/Future 
 
+- Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
 - ~~Enable switching between multiple projects~~ done
@@ -102,15 +116,17 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
   - eg Euclidian sequencer
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
 - Get it working in uClock/interrupts mode without crashes
-- ~~Sync from external input (MIDI)~~ done
-  - Sync from external input (CV)
+- ~~Sync from external clock input (MIDI)~~ done
+  - Sync from external clock input (CV)
 - ~~More outputs~~ - done, now works with 4 clock outs and 4 separate sequencer track outs
+  - add 2 more for use as resets
 - ~~MIDI DIN or TRS input + output~~ now using Deftaudio 8x8 interface board so get 8 MIDI DIN-ins and 8 MIDI DIN-outs!
 - Better sequencer
   - better how?
   - configurable chaining of sequences ie 'song mode'?
+  - sequencer mutations / fills
 - ~~Configurable routing of MIDI data and notes from device X to device Y?~~ Basically done but UI could probably do with improvement
-- Sequencer that records and playback MIDI notes or CV
+- Sequencer/looper that records and playback MIDI notes or CV
   - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
   - improve by writing & saving real MIDI files?
   - ~~Genericise MIDI looper functionality, so can eg record and loop drums ~~
@@ -121,19 +137,25 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
   - added auto-advance pattern mode, but isn't working reliably -- might be something weird with the USB MIDI problems discovered mentioned in Known issues?
   - ie, change pattern, change speed..?
 - Better way to define custom behaviour in order to add new USB MIDI devices
+  - Partially done, should write up instructions, can be improved further
 - Configurable per-device MIDI clock divisions/multiplier
   - ~~Done for Subclocker and saves with Project settings~~ -- maybe it should save with pattern instead though - could then ?
+  - tricks like 'half-time beatstep for last bar of phrase'
 - ~~Save and recall MIDI device+channel routings~~
-  - Improve saving and recalling of MIDI device+channel routing, rather than having it hardcoded
+  - Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded
 - Full configuration of MIDI device+channel routing
 - Allow input/loops to be redirected to multiple MIDI outputs.
-- Output MIDI notes from the sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
-- CV to MIDI for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
-- Record and playback CCs
+  - MIDI input/output matrix?
+- Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
+- CC modulation
+  - CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
+    - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
+  - Record and playback CCs as well as MIDI
 - Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets
-- Better looper overwriting logic to handle playing notes..
-- Looper display of what's recorded
 - Subclocker clock multipliers as well as division (need to calculate time between ticks and send clock on steps in between...)
+- Improve looper quantizer
+- Optimise memory usage of looper with more efficient data structure
+- MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
 
 ## Explanation/demo
 
