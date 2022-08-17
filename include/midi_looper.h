@@ -159,8 +159,8 @@ class MIDITrack {
         }
         // for actually storing values into buffer (also used when reloading from save)
         void store_event(unsigned long time, midi_message midi_event) {
-            //Serial.printf("Recording event at\t%i", time);
             time = quantize_time(time) % LOOP_LENGTH;
+            Serial.printf("Recording event at\t%i", time);
             frames[time].add(midi_event);
             if (midi_event.message_type==midi::NoteOn) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
@@ -175,6 +175,7 @@ class MIDITrack {
                     .started_at     = -1
                 };
             }
+            Serial.printf("sizeof frames at %i is now %i\n", time, frames[time].size());
         }
 
         // get total event count across entire loop
@@ -426,19 +427,22 @@ class MIDITrack {
 
         // render the frames (array of linked list of messages) to a 'bitmap' 2d array of time * pitch
         void draw_piano_roll_bitmap_from_save() {
+            Serial.println("draw_piano_roll_bitmap_from_save"); Serial.flush();
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
 
+            Serial.println("wiping bitmap.."); Serial.flush();
             this->wipe_piano_roll_bitmap();
 
+            Serial.println("building bitmap.."); Serial.flush();
             for (int x = 0 ; x < LOOP_LENGTH ; x++) {   // for each column
                 for (int m = 0 ; m < frames[x].size() ; m++) {
                     midi_message message = frames[x].get(m);
                     if (message.message_type==midi::NoteOn) {
-                        if (piano_roll_highest < message.pitch)
+                        /*if (piano_roll_highest < message.pitch)
                             piano_roll_lowest = message.pitch;
                         if (piano_roll_lowest > message.pitch)
-                            piano_roll_lowest = message.pitch;
+                            piano_roll_lowest = message.pitch;*/
                         piano_roll_held[message.pitch] = message.velocity;
                     } else if (message.message_type==midi::NoteOff) {
                         piano_roll_held[message.pitch] = 0;
@@ -448,6 +452,7 @@ class MIDITrack {
                     piano_roll_bitmap[x][p] = piano_roll_held[p];
                 }
             }
+            Serial.println("bitmap built.."); Serial.flush();
 
             /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {
@@ -517,6 +522,8 @@ class MIDITrack {
 
         // convert bitmap to the linkedlist-of-messages save format
         void convert_from_bitmap() {
+            int previous_quant = this->quantization_value;
+            this->quantization_value = 0;
             Serial.println("Converting from bitmap...");
             bool held_state[127];
             int note_on_count = 0, note_off_count = 0;
@@ -526,22 +533,39 @@ class MIDITrack {
             }
 
             for (int t = 0 ; t < LOOP_LENGTH ; t++) {
+                Serial.printf("doing time %i:\n", t);
                 frames[t].clear();
                 for (int p = 0 ; p < 127 ; p++) {
-                    //if (piano_roll_bitmap[t][p]>0           && !held_state[p]) { // note on
-                    if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
+                    if (piano_roll_bitmap[t][p]>0           && !held_state[p]) { // note on
+                    //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
+                        Serial.printf("Found note on with\tpitch %i\t", p);
                         held_state[p] = true;
                         note_on_count++;
                         this->store_event(t, midi::NoteOn, p, piano_roll_bitmap[t][p]);
-                    //} else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {
-                    } else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
+                    } else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {
+                        Serial.printf("\tFound note off with\tpitch %i\t\n", p);
+                    //} else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
                         held_state[p] = false;
                         note_off_count++;
                         this->store_event(t, midi::NoteOff, p, 0);
-                    } 
+                    } else {
+                        //Serial.printf("\tno change - held_state is %i\n", held_state[p]);
+                        Serial.print(".");
+                    }
                 }
             }
             Serial.printf("Converted: found %i note ons, %i note offs\n", note_on_count, note_off_count);
+
+            for (int t = 0 ; t < LOOP_LENGTH ; t++) {
+                if (frames[t].size()>0) {
+                    Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());
+                    for (int i = 0 ; i < frames[t].size() ; i++) {
+                        Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);
+                    }
+                }
+            }
+            Serial.println("done convert_from_bitmap");
+            this->quantization_value = previous_quant;
         }
 
         /* save+load stuff to filesystem - linkedlist-of-message format */
