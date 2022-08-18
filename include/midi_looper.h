@@ -13,7 +13,12 @@
 
 //#define DEBUG_LOOPER
 
-#define LOOP_LENGTH (PPQN*4*4)
+#define LOOP_LENGTH_TICKS (PPQN*4*4)
+#define LOOP_LENGTH_STEP_SIZE 1
+#define LOOP_LENGTH_STEPS (LOOP_LENGTH_TICKS/LOOP_LENGTH_STEP_SIZE)
+
+#define ticks_to_sequence_step(X)  ((X % LOOP_LENGTH_TICKS) / LOOP_LENGTH_STEP_SIZE)
+
 #define MAX_INSTRUCTIONS            100
 #define MAX_INSTRUCTION_ARGUMENTS   4
 
@@ -38,7 +43,7 @@ struct tracked_note {
 };
 
 class MIDITrack {
-    LinkedList<midi_message> frames[LOOP_LENGTH];
+    LinkedList<midi_message> frames[LOOP_LENGTH_STEPS];
 
     tracked_note recorded_hanging_notes[127];
     int loaded_recording_number = -1;
@@ -82,7 +87,7 @@ class MIDITrack {
         }
         //Serial.printf("for time\t%i, got step\t%i\n", time, step);
 
-        int quantized_time = step % LOOP_LENGTH;    // wrap around
+        int quantized_time = step % LOOP_LENGTH_TICKS;    // wrap around
         //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
         if (debug)
             Serial.printf("Quantize level\t%i: quantized time\t%i to\t%i\n", quantization, time, quantized_time);
@@ -91,7 +96,7 @@ class MIDITrack {
     int quantize_time(int time, int quantization = -1) {
         if (quantization==-1)
             quantization = quantization_value;
-        int quantized_time = find_nearest_quantized_time(time, quantization) % LOOP_LENGTH;
+        int quantized_time = find_nearest_quantized_time(time, quantization) % LOOP_LENGTH_TICKS;
         return quantized_time;
     }
 
@@ -144,7 +149,7 @@ class MIDITrack {
 
         // for actually storing values into buffer (also used when reloading from save)
         void store_event(midi_message midi_event) {
-            unsigned long time = ticks % (LOOP_LENGTH);
+            unsigned long time = ticks % (LOOP_LENGTH_TICKS);
             //time = quantize_time(time);
             store_event(time, midi_event);
         }
@@ -159,8 +164,10 @@ class MIDITrack {
         }
         // for actually storing values into buffer (also used when reloading from save)
         void store_event(unsigned long time, midi_message midi_event) {
-            time = quantize_time(time) % LOOP_LENGTH;
-            Serial.printf("Recording event at\t%i", time);
+            Serial.printf("store_event passed time %i...\n", time);
+            time = quantize_time(time);
+            time = ticks_to_sequence_step(time);
+            Serial.printf("Recording event at\t%i\n", time);
             frames[time].add(midi_event);
             if (midi_event.message_type==midi::NoteOn) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
@@ -181,7 +188,7 @@ class MIDITrack {
         // get total event count across entire loop
         int count_events() {
             int count = 0;
-            for (int i = 0 ; i < LOOP_LENGTH ; i++) {
+            for (int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
                 count += frames[i].size();
             }
             return count;
@@ -200,7 +207,7 @@ class MIDITrack {
 
         // get the list of events for a specific loop point
         LinkedList<midi_message> get_frames(unsigned long time) {
-            return this->frames[time%LOOP_LENGTH];
+            return this->frames[ticks_to_sequence_step(time)]; //time%LOOP_LENGTH];
         }
 
         // actually play events for a specified loop point
@@ -259,14 +266,15 @@ class MIDITrack {
 
         // actually play events for specific loop point
         void play_events(unsigned long time) {
-            time = time % LOOP_LENGTH;
+            //time = time % LOOP_LENGTH;
+            time = ticks_to_sequence_step(time);
             for (int i = 0 ; i < 127 ; i++) {
                 if (track_playing[i].playing && piano_roll_bitmap[time][i]==0) {
-                    Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
+                    if (this->debug) Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
                     this->sendNoteOff(i, 0);
                     track_playing_off(ticks, i, 0);
                 } else if (!track_playing[i].playing && piano_roll_bitmap[time][i]>0) {
-                    Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
+                    if (this->debug) Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
                     this->sendNoteOn(i, piano_roll_bitmap[time][i]);
                     track_playing_on(ticks, i, piano_roll_bitmap[time][i]);
                 }
@@ -278,7 +286,7 @@ class MIDITrack {
         void clear_all() {
             stop_all_notes();
             Serial.println("clearing recording");
-            for (int i = 0 ; i < LOOP_LENGTH ; i++) {
+            for (int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
                 // todo: actually free the recorded memory..?
                 frames[i].clear();
                 //clear_tick(i);
@@ -288,7 +296,7 @@ class MIDITrack {
 
         // wipe events at specific tick; only wipe once per tick, so that erase head only wipes previous take and not any new events we've received 
         void clear_tick(uint32_t tick) {
-            tick = tick % LOOP_LENGTH;
+            tick = ticks_to_sequence_step(tick); //tick % LOOP_LENGTH;
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
                 for (int i = 0 ; i < 127 ; i++) {
@@ -308,12 +316,12 @@ class MIDITrack {
         // for sending passthrough or recorded noteOns to actual output
         void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
             if (output!=nullptr) {
-                Serial.printf("\tsending to output %s\tpitch=%i,\tvel=%i,\tchan=%i\n", output->label);;
-                output->debug = true;
+                if (this->debug) Serial.printf("\tsending to output %s\tpitch=%i,\tvel=%i,\tchan=%i\n", output->label);;
+                //output->debug = true;
                 output->sendNoteOn(pitch, velocity, channel);
-                output->debug = false;
+                //output->debug = false;
             } else {
-                Serial.println("\tno output?");
+                if (this->debug) Serial.println("\tno output?");
             }
         }
         // for sending passthrough or recorded noteOffs to actual output
@@ -329,7 +337,7 @@ class MIDITrack {
             if (this->isOverwriting()) 
                 this->clear_tick(ticks);
             if (this->isRecording())
-                this->store_event(ticks%LOOP_LENGTH, message_type, note, velocity);
+                this->store_event(ticks, message_type, note, velocity);
         }
 
         // called by external code to inform looper of a tick happening; looper decides whether to wipe and/or play events at current position
@@ -392,7 +400,7 @@ class MIDITrack {
                 if (recorded_hanging_notes[i].playing) {
                     if (output!=nullptr)
                         this->sendNoteOff(i, 0);
-                    store_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
+                    store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, 0);
                     recorded_hanging_notes[i].playing = false;
                 }
             }
@@ -401,7 +409,7 @@ class MIDITrack {
 
 
     /* bitmap processing stuff */
-        byte piano_roll_bitmap[LOOP_LENGTH][127];    // velocity of note at this moment
+        byte piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
         byte piano_roll_held[127];
         int piano_roll_highest = 0;
         int piano_roll_lowest = 127;
@@ -410,7 +418,7 @@ class MIDITrack {
         void update_bitmap(uint32_t ticks) {
             for (int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
-                    piano_roll_bitmap[ticks%LOOP_LENGTH][i] = recorded_hanging_notes[i].velocity;
+                    piano_roll_bitmap[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
                 }
             }
         }
@@ -418,7 +426,7 @@ class MIDITrack {
         // wipe all of the bitmap, ready for redrawing etc
         // TODO: speed this up (memset?)
         void wipe_piano_roll_bitmap() {
-            memset(this->piano_roll_bitmap, 0, LOOP_LENGTH*127);
+            memset(this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(piano_roll_held, 0, 127);
             /*for (int p = 0 ; p < 127 ; p++) {
                 for (int x = 0  ; x < LOOP_LENGTH ; x++) {
@@ -438,7 +446,7 @@ class MIDITrack {
             this->wipe_piano_roll_bitmap();
 
             Serial.println("building bitmap.."); Serial.flush();
-            for (int x = 0 ; x < LOOP_LENGTH ; x++) {   // for each column
+            for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
                 for (int m = 0 ; m < frames[x].size() ; m++) {
                     midi_message message = frames[x].get(m);
                     if (message.message_type==midi::NoteOn) {
@@ -541,7 +549,7 @@ class MIDITrack {
 
             // todo: fix notes that wrap around from end of loop?
             //          maybe just set initial held_state to be the last frame..?
-            for (int t = 0 ; t < LOOP_LENGTH ; t++) {
+            for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
                 Serial.printf("doing time %i:\n", t);
                 frames[t].clear();
                 for (int p = 0 ; p < 127 ; p++) {
@@ -550,13 +558,13 @@ class MIDITrack {
                         if (this->debug) Serial.printf("Found note on with\tpitch %i\t", p);
                         held_state[p] = true;
                         note_on_count++;
-                        this->store_event(t, midi::NoteOn, p, piano_roll_bitmap[t][p]);
+                        this->store_event(t * LOOP_LENGTH_STEP_SIZE, midi::NoteOn, p, piano_roll_bitmap[t][p]);
                     } else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {
                         if (this->debug) Serial.printf("\tFound note off with\tpitch %i\t\n", p);
                     //} else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
                         held_state[p] = false;
                         note_off_count++;
-                        this->store_event(t, midi::NoteOff, p, 0);
+                        this->store_event(t * LOOP_LENGTH_STEP_SIZE, midi::NoteOff, p, 0);
                     } else {
                         //Serial.printf("\tno change - held_state is %i\n", held_state[p]);
                         if (this->debug) Serial.print(".");
@@ -570,7 +578,7 @@ class MIDITrack {
             }
 
             if (this->debug) { 
-                for (int t = 0 ; t < LOOP_LENGTH ; t++) {
+                for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
                     if (frames[t].size()>0) {
                         Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());
                         for (int i = 0 ; i < frames[t].size() ; i++) {
@@ -604,12 +612,13 @@ class MIDITrack {
                 return false;
             }
             f.println("; begin loop");
+            f.printf("step_size=%i\n", LOOP_LENGTH_STEP_SIZE);
             //myFile.printf("id=%i\n",input->id);
             f.println("starts_at=0");
             f.printf("transpose=%i\n", transpose);
             bool last_written = false;
             int lines_written = 0;
-            for (int x = 0 ; x < LOOP_LENGTH ; x++) {
+            for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
                 int size = frames[x].size();
                 /*if (!last_written) {
                     myFile.printf("starts_at=%i\n",x);
@@ -618,8 +627,8 @@ class MIDITrack {
                 if (size==0) {      // only write lines that have data
                     last_written = false;
                     continue;
-                } else if (!last_written) {
-                    f.printf("starts_at=%i\n",x);
+                } else if (!last_written || LOOP_LENGTH_STEP_SIZE>1) {
+                    f.printf("starts_at=%i\n",(x*LOOP_LENGTH_STEP_SIZE));
                 }
                 f.printf("loop_data="); //%2x:", frames[x].size());
                 
@@ -668,17 +677,23 @@ class MIDITrack {
 
             clear_all();
 
+            int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
+
             int total_frames = 0, total_messages = 0;
             String line;
             int time = 0;
             while (line = f.readStringUntil('\n')) {
+                Serial.printf("--reading line %s\n", line.c_str()); Serial.flush();
                 //load_sequence_parse_line(line, output);
                 if (line.startsWith("starts_at=")) {
-                    time =      line.remove(0,String("starts_at=").length()).toInt();
-                } if (line.startsWith("transpose=")) {
+                    time =      line.remove(0,String("starts_at=").length()).toInt() * loop_length_size;
+                } else if (line.startsWith("step_size=")) {
+                    loop_length_size = line.remove(0,String("step_size=").length()).toInt();
+                    //Serial.printf("read loop_length_size %i!\n", loop_length_size);
+                } else if (line.startsWith("transpose=")) {
                     transpose = line.remove(0,String("transpose=").length()).toInt();
                 } else if (line.startsWith("loop_data=")) {
-                    Serial.printf("reading line %s\n", line.c_str());
+                    //Serial.printf("processing a loop_data line..\n");
                     total_frames++;
                     //if (debug) Serial.printf("Read id %i\n", output->id);
                     line = line.remove(0,String("loop_data=").length());
@@ -692,7 +707,7 @@ class MIDITrack {
                     tok = strtok(c_line,",;:");
                     while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
                         #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf("at time %i: for token '%s', sizeof is already %i, ", time, tok, frames[time].size());
+                            Serial.printf("at time %i: for token '%s', sizeof is already %i, ", time, tok, frames[ticks_to_sequence_step(time)].size());
                         #endif
                         int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
                         sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
@@ -701,8 +716,9 @@ class MIDITrack {
                         m.pitch = tmp_pitch;
                         m.velocity = tmp_velocity;
                         #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf("read message bytes: %02x, %02x, %02x, %02x\n", m.message_type, m.channel, m.pitch, m.velocity);
+                            Serial.printf("read message bytes: %02x, %02x, %02x, %02x\n", m.message_type, m.channel, m.pitch, m.velocity); Serial.flush();
                         #endif
+                        Serial.printf("storing event at %i\n", time); Serial.flush();
                         store_event(time, m);
                         messages_count++;
                         tok = strtok(NULL,",;:");

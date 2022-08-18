@@ -8,6 +8,8 @@
 #include "mymenu.h"
 #include "menu.h"
 
+#include "midi_looper.h"
+
 class LooperDisplay : public MenuItem {
     public:
     MIDITrack *loop_track;
@@ -66,13 +68,14 @@ class LooperDisplay : public MenuItem {
             }
         }*/
 
-        static float ticks_per_pixel = (float)LOOP_LENGTH / (float)tft->width();
+        static float ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
         int base_row = pos.y;
 
         // we're going to use direct access to the underlying Adafruit library here
         DisplayTranslator_STeensy *tft2 = (DisplayTranslator_STeensy*)tft;
         ST7789_t3 *actual = tft2->tft;
 
+        // draw a vertical line showing the cursor position, if we're playing, recording or overwriting
         if (this->loop_track->isPlaying() || this->loop_track->isOverwriting() || this->loop_track->isRecording()) {
             uint16_t indicatorcolour = 0xAAAA;
             if (this->loop_track->isOverwriting() && this->loop_track->isRecording()) 
@@ -82,7 +85,7 @@ class LooperDisplay : public MenuItem {
             else if (this->loop_track->isOverwriting())
                 indicatorcolour = ORANGE;
             //actual->drawFastVLine(screen_x, base_row, 127, indicatorcolour);
-            actual->drawLine(ticks%LOOP_LENGTH / ticks_per_pixel, base_row, ticks%LOOP_LENGTH / ticks_per_pixel, base_row+127, indicatorcolour);
+            actual->drawLine(ticks%LOOP_LENGTH_TICKS / ticks_per_pixel, base_row, ticks%LOOP_LENGTH_TICKS / ticks_per_pixel, base_row+127, indicatorcolour);
         }
 
         // TODO: centering/resizing of piano roll based on what notes are in it
@@ -93,18 +96,16 @@ class LooperDisplay : public MenuItem {
                 // for each pixel, process ticks_per_pixel ticks
                 //bool held = false;
                 //Serial.printf("\tfor pitch %i:\n", pitch);
-                uint16_t tick_for_screen_X = (float)screen_x * ticks_per_pixel; // the tick corresponding to this screen position
+                uint16_t tick_for_screen_X = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
                 uint16_t colour = YELLOW + pitch*16;
 
                 uint16_t draw_at_y = base_row + (127-pitch);
 
-                /*if (ticks%LOOP_LENGTH==tick_for_pixel || ((int)(ticks+ticks_per_pixel))%LOOP_LENGTH==tick_for_pixel)
-                    colour = YELLOW;*/
-                // draw a vertical line showing the cursor position, if we're playing, recording or overwriting
-
                 if (loop_track->piano_roll_bitmap[tick_for_screen_X][pitch] > 0) {
                     int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
                     //Serial.printf("\tat %i with velocity %i\n", pitch, tick_for_screen_X, current_velocity);
+                    /// hmmm, this (which should be optimised) actually seems to fuck up the underlying data somehow?
+                    
                     /*for (int temp_tick = tick_for_screen_X ; temp_tick < LOOP_LENGTH ; temp_tick++) {
                         if (loop_track->piano_roll_bitmap[temp_tick][pitch] != current_velocity) {
                             uint16_t length_in_ticks = temp_tick - tick_for_screen_X;
@@ -123,6 +124,10 @@ class LooperDisplay : public MenuItem {
                             break;
                         }
                     }*/
+
+                    if (ticks%LOOP_LENGTH_TICKS==tick_for_screen_X || ((int)(ticks+ticks_per_pixel))%LOOP_LENGTH_TICKS==tick_for_screen_X)
+                        colour = YELLOW;
+
                     tft->drawLine(
                         screen_x, 
                         draw_at_y, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
