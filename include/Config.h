@@ -24,11 +24,11 @@
 
 #ifdef ENABLE_SCREEN
     #define ENCODER_STEP_DIVISOR    4
-    #define PIN_BUTTON_A    4   // encoder button
-    #define PIN_BUTTON_B    5   // back button
-    #define PIN_BUTTON_C    26  // right-hand / save button
-    #define ENCODER_KNOB_L  2
-    #define ENCODER_KNOB_R  3
+    #define PIN_BUTTON_A    4   // pin to receive encoder button
+    #define PIN_BUTTON_B    5   // pin to receive back button
+    #define PIN_BUTTON_C    26  // pin to receive right-hand / save button
+    #define ENCODER_KNOB_L  2   // pin to receive left-encoder pulses
+    #define ENCODER_KNOB_R  3   // pin to receive right-encoder pulses
 #endif
 
 #define ENABLE_USB
@@ -104,10 +104,18 @@
 #ifdef ENABLE_SEQUENCER
     #define NUM_SEQUENCES 4
     #define NUM_STEPS 8
-    #ifdef SEPARATE_SEQUENCER_AND_CLOCKS
+    #ifdef SEPARATE_SEQUENCER_AND_CLOCKS   
+        // new 'reversed' pin ordering
+        #define PIN_SEQUENCE_1 39
+        #define PIN_SEQUENCE_2 38
+        #define PIN_SEQUENCE_3 37
+        #define PIN_SEQUENCE_4 36
+        
+        /*
+        // original ordering
         #define PIN_SEQUENCE_1 36
         #define PIN_SEQUENCE_2 37
         #define PIN_SEQUENCE_3 38
-        #define PIN_SEQUENCE_4 39
+        #define PIN_SEQUENCE_4 39*/
     #endif
 #endif
