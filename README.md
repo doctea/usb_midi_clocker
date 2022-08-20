@@ -41,7 +41,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Or run from internal clock, with BPM controlled by APCMini slider
   - APCMini shortcuts to 'send restarts' to synced devices to get everything in sync
 - CV outputs for clock divisions and sequencer tracks
-  - on Teensy's digital pins via level shifter *TODO:* schematic/instructions 
+  - on Teensy's digital pins, via level shifter (wiring diagram/schematic below)
   - 4 tracks of an 8-beat sequencer, configurable on-the-fly via APCMini
     - trigger once per beat, twice per beat, 4 times per beat, 0 times per beat
   - 4 clock division outputs, configurable on-the-fly via APCMini
@@ -78,16 +78,24 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Rotary encoder and some buttons for controlling the screen and options
 - Akai APCMini for controlling the sequencer and clocks
 - SD card in the onboard Teensy SD card reader
-- DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers
-  - I'm using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377
+- DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' below
+  - I was originally using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377 originally -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
+  - But I am now using one of these instead: https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e?_pos=1&_sid=b1dce7a8e&_ss=r (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
+
+## Suggested wiring 
+
+media/suggested\ circuit\ connections.png
+- Careful with this, consider it untested for now -- this is how I have mine connected up.  If you follow this then double-check that it actually makes sense when looking at the datasheets+pin diagrams for the actual Teensy and level-shifter boards before you power it on and risk frying pins on your Teensy!  I accept no responsibility if this breaks anything!
+
+![example wiring](https://github.com/doctea/usb_midi_clocker/blob/main/media/suggested%20circuit%connections.png "Suggested wiring diagram")
 
 ### Known issues (current)
 
 - BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
  - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
-- MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is created
-- Get crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers?
+- MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
+- Get crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers..?  might be due to dodgy cable or usb hubs, or akai apcmini?  runs for hours perfectly OK then will suddenly lock up inside the USBHost_t36 queue_Data_Transfer 
 
 ## Known issues (may be solved)
 
@@ -109,6 +117,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
+- More efficient Akai APCMini screen output (don't need to send as many messages as we do, can just update when it needs to)
 - ~~Enable switching between multiple projects~~ done
 - ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
@@ -125,7 +134,6 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - better how?
   - configurable chaining of sequences ie 'song mode'?
   - sequencer mutations / fills
-- ~~Configurable routing of MIDI data and notes from device X to device Y?~~ Basically done but UI could probably do with improvement
 - Sequencer/looper that records and playback MIDI notes or CV
   - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
   - improve by writing & saving real MIDI files?
@@ -137,7 +145,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - added auto-advance pattern mode, but isn't working reliably -- might be something weird with the USB MIDI problems discovered mentioned in Known issues?
   - ie, change pattern, change speed..?
 - Better way to define custom behaviour in order to add new USB MIDI devices
-  - Partially done, should write up instructions, can be improved further
+  - Partially done, can be improved further
+  - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
   - ~~Done for Subclocker and saves with Project settings~~ -- maybe it should save with pattern instead though - could then ?
   - tricks like 'half-time beatstep for last bar of phrase'
@@ -156,6 +165,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Improve looper quantizer
 - Optimise memory usage of looper with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
+- Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices but that don't expose the correct USB device enumerations
+  - eg for the OpenTheremin v4 with USB MIDI modification
+  - and for Arduino Unos without needing to use USB Midi Klik
 
 ## Explanation/demo
 
