@@ -114,7 +114,7 @@ class MidiOutputSelectorControl : public SelectorControl {
         //Serial.printf("about to build msg string...\n");
         sprintf(msg, "Set %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
         //Serial.printf("about to set_last_message!");
-        msg[20] = '\0'; // limit the string so we don't overflow set_last_message
+        msg[tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
         menu_set_last_message(msg,GREEN);
         return false;
     }

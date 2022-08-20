@@ -39,7 +39,7 @@ struct midi_message {
 struct tracked_note {
     bool playing = false;
     byte velocity = 0;
-    uint32_t started_at = -1;
+    int32_t started_at = -1;
 };
 
 class MIDITrack {
@@ -173,7 +173,7 @@ class MIDITrack {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
                     .playing = true, 
                     .velocity = midi_event.velocity, 
-                    .started_at = time 
+                    .started_at = (int32_t)time 
                 };
             } else if (midi_event.message_type==midi::NoteOff) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) {

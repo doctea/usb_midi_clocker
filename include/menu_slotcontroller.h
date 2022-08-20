@@ -26,12 +26,10 @@ class SlotController : public MenuItem {
         virtual bool load_slot_number(int);
         virtual bool save_to_slot_number(int);
 
-        bool show_header = true;
-
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);
             //colours(selected);
-            if (show_header) header(label, pos, selected, opened);
+            header(label, pos, selected, opened);
             int x = pos.x, y = tft->getCursorY(); //.y;
 
             const int max_slots = this->get_max_slots(); //this->target->*get_max_callback();
@@ -110,12 +108,12 @@ class SlotController : public MenuItem {
             bool success = this->load_slot_number(ui_selected_number);
             if (success) {
                 //loaded_sequence_number = ui_selected_number;
-                char msg[20] = "";
+                char msg[tft->get_c_max()] = "";
                 sprintf(msg, "Loaded %i", this->get_loaded_slot()); //this->target->*getter_callback());
                 menu->set_message_colour(ST77XX_GREEN);
                 menu->set_last_message(msg);
             } else {
-                char msg[20] = "";
+                char msg[tft->get_c_max()] = "";
                 sprintf(msg, "Error loading %i", ui_selected_number);
                 menu->set_message_colour(ST77XX_RED);
                 menu->set_last_message(msg);
@@ -132,12 +130,12 @@ class SlotController : public MenuItem {
             bool success = this->save_to_slot_number(ui_selected_number); //this->target->*right_button_callback(ui_selected_number);
             if (success) {
                 //loaded_sequence_number = ui_selected_number;
-                char msg[20] = "";
+                char msg[tft->get_c_max()] = "";
                 sprintf(msg, "Saved %i", this->get_loaded_slot()); //->target->*getter_callback()); //project.loaded_sequence_number);
                 menu->set_message_colour(ST77XX_GREEN);
                 menu->set_last_message(msg);
             } else {
-                char msg[20] = "";
+                char msg[tft->get_c_max()] = "";
                 sprintf(msg, "Error saving %i", ui_selected_number);
                 menu->set_message_colour(ST77XX_RED);
                 menu->set_last_message(msg);

@@ -36,6 +36,7 @@
 
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
+#define ENABLE_LOOPER_PIANOROLL
 
 // enable MIDI looping for drumkit
 //#define ENABLE_DRUM_LOOPER

@@ -101,11 +101,11 @@ class LooperDisplay : public MenuItem {
 
                 uint16_t draw_at_y = base_row + (127-pitch);
 
-                if (loop_track->piano_roll_bitmap[tick_for_screen_X][pitch] > 0) {
-                    int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
+                int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
+                if (current_velocity > 0) {                  
                     //Serial.printf("\tat %i with velocity %i\n", pitch, tick_for_screen_X, current_velocity);
+
                     /// hmmm, this (which should be optimised) actually seems to fuck up the underlying data somehow?
-                    
                     /*for (int temp_tick = tick_for_screen_X ; temp_tick < LOOP_LENGTH ; temp_tick++) {
                         if (loop_track->piano_roll_bitmap[temp_tick][pitch] != current_velocity) {
                             uint16_t length_in_ticks = temp_tick - tick_for_screen_X;

@@ -8,6 +8,9 @@
 #include "mymenu.h"
 #include "menu.h"
 
+#ifdef ENABLE_LOOPER_PIANOROLL
+    #include "menu_looperdisplay.h"
+#endif
 #include "menu_slotcontroller.h"
 
 class LooperRecStatus : public MenuItem {   
@@ -123,17 +126,28 @@ class LooperTransposeControl : public NumberControl {
         }
 };
 
+
+// this is the 'parent' widget, it sets up and draws the LooperRecStatus and LooperDisplay widgets since they don't need to be interacted with
 class LooperStatus : public SlotController {
     int ui_selected_loop_number = 0;
 
     LooperRecStatus *lrs = nullptr; //LooperRecStatus();
+    #ifdef ENABLE_LOOPER_PIANOROLL
+        LooperDisplay *lds = nullptr;
+    #endif
     public: 
         LooperStatus(const char *label, MIDITrack *loop_track) : SlotController(label) {
             this->lrs = new LooperRecStatus("Looper status", loop_track);
+            #ifdef ENABLE_LOOPER_PIANOROLL
+                this->lds = new LooperDisplay("Piano roll", loop_track);
+                this->lds->show_header = false;
+            #endif
+            this->show_header = false;
         }
 
         virtual void on_add() override {
             lrs->set_tft(this->tft);
+            lds->set_tft(this->tft);
         };
 
         virtual int get_max_slots() override {
@@ -159,9 +173,13 @@ class LooperStatus : public SlotController {
         };
 
         virtual int display(Coord pos, bool selected, bool opened) override {
-            pos.y = lrs->display(pos,selected,opened);
-            show_header = false;
-            return SlotController::display(pos, selected, opened);
+            pos.y = lrs->display(pos, selected, opened);                // draw the loop record status widget first (with header)
+            pos.y = SlotController::display(pos, selected, opened);     // draw the loop selection widget (without header)
+            #ifdef ENABLE_LOOPER_PIANOROLL
+                return lds->display(pos, selected, opened);             // if its enabled, draw the pianoroll (without header)
+            #else 
+                return pos.y;
+            #endif
         }
 };
 #endif
