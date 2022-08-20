@@ -1,0 +1,101 @@
+[1mdiff --git a/include/midi_looper.h b/include/midi_looper.h[m
+[1mindex 9b9f8c0..eff70e9 100644[m
+[1m--- a/include/midi_looper.h[m
+[1m+++ b/include/midi_looper.h[m
+[36m@@ -522,50 +522,62 @@[m [mclass MIDITrack {[m
+ [m
+         // convert bitmap to the linkedlist-of-messages save format[m
+         void convert_from_bitmap() {[m
+[31m-            int previous_quant = this->quantization_value;[m
+[32m+[m[32m            if (this->debug) Serial.println("Converting from bitmap...");[m
+[32m+[m
+[32m+[m[32m            // store current quantization setting so that we don't quantize during conversion, else shit gets all fucked up![m
+[32m+[m[32m            int previous_quant = this->quantization_value;[m[41m  [m
+             this->quantization_value = 0;[m
+[31m-            Serial.println("Converting from bitmap...");[m
+[31m-            bool held_state[127];[m
+[32m+[m
+[32m+[m[32m            bool held_state[127];   // for tracking what notes are held[m
+             int note_on_count = 0, note_off_count = 0;[m
+ [m
+             for (int i = 0 ; i < 127; i++) {[m
+                 held_state[i] = false;[m
+             }[m
+ [m
+[32m+[m[32m            // todo: fix notes that wrap around from end of loop?[m
+[32m+[m[32m            //          maybe just set initial held_state to be the last frame..?[m
+             for (int t = 0 ; t < LOOP_LENGTH ; t++) {[m
+                 Serial.printf("doing time %i:\n", t);[m
+                 frames[t].clear();[m
+                 for (int p = 0 ; p < 127 ; p++) {[m
+                     if (piano_roll_bitmap[t][p]>0           && !held_state[p]) { // note on[m
+                     //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on[m
+[31m-                        Serial.printf("Found note on with\tpitch %i\t", p);[m
+[32m+[m[32m                        if (this->debug) Serial.printf("Found note on with\tpitch %i\t", p);[m
+                         held_state[p] = true;[m
+                         note_on_count++;[m
+                         this->store_event(t, midi::NoteOn, p, piano_roll_bitmap[t][p]);[m
+                     } else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {[m
+[31m-                        Serial.printf("\tFound note off with\tpitch %i\t\n", p);[m
+[32m+[m[32m                        if (this->debug) Serial.printf("\tFound note off with\tpitch %i\t\n", p);[m
+                     //} else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {[m
+                         held_state[p] = false;[m
+                         note_off_count++;[m
+                         this->store_event(t, midi::NoteOff, p, 0);[m
+                     } else {[m
+                         //Serial.printf("\tno change - held_state is %i\n", held_state[p]);[m
+[31m-                        Serial.print(".");[m
+[32m+[m[32m                        if (this->debug) Serial.print(".");[m
+                     }[m
+                 }[m
+             }[m
+[31m-            Serial.printf("Converted: found %i note ons, %i note offs\n", note_on_count, note_off_count);[m
+[32m+[m[32m            if (this->debug) Serial.printf("Converted: found %i note ons, %i note offs\n", note_on_count, note_off_count);[m
+[32m+[m[32m            if (note_on_count>note_off_count) {[m
+[32m+[m[32m                Serial.printf("WARNING in MIDITrack#convert_from_bitmap: found more note ons than note offs!");[m
+[32m+[m[32m                // todo: fix note on/off mismatches[m
+[32m+[m[32m            }[m
+ [m
+[31m-            for (int t = 0 ; t < LOOP_LENGTH ; t++) {[m
+[31m-                if (frames[t].size()>0) {[m
+[31m-                    Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());[m
+[31m-                    for (int i = 0 ; i < frames[t].size() ; i++) {[m
+[31m-                        Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);[m
+[32m+[m[32m            if (this->debug) {[m[41m [m
+[32m+[m[32m                for (int t = 0 ; t < LOOP_LENGTH ; t++) {[m
+[32m+[m[32m                    if (frames[t].size()>0) {[m
+[32m+[m[32m                        if (this->debug) Serial.printf("frames[%i] now has %i events:\n", t, frames[t].size());[m
+[32m+[m[32m                        for (int i = 0 ; i < frames[t].size() ; i++) {[m
+[32m+[m[32m                            if (this->debug) Serial.printf("\tmessage type = %i, pitch = %i, velocity = %i\n", frames[t].get(i).message_type, frames[t].get(i).pitch, frames[t].get(i).velocity);[m
+[32m+[m[32m                        }[m
+                     }[m
+                 }[m
+[32m+[m[32m                Serial.println("Done convert_from_bitmap");[m
+             }[m
+[31m-            Serial.println("done convert_from_bitmap");[m
+[31m-            this->quantization_value = previous_quant;[m
+[32m+[m
+[32m+[m[32m            this->quantization_value = previous_quant;  // restore original quantization setting[m
+         }[m
+ [m
+         /* save+load stuff to filesystem - linkedlist-of-message format */[m
+[1mdiff --git a/platformio.ini b/platformio.ini[m
+[1mindex 17d034e..68e6578 100644[m
+[1m--- a/platformio.ini[m
+[1m+++ b/platformio.ini[m
+[36m@@ -18,6 +18,7 @@[m [mlib_deps = midi, usbhost_t36, SD @ 2.0.0, adafruit/Adafruit GFX Library, ST7735_[m
+ lib_extra_dirs = C:\Users\docte\Documents\Arduino\my_libraries[m
+                  lib[m
+ monitor_filters = time[m
+[32m+[m[32mmonitor_port = \\.\COM12[m
+ [m
+ [env:debug][m
+ platform = teensy[m
+[36m@@ -32,6 +33,7 @@[m [mlib_deps = midi, usbhost_t36, SD @ 2.0.0, adafruit/Adafruit GFX Library, ST7735_[m
+ lib_extra_dirs = C:\Users\docte\Documents\Arduino\my_libraries[m
+                  C:\Users\docte\Documents\Arduino\libraries\TeensyDebug[m
+ monitor_filters = time[m
+[32m+[m[32mmonitor_port = \\.\COM6[m
+ [m
+ build_type = debug[m
+ ; See https://github.com/platformio/platform-teensy/issues/65[m

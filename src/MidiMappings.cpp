@@ -42,7 +42,7 @@
             }
             //midi_drums_output.sendNoteOn(note, velocity);
         #endif
-        drums_loop_track.record_event(ticks, midi::NoteOn, note, velocity);
+        drums_loop_track.store_event(ticks, midi::NoteOn, note, velocity);
     }
     void drumkit_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
         if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;      // map acoustic to electric so drum2musocv will use it
@@ -52,7 +52,7 @@
                 behaviour_bamble->device->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
             }
         #endif
-        drums_loop_track.record_event(ticks, midi::NoteOff, note, velocity);
+        drums_loop_track.store_event(ticks, midi::NoteOff, note, velocity);
     }
 #endif
 
