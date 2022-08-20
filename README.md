@@ -139,6 +139,8 @@ media/suggested\ circuit\ connections.png
   - improve by writing & saving real MIDI files?
   - ~~Genericise MIDI looper functionality, so can eg record and loop drums ~~
   - Make a looper manager or something to allow easier adding of multiple loopers with controls
+  - Variable loop length
+  - Variable repeats
 - ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
 - Give better control over Beatstep via sysex if possible?
@@ -168,6 +170,7 @@ media/suggested\ circuit\ connections.png
 - Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices but that don't expose the correct USB device enumerations
   - eg for the OpenTheremin v4 with USB MIDI modification
   - and for Arduino Unos without needing to use USB Midi Klik
+- Transposition of everything (Beatstep etc?) in chord progressions
 
 ## Explanation/demo
 
