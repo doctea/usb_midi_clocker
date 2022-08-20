@@ -85,10 +85,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Suggested wiring 
 
-media/suggested\ circuit\ connections.png
 - Careful with this, consider it untested for now -- this is how I have mine connected up.  If you follow this then double-check that it actually makes sense when looking at the datasheets+pin diagrams for the actual Teensy and level-shifter boards before you power it on and risk frying pins on your Teensy!  I accept no responsibility if this breaks anything!
 
-![example wiring](https://github.com/doctea/usb_midi_clocker/blob/main/media/suggested%20circuit%connections.png "Suggested wiring diagram")
+![example wiring](https://github.com/doctea/usb_midi_clocker/blob/main/media/suggested%20circuit%20connections.png "Suggested wiring diagram")
 
 ### Known issues (current)
 
