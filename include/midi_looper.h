@@ -273,10 +273,14 @@ class MIDITrack {
                     if (this->debug) Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
                     this->sendNoteOff(i, 0);
                     track_playing_off(ticks, i, 0);
+                    last_note = i;
+                    if (i==current_note) // todo: properly check that there are no other notes playing
+                        current_note = -1;
                 } else if (!track_playing[i].playing && piano_roll_bitmap[time][i]>0) {
                     if (this->debug) Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
                     this->sendNoteOn(i, piano_roll_bitmap[time][i]);
                     track_playing_on(ticks, i, piano_roll_bitmap[time][i]);
+                    current_note = i;
                 }
             }
         }

@@ -89,12 +89,13 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ![example wiring](https://github.com/doctea/usb_midi_clocker/blob/main/media/suggested%20circuit%20connections.png "Suggested wiring diagram")
 
-### Known issues (current)
+## Known issues (current)
 
 - BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
  - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Get crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers..?  might be due to dodgy cable or usb hubs, or akai apcmini?  runs for hours perfectly OK then will suddenly lock up inside the USBHost_t36 queue_Data_Transfer 
+- Think it may be be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?
 
 ## Known issues (may be solved)
 
@@ -116,14 +117,14 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
-- More efficient Akai APCMini screen output (don't need to send as many messages as we do, can just update when it needs to)
+- More efficient Akai APCMini display output (don't need to send as many messages as we do, can just update when it needs to)
 - ~~Enable switching between multiple projects~~ done
 - ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - eg Euclidian sequencer
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
-- Get it working in uClock/interrupts mode without crashes
+- Improve stability of clock by getting it working in uClock/interrupts mode without crashes
 - ~~Sync from external clock input (MIDI)~~ done
   - Sync from external clock input (CV)
 - ~~More outputs~~ - done, now works with 4 clock outs and 4 separate sequencer track outs
@@ -150,6 +151,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
   - ~~Done for Subclocker and saves with Project settings~~ -- maybe it should save with pattern instead though - could then ?
+  - add it for devices it might be useful for, eg CraftSynth
   - tricks like 'half-time beatstep for last bar of phrase'
 - ~~Save and recall MIDI device+channel routings~~
   - Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded

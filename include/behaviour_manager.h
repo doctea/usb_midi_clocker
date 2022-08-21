@@ -56,8 +56,8 @@ class DeviceBehaviourManager {
         }
 
         void do_bar(int bar) {
-            const int size = behaviours.size();
-            for (int i = 0 ; i < size ; i++) {
+            //const int size = behaviours.size();
+            for (int i = 0 ; i < behaviours.size() ; i++) {
                 behaviours.get(i)->on_bar(bar);
             }
         }
@@ -66,8 +66,8 @@ class DeviceBehaviourManager {
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            const int size = behaviours.size();
-            for (int i = 0 ; i < size ; i++) {
+            //const int size = behaviours.size();
+            for (int i = 0 ; i < behaviours.size() ; i++) {
                 DeviceBehaviourBase *behaviour = behaviours.get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
@@ -78,8 +78,8 @@ class DeviceBehaviourManager {
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            const int size = behaviours.size();
-            for (int i = 0 ; i < size ; i++) {
+            //const int size = behaviours.size();
+            for (int i = 0 ; i < behaviours.size() ; i++) {
                 behaviours.get(i)->on_pre_clock(in_ticks);
             }
         }
