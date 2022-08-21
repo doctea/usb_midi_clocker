@@ -117,6 +117,7 @@
         #define PIN_SEQUENCE_1 36
         #define PIN_SEQUENCE_2 37
         #define PIN_SEQUENCE_3 38
-        #define PIN_SEQUENCE_4 39*/
+        #define PIN_SEQUENCE_4 39
+        */
     #endif
 #endif

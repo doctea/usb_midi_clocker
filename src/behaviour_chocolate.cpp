@@ -22,11 +22,4 @@ void chocolate_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVe
     if (behaviour_chocolate!=nullptr) behaviour_chocolate->note_off(inChannel, inNumber, inVelocity);
 }
 
-/*MIDIOutputWrapper *beatstep_output = nullptr;// = &midi_out_bass_wrapper;
-void beatstep_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-    if (beatstep_output!=nullptr)
-        beatstep_output->stop_all_notes();
-    beatstep_output = wrapper;
-}*/
-
 #endif

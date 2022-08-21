@@ -36,7 +36,7 @@ void setup_midi_output_wrapper_manager() {
     #ifdef ENABLE_BAMBLE
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1));
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));
-        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : drums", &(behaviour_bamble->device), 10));
+        midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : drums",&(behaviour_bamble->device), 10));
         midi_output_wrapper_manager->add(new MIDIOutputWrapper((char*)"USB : Bamble : ch 4", &(behaviour_bamble->device), 4));
     #endif
 
@@ -67,7 +67,6 @@ void setup_midi_output_wrapper_manager() {
 
     #ifdef ENABLE_BEATSTEP
         beatstep_output = midi_output_wrapper_manager->find((char*)"S3 : Neutron : ch 4");
-        //while(1) {};
     #endif
 
     #ifdef ENABLE_KEYSTEP
