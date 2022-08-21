@@ -135,6 +135,7 @@ class LooperStatus : public SlotController {
     #ifdef ENABLE_LOOPER_PIANOROLL
         LooperDisplay *lds = nullptr;
     #endif
+    HarmonyStatus *lhs = nullptr;
     public: 
         LooperStatus(const char *label, MIDITrack *loop_track) : SlotController(label) {
             this->lrs = new LooperRecStatus("Looper status", loop_track);
@@ -142,12 +143,14 @@ class LooperStatus : public SlotController {
                 this->lds = new LooperDisplay("Piano roll", loop_track);
                 this->lds->show_header = false;
             #endif
+            this->lhs = new HarmonyStatus("Last / current note", &loop_track->last_note, &loop_track->current_note);
             this->show_header = false;
         }
 
         virtual void on_add() override {
             lrs->set_tft(this->tft);
             lds->set_tft(this->tft);
+            lhs->set_tft(this->tft);
         };
 
         virtual int get_max_slots() override {
@@ -174,6 +177,7 @@ class LooperStatus : public SlotController {
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             pos.y = lrs->display(pos, selected, opened);                // draw the loop record status widget first (with header)
+            pos.y = lhs->display(pos, false, false);                    // draw the last/current note display (with header, unhighlighted)
             pos.y = SlotController::display(pos, selected, opened);     // draw the loop selection widget (without header)
             #ifdef ENABLE_LOOPER_PIANOROLL
                 return lds->display(pos, selected, opened);             // if its enabled, draw the pianoroll (without header)

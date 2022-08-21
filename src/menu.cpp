@@ -55,8 +55,12 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
-ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
-ObjectToggleControl<Project> project_auto_advance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
+#ifdef ENABLE_SEQUENCER
+    ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
+#endif
+#ifdef ENABLE_LOOPER
+    ObjectToggleControl<Project> project_auto_advance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
+#endif
 ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
@@ -93,7 +97,6 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     //SubMenuItem     looper_submenu = SubMenuItem("Looper Submenu");
     LooperStatus            mpk49_looper_status =       LooperStatus("Looper",                  &mpk49_loop_track);
     LooperQuantizeControl   quantizer_setting =         LooperQuantizeControl("Loop quant",     &mpk49_loop_track);   
-    HarmonyStatus           looper_harmony_status =     HarmonyStatus("Loop harmony",           &mpk49_loop_track.last_note, &mpk49_loop_track.current_note); 
     LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
     MidiOutputSelectorControl looper_output_selector =  MidiOutputSelectorControl("Looper MIDI Output"); 
 #endif
@@ -248,8 +251,7 @@ void setup_menu() {
         //looper_submenu.set_tft(tft);
         menu->add(&project_auto_advance_looper);
         menu->add(&mpk49_looper_status); 
-        menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object
-        menu->add(&looper_harmony_status);   // todo: make this part of the LooperStatus object
+        menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
         menu->add(&looper_output_selector);
         menu->add(&looper_transpose_control);
         //menu->add(&looper_submenu);
