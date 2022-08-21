@@ -113,7 +113,7 @@ class MIDITrack {
         int last_note = -1;
         int current_note = -1;
 
-        int transpose = 0;
+        int transpose_amount = 0;
 
         MIDITrack() {
             this->wipe_piano_roll_bitmap();
@@ -141,10 +141,10 @@ class MIDITrack {
         // set the loop transposition
         void set_transpose(int transpose) {
             stop_all_notes();
-            this->transpose = transpose;
+            this->transpose_amount = transpose;
         }
         int get_transpose() {
-            return this->transpose;
+            return this->transpose_amount;
         }
 
         // for actually storing values into buffer (also used when reloading from save)
@@ -269,18 +269,27 @@ class MIDITrack {
             //time = time % LOOP_LENGTH;
             time = ticks_to_sequence_step(time);
             for (int i = 0 ; i < 127 ; i++) {
+                int transposed_pitch = i + transpose_amount;
+                if (transposed_pitch<0 || transposed_pitch > 127) {
+                    if (this->debug) { Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", transposed_pitch, i, transpose_amount); Serial.flush(); }
+                    continue;;
+                } else {
+                    if (this->debug) { Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", transposed_pitch, i, transpose_amount); Serial.flush(); }
+                }
+
                 if (track_playing[i].playing && piano_roll_bitmap[time][i]==0) {
                     if (this->debug) Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
-                    this->sendNoteOff(i, 0);
+
+                    this->sendNoteOff(transposed_pitch, 0);
                     track_playing_off(ticks, i, 0);
-                    last_note = i;
+                    last_note = transposed_pitch;
                     if (i==current_note) // todo: properly check that there are no other notes playing
                         current_note = -1;
                 } else if (!track_playing[i].playing && piano_roll_bitmap[time][i]>0) {
                     if (this->debug) Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
-                    this->sendNoteOn(i, piano_roll_bitmap[time][i]);
+                    this->sendNoteOn(transposed_pitch, piano_roll_bitmap[time][i]);
                     track_playing_on(ticks, i, piano_roll_bitmap[time][i]);
-                    current_note = i;
+                    current_note = transposed_pitch;
                 }
             }
         }
@@ -315,6 +324,9 @@ class MIDITrack {
         void stop_all_notes() {
             if (output!=nullptr)
                 this->output->stop_all_notes();
+            if (current_note!=-1) 
+                last_note = current_note;
+            current_note = -1;
         }
 
         // for sending passthrough or recorded noteOns to actual output
@@ -619,7 +631,7 @@ class MIDITrack {
             f.printf("step_size=%i\n", LOOP_LENGTH_STEP_SIZE);
             //myFile.printf("id=%i\n",input->id);
             f.println("starts_at=0");
-            f.printf("transpose=%i\n", transpose);
+            f.printf("transpose=%i\n", transpose_amount);
             bool last_written = false;
             int lines_written = 0;
             for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
@@ -695,7 +707,7 @@ class MIDITrack {
                     loop_length_size = line.remove(0,String("step_size=").length()).toInt();
                     //Serial.printf("read loop_length_size %i!\n", loop_length_size);
                 } else if (line.startsWith("transpose=")) {
-                    transpose = line.remove(0,String("transpose=").length()).toInt();
+                    transpose_amount = line.remove(0,String("transpose=").length()).toInt();
                 } else if (line.startsWith("loop_data=")) {
                     //Serial.printf("processing a loop_data line..\n");
                     total_frames++;
