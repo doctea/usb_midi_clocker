@@ -66,7 +66,7 @@ ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
-    HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &last_beatstep_note,          &current_beatstep_note);
+    HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &behaviour_beatstep->last_note,          &behaviour_beatstep->current_note);
     #ifdef ENABLE_BASS_TRANSPOSE
         //NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
         ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
@@ -78,6 +78,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
             0,
             8
         );
+        HarmonyStatus bass_harmony = HarmonyStatus("Bass harmony", &behaviour_beatstep->last_transposed_note, &behaviour_beatstep->current_transposed_note);
     #endif
     #ifdef ENABLE_BEATSTEP_SYSEX
         ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = ObjectToggleControl<DeviceBehaviour_Beatstep> (
@@ -233,7 +234,10 @@ void setup_menu() {
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
-        menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+        #ifdef ENABLE_BASS_TRANSPOSE
+            menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+            menu->add(&bass_harmony);
+        #endif
         #ifdef ENABLE_BEATSTEP_SYSEX
             menu->add(&beatstep_auto_advance);
         #endif
@@ -292,7 +296,7 @@ void setup_menu() {
         subclocker_restart_action.target_object = 
             subclocker_divisor_control.target_object = 
                 subclocker_delay_ticks_control.target_object = 
-                    behaviour_subclocker;   // because behaviour_subclocker pointer won't be set yet..?
+                    behaviour_subclocker;   // because behaviour_subclocker pointer won't be set before now..?
         menu->add(&subclocker_divisor_control);
         menu->add(&subclocker_delay_ticks_control);
         menu->add(&subclocker_restart_action);

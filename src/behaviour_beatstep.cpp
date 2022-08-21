@@ -3,16 +3,6 @@
 
 #include "behaviour_beatstep.h"
 
-extern int current_beatstep_note;
-extern int last_beatstep_note;
-
-//extern int bass_transpose_octave;
-
-int current_beatstep_note = -1;
-int last_beatstep_note = -1;
-
-//int bass_transpose_octave = 2;
-
 DeviceBehaviour_Beatstep *behaviour_beatstep = new DeviceBehaviour_Beatstep();
 /*DeviceBehaviour_Beatstep behaviour_beatstep_actual = DeviceBehaviour_Beatstep();
 DeviceBehaviour_Beatstep *behaviour_beatstep = &behaviour_beatstep_actual;*/
