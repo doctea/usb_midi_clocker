@@ -32,6 +32,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
         void setup_callbacks() override {
+            if (this->device == nullptr) return;
             this->device->setHandleNoteOn(beatstep_handle_note_on);
             this->device->setHandleNoteOff(beatstep_handle_note_off);
         }

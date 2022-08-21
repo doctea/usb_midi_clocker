@@ -118,7 +118,7 @@ class LooperTransposeControl : public NumberControl {
         LooperTransposeControl(const char* label, MIDITrack *target) : LooperTransposeControl(label, target, 0, -127, 127) {};
         
         virtual int get_current_value() override {
-            return loop_track->transpose;
+            return loop_track->transpose_amount;
         }
 
         virtual void set_current_value(int value) override { 

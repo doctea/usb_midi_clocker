@@ -35,24 +35,25 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
+            if ( this->device == nullptr ) 
+                return;
             this->device->setHandleControlChange(apcmini_control_change);
             this->device->setHandleNoteOn(apcmini_note_on);
             this->device->setHandleNoteOff(apcmini_note_off);
         };
 
         virtual void loop(unsigned long ticks) override {
-            if ( this->device == nullptr ) {
+            if ( this->device == nullptr ) 
                 return;
-            }
 
             #ifdef ENABLE_APCMINI_DISPLAY
                 static unsigned long last_processed_tick;
 
-                if (last_processed_tick!=ticks) {
+                if (last_processed_tick != ticks) {
                     //Serial.println("about to call apcmini_update_position_display()"); Serial.flush();
                     apcmini_update_position_display(ticks);
                 
-                    if (this->device!=nullptr && (redraw_immediately || millis() - last_updated_display > 50)) {
+                    if (redraw_immediately || millis() - last_updated_display > 50) {
                         //Serial.println(F("redraw_immediately is set!"));
                         //Serial.println("about to call apcmini_update_clock_display()"); Serial.flush();
                         apcmini_update_clock_display();

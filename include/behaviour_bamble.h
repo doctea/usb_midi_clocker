@@ -24,12 +24,14 @@ class DeviceBehaviour_Bamble : public ClockedBehaviour {
 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
+            if (this->device==nullptr) return;
             this->device->setHandleControlChange(bamble_control_change);
             this->device->setHandleNoteOn(bamble_note_on);
             this->device->setHandleNoteOff(bamble_note_off);
         };
 
         virtual void init() override {
+            if (this->device==nullptr) return;
             started = false;
 
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2

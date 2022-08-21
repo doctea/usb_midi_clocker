@@ -30,22 +30,24 @@ class DeviceBehaviourBase {
 
         virtual void setup_callbacks() {};
         virtual void connect_device(MIDIDeviceBase *device) {
+            if (device==nullptr) return;
+
             Serial.printf("DeviceBehaviourBase#connected_device connecting %p\n", device);
             this->device = device;
             this->setup_callbacks();
             this->init();
         }
+        // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
         virtual void disconnect_device() {
-            if (this->device!=nullptr) {
-                // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
-                this->device->setHandleNoteOn(nullptr);
-                this->device->setHandleNoteOff(nullptr);
-                this->device->setHandleControlChange(nullptr);
-                this->device->setHandleClock(nullptr);
-                this->device->setHandleStart(nullptr);
-                this->device->setHandleStop(nullptr);
-                this->device->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
-            }
+            if (this->device==nullptr) return;
+            
+            this->device->setHandleNoteOn(nullptr);
+            this->device->setHandleNoteOff(nullptr);
+            this->device->setHandleControlChange(nullptr);
+            this->device->setHandleClock(nullptr);
+            this->device->setHandleStart(nullptr);
+            this->device->setHandleStop(nullptr);
+            this->device->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
             this->device = nullptr;
         }
 
@@ -59,7 +61,9 @@ class DeviceBehaviourBase {
             // remove all hooks from device
         }*/
         virtual void read() {
-             if (this->device!=nullptr) while(this->device->read()); 
+            if (this->device==nullptr) return;
+
+            while(this->device->read()); 
         };
         // called every loop
         virtual void loop(uint32_t ticks) {};
@@ -92,8 +96,9 @@ class ClockedBehaviour : public DeviceBehaviourBase {
         bool clock_enabled = true;
 
         virtual void send_clock(uint32_t ticks) override {
+            if (this->device == nullptr) return;
             //Serial.println("send_clock() in ClockedBehaviour");
-            if (this->device!=nullptr && this->clock_enabled) {
+            if (this->clock_enabled) {
                 this->device->sendRealTime(MIDIDevice::Clock);
                 this->device->send_now();
             } else {
@@ -114,13 +119,16 @@ class ClockedBehaviour : public DeviceBehaviourBase {
             this->restart_on_bar = v;
         }
         virtual const char *get_restart_on_bar_status_label(bool value) {
-            if (value) return "Restarting on bar..";
-            else return "Trigger restart on bar";
+            if (value) 
+                return "Restarting on bar..";
+            else 
+                return "Trigger restart on bar";
         }
 
         virtual void on_restart() override {
+            if (this->device == nullptr) return;
             //Serial.println("\ton_restart() in ClockedBehaviour");
-            if (this->device!=nullptr && this->clock_enabled) {
+            if (this->clock_enabled) {
                 this->device->sendRealTime(MIDIDevice::Stop); //sendStop();
                 this->device->sendRealTime(MIDIDevice::Start); //sendStart();
                 this->device->send_now();
