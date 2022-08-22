@@ -3,13 +3,11 @@
 #include "midi_looper.h"
 #include "bpm.h"
 
-MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1) {
-    strcpy(this->label, label);
+MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel) : MIDIOutputWrapper(label, channel) {
     output_looper = looper;
-    default_channel = channel;
 }
 
-void MIDIOutputWrapper::sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
+void MIDIOutputWrapper::sendNoteOn(byte pitch, byte velocity, byte channel) {
     if (this->debug) Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
     if (channel==0) channel = default_channel;
     if (output_serialmidi!=nullptr) {
@@ -35,7 +33,7 @@ void MIDIOutputWrapper::sendNoteOn(byte pitch, byte velocity, byte channel = 0) 
     }
 }
 
-void MIDIOutputWrapper::sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
+void MIDIOutputWrapper::sendNoteOff(byte pitch, byte velocity, byte channel) {
     if (channel==0) channel = default_channel;
     if (output_serialmidi!=nullptr)     output_serialmidi->sendNoteOff(pitch, velocity, channel);
     if (output_usb!=nullptr)            output_usb->sendNoteOff(pitch, velocity, channel);
@@ -48,7 +46,7 @@ void MIDIOutputWrapper::sendNoteOff(byte pitch, byte velocity, byte channel = 0)
     if (playing_notes[pitch]>0) playing_notes[pitch]--;
 }
 
-void MIDIOutputWrapper::sendControlChange(byte pitch, byte velocity, byte channel = 0) {
+void MIDIOutputWrapper::sendControlChange(byte pitch, byte velocity, byte channel) {
     if (channel==0) channel = default_channel;
     if (output_serialmidi!=nullptr)     output_serialmidi->sendControlChange(pitch, velocity, channel);
     if (output_usb!=nullptr)            output_usb->sendControlChange(pitch, velocity, channel);

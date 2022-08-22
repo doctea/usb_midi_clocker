@@ -10,18 +10,6 @@
 
 #ifdef ENABLE_CHOCOLATEFEET_SERIAL
 
-//MIDIOutputWrapper *lestrum_arp_output  = nullptr; //midi_output_wrapper_manager->find(7);
-//MIDIOutputWrapper *lestrum_pads_output = nullptr; //midi_output_wrapper_manager->find(6);
-
-/*void lestrum_pads_setOutputWrapper(MIDIOutputWrapper *output) {
-    lestrum_pads_output->stop_all_notes();
-    lestrum_pads_output = output;
-};
-void lestrum_arp_setOutputWrapper(MIDIOutputWrapper *output) {
-    lestrum_arp_output->stop_all_notes();
-    lestrum_arp_output = output;
-};*/
-
 // configure incoming lestrum to output to midimuso via bamble
 void footswitch_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
     Serial.printf("!! footswitch_note_on(\tchannel %i,\tnote %i,\tvelocity %i): \n", channel, note, velocity);

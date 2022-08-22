@@ -26,40 +26,39 @@ class MIDIOutputWrapper {
     MIDIDeviceBase *output_usb = nullptr;
     MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
     MIDITrack *output_looper = nullptr;
-    byte default_channel = 1;
 
     byte playing_notes[127];
 
     public:
         bool debug = false;
+
+        byte default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
-        MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) {
+        MIDIOutputWrapper(const char *label, byte channel = 1) {
             strcpy(this->label, label);
+            default_channel = channel;
+        }
+        MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             output_serialmidi = in_output_serialmidi;
-            default_channel = channel;
         }
-        MIDIOutputWrapper(const char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) {
-            strcpy(this->label, label);
+        MIDIOutputWrapper(const char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             output_usb = in_output_usb;
-            default_channel = channel;
         }
-        MIDIOutputWrapper(const char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) {
-            strcpy(this->label, label);
+        MIDIOutputWrapper(const char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             output_usb_pointer = in_output_usb;
-            default_channel = channel;
         }
         MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);
 
-        void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
-        void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
-        void sendControlChange(byte pitch, byte velocity, byte channel = 0);
+        virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
+        virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
+        virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0);
 
-        inline bool is_note_playing(byte note_number) {
+        virtual inline bool is_note_playing(byte note_number) {
             return playing_notes[note_number]>0;
         }
 
-        void stop_all_notes() {
+        virtual void stop_all_notes() {
             Serial.printf("stop_all_notes in %s...\n", label);
             for (int i = 0 ; i < 127 ; i++) {
                 while (is_note_playing(i)) {
@@ -68,6 +67,30 @@ class MIDIOutputWrapper {
                 }
             }
         }
+};
+
+class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
+    public:
+    byte cable_number = 0;
+
+    MIDIOutputWrapper_PC(const char *label, byte cable_number, byte channel = 1) : MIDIOutputWrapper(label, channel) {
+        this->cable_number = cable_number;
+    }
+
+    virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
+        if (channel == 0) channel = default_channel;
+        usbMIDI.sendNoteOn(pitch, velocity, channel, cable_number);
+    }
+
+    virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {
+        if (channel == 0) channel = default_channel;
+        usbMIDI.sendNoteOff(pitch, velocity, channel, cable_number);
+    }
+
+    virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) override {
+        if (channel == 0) channel = default_channel;
+        usbMIDI.sendControlChange(pitch, velocity, channel, cable_number);
+    }
 };
 
 #endif

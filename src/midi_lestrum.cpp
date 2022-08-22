@@ -28,20 +28,20 @@ void lestrum_arp_setOutputWrapper(MIDIOutputWrapper *output) {
 void lestrum_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
     //Serial.printf("lestrum_note_on(\tchannel %i,\tnote %i,\tvelocity %i): \n", channel, note, velocity);
     if (channel==1) {
-        midi_matrix_manager->send_note_on(lestrum_arp_source, note, 127);
+        midi_matrix_manager->processNoteOn(lestrum_arp_source, note, 127);
         //lestrum_arp_output->sendNoteOn(note, 127);
     } else {
-        midi_matrix_manager->send_note_on(lestrum_pads_source, note, 127);
+        midi_matrix_manager->processNoteOn(lestrum_pads_source, note, 127);
         //lestrum_pads_output->sendNoteOn(note, 127);
     }
 }
 void lestrum_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
     //Serial.printf("!! lestrum_note_off(\tchannel %i,\tnote %i,\tvelocity %i): \n", channel, note, velocity);
     if (channel==1) {
-        midi_matrix_manager->send_note_off(lestrum_arp_source, note, 0);
+        midi_matrix_manager->processNoteOff(lestrum_arp_source, note, 0);
         //lestrum_arp_output->sendNoteOff(note, 0);
     } else {
-        midi_matrix_manager->send_note_off(lestrum_pads_source, note, 0);
+        midi_matrix_manager->processNoteOff(lestrum_pads_source, note, 0);
         //lestrum_pads_output->sendNoteOff(note, 0);
     }
 }

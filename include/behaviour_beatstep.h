@@ -51,9 +51,6 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
 
             ClockedBehaviour::note_on(channel, note, 127);
 
-            /*if (beatstep_output!=nullptr)
-                beatstep_output->sendNoteOn((uint8_t)note, 127); */
-
             #ifdef ENABLE_BASS_TRANSPOSE
                 // update current / remember last played TRANSPOSED note
                 this->current_transposed_note = note;
@@ -69,18 +66,11 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 current_note = -1;
 
             #ifdef ENABLE_BASS_TRANSPOSE
-                //if(midi_out_bass_wrapper!=nullptr) {
-                //int note2 = note - 24;
-                //if (note2<=0) 
-                //    note2 += 12;
                 uint8_t note2 = note % 12;
                 note2 += (bass_transpose_octave*12);// note2 += 24;
                 note = note2;
-                //}
             #endif
 
-            //if (beatstep_output!=nullptr)
-            //    beatstep_output->sendNoteOff((uint8_t)note, velocity); //, BASS_MIDI_CHANNEL);
             ClockedBehaviour::note_off(channel, note, 127);
 
             #ifdef ENABLE_BASS_TRANSPOSE
@@ -96,11 +86,8 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
             int bass_transpose_octave = 2;  // absolute octave to transpose all notes to
             void setTransposeOctave(int octave) {
                 //Serial.printf("Beatstep_Behaviour#setTransposeOctave(%i)!", octave); Serial.flush();
-                //if (midi_out_bass_wrapper!=nullptr) // isn't a pointer!
                 if (octave!=this->bass_transpose_octave) {
-                    //midi_out_bass_wrapper.stop_all_notes();
-                    if (beatstep_output!=nullptr)
-                        beatstep_output->stop_all_notes();
+                    midi_matrix_manager->stop_all_notes(source_id);
                     this->bass_transpose_octave = octave;
                 }
             }
@@ -134,6 +121,7 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
 
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
+
                 Serial.printf("beatstep#send_preset_change switching to pattern %i\n", phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {

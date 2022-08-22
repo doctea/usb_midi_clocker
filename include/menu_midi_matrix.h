@@ -12,7 +12,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
-    uint16_t target_colours[16] = {
+    uint16_t target_colours[NUM_TARGETS] = {
         0xF800, //#define ST77XX_RED        
         0x07E0,        //#define ST77XX_GREEN      
         0x001F,        //#define ST77XX_BLUE       
@@ -20,8 +20,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
         0xF81F,        //#define ST77XX_MAGENTA   
         0xFFE0,//#define ST77XX_YELLOW     
         0xFC00,        //#define ST77XX_ORANGE     
-        //#define ST77XX_PINK       
-        0xF710,
+        0xF710,        //#define ST77XX_PINK       250 + 250 + 
         (0xF800 + 0x001F)/2,
         (0x07E0 + 0x07FF)/2,
         (0xF81F + 0xFC00)/2,
@@ -29,7 +28,15 @@ class MidiMatrixSelectorControl : public SelectorControl {
         (0x07E0 + 0x001F)/2,
         (0xF800 + 0x07FF)/2,
         (0xF81F + 0xFC00)/2,
-        (0xA81F + 0xF877)/2
+        (0xA81F + 0xF877)/2,
+        (0x07E0 + 0xFC00)/2,
+        (0xF710 + 0xFC00)/2,
+        (0xF710 + 0xF877)/2,
+        (0xF800 + 0xFC00)/2,
+        (0x07E0 + 0x001F)/2,
+        (0xF81F + 0xFC00)/3,
+        250 + (0x07E0 + 0x001F)/3,
+        250 + (0xF800 + 0x07FF)/3,
     }; 
 
     uint16_t get_colour_for_target_id(target_id_t target_id) {
@@ -42,37 +49,6 @@ class MidiMatrixSelectorControl : public SelectorControl {
     int selected_target_index = -1;
 
     MidiMatrixSelectorControl(const char *label) : SelectorControl(label, 0) {};
-
-    /*void on_add() override {
-        for (int i = 0 ; i < 16 ; i++) {
-            target_colours[i] = tft->rgb(
-                (byte)(64 + (i * 16)), 
-                64 + (i * 32), 
-                32 + (i * 64)
-            );
-        }
-    }*/
-
-    /*virtual void configure (MIDIOutputWrapper *initial_selected_output_wrapper, void (*setter_func)(MIDIOutputWrapper*)) {
-        this->initial_selected_output_wrapper = initial_selected_output_wrapper;
-        this->setter_func = setter_func;
-        Serial.printf("configured %s @ ", initial_selected_output_wrapper->label);
-        Serial.printf("%u and %u\n", this->initial_selected_output_wrapper, this->setter_func);
-    }*/
-
-    /*virtual void on_add() {
-        actual_value_index = -1;
-        Serial.println("MidiOutputSelectorControl#on_add()");
-        if (initial_selected_output_wrapper==nullptr) {
-            Serial.printf("No initial output wrapper passed to %s\n", this->label);
-            this->selected_value_index = this->actual_value_index = -1;
-            return;
-        }
-        Serial.printf("MidiOutputSelectorControl@ %p...\n", initial_selected_output_wrapper);
-        Serial.printf("MidiOutputSelectorControl looking for '%s' at %u...\n", initial_selected_output_wrapper->label, *initial_selected_output_wrapper);
-
-        this->actual_value_index = this->selected_value_index = midi_output_wrapper_manager->find_index(initial_selected_output_wrapper->label);
-    }*/
 
     virtual const char* get_label_for_index(int index) {
         if (selected_source_index==-1) {    
@@ -92,7 +68,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
             selected_value_index = actual_value_index;
         } else {
             // target selected for this source
-            midi_matrix_manager->toggle_source_target(selected_source_index, new_value);
+            midi_matrix_manager->toggle_connect(selected_source_index, new_value);
         }
     }
     virtual int getter () override {

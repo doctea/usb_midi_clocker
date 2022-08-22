@@ -11,48 +11,33 @@
 
 #ifdef ENABLE_BITBOX
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
-    //MIDIOutputWrapper midi_out_bitbox_wrapper = MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3", midi_out_bitbox, BITBOX_MIDI_CHANNEL);
 #endif
-//midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
-//#ifdef ENABLE_BAMBLE
-//MIDIDevice *midi_out_cv12_poly   = midi_bamble;
-//#endif
 
 #ifdef ENABLE_BASS_TRANSPOSE
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass      = &ENABLE_BASS_TRANSPOSE;
-    //MIDIOutputWrapper midi_out_bass_wrapper = MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_bass, BASS_MIDI_CHANNEL);
 #endif
 
 #ifdef ENABLE_DRUMKIT
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &ENABLE_DRUMKIT;
-    //MIDIOutputWrapper midi_drums_output;
 #endif
+
+source_id_t drumkit_source_id = -1;
 
 #ifdef ENABLE_DRUMKIT
     #include "Drums.h"
     // hardcode incoming drumkit on input 2 to go out to drums on bamble
     void drumkit_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
         Serial.printf("drumkit_note_on(\tchannel %i,\tnote %i,\tvelocity %i): ", channel, note, velocity);
-        if (note==GM_NOTE_ACOUSTIC_SNARE) note = GM_NOTE_ELECTRIC_SNARE;
-        if (note==GM_NOTE_LOW_FLOOR_TOM) note = GM_NOTE_HI_MID_TOM;
-        #ifdef ENABLE_BAMBLE
-            if (behaviour_bamble->device) {
-                //Serial.println("sending!");
-                behaviour_bamble->device->sendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
-            }
-            //midi_drums_output.sendNoteOn(note, velocity);
-        #endif
-        drums_loop_track.store_event(ticks, midi::NoteOn, note, velocity);
+        if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;
+        if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HI_MID_TOM;
+
+        midi_matrix_manager->processNoteOn(drumkit_source_id, note, velocity);
     }
     void drumkit_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
         if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;      // map acoustic to electric so drum2musocv will use it
         if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HIGH_TOM;            // remap tom 
-        #ifdef ENABLE_BAMBLE
-            if (behaviour_bamble->device) {
-                behaviour_bamble->device->sendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
-            }
-        #endif
-        drums_loop_track.store_event(ticks, midi::NoteOff, note, velocity);
+
+        midi_matrix_manager->processNoteOff(drumkit_source_id, note, velocity);
     }
 #endif
 

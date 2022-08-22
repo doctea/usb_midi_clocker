@@ -22,7 +22,6 @@ extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum;//
 //#ifdef ENABLE_DRUMKIT
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit;//      = &ENABLE_DRUMKIT;
 //#endif
-
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bass;//      = &ENABLE_BASS_TRANSPOSE;
 //extern MIDIOutputWrapper midi_out_bass_wrapper;
 #define BASS_MIDI_CHANNEL   4

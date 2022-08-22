@@ -20,10 +20,12 @@
 
 using namespace storage;
 
-extern MIDITrack mpk49_loop_track;
-extern MIDITrack drums_loop_track;
-
-void set_target_wrapper_for_names(String source_label, String target_label);
+#ifdef ENABLE_LOOPER
+    extern MIDITrack mpk49_loop_track;
+#endif
+#ifdef ENABLE_DRUM_LOOPER
+    extern MIDITrack drums_loop_track;
+#endif
 
 class Project {
     bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];
@@ -227,6 +229,7 @@ class Project {
         bool save_project_settings(int save_to_project_number) {
             File myFile;
 
+            // determine filename, delete if exists, and open the file up for writing
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
             Serial.printf("save_sequence(%i) writing to %s\n", save_to_project_number, filename);
@@ -239,54 +242,16 @@ class Project {
                 Serial.printf("Error: couldn't open %s for writing\n", filename);
                 return false;
             }
+
+            // header
             myFile.println("; begin project");
             myFile.printf("id=%i\n", save_to_project_number);
-            /*myFile.printf("size_clocks=%i\n",     input->size_clocks);
-            myFile.printf("size_sequences=%i\n",  input->size_sequences);
-            myFile.printf("size_steps=%i\n",      input->size_steps);
-            for (int i = 0 ; i < input->size_clocks ; i++) {
-                myFile.printf("clock_multiplier=%i\n", input->clock_multiplier[i]);
-            }
-            for (int i = 0 ; i < input->size_clocks ; i++) {
-                myFile.printf("clock_delay=%i\n", input->clock_delay[i]);
-            }
-            for (int i = 0 ; i < input->size_sequences ; i++) {
-                myFile.printf("sequence_data=");
-                for (int x = 0 ; x < input->size_steps ; x++) {
-                    myFile.printf("%1x", input->sequence_data[i][x]);
-                }
-                myFile.println("");
-            }*/
-            //behaviour_subclocker->get_divisor();
 
             // subclocker settings
             myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
             myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
 
-            // midi output mappings
-            /*#ifdef ENABLE_BEATSTEP
-                if(beatstep_output!=nullptr)        myFile.printf("midi_output_map=beatstep_output|%s\n",       beatstep_output->label);
-            #endif
-            #ifdef ENABLE_KEYSTEP
-                if(keystep_output!=nullptr)         myFile.printf("midi_output_map=keystep_output|%s\n",        keystep_output->label);
-            #endif
-            #ifdef ENABLE_MPK49
-                if(mpk49_output!=nullptr)           myFile.printf("midi_output_map=mpk49_output|%s\n",          mpk49_output->label);
-            #endif
-            #ifdef ENABLE_LESTRUM
-                if(lestrum_pads_output!=nullptr)    myFile.printf("midi_output_map=lestrum_pads_output|%s\n",   lestrum_pads_output->label);
-                if(lestrum_arp_output!=nullptr)     myFile.printf("midi_output_map=lestrum_arp_output|%s\n",    lestrum_arp_output->label);
-            #endif
-            #ifdef ENABLE_LOOPER
-                if(mpk49_loop_track.output!=nullptr) {
-                    Serial.printf("saving midi_output_map=mpk49_loop_track|%s\n",   mpk49_loop_track.output->label);
-                    myFile.printf("midi_output_map=mpk49_loop_track|%s\n",          mpk49_loop_track.output->label);
-                }
-            #endif
-            if(pc_usb_outputs[0]!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_outputs[0]->label);
-            if(pc_usb_outputs[1]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[1]->label);
-            if(pc_usb_outputs[2]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[2]->label);
-            if(pc_usb_outputs[3]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[3]->label);*/
+            // midi matrix settings
             for (int source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
                 for (int target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                     if (midi_matrix_manager->is_connected(source_id,target_id)) {
@@ -298,7 +263,7 @@ class Project {
                     }
                 }
             }
-                        //midi_output_wrapper_manager->save_to_file(myFile);
+            //midi_matrix_manager->save_to_file(myFile);
 
             myFile.println("; end project");
             myFile.close();
@@ -345,24 +310,22 @@ class Project {
             } else if (line.startsWith("subclocker_delay_ticks=")) {
                 behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
             } else if (line.startsWith("midi_output_map=")) {
+                // legacy save format, pre-matrix
                 Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_output_map=").length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);
-                source_label = source_label.replace("_output","");
+                source_label = source_label.replace("_output","");  // translate pre-matrix style naming to matrix-style naming
                 String target_label = line.substring(split+1,line.length());
-                //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
-                //set_target_wrapper_for_names(source_label, target_label);
-                midi_matrix_manager->connect_source_target(source_label.c_str(), target_label.c_str());
+                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
             } else if (line.startsWith("midi_matrix_map=")) {
+                // midi matrix version
                 Serial.printf("----\nLoading midi_matrix_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_matrix_map=").length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
-                //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
-                //set_target_wrapper_for_names(source_label, target_label);
-                midi_matrix_manager->connect_source_target(source_label.c_str(), target_label.c_str());
+                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
             }
         }
 };
