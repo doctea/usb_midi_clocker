@@ -13,8 +13,8 @@ void setup_midi_mapper_matrix_manager();
 
 //#include "behaviour_bamble.h"
 
-#define NUM_SOURCES 10
-#define NUM_TARGETS 10
+#define NUM_SOURCES 16
+#define NUM_TARGETS 16
 
 #include "midi_mapper_matrix_types.h"
 
@@ -22,11 +22,11 @@ class MIDITrack;
 class DeviceBehaviourBase;
 
 struct target_entry {
-    char handle[20];
+    char handle[25];
     MIDIOutputWrapper *wrapper = nullptr;
 };
 struct source_entry {
-    char handle[20];
+    char handle[25];
 };
 
 class MIDIMatrixManager {
@@ -55,6 +55,7 @@ class MIDIMatrixManager {
 
     source_entry sources[NUM_SOURCES] = {};
     source_id_t register_source(const char *handle) {
+        Serial.printf("midi_mapper_matrix_manager#register_source() registering handle '%s'\n", handle);
         strcpy(sources[sources_count].handle, handle);
         return sources_count++;
     }
@@ -66,6 +67,7 @@ class MIDIMatrixManager {
             if (strcmp(handle, sources[i].handle)==0)
                 return i;
         }
+        Serial.printf("!! get_source_id_for_handle couldn't find a source for handle '%s'\n", handle);
         return -1;
     }
 
@@ -132,16 +134,21 @@ class MIDIMatrixManager {
         return this->register_target(new MIDIOutputWrapper(handle, target));
     }
     int register_target(MIDIOutputWrapper *target, const char *handle) {
+        Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s'\n", handle);
         strcpy(targets[targets_count].handle, handle);
         targets[targets_count].wrapper = target;
         return targets_count++;
     }
 
     int get_target_id_for_handle(const char *handle) {
+        Serial.printf("get_target_id_for_handle(%s)\n", handle);
         for (int i = 0; i < targets_count ; i++) {
-            if (strcmp(handle, targets[i].handle)==0)
+            Serial.printf("\t%i: looking for '%s', comparing '%s'..\n", i, handle, targets[i].handle);
+            if (strcmp(handle, targets[i].handle)==0) {
                 return i;
+            }
         }
+        Serial.printf("!! get_target_id_for_handle couldn't find a target for handle '%s'\n", handle);
         return -1;
     }
     MIDIOutputWrapper *get_target_for_handle(char *handle) {

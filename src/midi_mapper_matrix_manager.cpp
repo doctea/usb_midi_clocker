@@ -42,7 +42,7 @@ void MIDIMatrixManager::connect_source_target(DeviceBehaviourBase *device, const
 
 // initialise the output pointers, initialise the outputs and assign them to their defaults
 void setup_midi_mapper_matrix_manager() {
-    Serial.println("setup_midi_mapper_matrix_manager.."); Serial.flush();
+    Serial.println("##### setup_midi_mapper_matrix_manager.."); Serial.flush();
     midi_matrix_manager = MIDIMatrixManager::getInstance();
 
     // first, add all the output options that will exist
@@ -87,7 +87,7 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_LESTRUM
         lestrum_arp_source  = midi_matrix_manager->register_source("lestrum_arp");
         lestrum_pads_source = midi_matrix_manager->register_source("lestrum_pads");
-        midi_matrix_manager->connect_source_target("lestrum_arp", "USB : Bamble : ch 1");
+        midi_matrix_manager->connect_source_target("lestrum_arp",  "USB : Bamble : ch 1");
         midi_matrix_manager->connect_source_target("lestrum_pads", "USB : Bamble : ch 2");
         //lestrum_arp_output =    midi_matrix_manager->find((char*)"USB : Bamble : ch 1");
         //lestrum_pads_output =   midi_matrix_manager->find((char*)"USB : Bamble : ch 1");
@@ -115,15 +115,18 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_LOOPER
         //mpk49_loop_track = MIDITrack(midi_matrix_manager->find((char*)"S1 : Bitbox : ch 3"));
         midi_matrix_manager->register_source(&mpk49_loop_track, "loop_track_1");
-        midi_matrix_manager->connect_source_target(&mpk49_loop_track, behaviour_mpk49);
         midi_matrix_manager->register_target(&mpk49_loop_track, "loop_track_1");
-
+        midi_matrix_manager->connect_source_target("loop_track_1", "S1 : Bitbox : ch3");
+        midi_matrix_manager->connect_source_target(behaviour_mpk49, "loop_track_1");
     #endif
     #ifdef ENABLE_DRUM_LOOPER
         drums_loop_track = MIDITrack(midi_output_wrapper_manager->find((char*)"USB : Bamble : drums"));
         drums_loop_track.set_quantization_value(0);
         drums_loop_track.debug = true;
     #endif
+
+    Serial.println("##### finished setup_midi_mapper_matrix_manager"); Serial.flush();
+    //while(1);
 }
 
 #endif
