@@ -29,11 +29,16 @@ class MIDIOutputWrapper {
 
     byte playing_notes[127];
 
+    int force_octave = -1;
+
     public:
         bool debug = false;
 
         byte default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
+
+        int last_note = -1, current_note = -1;
+        int last_transposed_note = -1, current_transposed_note = -1;
 
         MIDIOutputWrapper(const char *label, byte channel = 1) {
             strcpy(this->label, label);
@@ -50,12 +55,26 @@ class MIDIOutputWrapper {
         }
         MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);
 
+        virtual int recalculate_pitch(byte note) {
+            if (this->force_octave>=0) {
+                // send incoming notes from beatstep back out to neutron on serial3, but transposed down
+                uint8_t note2 = note % 12;
+                note2 += (force_octave*12); //24;
+                //Serial.printf("beatstep note on %i : %i : %i\n", BASS_MIDI_CHANNEL, note, velocity);
+                //Serial.printf("beatstep note2 is %i\n", note2);
+                note = note2;
+            }
+            return note;
+        }
+
         virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
         virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
         virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0);
 
-        virtual inline bool is_note_playing(byte note_number) {
-            return playing_notes[note_number]>0;
+        virtual inline bool is_note_playing(int pitch) {
+            pitch = recalculate_pitch(pitch);
+            if (pitch<=0 || pitch>=127) return false;
+            return playing_notes[pitch]>0;
         }
 
         virtual void stop_all_notes() {
@@ -66,6 +85,19 @@ class MIDIOutputWrapper {
                     sendNoteOff(i, 0, default_channel);
                 }
             }
+        }
+
+        void setForceOctave(int octave) {
+            //Serial.printf("Beatstep_Behaviour#setForceOctave(%i)!", octave); Serial.flush();
+            if (octave!=this->force_octave) {
+                this->stop_all_notes();
+                //midi_matrix_manager->stop_all_notes(source_id);
+                this->force_octave = octave;
+            }
+        }
+        int getForceOctave() {
+            //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial.flush();
+            return this->force_octave;
         }
 };
 
@@ -79,12 +111,28 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
 
     virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
         if (channel == 0) channel = default_channel;
+        current_note = pitch;
+        pitch = recalculate_pitch(pitch);
+        if (pitch<0 || pitch>127) return;
+
+        current_transposed_note = pitch;
         usbMIDI.sendNoteOn(pitch, velocity, channel, cable_number);
     }
 
     virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {
         if (channel == 0) channel = default_channel;
+
+        this->last_note = pitch;
+        if (this->current_note==pitch) 
+            current_note = -1;
+
+        pitch = recalculate_pitch(pitch);
+
         usbMIDI.sendNoteOff(pitch, velocity, channel, cable_number);
+
+        this->last_transposed_note = pitch;
+        if (this->current_transposed_note==pitch)
+            current_transposed_note = -1;
     }
 
     virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) override {

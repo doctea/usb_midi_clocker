@@ -7,8 +7,15 @@ MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte 
     output_looper = looper;
 }
 
-void MIDIOutputWrapper::sendNoteOn(byte pitch, byte velocity, byte channel) {
-    if (this->debug) Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
+void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
+    if (this->debug) Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", in_pitch, velocity, channel, label); Serial.flush();
+
+    current_note = in_pitch;
+    int pitch = recalculate_pitch(in_pitch);
+    if (pitch<0 || pitch>127) return;
+
+    current_transposed_note = pitch;
+
     if (channel==0) channel = default_channel;
     if (output_serialmidi!=nullptr) {
         if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);
@@ -33,8 +40,20 @@ void MIDIOutputWrapper::sendNoteOn(byte pitch, byte velocity, byte channel) {
     }
 }
 
-void MIDIOutputWrapper::sendNoteOff(byte pitch, byte velocity, byte channel) {
-    if (channel==0) channel = default_channel;
+void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) {
+
+    this->last_note = in_pitch;
+    if (this->current_note==in_pitch) 
+        current_note = -1;
+
+    int pitch = recalculate_pitch(in_pitch);  
+    if (pitch<0 || pitch>127) return;
+
+    this->last_transposed_note = pitch;
+    if (this->current_transposed_note==pitch)
+        current_transposed_note = -1;
+
+    if (channel==0) channel = default_channel;  
     if (output_serialmidi!=nullptr)     output_serialmidi->sendNoteOff(pitch, velocity, channel);
     if (output_usb!=nullptr)            output_usb->sendNoteOff(pitch, velocity, channel);
     if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)

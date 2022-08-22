@@ -64,22 +64,9 @@ ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,
 ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
-//LooperStatus mpk49_looper = LooperStatus();
+
 #ifdef ENABLE_BEATSTEP
     HarmonyStatus beatstep_notes = HarmonyStatus("Beatstep harmony",   &behaviour_beatstep->last_note,          &behaviour_beatstep->current_note);
-    #ifdef ENABLE_BASS_TRANSPOSE
-        //NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
-        ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
-            "Bass octave",
-            behaviour_beatstep, 
-            &DeviceBehaviour_Beatstep::setTransposeOctave, 
-            &DeviceBehaviour_Beatstep::getTransposeOctave, 
-            nullptr,
-            0,
-            8
-        );
-        HarmonyStatus bass_harmony = HarmonyStatus("Bass harmony", &behaviour_beatstep->last_transposed_note, &behaviour_beatstep->current_transposed_note);
-    #endif
     #ifdef ENABLE_BEATSTEP_SYSEX
         ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = ObjectToggleControl<DeviceBehaviour_Beatstep> (
             "Beatstep auto-advance",
@@ -89,7 +76,6 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
             nullptr
         );
     #endif
-    //MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("Beatstep Output");
 #endif
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
@@ -183,15 +169,31 @@ void setup_menu() {
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
-        #ifdef ENABLE_BASS_TRANSPOSE
-            menu->add(&bass_transpose_control);  // beatstep transposed to neutron control
+        /*#ifdef ENABLE_BASS_TRANSPOSE
+            menu->add(&neutron_transpose_control);  // beatstep transposed to neutron control
             menu->add(&bass_harmony);
-        #endif
+        #endif*/
         #ifdef ENABLE_BEATSTEP_SYSEX
             menu->add(&beatstep_auto_advance);
         #endif
         //menu->add(&beatstep_output_selector);
     #endif
+
+    //#ifdef ENABLE_BASS_TRANSPOSE
+    MIDIOutputWrapper *neutron_wrapper = midi_matrix_manager->get_target_for_handle("S3 : Neutron : ch 4");
+    ObjectNumberControl<MIDIOutputWrapper,int> *neutron_transpose_control = new ObjectNumberControl<MIDIOutputWrapper,int>(
+        "Neutron octave",
+        neutron_wrapper, 
+        &MIDIOutputWrapper::setForceOctave, 
+        &MIDIOutputWrapper::getForceOctave, 
+        nullptr,
+        0,
+        8
+    );
+    HarmonyStatus *neutron_harmony = new HarmonyStatus("Bass harmony", &neutron_wrapper->last_transposed_note, &neutron_wrapper->current_transposed_note);
+    menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
+    menu->add(neutron_harmony);
+    //#endif
 
     // sequencer
     #ifdef ENABLE_SEQUENCER

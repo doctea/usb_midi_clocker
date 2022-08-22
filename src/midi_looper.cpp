@@ -30,11 +30,11 @@ MIDITrack mpk49_loop_track;// = MIDITrack(); // = MIDITrack(&midi_out_bitbox_wra
 
 // for sending passthrough or recorded noteOns to actual output
 void MIDITrack::sendNoteOn(byte pitch, byte velocity, byte channel) {
-    midi_matrix_manager->send_note_on(this->source_id, pitch, velocity); //, channel);
+    midi_matrix_manager->processNoteOn(this->source_id, pitch, velocity); //, channel);
 }
 // for sending passthrough or recorded noteOffs to actual output
 void MIDITrack::sendNoteOff(byte pitch, byte velocity, byte channel) {
-    midi_matrix_manager->send_note_off(this->source_id, pitch, velocity); //, channel);
+    midi_matrix_manager->processNoteOff(this->source_id, pitch, velocity); //, channel);
 }
 
 void MIDITrack::stop_all_notes() {
