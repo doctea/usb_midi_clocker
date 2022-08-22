@@ -1,8 +1,10 @@
+#include "Config.h"
+
 #include "mymenu.h"
 #include "menuitems.h"
 #include "menu_midi_mapper.h"
 
-#ifdef ENABLE_BEATSTEP
+/*#ifdef ENABLE_BEATSTEP
     extern MidiOutputSelectorControl beatstep_output_selector;
 #endif
 #ifdef ENABLE_KEYSTEP
@@ -19,8 +21,9 @@
     extern MidiOutputSelectorControl looper_output_selector;
 #endif
 extern MidiOutputSelectorControl pc_usb_input_1_selector;
-extern MidiOutputSelectorControl pc_usb_input_2_selector;
+extern MidiOutputSelectorControl pc_usb_input_2_selector;*/
 
+/*
 //TODO: move this into MIDIOutputWrapperManager...
 void update_wrapper_menus_for_name(String source_label, int index) {
     Serial.printf("update_wrapper_menus_for_name(%s, %i)\n", source_label.c_str(), index);
@@ -86,3 +89,4 @@ void update_wrapper_menus_for_name(String source_label, int index) {
 
     Serial.printf("update_wrapper_menus_for_name: Couldn't match source_label '%s' with anything!\n", source_label.c_str());
 }
+*/

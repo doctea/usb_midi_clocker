@@ -1,4 +1,4 @@
-#include "midi_mapper_manager.h"
+/*#include "midi_mapper_manager.h"
 
 #include "behaviour_bamble.h"
 #include "behaviour_craftsynth.h"
@@ -84,10 +84,6 @@ void setup_midi_output_wrapper_manager() {
     #endif
 }
 
-/*void setup_midi_input_wrapper_manager() {
-    // set up the inputs...
-}*/
-
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
@@ -171,3 +167,6 @@ void set_target_wrapper_for_names(String source_label, String target_label) {
     Serial.printf("set_target_wrapper_for_names: Couldn't match source_label '%s' with anything!\n", source_label.c_str()); Serial.flush();
     update_wrapper_menus_for_name(source_label, -1);
 }
+
+
+*/

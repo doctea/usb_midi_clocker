@@ -5,7 +5,11 @@
 #include <USBHost_t36.h>
 #include <SdFat.h>
 
+#include "midi_looper.h"
+
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 30
+
+class MIDITrack;
 
 // generic wrapper around a MIDI output object
 // tracks playing notes and provides methods to kill them so can eg kill all notes when transposition is changed
@@ -21,6 +25,7 @@ class MIDIOutputWrapper {
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
     MIDIDeviceBase *output_usb = nullptr;
     MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
+    MIDITrack *output_looper = nullptr;
     byte default_channel = 1;
 
     byte playing_notes[127];
@@ -44,48 +49,11 @@ class MIDIOutputWrapper {
             output_usb_pointer = in_output_usb;
             default_channel = channel;
         }
+        MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);
 
-        void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-            if (this->debug) Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", pitch, velocity, channel, label); Serial.flush();
-            if (channel==0) channel = default_channel;
-            if (output_serialmidi!=nullptr) {
-                if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);
-                output_serialmidi->sendNoteOn(pitch, velocity, channel);
-            }
-            if (output_usb!=nullptr) {
-                if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb, pitch, velocity, channel);
-                output_usb->sendNoteOn(pitch, velocity, channel);
-            }
-            if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr) {
-                if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb_pointer\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb_pointer, pitch, velocity, channel);
-                (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
-            }
-            //Serial.println("sent NoteOn");
-            if (playing_notes[pitch]<8) {
-                playing_notes[pitch]++;
-            } else {
-                if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
-            }
-        }
-
-        void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
-            if (channel==0) channel = default_channel;
-            if (output_serialmidi!=nullptr)     output_serialmidi->sendNoteOff(pitch, velocity, channel);
-            if (output_usb!=nullptr)            output_usb->sendNoteOff(pitch, velocity, channel);
-            if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)
-                                                (*output_usb_pointer)->sendNoteOff(pitch, velocity, channel);
-
-            if (playing_notes[pitch]>0) playing_notes[pitch]--;
-        }
-
-        void sendControlChange(byte pitch, byte velocity, byte channel = 0) {
-            if (channel==0) channel = default_channel;
-            if (output_serialmidi!=nullptr)     output_serialmidi->sendControlChange(pitch, velocity, channel);
-            if (output_usb!=nullptr)            output_usb->sendControlChange(pitch, velocity, channel);
-            if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)
-                                                (*output_usb_pointer)->sendControlChange(pitch, velocity, channel);
-
-        }
+        void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
+        void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
+        void sendControlChange(byte pitch, byte velocity, byte channel = 0);
 
         inline bool is_note_playing(byte note_number) {
             return playing_notes[note_number]>0;

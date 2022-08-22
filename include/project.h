@@ -9,7 +9,7 @@
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
 
-#include "midi_mapper_manager.h"
+#include "midi_mapper_matrix_manager.h"
 
 #include "midi_lestrum.h"
 #include "midi_pc_usb.h"
@@ -264,7 +264,7 @@ class Project {
             myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
 
             // midi output mappings
-            #ifdef ENABLE_BEATSTEP
+            /*#ifdef ENABLE_BEATSTEP
                 if(beatstep_output!=nullptr)        myFile.printf("midi_output_map=beatstep_output|%s\n",       beatstep_output->label);
             #endif
             #ifdef ENABLE_KEYSTEP
@@ -286,7 +286,18 @@ class Project {
             if(pc_usb_outputs[0]!=nullptr)        myFile.printf("midi_output_map=pc_usb_1_output|%s\n",       pc_usb_outputs[0]->label);
             if(pc_usb_outputs[1]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[1]->label);
             if(pc_usb_outputs[2]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[2]->label);
-            if(pc_usb_outputs[3]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[3]->label);
+            if(pc_usb_outputs[3]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[3]->label);*/
+            for (int s = 0 ; s < midi_matrix_manager->sources_count ; s++) {
+                for (int t = 0 ; t < midi_matrix_manager->targets_count ; t++) {
+                    if (midi_matrix_manager->source_to_targets[s][t]) {
+                        myFile.printf(
+                            "midi_matrix_map=%s|%s\n", 
+                            midi_matrix_manager->sources[s].handle, 
+                            midi_matrix_manager->targets[t].handle
+                        );
+                    }
+                }
+            }
                         //midi_output_wrapper_manager->save_to_file(myFile);
 
             myFile.println("; end project");
@@ -337,7 +348,17 @@ class Project {
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
-                set_target_wrapper_for_names(source_label, target_label);
+                //set_target_wrapper_for_names(source_label, target_label);
+                midi_matrix_manager->connect_source_target(source_label.c_str(), target_label.c_str());
+            } else if (line.startsWith("midi_matrix_map=")) {
+                Serial.printf("----\nLoading midi_matrix_map line '%s'\n", line.c_str());
+                line = line.remove(0,String("midi_matrix_map=").length());
+                int split = line.indexOf('|');
+                String source_label = line.substring(0,split);
+                String target_label = line.substring(split+1,line.length());
+                //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
+                //set_target_wrapper_for_names(source_label, target_label);
+                midi_matrix_manager->connect_source_target(source_label.c_str(), target_label.c_str());
             }
         }
 };

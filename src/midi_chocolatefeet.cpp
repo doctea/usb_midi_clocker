@@ -4,7 +4,7 @@
 #include "midi_out_wrapper.h"
 #include "midi_chocolatefeet.h"
 
-#include "midi_mapper_manager.h"
+#include "midi_mapper_matrix_manager.h"
 
 #include "ConfigMidi.h"
 

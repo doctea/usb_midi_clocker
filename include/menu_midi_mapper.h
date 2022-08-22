@@ -1,4 +1,4 @@
-#ifndef MENU_MIDI_MAPPER__INCLUDED
+/*#ifndef MENU_MIDI_MAPPER__INCLUDED
 #define MENU_MIDI_MAPPER__INCLUDED
 
 #include "Config.h"
@@ -16,11 +16,6 @@ class MidiOutputSelectorControl : public SelectorControl {
     int actual_value_index;
 
     MidiOutputSelectorControl(const char *label) : SelectorControl(label, 0) {};
-/*        SelectorControl(label, 0) {
-        //strcpy(this->label, label);
-        this->setter_func = setter_func;
-        //this->initial_selected_output_wrapper = initial_selected_output_wrapper;
-    }*/
 
     virtual void configure (MIDIOutputWrapper *initial_selected_output_wrapper, void (*setter_func)(MIDIOutputWrapper*)) {
         this->initial_selected_output_wrapper = initial_selected_output_wrapper;
@@ -122,3 +117,4 @@ class MidiOutputSelectorControl : public SelectorControl {
 };
 
 #endif
+*/

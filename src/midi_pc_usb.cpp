@@ -11,7 +11,6 @@
 
 #include "behaviour_bamble.h"
 
-#include "midi_mapper_manager.h"
 #include "midi_mapper_matrix_manager.h"
 
 //MIDIOutputWrapper *pc_usb_outputs[NUM_PC_INPUTS];
@@ -31,7 +30,7 @@ void pc_usb_4_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputW
 void pc_usb_handle_note_on(byte channel, byte note, byte velocity) { //, byte cable) {
   byte cable = usbMIDI.getCable();
 
-  midi_matrix_manager->send_note_on(pc_usb_outputs[cable], note, velocity);
+  midi_matrix_manager->send_note_on(pc_usb_outputs[cable], note, velocity, channel = 0);
   //Serial.printf("pc_usb_handle_note_on (%i, %i, %i, %i)!\n", channel, note, velocity, cable);
   //if (pc_usb_outputs[cable]!=nullptr)
   //  pc_usb_outputs[cable]->sendNoteOn(note, velocity);
@@ -39,16 +38,18 @@ void pc_usb_handle_note_on(byte channel, byte note, byte velocity) { //, byte ca
 void pc_usb_handle_note_off(byte channel, byte note, byte velocity) { //, byte cable) {
   byte cable = usbMIDI.getCable();
 
-  midi_matrix_manager->send_note_off(pc_usb_outputs[cable], note, velocity);
+  midi_matrix_manager->send_note_off(pc_usb_outputs[cable], note, velocity, channel = 0);
   //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
   //if (pc_usb_outputs[cable]!=nullptr)
   //  pc_usb_outputs[cable]->sendNoteOff(note, velocity);
 }
 void pc_usb_handle_control_change(byte channel, byte cc, byte value) { //, byte cable) {
   byte cable = usbMIDI.getCable();
+
+  midi_matrix_manager->send_control_change(pc_usb_outputs[cable], cc, value, channel = 0);
   //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
-  if (pc_usb_outputs[cable]!=nullptr)
-    pc_usb_outputs[cable]->sendControlChange(cc, value, channel);
+  //if (pc_usb_outputs[cable]!=nullptr)
+    //pc_usb_outputs[cable]->sendControlChange(cc, value, channel);
 }
 
 // for handling external midi clock from host's usb

@@ -5,7 +5,10 @@
 #include "Config.h"
 #include "ConfigMidi.h"
 #include "MidiMappings.h"
-#include "midi_out_wrapper.h"
+//#include "midi_out_wrapper.h"
+
+#include "midi_mapper_matrix_types.h"
+//#include "midi_mapper_matrix_manager.h"
 
 #include "bpm.h"
 
@@ -101,8 +104,10 @@ class MIDITrack {
     }
 
     public: 
-        MIDIOutputWrapper *output = nullptr;
+        //MIDIOutputWrapper *output = nullptr;
 
+        source_id_t source_id = -1;
+        
         bool debug = false;
 
         bool recording = false;
@@ -119,16 +124,16 @@ class MIDITrack {
             this->wipe_piano_roll_bitmap();
         };
 
-        MIDITrack(MIDIOutputWrapper *default_output) : MIDITrack () {
+        /*MIDITrack(MIDIOutputWrapper *default_output) : MIDITrack () {
             output = default_output;
-        };
+        };*/
 
-        void setOutputWrapper(MIDIOutputWrapper *output) {
+        /*void setOutputWrapper(MIDIOutputWrapper *output) {
             if (this->output!=nullptr)
                 this->output->stop_all_notes();
             this->output = output;
             Serial.printf("MIDITrack#setOutputWrapper in midi_looper wrapper to '%s'\n", this->output->label);
-        }
+        }*/
 
         // for getting and setting from menu
         int get_quantization_value() {
@@ -321,32 +326,11 @@ class MIDITrack {
         }
 
         // tell the output device to stop all notes that its playing
-        void stop_all_notes() {
-            if (output!=nullptr)
-                this->output->stop_all_notes();
-            if (current_note!=-1) 
-                last_note = current_note;
-            current_note = -1;
-        }
+        void stop_all_notes();
 
         // for sending passthrough or recorded noteOns to actual output
-        void sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-            if (output!=nullptr) {
-                if (this->debug) Serial.printf("\tsending to output %s\tpitch=%i,\tvel=%i,\tchan=%i\n", output->label);;
-                //output->debug = true;
-                output->sendNoteOn(pitch, velocity, channel);
-                //output->debug = false;
-            } else {
-                if (this->debug) Serial.println("\tno output?");
-            }
-        }
-        // for sending passthrough or recorded noteOffs to actual output
-        void sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
-            //Serial.printf("sendNoteOff: output is %p, output_deferred is %p, *output_deferred is %p\n", output, output_deferred, *output_deferred);
-            if (output!=nullptr) 
-                output->sendNoteOff(pitch, velocity, channel);
-        }
-
+        void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
+        void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
 
         // called by external code to inform the looper about a note being played; looper decides whether to wipe and/or record it
         void in_event(uint32_t ticks, byte message_type, byte note, byte velocity) {
@@ -414,8 +398,7 @@ class MIDITrack {
             // send & record note-offs for all notes that are playing due to being recorded
             for (byte i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
-                    if (output!=nullptr)
-                        this->sendNoteOff(i, 0);
+                    this->sendNoteOff(i, 0);
                     store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, 0);
                     recorded_hanging_notes[i].playing = false;
                 }

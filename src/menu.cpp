@@ -89,7 +89,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
             nullptr
         );
     #endif
-    MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("Beatstep Output");
+    //MidiOutputSelectorControl beatstep_output_selector = MidiOutputSelectorControl("Beatstep Output");
 #endif
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
@@ -99,7 +99,7 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     LooperStatus            mpk49_looper_status =       LooperStatus("Looper",                  &mpk49_loop_track);
     LooperQuantizeControl   quantizer_setting =         LooperQuantizeControl("Loop quant",     &mpk49_loop_track);   
     LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
-    MidiOutputSelectorControl looper_output_selector =  MidiOutputSelectorControl("Looper MIDI Output"); 
+    //MidiOutputSelectorControl looper_output_selector =  MidiOutputSelectorControl("Looper MIDI Output"); 
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER
@@ -109,24 +109,24 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 
 
 #ifdef ENABLE_KEYSTEP
-    MidiOutputSelectorControl keystep_output_selector = MidiOutputSelectorControl("KeyStep MIDI Output");
+    //MidiOutputSelectorControl keystep_output_selector = MidiOutputSelectorControl("KeyStep MIDI Output");
 #endif
 
 #ifdef ENABLE_MPK49
-    MidiOutputSelectorControl mpk49_output_selector = MidiOutputSelectorControl("MPK49 MIDI Output");
+    //MidiOutputSelectorControl mpk49_output_selector = MidiOutputSelectorControl("MPK49 MIDI Output");
 #endif
 
 #ifdef ENABLE_USB
     USBDevicesPanel usbdevices_panel = USBDevicesPanel();
-    MidiOutputSelectorControl pc_usb_input_1_selector = MidiOutputSelectorControl("PC USB 1 MIDI Output");
+    /*MidiOutputSelectorControl pc_usb_input_1_selector = MidiOutputSelectorControl("PC USB 1 MIDI Output");
     MidiOutputSelectorControl pc_usb_input_2_selector = MidiOutputSelectorControl("PC USB 2 MIDI Output");
     MidiOutputSelectorControl pc_usb_input_3_selector = MidiOutputSelectorControl("PC USB 3 MIDI Output");
-    MidiOutputSelectorControl pc_usb_input_4_selector = MidiOutputSelectorControl("PC USB 4 MIDI Output");
+    MidiOutputSelectorControl pc_usb_input_4_selector = MidiOutputSelectorControl("PC USB 4 MIDI Output");*/
 #endif
 
 #ifdef ENABLE_LESTRUM
-    MidiOutputSelectorControl lestrum_pads_output_selector = MidiOutputSelectorControl("LeStrum pads Output");
-    MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp Output");
+    //MidiOutputSelectorControl lestrum_pads_output_selector = MidiOutputSelectorControl("LeStrum pads Output");
+    //MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp Output");
 #endif
 
 /*#ifdef ENABLE_CRAFTSYNTH  // only need this if we want to listen to craftsynth midi *input*
@@ -172,9 +172,9 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #endif
 
 
-void mpk49_loop_track_setOutputWrapper(MIDIOutputWrapper *wrapper) {
+/*void mpk49_loop_track_setOutputWrapper(MIDIOutputWrapper *wrapper) {
     mpk49_loop_track.setOutputWrapper(wrapper);
-}
+}*/
 
 
 /*MenuItem test_item_1 = MenuItem("test 1");
@@ -197,7 +197,7 @@ void setup_menu() {
     Serial.println("Created Menu object..");
     Serial.flush();
 
-    #ifdef ENABLE_LOOPER
+    /*#ifdef ENABLE_LOOPER
         looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
     #endif
     #ifdef ENABLE_BEATSTEP    
@@ -213,15 +213,15 @@ void setup_menu() {
         lestrum_pads_output_selector.configure(lestrum_pads_output, lestrum_pads_setOutputWrapper);
         lestrum_arp_output_selector.configure(lestrum_arp_output, lestrum_arp_setOutputWrapper);
     #endif
-    /*#ifdef ENABLE_CRAFTSYNTH
-        craftsynth_output_selector.configure(craftsynth_output, craftsynth_setOutputWrapper);
-    #endif*/
+    //#ifdef ENABLE_CRAFTSYNTH
+    //    craftsynth_output_selector.configure(craftsynth_output, craftsynth_setOutputWrapper);
+    //#endif
     #ifdef ENABLE_USB
         pc_usb_input_1_selector.configure(pc_usb_outputs[0], pc_usb_1_setOutputWrapper);
         pc_usb_input_2_selector.configure(pc_usb_outputs[1], pc_usb_2_setOutputWrapper);
         pc_usb_input_3_selector.configure(pc_usb_outputs[2], pc_usb_3_setOutputWrapper);
         pc_usb_input_4_selector.configure(pc_usb_outputs[3], pc_usb_4_setOutputWrapper);
-    #endif
+    #endif*/
     
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
@@ -241,7 +241,7 @@ void setup_menu() {
         #ifdef ENABLE_BEATSTEP_SYSEX
             menu->add(&beatstep_auto_advance);
         #endif
-        menu->add(&beatstep_output_selector);
+        //menu->add(&beatstep_output_selector);
     #endif
 
     // sequencer
@@ -256,7 +256,7 @@ void setup_menu() {
         menu->add(&project_auto_advance_looper);
         menu->add(&mpk49_looper_status); 
         menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
-        menu->add(&looper_output_selector);
+        //menu->add(&looper_output_selector);
         menu->add(&looper_transpose_control);
         //menu->add(&looper_submenu);
     #endif
@@ -269,15 +269,15 @@ void setup_menu() {
         menu->add(&beatstep_output_selector);
     #endif*/
     #ifdef ENABLE_KEYSTEP
-        menu->add(&keystep_output_selector);
+        //menu->add(&keystep_output_selector);
     #endif
     #ifdef ENABLE_MPK49
-        menu->add(&mpk49_output_selector);
+        //menu->add(&mpk49_output_selector);
     #endif
 
     #ifdef ENABLE_LESTRUM
-        menu->add(&lestrum_pads_output_selector);
-        menu->add(&lestrum_arp_output_selector);
+        //menu->add(&lestrum_pads_output_selector);
+        //menu->add(&lestrum_arp_output_selector);
     #endif
 
     #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
@@ -285,10 +285,10 @@ void setup_menu() {
     #endif
 
     #ifdef ENABLE_USB
-        menu->add(&pc_usb_input_1_selector);
+        /*menu->add(&pc_usb_input_1_selector);
         menu->add(&pc_usb_input_2_selector);
         menu->add(&pc_usb_input_3_selector);
-        menu->add(&pc_usb_input_4_selector);
+        menu->add(&pc_usb_input_4_selector);*/
     #endif
 
     #ifdef ENABLE_SUBCLOCKER

@@ -75,8 +75,11 @@ void setup() {
   Serial.println("..USB device handler..");
   setup_behaviour_manager();
 
-  Serial.println("..MIDIOutputWrapper manager..");
-  setup_midi_output_wrapper_manager();
+  //Serial.println("..MIDIOutputWrapper manager..");
+  //setup_midi_output_wrapper_manager();
+  Serial.println("..MIDI matrix manager..");
+  //setup_midi_output_wrapper_manager();
+  setup_midi_mapper_matrix_manager();
 
   #ifdef ENABLE_SCREEN
     //setup_tft();

@@ -8,12 +8,17 @@
 
 #include <LinkedList.h>
 
+#include "midi_mapper_matrix_types.h"
+
 class DeviceBehaviourBase {
     public:
         bool debug = false;
 
         const uint32_t vid = 0x0000, pid = 0x0000;
         MIDIDeviceBase *device = nullptr;
+
+        source_id_t source_id = -1;
+        target_id_t target_id = -1;
 
         DeviceBehaviourBase() = default;
         virtual ~DeviceBehaviourBase() = default;
@@ -79,14 +84,11 @@ class DeviceBehaviourBase {
         virtual void on_restart() {};
         // called when we change phrase
         virtual void on_phrase(uint32_t phrase) {};
-        // called when a note_on message is received from the device
-        virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
+        virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
         // called when a note_off message is received from the device
-        virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {};
-        // called when a control_change message is received from the device
-        virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {};
+        virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+        virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
         virtual void init() {};
-
 };
 
 class ClockedBehaviour : public DeviceBehaviourBase {
