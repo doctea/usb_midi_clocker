@@ -107,31 +107,10 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     LooperQuantizeControl   drum_loop_quantizer_setting = LooperQuantizeControl("Drum Loop quant",   &drums_loop_track);   // todo: make this part of the LooperStatus object
 #endif
 
-
-#ifdef ENABLE_KEYSTEP
-    //MidiOutputSelectorControl keystep_output_selector = MidiOutputSelectorControl("KeyStep MIDI Output");
-#endif
-
-#ifdef ENABLE_MPK49
-    //MidiOutputSelectorControl mpk49_output_selector = MidiOutputSelectorControl("MPK49 MIDI Output");
-#endif
-
 #ifdef ENABLE_USB
     USBDevicesPanel usbdevices_panel = USBDevicesPanel();
-    /*MidiOutputSelectorControl pc_usb_input_1_selector = MidiOutputSelectorControl("PC USB 1 MIDI Output");
-    MidiOutputSelectorControl pc_usb_input_2_selector = MidiOutputSelectorControl("PC USB 2 MIDI Output");
-    MidiOutputSelectorControl pc_usb_input_3_selector = MidiOutputSelectorControl("PC USB 3 MIDI Output");
-    MidiOutputSelectorControl pc_usb_input_4_selector = MidiOutputSelectorControl("PC USB 4 MIDI Output");*/
 #endif
 
-#ifdef ENABLE_LESTRUM
-    //MidiOutputSelectorControl lestrum_pads_output_selector = MidiOutputSelectorControl("LeStrum pads Output");
-    //MidiOutputSelectorControl lestrum_arp_output_selector  = MidiOutputSelectorControl("LeStrum arp Output");
-#endif
-
-/*#ifdef ENABLE_CRAFTSYNTH  // only need this if we want to listen to craftsynth midi *input*
-    MidiOutputSelectorControl craftsynth_output_selector = MidiOutputSelectorControl("CraftSynth Output");
-#endif*/
 #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
     ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
         "CraftSynth clock enable",
@@ -173,12 +152,6 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
 
 #endif
 
-
-/*void mpk49_loop_track_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-    mpk49_loop_track.setOutputWrapper(wrapper);
-}*/
-
-
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
@@ -198,32 +171,6 @@ void setup_menu() {
     menu = new Menu(tft);
     Serial.println("Created Menu object..");
     Serial.flush();
-
-    /*#ifdef ENABLE_LOOPER
-        looper_output_selector.configure(mpk49_loop_track.output, mpk49_loop_track_setOutputWrapper);
-    #endif
-    #ifdef ENABLE_BEATSTEP    
-        beatstep_output_selector.configure(beatstep_output, beatstep_setOutputWrapper);
-    #endif
-    #ifdef ENABLE_KEYSTEP
-        keystep_output_selector.configure(keystep_output, keystep_setOutputWrapper);
-    #endif
-    #ifdef ENABLE_MPK49
-        mpk49_output_selector.configure(mpk49_output, mpk49_setOutputWrapper);
-    #endif
-    #ifdef ENABLE_LESTRUM
-        lestrum_pads_output_selector.configure(lestrum_pads_output, lestrum_pads_setOutputWrapper);
-        lestrum_arp_output_selector.configure(lestrum_arp_output, lestrum_arp_setOutputWrapper);
-    #endif
-    //#ifdef ENABLE_CRAFTSYNTH
-    //    craftsynth_output_selector.configure(craftsynth_output, craftsynth_setOutputWrapper);
-    //#endif
-    #ifdef ENABLE_USB
-        pc_usb_input_1_selector.configure(pc_usb_outputs[0], pc_usb_1_setOutputWrapper);
-        pc_usb_input_2_selector.configure(pc_usb_outputs[1], pc_usb_2_setOutputWrapper);
-        pc_usb_input_3_selector.configure(pc_usb_outputs[2], pc_usb_3_setOutputWrapper);
-        pc_usb_input_4_selector.configure(pc_usb_outputs[3], pc_usb_4_setOutputWrapper);
-    #endif*/
 
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
@@ -269,30 +216,8 @@ void setup_menu() {
         menu->add(&drum_loop_quantizer_setting);
     #endif
 
-    /*#ifdef ENABLE_BEATSTEP
-        menu->add(&beatstep_output_selector);
-    #endif*/
-    #ifdef ENABLE_KEYSTEP
-        //menu->add(&keystep_output_selector);
-    #endif
-    #ifdef ENABLE_MPK49
-        //menu->add(&mpk49_output_selector);
-    #endif
-
-    #ifdef ENABLE_LESTRUM
-        //menu->add(&lestrum_pads_output_selector);
-        //menu->add(&lestrum_arp_output_selector);
-    #endif
-
     #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
         menu->add(&craftsynth_clock_toggle);
-    #endif
-
-    #ifdef ENABLE_USB
-        /*menu->add(&pc_usb_input_1_selector);
-        menu->add(&pc_usb_input_2_selector);
-        menu->add(&pc_usb_input_3_selector);
-        menu->add(&pc_usb_input_4_selector);*/
     #endif
 
     #ifdef ENABLE_SUBCLOCKER
