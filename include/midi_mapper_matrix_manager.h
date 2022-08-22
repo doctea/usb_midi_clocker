@@ -73,6 +73,9 @@ class MIDIMatrixManager {
 
     bool source_to_targets[NUM_SOURCES][NUM_TARGETS] = {};
 
+    void toggle_source_target(source_id_t source_id, target_id_t target_id) {
+        source_to_targets[source_id][target_id] = !source_to_targets[source_id][target_id];
+    }
     void connect_source_target(MIDITrack *track, DeviceBehaviourBase *device);
     void connect_source_target(DeviceBehaviourBase *device, const char *handle);
     void connect_source_target(source_id_t source_id, target_id_t target_id) {
@@ -95,16 +98,32 @@ class MIDIMatrixManager {
     }
 
     void send_note_on(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
-        for (target_id_t i = 0 ; i < NUM_TARGETS ; i++) {
-            if (source_to_targets[source_id][i]) {
-                targets[i].wrapper->sendNoteOn(pitch, velocity, channel);
+        if (source_id<0) {
+            Serial.printf("!! midi_mapper_matrix_manager#send_note_on() passed source_id of %i!\n", source_id);
+            return;
+        }
+        Serial.printf("midi_mapper_matrix_manager#send_note_on(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
+        for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
+            if (source_to_targets[source_id][target_id]) {
+                targets[target_id].wrapper->debug = true;
+                Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
+                targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
+                targets[target_id].wrapper->debug = false;
             }
         }
     }
     void send_note_off(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
-        for (target_id_t i = 0 ; i < NUM_TARGETS ; i++) {
-            if (source_to_targets[source_id][i]) {
-                targets[i].wrapper->sendNoteOff(pitch, velocity, channel);
+        if (source_id<0) {
+            Serial.printf("!! midi_mapper_matrix_manager#send_note_off() passed source_id of %i!\n", source_id);
+            return;
+        }
+        Serial.printf("midi_mapper_matrix_manager#send_note_off(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
+        for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
+            if (source_to_targets[source_id][target_id]) {
+                targets[target_id].wrapper->debug = true;
+                Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
+                targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
+                targets[target_id].wrapper->debug = false;
             }
         }
     }

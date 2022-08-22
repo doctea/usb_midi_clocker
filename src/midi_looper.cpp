@@ -43,7 +43,7 @@ void clear_recording() {
 
 // for sending passthrough or recorded noteOns to actual output
 void MIDITrack::sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
-    midi_matrix_manager->send_note_on(this->source_id, pitch, velocity, channel);
+    midi_matrix_manager->send_note_on(this->source_id, pitch, velocity); //, channel);
     /*if (output!=nullptr) {
         if (this->debug) Serial.printf("\tsending to output %s\tpitch=%i,\tvel=%i,\tchan=%i\n", output->label);;
         //output->debug = true;
@@ -55,7 +55,7 @@ void MIDITrack::sendNoteOn(byte pitch, byte velocity, byte channel = 0) {
 }
 // for sending passthrough or recorded noteOffs to actual output
 void MIDITrack::sendNoteOff(byte pitch, byte velocity, byte channel = 0) {
-    midi_matrix_manager->send_note_off(this->source_id, pitch, velocity, channel);
+    midi_matrix_manager->send_note_off(this->source_id, pitch, velocity); //, channel);
     //Serial.printf("sendNoteOff: output is %p, output_deferred is %p, *output_deferred is %p\n", output, output_deferred, *output_deferred);
     /*if (output!=nullptr) 
         output->sendNoteOff(pitch, velocity, channel);*/

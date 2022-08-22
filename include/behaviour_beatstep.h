@@ -49,8 +49,10 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 note = note2;
             #endif
 
-            if (beatstep_output!=nullptr)
-                beatstep_output->sendNoteOn((uint8_t)note, 127); 
+            ClockedBehaviour::note_on(channel, note, 127);
+
+            /*if (beatstep_output!=nullptr)
+                beatstep_output->sendNoteOn((uint8_t)note, 127); */
 
             #ifdef ENABLE_BASS_TRANSPOSE
                 // update current / remember last played TRANSPOSED note
@@ -77,8 +79,9 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
                 //}
             #endif
 
-            if (beatstep_output!=nullptr)
-                beatstep_output->sendNoteOff((uint8_t)note, velocity); //, BASS_MIDI_CHANNEL);
+            //if (beatstep_output!=nullptr)
+            //    beatstep_output->sendNoteOff((uint8_t)note, velocity); //, BASS_MIDI_CHANNEL);
+            ClockedBehaviour::note_off(channel, note, 127);
 
             #ifdef ENABLE_BASS_TRANSPOSE
                 // update current / remember last played TRANSPOSED note

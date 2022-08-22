@@ -25,7 +25,7 @@ class DeviceBehaviour_Keystep : public ClockedBehaviour {
             this->device->setHandleNoteOff(keystep_handle_note_off);
         }
 
-        void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        /*void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
             if (keystep_output!=nullptr)
                 keystep_output->sendNoteOn(note, velocity); //, MIDI_CHANNEL_BITBOX 3);
         }
@@ -33,7 +33,7 @@ class DeviceBehaviour_Keystep : public ClockedBehaviour {
         void note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
             if (keystep_output!=nullptr)
                 keystep_output->sendNoteOff(note, velocity);
-        }
+        }*/
 
 };
 

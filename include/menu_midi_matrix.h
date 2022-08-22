@@ -58,7 +58,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
             selected_source_index = new_value;
         } else {
             // target selected for this source
-            midi_matrix_manager->connect_source_target(selected_source_index, new_value);
+            midi_matrix_manager->toggle_source_target(selected_source_index, new_value);
         }
         actual_value_index = new_value;
         selected_value_index = actual_value_index;
