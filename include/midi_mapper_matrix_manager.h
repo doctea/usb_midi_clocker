@@ -127,10 +127,10 @@ class MIDIMatrixManager {
         if (this->debug) Serial.printf("midi_mapper_matrix_manager#send_note_on(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
             if (is_connected(source_id, target_id)) {
-                targets[target_id].wrapper->debug = true;
+                //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
-                targets[target_id].wrapper->debug = false;
+                //targets[target_id].wrapper->debug = false;
             }
         }
     }
