@@ -287,13 +287,13 @@ class Project {
             if(pc_usb_outputs[1]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[1]->label);
             if(pc_usb_outputs[2]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[2]->label);
             if(pc_usb_outputs[3]!=nullptr)        myFile.printf("midi_output_map=pc_usb_2_output|%s\n",       pc_usb_outputs[3]->label);*/
-            for (int s = 0 ; s < midi_matrix_manager->sources_count ; s++) {
-                for (int t = 0 ; t < midi_matrix_manager->targets_count ; t++) {
-                    if (midi_matrix_manager->source_to_targets[s][t]) {
+            for (int source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+                for (int target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+                    if (midi_matrix_manager->is_connected(source_id,target_id)) {
                         myFile.printf(
                             "midi_matrix_map=%s|%s\n", 
-                            midi_matrix_manager->sources[s].handle, 
-                            midi_matrix_manager->targets[t].handle
+                            midi_matrix_manager->sources[source_id].handle, 
+                            midi_matrix_manager->targets[target_id].handle
                         );
                     }
                 }
@@ -308,6 +308,9 @@ class Project {
 
         bool load_project_settings(int project_number) {
             File myFile;
+
+            Serial.printf("load_project_settings(%i) resetting matrix!\n");
+            midi_matrix_manager->reset_matrix(); 
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
@@ -346,6 +349,7 @@ class Project {
                 line = line.remove(0,String("midi_output_map=").length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);
+                source_label = source_label.replace("_output","");
                 String target_label = line.substring(split+1,line.length());
                 //MIDIOutputWrapper *target = find_wrapper_for_name((char*)target_label.c_str());
                 //set_target_wrapper_for_names(source_label, target_label);

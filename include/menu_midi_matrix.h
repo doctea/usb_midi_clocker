@@ -12,12 +12,46 @@ class MidiMatrixSelectorControl : public SelectorControl {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
+    uint16_t target_colours[16] = {
+        0xF800, //#define ST77XX_RED        
+        0x07E0,        //#define ST77XX_GREEN      
+        0x001F,        //#define ST77XX_BLUE       
+        0x07FF,        //#define ST77XX_CYAN       
+        0xF81F,        //#define ST77XX_MAGENTA   
+        0xFFE0,//#define ST77XX_YELLOW     
+        0xFC00,        //#define ST77XX_ORANGE     
+        //#define ST77XX_PINK       
+        0xF710,
+        (0xF800 + 0x001F)/2,
+        (0x07E0 + 0x07FF)/2,
+        (0xF81F + 0xFC00)/2,
+        (0xFA1F + 0xF800)/2,
+        (0x07E0 + 0x001F)/2,
+        (0xF800 + 0x07FF)/2,
+        (0xF81F + 0xFC00)/2,
+        (0xA81F + 0xF877)/2
+    }; 
+
+    uint16_t get_colour_for_target_id(target_id_t target_id) {
+        return target_colours[target_id];
+    }
+
     public:
     int actual_value_index;
     int selected_source_index = -1;
     int selected_target_index = -1;
 
     MidiMatrixSelectorControl(const char *label) : SelectorControl(label, 0) {};
+
+    /*void on_add() override {
+        for (int i = 0 ; i < 16 ; i++) {
+            target_colours[i] = tft->rgb(
+                (byte)(64 + (i * 16)), 
+                64 + (i * 32), 
+                32 + (i * 64)
+            );
+        }
+    }*/
 
     /*virtual void configure (MIDIOutputWrapper *initial_selected_output_wrapper, void (*setter_func)(MIDIOutputWrapper*)) {
         this->initial_selected_output_wrapper = initial_selected_output_wrapper;
@@ -41,32 +75,25 @@ class MidiMatrixSelectorControl : public SelectorControl {
     }*/
 
     virtual const char* get_label_for_index(int index) {
-        if (selected_source_index==-1) {    // select from the sources
-            return midi_matrix_manager->sources[index].handle;
-        } else {    // select from targets
-            return midi_matrix_manager->targets[index].handle;
+        if (selected_source_index==-1) {    
+            // select from the sources
+            return midi_matrix_manager->get_label_for_source_id(index); //->sources[index].handle;
+        } else {    
+            // select from targets
+            return midi_matrix_manager->get_label_for_target_id(index); //targets[index].handle;
         }
-        //Serial.printf("MidiOutputSelectorControl->get_label_for_index(%i)..\n", index); Serial.flush();
-        //Serial.printf("got label %s..\n", available_outputs[index].label); Serial.flush();
-        //return available_outputs[index].label;
-        //return midi_output_wrapper_manager->get_label_for_index(index);
     }
 
     virtual void setter (int new_value) override {
         Serial.printf("MidiMatrixSelectorControl changing from %i to %i\n", this->actual_value_index, new_value); Serial.flush();
         if (selected_source_index==-1) { // select source
             selected_source_index = new_value;
+            actual_value_index = new_value;
+            selected_value_index = actual_value_index;
         } else {
             // target selected for this source
             midi_matrix_manager->toggle_source_target(selected_source_index, new_value);
         }
-        actual_value_index = new_value;
-        selected_value_index = actual_value_index;
-        /*if (this->setter_func!=nullptr) {
-            Serial.printf("setting new output to number %i\n", new_value); Serial.flush();
-            //this->setter_func(&available_outputs[new_value]);
-            this->setter_func(midi_output_wrapper_manager->find(new_value));
-        }*/
     }
     virtual int getter () override {
         //if (selected_source_index==-1) // select source
@@ -92,40 +119,53 @@ class MidiMatrixSelectorControl : public SelectorControl {
 
         tft->setTextSize(1);
 
-        if (!opened) {
+        /*if (!opened) {
             // not selected, so just show the current values
             //colours(opened && selected_value_index==i, col, BLACK);
-            /*char *label = (char*)get_label_for_index(this->actual_value_index);
-            if (label==nullptr || this->actual_value_index == -1) {
-                tft->setTextColor(RED, BLACK);
-                label = (char*)"[invalid]";
-            } else {
-                tft->setTextColor(YELLOW, BLACK);
-            }
-            tft->printf((char*)"%s", (char*)label);
-            tft->println((char*)"");*/
-            tft->setTextColor(C_WHITE, BLACK);
-            tft->printf("not opened");
-        } else {
+            //tft->setTextColor(C_WHITE, BLACK);
+            colours(selected, C_WHITE, BLACK);
+            tft->println("..");
+        } else {*/
             int current_value = actual_value_index; //this->getter();
 
+            /*int rotation = ((DisplayTranslator_STeensy *)tft)->actual.getRotation();
+            ((DisplayTranslator_STeensy *)tft)->actual.setRotation(rotation+1);
+            for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+                tft->println(midi_matrix_manager->get_label_for_target_id(target_id));
+            }
+            ((DisplayTranslator_STeensy *)tft)->actual.printf.setRotation(rotation);*/
+
             if (selected_source_index==-1) { // show list of sources
-                for (int i = 0 ; i < midi_matrix_manager->sources_count ; i++) {
-                    bool is_current_value_selected = i==current_value;
+                for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+                    bool is_current_value_selected = source_id==current_value;
                     int col = is_current_value_selected ? GREEN : C_WHITE;
-                    colours(opened && selected_value_index==i, col, BLACK);
-                    tft->printf((char*)"%s\n", (char*)get_label_for_index(i));
+                    colours(opened && selected_value_index==source_id, col, BLACK);
+                    tft->printf((char*)"%15s : ", (char*)get_label_for_index(source_id));
+
+                    for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+                        colours(BLACK, this->get_colour_for_target_id(target_id));
+                        if (midi_matrix_manager->is_connected(source_id, target_id)) {
+                            //tft->printf((char*)"%15s, ", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
+                            tft->printf("*");
+                        } else {
+                            tft->printf(" ");
+                        }
+                    }
+                    tft->println();
                 }
             } else {        // show list of targets
-                for (int i = 0 ; i < midi_matrix_manager->targets_count ; i++) {
-                    bool is_current_value_selected = i==current_value;
-                    bool is_current_value_connected = midi_matrix_manager->source_to_targets[selected_source_index][i];
-                    int col = (is_current_value_connected && is_current_value_selected) ? PURPLE :
-                              is_current_value_selected ? YELLOW : 
+                tft->setTextColor(BLACK,GREEN);
+                tft->printf((const char*)"%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
+                for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+                    bool is_current_value_selected = target_id==current_value;
+                    bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
+                    /*int col = (is_current_value_connected && is_current_value_selected) ? PURPLE :
                               is_current_value_connected ? GREEN :
-                              C_WHITE;
-                    colours(opened && selected_value_index==i, col, BLACK);
-                    tft->printf((char*)"%s\n", (char*)get_label_for_index(i));
+                              C_WHITE;*/
+                    uint16_t col = this->get_colour_for_target_id(target_id);
+                    colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
+                    char indicator = is_current_value_connected ? '*' : ' ';
+                    tft->printf((char*)"%c %s\n", indicator, (char*)get_label_for_index(target_id));
                 }
             }
 
@@ -138,7 +178,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
             }*/
             if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually
                 tft->println((char*)"");
-        }
+        //}
         return tft->getCursorY();
     }
 
@@ -159,7 +199,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
     virtual bool button_back() override {
         if (selected_source_index >= 0) {
             Serial.println("Backing out from selecting target");
-            menu_set_last_message("Back out", GREEN);
+            menu_set_last_message((const char*)"Back out", GREEN);
             selected_source_index = -1;
             return true;    // don't exit to top menu
         }
