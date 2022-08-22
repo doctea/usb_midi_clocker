@@ -66,7 +66,7 @@ ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 BPMPositionIndicator posbar = BPMPositionIndicator();
 //LooperStatus mpk49_looper = LooperStatus();
 #ifdef ENABLE_BEATSTEP
-    HarmonyStatus beatstep_notes =          HarmonyStatus("Beatstep harmony",   &behaviour_beatstep->last_note,          &behaviour_beatstep->current_note);
+    HarmonyStatus beatstep_notes = HarmonyStatus("Beatstep harmony",   &behaviour_beatstep->last_note,          &behaviour_beatstep->current_note);
     #ifdef ENABLE_BASS_TRANSPOSE
         //NumberControl bass_transpose_control =  NumberControl("Bass octave", &bass_transpose_octave, bass_transpose_octave, 1, 4, &bass_transpose_changed);
         ObjectNumberControl<DeviceBehaviour_Beatstep,int> bass_transpose_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
@@ -147,9 +147,6 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
         &DeviceBehaviour_Subclocker::is_set_restart_on_bar,
         "Restarting.."
     );
-
-    //ObjectActionItem<DeviceBehaviour_Subclocker> subclocker_restart_action = ObjectActionItem<DeviceBehaviour_Subclocker> ()
-
 #endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
@@ -157,7 +154,8 @@ MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
 
 //DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
-DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
+//DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
+DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
 
 void setup_menu() {
 
