@@ -1,17 +1,20 @@
 - This branch (main) is for a Teensy 4.1 using the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
 - The [Arduino branch](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) is lacking most of the extended features, but works on an Arduino Uno with a USB Host Shield.  (The Teensy version supports connecting a Uno running the Arduino version as a USB MIDI device to add extra clock outputs - use [USBMidiKliK](https://github.com/TheKikGen/USBMidiKliK) to turn the Arduino into a native USB MIDI device and configure it with pid=0x1337, vid=0x1337).
+- This project should be considered work-in-progress/beta -- don't trust it for anything mission-critical!  Although it has been known to run for 12 hour stretches without crashing, it has started locking up quite frequently lately for unknown reasons (usually crashing/freezing during USB operations from what I can tell)
 
 # usb_midi_clocker
 
-This can be used as the clock generator and a USB MIDI hub to your Eurorack system, and more.  It allows making use of USB-MIDI devices (eg Akai APCMini and MPK49, original Arturia Beatstep and Keystep, Modal CraftSynth 2.0), syncing USB and din MIDI devices as well as Eurorack CV clock and triggers on multiple outputs with selectable divisions and sequencer controlled by APCMini interface.
+This can be used as the clock generator and a USB MIDI hub to your Eurorack system, and more.
 
-Fundamentally I guess the aim is to try and tie together and make useful in a Eurorack context multiple cheap MIDI devices by clocking MIDI and eurorack from the same source.
+It allows making use of USB-MIDI devices (eg Akai APCMini and MPK49, original Arturia Beatstep and Keystep, Modal CraftSynth 2.0), syncing USB and din MIDI devices as well as Eurorack CV clock and triggers on multiple outputs with selectable divisions and sequencer controlled by APCMini interface.
+
+Fundamentally I guess the aim is to tie together and make useful, in a Eurorack context, multiple cheap MIDI devices by clocking serial MIDI, USB MIDI, and eurorack from the same clock source.
 
 Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to SD with functions such as unlimited projects, per-project sequences that store and recall clock divisions and sequencer patterns, a MIDI looper, etc.  Option to auto-advance through these sequences/loops for rudimentary song chaining.
 
 # Use and contributing
 
-Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message if you're thinking of giving it a try.
+Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message if you're thinking of giving it a try or need any assistance!
 
 ## Features
 
@@ -26,30 +29,30 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Modal CraftSynth 2.0 (route an input or looper to play CraftSynth notes, with tempo sync for arpeggiation etc)
   - M-Vave/Cuvave Chocolate footswitch controller (controls the MIDI looper from left to right: play (toggle), record (toggle), overwrite (momentary), record (momentary))
     - Use the app to configure it as a custom config that outputs note on/note offs on notes 0,1,2,3
+- Send and receive MIDI events to host PC
 - Support for MIDI DIN devices (clock and note in/outs), eg
   - Route USB MIDI from Beatstep to DIN Behringer Neutron, while transposing all notes to target octave range
   - Sync a 1010 bitbox mk2 with clock
   - Route a MIDI drumkit to my drum2musocv MidiMuso CV-12 triggers
   - Route MIDI input from a [LeStrum](https://www.tindie.com/products/hotchk155/le-strum-midi-strummed-chord-controller-kit/) to MIDI->CV interface or other synth
   - Route MIDI to/from a Disting Ex with the Expert Sleepers MIDI breakout board
-- a MIDI routing matrix to take input from any of the configured sources and output it to any of the configure outputs (including loopers)
+- a MIDI routing matrix, to take input from any of the configured sources and output it to any of the configure outputs (including loopers)
 - Re-sync clocked devices 'now' or 'on next bar start' (using ACPMini shift+Up and shift+Device respectively) that resets internal clock and sends stop/start messages to attached MIDI devices
 - Feedback & configuration via UI
-  - ST7899 display using ST7899_t3 for info + [custom menu system](https://github.com/doctea/mymenu)
+  - ST7899 display using ST7899_t3 library for info via [custom menu system](https://github.com/doctea/mymenu)
   - Controlled with rotary encoder + buttons and via APCMini 
 - Clock sync options
-  - Sync to external MIDI clock and obey start/stop from USB host (ie sync to PC/DAW)
-  - Or run from internal clock, with BPM controlled by APCMini slider
+  - Run from internal clock, with BPM controlled by APCMini slider
+  - Or sync to external MIDI clock and obey start/stop from USB host (ie sync to PC/DAW)
   - APCMini shortcuts to 'send restarts' to synced devices to get everything in sync
 - CV outputs for clock divisions and sequencer tracks
-  - on Teensy's digital pins, via level shifter (wiring diagram/schematic below)
+  - on Teensy's digital pins, via level shifter (see wiring diagram/schematic below)
   - 4 tracks of an 8-beat sequencer, configurable on-the-fly via APCMini
     - trigger once per beat, twice per beat, 4 times per beat, 0 times per beat
   - 4 clock division outputs, configurable on-the-fly via APCMini
     - 32nds, 16ths, 8ths, 4ths, whole note, half bar, bar, 2-bar, phrase, two phrases
     - offset up to +/-7 beats from start of phrase
-- Configurable MIDI device routing (device:channel input to device:channel output)
-- Save sequences, clock settings and device routings to SD card
+- Save sequences, clock settings and device matrix routings to SD card
   - Multiple (effectively unlimited?) projects
   - 8 save slots for sequencer+clock settings per project
   - auto-advance sequence option
@@ -62,7 +65,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - with quantization on recording and recall
   - transpose loop (chromatic)
   - 8 slots per project
-  - auto-advance loops option
+  - auto-advance looper option
   - control via the M-Vave footswitch buttons, including momentary hold for overwriting + recording
   - recorded notes are shown on display in piano roll style
   - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
@@ -112,6 +115,13 @@ Both are encouraged, I would love to have this be useful to others and to accept
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
 - Beatstep sysex commands don't work, probably for the same reason?
 - MIDI looper uses a LOT (all?!) of RAM (~48k for 1 phrase -- 384*127)
+
+## Configuration
+
+- see `include/Config.h` for lots of switches to enable/disable features, set pin assignments, and the like
+- see also `include/ConfigMidi.h` for a few more switches
+- `src/midi_mapper_matrix_manager.cpp` is where a lot of midi device input/output mappings are initialised and defaults assigned, so you may need to tweak stuff here to match your hardware
+- `src/menu.cpp` is where the display and menu system are initialised and menu items configured, so you may need to tweak stuff here too
 
 ### TODO/Future 
 
@@ -166,12 +176,13 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Record and playback CCs as well as MIDI
 - Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets
 - Subclocker clock multipliers as well as division (need to calculate time between ticks and send clock on steps in between...)
-- Improve looper quantizer
+- Improve looper quantizer (take note length into consideration)
 - Optimise memory usage of looper with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
-- Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices but that don't expose the correct USB device enumerations
+- Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
   - eg for the OpenTheremin v4 with USB MIDI modification
   - and for Arduino Unos without needing to use USB Midi Klik
+  - or for things like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
 - Transposition of everything (Beatstep etc?) in chord progressions
 
 ## Explanation/demo
