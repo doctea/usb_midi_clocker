@@ -32,6 +32,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Route a MIDI drumkit to my drum2musocv MidiMuso CV-12 triggers
   - Route MIDI input from a [LeStrum](https://www.tindie.com/products/hotchk155/le-strum-midi-strummed-chord-controller-kit/) to MIDI->CV interface or other synth
   - Route MIDI to/from a Disting Ex with the Expert Sleepers MIDI breakout board
+- a MIDI routing matrix to take input from any of the configured sources and output it to any of the configure outputs (including loopers)
 - Re-sync clocked devices 'now' or 'on next bar start' (using ACPMini shift+Up and shift+Device respectively) that resets internal clock and sends stop/start messages to attached MIDI devices
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 for info + [custom menu system](https://github.com/doctea/mymenu)
@@ -156,8 +157,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Save and recall MIDI device+channel routings~~
   - Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded
 - Full configuration of MIDI device+channel routing
-- Allow input/loops to be redirected to multiple MIDI outputs.
-  - MIDI input/output matrix?
+- ~~Allow input/loops to be redirected to multiple MIDI outputs.~~
+  - ~~MIDI input/output matrix?~~
 - Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CC modulation
   - CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
