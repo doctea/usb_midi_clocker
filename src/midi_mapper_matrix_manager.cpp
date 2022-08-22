@@ -7,7 +7,7 @@
 
 #include "midi_pc_usb.h"
 
-MIDIMatrixManager *midi_output_wrapper_manager = nullptr;
+MIDIMatrixManager *midi_matrix_manager = nullptr;
 MIDIMatrixManager* MIDIMatrixManager::inst_ = nullptr;
 
 MIDIMatrixManager* MIDIMatrixManager::getInstance() {

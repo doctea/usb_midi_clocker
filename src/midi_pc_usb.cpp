@@ -12,32 +12,37 @@
 #include "behaviour_bamble.h"
 
 #include "midi_mapper_manager.h"
+#include "midi_mapper_matrix_manager.h"
 
-MIDIOutputWrapper *pc_usb_outputs[NUM_PC_INPUTS];
+//MIDIOutputWrapper *pc_usb_outputs[NUM_PC_INPUTS];
+source_id_t pc_usb_outputs[NUM_PC_INPUTS];
 
-void pc_usb_x_setOutputWrapper(int index, MIDIOutputWrapper *wrapper) { 
+/*void pc_usb_x_setOutputWrapper(int index, MIDIOutputWrapper *wrapper) { 
   if (pc_usb_outputs[index]!=nullptr) 
     pc_usb_outputs[index]->stop_all_notes();
   pc_usb_outputs[index] = wrapper;
-}
+}*/
 
-void pc_usb_1_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(0, wrapper); }
+/*void pc_usb_1_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(0, wrapper); }
 void pc_usb_2_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(1, wrapper); }
 void pc_usb_3_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(2, wrapper); }
-void pc_usb_4_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(3, wrapper); }
-
+void pc_usb_4_setOutputWrapper(MIDIOutputWrapper *wrapper) { pc_usb_x_setOutputWrapper(3, wrapper); }*/
 
 void pc_usb_handle_note_on(byte channel, byte note, byte velocity) { //, byte cable) {
   byte cable = usbMIDI.getCable();
+
+  midi_matrix_manager->send_note_on(pc_usb_outputs[cable], note, velocity);
   //Serial.printf("pc_usb_handle_note_on (%i, %i, %i, %i)!\n", channel, note, velocity, cable);
-  if (pc_usb_outputs[cable]!=nullptr)
-    pc_usb_outputs[cable]->sendNoteOn(note, velocity);
+  //if (pc_usb_outputs[cable]!=nullptr)
+  //  pc_usb_outputs[cable]->sendNoteOn(note, velocity);
 }
 void pc_usb_handle_note_off(byte channel, byte note, byte velocity) { //, byte cable) {
   byte cable = usbMIDI.getCable();
+
+  midi_matrix_manager->send_note_off(pc_usb_outputs[cable], note, velocity);
   //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
-  if (pc_usb_outputs[cable]!=nullptr)
-    pc_usb_outputs[cable]->sendNoteOff(note, velocity);
+  //if (pc_usb_outputs[cable]!=nullptr)
+  //  pc_usb_outputs[cable]->sendNoteOff(note, velocity);
 }
 void pc_usb_handle_control_change(byte channel, byte cc, byte value) { //, byte cable) {
   byte cable = usbMIDI.getCable();

@@ -7,6 +7,8 @@
 
 //#include "behaviour_bamble.h"
 
+#include "LinkedList.h"
+
 //MIDIOutputWrapper *find_wrapper_for_name(char *to_find);
 //int find_wrapper_index_for_label(char *to_find);
 void setup_midi_output_wrapper_manager();
