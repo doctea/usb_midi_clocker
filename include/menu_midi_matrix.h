@@ -161,9 +161,9 @@ class MidiMatrixSelectorControl : public SelectorControl {
             Serial.println("Backing out from selecting target");
             menu_set_last_message("Back out", GREEN);
             selected_source_index = -1;
-            return false;
+            return true;    // don't exit to top menu
         }
-        return true;
+        return false;       // exit to top menu
     }
 
 };
