@@ -112,10 +112,9 @@ class MIDIMatrixManager {
         );
     }
     void disconnect_source_target(source_id_t source_id, target_id_t target_id) {
-        for (int i = 0 ; i < targets_count ; i++) {
-            if (is_connected(source_id, target_id))
-                if (targets[target_id].wrapper!=nullptr) 
-                    targets[target_id].wrapper->stop_all_notes();
+        if (is_connected(source_id, target_id)) {
+            if (targets[target_id].wrapper!=nullptr) 
+                targets[target_id].wrapper->stop_all_notes();
         }
         source_to_targets[source_id][target_id] = false;
     }
