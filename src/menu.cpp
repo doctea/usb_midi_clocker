@@ -10,8 +10,8 @@
 #include "menu_looper.h"
 #include "menu_sequencer.h"
 #include "menu_bpm.h"
-#include "menu_midi_mapper.h"
 #include "menu_clock_source.h"
+#include "menu_midi_matrix.h"
 
 #include "midi_lestrum.h"
 
@@ -142,6 +142,8 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     );
 #endif
 
+MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
+
 #ifdef ENABLE_SUBCLOCKER
     ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_divisor_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
         "Subclocker div", 
@@ -222,7 +224,7 @@ void setup_menu() {
         pc_usb_input_3_selector.configure(pc_usb_outputs[2], pc_usb_3_setOutputWrapper);
         pc_usb_input_4_selector.configure(pc_usb_outputs[3], pc_usb_4_setOutputWrapper);
     #endif*/
-    
+
     menu->add_pinned(&top_loop_marker_panel); 
     menu->add(&posbar);
 
@@ -231,6 +233,8 @@ void setup_menu() {
     //project_selector.go_back_on_select = true;
     menu->add(&project_save);
     menu->add(&project_selector);
+
+    menu->add(&midi_matrix_selector);
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
