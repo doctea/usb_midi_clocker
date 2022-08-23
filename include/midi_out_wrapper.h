@@ -43,6 +43,7 @@ class MIDIOutputWrapper {
         MIDIOutputWrapper(const char *label, byte channel = 1) {
             strcpy(this->label, label);
             default_channel = channel;
+            memset(playing_notes, 0, sizeof(playing_notes));
         }
         MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             output_serialmidi = in_output_serialmidi;
@@ -55,6 +56,7 @@ class MIDIOutputWrapper {
         }
         MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);
 
+        // remap pitch if force octave is on, TODO: other tranposition modes
         virtual int recalculate_pitch(byte note) {
             if (this->force_octave>=0) {
                 // send incoming notes from beatstep back out to neutron on serial3, but transposed down
@@ -81,10 +83,12 @@ class MIDIOutputWrapper {
             Serial.printf("stop_all_notes in %s...\n", label);
             for (int pitch = 0 ; pitch < 127 ; pitch++) {
                 //int pitch = recalculate_pitch(i);
-                while (is_note_playing(pitch)) {
+
+                if (is_note_playing(pitch)) {
                     //if (this->debug) 
                     Serial.printf("Got %i notes of pitch %i to stop on channel %i..\n", playing_notes[pitch], pitch, default_channel);
                     sendNoteOff(pitch, 0, default_channel);
+                    playing_notes[pitch] = 0;
                 }
             }
         }
@@ -132,8 +136,11 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
 
         pitch = recalculate_pitch(pitch);
 
-        if (this->playing_notes[pitch]>0) this->playing_notes[pitch]--;
+        if (this->playing_notes[pitch]>0) 
+            this->playing_notes[pitch]--;
 
+        if (this->playing_notes[pitch]>0) return;
+        
         usbMIDI.sendNoteOff(pitch, velocity, channel, cable_number);
 
         this->last_transposed_note = pitch;

@@ -8,16 +8,19 @@ MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte 
 }
 
 void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
-    if (this->debug) Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", in_pitch, velocity, channel, label); Serial.flush();
+    //if (this->debug) 
+        Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", in_pitch, velocity, channel, label); Serial.flush();
 
     current_note = in_pitch;
     int pitch = recalculate_pitch(in_pitch);
     if (pitch<0 || pitch>127) return;
 
     if (playing_notes[pitch]<8) {
+        Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
         playing_notes[pitch]++;
     } else {
-        if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+        //if (this->debug) 
+            Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
     }
 
     current_transposed_note = pitch;
@@ -35,9 +38,7 @@ void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
         if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_usb_pointer\tat %p\t[p=%i,\tv=%i,\tc=%i]\n", this->label, this->output_usb_pointer, pitch, velocity, channel);
         (*output_usb_pointer)->sendNoteOn(pitch, velocity, channel);
     }
-    if (output_looper!=nullptr) {
-        output_looper->in_event(ticks, midi::NoteOn, pitch, velocity);
-    }
+    if (output_looper!=nullptr)         output_looper->in_event(ticks, midi::NoteOn, pitch, velocity);
     //Serial.println("sent NoteOn");
 
 }
@@ -48,10 +49,13 @@ void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) 
     if (this->current_note==in_pitch) 
         current_note = -1;
 
-    int pitch = recalculate_pitch(in_pitch);  
+    int pitch = recalculate_pitch(in_pitch);
+
+    Serial.printf("MIDIOutputWrapper:sendNoteOff(%i, %i, %i) current count is %i\n", pitch, velocity, channel,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              playing_notes[pitch]);
 
     if (pitch<0 || pitch>127) return;
     if (playing_notes[pitch]>0) playing_notes[pitch]--;
+    if (playing_notes[pitch]!=0) return;
 
     this->last_transposed_note = pitch;
     if (this->current_transposed_note==pitch)
@@ -62,9 +66,7 @@ void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) 
     if (output_usb!=nullptr)            output_usb->sendNoteOff(pitch, velocity, channel);
     if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)
                                         (*output_usb_pointer)->sendNoteOff(pitch, velocity, channel);
-    if (output_looper!=nullptr) {
-        output_looper->in_event(ticks, midi::NoteOff, pitch, velocity);
-    }
+    if (output_looper!=nullptr)         output_looper->in_event(ticks, midi::NoteOff, pitch, velocity);
 }
 
 void MIDIOutputWrapper::sendControlChange(byte pitch, byte velocity, byte channel) {
