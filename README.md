@@ -125,7 +125,10 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### TODO/Future 
 
-- Move bass transposition options into the OutputWrapper?
+- ~~Move bass transposition options into the OutputWrapper?~~ done!
+ - remove debug output for this
+ - set default transposition
+ - save transpostion info to project
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
