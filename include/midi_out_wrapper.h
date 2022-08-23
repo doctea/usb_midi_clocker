@@ -27,8 +27,6 @@ class MIDIOutputWrapper {
     MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
     MIDITrack *output_looper = nullptr;
 
-    byte playing_notes[127];
-
     int force_octave = -1;
 
     public:
@@ -36,6 +34,8 @@ class MIDIOutputWrapper {
 
         byte default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
+
+        byte playing_notes[127];
 
         int last_note = -1, current_note = -1;
         int last_transposed_note = -1, current_transposed_note = -1;
@@ -73,16 +73,18 @@ class MIDIOutputWrapper {
 
         virtual inline bool is_note_playing(int pitch) {
             pitch = recalculate_pitch(pitch);
-            if (pitch<=0 || pitch>=127) return false;
+            if (pitch<0 || pitch>127) return false;
             return playing_notes[pitch]>0;
         }
 
         virtual void stop_all_notes() {
             Serial.printf("stop_all_notes in %s...\n", label);
-            for (int i = 0 ; i < 127 ; i++) {
-                while (is_note_playing(i)) {
-                    if (this->debug) Serial.printf("stopping %i notes of pitch %i on channel %i..\n", playing_notes[i], i, default_channel);
-                    sendNoteOff(i, 0, default_channel);
+            for (int pitch = 0 ; pitch < 127 ; pitch++) {
+                //int pitch = recalculate_pitch(i);
+                while (is_note_playing(pitch)) {
+                    //if (this->debug) 
+                    Serial.printf("Got %i notes of pitch %i to stop on channel %i..\n", playing_notes[pitch], pitch, default_channel);
+                    sendNoteOff(pitch, 0, default_channel);
                 }
             }
         }
@@ -115,6 +117,8 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
         pitch = recalculate_pitch(pitch);
         if (pitch<0 || pitch>127) return;
 
+        if (this->playing_notes[pitch]<8) this->playing_notes[pitch]++;
+
         current_transposed_note = pitch;
         usbMIDI.sendNoteOn(pitch, velocity, channel, cable_number);
     }
@@ -127,6 +131,8 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
             current_note = -1;
 
         pitch = recalculate_pitch(pitch);
+
+        if (this->playing_notes[pitch]>0) this->playing_notes[pitch]--;
 
         usbMIDI.sendNoteOff(pitch, velocity, channel, cable_number);
 

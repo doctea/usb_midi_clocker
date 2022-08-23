@@ -14,6 +14,12 @@ void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
     int pitch = recalculate_pitch(in_pitch);
     if (pitch<0 || pitch>127) return;
 
+    if (playing_notes[pitch]<8) {
+        playing_notes[pitch]++;
+    } else {
+        if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+    }
+
     current_transposed_note = pitch;
 
     if (channel==0) channel = default_channel;
@@ -33,11 +39,7 @@ void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
         output_looper->in_event(ticks, midi::NoteOn, pitch, velocity);
     }
     //Serial.println("sent NoteOn");
-    if (playing_notes[pitch]<8) {
-        playing_notes[pitch]++;
-    } else {
-        if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
-    }
+
 }
 
 void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) {
@@ -47,7 +49,9 @@ void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) 
         current_note = -1;
 
     int pitch = recalculate_pitch(in_pitch);  
+
     if (pitch<0 || pitch>127) return;
+    if (playing_notes[pitch]>0) playing_notes[pitch]--;
 
     this->last_transposed_note = pitch;
     if (this->current_transposed_note==pitch)
@@ -61,8 +65,6 @@ void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) 
     if (output_looper!=nullptr) {
         output_looper->in_event(ticks, midi::NoteOff, pitch, velocity);
     }
-
-    if (playing_notes[pitch]>0) playing_notes[pitch]--;
 }
 
 void MIDIOutputWrapper::sendControlChange(byte pitch, byte velocity, byte channel) {
