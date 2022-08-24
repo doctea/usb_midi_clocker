@@ -36,7 +36,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Route a MIDI drumkit to my drum2musocv MidiMuso CV-12 triggers
   - Route MIDI input from a [LeStrum](https://www.tindie.com/products/hotchk155/le-strum-midi-strummed-chord-controller-kit/) to MIDI->CV interface or other synth
   - Route MIDI to/from a Disting Ex with the Expert Sleepers MIDI breakout board
-- a MIDI routing matrix, to take input from any of the configured sources and output it to any of the configure outputs (including loopers)
+- A MIDI routing matrix, to route notes from any of the configured sources (usb-midi, serial-midi, looper) and output it to any of the configured outputs (usb-midi, serial-midi, loopers)
 - Re-sync clocked devices 'now' or 'on next bar start' (using ACPMini shift+Up and shift+Device respectively) that resets internal clock and sends stop/start messages to attached MIDI devices
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 library for info via [custom menu system](https://github.com/doctea/mymenu)
@@ -126,9 +126,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ### TODO/Future 
 
 - ~~Move bass transposition options into the OutputWrapper?~~ done!
- - remove debug output for this
- - set default transposition
- - save transpostion info to project
+ - ~~remove debug output for this~~
+ - ~~set default transposition~~
+ - save transpostion info to project?
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features

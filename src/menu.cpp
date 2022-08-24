@@ -179,21 +179,21 @@ void setup_menu() {
         //menu->add(&beatstep_output_selector);
     #endif
 
-    //#ifdef ENABLE_BASS_TRANSPOSE
-    MIDIOutputWrapper *neutron_wrapper = midi_matrix_manager->get_target_for_handle("S3 : Neutron : ch 4");
-    ObjectNumberControl<MIDIOutputWrapper,int> *neutron_transpose_control = new ObjectNumberControl<MIDIOutputWrapper,int>(
-        "Neutron octave",
-        neutron_wrapper, 
-        &MIDIOutputWrapper::setForceOctave, 
-        &MIDIOutputWrapper::getForceOctave, 
-        nullptr,
-        0,
-        8
-    );
-    HarmonyStatus *neutron_harmony = new HarmonyStatus("Bass harmony", &neutron_wrapper->last_transposed_note, &neutron_wrapper->current_transposed_note);
-    menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
-    menu->add(neutron_harmony);
-    //#endif
+    #ifdef ENABLE_BASS_TRANSPOSE
+        MIDIOutputWrapper *neutron_wrapper = midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4");
+        ObjectNumberControl<MIDIOutputWrapper,int> *neutron_transpose_control = new ObjectNumberControl<MIDIOutputWrapper,int>(
+            "Neutron octave",
+            neutron_wrapper, 
+            &MIDIOutputWrapper::setForceOctave, 
+            &MIDIOutputWrapper::getForceOctave, 
+            nullptr,
+            0,
+            8
+        );
+        HarmonyStatus *neutron_harmony = new HarmonyStatus("Neutron output", &neutron_wrapper->last_transposed_note, &neutron_wrapper->current_transposed_note);
+        menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
+        menu->add(neutron_harmony);
+    #endif
 
     // sequencer
     #ifdef ENABLE_SEQUENCER

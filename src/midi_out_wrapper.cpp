@@ -8,7 +8,7 @@ MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte 
 }
 
 void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
-    //if (this->debug) 
+    if (this->debug) 
         Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", in_pitch, velocity, channel, label); Serial.flush();
 
     current_note = in_pitch;
@@ -16,10 +16,10 @@ void MIDIOutputWrapper::sendNoteOn(byte in_pitch, byte velocity, byte channel) {
     if (pitch<0 || pitch>127) return;
 
     if (playing_notes[pitch]<8) {
-        Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
+        if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
         playing_notes[pitch]++;
     } else {
-        //if (this->debug) 
+        if (this->debug) 
             Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
     }
 
@@ -51,7 +51,7 @@ void MIDIOutputWrapper::sendNoteOff(byte in_pitch, byte velocity, byte channel) 
 
     int pitch = recalculate_pitch(in_pitch);
 
-    Serial.printf("MIDIOutputWrapper:sendNoteOff(%i, %i, %i) current count is %i\n", pitch, velocity, channel,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              playing_notes[pitch]);
+    if (this->debug) Serial.printf("MIDIOutputWrapper:sendNoteOff(%i, %i, %i) current count is %i\n", pitch, velocity, channel, playing_notes[pitch]);
 
     if (pitch<0 || pitch>127) return;
     if (playing_notes[pitch]>0) playing_notes[pitch]--;

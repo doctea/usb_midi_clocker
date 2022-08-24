@@ -1,6 +1,8 @@
 #ifndef MIDI_MAPPER_MATRIX_MANAGER__INCLUDED
 #define MIDI_MAPPER_MATRIX_MANAGER__INCLUDED
 
+#include "Config.h"
+
 #include "midi_mapper_matrix_manager.h"
 
 #include "behaviour_bamble.h"
@@ -56,6 +58,11 @@ void setup_midi_mapper_matrix_manager() {
     //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
     //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
+
+    #ifdef ENABLE_BASS_TRANSPOSE
+        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+    #endif
+
     #ifdef ENABLE_BAMBLE
         midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));

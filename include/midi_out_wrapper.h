@@ -80,13 +80,13 @@ class MIDIOutputWrapper {
         }
 
         virtual void stop_all_notes() {
-            Serial.printf("stop_all_notes in %s...\n", label);
+            if (this->debug) Serial.printf("stop_all_notes in %s...\n", label);
             for (int pitch = 0 ; pitch < 127 ; pitch++) {
                 //int pitch = recalculate_pitch(i);
 
                 if (is_note_playing(pitch)) {
                     //if (this->debug) 
-                    Serial.printf("Got %i notes of pitch %i to stop on channel %i..\n", playing_notes[pitch], pitch, default_channel);
+                    if (this->debug) Serial.printf("Got %i notes of pitch %i to stop on channel %i..\n", playing_notes[pitch], pitch, default_channel);
                     sendNoteOff(pitch, 0, default_channel);
                     playing_notes[pitch] = 0;
                 }

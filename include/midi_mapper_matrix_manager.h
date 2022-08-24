@@ -53,7 +53,7 @@ class MIDIMatrixManager {
     int sources_count = 0;
 
     source_entry sources[NUM_SOURCES] = {};
-    // assign a source_id for the name
+    // assign a source_id for the given name
     source_id_t register_source(const char *handle) {
         Serial.printf("midi_mapper_matrix_manager#register_source() registering handle '%s'\n", handle);
         strcpy(sources[sources_count].handle, handle);
@@ -84,7 +84,7 @@ class MIDIMatrixManager {
             }
         }
     }
-
+    // is this source id connected to target id
     bool is_connected(source_id_t source_id, target_id_t target_id) {
         return source_to_targets[source_id][target_id];
     }
@@ -146,10 +146,10 @@ class MIDIMatrixManager {
         if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
             if (is_connected(source_id, target_id)) {
-                targets[target_id].wrapper->debug = true;
+                //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
-                targets[target_id].wrapper->debug = false;
+                //targets[target_id].wrapper->debug = false;
             }
         }
     }

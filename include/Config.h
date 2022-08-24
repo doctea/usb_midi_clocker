@@ -44,6 +44,7 @@
 
 // enable transposing beatstep to a particular octave
 #define ENABLE_BASS_TRANSPOSE MIDI3
+#define DEFAULT_NEUTRON_OCTAVE 2    // set to 1 for 'disabled'
 
 //#define ENABLE_LESTRUM    // these are defined in ConfigMidi.h instead
 //#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead

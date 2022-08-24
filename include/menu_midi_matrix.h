@@ -88,7 +88,16 @@ class MidiMatrixSelectorControl : public SelectorControl {
         //Serial.println("MidiOutputSelectorControl display()!");
 
         pos.y = header(label, pos, selected, opened);
-        tft->setTextSize(2);
+        //tft->setTextSize(2);
+
+        if (selected_source_index == -1) {
+            tft->setCursor(pos.x + (18*6), pos.y - 8);
+            for(int i = 0 ; i < midi_matrix_manager->targets_count ; i++) {
+                colours(selected, this->get_colour_for_target_id(i), BLACK);
+                tft->printf("%1x", i);
+            }
+            tft->println();
+        }
 
         //num_values = NUM_AVAILABLE_OUTPUTS;
         num_values = this->get_num_available();
@@ -108,7 +117,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
                     colours(BLACK, this->get_colour_for_target_id(target_id));
                     if (midi_matrix_manager->is_connected(source_id, target_id)) {
                         //tft->printf((char*)"%15s, ", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
-                        tft->printf("*");
+                        tft->printf("%1x", target_id);
                     } else {
                         tft->printf(" ");
                     }
@@ -127,7 +136,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
                 uint16_t col = this->get_colour_for_target_id(target_id);
                 colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
                 char indicator = is_current_value_connected ? '*' : ' ';
-                tft->printf((char*)"%c %s\n", indicator, (char*)get_label_for_index(target_id));
+                tft->printf((char*)"%c %1x %s\n", indicator, target_id, (char*)get_label_for_index(target_id));
             }
         }
 
