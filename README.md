@@ -125,6 +125,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### TODO/Future 
 
+- Panic / all notes off action
+- Bass drone mode
+ - toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..
 - ~~Move bass transposition options into the OutputWrapper?~~ done!
  - ~~remove debug output for this~~
  - ~~set default transposition~~
@@ -169,7 +172,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - add it for devices it might be useful for, eg CraftSynth
   - tricks like 'half-time beatstep for last bar of phrase'
 - ~~Save and recall MIDI device+channel routings~~
-  - Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded
+  - ~~Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded~~
 - Full configuration of MIDI device+channel routing
 - ~~Allow input/loops to be redirected to multiple MIDI outputs.~~
   - ~~MIDI input/output matrix?~~
@@ -188,6 +191,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - and for Arduino Unos without needing to use USB Midi Klik
   - or for things like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
 - Transposition of everything (Beatstep etc?) in chord progressions
+- Make DeviceBehaviours work on serial inputs/outputs too, ...?
 
 ## Explanation/demo
 
