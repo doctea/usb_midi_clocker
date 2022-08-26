@@ -136,7 +136,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
                 uint16_t col = this->get_colour_for_target_id(target_id);
                 colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
                 char indicator = is_current_value_connected ? '*' : ' ';
-                tft->printf((char*)"%c %1x %s\n", indicator, target_id, (char*)get_label_for_index(target_id));
+                tft->printf((char*)"%c %1x %s\n", indicator, (int)target_id, (char*)get_label_for_index(target_id));
             }
         }
 
