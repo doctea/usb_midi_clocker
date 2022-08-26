@@ -54,7 +54,7 @@
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
-    #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
+    //#define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     #define ENABLE_BAMBLE
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
