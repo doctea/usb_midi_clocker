@@ -19,9 +19,9 @@ void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
 class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
     public:
-        using DeviceBehaviourUltimateBase::control_change;
-        using DeviceBehaviourUltimateBase::note_on;
-        using DeviceBehaviourUltimateBase::note_off;
+        using DeviceBehaviourUltimateBase::receive_control_change;
+        using DeviceBehaviourUltimateBase::receive_note_on;
+        using DeviceBehaviourUltimateBase::receive_note_off;
         using DeviceBehaviourUltimateBase::debug;
 
         uint16_t vid = 0x2886, pid = 0x800B;

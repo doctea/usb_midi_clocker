@@ -25,18 +25,18 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
             this->input_device->setHandleNoteOff(drumkit_note_off);
         }
 
-        void note_on(byte note, byte velocity, byte channel) override {
+        void receive_note_on(byte note, byte velocity, byte channel) override {
             if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;
             if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HI_MID_TOM;
 
-            DeviceBehaviourSerialBase::note_on(note, velocity, channel);
+            DeviceBehaviourSerialBase::receive_note_on(note, velocity, channel);
         }
 
-        void note_off(byte note, byte velocity, byte channel) override {
+        void receive_note_off(byte note, byte velocity, byte channel) override {
             if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;
             if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HI_MID_TOM;
 
-            DeviceBehaviourSerialBase::note_off(note, velocity, channel);
+            DeviceBehaviourSerialBase::receive_note_off(note, velocity, channel);
         }
 };
 

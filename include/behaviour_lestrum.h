@@ -25,7 +25,7 @@ class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
             this->input_device->setHandleNoteOff(lestrum_note_off);
         }
 
-        void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
             Serial.printf("lestrum_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n", channel, note, velocity, source_id);
             if (channel==1) {
                 midi_matrix_manager->processNoteOn(this->source_id, note, 127);
@@ -35,7 +35,7 @@ class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
                 //lestrum_pads_output->sendNoteOn(note, 127);
             }
         }
-        void note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
             Serial.printf("!! lestrum_note_off(\tchannel %i,\tnote %i,\tvelocity %i)with source_id %i: \n", channel, note, velocity, source_id_2);
             if (channel==1) {
                 midi_matrix_manager->processNoteOff(this->source_id_2, note, 0);

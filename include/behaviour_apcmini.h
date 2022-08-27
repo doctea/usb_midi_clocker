@@ -66,7 +66,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
             //Serial.println(F("finished apcmini_loop"));
         }
 
-        virtual void note_on(byte inChannel, byte inNumber, byte inVelocity) override {
+        virtual void receive_note_on(byte inChannel, byte inNumber, byte inVelocity) override {
             Serial.printf("apcmini_note_on for %i, %i, %i\n", inChannel, inNumber, inVelocity);
             if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
                 // start / stop play
@@ -215,14 +215,14 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
                 last_updated_display = 0;
         }
 
-        virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) override {
+        virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) override {
             if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = false;
             }
         }
 
         // called from loop, already inside ATOMIC, so don't use ATOMIC here
-        virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) override {
+        virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) override {
             //ATOMIC(
                 /*Serial.print(F("APCMINI CC ch"));
                 Serial.print(inChannel);

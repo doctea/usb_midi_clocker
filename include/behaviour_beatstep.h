@@ -37,7 +37,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBe
             this->device->setHandleNoteOff(beatstep_handle_note_off);
         }
 
-        virtual void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
             //Serial.printf("beatstep got note on %i\n", note); Serial.flush();
 
             this->current_note = note;
@@ -51,7 +51,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBe
                 note = note2;
             #endif*/
 
-            ClockedBehaviour::note_on(channel, note, 127);
+            ClockedBehaviour::receive_note_on(channel, note, 127);
 
             /*#ifdef ENABLE_BASS_TRANSPOSE
                 // update current / remember last played TRANSPOSED note
@@ -59,7 +59,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBe
             #endif*/
         }
 
-        virtual void note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
             //Serial.printf("beatstep got note off %i\n", note); Serial.flush();
 
             // update current / remember last played note
@@ -73,7 +73,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBe
                 note = note2;
             #endif*/
 
-            ClockedBehaviour::note_off(channel, note, 127);
+            ClockedBehaviour::receive_note_off(channel, note, 127);
 
         }
 

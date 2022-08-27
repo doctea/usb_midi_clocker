@@ -21,6 +21,7 @@
 #include "behaviour_mpk49.h"
 #include "behaviour_subclocker.h"
 #include "behaviour_craftsynth.h"
+#include "behaviour_neutron.h"
 
 #include "midi_out_wrapper.h"
 #include "midi_outs.h"
@@ -172,14 +173,9 @@ void setup_menu() {
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
-        /*#ifdef ENABLE_BASS_TRANSPOSE
-            menu->add(&neutron_transpose_control);  // beatstep transposed to neutron control
-            menu->add(&bass_harmony);
-        #endif*/
         #ifdef ENABLE_BEATSTEP_SYSEX
             menu->add(&beatstep_auto_advance);
         #endif
-        //menu->add(&beatstep_output_selector);
     #endif
 
     #ifdef ENABLE_BASS_TRANSPOSE
@@ -194,8 +190,20 @@ void setup_menu() {
             8
         );
         HarmonyStatus *neutron_harmony = new HarmonyStatus("Neutron output", &neutron_wrapper->last_transposed_note, &neutron_wrapper->current_transposed_note);
+        /*
+        //TODO: see commented-out section in DeviceBehaviour_Neutron
+        ObjectToggleControl<DeviceBehaviour_Neutron> *neutron_drone_bass = new ObjectToggleControl<DeviceBehaviour_Neutron> (
+            "Neutron bass drone",
+            &behaviour_neutron,
+            &DeviceBehaviour_Neutron::set_drone,
+            &DeviceBehaviour_Neutron::is_drone,
+            nullptr
+        );
+        menu->add(neutron_drone_bass);
+        */
         menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
         menu->add(neutron_harmony);
+        
     #endif
 
     // sequencer

@@ -54,10 +54,10 @@ class DeviceBehaviourUltimateBase {
     virtual void on_restart() {};
     // called when we change phrase
     virtual void on_phrase(uint32_t phrase) {};
-    virtual void note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+    virtual void receive_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
     // called when a note_off message is received from the device
-    virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
-    virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+    virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+    virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
     virtual void init() {};
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {

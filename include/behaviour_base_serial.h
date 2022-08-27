@@ -72,15 +72,15 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             while(this->input_device->read()); 
         };
 
-        virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
             if (!is_connected()) return;
             this->output_device->sendNoteOn(note, velocity, channel);
         };
-        virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
             if (!is_connected()) return;
             this->output_device->sendNoteOff(note, velocity, channel);
         };
-        virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
+        virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel = 0) override {
             if (!is_connected()) return;
             this->output_device->sendControlChange(number, value, channel);
         };
