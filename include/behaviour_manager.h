@@ -13,12 +13,12 @@ class DeviceBehaviourManager {
 
         LinkedList<DeviceBehaviourUSBBase *> behaviours = LinkedList<DeviceBehaviourUSBBase *>();
 
-        void registerDevice(DeviceBehaviourUSBBase *device) {
-            if (device==nullptr) {
-                Serial.println("registerDevice passed a nullptr!"); Serial.flush();
+        void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
+            if (behaviour==nullptr) {
+                Serial.println("registerBehaviour passed a nullptr!"); Serial.flush();
                 return;
             }
-            this->behaviours.add(device);
+            this->behaviours.add(behaviour);
         }
 
         bool attempt_device_connect(uint8_t idx, uint32_t packed_id) {
@@ -96,11 +96,9 @@ class DeviceBehaviourManager {
         void on_restart() {
             const int size = behaviours.size();
             for(int i = 0 ; i < size ; i++) {
-                //if (behaviours.get(i)->device) {
-                    //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
-                    behaviours.get(i)->on_restart();
-                    //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
-                //}
+                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
+                behaviours.get(i)->on_restart();
+                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
             }
         }
 
