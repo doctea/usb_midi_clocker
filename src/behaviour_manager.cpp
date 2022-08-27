@@ -10,6 +10,7 @@
 #include "behaviour_chocolate.h"
 
 #include "behaviour_bitbox.h"
+#include "behaviour_neutron.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -74,6 +75,8 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_BITBOX
         behaviour_manager->registerBehaviour(&behaviour_bitbox);
     #endif
+
+    behaviour_manager->registerBehaviour(&behaviour_neutron);
     
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());
     usb_manager->registerBehaviour(new USBDevice_Beatstep());
