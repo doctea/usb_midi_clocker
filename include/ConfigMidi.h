@@ -12,6 +12,8 @@
 
 //////////////////////////////// SERIAL MIDI DIN INPUTS
 
+#define ENABLE_BASS MIDI3   // bass output on MIDI3
+
 //#ifdef ENABLE_LESTRUM
     //#undef ENABLE_LESTRUM
     #define ENABLE_LESTRUM          MIDI1   // used for input
