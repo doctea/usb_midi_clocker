@@ -7,6 +7,10 @@
 
 #include "behaviour_bamble.h"
 #include "behaviour_craftsynth.h"
+#include "behaviour_mpk49.h"
+#include "behaviour_beatstep.h"
+#include "behaviour_keystep.h"
+
 #include "behaviour_bitbox.h"
 #include "behaviour_neutron.h"
 #include "behaviour_lestrum.h"
@@ -15,8 +19,6 @@
 #include "midi_mapper_update_wrapper_menus.h"
 
 #include "midi_pc_usb.h"
-#include "midi_lestrum.h"
-#include "midi_drums.h"
 
 MIDIMatrixManager *midi_matrix_manager = nullptr;
 MIDIMatrixManager* MIDIMatrixManager::inst_ = nullptr;
@@ -110,8 +112,8 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_LESTRUM
         behaviour_lestrum.source_id     = midi_matrix_manager->register_source("lestrum_arp");
         behaviour_lestrum.source_id_2   = midi_matrix_manager->register_source("lestrum_pads");
-        midi_matrix_manager->connect("lestrum_arp",  "USB : Bamble : ch 1");
-        midi_matrix_manager->connect("lestrum_pads", "USB : Bamble : ch 2");
+        midi_matrix_manager->connect("lestrum_arp",         "USB : Bamble : ch 1");
+        midi_matrix_manager->connect("lestrum_pads",        "USB : Bamble : ch 2");
     #endif
 
     #ifdef ENABLE_MPK49
@@ -126,15 +128,15 @@ void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_KEYSTEP
         midi_matrix_manager->register_source(behaviour_keystep, "keystep");
-        midi_matrix_manager->connect(behaviour_keystep, "S1 : Bitbox : ch 3");
+        midi_matrix_manager->connect(behaviour_keystep,     "S1 : Bitbox : ch 3");
     #endif
 
     // instantiate the loop tracks and point them at their default output wrappers
     #ifdef ENABLE_LOOPER
         midi_matrix_manager->register_source(&mpk49_loop_track, "loop_track_1");
         midi_matrix_manager->register_target(&mpk49_loop_track, "loop_track_1");
-        midi_matrix_manager->connect("loop_track_1", "S1 : Bitbox : ch3");
-        midi_matrix_manager->connect(behaviour_mpk49, "loop_track_1");
+        midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch3");
+        midi_matrix_manager->connect(behaviour_mpk49,           "loop_track_1");
     #endif
 
     #ifdef ENABLE_DRUM_LOOPER

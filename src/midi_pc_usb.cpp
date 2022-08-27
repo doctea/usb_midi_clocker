@@ -13,6 +13,8 @@
 
 #include "midi_mapper_matrix_manager.h"
 
+// TODO: turn this into a behaviour instead
+
 source_id_t pc_usb_sources[NUM_PC_SOURCES];
 
 void pc_usb_handle_note_on(byte channel, byte note, byte velocity) { //, byte cable) {

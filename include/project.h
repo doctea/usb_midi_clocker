@@ -5,14 +5,12 @@
 #include "midi_looper.h"
 
 #include "behaviour_subclocker.h"
-#include "behaviour_beatstep.h"
+/*#include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
-#include "behaviour_mpk49.h"
+#include "behaviour_mpk49.h"*/
 
 #include "midi_mapper_matrix_manager.h"
 
-#include "midi_lestrum.h"
-#include "midi_pc_usb.h"
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8

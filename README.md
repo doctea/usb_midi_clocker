@@ -191,7 +191,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - and for Arduino Unos without needing to use USB Midi Klik
   - or for things like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
 - Transposition of everything (Beatstep etc?) in chord progressions
-- Make DeviceBehaviours work on serial inputs/outputs too, ...?
+- ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
+  - Make the pc_usb connections work using behaviours
+  - .. think there might be some duplication in purpose between MIDIOutputWrapper and Behaviours now...?
 
 ## Explanation/demo
 

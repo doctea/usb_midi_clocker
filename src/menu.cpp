@@ -16,8 +16,6 @@
 #include "menu_usb.h"
 #include "menu_behaviours.h"
 
-#include "midi_lestrum.h"
-
 #include "behaviour_beatstep.h"
 #include "behaviour_keystep.h"
 #include "behaviour_mpk49.h"
