@@ -41,6 +41,9 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         virtual void connect_device_input(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             //if (!is_connected()) return;
 
+            //device->begin(MIDI_CHANNEL_OMNI);
+            //device->turnThruOff();
+
             Serial.printf("DeviceBehaviourSerialBase#connect_device_input connecting %p\n", device);
             this->input_device = device;
             this->connected_flag = true;

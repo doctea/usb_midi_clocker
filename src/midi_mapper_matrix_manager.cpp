@@ -10,6 +10,7 @@
 #include "behaviour_bitbox.h"
 #include "behaviour_neutron.h"
 #include "behaviour_lestrum.h"
+#include "behaviour_drumkit.h"
 
 #include "midi_mapper_update_wrapper_menus.h"
 
@@ -32,16 +33,16 @@ source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char
     loop_track->source_id = sources_count;
     return sources_count++;
 }
-source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUSBBase *device, const char *handle) {
+source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
     strcpy(sources[sources_count].handle, handle);
     device->source_id = sources_count;
     return sources_count++;
 }
 
-void MIDIMatrixManager::connect(MIDITrack *track, DeviceBehaviourUSBBase *device) {
+void MIDIMatrixManager::connect(MIDITrack *track, DeviceBehaviourUltimateBase *device) {
     this->connect(track->source_id, device->target_id);
 }
-void MIDIMatrixManager::connect(DeviceBehaviourUSBBase *device, const char *handle) {
+void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char *handle) {
     this->connect(device->source_id, this->get_target_id_for_handle(handle)); //this->get_target_id_for_handle->target_id);
 }
 
@@ -82,7 +83,8 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_DRUMKIT
-        drumkit_source_id = midi_matrix_manager->register_source("drumkit");
+        //drumkit_source_id = midi_matrix_manager->register_source("drumkit");
+        midi_matrix_manager->register_source(&behaviour_drumkit, "drumkit");
     #endif
 
     #ifdef ENABLE_USB
@@ -106,8 +108,8 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_LESTRUM
-        behaviour_lestrum.source_id = midi_matrix_manager->register_source("lestrum_arp");
-        behaviour_lestrum.source_id_2 = midi_matrix_manager->register_source("lestrum_pads");
+        behaviour_lestrum.source_id     = midi_matrix_manager->register_source("lestrum_arp");
+        behaviour_lestrum.source_id_2   = midi_matrix_manager->register_source("lestrum_pads");
         midi_matrix_manager->connect("lestrum_arp",  "USB : Bamble : ch 1");
         midi_matrix_manager->connect("lestrum_pads", "USB : Bamble : ch 2");
     #endif

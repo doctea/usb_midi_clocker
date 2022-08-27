@@ -4,14 +4,12 @@
 #include "midi_outs.h"
 #include "midi_out_wrapper.h"
 
-#include "midi_drums.h"
+//#include "midi_drums.h"
 //#include "midi_lestrum.h"
-#include "behaviour_bamble.h"
-#include "midi_chocolatefeet.h"
+//#include "behaviour_bamble.h"
+//#include "behaviour_lestrum.h"
 
-#include "behaviour_lestrum.h"
-
-#ifdef ENABLE_BITBOX
+/*#ifdef ENABLE_BITBOX
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox      = &ENABLE_BITBOX;
 #endif
 
@@ -21,11 +19,11 @@
 
 #ifdef ENABLE_DRUMKIT
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_drumkit      = &ENABLE_DRUMKIT;
-#endif
+#endif*/
 
-source_id_t drumkit_source_id = -1;
+//source_id_t drumkit_source_id = -1;
 
-#ifdef ENABLE_DRUMKIT
+/*#ifdef ENABLE_DRUMKIT
     #include "Drums.h"
     // hardcode incoming drumkit on input 2 to go out to drums on bamble
     void drumkit_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
@@ -41,27 +39,12 @@ source_id_t drumkit_source_id = -1;
 
         midi_matrix_manager->processNoteOff(drumkit_source_id, note, velocity);
     }
-#endif
+#endif*/
 
 void setup_midi_serial_devices() {
-    // TODO: midi -- move this to behaviourserialbase setup
+    // todo: move to DeviceBehaviourSerialBase..
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         midi_out_serial[i]->begin(MIDI_CHANNEL_OMNI);
         midi_out_serial[i]->turnThruOff();
     }
-
-    /*#ifdef ENABLE_LESTRUM
-        ENABLE_LESTRUM.setHandleNoteOn(lestrum_note_on);
-        ENABLE_LESTRUM.setHandleNoteOff(lestrum_note_off);
-    #endif */
-
-    #ifdef ENABLE_DRUMKIT
-        midi_in_drumkit->setHandleNoteOn(drumkit_note_on);
-        midi_in_drumkit->setHandleNoteOff(drumkit_note_off);
-    #endif
-
-    #ifdef ENABLE_CHOCOLATEFEET_SERIAL
-        midi_in_footswitch->setHandleNoteOn(footswitch_note_on);
-        midi_in_footswitch->setHandleNoteOff(footswitch_note_off);
-    #endif
 }

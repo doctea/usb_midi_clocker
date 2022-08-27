@@ -12,6 +12,7 @@
 #include "behaviour_bitbox.h"
 #include "behaviour_neutron.h"
 #include "behaviour_lestrum.h"
+#include "behaviour_drumkit.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -86,6 +87,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_LESTRUM
         behaviour_manager->registerBehaviour(&behaviour_lestrum);
         behaviour_lestrum.connect_device_input(&ENABLE_LESTRUM);
+    #endif
+    
+    #ifdef ENABLE_DRUMKIT
+        behaviour_manager->registerBehaviour(&behaviour_drumkit);
+        behaviour_drumkit.connect_device_input(&ENABLE_DRUMKIT);
     #endif
     
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());

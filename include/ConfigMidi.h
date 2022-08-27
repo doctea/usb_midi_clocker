@@ -15,8 +15,6 @@
 #define ENABLE_LESTRUM          MIDI1   // used for input
 #define ENABLE_DRUMKIT          MIDI2   // used for input
 
-//#define ENABLE_CHOCOLATEFEET_SERIAL        MIDI3   // used for input -- not working?
-
 //////////////////////////////// SERIAL MIDI DIN OUTPUTS
 
 #define ENABLE_BITBOX               MIDI1   // used for output
