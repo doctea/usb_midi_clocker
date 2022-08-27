@@ -50,11 +50,21 @@ class DeviceBehaviourUltimateBase {
     virtual void control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
     virtual void init() {};
 
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {};
-    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {};
-    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {};
-    virtual void sendRealTime(uint8_t message) {};    
-    virtual void sendNow() {};
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+        Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
+    };
+    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+        Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
+    };
+    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
+        Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
+    };
+    virtual void sendRealTime(uint8_t message) {
+        Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
+    };    
+    virtual void sendNow() {
+
+    };
 
 };
 
@@ -82,7 +92,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void connect_device(MIDIDeviceBase *device) {
-            if (!is_connected()) return;
+            //if (!is_connected()) return;
 
             Serial.printf("DeviceBehaviourUSBBase#connected_device connecting %p\n", device);
             this->device = device;

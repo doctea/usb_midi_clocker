@@ -12,6 +12,7 @@
 #include "multi_usb_handlers.h"
 
 extern MIDIOutputWrapper *beatstep_output;
+
 void beatstep_setOutputWrapper(MIDIOutputWrapper *);
 
 //void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
