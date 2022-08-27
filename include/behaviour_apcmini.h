@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #include "Config.h"
-#include "behaviour_base_usb.h""
+#include "behaviour_base_usb.h"
 #include "midi_apcmini.h"
 #include "project.h"
 #include "clock.h"

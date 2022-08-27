@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #include "Config.h"
-#include "behaviour_base.h"
+#include "behaviour_base_usb.h"
 
 #include "multi_usb_handlers.h"
 
@@ -15,7 +15,7 @@ void keystep_setOutputWrapper(MIDIOutputWrapper *);
 void keystep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void keystep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_Keystep : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
     public:
         uint16_t vid = 0x1c75, pid = 0x0288;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }

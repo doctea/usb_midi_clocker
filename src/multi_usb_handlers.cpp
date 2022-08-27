@@ -95,7 +95,7 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   }
 
   // attempt to connect this device to a registered behaviour type
-  if (behaviour_manager->attempt_device_connect(idx, packed_id))
+  if (behaviour_manager->attempt_usb_device_connect(idx, packed_id))
     return;
 
   //usb_midi_connected[idx] = packed_id;

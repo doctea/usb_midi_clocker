@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 #include "Config.h"
-#include "behaviour_base.h"
+#include "behaviour_base_usb.h"
 #include "bpm.h"
 
 #include "multi_usb_handlers.h"

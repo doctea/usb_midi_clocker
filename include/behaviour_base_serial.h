@@ -2,14 +2,18 @@
 
 class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
     public:
-        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> input_device = nullptr;
-        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> output_device = nullptr;
+        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device = nullptr;
+        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device = nullptr;
 
         DeviceBehaviourSerialBase() = default;
         virtual ~DeviceBehaviourSerialBase() = default;
 
         virtual bool is_connected() override {
             return this->output_device!=nullptr;
+        }
+
+        virtual int getType() override {
+            return BehaviourType::serial;
         }
 
         virtual void connect_device(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
@@ -55,6 +59,6 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         };
         virtual void sendRealTime(uint8_t message) override {
             if (!is_connected()) return;
-            this->output_device->sendRealTime(message);
+            this->output_device->sendRealTime((midi::MidiType)message);
         };
 };

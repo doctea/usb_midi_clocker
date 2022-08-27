@@ -1,3 +1,6 @@
+#ifndef BEHAVIOUR_BASE_USB__INCLUDED
+#define BEHAVIOUR_BASE_USB__INCLUDED
+
 #include "behaviour_base.h"
 
 class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
@@ -10,6 +13,10 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         virtual ~DeviceBehaviourUSBBase() = default;
 
         virtual uint32_t get_packed_id() { return (this->vid<<16 | this->pid); }
+
+        virtual int getType() override {
+            return BehaviourType::usb;
+        }
 
         // interface methods - static
         virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
@@ -69,3 +76,5 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             this->device->sendRealTime(message);
         };
 };
+
+#endif

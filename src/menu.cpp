@@ -13,6 +13,9 @@
 #include "menu_clock_source.h"
 #include "menu_midi_matrix.h"
 
+#include "menu_usb.h"
+#include "menu_behaviours.h"
+
 #include "midi_lestrum.h"
 
 #include "behaviour_beatstep.h"
@@ -96,6 +99,8 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 #ifdef ENABLE_USB
     USBDevicesPanel usbdevices_panel = USBDevicesPanel();
 #endif
+
+BehavioursPanel behaviours_panel = BehavioursPanel();
 
 #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
     ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
@@ -232,6 +237,7 @@ void setup_menu() {
     #endif
 
     menu->add(&usbdevices_panel);
+    menu->add(&behaviours_panel);
 
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
