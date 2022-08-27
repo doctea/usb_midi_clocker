@@ -96,9 +96,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ## Known issues (current)
 
 - BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
- - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
+- Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
-- Get crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers..?  might be due to dodgy cable or usb hubs, or akai apcmini?  runs for hours perfectly OK then will suddenly lock up inside the USBHost_t36 queue_Data_Transfer 
+- Enabling BEATSTEP_SYSEX causes crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers..?  ~~might be due to dodgy cable or usb hubs, or akai apcmini?~~  runs for hours perfectly OK then will suddenly lock up inside the USBHost_t36 queue_Data_Transfer 
 - Think it may be be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?
 
 ## Known issues (may be solved)
