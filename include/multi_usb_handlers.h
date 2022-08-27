@@ -56,14 +56,14 @@ extern MIDIDevice_BigBuffer midi15;
 
 //#include "behaviour_base.h"
 
-class DeviceBehaviourBase;
+class DeviceBehaviourUSBBase;
 
 struct usb_midi_slot {
     uint16_t vid = 0x00;
     uint16_t pid = 0x00;
     uint32_t packed_id = 0x00;
     MIDIDeviceBase *device = nullptr;
-    DeviceBehaviourBase *behaviour = nullptr;
+    DeviceBehaviourUSBBase *behaviour = nullptr;
 };
 
 extern usb_midi_slot usb_midi_slots[NUM_USB_DEVICES];

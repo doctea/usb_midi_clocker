@@ -17,7 +17,7 @@ void subclocker_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity
 
 }*/
 
-class DeviceBehaviour_Subclocker : public ClockedBehaviour {
+class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         uint16_t vid = 0x1337, pid = 0x1337;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
@@ -44,7 +44,7 @@ class DeviceBehaviour_Subclocker : public ClockedBehaviour {
             if (ticks<clock_delay_ticks) return;
 
             /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
-                DeviceBehaviourBase::on_phrase(BPM_CURRENT_PHRASE);
+                DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
             }*/
             if (is_bpm_on_bar(real_ticks - clock_delay_ticks)) {
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
@@ -64,10 +64,10 @@ class DeviceBehaviour_Subclocker : public ClockedBehaviour {
 
         virtual void on_restart() override {
             //Serial.println("\ton_restart() in ClockedBehaviour");
-            if (this->device!=nullptr && this->clock_enabled) {
-                this->device->sendRealTime(MIDIDevice::Stop); //sendStop();
-                this->device->sendRealTime(MIDIDevice::Start); //sendStart();
-                this->device->send_now();
+            if (DeviceBehaviourUSBBase::is_connected() && this->clock_enabled) {
+                DeviceBehaviourUSBBase::sendRealTime(MIDIDevice::Stop); //sendStop();
+                DeviceBehaviourUSBBase::sendRealTime(MIDIDevice::Start); //sendStart();
+                DeviceBehaviourUSBBase::sendNow();
                 this->started = true;
             } else {
                 //Serial.println("\tin clocked behaviour on_restart, no device!");

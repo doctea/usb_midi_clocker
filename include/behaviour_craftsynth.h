@@ -17,7 +17,7 @@
 //void craftsynth_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void craftsynth_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_CraftSynth : public ClockedBehaviour { // public DeviceBehaviourBase { //
+class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour { // public DeviceBehaviourUSBBase { //
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x04D8, pid = 0xEE1F;

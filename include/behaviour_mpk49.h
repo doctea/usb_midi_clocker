@@ -18,7 +18,7 @@ void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocit
 void mpk49_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size);
 
-class DeviceBehaviour_mpk49 : public ClockedBehaviour {
+class DeviceBehaviour_mpk49 : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         MIDITrack *loop_track = nullptr;
 
@@ -32,21 +32,7 @@ class DeviceBehaviour_mpk49 : public ClockedBehaviour {
             this->device->setHandleSystemExclusive(mpk49_handle_system_exclusive);
         }
 
-        /*void note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            mpk49_output->sendNoteOn(note, velocity);            
-            #ifdef ENABLE_LOOPER
-                this->loop_track->in_event(ticks, midi::NoteOn,  note, velocity);
-            #endif
-        }
-
-        void note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            mpk49_output->sendNoteOff(note, velocity);
-
-            #ifdef ENABLE_LOOPER
-                this->loop_track->in_event(ticks, midi::NoteOff,note, velocity);
-            #endif
-        }*/
-
+        // TODO: move this elsewhere, since the looper is no longer explicitly tied to the mpk49..
         #ifdef ENABLE_LOOPER
             void on_pre_clock(unsigned long ticks) {
                 this->loop_track->process_tick(ticks);
@@ -54,7 +40,7 @@ class DeviceBehaviour_mpk49 : public ClockedBehaviour {
         #endif
 
         void handle_system_exclusive(uint8_t *data, unsigned int size) {
-            if (this->debug) {
+            if (DeviceBehaviourUSBBase::debug) {
                 Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
                 for (unsigned int i = 0 ; i < size ; i++) {
                     Serial.printf("%02x ", data[i]);

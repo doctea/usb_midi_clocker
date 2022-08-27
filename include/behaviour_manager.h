@@ -11,9 +11,9 @@ class DeviceBehaviourManager {
     public:
         static DeviceBehaviourManager* getInstance();
 
-        LinkedList<DeviceBehaviourBase *> behaviours = LinkedList<DeviceBehaviourBase *>();
+        LinkedList<DeviceBehaviourUSBBase *> behaviours = LinkedList<DeviceBehaviourUSBBase *>();
 
-        void registerDevice(DeviceBehaviourBase *device) {
+        void registerDevice(DeviceBehaviourUSBBase *device) {
             if (device==nullptr) {
                 Serial.println("registerDevice passed a nullptr!"); Serial.flush();
                 return;
@@ -25,7 +25,7 @@ class DeviceBehaviourManager {
             // loop over the registered behaviours and if the correct one is found, set it up
             const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                DeviceBehaviourBase *behaviour = behaviours.get(i);
+                DeviceBehaviourUSBBase *behaviour = behaviours.get(i);
                 Serial.printf("DeviceBehaviourManager#attempt_device_connect(): checking behaviour %i -- does it match %08X?\n", i, packed_id);
                 usb_midi_slots[idx].packed_id = packed_id;
                 if (behaviour->matches_identifiers(packed_id)) {
@@ -68,7 +68,7 @@ class DeviceBehaviourManager {
             temp_tick = ticks;
             const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                DeviceBehaviourBase *behaviour = behaviours.get(i);
+                DeviceBehaviourUSBBase *behaviour = behaviours.get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
                     behaviours.get(i)->loop(temp_tick);

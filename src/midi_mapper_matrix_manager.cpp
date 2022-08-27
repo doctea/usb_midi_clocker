@@ -29,16 +29,16 @@ source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char
     loop_track->source_id = sources_count;
     return sources_count++;
 }
-source_id_t MIDIMatrixManager::register_source(DeviceBehaviourBase *device, const char *handle) {
+source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUSBBase *device, const char *handle) {
     strcpy(sources[sources_count].handle, handle);
     device->source_id = sources_count;
     return sources_count++;
 }
 
-void MIDIMatrixManager::connect(MIDITrack *track, DeviceBehaviourBase *device) {
+void MIDIMatrixManager::connect(MIDITrack *track, DeviceBehaviourUSBBase *device) {
     this->connect(track->source_id, device->target_id);
 }
-void MIDIMatrixManager::connect(DeviceBehaviourBase *device, const char *handle) {
+void MIDIMatrixManager::connect(DeviceBehaviourUSBBase *device, const char *handle) {
     this->connect(device->source_id, this->get_target_id_for_handle(handle)); //this->get_target_id_for_handle->target_id);
 }
 

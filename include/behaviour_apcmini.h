@@ -18,7 +18,7 @@
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
 
-class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
+class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
     public:
         uint16_t vid = 0x09e8, pid = 0x0028;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
@@ -35,16 +35,15 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
-            if ( this->device == nullptr ) 
-                return;
+            if (!is_connected()) return;
+
             this->device->setHandleControlChange(apcmini_control_change);
             this->device->setHandleNoteOn(apcmini_note_on);
             this->device->setHandleNoteOff(apcmini_note_off);
         };
 
         virtual void loop(unsigned long ticks) override {
-            if ( this->device == nullptr ) 
-                return;
+            if (!is_connected()) return;
 
             #ifdef ENABLE_APCMINI_DISPLAY
                 static unsigned long last_processed_tick;
@@ -91,7 +90,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
                 Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
                 #ifdef ENABLE_APCMINI_DISPLAY
                     //ATOMIC(
-                    this->device->sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
+                    sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
                     //)  // turn on the 'going to restart on next bar' flashing indicator
                 #endif
                 restart_on_next_bar = true;
@@ -251,7 +250,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourBase {
         virtual void on_restart() override {
             if (device!=nullptr) {
                 #ifdef ENABLE_APCMINI_DISPLAY
-                    device->sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
+                    sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
                 #endif
             }
         }

@@ -18,7 +18,7 @@ void beatstep_setOutputWrapper(MIDIOutputWrapper *);
 void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_Beatstep : public ClockedBehaviour {
+class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         #define NUM_PATTERNS 16
         bool auto_advance_pattern = false;   // todo: make configurable!
@@ -30,7 +30,8 @@ class DeviceBehaviour_Beatstep : public ClockedBehaviour {
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
         virtual void setup_callbacks() override {
-            if (this->device == nullptr) return;
+            if (!DeviceBehaviourUSBBase::is_connected()) return;
+
             this->device->setHandleNoteOn(beatstep_handle_note_on);
             this->device->setHandleNoteOff(beatstep_handle_note_off);
         }

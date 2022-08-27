@@ -26,7 +26,7 @@ void chocolate_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVe
 #define CHOC_NOTE_OVERWRITE_MOM 2
 #define CHOC_NOTE_RECORD_MOM    3
 
-class DeviceBehaviour_Chocolate : public DeviceBehaviourBase {
+class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
     public:
         uint16_t vid = 0x4353, pid = 0x4B4D;
         //uint16_t vid = 0x1c75, pid = 0x0288;

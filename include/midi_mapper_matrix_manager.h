@@ -19,7 +19,7 @@ void setup_midi_mapper_matrix_manager();
 #include "midi_mapper_matrix_types.h"
 
 class MIDITrack;
-class DeviceBehaviourBase;
+class DeviceBehaviourUSBBase;
 
 class MIDIMatrixManager {
     public:
@@ -62,7 +62,7 @@ class MIDIMatrixManager {
     // assign a source_id for the midi track
     source_id_t register_source(MIDITrack *loop_track, const char *handle);
     // assign a source_id for the device
-    source_id_t register_source(DeviceBehaviourBase *device, const char *handle);
+    source_id_t register_source(DeviceBehaviourUSBBase *device, const char *handle);
 
     // get id of source for string
     source_id_t get_source_id_for_handle(const char *handle) {
@@ -96,8 +96,8 @@ class MIDIMatrixManager {
             this->disconnect(source_id, target_id);
     }
     
-    void connect(MIDITrack *track, DeviceBehaviourBase *device);
-    void connect(DeviceBehaviourBase *device, const char *handle);
+    void connect(MIDITrack *track, DeviceBehaviourUSBBase *device);
+    void connect(DeviceBehaviourUSBBase *device, const char *handle);
     void connect(const char *source_handle, const char *target_handle) {
         this->connect(
             this->get_source_id_for_handle(source_handle),
