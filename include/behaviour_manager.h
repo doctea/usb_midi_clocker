@@ -1,7 +1,7 @@
 #ifndef BEHAVIOUR_MANAGER__INCLUDED
 #define BEHAVIOUR_MANAGER__INCLUDED
 
-#include "behaviour_base.h"
+#include "behaviour_base_usb.h"
 
 #include "multi_usb_handlers.h"
 

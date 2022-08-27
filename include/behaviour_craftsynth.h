@@ -7,7 +7,7 @@
 
 #ifdef ENABLE_CRAFTSYNTH_USB
 
-#include "behaviour_base.h"
+#include "behaviour_base_usb.h"
 #include "project.h"
 #include "clock.h"
 

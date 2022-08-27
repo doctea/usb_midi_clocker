@@ -65,7 +65,6 @@ class DeviceBehaviourUltimateBase {
     virtual void sendNow() {
 
     };
-
 };
 
 class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
