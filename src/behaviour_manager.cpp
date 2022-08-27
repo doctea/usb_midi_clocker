@@ -9,6 +9,8 @@
 #include "behaviour_craftsynth.h"
 #include "behaviour_chocolate.h"
 
+#include "behaviour_bitbox.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -67,6 +69,10 @@ void setup_behaviour_manager() {
         behaviour_chocolate = new DeviceBehaviour_Chocolate();
         behaviour_manager->registerBehaviour(behaviour_chocolate);
         Serial.println("Finished registering"); Serial.flush();
+    #endif
+
+    #ifdef ENABLE_BITBOX
+        behaviour_manager->registerBehaviour(&behaviour_bitbox);
     #endif
     
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());

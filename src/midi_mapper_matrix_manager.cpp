@@ -7,6 +7,7 @@
 
 #include "behaviour_bamble.h"
 #include "behaviour_craftsynth.h"
+#include "behaviour_bitbox.h"
 
 #include "midi_mapper_update_wrapper_menus.h"
 
@@ -49,9 +50,9 @@ void setup_midi_mapper_matrix_manager() {
 
     // first, add all the output options that will exist
 
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  midi_out_serial[0], 1));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  midi_out_serial[0], 2));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  midi_out_serial[0], 3));
+    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  behaviour_bitbox.output_device, 1));
+    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  behaviour_bitbox.output_device, 2));
+    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  behaviour_bitbox.output_device, 3));
     midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S2 : unused : ch 1",  midi_out_serial[1], 1));
     midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", midi_out_serial[2], 4));
     midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));

@@ -176,7 +176,7 @@ void global_on_restart() {
   //interrupts();
   last_processed_tick = -1;
   
-  send_midi_serial_stop_start();
+  //send_midi_serial_stop_start();
 
   behaviour_manager->on_restart();
 

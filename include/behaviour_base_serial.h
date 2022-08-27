@@ -1,3 +1,6 @@
+#ifndef BEHAVIOUR_BASE_SERIAL__INCLUDED
+#define BEHAVIOUR_BASE_SERIAL__INCLUDED
+
 #include "behaviour_base.h"
 
 class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
@@ -7,6 +10,14 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         DeviceBehaviourSerialBase() = default;
         virtual ~DeviceBehaviourSerialBase() = default;
+
+        DeviceBehaviourSerialBase (
+            midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
+            midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device
+        ) : DeviceBehaviourSerialBase () {
+            this->input_device = input_device;
+            this->output_device = output_device;
+        }
 
         virtual bool is_connected() override {
             return this->output_device!=nullptr;
@@ -41,7 +52,6 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual void read() override {
             if (!is_connected()) return;
-
             while(this->input_device->read()); 
         };
 
@@ -62,3 +72,5 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             this->output_device->sendRealTime((midi::MidiType)message);
         };
 };
+
+#endif

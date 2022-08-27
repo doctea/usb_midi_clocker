@@ -213,8 +213,8 @@ void loop() {
     #endif
   }
 
-  read_midi_serial_devices();
-  loop_midi_serial_devices();
+  //read_midi_serial_devices();
+  //loop_midi_serial_devices();
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
@@ -287,7 +287,7 @@ void do_tick(uint32_t in_ticks) {
     drums_loop_track.process_tick(ticks);
   #endif
 
-  send_midi_serial_clocks();
+  //send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
     //Serial.println("in do_tick() about to behaviour_manager->send_clocks()"); Serial.flush();
