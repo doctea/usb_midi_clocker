@@ -49,7 +49,7 @@ class DeviceBehaviourUltimateBase {
     // called every tick, after clocks sent
     virtual void on_tick(uint32_t ticks) {};
     // called when new bar starts
-    virtual void on_bar(int bar_number) {}
+    virtual void on_bar(int bar_number) {};
     // called when the clock is restarted
     virtual void on_restart() {};
     // called when we change phrase
@@ -92,6 +92,7 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void on_bar(int bar_number) override {
+            //Serial.printf("ClockedBehaviour#on_bar in %p\n", this);
             if (this->restart_on_bar) {
                 this->restart_on_bar = false;
                 this->on_restart();
@@ -112,6 +113,7 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         virtual void on_restart() override {
             if (!is_connected()) return;
+
             if (this->clock_enabled) {
                 this->sendRealTime(midi::Stop);
                 this->sendRealTime(midi::Start);

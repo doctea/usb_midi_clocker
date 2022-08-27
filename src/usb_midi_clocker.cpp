@@ -131,6 +131,8 @@ void setup() {
     menu->start();
     //tft_start();
   #endif
+
+  Serial.println("Finished setup()!");
 }
 
 //long loop_counter = 0;
@@ -139,8 +141,8 @@ void setup() {
 //
 // -----------------------------------------------------------------------------
 void loop() {
-  //Serial.println("start of loop!"); Serial.flush();
   bool debug = false;
+  if (debug) { Serial.println("start of loop!"); Serial.flush(); }
 
   #ifdef DEBUG_LED
     static int loop_counter;
@@ -215,10 +217,11 @@ void loop() {
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
+  behaviour_manager->do_reads();
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
-    read_midi_usb_devices();
+    //read_midi_usb_devices();
     behaviour_manager->do_loops();
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
@@ -242,6 +245,7 @@ void loop() {
 
 // called inside interrupt
 void do_tick(uint32_t in_ticks) {
+  bool debug = false;
   /*#ifdef DEBUG_TICKS
       unsigned int delta = millis()-last_ticked_at_micros;
 
@@ -258,6 +262,7 @@ void do_tick(uint32_t in_ticks) {
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+    if (debug) Serial.println("do_tick(): about to global_on_restart");
     //in_ticks = ticks = 0;
     global_on_restart();
     //ATOMIC(
@@ -267,6 +272,7 @@ void do_tick(uint32_t in_ticks) {
   }
 
   if (is_bpm_on_phrase(ticks)) {
+    if (debug) Serial.println("do_tick(): about to project.on_phrase()");
     project.on_phrase(BPM_CURRENT_PHRASE);
     #ifdef ENABLE_USB
       behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
@@ -275,11 +281,14 @@ void do_tick(uint32_t in_ticks) {
   if (is_bpm_on_bar(ticks)) {
     //project.on_bar(BPM_CURRENT_BAR_OF_PHRASE);
     #ifdef ENABLE_USB
+      if (debug) Serial.println("do_tick(): about to behaviour_manager->do_bar()");
       behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
+      if (debug) Serial.println("do_tick(): just did behaviour_manager->do_bar()");
     #endif
   }
 
   #ifdef ENABLE_USB
+    if (debug) Serial.println("do_tick(): about to behaviour_manager->do_pre_clock()");
     behaviour_manager->do_pre_clock(in_ticks);
   #endif
 
@@ -290,19 +299,21 @@ void do_tick(uint32_t in_ticks) {
   //send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
-    //Serial.println("in do_tick() about to behaviour_manager->send_clocks()"); Serial.flush();
+    if (debug) { Serial.println("in do_tick() about to behaviour_manager->send_clocks()"); Serial.flush(); }
     behaviour_manager->send_clocks();
-    //Serial.println("in do_tick() just did behaviour_manager->send_clocks()"); Serial.flush();
+    if (debug) { Serial.println("in do_tick() just did behaviour_manager->send_clocks()"); Serial.flush(); }
   #endif
 
   #ifdef ENABLE_CV
+    if (debug) { Serial.println("in do_tick() about to update_cv_outs()"); Serial.flush(); }
     update_cv_outs(in_ticks);
+    if (debug) { Serial.println("in do_tick() just did update_cv_outs()"); Serial.flush(); }
   #endif
 
   #ifdef ENABLE_USB
-    //Serial.println("in do_tick() about to behaviour_manager->do_ticks()"); Serial.flush();
+    if (debug) { Serial.println("in do_tick() about to behaviour_manager->do_ticks()"); Serial.flush(); }
     behaviour_manager->do_ticks(in_ticks);
-    //Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush();
+    if (debug) { Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush(); }
   #endif
 
   /*#ifdef ENABLE_USB2

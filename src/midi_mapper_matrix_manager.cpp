@@ -9,6 +9,7 @@
 #include "behaviour_craftsynth.h"
 #include "behaviour_bitbox.h"
 #include "behaviour_neutron.h"
+#include "behaviour_lestrum.h"
 
 #include "midi_mapper_update_wrapper_menus.h"
 
@@ -105,8 +106,8 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_LESTRUM
-        lestrum_arp_source  = midi_matrix_manager->register_source("lestrum_arp");
-        lestrum_pads_source = midi_matrix_manager->register_source("lestrum_pads");
+        behaviour_lestrum.source_id = midi_matrix_manager->register_source("lestrum_arp");
+        behaviour_lestrum.source_id_2 = midi_matrix_manager->register_source("lestrum_pads");
         midi_matrix_manager->connect("lestrum_arp",  "USB : Bamble : ch 1");
         midi_matrix_manager->connect("lestrum_pads", "USB : Bamble : ch 2");
     #endif

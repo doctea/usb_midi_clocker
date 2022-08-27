@@ -17,7 +17,7 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_
     &MIDI1,&MIDI2,&MIDI3,&MIDI4,&MIDI5,&MIDI6,&MIDI7,&MIDI8
 };
 
-bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
+/*bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
     true,       // bitbox
     false,      // blue (currently unused)
     true,       // neutron
@@ -26,17 +26,17 @@ bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
     false,
     false,
     false
-};
+};*/
 
-void send_midi_serial_clocks() {
+/*void send_midi_serial_clocks() {
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         if (midi_out_serial_clock_enabled[i]) {
             midi_out_serial[i]->sendRealTime(midi::Clock);
         }
     }
-}
+}*/
 
-void send_midi_serial_stop_start() {
+/*void send_midi_serial_stop_start() {
     // send all stops first
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         if (midi_out_serial_clock_enabled[i]) {
@@ -49,9 +49,9 @@ void send_midi_serial_stop_start() {
             midi_out_serial[i]->sendRealTime(midi::Start);
         }
     }
-}
+}*/
 
-#define SINGLE_FRAME_READ
+/*#define SINGLE_FRAME_READ
 void read_midi_serial_devices() {
     #ifdef SINGLE_FRAME_READ
         //int i = 0;
@@ -65,9 +65,9 @@ void read_midi_serial_devices() {
         while(midi_out_serial[counter]->read());
         counter++;
     #endif
-}
+}*/
 
-void loop_midi_serial_devices() {
+/*void loop_midi_serial_devices() {
     // anything that should be done per-loop for serial midi devices
 
-}
+}*/

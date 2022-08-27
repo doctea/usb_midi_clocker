@@ -8,11 +8,12 @@
 #include "bpm.h"
 
 class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour {
+    
     public:
-        DeviceBehaviour_Neutron (
+        /*DeviceBehaviour_Neutron (
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device
-        ) : DeviceBehaviourSerialBase (input_device, output_device) {}
+        ) : DeviceBehaviourSerialBase (input_device, output_device) {}*/
 };
 
 extern DeviceBehaviour_Neutron behaviour_neutron;

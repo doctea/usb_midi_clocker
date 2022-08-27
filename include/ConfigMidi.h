@@ -12,27 +12,16 @@
 
 //////////////////////////////// SERIAL MIDI DIN INPUTS
 
-#define ENABLE_BASS MIDI3   // bass output on MIDI3
-
-//#ifdef ENABLE_LESTRUM
-    //#undef ENABLE_LESTRUM
-    #define ENABLE_LESTRUM          MIDI1   // used for input
-//#endif
-//#ifdef ENABLE_DRUMKIT
-//    #undef ENABLE_DRUMKIT
-    #define ENABLE_DRUMKIT          MIDI2   // used for input
-//#endif
+#define ENABLE_LESTRUM          MIDI1   // used for input
+#define ENABLE_DRUMKIT          MIDI2   // used for input
 
 //#define ENABLE_CHOCOLATEFEET_SERIAL        MIDI3   // used for input -- not working?
-
 
 //////////////////////////////// SERIAL MIDI DIN OUTPUTS
 
 #define ENABLE_BITBOX               MIDI1   // used for output
-//#ifdef ENABLE_BASS_TRANSPOSE
-//    #undef ENABLE_BASS_TRANSPOSE
-    #define ENABLE_BASS_TRANSPOSE   MIDI3   // used for output
+#define ENABLE_BASS_TRANSPOSE       MIDI3   // used for output
+#define ENABLE_BASS                 MIDI3   // bass output on MIDI3
 //#endif
-
 
 #endif

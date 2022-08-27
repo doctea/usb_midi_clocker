@@ -11,6 +11,7 @@
 
 #include "behaviour_bitbox.h"
 #include "behaviour_neutron.h"
+#include "behaviour_lestrum.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -74,9 +75,18 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_BITBOX
         behaviour_manager->registerBehaviour(&behaviour_bitbox);
+        behaviour_bitbox.connect_device_output(&ENABLE_BITBOX);
     #endif
 
-    behaviour_manager->registerBehaviour(&behaviour_neutron);
+    #ifdef ENABLE_BASS
+        behaviour_manager->registerBehaviour(&behaviour_neutron);
+        behaviour_neutron.connect_device_output(&ENABLE_BASS);
+    #endif
+
+    #ifdef ENABLE_LESTRUM
+        behaviour_manager->registerBehaviour(&behaviour_lestrum);
+        behaviour_lestrum.connect_device_input(&ENABLE_LESTRUM);
+    #endif
     
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());
     usb_manager->registerBehaviour(new USBDevice_Beatstep());

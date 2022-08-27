@@ -169,10 +169,10 @@ class MIDITrack {
         }
         // for actually storing values into buffer (also used when reloading from save)
         void store_event(unsigned long time, midi_message midi_event) {
-            Serial.printf("store_event passed time %i...\n", time);
+            if (this->debug) Serial.printf("store_event passed time %i...\n", time);
             time = quantize_time(time);
             time = ticks_to_sequence_step(time);
-            Serial.printf("Recording event at\t%i\n", time);
+            if (this->debug) Serial.printf("Recording event at\t%i\n", time);
             frames[time].add(midi_event);
             if (midi_event.message_type==midi::NoteOn) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
@@ -187,7 +187,7 @@ class MIDITrack {
                     .started_at     = -1
                 };
             }
-            Serial.printf("sizeof frames at %i is now %i\n", time, frames[time].size());
+            if (this->debug) Serial.printf("sizeof frames at %i is now %i\n", time, frames[time].size());
         }
 
         // get total event count across entire loop
@@ -682,7 +682,7 @@ class MIDITrack {
             String line;
             int time = 0;
             while (line = f.readStringUntil('\n')) {
-                Serial.printf("--reading line %s\n", line.c_str()); Serial.flush();
+                if (this->debug) { Serial.printf("--reading line %s\n", line.c_str()); Serial.flush(); }
                 //load_sequence_parse_line(line, output);
                 if (line.startsWith("starts_at=")) {
                     time =      line.remove(0,String("starts_at=").length()).toInt() * loop_length_size;
@@ -717,7 +717,7 @@ class MIDITrack {
                         #ifdef DEBUG_LOOP_LOADER
                             Serial.printf("read message bytes: %02x, %02x, %02x, %02x\n", m.message_type, m.channel, m.pitch, m.velocity); Serial.flush();
                         #endif
-                        Serial.printf("storing event at %i\n", time); Serial.flush();
+                        if (this->debug) Serial.printf("storing event at %i\n", time); Serial.flush();
                         store_event(time, m);
                         messages_count++;
                         tok = strtok(NULL,",;:");

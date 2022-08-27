@@ -16,7 +16,7 @@ extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox;//
 
 
 //#ifdef ENABLE_LESTRUM
-extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum;//      = &ENABLE_LESTRUM;
+//extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_in_lestrum;//      = &ENABLE_LESTRUM;
 //#endif
 
 //#ifdef ENABLE_DRUMKIT

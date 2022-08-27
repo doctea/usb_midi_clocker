@@ -127,7 +127,7 @@ void update_usb_device_connections() {
 //#define SINGLE_FRAME_READ_ONCE
 #define SINGLE_FRAME_READ_ALL
 
-void read_midi_usb_devices() {
+/*void read_midi_usb_devices() {
   #ifdef SINGLE_FRAME_READ_ALL
     for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
       while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
@@ -152,7 +152,7 @@ void read_midi_usb_devices() {
       counter++;
     #endif
   #endif
-}
+}*/
 
 
 
