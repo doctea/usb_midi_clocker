@@ -78,6 +78,14 @@ class Project {
             initialise_loop_slots(false);
         }
 
+        bool load_matrix_mappings = true;
+        void setLoadMatrixMappings(bool value = true) {
+            this->load_matrix_mappings = value;
+        }
+        bool isLoadMatrixMappings() {
+            return this->load_matrix_mappings;
+        }
+
         void setProjectNumber(int number) {
             if (this->debug) Serial.printf("Project#setProjectNumber(%i)...\n", number);
             if (this->current_project_number!=number) {
@@ -272,8 +280,10 @@ class Project {
         bool load_project_settings(int project_number) {
             File myFile;
 
-            Serial.printf("load_project_settings(%i) resetting matrix!\n");
-            midi_matrix_manager->reset_matrix(); 
+            if (isLoadMatrixMappings()) {
+                Serial.printf("load_project_settings(%i) resetting matrix!\n");
+                midi_matrix_manager->reset_matrix(); 
+            }
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
@@ -307,7 +317,7 @@ class Project {
                 behaviour_subclocker->set_divisor((int) line.remove(0,String("subclocker_divisor=").length()).toInt());
             } else if (line.startsWith("subclocker_delay_ticks=")) {
                 behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
-            } else if (line.startsWith("midi_output_map=")) {
+            } else if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
                 // legacy save format, pre-matrix
                 Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_output_map=").length());
@@ -316,7 +326,7 @@ class Project {
                 source_label = source_label.replace("_output","");  // translate pre-matrix style naming to matrix-style naming
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
-            } else if (line.startsWith("midi_matrix_map=")) {
+            } else if (this->isLoadMatrixMappings() && line.startsWith("midi_matrix_map=")) {
                 // midi matrix version
                 Serial.printf("----\nLoading midi_matrix_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_matrix_map=").length());

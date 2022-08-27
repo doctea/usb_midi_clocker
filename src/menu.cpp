@@ -57,6 +57,7 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
+ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
 #ifdef ENABLE_SEQUENCER
     ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
 #endif
@@ -168,6 +169,7 @@ void setup_menu() {
     //project_selector.go_back_on_select = true;
     menu->add(&project_save);
     menu->add(&project_selector);
+    menu->add(&project_load_matrix_mappings);
 
     menu->add(&midi_matrix_selector);
 
