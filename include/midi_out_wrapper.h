@@ -14,13 +14,14 @@ class MIDITrack;
 // generic wrapper around a MIDI output object
 // tracks playing notes and provides methods to kill them so can eg kill all notes when transposition is changed
 // used by looper tracks, and for echoing beatstep input to the neutron bass output
-// TODO: handle transposition here
-//      multiple transposition modes:
+// DONE: handle transposition here
+// TODO: multiple transposition modes:
 //          transpose chord? / transpose/quantize within key?
 //          transpose key? / outright transposition by semitone amount (ala current midi looper method)
-//          tranpose to target octave (ala current beatstep->neutron bass transposition)
-// TODO: handle currently_playing_note / last_played_note stuff here too?
+// DONE:    tranpose to target octave (ala current beatstep->neutron bass transposition)
+// DONE: handle currently_playing_note / last_played_note stuff here too?
 // TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
+//          ^^ think this is better handled by the midi matrix manager..?
 class MIDIOutputWrapper {
     midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
     MIDIDeviceBase *output_usb = nullptr;
@@ -69,9 +70,67 @@ class MIDIOutputWrapper {
             return note;
         }
 
-        virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
-        virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
-        virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0);
+        //virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
+        //virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
+
+        virtual void sendNoteOn(byte in_pitch, byte velocity, byte channel) {
+            if (this->debug) 
+                Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", in_pitch, velocity, channel, label); Serial.flush();
+
+            current_note = in_pitch;
+            int pitch = recalculate_pitch(in_pitch);
+            if (pitch<0 || pitch>127) return;
+
+            if (playing_notes[pitch]<8) {
+                if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
+                playing_notes[pitch]++;
+            } else {
+                if (this->debug) 
+                    Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+            }
+
+            current_transposed_note = pitch;
+
+            if (channel==0) channel = default_channel;
+
+            this->actual_sendNoteOn(pitch, velocity, channel);
+        }
+
+        virtual void sendNoteOff(byte in_pitch, byte velocity, byte channel) {
+            this->last_note = in_pitch;
+            if (this->current_note==in_pitch) 
+                current_note = -1;
+
+            int pitch = recalculate_pitch(in_pitch);
+
+            if (this->debug) Serial.printf("MIDIOutputWrapper:sendNoteOff(%i, %i, %i) current count is %i\n", pitch, velocity, channel, playing_notes[pitch]);
+
+            if (pitch<0 || pitch>127) return;
+            if (playing_notes[pitch]>0) playing_notes[pitch]--;
+            if (playing_notes[pitch]!=0) return;
+
+            this->last_transposed_note = pitch;
+            if (this->current_transposed_note==pitch)
+                current_transposed_note = -1;
+
+            if (channel==0) channel = default_channel;
+
+            this->actual_sendNoteOff(pitch, velocity, channel);
+
+            this->last_transposed_note = pitch;
+            if (this->current_transposed_note==pitch)
+                current_transposed_note = -1;
+        }
+
+        virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) {
+            if (channel == 0 ) channel = this->default_channel;
+            this->actual_sendControlChange(pitch, velocity, channel);
+        };
+
+        // these are the parts that actually send using the underlying objects -- split out so that can override in subclasses
+        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel = 0);
+        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel = 0);
+        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel = 0);
 
         virtual inline bool is_note_playing(int pitch) {
             pitch = recalculate_pitch(pitch);
@@ -115,42 +174,16 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
         this->cable_number = cable_number;
     }
 
-    virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
-        if (channel == 0) channel = default_channel;
-        current_note = pitch;
-        pitch = recalculate_pitch(pitch);
-        if (pitch<0 || pitch>127) return;
-
-        if (this->playing_notes[pitch]<8) this->playing_notes[pitch]++;
-
-        current_transposed_note = pitch;
-        usbMIDI.sendNoteOn(pitch, velocity, channel, cable_number);
+    virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
+        usbMIDI.sendNoteOn(pitch, velocity, channel, this->cable_number);
     }
 
-    virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {
-        if (channel == 0) channel = default_channel;
-
-        this->last_note = pitch;
-        if (this->current_note==pitch) 
-            current_note = -1;
-
-        pitch = recalculate_pitch(pitch);
-
-        if (this->playing_notes[pitch]>0) 
-            this->playing_notes[pitch]--;
-
-        if (this->playing_notes[pitch]>0) return;
-        
-        usbMIDI.sendNoteOff(pitch, velocity, channel, cable_number);
-
-        this->last_transposed_note = pitch;
-        if (this->current_transposed_note==pitch)
-            current_transposed_note = -1;
+    virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {  
+        usbMIDI.sendNoteOff(pitch, velocity, channel, this->cable_number);
     }
 
-    virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) override {
-        if (channel == 0) channel = default_channel;
-        usbMIDI.sendControlChange(pitch, velocity, channel, cable_number);
+    virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel = 0) override {
+        usbMIDI.sendControlChange(pitch, velocity, channel, this->cable_number);
     }
 };
 
