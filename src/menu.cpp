@@ -13,6 +13,8 @@
 #include "menu_clock_source.h"
 #include "menu_midi_matrix.h"
 
+#include "menuitems_object_multitoggle.h"
+
 #include "menu_usb.h"
 #include "menu_behaviours.h"
 
@@ -57,7 +59,10 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
-ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
+//ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
+
+ObjectMultiToggleControl<Project> project_multi_options = ObjectMultiToggleControl<Project>("Project options");
+
 #ifdef ENABLE_SEQUENCER
     ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
 #endif
@@ -167,9 +172,17 @@ void setup_menu() {
     menu->add(&clock_source_selector);
 
     //project_selector.go_back_on_select = true;
+    MultiToggleItem<Project> load_matrix = {
+        (char*)"Load MIDI Mappings",
+        &project,
+        &Project::setLoadMatrixMappings,
+        &Project::isLoadMatrixMappings    
+    };
+    project_multi_options.addItem(load_matrix);
     menu->add(&project_save);
     menu->add(&project_selector);
-    menu->add(&project_load_matrix_mappings);
+    //menu->add(&project_load_matrix_mappings);
+    menu->add(&project_multi_options);
 
     menu->add(&midi_matrix_selector);
 
