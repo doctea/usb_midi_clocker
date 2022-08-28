@@ -31,6 +31,8 @@ class Project {
 
     bool debug = false;
 
+    MIDITrack *temp_loop = new MIDITrack();
+
     void initialise_sequence_slots() {
         for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];
@@ -48,15 +50,15 @@ class Project {
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf("checking if slot %i is actually empty...\n");
-                mpk49_loop_track.load_loop(this->current_project_number, i);
+                temp_loop->load_loop(this->current_project_number, i);
                 Serial.printf("loaded ok\n");
-                if (mpk49_loop_track.count_events()==0)
+                if (temp_loop->count_events()==0)
                     loop_slot_has_file[i] = false;
                 Serial.printf("did count_events\n");
             }
             Serial.printf("loop_slot_has_file[i] = %i for %s\n", loop_slot_has_file[i], filepath);
         }
-        mpk49_loop_track.clear_all();
+        temp_loop->clear_all();
     }
     public:
         int current_project_number = 0;
