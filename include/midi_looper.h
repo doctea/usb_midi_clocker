@@ -187,7 +187,7 @@ class MIDITrack {
                     .started_at     = -1
                 };
             }
-            Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
+            //Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
             pitch_contains_notes[midi_event.pitch] = true;
             if (this->debug) Serial.printf("sizeof frames at %i is now %i\n", time, frames[time].size());
         }
