@@ -181,7 +181,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
     - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
   - Record and playback CCs as well as MIDI
-- Option to 'lock/hold current' clock/sequencer/~~MIDI mapping settings~~ etc when switching presets
+- ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks and send clock on steps in between...)
 - Improve looper quantizer (take note length into consideration)
 - Optimise memory usage of looper with more efficient data structure
