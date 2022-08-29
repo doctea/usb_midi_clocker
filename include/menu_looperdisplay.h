@@ -139,7 +139,7 @@ class LooperDisplay : public MenuItem {
             for (uint16_t screen_x = 0 ; screen_x < tft->width() ; screen_x++) {
                 const uint16_t tick_for_screen_X = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
                 //const uint16_t tick_for_screen_X = this->get_tick_for_screen_x(screen_x);// ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
-                uint16_t colour = YELLOW + pitch*16;
+                uint16_t colour = C_WHITE - ((pitch%12) * 32);
 
                 const int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
                 if (current_velocity > 0) {                  
@@ -180,7 +180,7 @@ class LooperDisplay : public MenuItem {
         }
         //Serial.printf("first_found = %i, last_found = %i, height = %i\n", first_found, last_found, first_found - last_found);
 
-        return pos.y + (last_pitch-first_pitch); //row + 12; //pos.y + (first_found - last_found); //127;  
+        return pos.y + 4 + (last_pitch-first_pitch); //row + 12; //pos.y + (first_found - last_found); //127;  
     }
 
 };
