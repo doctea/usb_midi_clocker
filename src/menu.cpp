@@ -274,6 +274,9 @@ void setup_menu() {
     menu->add(&usbdevices_panel);
     menu->add(&behaviours_panel);
 
+    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Debug: Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
+    menu->add(debug_times_control);
+
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
     pinMode(PIN_BUTTON_C, INPUT_PULLUP);
