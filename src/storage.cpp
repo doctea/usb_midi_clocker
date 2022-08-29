@@ -194,7 +194,7 @@ namespace storage {
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();
       if (debug) Serial.printf("Read a clock_multiplier: %i\n", output->clock_multiplier[clock_multiplier_index]);
       clock_multiplier_index++;      
-    } else if (!project.hold_clock_settings &&line.startsWith("clock_delay=")) {
+    } else if (project.isLoadClockSettings() &&line.startsWith("clock_delay=")) {
       if (clock_delay_index>NUM_CLOCKS) {
         Serial.println("Skipping clock_delay entry as exceeds NUM_CLOCKS");
         return;
@@ -202,7 +202,7 @@ namespace storage {
       output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String("clock_delay=").length()).toInt();      
       if (debug) Serial.printf("Read a clock_delay: %i\n", output->clock_delay[clock_delay_index]);
       clock_delay_index++;
-    } else if (!project.hold_sequencer_settings && line.startsWith("sequence_data=")) {
+    } else if (project.isLoadSequencerSettings() && line.startsWith("sequence_data=")) {
       if (clock_delay_index>NUM_SEQUENCES) {
         Serial.println("Skipping sequence_data entry as exceeds NUM_CLOCKS");
         return;

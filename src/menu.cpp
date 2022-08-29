@@ -61,7 +61,7 @@ ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("C
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
 //ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
 
-ObjectMultiToggleControl<Project> project_multi_options = ObjectMultiToggleControl<Project>("Project options");
+ObjectMultiToggleControl<Project> project_multi_options = ObjectMultiToggleControl<Project>("Recall options");
 
 #ifdef ENABLE_SEQUENCER
     ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
@@ -178,21 +178,21 @@ void setup_menu() {
         &Project::setLoadMatrixMappings,
         &Project::isLoadMatrixMappings    
     };
-    MultiToggleItem<Project> hold_clock = {
-        (char*)"Hold Clock Settings",
+    MultiToggleItem<Project> load_clock = {
+        (char*)"Load Clock Settings",
         &project,
-        &Project::setHoldClockSettings,
-        &Project::isHoldClockSettings    
+        &Project::setLoadClockSettings,
+        &Project::isLoadClockSettings    
     };
-    MultiToggleItem<Project> hold_sequence = {
-        (char*)"Hold Sequence Settings",
+    MultiToggleItem<Project> load_sequence = {
+        (char*)"Load Sequence Settings",
         &project,
-        &Project::setHoldSequencerSettings,
-        &Project::isHoldSequencerSettings    
+        &Project::setLoadSequencerSettings,
+        &Project::isLoadSequencerSettings    
     };
     project_multi_options.addItem(load_matrix);
-    project_multi_options.addItem(hold_clock);
-    project_multi_options.addItem(hold_sequence);
+    project_multi_options.addItem(load_clock);
+    project_multi_options.addItem(load_sequence);
     menu->add(&project_save);
     menu->add(&project_selector);
     //menu->add(&project_load_matrix_mappings);

@@ -70,7 +70,7 @@ class Project {
         int loaded_loop_number = -1;
 
         bool hold_clock_settings = false;
-        bool hold_sequencer_settings = false;
+        bool load_sequencer_settings = false;
         
         Project() {
             //initialise_sequence_slots();
@@ -91,17 +91,17 @@ class Project {
             return this->load_matrix_mappings;
         }
 
-        void setHoldClockSettings(bool value = true) {
+        void setLoadClockSettings(bool value = true) {
             this->hold_clock_settings = value;
         }
-        bool isHoldClockSettings() {
+        bool isLoadClockSettings() {
             return this->hold_clock_settings;
         }
-        void setHoldSequencerSettings(bool value = true) {
-            this->hold_sequencer_settings = value;
+        void setLoadSequencerSettings(bool value = true) {
+            this->load_sequencer_settings = value;
         }
-        bool isHoldSequencerSettings() {
-            return this->hold_sequencer_settings;
+        bool isLoadSequencerSettings() {
+            return this->load_sequencer_settings;
         }
 
         void setProjectNumber(int number) {
