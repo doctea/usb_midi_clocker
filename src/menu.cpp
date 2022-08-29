@@ -178,7 +178,21 @@ void setup_menu() {
         &Project::setLoadMatrixMappings,
         &Project::isLoadMatrixMappings    
     };
+    MultiToggleItem<Project> hold_clock = {
+        (char*)"Hold Clock Settings",
+        &project,
+        &Project::setHoldClockSettings,
+        &Project::isHoldClockSettings    
+    };
+    MultiToggleItem<Project> hold_sequence = {
+        (char*)"Hold Sequence Settings",
+        &project,
+        &Project::setHoldSequencerSettings,
+        &Project::isHoldSequencerSettings    
+    };
     project_multi_options.addItem(load_matrix);
+    project_multi_options.addItem(hold_clock);
+    project_multi_options.addItem(hold_sequence);
     menu->add(&project_save);
     menu->add(&project_selector);
     //menu->add(&project_load_matrix_mappings);

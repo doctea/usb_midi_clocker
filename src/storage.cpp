@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "storage.h"
 
+#include "project.h"
+
 #include "SD.h"
 //#include "SdFat.h"
 #include <SPI.h>
@@ -175,20 +177,16 @@ namespace storage {
     if (line.startsWith("id=")) {
       output->id = (uint8_t) line.remove(0,String("id=").length()).toInt();
       if (debug) Serial.printf("Read id %i\n", output->id);
-    }
-    if (line.startsWith("size_clocks=")) {
+    } else if (line.startsWith("size_clocks=")) {
       output->size_clocks = (uint8_t) line.remove(0,String("size_clocks=").length()).toInt();
       if (debug) Serial.printf("Read size_clocks %i\n", output->size_clocks);
-    }
-    if (line.startsWith("size_sequences=")) {
+    } else if (line.startsWith("size_sequences=")) {
       output->size_sequences = (uint8_t) line.remove(0,String("size_sequences=").length()).toInt();
       if (debug) Serial.printf("Read size_sequences %i\n", output->size_sequences);
-    }
-    if (line.startsWith("size_steps=")) {
+    } else if (line.startsWith("size_steps=")) {
       output->size_steps = (uint8_t) line.remove(0,String("size_steps=").length()).toInt();
       if (debug) Serial.printf("Read size_steps %i\n", output->size_steps);
-    }
-    if (line.startsWith("clock_multiplier=")) {
+    } else if (!project.hold_clock_settings && line.startsWith("clock_multiplier=")) {
       if (clock_multiplier_index>NUM_CLOCKS) {
         Serial.println("Skipping clock_multiplier entry as exceeds NUM_CLOCKS");
         return;
@@ -196,8 +194,7 @@ namespace storage {
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();
       if (debug) Serial.printf("Read a clock_multiplier: %i\n", output->clock_multiplier[clock_multiplier_index]);
       clock_multiplier_index++;      
-    }
-    if (line.startsWith("clock_delay=")) {
+    } else if (!project.hold_clock_settings &&line.startsWith("clock_delay=")) {
       if (clock_delay_index>NUM_CLOCKS) {
         Serial.println("Skipping clock_delay entry as exceeds NUM_CLOCKS");
         return;
@@ -205,8 +202,7 @@ namespace storage {
       output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String("clock_delay=").length()).toInt();      
       if (debug) Serial.printf("Read a clock_delay: %i\n", output->clock_delay[clock_delay_index]);
       clock_delay_index++;
-    }
-    if (line.startsWith("sequence_data=")) {
+    } else if (!project.hold_sequencer_settings && line.startsWith("sequence_data=")) {
       if (clock_delay_index>NUM_SEQUENCES) {
         Serial.println("Skipping sequence_data entry as exceeds NUM_CLOCKS");
         return;
@@ -251,9 +247,9 @@ namespace storage {
     myFile.close();
     Serial.println("File closed");
 
-  #ifdef ENABLE_APCMINI_DISPLAY
-    //redraw_immediately = true;
-  #endif
+    #ifdef ENABLE_APCMINI_DISPLAY
+      //redraw_immediately = true;
+    #endif
 
     Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
     return true;
