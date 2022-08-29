@@ -187,6 +187,8 @@ class MIDITrack {
                     .started_at     = -1
                 };
             }
+            Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
+            pitch_contains_notes[midi_event.pitch] = true;
             if (this->debug) Serial.printf("sizeof frames at %i is now %i\n", time, frames[time].size());
         }
 
@@ -410,15 +412,38 @@ class MIDITrack {
     /* bitmap processing stuff */
         byte piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
         byte piano_roll_held[127];
+        bool pitch_contains_notes[127];
         int piano_roll_highest = 0;
         int piano_roll_lowest = 127;
+
+        // what's the lowest pitch that we've got a note for?
+        int first_pitch() {
+            for (int i = 0 ; i < 127 ; i++) {
+                if (pitch_contains_notes[i]) return i;
+            }
+            return 0;
+        }
+        // what's the highest pitch that we've got a note for?
+        int last_pitch() {
+            for (int i = 127 ; i > 0 ; i--) {
+                if (pitch_contains_notes[i]) return i;
+            }
+            return 0;
+        }
+        // are there any recorded notes for the given pitch?
+        bool does_pitch_contain_notes(byte pitch) {
+            return pitch_contains_notes[pitch];
+        }
 
         // live update of the 'bitmap' - called from process_tick after erase head - updates for any notes that are currently being recorded
         void update_bitmap(uint32_t ticks) {
             for (int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     piano_roll_bitmap[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
-                }
+                    pitch_contains_notes[i] = true;
+                } /*else {
+                    piano_roll_bitmap[ticks_to_sequence_step(ticks)][i] = 0;//recorded_hanging_notes[i].velocity;
+                }*/
             }
         }
 
@@ -427,6 +452,7 @@ class MIDITrack {
         void wipe_piano_roll_bitmap() {
             memset(this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(piano_roll_held, 0, 127);
+            memset(this->pitch_contains_notes, 0, 127);
             /*for (int p = 0 ; p < 127 ; p++) {
                 for (int x = 0  ; x < LOOP_LENGTH ; x++) {
                     piano_roll_bitmap[x][p] = 0;
@@ -454,6 +480,7 @@ class MIDITrack {
                         if (piano_roll_lowest > message.pitch)
                             piano_roll_lowest = message.pitch;*/
                         piano_roll_held[message.pitch] = message.velocity;
+                        pitch_contains_notes[message.pitch] = true;
                     } else if (message.message_type==midi::NoteOff) {
                         piano_roll_held[message.pitch] = 0;
                     }
