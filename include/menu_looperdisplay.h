@@ -20,9 +20,43 @@ class LooperDisplay : public MenuItem {
         this->loop_track = loop_track;
     }
 
-    /*virtual void on_add() override {
+    /*float ticks_per_pixel = 1.0;
+    virtual void on_add() override {
         //canvas = new GFXcanvas16(this->tft->width(), this->tft->getRowHeight()*2);
+        ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
     }*/
+
+
+    /*
+    /// this was supposed to be faster... actually slower than recalculating in loop!
+    uint16_t precalculated_value_screen_x_for_tick[LOOP_LENGTH_TICKS];
+    bool precalculated = false;
+    virtual int get_screen_x_for_tick(int tick) {
+        if (!precalculated) {
+            static int ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
+            for (int i = 0 ; i < LOOP_LENGTH_TICKS ; i++) {
+                precalculated_value_screen_x_for_tick[i] = i / ticks_per_pixel;
+            }
+            precalculated = true;
+        }
+        return precalculated_value_screen_x_for_tick[tick%LOOP_LENGTH_TICKS];
+    }
+
+    /// this was supposed to be faster... actually slower than recalculating in loop!
+    uint16_t precalculated_value_tick_for_screen_x[240];
+    bool precalculated_tick_for_screen_x = false;
+    virtual int get_tick_for_screen_x(int screen_x) {
+        if (!precalculated_tick_for_screen_x) {
+            static int ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
+            for (int i = 0 ; i < tft->width() ; i++) {
+                precalculated_value_tick_for_screen_x[i] = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel));
+            }
+            precalculated_tick_for_screen_x = true;
+        }
+        return precalculated_value_tick_for_screen_x[screen_x];
+    }*/
+
+
     virtual int display(Coord pos, bool selected, bool opened) override {
         //Serial.println("LooperDisplay#display!");
         //pos.y += MenuItem::display(pos, selected, opened);
@@ -68,11 +102,13 @@ class LooperDisplay : public MenuItem {
             }
         }*/
 
+        //static float ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
+        const uint16_t base_row = pos.y;
+
         static float ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
-        int base_row = pos.y;
 
         // we're going to use direct access to the underlying Adafruit library here
-        DisplayTranslator_STeensy *tft2 = (DisplayTranslator_STeensy*)tft;
+        const DisplayTranslator_STeensy *tft2 = (DisplayTranslator_STeensy*)tft;
         ST7789_t3 *actual = tft2->tft;
 
         // draw a vertical line showing the cursor position, if we're playing, recording or overwriting
@@ -85,23 +121,32 @@ class LooperDisplay : public MenuItem {
             else if (this->loop_track->isOverwriting())
                 indicatorcolour = ORANGE;
             //actual->drawFastVLine(screen_x, base_row, 127, indicatorcolour);
-            actual->drawLine(ticks%LOOP_LENGTH_TICKS / ticks_per_pixel, base_row, ticks%LOOP_LENGTH_TICKS / ticks_per_pixel, base_row+127, indicatorcolour);
+            const int current_screen_x = ticks%LOOP_LENGTH_TICKS / ticks_per_pixel;
+            //const int current_screen_x = get_screen_x_for_tick(ticks);
+            /*actual->drawLine(
+                current_screen_x, 
+                base_row, 
+                current_screen_x, 
+                base_row+127, 
+                indicatorcolour
+            );*/
+            actual->drawFastVLine(current_screen_x, base_row, 127, indicatorcolour);
         }
 
         // TODO: centering/resizing of piano roll based on what notes are in it
         for (int pitch = 0 ; pitch < 127 ; pitch++) {
             //Serial.printf("for pitch %i\n", pitch);
-            for (int screen_x = 0 ; screen_x < tft->width() ; screen_x++) {
+            const uint16_t draw_at_y = base_row + (127-pitch);
+            for (uint16_t screen_x = 0 ; screen_x < tft->width() ; screen_x++) {
                 //Serial.printf("for real pixel %i: \n", i);
                 // for each pixel, process ticks_per_pixel ticks
                 //bool held = false;
                 //Serial.printf("\tfor pitch %i:\n", pitch);
-                uint16_t tick_for_screen_X = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
+                const uint16_t tick_for_screen_X = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
+                //const uint16_t tick_for_screen_X = this->get_tick_for_screen_x(screen_x);// ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
                 uint16_t colour = YELLOW + pitch*16;
 
-                uint16_t draw_at_y = base_row + (127-pitch);
-
-                int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
+                const int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
                 if (current_velocity > 0) {                  
                     //Serial.printf("\tat %i with velocity %i\n", pitch, tick_for_screen_X, current_velocity);
 
@@ -128,23 +173,23 @@ class LooperDisplay : public MenuItem {
                     if (ticks%LOOP_LENGTH_TICKS==tick_for_screen_X || ((int)(ticks+ticks_per_pixel))%LOOP_LENGTH_TICKS==tick_for_screen_X)
                         colour = YELLOW;
 
-                    tft->drawLine(
+                    /*tft->drawLine(
                         screen_x, 
                         draw_at_y, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
                         screen_x+1, 
                         draw_at_y, //tft->getRowHeight() + pos.y+(first_found-pitch)+1, 
                         colour
-                    );
+                    );*/
+                    actual->drawFastHLine(screen_x, draw_at_y, 2, colour);
                 }
-
-                if (this->loop_track->track_playing[pitch].velocity>0) {
-                    // draw a little indicator displaying what notes are played with brightness indicating velocity
-                    //int draw_at_y = pos.y+(127-pitch);
-                    //tft->drawLine(0, draw_at_y, 2, draw_at_y, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
-                    actual->drawFastHLine(0, draw_at_y, 2, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
-                } else {
-                    //tft->drawLine(0, pos.y+(127-pitch), 2, pos.y+(127-pitch), BLACK); // + (this->loop_track->track_playing[pitch].velocity<<8));
-                }
+            }
+            if (this->loop_track->track_playing[pitch].velocity>0) {
+                // draw a little indicator displaying what notes are played with brightness indicating velocity
+                //int draw_at_y = pos.y+(127-pitch);
+                //tft->drawLine(0, draw_at_y, 2, draw_at_y, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
+                actual->drawFastHLine(0, draw_at_y, 2, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
+            } else {
+                //tft->drawLine(0, pos.y+(127-pitch), 2, pos.y+(127-pitch), BLACK); // + (this->loop_track->track_playing[pitch].velocity<<8));
             }
         }
         //Serial.printf("first_found = %i, last_found = %i, height = %i\n", first_found, last_found, first_found - last_found);

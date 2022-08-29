@@ -86,6 +86,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
     // classic fixed display version
     virtual int display(Coord pos, bool selected, bool opened) override {
         //Serial.println("MidiOutputSelectorControl display()!");
+        //unsigned long time_micros = micros();
 
         pos.y = header(label, pos, selected, opened);
         //tft->setTextSize(2);
@@ -108,8 +109,8 @@ class MidiMatrixSelectorControl : public SelectorControl {
 
         if (selected_source_index==-1) { // show list of sources
             for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
-                bool is_current_value_selected = source_id==current_value;
-                int col = is_current_value_selected ? GREEN : C_WHITE;
+                const bool is_current_value_selected = source_id==current_value;
+                const int col = is_current_value_selected ? GREEN : C_WHITE;
                 colours(opened && selected_value_index==source_id, col, BLACK);
                 tft->printf((char*)"%15s : ", (char*)get_label_for_index(source_id));
 
@@ -129,19 +130,20 @@ class MidiMatrixSelectorControl : public SelectorControl {
             tft->printf((const char*)"%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
             for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                 //bool is_current_value_selected = target_id==current_value;
-                bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
+                const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
                 /*int col = (is_current_value_connected && is_current_value_selected) ? PURPLE :
                             is_current_value_connected ? GREEN :
                             C_WHITE;*/
-                uint16_t col = this->get_colour_for_target_id(target_id);
+                const uint16_t col = this->get_colour_for_target_id(target_id);
                 colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
-                char indicator = is_current_value_connected ? '*' : ' ';
+                const char indicator = is_current_value_connected ? '*' : ' ';
                 tft->printf((char*)"%c %1x %s\n", indicator, (int)target_id, (char*)get_label_for_index(target_id));
             }
         }
 
         if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually
             tft->println((char*)"");
+
         return tft->getCursorY();
     }
 
