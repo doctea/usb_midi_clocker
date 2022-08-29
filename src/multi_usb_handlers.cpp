@@ -1,3 +1,5 @@
+#include "Config.h"
+
 #include "bpm.h"
 #include "midi_outs.h"
 
@@ -20,21 +22,21 @@ USBHub hub1(Usb);
 USBHub hub2(Usb);
 USBHub hub3(Usb);
 USBHub hub4(Usb);
-MIDIDevice_BigBuffer midi01(Usb);
-MIDIDevice_BigBuffer midi02(Usb);
-MIDIDevice_BigBuffer midi03(Usb);
-MIDIDevice_BigBuffer midi04(Usb);
-MIDIDevice_BigBuffer midi05(Usb);
-MIDIDevice_BigBuffer midi06(Usb);
-MIDIDevice_BigBuffer midi07(Usb);
-MIDIDevice_BigBuffer midi08(Usb);
-MIDIDevice_BigBuffer midi09(Usb);
-MIDIDevice_BigBuffer midi10(Usb);
-MIDIDevice_BigBuffer midi11(Usb);
-MIDIDevice_BigBuffer midi12(Usb);
-MIDIDevice_BigBuffer midi13(Usb);
-MIDIDevice_BigBuffer midi14(Usb);
-MIDIDevice_BigBuffer midi15(Usb);
+use_MIDIDevice_BigBuffer midi01(Usb);
+use_MIDIDevice_BigBuffer midi02(Usb);
+use_MIDIDevice_BigBuffer midi03(Usb);
+use_MIDIDevice_BigBuffer midi04(Usb);
+use_MIDIDevice_BigBuffer midi05(Usb);
+use_MIDIDevice_BigBuffer midi06(Usb);
+use_MIDIDevice_BigBuffer midi07(Usb);
+use_MIDIDevice_BigBuffer midi08(Usb);
+use_MIDIDevice_BigBuffer midi09(Usb);
+use_MIDIDevice_BigBuffer midi10(Usb);
+use_MIDIDevice_BigBuffer midi11(Usb);
+use_MIDIDevice_BigBuffer midi12(Usb);
+use_MIDIDevice_BigBuffer midi13(Usb);
+use_MIDIDevice_BigBuffer midi14(Usb);
+use_MIDIDevice_BigBuffer midi15(Usb);
 
 /*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,

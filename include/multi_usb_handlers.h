@@ -6,6 +6,7 @@
 #include "bpm.h"
 #include "midi_outs.h"
 
+
 //#include "usb_device_handler.h"
 
 /*
@@ -35,21 +36,21 @@ extern USBHub hub1;
 extern USBHub hub2;
 extern USBHub hub3;
 extern USBHub hub4;
-extern MIDIDevice_BigBuffer midi01;
-extern MIDIDevice_BigBuffer midi02;
-extern MIDIDevice_BigBuffer midi03;
-extern MIDIDevice_BigBuffer midi04;
-extern MIDIDevice_BigBuffer midi05;
-extern MIDIDevice_BigBuffer midi06;
-extern MIDIDevice_BigBuffer midi07;
-extern MIDIDevice_BigBuffer midi08;
-extern MIDIDevice_BigBuffer midi09;
-extern MIDIDevice_BigBuffer midi10;
-extern MIDIDevice_BigBuffer midi11;
-extern MIDIDevice_BigBuffer midi12;
-extern MIDIDevice_BigBuffer midi13;
-extern MIDIDevice_BigBuffer midi14;
-extern MIDIDevice_BigBuffer midi15;
+extern use_MIDIDevice_BigBuffer midi01;
+extern use_MIDIDevice_BigBuffer midi02;
+extern use_MIDIDevice_BigBuffer midi03;
+extern use_MIDIDevice_BigBuffer midi04;
+extern use_MIDIDevice_BigBuffer midi05;
+extern use_MIDIDevice_BigBuffer midi06;
+extern use_MIDIDevice_BigBuffer midi07;
+extern use_MIDIDevice_BigBuffer midi08;
+extern use_MIDIDevice_BigBuffer midi09;
+extern use_MIDIDevice_BigBuffer midi10;
+extern use_MIDIDevice_BigBuffer midi11;
+extern use_MIDIDevice_BigBuffer midi12;
+extern use_MIDIDevice_BigBuffer midi13;
+extern use_MIDIDevice_BigBuffer midi14;
+extern use_MIDIDevice_BigBuffer midi15;
 
 //extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES];
 //extern uint64_t usb_midi_connected[NUM_USB_DEVICES];

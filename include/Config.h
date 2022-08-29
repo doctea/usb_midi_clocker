@@ -7,6 +7,9 @@
 
 //#define GDB_DEBUG             // to enable TeensyDebug 
 
+#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
+//#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
+
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
 #define DEFAULT_SUBCLOCKER_DIVISOR          4
 #define DEFAULT_SUBCLOCKER_DELAY_TICKS      0   // don't send clock to the subclocker device until this many ticks have elapsed
