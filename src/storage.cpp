@@ -186,7 +186,7 @@ namespace storage {
     } else if (line.startsWith("size_steps=")) {
       output->size_steps = (uint8_t) line.remove(0,String("size_steps=").length()).toInt();
       if (debug) Serial.printf("Read size_steps %i\n", output->size_steps);
-    } else if (!project.hold_clock_settings && line.startsWith("clock_multiplier=")) {
+    } else if (project.isLoadClockSettings() && line.startsWith("clock_multiplier=")) {
       if (clock_multiplier_index>NUM_CLOCKS) {
         Serial.println("Skipping clock_multiplier entry as exceeds NUM_CLOCKS");
         return;
@@ -194,7 +194,7 @@ namespace storage {
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();
       if (debug) Serial.printf("Read a clock_multiplier: %i\n", output->clock_multiplier[clock_multiplier_index]);
       clock_multiplier_index++;      
-    } else if (project.isLoadClockSettings() &&line.startsWith("clock_delay=")) {
+    } else if (project.isLoadClockSettings() && line.startsWith("clock_delay=")) {
       if (clock_delay_index>NUM_CLOCKS) {
         Serial.println("Skipping clock_delay entry as exceeds NUM_CLOCKS");
         return;

@@ -69,8 +69,8 @@ class Project {
         int selected_loop_number = 0;
         int loaded_loop_number = -1;
 
-        bool hold_clock_settings = false;
-        bool load_sequencer_settings = false;
+        bool load_clock_settings = true;
+        bool load_sequencer_settings = true;
         
         Project() {
             //initialise_sequence_slots();
@@ -92,10 +92,10 @@ class Project {
         }
 
         void setLoadClockSettings(bool value = true) {
-            this->hold_clock_settings = value;
+            this->load_clock_settings = value;
         }
         bool isLoadClockSettings() {
-            return this->hold_clock_settings;
+            return this->load_clock_settings;
         }
         void setLoadSequencerSettings(bool value = true) {
             this->load_sequencer_settings = value;
