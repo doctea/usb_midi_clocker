@@ -61,14 +61,16 @@ ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("C
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
 //ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
 
-ObjectMultiToggleControl<Project> project_multi_options = ObjectMultiToggleControl<Project>("Recall options");
+ObjectMultiToggleControl project_multi_options = ObjectMultiToggleControl("Recall options", true);
 
-#ifdef ENABLE_SEQUENCER
+ObjectMultiToggleControl project_multi_autoadvance = ObjectMultiToggleControl("Auto-advance", true);
+
+/*#ifdef ENABLE_SEQUENCER
     ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
 #endif
 #ifdef ENABLE_LOOPER
     ObjectToggleControl<Project> project_auto_advance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
-#endif
+#endif*/
 ActionItem project_save = ActionItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
@@ -171,40 +173,64 @@ void setup_menu() {
 
     menu->add(&clock_source_selector);
 
-    //project_selector.go_back_on_select = true;
-    MultiToggleItem<Project> load_matrix = {
+    menu->add(&project_save);
+    menu->add(&project_selector);
+
+    // project loading options (whether to load or hold matrix settings, clock, sequence)
+    MultiToggleItemClass<Project> *load_matrix = new MultiToggleItemClass<Project> (
         (char*)"Load MIDI Mappings",
         &project,
         &Project::setLoadMatrixMappings,
         &Project::isLoadMatrixMappings    
-    };
-    MultiToggleItem<Project> load_clock = {
+    );
+    MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
         (char*)"Load Clock Settings",
         &project,
         &Project::setLoadClockSettings,
         &Project::isLoadClockSettings    
-    };
-    MultiToggleItem<Project> load_sequence = {
+    );
+    MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
         (char*)"Load Sequence Settings",
         &project,
         &Project::setLoadSequencerSettings,
         &Project::isLoadSequencerSettings    
-    };
+    );
     project_multi_options.addItem(load_matrix);
     project_multi_options.addItem(load_clock);
     project_multi_options.addItem(load_sequence);
-    menu->add(&project_save);
-    menu->add(&project_selector);
     //menu->add(&project_load_matrix_mappings);
     menu->add(&project_multi_options);
+
+    // options for whether to auto-advance looper/sequencer/beatstep
+    MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
+        (char*)"Sequence",
+        &project,
+        &Project::set_auto_advance_sequencer,
+        &Project::is_auto_advance_sequencer
+    );
+    MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
+        (char*)"Looper",
+        &project,
+        &Project::set_auto_advance_looper,
+        &Project::is_auto_advance_looper
+    );
+    project_multi_autoadvance.addItem(auto_advance_sequencer);
+    project_multi_autoadvance.addItem(auto_advance_looper);
+    #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
+        menu->add(&beatstep_auto_advance);
+        project_multi_autoadvance.addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
+            (char*)"Beatstep advance",
+            &behaviour_beatstep,
+            &DeviceBehaviour_Beatstep::set_auto_advance_pattern(),
+            &DeviceBehaviour_Beatstep::is_auto_advance_pattern()
+        ));
+    #endif
+    menu->add(&project_multi_autoadvance);
 
     menu->add(&midi_matrix_selector);
 
     #ifdef ENABLE_BEATSTEP
         menu->add(&beatstep_notes);
-        #ifdef ENABLE_BEATSTEP_SYSEX
-            menu->add(&beatstep_auto_advance);
-        #endif
     #endif
 
     #ifdef ENABLE_BASS_TRANSPOSE
@@ -232,19 +258,18 @@ void setup_menu() {
         */
         menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
         menu->add(neutron_harmony);
-        
     #endif
 
     // sequencer
     #ifdef ENABLE_SEQUENCER
-        menu->add(&project_auto_advance_sequencer);
+        //menu->add(&project_auto_advance_sequencer);
         menu->add(&sequencer_status);
     #endif
 
     // looper stuff
     #ifdef ENABLE_LOOPER
         //looper_submenu.set_tft(tft);
-        menu->add(&project_auto_advance_looper);
+        //menu->add(&project_auto_advance_looper);
         menu->add(&mpk49_looper_status); 
         menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
         //menu->add(&looper_output_selector);
