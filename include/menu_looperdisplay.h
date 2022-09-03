@@ -124,6 +124,8 @@ class LooperDisplay : public MenuItem {
                 indicatorcolour = RED;
             else if (this->loop_track->isOverwriting())
                 indicatorcolour = ORANGE;
+            else if (this->loop_track->isPlaying()) 
+                indicatorcolour = GREEN;
             const int current_screen_x = ticks%LOOP_LENGTH_TICKS / ticks_per_pixel;
             actual->drawFastVLine(current_screen_x, base_row, range, indicatorcolour);
         }
