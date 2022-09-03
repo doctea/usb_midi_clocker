@@ -57,6 +57,8 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
             this->connected_flag = false;
             
+            if (this->input_device==nullptr) return;
+
             this->input_device->setHandleNoteOn(nullptr);
             this->input_device->setHandleNoteOff(nullptr);
             this->input_device->setHandleControlChange(nullptr);
@@ -68,24 +70,26 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void read() override {
-            if (!is_connected()) return;
+            if (!is_connected() || this->input_device==nullptr) return;
+            //Serial.println("DeviceBehaviourSerialBase#read() about to go into loop..");
             while(this->input_device->read()); 
+            //Serial.println("DeviceBehaviourSerialBase#read() came out of loop..");
         };
 
         virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
-            if (!is_connected()) return;
+            if (!is_connected() || this->output_device==nullptr) return;
             this->output_device->sendNoteOn(note, velocity, channel);
         };
         virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
-            if (!is_connected()) return;
+            if (!is_connected() || this->output_device==nullptr) return;
             this->output_device->sendNoteOff(note, velocity, channel);
         };
         virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel = 0) override {
-            if (!is_connected()) return;
+            if (!is_connected() || this->output_device==nullptr) return;
             this->output_device->sendControlChange(number, value, channel);
         };
         virtual void sendRealTime(uint8_t message) override {
-            if (!is_connected()) return;
+            if (!is_connected() || this->output_device==nullptr) return;
             this->output_device->sendRealTime((midi::MidiType)message);
         };
 };

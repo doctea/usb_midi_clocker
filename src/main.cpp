@@ -217,12 +217,18 @@ void loop() {
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
+  if (debug) Serial.println("about to behaviour_manager->do_reads()..");
   behaviour_manager->do_reads();
+  if (debug) Serial.println("just did behaviour_manager->do_reads()");
+
+  if (debug) Serial.println("about to behaviour_manager->do_loops()..");
+  behaviour_manager->do_loops();
+  if (debug) Serial.println("just did behaviour_manager->do_loops()");
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
     //read_midi_usb_devices();
-    behaviour_manager->do_loops();
+    
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
 

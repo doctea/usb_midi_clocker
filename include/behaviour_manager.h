@@ -15,7 +15,10 @@ class DeviceBehaviourManager {
 
         static DeviceBehaviourManager* getInstance();
 
+        // all of the registered behaviours
         LinkedList<DeviceBehaviourUltimateBase *> behaviours = LinkedList<DeviceBehaviourUltimateBase *>();
+
+        // registered behaviours separated by type, so that we can treat them differently for connection and listing purposes
         LinkedList<DeviceBehaviourUSBBase *> behaviours_usb = LinkedList<DeviceBehaviourUSBBase *>();
         LinkedList<DeviceBehaviourSerialBase *> behaviours_serial = LinkedList<DeviceBehaviourSerialBase *>();
 
@@ -62,7 +65,9 @@ class DeviceBehaviourManager {
 
         void do_reads() {
             for (int i = 0 ; i < behaviours.size() ; i++) {
+                //Serial.printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours.get(i)); Serial.flush();
                 behaviours.get(i)->read();
+                //Serial.printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours.get(i)); Serial.flush();
             }
             /*for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
                 while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
@@ -143,7 +148,7 @@ class DeviceBehaviourManager {
         void do_bar(int bar) {
             int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                behaviours_usb.get(i)->on_bar(bar);
+                behaviours.get(i)->on_bar(bar);
             }
         }
         void do_end_bar(int bar) {
@@ -162,7 +167,7 @@ class DeviceBehaviourManager {
                 DeviceBehaviourUltimateBase *behaviour = behaviours.get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
-                    behaviours_usb.get(i)->loop(temp_tick);
+                    behaviours.get(i)->loop(temp_tick);
                     //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial.flush();
                 }
             }
