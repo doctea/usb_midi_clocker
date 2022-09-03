@@ -190,7 +190,7 @@ class MIDIMatrixManager {
         return this->register_target(target, target->label);
     }
     int register_target(MIDITrack *target, const char *handle) {
-        return this->register_target(new MIDIOutputWrapper(handle, target));
+        return this->register_target(make_midioutputwrapper(handle, target));
     }
     int register_target(MIDIOutputWrapper *target, const char *handle) {
         Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s'\n", handle);

@@ -60,15 +60,19 @@ class DeviceBehaviourUltimateBase {
     virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
     virtual void init() {};
 
+    // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
     };
+    // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
     };
+    // tell the device to send a control change
     virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
         Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
     };
+    // tell the device to send a realtime message
     virtual void sendRealTime(uint8_t message) {
         Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
     };    
