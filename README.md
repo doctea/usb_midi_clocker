@@ -14,7 +14,7 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 
 # Use and contributing
 
-Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message if you're thinking of giving it a try or need any assistance!
+Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message or open an issue if you're thinking of giving it a try or need any assistance!
 
 ## Features
 
@@ -121,6 +121,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - see `include/Config.h` for lots of switches to enable/disable features, set pin assignments, and the like
 - see also `include/ConfigMidi.h` for a few more switches
 - `src/midi_mapper_matrix_manager.cpp` is where a lot of midi device input/output mappings are initialised and defaults assigned, so you may need to tweak stuff here to match your hardware
+- `src/behaviour_manager.cpp` is where devices are set up and configured, so this may need tweaking to match your hardware too
 - `src/menu.cpp` is where the display and menu system are initialised and menu items configured, so you may need to tweak stuff here too
 
 ### TODO/Future 
