@@ -280,11 +280,11 @@ void do_tick(uint32_t in_ticks) {
   }
   if (is_bpm_on_bar(ticks)) {
     //project.on_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    #ifdef ENABLE_USB
-      if (debug) Serial.println("do_tick(): about to behaviour_manager->do_bar()");
-      behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
-      if (debug) Serial.println("do_tick(): just did behaviour_manager->do_bar()");
-    #endif
+    if (debug) Serial.println("do_tick(): about to behaviour_manager->do_bar()");
+    behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    if (debug) Serial.println("do_tick(): just did behaviour_manager->do_bar()");
+  } else if (is_bpm_on_bar(ticks+1)) {
+    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
   }
 
   #ifdef ENABLE_USB

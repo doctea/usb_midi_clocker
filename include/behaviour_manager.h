@@ -15,7 +15,7 @@ class DeviceBehaviourManager {
 
         static DeviceBehaviourManager* getInstance();
 
-        //LinkedList<DeviceBehaviourUltimateBase *> behaviours = LinkedList<DeviceBehaviourUltimateBase *>();
+        LinkedList<DeviceBehaviourUltimateBase *> behaviours = LinkedList<DeviceBehaviourUltimateBase *>();
         LinkedList<DeviceBehaviourUSBBase *> behaviours_usb = LinkedList<DeviceBehaviourUSBBase *>();
         LinkedList<DeviceBehaviourSerialBase *> behaviours_serial = LinkedList<DeviceBehaviourSerialBase *>();
 
@@ -25,6 +25,7 @@ class DeviceBehaviourManager {
                 return;
             }
             this->behaviours_usb.add(behaviour);
+            this->behaviours.add(behaviour);
         }
 
         void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
@@ -32,8 +33,9 @@ class DeviceBehaviourManager {
                 Serial.println("registerBehaviour<DeviceSerialBase> passed a nullptr!"); Serial.flush();
                 return;
             }
-            Serial.printf("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n", behaviours_serial.size(), behaviour);
+            Serial.printf("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n", behaviours.size(), behaviour);
             this->behaviours_serial.add(behaviour);
+            this->behaviours.add(behaviour);
         }
 
         bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
@@ -59,12 +61,15 @@ class DeviceBehaviourManager {
         }
 
         void do_reads() {
-            for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                behaviours.get(i)->read();
+            }
+            /*for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
                 while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
             }
             for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
                 while(midi_out_serial[i]->read());
-            }
+            }*/
         }
         /*#define SINGLE_FRAME_READ
         void read_midi_serial_devices() {
@@ -112,45 +117,39 @@ class DeviceBehaviourManager {
         }*/
 
         void send_clocks() {    // replaces behaviours_send_clock
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial.flush();
-                behaviours_usb.get(i)->send_clock(ticks);
+                behaviours.get(i)->send_clock(ticks);
                 //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial.flush();
             }  
-            size = behaviours_serial.size();
+            /*size = behaviours_serial.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours_serial.get(i)->send_clock(ticks);
-            }
+            }*/
         }
 
         void do_phrase(int phrase) {
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                behaviours_usb.get(i)->on_phrase(phrase);
+                behaviours.get(i)->on_phrase(phrase);
             }
-            size = behaviours_serial.size();
+            /*size = behaviours_serial.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours_serial.get(i)->on_phrase(phrase);
-            }
+            }*/
         }
 
         void do_bar(int bar) {
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours_usb.get(i)->on_bar(bar);
             }
-            size = behaviours_serial.size();
+        }
+        void do_end_bar(int bar) {
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                if (this->debug) {
-                    Serial.printf("behaviour_manager#do_bar(): about to on_bar on serial behaviour number %i at %p\n", i, behaviours_serial.get(i)); 
-                    Serial.flush();
-                }
-                if (behaviours_serial.get(i)==nullptr) {
-                    Serial.printf("behaviour_manager#do_bar() found a nullptr for item %i!\n", i);
-                }
-                behaviours_serial.get(i)->on_bar(bar);
-                if (this->debug) Serial.printf("behaviour_manager#do_bar(): just did on_bar on serial behaviour number %i\n", i); Serial.flush();
+                behaviours.get(i)->on_bar(bar);
             }
         }
 
@@ -158,63 +157,38 @@ class DeviceBehaviourManager {
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                DeviceBehaviourUltimateBase *behaviour = behaviours_usb.get(i);
+                DeviceBehaviourUltimateBase *behaviour = behaviours.get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
                     behaviours_usb.get(i)->loop(temp_tick);
                     //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial.flush();
                 }
             }
-            size = behaviours_serial.size();
-            for (int i = 0 ; i < size ; i++) {
-                DeviceBehaviourUltimateBase *behaviour = behaviours_serial.get(i);
-                if (behaviour!=nullptr) {
-                    //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
-                    behaviours_serial.get(i)->loop(temp_tick);
-                    //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial.flush();
-                }
-            }
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                behaviours_usb.get(i)->on_pre_clock(in_ticks);
-            }
-            size = behaviours_serial.size();
-            for (int i = 0 ; i < size ; i++) {
-                behaviours_serial.get(i)->on_pre_clock(in_ticks);
+                behaviours.get(i)->on_pre_clock(in_ticks);
             }
         }
 
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial.flush();
-                behaviours_usb.get(i)->on_tick(in_ticks);
+                behaviours.get(i)->on_tick(in_ticks);
                 //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial.flush();
-            }
-            size = behaviours_serial.size();
-            for (int i = 0 ; i < size ; i++) {
-                if (this->debug) Serial.printf("behaviours#do_ticks calling on_tick on serial behaviour %i\n", i); Serial.flush();
-                behaviours_serial.get(i)->on_tick(in_ticks);
-                if (this->debug) Serial.printf("behaviours#do_ticks called on_tick on serial behaviour %i\n", i); Serial.flush();
             }
         }
 
         void on_restart() {
-            int size = behaviours_usb.size();
+            int size = behaviours.size();
             for(int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
-                behaviours_usb.get(i)->on_restart();
-                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
-            }
-            size = behaviours_serial.size();
-            for(int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
-                behaviours_serial.get(i)->on_restart();
+                behaviours.get(i)->on_restart();
                 //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
             }
         }
