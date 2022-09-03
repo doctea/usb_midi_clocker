@@ -160,12 +160,15 @@ class MIDIMatrixManager {
             }
         }
     }
-    void stop_all_notes(source_id_t source_id) {
+    void stop_all_notes_for_source(source_id_t source_id) {
         for (target_id_t target_id = 0 ; target_id < NUM_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
-                targets[target_id].wrapper->stop_all_notes();
+                this->stop_all_notes_for_target(target_id);
             }
         }
+    }
+    void stop_all_notes_for_target(target_id_t target_id) {
+        targets[target_id].wrapper->stop_all_notes();
     }
 
     const char *get_label_for_source_id(source_id_t source_id) {
@@ -186,20 +189,20 @@ class MIDIMatrixManager {
     int targets_count = 0;
     target_entry targets[NUM_TARGETS] = {};
 
-    int register_target(MIDIOutputWrapper *target) {
+    target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
-    int register_target(MIDITrack *target, const char *handle) {
+    target_id_t register_target(MIDITrack *target, const char *handle) {
         return this->register_target(make_midioutputwrapper(handle, target));
     }
-    int register_target(MIDIOutputWrapper *target, const char *handle) {
+    target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
         Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s'\n", handle);
         strcpy(targets[targets_count].handle, handle);
         targets[targets_count].wrapper = target;
         return targets_count++;
     }
 
-    int get_target_id_for_handle(const char *handle) {
+    target_id_t get_target_id_for_handle(const char *handle) {
         Serial.printf("get_target_id_for_handle(%s)\n", handle);
         for (int i = 0; i < targets_count ; i++) {
             Serial.printf("\t%i: looking for '%s', comparing '%s'..\n", i, handle, targets[i].handle);

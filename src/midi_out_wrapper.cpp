@@ -74,6 +74,8 @@ MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, byte cable_nu
     return new MIDIOutputWrapper_PC(label, cable_number, channel);
 }
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel) {
+    /*MIDIOutputWrapper_Behaviour * v = new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
+    behaviour->wrapper = v;*/
     return new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
 }
 

@@ -26,6 +26,8 @@ class DeviceBehaviourUltimateBase {
     source_id_t source_id = -1;
     target_id_t target_id = -1;
 
+    //MIDIOutputWrapper *wrapper = nullptr;
+
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
 

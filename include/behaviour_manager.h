@@ -154,7 +154,7 @@ class DeviceBehaviourManager {
         void do_end_bar(int bar) {
             int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
-                behaviours.get(i)->on_bar(bar);
+                behaviours.get(i)->on_end_bar(bar);
             }
         }
 

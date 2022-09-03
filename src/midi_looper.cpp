@@ -38,7 +38,7 @@ void MIDITrack::sendNoteOff(byte pitch, byte velocity, byte channel) {
 }
 
 void MIDITrack::stop_all_notes() {
-    midi_matrix_manager->stop_all_notes(this->source_id);
+    midi_matrix_manager->stop_all_notes_for_source(this->source_id);
 
     if (current_note!=-1) 
         last_note = current_note;
