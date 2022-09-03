@@ -37,6 +37,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Route MIDI input from a [LeStrum](https://www.tindie.com/products/hotchk155/le-strum-midi-strummed-chord-controller-kit/) to MIDI->CV interface or other synth
   - Route MIDI to/from a Disting Ex with the Expert Sleepers MIDI breakout board
 - A MIDI routing matrix, to route notes from any of the configured sources (usb-midi, serial-midi, looper) and output it to any of the configured outputs (usb-midi, serial-midi, loopers)
+- 'Bass drone' feature on the Neutron output where it'll drone on the first note played of a bar
 - Re-sync clocked devices 'now' or 'on next bar start' (using ACPMini shift+Up and shift+Device respectively) that resets internal clock and sends stop/start messages to attached MIDI devices
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 library for info via [custom menu system](https://github.com/doctea/mymenu)
@@ -70,6 +71,23 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - recorded notes are shown on display in piano roll style
   - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
   - momentary overwrite mode that cuts notes
+
+### Behaviours
+
+- behaviour_apcmini: for Akai APCMini as sequencer/clock sequencer
+- behaviour_bitbox: clock to 1010 Music Bitbox mk2, also notes, over midi DIN
+- behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
+- behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
+- behaviour_craftsynth: send notes to the Modal CraftSynth 2.0
+- behaviour_drumkit: input from midi drumkit over DIN
+- behaviour_lestrum: input from LeStrum on both channels
+- behaviour_mpk49: input from Akai MK49, including control over looper
+- behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
+- behaviour_keystep: sends clock and receives notes
+- behaviour_bamble: sends clock and sets up some parameters for drum2musocv
+- behaviour_neutron: bass drone and clock to Neutron over MIDI DIN
+- behaviour_base_serial: base class for DIN MIDI serial devices
+- behaviour_base_usb: base class for USB MIDI devices
 
 ## Requirements
 
