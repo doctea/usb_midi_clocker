@@ -26,6 +26,8 @@ class DeviceBehaviourUltimateBase {
     source_id_t source_id = -1;
     target_id_t target_id = -1;
 
+    //MIDIOutputWrapper *wrapper = nullptr;
+
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
 
@@ -50,6 +52,7 @@ class DeviceBehaviourUltimateBase {
     virtual void on_tick(uint32_t ticks) {};
     // called when new bar starts
     virtual void on_bar(int bar_number) {};
+    virtual void on_end_bar(int bar_number) {};
     // called when the clock is restarted
     virtual void on_restart() {};
     // called when we change phrase
@@ -60,15 +63,19 @@ class DeviceBehaviourUltimateBase {
     virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
     virtual void init() {};
 
+    // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
     };
+    // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
     };
+    // tell the device to send a control change
     virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
         Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
     };
+    // tell the device to send a realtime message
     virtual void sendRealTime(uint8_t message) {
         Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
     };    

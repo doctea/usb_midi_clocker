@@ -46,7 +46,9 @@ class MIDIOutputWrapper {
             default_channel = channel;
             memset(playing_notes, 0, sizeof(playing_notes));
         }
-        MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) : MIDIOutputWrapper(label, channel) {
+        virtual ~MIDIOutputWrapper();
+        //virtual ~MIDIOutputWrapper();
+        /*MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             output_serialmidi = in_output_serialmidi;
         }
         MIDIOutputWrapper(const char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) : MIDIOutputWrapper(label, channel) {
@@ -55,7 +57,7 @@ class MIDIOutputWrapper {
         MIDIOutputWrapper(const char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             output_usb_pointer = in_output_usb;
         }
-        MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);
+        MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);*/
 
         // remap pitch if force octave is on, TODO: other tranposition modes
         virtual int recalculate_pitch(byte note) {
@@ -122,15 +124,15 @@ class MIDIOutputWrapper {
                 current_transposed_note = -1;
         }
 
-        virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) {
+        virtual void sendControlChange(byte pitch, byte velocity, byte channel) {
             if (channel == 0 ) channel = this->default_channel;
             this->actual_sendControlChange(pitch, velocity, channel);
         };
 
         // these are the parts that actually send using the underlying objects -- split out so that can override in subclasses
-        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel = 0);
-        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel = 0);
-        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel = 0);
+        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) {};
+        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) {};
+        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) {};
 
         virtual inline bool is_note_playing(int pitch) {
             pitch = recalculate_pitch(pitch);
@@ -152,7 +154,7 @@ class MIDIOutputWrapper {
             }
         }
 
-        void setForceOctave(int octave) {
+        virtual void setForceOctave(int octave) {
             //Serial.printf("Beatstep_Behaviour#setForceOctave(%i)!", octave); Serial.flush();
             if (octave!=this->force_octave) {
                 this->stop_all_notes();
@@ -160,7 +162,7 @@ class MIDIOutputWrapper {
                 this->force_octave = octave;
             }
         }
-        int getForceOctave() {
+        virtual int getForceOctave() {
             //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial.flush();
             return this->force_octave;
         }
@@ -174,17 +176,106 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
         this->cable_number = cable_number;
     }
 
-    virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
+    virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
         usbMIDI.sendNoteOn(pitch, velocity, channel, this->cable_number);
     }
 
-    virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {  
+    virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) override {
         usbMIDI.sendNoteOff(pitch, velocity, channel, this->cable_number);
     }
 
-    virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel = 0) override {
+    virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
         usbMIDI.sendControlChange(pitch, velocity, channel, this->cable_number);
     }
 };
+
+class MIDIOutputWrapper_MIDISerial : public MIDIOutputWrapper {
+    public:
+        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output = nullptr;
+        
+        MIDIOutputWrapper_MIDISerial(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1) 
+            : MIDIOutputWrapper(label, channel) {
+            this->output = output;
+        }
+
+        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
+            output->sendNoteOn(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) override {  
+            output->sendNoteOff(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
+            output->sendControlChange(pitch, velocity, channel);
+        }
+};
+
+class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
+    public:
+        MIDIDeviceBase *output = nullptr;
+
+        MIDIOutputWrapper_MIDIUSB(const char *label, MIDIDeviceBase *output, byte channel = 1) : MIDIOutputWrapper(label, channel) {
+            this->output = output;
+        }
+
+        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
+            output->sendNoteOn(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) override {  
+            output->sendNoteOff(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
+            output->sendControlChange(pitch, velocity, channel);
+        }
+};
+
+class MIDIOutputWrapper_LoopTrack : public MIDIOutputWrapper {
+    public:
+        MIDITrack *output = nullptr;
+
+        MIDIOutputWrapper_LoopTrack(const char *label, MIDITrack *output, byte channel = 1) : MIDIOutputWrapper(label, channel) {
+            this->output = output;
+        }
+
+        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel);
+        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel);
+        virtual void actual_sendControlChange(byte number, byte value, byte channel);
+};
+
+
+#include "behaviour_base.h"
+
+class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
+    public:
+        DeviceBehaviourUltimateBase *output = nullptr;
+
+        MIDIOutputWrapper_Behaviour(const char *label, DeviceBehaviourUltimateBase *output, byte channel = 1) : MIDIOutputWrapper(label, channel) {
+            this->output = output;
+        }
+        //virtual ~MIDIOutputWrapper_Behaviour();
+
+        virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
+            output->sendNoteOn(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) override {  
+            output->sendNoteOff(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
+            output->sendControlChange(pitch, velocity, channel);
+        }
+};
+
+MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, byte cable_number, byte channel = 1);
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, byte channel = 1);
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, byte channel = 1);
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1);
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel = 1);
+
+//MIDIOutputWrapper::~MIDIOutputWrapper() {}
 
 #endif

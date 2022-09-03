@@ -3,6 +3,7 @@
 #include "midi_looper.h"
 #include "bpm.h"
 
+/*
 MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel) : MIDIOutputWrapper(label, channel) {
     output_looper = looper;
 }
@@ -40,4 +41,42 @@ void MIDIOutputWrapper::actual_sendControlChange(byte pitch, byte velocity, byte
     if (output_looper!=nullptr) {
         output_looper->in_event(ticks, midi::ControlChange, pitch, velocity);
     }
+}*/
+
+
+void MIDIOutputWrapper_LoopTrack::actual_sendNoteOn(byte pitch, byte velocity, byte channel) {
+    output->in_event(ticks, midi::NoteOn, pitch, velocity); //, channel);
 }
+
+void MIDIOutputWrapper_LoopTrack::actual_sendNoteOff(byte pitch, byte velocity, byte channel) {  
+    output->in_event(ticks, midi::NoteOff, pitch, velocity); //, channel);
+}
+
+void MIDIOutputWrapper_LoopTrack::actual_sendControlChange(byte number, byte value, byte channel) {
+    //TODO: implement loop track CC recording
+    //output->sendControlChange(pitch, velocity, channel);
+    output->in_event(ticks, midi::ControlChange, number, value); //, channel);
+}
+
+
+
+
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, byte channel) {
+    return new MIDIOutputWrapper_LoopTrack(label, output, channel);
+}
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, byte channel) {
+    return new MIDIOutputWrapper_MIDIUSB(label, output, channel);
+}
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel) {
+    return new MIDIOutputWrapper_MIDISerial(label, output, channel);
+}
+MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, byte cable_number, byte channel) {
+    return new MIDIOutputWrapper_PC(label, cable_number, channel);
+}
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel) {
+    /*MIDIOutputWrapper_Behaviour * v = new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
+    behaviour->wrapper = v;*/
+    return new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
+}
+
+MIDIOutputWrapper::~MIDIOutputWrapper() {}

@@ -234,7 +234,7 @@ void setup_menu() {
     #endif
 
     #ifdef ENABLE_BASS_TRANSPOSE
-        MIDIOutputWrapper *neutron_wrapper = midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4");
+        MIDIOutputWrapper_Behaviour *neutron_wrapper = (MIDIOutputWrapper_Behaviour *)midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4");
         ObjectNumberControl<MIDIOutputWrapper,int> *neutron_transpose_control = new ObjectNumberControl<MIDIOutputWrapper,int>(
             "Neutron octave",
             neutron_wrapper, 
@@ -244,8 +244,13 @@ void setup_menu() {
             0,
             8
         );
-        HarmonyStatus *neutron_harmony = new HarmonyStatus("Neutron output", &neutron_wrapper->last_transposed_note, &neutron_wrapper->current_transposed_note);
-        /*
+        //DeviceBehaviour_Neutron *behaviour_neutron = static_cast<DeviceBehaviour_Neutron *>(neutron_wrapper->output);
+        HarmonyStatus *neutron_harmony = new HarmonyStatus("Neutron output", 
+            &neutron_wrapper->last_transposed_note, 
+            &neutron_wrapper->current_transposed_note, 
+            &behaviour_neutron.last_drone_note
+        );
+        
         //TODO: see commented-out section in DeviceBehaviour_Neutron
         ObjectToggleControl<DeviceBehaviour_Neutron> *neutron_drone_bass = new ObjectToggleControl<DeviceBehaviour_Neutron> (
             "Neutron bass drone",
@@ -255,7 +260,7 @@ void setup_menu() {
             nullptr
         );
         menu->add(neutron_drone_bass);
-        */
+        
         menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
         menu->add(neutron_harmony);
     #endif

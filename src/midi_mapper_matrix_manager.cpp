@@ -55,12 +55,12 @@ void setup_midi_mapper_matrix_manager() {
 
     // first, add all the output options that will exist
 
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 1",  behaviour_bitbox.output_device, 1));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 2",  behaviour_bitbox.output_device, 2));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S1 : Bitbox : ch 3",  behaviour_bitbox.output_device, 3));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S2 : unused : ch 1",  midi_out_serial[1], 1));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S3 : Neutron : ch 4", behaviour_neutron.output_device, 4));
-    midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", &behaviour_bitbox, 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", &behaviour_bitbox, 2));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", &behaviour_bitbox, 3));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", &behaviour_neutron, 4));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
     //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
     //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
@@ -70,14 +70,14 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_BAMBLE
-        midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : Bamble : ch 1", &(behaviour_bamble->device), 1));
-        midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : Bamble : ch 2", &(behaviour_bamble->device), 2));
-        midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : Bamble : drums",&(behaviour_bamble->device), 10));
-        midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : Bamble : ch 4", &(behaviour_bamble->device), 4));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 1", behaviour_bamble, 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 2", behaviour_bamble, 2));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",behaviour_bamble, 10));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 4", behaviour_bamble, 4));
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
-        midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"USB : CraftSynth : ch 1", &(behaviour_craftsynth->device), 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : CraftSynth : ch 1", behaviour_craftsynth, 1));
     #endif
     #if defined(ENABLE_CRAFTSYNTH) && !defined(ENABLE_CRAFTSYNTH_USB)
         midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S6 : CraftSynth : ch1", midi_out_serial[5], 1));
