@@ -107,6 +107,8 @@ void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 2", 1, 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 3", 2, 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 4", 3, 1));
+
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Beatstep trans", behaviour_beatstep, 1));
     #endif
 
     #ifdef ENABLE_LESTRUM
