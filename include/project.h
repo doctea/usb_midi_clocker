@@ -69,8 +69,10 @@ class Project {
         int selected_loop_number = 0;
         int loaded_loop_number = -1;
 
+        bool load_matrix_mappings = true;
         bool load_clock_settings = true;
         bool load_sequencer_settings = true;
+        bool load_behaviour_options = true;
         
         Project() {
             //initialise_sequence_slots();
@@ -83,7 +85,6 @@ class Project {
             initialise_loop_slots(false);
         }
 
-        bool load_matrix_mappings = true;
         void setLoadMatrixMappings(bool value = true) {
             this->load_matrix_mappings = value;
         }
@@ -102,6 +103,13 @@ class Project {
         }
         bool isLoadSequencerSettings() {
             return this->load_sequencer_settings;
+        }
+
+        void setLoadBehaviourOptions(bool value = true) {
+            this->load_behaviour_options = value;
+        }
+        bool isLoadBehaviourOptions() {
+            return this->load_behaviour_options;
         }
 
         void setProjectNumber(int number) {

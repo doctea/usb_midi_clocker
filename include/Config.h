@@ -4,8 +4,9 @@
 //#define WAIT_FOR_SERIAL       // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
+//#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here?
 
-//#define GDB_DEBUG             // to enable TeensyDebug 
+//#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
 #define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer

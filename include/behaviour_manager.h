@@ -198,6 +198,23 @@ class DeviceBehaviourManager {
             }
         }
 
+        // ask behaviours if a sequence save key-value pair applies to them; early return if one is found
+        void load_sequence_parse_key_value(String key, String value) {
+            Serial.printf("BehaviourManager#load_sequence_parse_key_value('%s', '%s')\n", key.c_str(), value.c_str());
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                if (behaviours.get(i)->parse_sequence_key_value(key, value)) {
+                    return;
+                }
+            }
+        }
+        // ask behaviours to add option lines to save sequence file
+        void save_sequence_add_lines(LinkedList<String> *lines) {
+            //LinkedList<String> lines = LinkedList<String>();
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                behaviours.get(i)->save_sequence_add_lines(lines);
+            }
+        }
+
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {}

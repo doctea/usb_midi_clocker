@@ -3,6 +3,8 @@
 
 #include "project.h"
 
+#include "behaviour_manager.h"
+
 #include "SD.h"
 //#include "SdFat.h"
 #include <SPI.h>
@@ -110,6 +112,12 @@ namespace storage {
         myFile.printf("%1x", input->sequence_data[i][x]);
       }
       myFile.println("");
+    }
+    myFile.println("; behaviour extensions");
+    LinkedList<String> behaviour_lines = LinkedList<String>();
+    behaviour_manager->save_sequence_add_lines(&behaviour_lines);
+    for (int i = 0 ; i < behaviour_lines.size() ; i++) {
+      myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
     }
     myFile.println("; end sequence");
     myFile.close();
@@ -220,6 +228,14 @@ namespace storage {
       }
       if (debug) Serial.println("]");
       sequence_data_index++;
+    } else if (project.isLoadBehaviourOptions() && line.startsWith("behaviour_option_")) {
+      Serial.printf("behaviour_option read line '%s'\n", line.c_str());
+      String partial = line.remove(0,String("behaviour_option_").length());
+      // todo: something is off with my understanding of how remove works here
+      int split_point = partial.indexOf("=");
+      String key = partial.remove(split_point);
+      String value = line.remove(0,split_point+1);
+      behaviour_manager->load_sequence_parse_key_value(key, value);
     }
   }
 

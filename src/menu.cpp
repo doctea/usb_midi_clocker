@@ -61,10 +61,6 @@ ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("C
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
 //ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
 
-ObjectMultiToggleControl project_multi_options = ObjectMultiToggleControl("Recall options", true);
-
-ObjectMultiToggleControl project_multi_autoadvance = ObjectMultiToggleControl("Auto-advance", true);
-
 /*#ifdef ENABLE_SEQUENCER
     ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
 #endif
@@ -176,32 +172,41 @@ void setup_menu() {
     menu->add(&project_save);
     menu->add(&project_selector);
 
-    // project loading options (whether to load or hold matrix settings, clock, sequence)
+    // project loading options (whether to load or hold matrix settings, clock, sequence, behaviour options)
+    ObjectMultiToggleControl *project_multi_load_options = new ObjectMultiToggleControl("Recall options", true);
     MultiToggleItemClass<Project> *load_matrix = new MultiToggleItemClass<Project> (
-        (char*)"Load MIDI Mappings",
+        (char*)"MIDI Mappings",
         &project,
         &Project::setLoadMatrixMappings,
         &Project::isLoadMatrixMappings    
     );
     MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
-        (char*)"Load Clock Settings",
+        (char*)"Clock Settings",
         &project,
         &Project::setLoadClockSettings,
         &Project::isLoadClockSettings    
     );
     MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
-        (char*)"Load Sequence Settings",
+        (char*)"Sequence Settings",
         &project,
         &Project::setLoadSequencerSettings,
         &Project::isLoadSequencerSettings    
     );
-    project_multi_options.addItem(load_matrix);
-    project_multi_options.addItem(load_clock);
-    project_multi_options.addItem(load_sequence);
+    MultiToggleItemClass<Project> *load_behaviour_settings = new MultiToggleItemClass<Project> {
+        (char*)"Behaviour Options",
+        &project,
+        &Project::setLoadBehaviourOptions,
+        &Project::isLoadBehaviourOptions
+    };
+    project_multi_load_options->addItem(load_matrix);
+    project_multi_load_options->addItem(load_clock);
+    project_multi_load_options->addItem(load_sequence);
+    project_multi_load_options->addItem(load_behaviour_settings);
     //menu->add(&project_load_matrix_mappings);
-    menu->add(&project_multi_options);
+    menu->add(project_multi_load_options);
 
     // options for whether to auto-advance looper/sequencer/beatstep
+    ObjectMultiToggleControl *project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
     MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
         (char*)"Sequence",
         &project,
@@ -214,18 +219,18 @@ void setup_menu() {
         &Project::set_auto_advance_looper,
         &Project::is_auto_advance_looper
     );
-    project_multi_autoadvance.addItem(auto_advance_sequencer);
-    project_multi_autoadvance.addItem(auto_advance_looper);
+    project_multi_autoadvance->addItem(auto_advance_sequencer);
+    project_multi_autoadvance->addItem(auto_advance_looper);
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         menu->add(&beatstep_auto_advance);
-        project_multi_autoadvance.addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
+        project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
             (char*)"Beatstep advance",
             &behaviour_beatstep,
             &DeviceBehaviour_Beatstep::set_auto_advance_pattern(),
             &DeviceBehaviour_Beatstep::is_auto_advance_pattern()
         ));
     #endif
-    menu->add(&project_multi_autoadvance);
+    menu->add(project_multi_autoadvance);
 
     menu->add(&midi_matrix_selector);
 

@@ -16,6 +16,8 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
         int last_drone_note = -1;   // note that we should drone on
         byte drone_channel = 0;     // channel that we should drone on
 
+        target_id_t target_id = -1;
+
         virtual bool is_drone() {
             return drone_enabled;
         }
@@ -24,14 +26,16 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
                 // turning drone off and there is a note to kill
                 if (this->debug) Serial.println("set_drone setting drone_enabled off - calling kill_drone_note!");
                 this->kill_drone_note();
+                this->last_drone_note = -1;
             } else if (!this->drone_enabled && value) {
                 // should kill any (non-drone) notes that we have playing... except thats handled by the MIDIOutputWrapper that's wrapped around this behaviour, rather than the output that this is connected to.  
                 // hmmm.  so, how do we untangle this?  should DeviceBehaviours be subclasses of MIDIOutputWrapper too?
                 // TODO: yeah this ugly af kludge should work for now
-                midi_matrix_manager->stop_all_notes_for_target(midi_matrix_manager->get_target_id_for_handle("S3 : Neutron : ch 4"));
+                if (this->target_id == -1)     // at least cache it
+                    target_id = midi_matrix_manager->get_target_id_for_handle("S3 : Neutron : ch 4");
+                midi_matrix_manager->stop_all_notes_for_target(this->target_id);
             }
             this->drone_enabled = value;
-            this->last_drone_note = -1;
         }
         virtual int get_drone_note() {
             return this->last_drone_note;
@@ -90,6 +94,21 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
             } else
                 DeviceBehaviourSerialBase::sendNoteOff(pitch, velocity, channel);
         }
+
+        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+            lines->add(
+                String("neutron_drone=") + String(this->drone_enabled ? "enabled":"disabled")
+            );
+        }
+        virtual bool parse_sequence_key_value(String key, String value) override {
+            if (key.equals("neutron_drone")) {
+                this->set_drone(value.equals("enabled"));
+                Serial.printf("neutron_drone found - setting to %s!\n", drone_enabled?"true":"false");
+                return true;
+            }
+            return DeviceBehaviourUltimateBase::parse_sequence_key_value(key, value);
+        }
+
 };
 
 extern DeviceBehaviour_Neutron behaviour_neutron;

@@ -189,6 +189,11 @@ class MIDIMatrixManager {
     int targets_count = 0;
     target_entry targets[NUM_TARGETS] = {};
 
+    /*target_id_t register_target(DeviceBehaviourUltimateBase *target_behaviour, const char *handle) {
+        target_id_t t = this->register_target(make_midioutputwrapper(handle, target_behaviour));
+        target_behaviour->target_id = t;
+        return t;
+    }*/
     target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }

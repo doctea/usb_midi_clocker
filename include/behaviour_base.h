@@ -82,6 +82,13 @@ class DeviceBehaviourUltimateBase {
     virtual void sendNow() {
 
     };
+
+    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+
+    }
+    virtual bool parse_sequence_key_value(String key, String value) {
+        return false;
+    }
 };
 
 
