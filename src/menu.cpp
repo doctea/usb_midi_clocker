@@ -241,7 +241,7 @@ void setup_menu() {
             &MIDIOutputWrapper::setForceOctave, 
             &MIDIOutputWrapper::getForceOctave, 
             nullptr,
-            0,
+            -1,
             8
         );
         //DeviceBehaviour_Neutron *behaviour_neutron = static_cast<DeviceBehaviour_Neutron *>(neutron_wrapper->output);
