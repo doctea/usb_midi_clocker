@@ -41,7 +41,7 @@
 
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
-#define ENABLE_LOOPER_PIANOROLL
+#define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
 
 // enable MIDI looping for drumkit
 //#define ENABLE_DRUM_LOOPER
@@ -60,6 +60,7 @@
     #define ENABLE_BEATSTEP
     //#define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     #define ENABLE_BAMBLE
+    //#defined ENABLE_BAMBLE_INPUT    // for collecting input from bambleweeny
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
@@ -70,7 +71,7 @@
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
-#error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
+    #error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
 #endif
 
 //#define ENABLE_CRAFTSYNTH_CLOCKTOGGLE   // enable menu item to enable/disable clock output to CraftSynth - only really useful for debug i think?

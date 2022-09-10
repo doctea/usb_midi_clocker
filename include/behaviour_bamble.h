@@ -35,9 +35,47 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
             this->device->setHandleNoteOff(bamble_note_off);
         };
 
+        source_id_t source_ids[5] = { -1, -1, -1, -1, -1 };
+        virtual void self_register_midi_matrix_targets(MIDIMatrixManager *midi_matrix_manager) {
+            // register multiple inputs / outputs
+
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 1", this, 1));
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 2", this, 2));
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 3", this, 3));
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 4", this, 4));
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",this, 10));
+        }
+
+        #ifdef ENABLE_BAMBLE_INPUT
+            virtual void self_register_midi_matrix_sources(MIDIMatrixManager *midi_matrix_manager) {
+                this->source_ids[0] = midi_matrix_manager->register_source(this, "bamble_input_ch1");
+                this->source_ids[1] = midi_matrix_manager->register_source(this, "bamble_input_ch2");
+                this->source_ids[2] = midi_matrix_manager->register_source(this, "bamble_input_ch3");
+                this->source_ids[3] = midi_matrix_manager->register_source(this, "bamble_input_ch4");
+                this->source_ids[4] = midi_matrix_manager->register_source(this, "bamble_input_ch16");
+            }
+
+            // special version that uses source_ids array based on incoming channel to route
+            void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
+                if (channel==16) channel = 5;    // remap midimuso drums to the last channel in the range
+                midi_matrix_manager->processNoteOn(this->source_ids[channel-1], note, velocity); //, channel);
+            }
+
+            // called when a note_off message is received from the device
+            void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
+                if (channel==16) channel = 5;    // remap midimuso drums to the last channel in the range
+                midi_matrix_manager->processNoteOff(this->source_ids[channel-1], note, velocity); //, channel);
+            }
+        #endif
+
         virtual void init() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
             started = false;
+
+            #ifdef ENABLE_BAMBLE_INPUT
+                // enable midi echo - crashes it ?
+                DeviceBehaviourUSBBase::sendControlChange(21, 127, 10);
+            #endif
 
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2
             DeviceBehaviourUSBBase::sendControlChange(78, 0, 10);

@@ -69,11 +69,8 @@ void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
     #endif
 
-    #ifdef ENABLE_BAMBLE
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 1", behaviour_bamble, 1));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 2", behaviour_bamble, 2));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",behaviour_bamble, 10));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 4", behaviour_bamble, 4));
+    #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
+        behaviour_bamble->self_register_midi_matrix_targets(midi_matrix_manager);
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
@@ -87,6 +84,10 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_DRUMKIT
         //drumkit_source_id = midi_matrix_manager->register_source("drumkit");
         midi_matrix_manager->register_source(&behaviour_drumkit, "drumkit");
+    #endif
+
+    #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
+        behaviour_bamble->self_register_midi_matrix_sources(midi_matrix_manager);
     #endif
 
     #ifdef ENABLE_USB

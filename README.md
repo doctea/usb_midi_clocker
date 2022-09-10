@@ -71,23 +71,28 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - recorded notes are shown on display in piano roll style
   - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
   - momentary overwrite mode that cuts notes
+- Allow Behaviours to register CCs they respond to and can generate
+  - So that can remap these as sources and targets
+  - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
+  - Allow CV input to be mapped to CC outputs
 
 ### Behaviours
 
 - behaviour_apcmini: for Akai APCMini as sequencer/clock sequencer
+- behaviour_bamble: sends clock and sets up some parameters for drum2musocv
+- behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
 - behaviour_bitbox: clock to 1010 Music Bitbox mk2, also notes, over midi DIN
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
-- behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0
 - behaviour_drumkit: input from midi drumkit over DIN
+- behaviour_keystep: sends clock and receives notes
 - behaviour_lestrum: input from LeStrum on both channels
 - behaviour_mpk49: input from Akai MK49, including control over looper
-- behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
-- behaviour_keystep: sends clock and receives notes
-- behaviour_bamble: sends clock and sets up some parameters for drum2musocv
 - behaviour_neutron: bass drone and clock to Neutron over MIDI DIN
+- behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
+- ClockedBehaviour: send clock messages
 
 ## Requirements
 
@@ -171,13 +176,15 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - better how?
   - configurable chaining of sequences ie 'song mode'?
   - sequencer mutations / fills
-- Sequencer/looper that records and playback MIDI notes or CV
+  - allow offbeat tracks or individual steps
+- Sequencer/looper that ~~records and playback MIDI notes or~~ CV
   - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
   - improve by writing & saving real MIDI files?
   - ~~Genericise MIDI looper functionality, so can eg record and loop drums ~~
-  - Make a looper manager or something to allow easier adding of multiple loopers with controls
+  - Make a looper manager or something to allow easier control of multiple loopers
   - Variable loop length
   - Variable repeats
+  - more efficient memory/cpu usage
 - ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
 - Give better control over Beatstep via sysex if possible?
