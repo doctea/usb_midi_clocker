@@ -24,6 +24,10 @@
 #endif
 #include "project.h"
 
+#ifdef ENABLE_CV_INPUT
+  #include "cv_input.h"
+#endif
+
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
 
@@ -164,6 +168,8 @@ void loop() {
   //while (usbMIDI.read());
 
   //static unsigned long last_ticked_at_micros = 0;
+
+  update_voltage_sources();
 
   bool ticked = false;
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST && /*playing && */check_and_unset_pc_usb_midi_clock_ticked())
