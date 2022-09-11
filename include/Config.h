@@ -8,6 +8,8 @@
 
 //#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
+#define ENABLE_CV_INPUT 0x48
+
 #define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
 
@@ -37,7 +39,7 @@
 #endif
 
 #define ENABLE_USB
-#define ENABLE_CV
+#define ENABLE_CV_OUTPUT
 
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER

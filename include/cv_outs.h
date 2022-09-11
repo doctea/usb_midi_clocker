@@ -32,7 +32,7 @@ extern float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES];
 extern int duration;
 
  
-void setup_cv();
+void setup_cv_output();
 float get_clock_multiplier(byte i);
 void increase_clock_multiplier(byte i);
 void decrease_clock_multiplier(byte i); 

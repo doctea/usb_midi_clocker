@@ -86,9 +86,9 @@ void setup() {
     setup_menu();
   #endif
 
-  #ifdef ENABLE_CV
+  #ifdef ENABLE_CV_OUTPUT
     tft_print((char*)"Setting up CV..\n");
-    setup_cv();
+    setup_cv_output();
   #endif
 
   delay( 100 );
@@ -102,6 +102,10 @@ void setup() {
 
   tft_print((char*)"..setup project..\n");
   project.setup_project();
+
+  #ifdef ENABLE_CV_INPUT
+    setup_cv_input();
+  #endif
 
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
@@ -310,7 +314,7 @@ void do_tick(uint32_t in_ticks) {
     if (debug) { Serial.println("in do_tick() just did behaviour_manager->send_clocks()"); Serial.flush(); }
   #endif
 
-  #ifdef ENABLE_CV
+  #ifdef ENABLE_CV_OUTPUT
     if (debug) { Serial.println("in do_tick() about to update_cv_outs()"); Serial.flush(); }
     update_cv_outs(in_ticks);
     if (debug) { Serial.println("in do_tick() just did update_cv_outs()"); Serial.flush(); }
