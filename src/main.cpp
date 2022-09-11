@@ -109,6 +109,8 @@ void setup() {
 
   #ifdef ENABLE_CV_INPUT
     setup_cv_input();
+    setup_parameters();
+    setup_parameter_menu();
   #endif
 
   #ifdef ENABLE_SEQUENCER
@@ -169,8 +171,6 @@ void loop() {
 
   //static unsigned long last_ticked_at_micros = 0;
 
-  update_voltage_sources();
-
   bool ticked = false;
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST && /*playing && */check_and_unset_pc_usb_midi_clock_ticked())
     ticked = true;
@@ -224,6 +224,11 @@ void loop() {
       //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
     #endif
   }
+
+  #ifdef ENABLE_CV_INPUT
+    update_voltage_sources();
+    update_parameters();
+  #endif
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();

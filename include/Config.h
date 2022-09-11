@@ -17,7 +17,9 @@
 #define DEFAULT_SUBCLOCKER_DIVISOR          4
 #define DEFAULT_SUBCLOCKER_DELAY_TICKS      0   // don't send clock to the subclocker device until this many ticks have elapsed
 
-#define ENABLE_SCREEN       // tft
+#ifndef ENABLE_SCREEN
+    #define ENABLE_SCREEN       // tft
+#endif
 #ifdef ENABLE_SCREEN
     #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
     #define TFT_ST7789_T3
