@@ -17,11 +17,12 @@
 
 #include "mymenu_items/ParameterMenuItems.h"
 
-#define MAX_INPUT_VOLTAGE_24V 10.0
+#include "ParameterManager.h"
+
+//#define MAX_INPUT_VOLTAGE_24V 10.0
 
 void setup_cv_input();
 void setup_parameters();
 void setup_parameter_menu();
 
-void update_voltage_sources();
-void update_parameters();
+extern ParameterManager parameter_manager;

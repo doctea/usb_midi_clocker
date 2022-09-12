@@ -2,53 +2,42 @@
 
 #include "cv_input.h"
 
+#include "ParameterManager.h"
+
+#include "devices/ADCPimoroni24v.h"
+
 #include "midi_mapper_matrix_manager.h"
 
-LinkedList<VoltageSourceBase*> voltage_sources = LinkedList<VoltageSourceBase*> ();
+/*LinkedList<VoltageSourceBase*> voltage_sources = LinkedList<VoltageSourceBase*> ();
 
 ADS1015 ADS_OBJECT_24V(0x49);
 ADS24vVoltageSource<ADS1015> voltage_source_1_channel_0 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 0, MAX_INPUT_VOLTAGE_24V);
-ADS24vVoltageSource<ADS1015> voltage_source_1_channel_1 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 1, MAX_INPUT_VOLTAGE_24V);
+ADS24vVoltageSource<ADS1015> voltage_source_1_channel_1 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 1, MAX_INPUT_VOLTAGE_24V);*/
 //ADS24vVoltageSource<ADS1015> voltage_source_1_channel_2 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 2, MAX_INPUT_VOLTAGE_24V);
+
+ParameterManager parameter_manager = ParameterManager();
 
 void setup_cv_input() {
     Serial.println((char*)"setup_cv_input...");
-    tft_print((char*)"setup_cv_input...\n");
+    tft_print((char*)"...setup_cv_input...\n");
 
-    Serial.println("Beginning ADS_x48..");
+    /*//Serial.println("Beginning ADS_x48..");
     Serial.println("Beginning ADS_24V..");
     ADS_OBJECT_24V.begin();
     ADS_OBJECT_24V.setGain(2);
     voltage_sources.add(&voltage_source_1_channel_0);
     voltage_sources.add(&voltage_source_1_channel_1);
     //voltage_sources.add(&voltage_source_1_channel_2);
-    voltage_source_1_channel_0.correction_value_1 = 1180.0;    
-    tft_print((char*)"..done setup_cv_input");
-    Serial.println("..done ADS_x48");
+    voltage_source_1_channel_0.correction_value_1 = 1180.0;    */
+    parameter_manager.init();
+    parameter_manager.addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT)); //, 2, MAX_INPUT_VOLTAGE_24V));
+
+    parameter_manager.auto_init_devices();
+
+    tft_print((char*)"..done setup_cv_input\n");
 }
 
-void update_voltage_sources() {
-    // round robin reading so they get a chance to settle in between adc reads?
-    int size = voltage_sources.size();
-    if (size==0) return;
-
-    static int last_read = 0;
-    voltage_sources.get(last_read)->update();
-    //Serial.printf("Reading from ADC %i...", last_read);
-    //Serial.printf("update_voltage_sources read value %f\n", voltage_sources.get(last_read)->current_value);
-    last_read++;
-
-    if (last_read>=size)
-        last_read = 0;
-
-    voltage_sources.get(last_read)->update();   // pre-read the next one so it has a chance to settle?
-
-    /*for (int i = 0 ; i < voltage_sources.size() ; i++) {
-        voltage_sources.get(i)->update();
-    }*/
-}
-
-
+/*
 // ParameterInputs, ie wrappers around input mechanism, assignable to a Parameter
 LinkedList<BaseParameterInput*> available_inputs            = LinkedList<BaseParameterInput*>();
 
@@ -57,27 +46,38 @@ LinkedList<DataParameter*>      available_parameters    = LinkedList<DataParamet
 
 //DataParameter* parameter_a = nullptr;
 DataParameter  param_none                              = DataParameter((char*)"None");
-
+*/
 
 void setup_parameters() {
     // add the available parameters to a list used globally and later passed to each selector menuitem
     Serial.println(F("==== begin setup_parameters ===="));
-    tft_print("setup_parameters...");
+    tft_print((char*)"setup_parameters...");
 
     MIDICCParameter *parameter_a = new MIDICCParameter(
         (char*)"CS Cutoff", 
-        (MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle("USB : CraftSynth : ch 1"), 
+        (MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
         (byte)34,
         (byte)1
     );    // cutoff
     MIDICCParameter *parameter_b = new MIDICCParameter(
         (char*)"CS Spread", 
-        (MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle("USB : CraftSynth : ch 1"), 
+        (MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
         (byte)20,
         (byte)1
     );    // spread
 
-    VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', voltage_sources.get(0));
+    parameter_manager.addParameter(parameter_a);
+    parameter_manager.addParameter(parameter_b);
+
+    // todo: improve this bit, maybe name the voltage sources?
+    VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', parameter_manager.voltage_sources.get(0));
+    VoltageParameterInput<BaseParameter> *vpi2 = new VoltageParameterInput<BaseParameter>('B', parameter_manager.voltage_sources.get(1));
+    vpi1->setTarget(parameter_a);
+    vpi2->setTarget(parameter_b);
+    parameter_manager.addInput(vpi1);
+    parameter_manager.addInput(vpi2);
+
+    /*VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', voltage_sources.get(0));
     available_inputs.add(vpi1);
     vpi1->setTarget(parameter_a);
 
@@ -94,9 +94,9 @@ void setup_parameters() {
     available_parameters.add(parameter_a);
     available_parameters.add(parameter_b);
 
-    //vpi2->setTarget(parameter_b);
+    //vpi2->setTarget(parameter_b);*/
 
-    tft_print("\n");
+    tft_print((char*)"\n");
 }
     
 void setup_parameter_menu() {
@@ -105,7 +105,10 @@ void setup_parameter_menu() {
     //menu->add(&testitem);
 
     Serial.println("Adding ParameterSelectorControls for available_inputs...");
-    for (int i = 0 ; i < available_inputs.size() ; i++) {
+    parameter_manager.addAllParameterInputMenuItems(menu);
+    parameter_manager.addAllParameterMenuItems(menu);
+
+    /*for (int i = 0 ; i < available_inputs.size() ; i++) {
         BaseParameterInput *param_input = available_inputs.get(i);
         BaseParameter *param = param_input->target_parameter;
 
@@ -132,8 +135,9 @@ void setup_parameter_menu() {
         //ctrl->debug = true;
         menu->add(ctrl);
         Serial.println("\tAdded!"); Serial.flush();
-    }
+    }*/
 
+    /*
     Serial.println("Starting add available_parameters loop..."); Serial.flush();
     Serial.printf("Got %i parameters..\n", available_parameters.size());
     for (int i = 0 ; i < available_parameters.size() ; i++) {
@@ -146,15 +150,16 @@ void setup_parameter_menu() {
         menu->add(ctrl);
     }
     Serial.println("Finished adding available_parameters loop"); Serial.flush();
+    */
 
     Serial.println("setup_parameter_menu done ==================");
 }
 
 
 // called every loop to update the inputs; maybe in future we also eventually want to process internal LFOs or other properties of parameter here
-void update_parameters() {
+/*void update_parameters() {
     for (int i = 0 ; i < available_inputs.size() ; i++) {
         available_inputs.get(i)->loop();
         //parameter_inputs[i]->loop();
     }
-}
+}*/

@@ -226,8 +226,8 @@ void loop() {
   }
 
   #ifdef ENABLE_CV_INPUT
-    update_voltage_sources();
-    update_parameters();
+    parameter_manager.update_voltage_sources();
+    parameter_manager.update_inputs();
   #endif
 
   //read_midi_serial_devices();
