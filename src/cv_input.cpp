@@ -6,7 +6,11 @@
 
 #include "devices/ADCPimoroni24v.h"
 
-#include "midi_mapper_matrix_manager.h"
+//#include "midi_mapper_matrix_manager.h"
+
+#include "behaviour_base.h"
+//#include "behaviour_manager.h"
+#include "behaviour_craftsynth.h"
 
 /*LinkedList<VoltageSourceBase*> voltage_sources = LinkedList<VoltageSourceBase*> ();
 
@@ -29,6 +33,7 @@ void setup_cv_input() {
     voltage_sources.add(&voltage_source_1_channel_1);
     //voltage_sources.add(&voltage_source_1_channel_2);
     voltage_source_1_channel_0.correction_value_1 = 1180.0;    */
+    //parameter_manager.debug = true;
     parameter_manager.init();
     parameter_manager.addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT)); //, 2, MAX_INPUT_VOLTAGE_24V));
 
@@ -55,13 +60,15 @@ void setup_parameters() {
 
     MIDICCParameter *parameter_a = new MIDICCParameter(
         (char*)"CS Cutoff", 
-        (MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
+        //(MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
+        behaviour_craftsynth,
         (byte)34,
         (byte)1
     );    // cutoff
     MIDICCParameter *parameter_b = new MIDICCParameter(
         (char*)"CS Spread", 
-        (MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
+        //(MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
+        behaviour_craftsynth,
         (byte)20,
         (byte)1
     );    // spread
