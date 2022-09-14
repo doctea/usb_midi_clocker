@@ -3,6 +3,8 @@
 
 #include "behaviour_base.h"
 
+#include "parameters/Parameter.h"
+
 class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
     public:
 
@@ -75,6 +77,10 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             if (!is_connected()) return;
             this->device->sendRealTime(message);
         };
+
+        virtual LinkedList<DataParameter*> *get_parameters () {
+            return nullptr;
+        }
 };
 
 #endif

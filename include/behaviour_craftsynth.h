@@ -13,15 +13,21 @@
 
 #include "multi_usb_handlers.h"
 
+#include "parameters/MIDICCParameter.h"
+
 //void craftsynth_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 //void craftsynth_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void craftsynth_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour { // public DeviceBehaviourUSBBase { //
+class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x04D8, pid = 0xEE1F;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
+
+        virtual char *get_label() {
+            return "CraftSynth 2.0";
+        }
 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
@@ -44,6 +50,40 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void receive_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#receive_note_on"); };
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#note_off"); };
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
+
+
+        virtual LinkedList<DataParameter*> *get_parameters () override {
+            static bool already_initialised = false;
+            static LinkedList<DataParameter*> *parameters = new LinkedList<DataParameter*>();
+
+            if (already_initialised) 
+                return parameters;
+            already_initialised = true;
+
+            parameters->clear();
+
+            /*MIDICCParameter *parameter_b = new MIDICCParameter(
+                (char*)"CS Spread", 
+                //(MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
+                behaviour_craftsynth,
+                (byte)20,
+                (byte)1
+            );    // spread
+            parameters->add(parameter_b);*/
+
+            parameters->add(new MIDICCParameter((char*)"Distortion",    this,   (byte)12,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Delay Dry/Wet", this,   (byte)13,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Delay Time",    this,   (byte)14,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Osc 1 Wave",    this,   (byte)16,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Osc 2 Wave",    this,   (byte)17,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Osc Mix",       this,   (byte)18,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"CS Spread",     this,   (byte)20,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"CS Cutoff",     this,   (byte)34,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
+
+            return parameters;
+        }
 
 };
 

@@ -3,6 +3,7 @@
 #include "cv_input.h"
 
 #include "ParameterManager.h"
+#include "submenuitem.h"
 
 #include "devices/ADCPimoroni24v.h"
 
@@ -58,7 +59,10 @@ void setup_parameters() {
     Serial.println(F("==== begin setup_parameters ===="));
     tft_print((char*)"setup_parameters...");
 
-    MIDICCParameter *parameter_a = new MIDICCParameter(
+    // TODO: ask the behaviour to automatically configure its known parameters
+    // add them to sub-menus
+
+    /*MIDICCParameter *parameter_a = new MIDICCParameter(
         (char*)"CS Cutoff", 
         //(MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
         behaviour_craftsynth,
@@ -77,12 +81,20 @@ void setup_parameters() {
     parameter_manager.addParameter(parameter_b);
 
     // todo: improve this bit, maybe name the voltage sources?
+    */
     VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', parameter_manager.voltage_sources.get(0));
     VoltageParameterInput<BaseParameter> *vpi2 = new VoltageParameterInput<BaseParameter>('B', parameter_manager.voltage_sources.get(1));
-    vpi1->setTarget(parameter_a);
-    vpi2->setTarget(parameter_b);
     parameter_manager.addInput(vpi1);
     parameter_manager.addInput(vpi2);
+
+    /*vpi1->setTarget(parameter_a);
+    vpi2->setTarget(parameter_b);*/
+
+    LinkedList<DataParameter*> *params = behaviour_craftsynth->get_parameters();
+    parameter_manager.addParameters(params);
+
+    vpi1->setTarget(params->get(0));
+    vpi2->setTarget(params->get(1));
 
     /*VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', voltage_sources.get(0));
     available_inputs.add(vpi1);
@@ -113,7 +125,9 @@ void setup_parameter_menu() {
 
     Serial.println("Adding ParameterSelectorControls for available_inputs...");
     parameter_manager.addAllParameterInputMenuItems(menu);
-    parameter_manager.addAllParameterMenuItems(menu);
+    //parameter_manager.addAllParameterMenuItems(menu);
+
+    parameter_manager.addParameterSubMenuItems(menu, behaviour_craftsynth->get_label(), behaviour_craftsynth->get_parameters());
 
     /*for (int i = 0 ; i < available_inputs.size() ; i++) {
         BaseParameterInput *param_input = available_inputs.get(i);

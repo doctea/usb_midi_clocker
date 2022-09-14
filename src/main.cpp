@@ -190,7 +190,9 @@ void loop() {
     do_tick(ticks);
     if (debug) { Serial.println("just did do_tick"); Serial.flush(); }
 
+    if (debug) { Serial.println("about to do menu->update_ticks(ticks)"); Serial.flush(); }
     menu->update_ticks(ticks);
+    if (debug) { Serial.println("just did menu->update_ticks(ticks)"); Serial.flush(); }
 
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();
@@ -226,8 +228,13 @@ void loop() {
   }
 
   #ifdef ENABLE_CV_INPUT
+    if(debug) parameter_manager.debug = true;
+    if(debug) Serial.println("about to do parameter_manager.update_voltage_sources()..");
     parameter_manager.update_voltage_sources();
+    if(debug) Serial.println("just did parameter_manager.update_voltage_sources()..");
+    if(debug) Serial.println("about to do parameter_manager.update_inputs()..");
     parameter_manager.update_inputs();
+    if(debug) Serial.println("just did parameter_manager.update_inputs()..");
   #endif
 
   //read_midi_serial_devices();

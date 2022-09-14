@@ -31,6 +31,10 @@ class DeviceBehaviourUltimateBase {
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
 
+    virtual char *get_label() {
+        return "UltimateBase";
+    }
+
     virtual int getType() {
         return BehaviourType::undefined;
     }
