@@ -129,15 +129,18 @@ void setup() {
   tft_print((char*)"..PC USB..\n");
   setup_pc_usb();
   
-  tft_print((char*)"..USB..");
-  setup_multi_usb();
-  Serial.println(F("USB ready."));
+  #ifdef ENABLE_USB
+    tft_print((char*)"..USB..");
+    setup_multi_usb();
+    Serial.println(F("USB ready.")); Serial.flush();
+  #endif
 
-  Serial.println(F("Arduino ready."));
+  Serial.println(F("Arduino ready.")); Serial.flush();
   #ifdef ENABLE_SCREEN
-    tft_print((char*)"Ready!");
+    tft_print((char*)"Ready!"); 
     tft_clear();
 
+    Serial.println("About to init menu.."); Serial.flush();
     menu->start();
     //tft_start();
   #endif

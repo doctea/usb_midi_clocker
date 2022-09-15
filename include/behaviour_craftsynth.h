@@ -25,7 +25,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         uint16_t vid = 0x04D8, pid = 0xEE1F;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
-        virtual char *get_label() {
+        virtual char *get_label() override {
             return "CraftSynth 2.0";
         }
 

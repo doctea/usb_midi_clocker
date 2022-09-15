@@ -190,10 +190,10 @@ void setup_multi_usb() {
 
   Usb.begin();
   for (int i = 0 ; i < 5 ; i++) {
-    digitalWrite(LED_BUILTIN, HIGH);
+    //digitalWrite(LED_BUILTIN, HIGH);
     tft_print((char*)".");
     delay(500);
-    digitalWrite(LED_BUILTIN, LOW);
+    //digitalWrite(LED_BUILTIN, LOW);
   }
   tft_print((char*)"\n");
 }
