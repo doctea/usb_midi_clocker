@@ -26,7 +26,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
         virtual char *get_label() override {
-            return "CraftSynth 2.0";
+            return (char*)"CraftSynth 2.0";
         }
 
         virtual void setup_callbacks() override {
@@ -52,9 +52,9 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
 
-        virtual LinkedList<DataParameter*> *get_parameters () override {
+        virtual LinkedList<DoubleParameter*> *get_parameters () override {
             static bool already_initialised = false;
-            static LinkedList<DataParameter*> *parameters = new LinkedList<DataParameter*>();
+            static LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
 
             if (already_initialised) 
                 return parameters;
@@ -77,9 +77,9 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             parameters->add(new MIDICCParameter((char*)"Osc 1 Wave",    this,   (byte)16,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc 2 Wave",    this,   (byte)17,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc Mix",       this,   (byte)18,   (byte)1));
-            parameters->add(new MIDICCParameter((char*)"CS Spread",     this,   (byte)20,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Spread",        this,   (byte)20,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
-            parameters->add(new MIDICCParameter((char*)"CS Cutoff",     this,   (byte)34,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Cutoff",        this,   (byte)34,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
 
             return parameters;

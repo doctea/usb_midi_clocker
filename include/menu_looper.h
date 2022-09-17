@@ -153,6 +153,14 @@ class LooperStatus : public SlotController {
             lhs->set_tft(this->tft);
         };
 
+        virtual void update_ticks(unsigned long ticks) override {
+            if (this->lrs!=nullptr) this->lrs->update_ticks(ticks);
+            #ifdef ENABLE_LOOPER_PIANOROLL
+                if (this->lds!=nullptr) this->lds->update_ticks(ticks);
+            #endif
+            if (this->lhs!=nullptr) this->lhs->update_ticks(ticks);
+        }
+
         virtual int get_max_slots() override {
             return NUM_LOOP_SLOTS_PER_PROJECT;
         };

@@ -78,7 +78,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             this->device->sendRealTime(message);
         };
 
-        virtual LinkedList<DataParameter*> *get_parameters () {
+        virtual LinkedList<DoubleParameter*> *get_parameters () {
             return nullptr;
         }
 };

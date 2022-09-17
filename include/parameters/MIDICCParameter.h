@@ -7,14 +7,14 @@
 
 //template<class MIDIOutputWrapper, class DataType>
 //template<class OutputClass>
-class MIDICCParameter : public Parameter<DeviceBehaviourUltimateBase,byte> {
+class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
 
     //void(MIDIOutputWrapper::*cc_setter)(byte cc_number, byte value, byte channel);
     byte cc_number = 0, channel = 0;
 
     public:
         MIDICCParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel)
-            : Parameter(label, target) { //}, initial_value) {
+            : DataParameter(label, target) { //}, initial_value) {
                 //this->cc_setter = sendControlChange;
                 this->cc_number = cc_number;
                 this->channel = channel;

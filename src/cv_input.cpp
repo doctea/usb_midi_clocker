@@ -36,7 +36,7 @@ void setup_cv_input() {
     voltage_source_1_channel_0.correction_value_1 = 1180.0;    */
     //parameter_manager.debug = true;
     parameter_manager.init();
-    parameter_manager.addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT)); //, 2, MAX_INPUT_VOLTAGE_24V));
+    parameter_manager.addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT)); //, 5.0)); //, 2, MAX_INPUT_VOLTAGE_24V));
 
     parameter_manager.auto_init_devices();
 
@@ -84,13 +84,16 @@ void setup_parameters() {
     */
     VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', parameter_manager.voltage_sources.get(0));
     VoltageParameterInput<BaseParameter> *vpi2 = new VoltageParameterInput<BaseParameter>('B', parameter_manager.voltage_sources.get(1));
+    //vpi1->map_unipolar_to_bipolar = true;
+    //vpi2->map_unipolar_to_bipolar = true;
+    //vpi1->debug = true;
     parameter_manager.addInput(vpi1);
     parameter_manager.addInput(vpi2);
 
     /*vpi1->setTarget(parameter_a);
     vpi2->setTarget(parameter_b);*/
 
-    LinkedList<DataParameter*> *params = behaviour_craftsynth->get_parameters();
+    LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
     parameter_manager.addParameters(params);
 
     vpi1->setTarget(params->get(0));
