@@ -108,11 +108,14 @@ class LooperQuantizeControl : public SelectorControl {
 
 };
 
-class LooperTransposeControl : public NumberControl {
+//template<class DataType = int>
+class LooperTransposeControl : public NumberControl<int> {
     MIDITrack *loop_track = nullptr;
 
     public:
-        LooperTransposeControl(const char* label, MIDITrack *target, int start_value, int min_value, int max_value) : NumberControl(label, start_value, min_value, max_value) {
+        LooperTransposeControl(const char* label, MIDITrack *target, int start_value, int min_value, int max_value) 
+            : NumberControl(label, start_value, min_value, max_value) 
+        {
             this->loop_track = target;
         };
         LooperTransposeControl(const char* label, MIDITrack *target) : LooperTransposeControl(label, target, 0, -127, 127) {};
