@@ -10,6 +10,8 @@
 
 #include "midi_mapper_matrix_types.h"
 
+#include "parameters/Parameter.h"
+
 using namespace midi;
 
 enum BehaviourType {
@@ -88,10 +90,34 @@ class DeviceBehaviourUltimateBase {
     };
 
     virtual void save_sequence_add_lines(LinkedList<String> *lines) {
-
+        // todo: save parameter mappings...
     }
     virtual bool parse_sequence_key_value(String key, String value) {
+        // todo: reload parameter mappings...
         return false;
+    }
+
+    LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
+    virtual LinkedList<DoubleParameter*> *get_parameters () {
+        if (parameters->size()==0)
+            this->initialise_parameters();
+        return parameters;
+    }
+    virtual LinkedList<DoubleParameter*> *initialise_parameters() {
+        /*if (parameters==nullptr)
+            parameters = new LinkedList<DoubleParameter*>();*/
+        return parameters;
+    }
+    virtual DoubleParameter* getParameterForLabel(char *label) {
+        Serial.printf("getParameterForLabel(%s) in behaviour %s..\n", label, this->get_label());
+
+        for (int i = 0 ; i < parameters->size() ; i++) {
+            Serial.printf("Comparing '%s' to '%s'\n", parameters->get(i)->label, label);
+            if (strcmp(parameters->get(i)->label, label)==0) 
+                return parameters->get(i);
+        }
+        Serial.printf("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n", this->get_label(), label);
+        return nullptr;
     }
 };
 

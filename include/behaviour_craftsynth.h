@@ -51,26 +51,20 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#note_off"); };
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
-
-        virtual LinkedList<DoubleParameter*> *get_parameters () override {
+        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+            Serial.printf("DeviceBehaviour_CraftSynth#initialise_parameters()...");
             static bool already_initialised = false;
-            static LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
-
-            if (already_initialised) 
+            if (already_initialised)
                 return parameters;
-            already_initialised = true;
 
-            parameters->clear();
+            Serial.println("\tcalling DeviceBehaviourUSBBase::initialise_parameters()"); 
+            DeviceBehaviourUSBBase::initialise_parameters();
+            Serial.println("\tcalling ClockedBehaviour::initialise_parameters()"); 
+            ClockedBehaviour::initialise_parameters();
 
-            /*MIDICCParameter *parameter_b = new MIDICCParameter(
-                (char*)"CS Spread", 
-                //(MIDIOutputWrapper*)midi_matrix_manager->get_target_for_handle((char*)"USB : CraftSynth : ch 1"), 
-                behaviour_craftsynth,
-                (byte)20,
-                (byte)1
-            );    // spread
-            parameters->add(parameter_b);*/
-
+            Serial.println("\tAdding parameters...");
+            //parameters->clear();
+            // todo: read these from a file
             parameters->add(new MIDICCParameter((char*)"Distortion",    this,   (byte)12,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Delay Dry/Wet", this,   (byte)13,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Delay Time",    this,   (byte)14,   (byte)1));
@@ -81,6 +75,8 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             parameters->add(new MIDICCParameter((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Cutoff",        this,   (byte)34,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
+
+            Serial.printf("Finished initialise_parameters() in %s\n", this->get_label());
 
             return parameters;
         }
