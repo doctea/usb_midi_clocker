@@ -13,13 +13,6 @@
 //#include "behaviour_manager.h"
 #include "behaviour_craftsynth.h"
 
-/*LinkedList<VoltageSourceBase*> voltage_sources = LinkedList<VoltageSourceBase*> ();
-
-ADS1015 ADS_OBJECT_24V(0x49);
-ADS24vVoltageSource<ADS1015> voltage_source_1_channel_0 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 0, MAX_INPUT_VOLTAGE_24V);
-ADS24vVoltageSource<ADS1015> voltage_source_1_channel_1 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 1, MAX_INPUT_VOLTAGE_24V);*/
-//ADS24vVoltageSource<ADS1015> voltage_source_1_channel_2 = ADS24vVoltageSource<ADS1015>(&ADS_OBJECT_24V, 2, MAX_INPUT_VOLTAGE_24V);
-
 ParameterManager parameter_manager = ParameterManager();
 
 // initialise the voltage-reading hardware/librareis and the ParameterManager
@@ -50,6 +43,10 @@ void setup_parameters() {
     VoltageParameterInput<BaseParameter> *vpi2 = new VoltageParameterInput<BaseParameter>('B', parameter_manager.voltage_sources.get(1));
     VoltageParameterInput<BaseParameter> *vpi3 = new VoltageParameterInput<BaseParameter>('C', parameter_manager.voltage_sources.get(2));
 
+    vpi3->input_type = UNIPOLAR;
+
+    // todo: set up 1v/oct inputs to map to MIDI source_ids...
+
     // tell the parameter manager about them
     parameter_manager.addInput(vpi1);
     parameter_manager.addInput(vpi2);
@@ -64,10 +61,15 @@ void setup_parameters() {
     // setup the default mappings
     // TODO: make this a property of the Parameter, not the ParameterInputs, so we can have multiple mappings
     // TODO: load this from a saved config file
-    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
+    /*Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
     vpi1->setTarget(behaviour_craftsynth->getParameterForLabel("Cutoff")); 
     vpi2->setTarget(behaviour_craftsynth->getParameterForLabel("Filter Morph"));
     vpi3->setTarget(behaviour_craftsynth->getParameterForLabel("Distortion")); 
+    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");*/
+    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
+    behaviour_craftsynth->getParameterForLabel("Cutoff")->connect_input(vpi1, 1.0);
+    behaviour_craftsynth->getParameterForLabel("Filter Morph")->connect_input(vpi2, 1.0);
+    behaviour_craftsynth->getParameterForLabel("Distortion")->connect_input(vpi3, 1.0);
     Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");
 
     tft_print((char*)"\n");

@@ -97,6 +97,7 @@ class DeviceBehaviourUltimateBase {
         return false;
     }
 
+    // parameter handling shit
     LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
     virtual LinkedList<DoubleParameter*> *get_parameters () {
         if (parameters->size()==0)

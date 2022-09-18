@@ -237,6 +237,7 @@ void loop() {
     if(debug) Serial.println("just did parameter_manager.update_voltage_sources()..");
     if(debug) Serial.println("about to do parameter_manager.update_inputs()..");
     parameter_manager.update_inputs();
+    parameter_manager.update_mixers();
     if(debug) Serial.println("just did parameter_manager.update_inputs()..");
   #endif
 

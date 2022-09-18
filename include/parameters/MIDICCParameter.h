@@ -70,10 +70,13 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             //this->debug = true;
             //byte bvalue = this->get_midi_value_for_double(value);
             //byte bvalue = this->getCurrentDataValue();
+            static byte last_value = -1;
             
             if (this->target!=nullptr) {
                 if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData(%i, %i, %i)\n", cc_number, value, this->channel);
-                this->target->sendControlChange(this->cc_number, (byte)value, this->channel);
+                if (last_value!=value)
+                    this->target->sendControlChange(this->cc_number, (byte)value, this->channel);
+                last_value = value;
             } else {
                 if (this->debug) Serial.printf("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n", this->label);
             }
