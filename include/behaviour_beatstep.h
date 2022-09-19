@@ -30,6 +30,10 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBe
         uint16_t vid = 0x1c75, pid = 0x0206;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
+        char *get_label() override {
+            return "BeatStep";
+        }
+
         virtual void setup_callbacks() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
 

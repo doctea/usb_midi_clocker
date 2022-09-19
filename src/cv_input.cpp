@@ -46,7 +46,7 @@ void setup_parameters() {
     VoltageParameterInput<BaseParameter> *vpi2 = new VoltageParameterInput<BaseParameter>('B', parameter_manager.voltage_sources.get(1));
     VoltageParameterInput<BaseParameter> *vpi3 = new VoltageParameterInput<BaseParameter>('C', parameter_manager.voltage_sources.get(2));
 
-    vpi3->input_type = UNIPOLAR;
+    //vpi3->input_type = UNIPOLAR;
 
     // todo: set up 1v/oct inputs to map to MIDI source_ids...
 
@@ -92,8 +92,8 @@ void setup_parameter_menu() {
     // todo: dynamically loop over all the available behaviours
     parameter_manager.addParameterSubMenuItems(menu, behaviour_craftsynth->get_label(), behaviour_craftsynth->get_parameters());
 
-    DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, 0, 1000000, nullptr);
-    menu->add(mixer_profile);
+    //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, (int)0, (int)1000000, nullptr);
+    //menu->add(mixer_profile);
 
     Serial.println("setup_parameter_menu done ==================");
 }

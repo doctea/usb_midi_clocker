@@ -16,10 +16,6 @@
 
 //#define DEBUG_LOOPER
 
-#define LOOP_LENGTH_TICKS (PPQN*4*4)    // how many ticks does the loop last?
-#define LOOP_LENGTH_STEP_SIZE 1         // resolution of loop TODO: problems when this is set >1; reloaded sequences (or maybe its converted-from-bitmap stage?) are missing note-offs
-#define LOOP_LENGTH_STEPS (LOOP_LENGTH_TICKS/LOOP_LENGTH_STEP_SIZE) // how many steps are recorded per loop
-
 #define ticks_to_sequence_step(X)  ((X % LOOP_LENGTH_TICKS) / LOOP_LENGTH_STEP_SIZE)
 
 #define MAX_INSTRUCTIONS            100

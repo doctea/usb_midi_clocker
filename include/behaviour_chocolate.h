@@ -36,6 +36,10 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         signed long note_released_at[NUM_TRACK_NOTES];
         bool already_processed[NUM_TRACK_NOTES];
 
+        char *get_label() override {
+            return "Chocolate";
+        }
+
         DeviceBehaviour_Chocolate () {
             for (int i = 0 ; i < NUM_TRACK_NOTES ; i++) {
                 note_pressed_at[i] = -1;

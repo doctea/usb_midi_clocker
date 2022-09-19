@@ -19,6 +19,10 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
 
         source_id_t source_id_2 = -1;
 
+        char *get_label() override {
+            return "Drumkit";
+        }
+
         void setup_callbacks() override {
             Serial.println("DeviceBehaviour_DrumKit#setup_callbacks..");
             this->input_device->setHandleNoteOn(drumkit_note_on);

@@ -27,6 +27,10 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
         uint16_t vid = 0x2886, pid = 0x800B;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
+        char *get_label() override {
+            return "Bambleweeny57";
+        }
+
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             if (this->device==nullptr) return;

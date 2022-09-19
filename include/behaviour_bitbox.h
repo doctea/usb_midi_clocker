@@ -9,6 +9,10 @@
 
 class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public ClockedBehaviour {
     public:
+
+        char *get_label() override {
+            return "BitBox";
+        }
         /*DeviceBehaviour_Bitbox (
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device
