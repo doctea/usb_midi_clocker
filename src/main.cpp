@@ -44,8 +44,6 @@ void do_tick(uint32_t ticks);
 //#include "usb.h"
 #include "midi_pc_usb.h"
 
-#include "Config.h"
-
 #include "MidiMappings.h"
 #include "midi_outs.h"
 
@@ -217,6 +215,7 @@ void loop() {
       //tft_update(ticks);
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
       static unsigned long last_drawn;
+      bool screen_was_drawn = false;
       menu->update_inputs();
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
@@ -225,21 +224,28 @@ void loop() {
         //Serial.println("just did menu->display"); Serial.flush();
         //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
+        screen_was_drawn = true;
       }
       //delay(1000); Serial.println("exiting sleep after menu->display"); Serial.flush();
     #endif
+
+    #ifdef ENABLE_CV_INPUT
+      static unsigned long time_of_last_param_update = 0;
+      if (!screen_was_drawn && millis() - time_of_last_param_update > TIME_BETWEEN_CV_INPUT_UPDATES) {
+        if(debug) parameter_manager.debug = true;
+        if(debug) Serial.println("about to do parameter_manager.update_voltage_sources()..");
+        parameter_manager.update_voltage_sources();
+        if(debug) Serial.println("just did parameter_manager.update_voltage_sources()..");
+        if(debug) Serial.println("about to do parameter_manager.update_inputs()..");
+        parameter_manager.update_inputs();
+        parameter_manager.update_mixers();
+        if(debug) Serial.println("just did parameter_manager.update_inputs()..");
+        time_of_last_param_update = millis();
+      }
+    #endif
+
   }
 
-  #ifdef ENABLE_CV_INPUT
-    if(debug) parameter_manager.debug = true;
-    if(debug) Serial.println("about to do parameter_manager.update_voltage_sources()..");
-    parameter_manager.update_voltage_sources();
-    if(debug) Serial.println("just did parameter_manager.update_voltage_sources()..");
-    if(debug) Serial.println("about to do parameter_manager.update_inputs()..");
-    parameter_manager.update_inputs();
-    parameter_manager.update_mixers();
-    if(debug) Serial.println("just did parameter_manager.update_inputs()..");
-  #endif
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();

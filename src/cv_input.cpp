@@ -1,4 +1,7 @@
+
 #include "Config.h"
+
+#ifdef ENABLE_CV_INPUT
 
 #include "cv_input.h"
 
@@ -67,10 +70,12 @@ void setup_parameters() {
     vpi3->setTarget(behaviour_craftsynth->getParameterForLabel("Distortion")); 
     Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");*/
     Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
-    behaviour_craftsynth->getParameterForLabel("Cutoff")->connect_input(vpi1, 1.0);
-    behaviour_craftsynth->getParameterForLabel("Filter Morph")->connect_input(vpi2, 1.0);
-    behaviour_craftsynth->getParameterForLabel("Distortion")->connect_input(vpi3, 1.0);
+    behaviour_craftsynth->getParameterForLabel("Cutoff")->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
+    behaviour_craftsynth->getParameterForLabel("Filter Morph")->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
+    behaviour_craftsynth->getParameterForLabel("Distortion")->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
     Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");
+
+    parameter_manager.setDefaultParameterConnections();
 
     tft_print((char*)"\n");
 }
@@ -87,7 +92,11 @@ void setup_parameter_menu() {
     // todo: dynamically loop over all the available behaviours
     parameter_manager.addParameterSubMenuItems(menu, behaviour_craftsynth->get_label(), behaviour_craftsynth->get_parameters());
 
+    DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, 0, 1000000, nullptr);
+    menu->add(mixer_profile);
+
     Serial.println("setup_parameter_menu done ==================");
 }
 
 
+#endif

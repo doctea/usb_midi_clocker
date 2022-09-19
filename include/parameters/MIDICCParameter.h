@@ -30,7 +30,7 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
         /*virtual const char* parseFormattedDataType(byte value) {
             static char fmt[20] = "              ";
             //sprintf(fmt, "%5i (signed)",      (int)(this->maximum_value*this->getCurrentValue())); //getCurrentValue());
-            sprintf(fmt, "%i", this->get_midi_value_for_double(this->getCurrentValue()));
+            sprintf(fmt, "%i", value); //this->get_midi_value_for_double(this->getCurrentValue()));
             return fmt;
         }*/
 
