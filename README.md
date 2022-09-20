@@ -137,7 +137,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - hmm, may have worked around this by sending looper notes before sending clocks, in a do_pre_clock() function...?
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
 - Beatstep sysex commands don't work, probably for the same reason?
-- MIDI looper uses a LOT (all?!) of RAM (~48k for 1 phrase -- 384*127)
+- MIDI looper uses a LOT of RAM (~48k for 1 phrase -- 384 (ticks) * 127 (notes)) - less memory-hungry polyphony can be used, but drawing the pianoroll to screen would become more intensive...
 
 ## Configuration
 
@@ -150,12 +150,13 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ### TODO/Future 
 
 - Panic / all notes off action
-- Bass drone mode
- - toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..
+- ~~Bass drone mode~~
+ - ~~toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..~~
 - ~~Move bass transposition options into the OutputWrapper?~~ done!
  - ~~remove debug output for this~~
  - ~~set default transposition~~
- - save transpostion info to project?
+ - save transposition info to project?
+ - should actually probably be part of the DeviceBehaviour instead now?
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
@@ -205,10 +206,17 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CC modulation
   - CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
+    - this is mostly working now..!
+      - some performance issues in reading the data, though
+        - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart?
+    - some todos remain:
+      - load/save modulation settings
+      - lock/hold modulation settings
+      - auto-advance modulation settings?
     - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
   - Record and playback CCs as well as MIDI
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
-- Subclocker clock multipliers as well as division (need to calculate time between ticks and send clock on steps in between...)
+- Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
 - Improve looper quantizer (take note length into consideration)
 - Optimise memory usage of looper with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
@@ -220,6 +228,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
   - Make the pc_usb connections work using behaviours
   - .. think there might be some duplication in purpose between MIDIOutputWrapper and Behaviours now...?
+- Allow to control via USB typing keyboard
+  - control the menus so that I can still fiddle with the device without disturbing my cat
+  - shortcuts for different functions would make this something that could be performed with
+  - also opens the door to allow naming of patterns/projects?
+  - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
 
 ## Explanation/demo
 
