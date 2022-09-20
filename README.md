@@ -1,5 +1,5 @@
 - This branch (main) is for a Teensy 4.1 using the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
-- The [Arduino branch](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) is lacking most of the extended features, but works on an Arduino Uno with a USB Host Shield.  (The Teensy version supports connecting a Uno running the Arduino version as a USB MIDI device to add extra clock outputs - use [USBMidiKliK](https://github.com/TheKikGen/USBMidiKliK) to turn the Arduino into a native USB MIDI device and configure it with pid=0x1337, vid=0x1337).
+- The [Arduino branch](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) is lacking most of the features, but works on an Arduino Uno with a USB Host Shield, CV outputs, and an Akai APCMini over USB.  (The Teensy version supports connecting a Uno running the Arduino version as a USB MIDI device to add extra clock outputs - use [USBMidiKliK](https://github.com/TheKikGen/USBMidiKliK) to turn the Arduino into a native USB MIDI device and configure it with pid=0x1337, vid=0x1337).
 - This project should be considered work-in-progress/beta -- don't trust it for anything mission-critical!  Although it has been known to run for 12 hour stretches without crashing, it has started locking up quite frequently lately for unknown reasons (usually crashing/freezing during USB operations from what I can tell)
 
 # usb_midi_clocker
@@ -75,6 +75,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - So that can remap these as sources and targets
   - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
   - Allow CV input to be mapped to CC outputs
+- CV to MIDI CC 
 
 ### Behaviours
 
