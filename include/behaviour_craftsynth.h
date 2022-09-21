@@ -90,6 +90,9 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             for (int i = 0 ; i < parameters.size () ; i++) {
                 DoubleParameter* parameter = parameters.get(i);
                 char line[100];
+                // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
+                // todo: make these mappings part of an extra type of thing rather than associated with sequence?
+                // todo: move these to be saved with the project instead?
                 for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
                     if (parameter->connections[slot]->parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
                     if (parameter->connections[slot]->amount==0.00) continue;                     // skip if no amount configured for this slot
