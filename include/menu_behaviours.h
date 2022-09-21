@@ -19,11 +19,11 @@ class BehavioursPanel : public MenuItem {
                 if (usb_behaviour->is_connected())
                     sprintf(buf, "%i %19s [usb]\n", i, usb_behaviour->device->product());
                 else
-                    sprintf(buf, "%i [usb, disconnected]\n", i);
+                    sprintf(buf, "%i %10s [usb, disconnected]\n", i, usb_behaviour->get_label());
                 tft->printf(buf);
             }
             for (int i = 0 ; i < behaviour_manager->behaviours_serial.size() ; i++) {
-                sprintf(buf, "%i [serial]\n", i);
+                sprintf(buf, "%i %15s [serial]\n", i, behaviour->manager->behaviours_serial.get(i)->get_label());
                 tft->printf(buf);
             }
 
