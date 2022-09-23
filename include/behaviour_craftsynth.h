@@ -65,6 +65,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             Serial.println("\tAdding parameters...");
             //parameters->clear();
             // todo: read these from a file
+            //this->add_parameters();
             parameters->add(new MIDICCParameter((char*)"Distortion",    this,   (byte)12,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Delay Dry/Wet", this,   (byte)13,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Delay Time",    this,   (byte)14,   (byte)1));
@@ -79,6 +80,38 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             Serial.printf("Finished initialise_parameters() in %s\n", this->get_label());
 
             return parameters;
+        }
+
+        virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+            // todo: test this works!
+
+            // save all the parameter mapping settings 
+            LinkedList<DoubleParameter*> parameters = this->get_parameters();
+            for (int i = 0 ; i < parameters.size () ; i++) {
+                DoubleParameter* parameter = parameters.get(i);
+                char line[100];
+                // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
+                // todo: make these mappings part of an extra type of thing rather than associated with sequence?
+                // todo: move these to be saved with the project instead?
+                for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
+                    if (parameter->connections[slot]->parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
+                    if (parameter->connections[slot]->amount==0.00) continue;                     // skip if no amount configured for this slot
+                    sprintf(
+                        line, 
+                        "%s_%s_%i=%c|%3.3f", 
+                        this->get_label(),
+                        parameter->label,
+                        slot,
+                        parameter->connections[slot]->parameter_input!=nullptr ? parameter->connections[slot]->parameter_input->name : 'X',   // use X instead of parameter name if no parameter label is set for that parameter
+                        parameter->connections[slot]->amount
+                    );
+                    lines.add(String(line));
+                }
+            }
+        }
+        virtual bool parse_sequence_key_value(String key, String value) {
+            // todo: reload parameter mappings...
+            return false;
         }
 
 };
