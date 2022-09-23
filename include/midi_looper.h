@@ -117,8 +117,6 @@ class MIDITrack {
 
         int transpose_amount = 0;
 
-        typedef byte loop_bitmap[LOOP_LENGTH_STEPS][127];
-
         MIDITrack() {
             this->wipe_piano_roll_bitmap();
         };
@@ -414,7 +412,10 @@ class MIDITrack {
         //typedef byte track_note_bitmap[LOOP_LENGTH_STEPS][127];
         //track_note_bitmap *piano_roll_bitmap;
         //byte (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
-        loop_bitmap *piano_roll_bitmap = nullptr;
+
+        typedef byte loop_bitmap[LOOP_LENGTH_STEPS][127];
+        loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
+
         byte piano_roll_held[127];
         bool pitch_contains_notes[127];
         int piano_roll_highest = 0;
