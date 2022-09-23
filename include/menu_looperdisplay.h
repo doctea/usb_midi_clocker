@@ -143,7 +143,7 @@ class LooperDisplay : public MenuItem {
                 //const uint16_t tick_for_screen_X = this->get_tick_for_screen_x(screen_x);// ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
                 uint16_t colour = C_WHITE - ((pitch%12) * 32);
 
-                const int current_velocity = loop_track->piano_roll_bitmap[tick_for_screen_X][pitch];
+                const byte current_velocity = (*loop_track->piano_roll_bitmap)[tick_for_screen_X][pitch];
                 if (current_velocity > 0) {                  
                     //Serial.printf("\tat %i with velocity %i\n", pitch, tick_for_screen_X, current_velocity);
 

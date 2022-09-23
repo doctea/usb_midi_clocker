@@ -17,8 +17,8 @@ class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
     public:
         DeviceBehaviour_LeStrum () : DeviceBehaviourSerialBase () {}
 
-        char *get_label() override {
-            return "LeStrum";
+        virtual const char *get_label() override {
+            return (char*)"LeStrum";
         }
 
         source_id_t source_id_2 = -1;

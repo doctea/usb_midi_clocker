@@ -193,39 +193,49 @@ class Project {
             loop_slot_has_file[slot] = state;
         }
 
-        // load and save sequences / clock settings etc
-        bool load_loop(int selected_loop_number) {
-            return load_loop(selected_loop_number, &mpk49_loop_track);
-        }
-        bool load_loop() {
-            return load_loop(this->selected_loop_number, &mpk49_loop_track);
-        }
-        bool save_loop() {
-            return save_loop(this->selected_loop_number, &mpk49_loop_track);
-        }
-        bool save_loop(int selected_loop_number) {
-            return this->save_loop(selected_loop_number, &mpk49_loop_track);
-        }
-
-        bool load_loop(int selected_loop_number, MIDITrack *track) {
-            Serial.printf("load for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
-            //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
-            bool result = track->load_loop(current_project_number, selected_loop_number);
-            if (result)
-                loaded_loop_number = selected_loop_number;
-            return result;
-        }
-        bool save_loop(int selected_loop_number, MIDITrack *track) {
-            Serial.printf("save for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
-            //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
-            bool result = track->save_loop(current_project_number, selected_loop_number);
-            if (result) {
-                if (track->count_events()>0)
-                    loop_slot_has_file[selected_loop_number] = true;
-                loaded_loop_number = selected_loop_number;
+        #ifdef ENABLE_LOOPER
+            // load and save sequences / clock settings etc
+            bool load_loop(int selected_loop_number) {
+                return load_loop(selected_loop_number, &mpk49_loop_track);
             }
-            return result;
-        }
+            bool load_loop() {
+                return load_loop(this->selected_loop_number, &mpk49_loop_track);
+            }
+            bool save_loop() {
+                return save_loop(this->selected_loop_number, &mpk49_loop_track);
+            }
+            bool save_loop(int selected_loop_number) {
+                return this->save_loop(selected_loop_number, &mpk49_loop_track);
+            }
+
+            bool load_loop(int selected_loop_number, MIDITrack *track) {
+                Serial.printf("load for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
+                //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
+                bool result = track->load_loop(current_project_number, selected_loop_number);
+                if (result)
+                    loaded_loop_number = selected_loop_number;
+                return result;
+            }
+            bool save_loop(int selected_loop_number, MIDITrack *track) {
+                Serial.printf("save for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
+                //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
+                bool result = track->save_loop(current_project_number, selected_loop_number);
+                if (result) {
+                    if (track->count_events()>0)
+                        loop_slot_has_file[selected_loop_number] = true;
+                    loaded_loop_number = selected_loop_number;
+                }
+                return result;
+            }
+
+            bool auto_advance_looper = false;
+            bool is_auto_advance_looper() {
+                return this->auto_advance_looper;
+            }
+            void set_auto_advance_looper(bool auto_advance_looper) {
+                this->auto_advance_looper = auto_advance_looper;
+            }
+        #endif
 
         // callbacks so project can respond to events eg on_phrase...
         bool auto_advance_sequencer = false;
@@ -235,10 +245,12 @@ class Project {
                 this->selected_sequence_number = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
                 this->load_sequence(this->selected_sequence_number);
             }
-            if (auto_advance_looper) {
-                this->selected_loop_number = phrase % NUM_LOOP_SLOTS_PER_PROJECT;
-                this->load_loop(this->selected_loop_number);
-            }
+            #ifdef ENABLE_LOOPER
+                if (auto_advance_looper) {
+                    this->selected_loop_number = phrase % NUM_LOOP_SLOTS_PER_PROJECT;
+                    this->load_loop(this->selected_loop_number);
+                }
+            #endif
         }
         bool is_auto_advance_sequencer() {
             return this->auto_advance_sequencer;
@@ -247,13 +259,6 @@ class Project {
             this->auto_advance_sequencer = auto_advance_sequencer;
         }
 
-        bool auto_advance_looper = false;
-        bool is_auto_advance_looper() {
-            return this->auto_advance_looper;
-        }
-        void set_auto_advance_looper(bool auto_advance_looper) {
-            this->auto_advance_looper = auto_advance_looper;
-        }
 
         bool save_project_settings() {
             return this->save_project_settings(current_project_number);

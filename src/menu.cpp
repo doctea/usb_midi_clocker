@@ -213,14 +213,18 @@ void setup_menu() {
         &Project::set_auto_advance_sequencer,
         &Project::is_auto_advance_sequencer
     );
-    MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
-        (char*)"Looper",
-        &project,
-        &Project::set_auto_advance_looper,
-        &Project::is_auto_advance_looper
-    );
     project_multi_autoadvance->addItem(auto_advance_sequencer);
-    project_multi_autoadvance->addItem(auto_advance_looper);
+
+    #ifdef ENABLE_LOOPER
+        MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
+            (char*)"Looper",
+            &project,
+            &Project::set_auto_advance_looper,
+            &Project::is_auto_advance_looper
+        );
+        project_multi_autoadvance->addItem(auto_advance_looper);
+    #endif
+
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         menu->add(&beatstep_auto_advance);
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (

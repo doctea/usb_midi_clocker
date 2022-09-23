@@ -30,7 +30,9 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();
-        behaviour_apcmini->loop_track = &mpk49_loop_track;
+        #ifdef ENABLE_LOOPER
+            behaviour_apcmini->loop_track = &mpk49_loop_track;
+        #endif
         behaviour_manager->registerBehaviour(behaviour_apcmini);
     #endif
 
@@ -51,7 +53,9 @@ void setup_behaviour_manager() {
     
     #ifdef ENABLE_MPK49
         behaviour_mpk49 = new DeviceBehaviour_mpk49();
-        behaviour_mpk49->loop_track = &mpk49_loop_track;
+        #ifdef ENABLE_LOOPER
+            behaviour_mpk49->loop_track = &mpk49_loop_track;
+        #endif
         behaviour_manager->registerBehaviour(behaviour_mpk49);
     #endif
 

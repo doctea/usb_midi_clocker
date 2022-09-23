@@ -22,7 +22,7 @@ class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public Clocked
         uint16_t vid = 0x1337, pid = 0x1337;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
-        char *get_label() override {
+        virtual const char *get_label() override {
             return "Subclocker";
         }
 

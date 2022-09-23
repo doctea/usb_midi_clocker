@@ -152,7 +152,9 @@ class LooperStatus : public SlotController {
 
         virtual void on_add() override {
             lrs->set_tft(this->tft);
-            lds->set_tft(this->tft);
+            #ifdef ENABLE_LOOPER_PIANOROLL
+                lds->set_tft(this->tft);
+            #endif
             lhs->set_tft(this->tft);
         };
 
@@ -191,10 +193,10 @@ class LooperStatus : public SlotController {
             pos.y = lhs->display(pos, false, false);                    // draw the last/current note display (with header, unhighlighted)
             pos.y = SlotController::display(pos, selected, opened);     // draw the loop selection widget (without header)
             #ifdef ENABLE_LOOPER_PIANOROLL
-                return lds->display(pos, selected, opened);             // if its enabled, draw the pianoroll (without header)
-            #else 
-                return pos.y;
+                pos.y = lds->display(pos, selected, opened);    // if its enabled, draw the pianoroll (without header)
             #endif
+            
+            return pos.y;
         }
 };
 #endif

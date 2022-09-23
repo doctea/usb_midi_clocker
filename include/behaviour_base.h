@@ -33,8 +33,8 @@ class DeviceBehaviourUltimateBase {
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
 
-    virtual char *get_label() {
-        return "UltimateBase";
+    virtual const char *get_label() {
+        return (char*)"UltimateBase";
     }
 
     virtual int getType() {

@@ -18,8 +18,8 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
 
         target_id_t target_id = -1;
 
-        char *get_label() override {
-            return "Neutron";
+        virtual const char *get_label() override {
+            return (char*)"Neutron";
         }
 
         virtual bool is_drone() {

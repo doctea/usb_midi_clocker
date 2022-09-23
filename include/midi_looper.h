@@ -41,6 +41,7 @@ struct tracked_note {
     int32_t started_at = -1;
 };
 
+
 class MIDITrack {
     LinkedList<midi_message> frames[LOOP_LENGTH_STEPS];
 
@@ -115,6 +116,8 @@ class MIDITrack {
         int current_note = -1;
 
         int transpose_amount = 0;
+
+        typedef byte loop_bitmap[LOOP_LENGTH_STEPS][127];
 
         MIDITrack() {
             this->wipe_piano_roll_bitmap();
@@ -280,18 +283,18 @@ class MIDITrack {
                     if (this->debug) { Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", transposed_pitch, i, transpose_amount); Serial.flush(); }
                 }
 
-                if (track_playing[i].playing && piano_roll_bitmap[time][i]==0) {
-                    if (this->debug) Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
+                if (track_playing[i].playing && (*piano_roll_bitmap)[time][i]==0) {
+                    if (this->debug) Serial.printf("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n", time, i, (*piano_roll_bitmap)[time][i]);
 
                     this->sendNoteOff(transposed_pitch, 0);
                     track_playing_off(ticks, i, 0);
                     last_note = transposed_pitch;
                     if (i==current_note) // todo: properly check that there are no other notes playing
                         current_note = -1;
-                } else if (!track_playing[i].playing && piano_roll_bitmap[time][i]>0) {
-                    if (this->debug) Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, piano_roll_bitmap[time][i]);
-                    this->sendNoteOn(transposed_pitch, piano_roll_bitmap[time][i]);
-                    track_playing_on(ticks, i, piano_roll_bitmap[time][i]);
+                } else if (!track_playing[i].playing && (*piano_roll_bitmap)[time][i]>0) {
+                    if (this->debug) Serial.printf("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n", time, i, (*piano_roll_bitmap)[time][i]);
+                    this->sendNoteOn(transposed_pitch, (*piano_roll_bitmap)[time][i]);
+                    track_playing_on(ticks, i, (*piano_roll_bitmap)[time][i]);
                     current_note = transposed_pitch;
                 }
             }
@@ -316,7 +319,7 @@ class MIDITrack {
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
                 for (int i = 0 ; i < 127 ; i++) {
-                    piano_roll_bitmap[tick][i] = false;
+                    (*piano_roll_bitmap)[tick][i] = false;
                 }
                 frames[tick].clear();
                 last_cleared_tick = tick;
@@ -406,7 +409,12 @@ class MIDITrack {
 
 
     /* bitmap processing stuff */
-        byte piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
+        //byte piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
+        //byte (*piano_roll_bitmap)[LOOP_:];    // velocity of note at this moment
+        //typedef byte track_note_bitmap[LOOP_LENGTH_STEPS][127];
+        //track_note_bitmap *piano_roll_bitmap;
+        //byte (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
+        loop_bitmap *piano_roll_bitmap = nullptr;
         byte piano_roll_held[127];
         bool pitch_contains_notes[127];
         int piano_roll_highest = 0;
@@ -435,7 +443,7 @@ class MIDITrack {
         void update_bitmap(uint32_t ticks) {
             for (int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
-                    piano_roll_bitmap[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
+                    (*piano_roll_bitmap)[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
                     pitch_contains_notes[i] = true;
                 } /*else {
                     piano_roll_bitmap[ticks_to_sequence_step(ticks)][i] = 0;//recorded_hanging_notes[i].velocity;
@@ -446,7 +454,9 @@ class MIDITrack {
         // wipe all of the bitmap, ready for redrawing etc
         // TODO: speed this up (memset?)
         void wipe_piano_roll_bitmap() {
-            memset(this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
+            if (this->piano_roll_bitmap==nullptr)
+                this->piano_roll_bitmap = (loop_bitmap*)malloc(LOOP_LENGTH_STEPS * 127);
+            memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(piano_roll_held, 0, 127);
             memset(this->pitch_contains_notes, 0, 127);
             /*for (int p = 0 ; p < 127 ; p++) {
@@ -482,7 +492,7 @@ class MIDITrack {
                     }
                 }
                 for (int p = 0 ; p < 127 ; p++) {
-                    piano_roll_bitmap[x][p] = piano_roll_held[p];
+                    (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
             Serial.println("bitmap built.."); Serial.flush();
@@ -575,13 +585,13 @@ class MIDITrack {
                 Serial.printf("doing time %i:\n", t);
                 frames[t].clear();
                 for (int p = 0 ; p < 127 ; p++) {
-                    if (piano_roll_bitmap[t][p]>0           && !held_state[p]) { // note on
+                    if ((*piano_roll_bitmap)[t][p]>0           && !held_state[p]) { // note on
                     //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
                         if (this->debug) Serial.printf("Found note on with\tpitch %i\t", p);
                         held_state[p] = true;
                         note_on_count++;
-                        this->store_event(t * LOOP_LENGTH_STEP_SIZE, midi::NoteOn, p, piano_roll_bitmap[t][p]);
-                    } else if (piano_roll_bitmap[t][p]==0   && held_state[p]) {
+                        this->store_event(t * LOOP_LENGTH_STEP_SIZE, midi::NoteOn, p, (*piano_roll_bitmap)[t][p]);
+                    } else if ((*piano_roll_bitmap)[t][p]==0   && held_state[p]) {
                         if (this->debug) Serial.printf("\tFound note off with\tpitch %i\t\n", p);
                     //} else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
                         held_state[p] = false;

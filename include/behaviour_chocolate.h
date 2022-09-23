@@ -36,8 +36,8 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         signed long note_released_at[NUM_TRACK_NOTES];
         bool already_processed[NUM_TRACK_NOTES];
 
-        char *get_label() override {
-            return "Chocolate";
+        virtual const char *get_label() override {
+            return (char*)"Chocolate";
         }
 
         DeviceBehaviour_Chocolate () {
@@ -69,15 +69,17 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
             already_processed[note] = false;
 
-            if (note==CHOC_NOTE_TOGGLEPLAY) {
-                mpk49_loop_track.toggle_playing();
-            } else if (note==CHOC_NOTE_TOGGLEREC) {
-                mpk49_loop_track.toggle_recording();
-            } else if (note==CHOC_NOTE_RECORD_MOM) {
-                mpk49_loop_track.start_recording();
-            } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
-                mpk49_loop_track.start_overwriting();
-            }
+            #ifdef ENABLE_LOOPER
+                if (note==CHOC_NOTE_TOGGLEPLAY) {
+                    mpk49_loop_track.toggle_playing();
+                } else if (note==CHOC_NOTE_TOGGLEREC) {
+                    mpk49_loop_track.toggle_recording();
+                } else if (note==CHOC_NOTE_RECORD_MOM) {
+                    mpk49_loop_track.start_recording();
+                } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
+                    mpk49_loop_track.start_overwriting();
+                }
+            #endif
 
             /*if (note==0 && note_pressed_at[note+1]>=0) {
                 // trigger double action E
@@ -101,11 +103,13 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
             already_processed[note] = false;
 
-            if (note==CHOC_NOTE_RECORD_MOM) {
-                mpk49_loop_track.stop_recording();
-            } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
-                mpk49_loop_track.stop_overwriting();
-            }
+            #ifdef ENABLE_LOOPER
+                if (note==CHOC_NOTE_RECORD_MOM) {
+                    mpk49_loop_track.stop_recording();
+                } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
+                    mpk49_loop_track.stop_overwriting();
+                }
+            #endif
 
             /*if (note==0 && note_released_at[note+1]>=0) {
                 // trigger double action E

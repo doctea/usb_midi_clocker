@@ -19,8 +19,8 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
 
         source_id_t source_id_2 = -1;
 
-        char *get_label() override {
-            return "Drumkit";
+        virtual const char *get_label() override {
+            return (char*)"Drumkit";
         }
 
         void setup_callbacks() override {

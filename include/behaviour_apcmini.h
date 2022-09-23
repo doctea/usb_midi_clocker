@@ -23,8 +23,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
         uint16_t vid = 0x09e8, pid = 0x0028;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
-        char *get_label() override {
-            return "APCMini";
+        virtual const char *get_label() override {
+            return (char*)"APCMini";
         }
 
         bool apcmini_shift_held = false;

@@ -47,7 +47,6 @@ void setup_parameters() {
     VoltageParameterInput<BaseParameter> *vpi3 = new VoltageParameterInput<BaseParameter>('C', parameter_manager.voltage_sources.get(2));
 
     //vpi3->input_type = UNIPOLAR;
-
     // todo: set up 1v/oct inputs to map to MIDI source_ids...
 
     // tell the parameter manager about them
@@ -70,9 +69,9 @@ void setup_parameters() {
     vpi3->setTarget(behaviour_craftsynth->getParameterForLabel("Distortion")); 
     Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");*/
     Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
-    behaviour_craftsynth->getParameterForLabel("Cutoff")->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
-    behaviour_craftsynth->getParameterForLabel("Filter Morph")->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
-    behaviour_craftsynth->getParameterForLabel("Distortion")->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
+    behaviour_craftsynth->getParameterForLabel((char*)F("Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
+    behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
+    behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
     Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");
 
     parameter_manager.setDefaultParameterConnections();
