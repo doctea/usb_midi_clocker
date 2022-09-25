@@ -6,6 +6,7 @@
 #include "cv_input.h"
 
 #include "ParameterManager.h"
+#include "colours.h"
 #include "submenuitem.h"
 
 #include "devices/ADCPimoroni24v.h"

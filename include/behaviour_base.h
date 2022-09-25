@@ -89,13 +89,6 @@ class DeviceBehaviourUltimateBase {
 
     };
 
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
-        // todo: save parameter mappings...
-    }
-    virtual bool parse_sequence_key_value(String key, String value) {
-        // todo: reload parameter mappings...
-        return false;
-    }
 
     // parameter handling shit
     LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
@@ -119,6 +112,59 @@ class DeviceBehaviourUltimateBase {
         }
         Serial.printf("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n", this->get_label(), label);
         return nullptr;
+    }
+
+    /*
+    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+        // todo: save parameter mappings...
+    }
+    virtual bool parse_sequence_key_value(String key, String value) {
+        // todo: reload parameter mappings...
+        return false;
+    }
+    */
+
+    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+        // todo: rewrite/finish this!
+        // save all the parameter mapping settings 
+        LinkedList<DoubleParameter*> *parameters = this->get_parameters();
+        for (int i = 0 ; i < parameters->size () ; i++) {
+            DoubleParameter *parameter = parameters->get(i);
+            char line[100];
+            // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
+            // todo: make these mappings part of an extra type of thing rather than associated with sequence?
+            // todo: move these to be saved with the project instead?
+            for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
+                if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
+                if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
+                sprintf(
+                    line, 
+                    "%s_%s_%i=%c|%3.3f", 
+                    this->get_label(),
+                    parameter->label,
+                    slot,
+                    parameter->get_connection_slot_name(slot),
+                    parameter->connections[slot].amount
+                );
+                lines->add(String(line));
+            }
+        }
+    }
+    virtual bool parse_sequence_key_value(String key, String value) {
+        // todo: reload parameter mappings...
+        Serial.printf("parse_sequence_key_value passed '%s' => '%s'\n", key.c_str(), value.c_str());
+        if (key.startsWith(this->get_label())) {
+            key = key.replace(String(this->get_label()) + "_", "");
+
+            String parameter_name = key.substring(0, key.indexOf('_'));
+            int slot_number = key.substring(key.indexOf('_')+1).toInt();
+            String input_name = value.substring(0, key.indexOf('|'));
+            double amount = value.substring(key.indexOf('|')).toFloat();
+
+            this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, parameter_name.c_str()[0]);
+            this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_amount(slot_number, amount);
+        }
+        return false;
     }
 };
 
