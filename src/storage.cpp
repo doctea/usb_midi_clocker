@@ -250,6 +250,10 @@ namespace storage {
 
     clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
+    if(project.isLoadBehaviourOptions()) {
+      behaviour_manager->reset_all_mappings();
+    }
+
     if (!myFile) {
       Serial.printf("Error: Couldn't open %s for reading!\n", filename);
       return false;

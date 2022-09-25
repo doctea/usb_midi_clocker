@@ -215,6 +215,12 @@ class DeviceBehaviourManager {
             }
         }
 
+        void reset_all_mappings() {
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                behaviours.get(i)->reset_all_mappings();
+            }
+        }
+
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {}

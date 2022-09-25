@@ -124,6 +124,12 @@ class DeviceBehaviourUltimateBase {
     }
     */
 
+    virtual void reset_all_mappings() {
+        for (int i = 0 ; i < this->parameters->size() ; i++) {
+            this->parameters->get(i)->reset_mappings();
+        }
+    }
+
     virtual void save_sequence_add_lines(LinkedList<String> *lines) {
         // todo: rewrite/finish this!
         // save all the parameter mapping settings 
@@ -137,13 +143,22 @@ class DeviceBehaviourUltimateBase {
             for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
                 if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
                 if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
-                sprintf(
+                /*sprintf(
                     line, 
                     "%s_%s_%i=%c|%3.3f", 
                     this->get_label(),
                     parameter->label,
                     slot,
                     parameter->get_connection_slot_name(slot),
+                    parameter->connections[slot].amount
+                );*/
+                sprintf(
+                    line, 
+                    "%s_%s_%i=%3.3f", 
+                    this->get_label(),
+                    parameter->label,
+                    slot,
+                    //parameter->get_connection_slot_name(slot),
                     parameter->connections[slot].amount
                 );
                 lines->add(String(line));
@@ -159,9 +174,9 @@ class DeviceBehaviourUltimateBase {
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();
             String input_name = value.substring(0, key.indexOf('|'));
-            double amount = value.substring(key.indexOf('|')).toFloat();
+            double amount = value.substring(key.indexOf('|')+1).toFloat();
 
-            this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, parameter_name.c_str()[0]);
+            //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
             this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_amount(slot_number, amount);
         }
         return false;
