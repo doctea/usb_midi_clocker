@@ -12,6 +12,8 @@
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25
 #define FAST_VOLTAGE_READS
 
+#define ENABLE_TYPING_KEYBOARD
+
 #define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
 

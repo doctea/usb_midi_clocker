@@ -59,9 +59,9 @@ void do_tick(uint32_t ticks);
 
 #include "behaviour_manager.h"
 
+#include "input_keyboard.h"
 
 void setup() {
-
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif
@@ -86,6 +86,11 @@ void setup() {
   #ifdef ENABLE_SCREEN
     //setup_tft();
     setup_menu();
+  #endif
+
+  #ifdef ENABLE_TYPING_KEYBOARD
+    tft_print((char*)"Setting up typing keyboard..\n");
+    setup_typing_keyboard();
   #endif
 
   #ifdef ENABLE_CV_OUTPUT

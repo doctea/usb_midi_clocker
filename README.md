@@ -41,7 +41,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Re-sync clocked devices 'now' or 'on next bar start' (using ACPMini shift+Up and shift+Device respectively) that resets internal clock and sends stop/start messages to attached MIDI devices
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 library for info via [custom menu system](https://github.com/doctea/mymenu)
-  - Controlled with rotary encoder + buttons and via APCMini 
+  - Controlled with rotary encoder + buttons, via APCMini and/or via a USB typing keyboard
 - Clock sync options
   - Run from internal clock, with BPM controlled by APCMini slider
   - Or sync to external MIDI clock and obey start/stop from USB host (ie sync to PC/DAW)
