@@ -26,8 +26,10 @@
 #endif
 #ifdef ENABLE_SCREEN
     #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
-    #define TFT_ST7789_T3
-    #define TFT_ST7789_T3_BIG
+    #ifndef TFT_ST7789_T3
+        #define TFT_ST7789_T3
+        #define TFT_ST7789_T3_BIG
+    #endif
     #define MENU_MS_BETWEEN_REDRAW  75
 #endif
 
