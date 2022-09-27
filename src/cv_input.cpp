@@ -43,9 +43,9 @@ void setup_parameters() {
 
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
-    VoltageParameterInput<BaseParameter> *vpi1 = new VoltageParameterInput<BaseParameter>('A', parameter_manager.voltage_sources.get(0));
-    VoltageParameterInput<BaseParameter> *vpi2 = new VoltageParameterInput<BaseParameter>('B', parameter_manager.voltage_sources.get(1));
-    VoltageParameterInput<BaseParameter> *vpi3 = new VoltageParameterInput<BaseParameter>('C', parameter_manager.voltage_sources.get(2));
+    VoltageParameterInput *vpi1 = new VoltageParameterInput('A', parameter_manager.voltage_sources.get(0));
+    VoltageParameterInput *vpi2 = new VoltageParameterInput('B', parameter_manager.voltage_sources.get(1));
+    VoltageParameterInput *vpi3 = new VoltageParameterInput('C', parameter_manager.voltage_sources.get(2));
 
     //vpi3->input_type = UNIPOLAR;
     // todo: set up 1v/oct inputs to map to MIDI source_ids...
