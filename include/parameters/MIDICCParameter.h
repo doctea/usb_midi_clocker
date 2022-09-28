@@ -20,11 +20,14 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 this->channel = channel;
                 this->minimumDataValue = 0;
                 this->maximumDataValue = 127;
+
+                //this->debug = true;
         }
 
         MIDICCParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel, byte maximum_value) 
             : MIDICCParameter(label, target, cc_number, channel) {
-                //this->maximumNormalValue = maximum_value;
+                this->maximumDataValue = maximum_value;
+                //this->debug = true;
         }
 
         /*virtual const char* parseFormattedDataType(byte value) {
@@ -62,7 +65,7 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             return bvalue;
         }*/
 
-        virtual void setTargetValueFromData(byte value) override {
+        virtual void setTargetValueFromData(byte value, bool force = false) override {
             /*if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData passed %f\n", value);
             value = (value + 1.0f) / 2.0;
             if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData re-normalised to %f\n", value);
@@ -74,7 +77,7 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             
             if (this->target!=nullptr) {
                 if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData(%i, %i, %i)\n", cc_number, value, this->channel);
-                if (last_value!=value)
+                if (last_value!=value && !force)
                     this->target->sendControlChange(this->cc_number, (byte)value, this->channel);
                 last_value = value;
             } else {

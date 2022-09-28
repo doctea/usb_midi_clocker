@@ -13,7 +13,7 @@
 extern MIDIOutputWrapper *mpk49_output;
 void mpk49_setOutputWrapper(MIDIOutputWrapper *);
 
-//void mpk49_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+void mpk49_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void mpk49_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size);
@@ -33,6 +33,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
             Serial.println("Setting up callbacks for the MPK49");
             this->device->setHandleNoteOn(mpk49_handle_note_on);
             this->device->setHandleNoteOff(mpk49_handle_note_off);
+            this->device->setHandleControlChange(mpk49_handle_control_change);
             this->device->setHandleSystemExclusive(mpk49_handle_system_exclusive);
         }
 
@@ -66,7 +67,6 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         void handle_mmc_record() {
             loop_track->toggle_recording();
         }
-
         void handle_mmc_start() {
             loop_track->start_playing();
             playing = true;

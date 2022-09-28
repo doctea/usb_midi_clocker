@@ -58,7 +58,7 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr);
+ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
 //ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
 
 /*#ifdef ENABLE_SEQUENCER
@@ -132,7 +132,9 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
         behaviour_subclocker,
         &DeviceBehaviour_Subclocker::set_delay_ticks,
         &DeviceBehaviour_Subclocker::get_delay_ticks,
-        nullptr
+        nullptr,
+        0,
+        PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
     );
     ObjectActionItem<DeviceBehaviour_Subclocker> subclocker_restart_action = ObjectActionItem<DeviceBehaviour_Subclocker>(
         "Restart Subclocker on bar",

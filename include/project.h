@@ -312,7 +312,7 @@ class Project {
             File myFile;
 
             if (isLoadMatrixMappings()) {
-                Serial.printf("load_project_settings(%i) resetting matrix!\n");
+                Serial.printf("load_project_settings(%i) resetting matrix!\n", project_number);
                 midi_matrix_manager->reset_matrix(); 
             }
 

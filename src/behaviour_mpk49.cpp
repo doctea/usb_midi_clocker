@@ -2,9 +2,9 @@
 
 DeviceBehaviour_mpk49 *behaviour_mpk49 = nullptr;
 
-/*void mpk49_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
+void mpk49_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
     if (behaviour_mpk49!=nullptr) behaviour_mpk49->receive_control_change(inChannel, inNumber, inValue);
-}*/
+}
 
 void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
     //Serial.println("mpk49_handle_note_on");
