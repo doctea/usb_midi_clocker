@@ -109,7 +109,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' below
   - I was originally using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377 originally -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
   - But I am now using one of these instead: https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e?_pos=1&_sid=b1dce7a8e&_ss=r (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
-- For CV input: Pimoroni +/- 24v 1015 module https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003
+- For CV input: Pimoroni +/- 24v 1015 module https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003 with https://github.com/doctea/parameters
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
 ## Suggested wiring 
@@ -212,6 +212,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
       - some performance issues in reading the data, though
         - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart?
     - some todos remain:
+      - reassign modulation sources
       - load/save modulation settings
       - lock/hold modulation settings
       - auto-advance modulation settings?
@@ -231,16 +232,16 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Make the pc_usb connections work using behaviours
   - .. think there might be some duplication in purpose between MIDIOutputWrapper and Behaviours now...?
 - Allow to control via USB typing keyboard
-  - control the menus so that I can still fiddle with the device without disturbing my cat
+  - ~~control the menus so that I can still fiddle with the device without disturbing my cat~~
   - shortcuts for different functions would make this something that could be performed with
   - also opens the door to allow naming of patterns/projects?
-  - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
+- maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
 
 ## Explanation/demo
 
 ![my unit](https://github.com/doctea/usb_midi_clocker/blob/main/media/my%20unit.jpg "My unit")
 
-(Note that the below mostly applies to the Arduino Uno version, Teensy version has a lot more going on)
+(Note that the below mostly applies to the Arduino Uno version, Teensy version has a lot more going on, info here is getting a bit long in the tooth now!)
 
 Turning into a bit of a sequencer/MIDI+USB interface/brain for controlling Eurorack and MIDI devices.
 
