@@ -1,6 +1,12 @@
 
 #include "Config.h"
 
+#include "storage.h"
+
+extern DisplayTranslator_Configured steensy;
+
+#include "screenshot.h"
+
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
@@ -34,6 +40,9 @@
                 break;
             case 'r'            : restart_on_next_bar = true; break;
             case 'l'            : project.load_selected_sequence(); break;
+            case ' '            :
+                save_screenshot(&steensy.actual);
+                break;
             default:
                 Serial.printf("receiving OnPress(%i)\n", key);
         }
