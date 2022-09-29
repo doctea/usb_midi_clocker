@@ -27,8 +27,6 @@ class CraftSynthSpreadParameter : public MIDICCParameter {
 
         virtual const char* parseFormattedDataType(byte value) {
             static char fmt[20] = "              ";
-            //sprintf(fmt, "%i", this->getCurrentDataValue()); //get_midi_value_for_double(this->getCurrentNormalValue()));
-            //sprintf(fmt, "%s")
             switch (value) {
                 case 0 ... 63:
                     sprintf(fmt, "%-3i", value); break;
@@ -58,6 +56,23 @@ class CraftSynthSpreadParameter : public MIDICCParameter {
 };
 
 
+// TODO:- LFO1 Rate = CC 36 
+/*NO SYNC: 0-127 = 0.02Hz - 32Hz
+SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 = 3/16 / 24-31 = 1/4 /
+32-39 = 3/8 / 40-47 = 1/2 / 48-55 = 3/4 / 56-63 = 1 / 64-71 = 3/2
+/ 72-79 = 2 / 80-87 = 3 / 88-95 = 4 / 96-103 = 6 /104-111 = 8 /
+112-119 = 12 / 120-127 = 16*/
+
+// LFO2 Rate = CC 47
+/* CC 47 NO SYNC: 0-63 = 0-32Hz Free / 64-71 Root/8 / 72-79 Root/4 /
+80-87 Root/2 / 88-95 Root / 96-103 Root*1.5 /104-111 Root*2 /
+112-119 Root*2.5 / 120-127 Root*3
+SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 =1/4 / 24-31 =1/2 / 32-39
+= 1 / 40-47 = 5/4 / 48-55 =2 / 56-63 = 4 (Cycles per beat)*/
+
+//TODO:- LFO1 Shape CC 39 / LFO2 Shape CC 50
+/* 0-32 Sine to Triangle / 33-64 - Triangle to Sawtooth / 65-96 -
+Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
 class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
