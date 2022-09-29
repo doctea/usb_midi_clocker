@@ -56,6 +56,10 @@ class CraftSynthSpreadParameter : public MIDICCParameter {
 };
 
 
+// todo: some generic MIDICC types:-
+//      on / offs with configurable threshold
+//      full left / full right kinda things for osc mix    
+
 // TODO:- LFO1 Rate = CC 36 
 /*NO SYNC: 0-127 = 0.02Hz - 32Hz
 SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 = 3/16 / 24-31 = 1/4 /
@@ -121,16 +125,20 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             //parameters->clear();
             // todo: read these from a file
             //this->add_parameters();
+            parameters->add(new MIDICCParameter((char*)"Glide",         this,   (byte)5,    (byte)1));
             parameters->add(new MIDICCParameter((char*)"Distortion",    this,   (byte)12,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Delay Dry/Wet", this,   (byte)13,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Delay Time",    this,   (byte)14,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Delay Feedback",this,   (byte)15,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc 1 Wave",    this,   (byte)16,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc 2 Wave",    this,   (byte)17,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc Mix",       this,   (byte)18,   (byte)1));
             //parameters->add(new MIDICCParameter((char*)"Spread",        this,   (byte)20,   (byte)1));
             parameters->add(new CraftSynthSpreadParameter((char*)"Spread", this));
             parameters->add(new MIDICCParameter((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
-            parameters->add(new MIDICCParameter((char*)"Cutoff",        this,   (byte)34,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Filter Cutoff", this,   (byte)34,   (byte)1));
+            parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
+
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
 
             Serial.printf("Finished initialise_parameters() in %s\n", this->get_label());
