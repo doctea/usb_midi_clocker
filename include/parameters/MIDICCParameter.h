@@ -84,7 +84,6 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 if (this->debug) Serial.printf("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n", this->label);
             }
         }
-
 };
 
 #endif

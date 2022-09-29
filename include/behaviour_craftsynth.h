@@ -19,6 +19,46 @@
 //void craftsynth_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void craftsynth_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
+class CraftSynthSpreadParameter : public MIDICCParameter {
+    public:
+        CraftSynthSpreadParameter (char *label, DeviceBehaviourUltimateBase *target) 
+            : MIDICCParameter(label, target, (byte)20, (byte)1) {
+        }
+
+        virtual const char* parseFormattedDataType(byte value) {
+            static char fmt[20] = "              ";
+            //sprintf(fmt, "%i", this->getCurrentDataValue()); //get_midi_value_for_double(this->getCurrentNormalValue()));
+            //sprintf(fmt, "%s")
+            switch (value) {
+                case 0 ... 63:
+                    sprintf(fmt, "%-3i", value); break;
+                case 64 ... 70:
+                    strcpy(fmt, "Maj"); break;
+                case 71 ... 77:
+                    strcpy(fmt, "Min"); break;
+                case 78 ... 84:
+                    strcpy(fmt, "M6"); break;
+                case 85 ... 91:
+                    strcpy(fmt, "Su4"); break;
+                case 92 ... 98:
+                    strcpy(fmt, "5th"); break;
+                case 99 ... 105:
+                    strcpy(fmt, "5tO"); break;
+                case 106 ... 112:
+                    strcpy(fmt, "O++"); break;
+                case 113 ... 119:
+                    strcpy(fmt, "O+-"); break;
+                case 120 ... 127:
+                    strcpy(fmt, "O--"); break;
+                default:
+                    strcpy(fmt, "??"); break;
+            }
+            return fmt;
+        };
+};
+
+
+
 class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
@@ -72,7 +112,8 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             parameters->add(new MIDICCParameter((char*)"Osc 1 Wave",    this,   (byte)16,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc 2 Wave",    this,   (byte)17,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Osc Mix",       this,   (byte)18,   (byte)1));
-            parameters->add(new MIDICCParameter((char*)"Spread",        this,   (byte)20,   (byte)1));
+            //parameters->add(new MIDICCParameter((char*)"Spread",        this,   (byte)20,   (byte)1));
+            parameters->add(new CraftSynthSpreadParameter((char*)"Spread", this));
             parameters->add(new MIDICCParameter((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Cutoff",        this,   (byte)34,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
