@@ -207,17 +207,19 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~MIDI input/output matrix?~~
 - Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CC modulation
-  - CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
+  - ~~CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)~~
     - this is mostly working now..!
       - some performance issues in reading the data, though
         - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart?
     - some todos remain:
       - reassign modulation sources
       - load/save modulation settings
+         - working; but kinda impractical; how do we want to handle this?
       - lock/hold modulation settings
       - auto-advance modulation settings?
     - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
   - Record and playback CCs as well as MIDI
+  - tempo-synced LFOs etc...
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
 - Improve looper quantizer (take note length into consideration)
