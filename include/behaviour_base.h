@@ -137,10 +137,8 @@ class DeviceBehaviourUltimateBase {
         return false;
     }
 
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
-        // save all the parameter mapping settings 
-        static String prefix = "parameter_" + this->get_label();
-
+    // save all the parameter mapping settings; override in subclasses, which should call back up the chain
+    virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
@@ -151,34 +149,27 @@ class DeviceBehaviourUltimateBase {
             for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
                 if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
                 if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
-                /*sprintf(
-                    line, 
-                    "%s_%s_%i=%c|%3.3f", 
-                    this->get_label(),
-                    parameter->label,
-                    slot,
-                    parameter->get_connection_slot_name(slot),
-                    parameter->connections[slot].amount
-                );*/
-                sprintf(
-                    line, 
-                    "%s_%s_%i=%3.3f", 
-                    prefix,
-                    parameter->label,
-                    slot,
-                    //parameter->get_connection_slot_name(slot),
+
+                sprintf(line, "parameter_%s_%i=%c|%3.3f", 
+                    parameter->label, 
+                    slot, 
+                    'A'+slot, //TODO: implement proper saving of mapping! /*parameter->get_connection_slot_name(slot), */
+                    //parameter->connections[slot].parameter_input->name,
                     parameter->connections[slot].amount
                 );
                 lines->add(String(line));
             }
         }
     }
-    virtual bool parse_sequence_key_value(String key, String value) {
+
+    // ask behaviour to process the key/value pair
+    virtual bool load_parse_key_value(String key, String value) {
         // todo: reload parameter mappings...
         Serial.printf("parse_sequence_key_value passed '%s' => '%s'\n", key.c_str(), value.c_str());
-        static String prefix = "parameter_" + this->get_label();
-        if (key.startsWith(prefix)) {
-            key = key.replace(String(this->get_label()) + "_", "");
+        //static String prefix = String("parameter_" + this->get_label());
+        if (key.startsWith("parameter_")) {
+            //key = key.replace(String(this->get_label()) + "_", "");
+            key = key.replace("parameter_", "");
 
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();
@@ -187,10 +178,15 @@ class DeviceBehaviourUltimateBase {
 
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
             DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
-            if (p!=nullptr)
+            if (p!=nullptr) {
+                Serial.printf("\t%s: setting slot_number %i to %f", p->label, slot_number, amount);
                 p->set_slot_amount(slot_number, amount);
+                return true;
+            }
+            Serial.printf("\t slot_number %i and amount %f but no parameter found for %s in %s\n", slot_number, amount, parameter_name.c_str(), this->get_label());
             return true;
         }
+        Serial.printf("load_parse_key_value(%s, %s) isn't a parameter");
         return false;
     }
 };
@@ -305,23 +301,25 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             }
         }
 
-        virtual bool parse_sequence_key_value(String key, String value) override {
-            if (ClockedBehaviour::parse_project_key_value(key, value))
-                return true;
-            if (key.equals("divisor")) {
-                this->set_divisor((int) value.toInt());
-                returm true;
-            } else if (key.equals("delay_ticks")) {
-                this->set_delay_ticks(value.toInt());
-                return true;
-            }
-            return false;
-        }
-
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             ClockedBehaviour::save_project_add_lines(lines);
-            lines->add("divisor=" + this->clock_divisor);
-            lines->add("delay_ticks=" + this->clock_delay_ticks);
+            lines->add(String("divisor=") + String(this->clock_divisor));
+            lines->add(String("delay_ticks=") + String(this->clock_delay_ticks));
+        }
+
+        // ask behaviour to process the key/value pair
+        virtual bool load_parse_key_value(String key, String value) override {
+            if (key.equals("divisor")) {
+                this->set_divisor((int) value.toInt());
+                return true;
+            } else if (key.equals("delay_ticks")) {
+                this->set_delay_ticks((int) value.toInt());
+                return true;
+            } else if (ClockedBehaviour::load_parse_key_value(key, value)) {
+                return true;
+            }
+
+            return false;
         }
 
 };

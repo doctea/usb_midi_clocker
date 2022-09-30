@@ -101,16 +101,17 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             lines->add(
-                String("neutron_drone=") + String(this->drone_enabled ? "enabled":"disabled")
+                String("drone=") + String(this->drone_enabled ? "enabled":"disabled")
             );
+            ClockedBehaviour::save_sequence_add_lines(lines);
         }
-        virtual bool parse_sequence_key_value(String key, String value) override {
-            if (key.equals("neutron_drone")) {
+        virtual bool load_parse_key_value(String key, String value) override {
+            if (key.equals("drone")) {
                 this->set_drone(value.equals("enabled"));
                 Serial.printf("neutron_drone found - setting to %s!\n", drone_enabled?"true":"false");
                 return true;
             }
-            return DeviceBehaviourUltimateBase::parse_sequence_key_value(key, value);
+            return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
         }
 
 };

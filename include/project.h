@@ -10,6 +10,7 @@
 #include "behaviour_mpk49.h"*/
 
 #include "midi_mapper_matrix_manager.h"
+#include "behaviour_manager.h"
 
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
@@ -347,13 +348,13 @@ class Project {
         }
 
         void load_project_parse_line(String line) {
-            if (line.charAt(0)==';') {
+            if (line.charAt(0)==';') 
                 return;  // skip comment lines
-            /*} else if (line.startsWith("subclocker_divisor=")) {
-                behaviour_subclocker->set_divisor((int) line.remove(0,String("subclocker_divisor=").length()).toInt());
-            } else if (line.startsWith("subclocker_delay_ticks=")) {
-                behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());*/
-            } else if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
+
+            String key = line.substring(0, line.indexOf('='));
+            String value = line.substring(line.indexOf('=')+1);
+
+            if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
                 // legacy save format, pre-matrix
                 Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_output_map=").length());
@@ -370,10 +371,9 @@ class Project {
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
-            } else if (this->isLoadBehaviourOptions()) {
-                String key = line.substring(0, line.indexOf('='));
-                String value = line.substring(line.indexOf('=')+1);
-                behaviour_manager->load_project_parse_key_value(key, value);
+            } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
+                // ask behaviour_manager to process the line
+                Serial.printf("project read line '%s', processed by behaviour_manager\n", line.c_str());
             }
         }
 };

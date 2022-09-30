@@ -203,24 +203,35 @@ class DeviceBehaviourManager {
                 if (label.equals(this->behaviours.get(i)->get_label()))
                     return this->behaviours.get(i);
             }
+            return nullptr;
+        }
+
+        bool load_parse_line(String line) {
+            line = line.replace('\n',"");
+            String key = line.substring(0, line.indexOf('='));
+            String value = line.substring(line.indexOf('=')+1);
+            return this->load_parse_key_value(key, value);
         }
 
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
             if (key.equals("behaviour_start")) {
+                Serial.printf("found behaviour_start for '%s'\n", value.c_str());
                 current_behaviour = this->find_behaviour_for_label(value);
                 return true;
             } else if (key.equals("behaviour_end")) {
+                Serial.printf("found behaviour_end for '%s'\n", value.c_str());
                 current_behaviour = nullptr;
                 return true;
-            } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value))
+            } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
+                Serial.printf("loaded key %s for value '%s'\n", key.c_str(), value.c_str());
                 return true;
             }
+            Serial.printf("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n", key.c_str(), value.c_str());
             return false;
         }
 
-
-        void load_project_parse_key_value(String key, String value) {
+        /*void load_project_parse_key_value(String key, String value) {
             Serial.printf("BehaviourManager#load_project_parse_key_value('%s', '%s')\n", key.c_str(), value.c_str());
             //String initial_key = key.substring(0, key.indexOf('_'));
             for (int i = 0 ; i < behaviours.size() ; i++) {
@@ -244,15 +255,26 @@ class DeviceBehaviourManager {
                     return;
                 }
             }
-        }
-        // ask behaviours to add option lines to save sequence file
-        void save_sequence_add_lines(LinkedList<String> *lines) {
-            //LinkedList<String> lines = LinkedList<String>();
+        }*/
+
+        // ask each behaviour to add option lines to save project file
+        void save_project_add_lines(LinkedList<String> *lines) {
             for (int i = 0 ; i < behaviours.size() ; i++) {
-                behaviours.get(i)->save_sequence_add_lines(lines);
+                lines->add("behaviour_start=" + String(behaviours.get(i)->get_label()));
+                behaviours.get(i)->save_project_add_lines(lines);
+                lines->add("behaviour_end=" + String(behaviours.get(i)->get_label()));
             }
         }
 
+        // ask each behaviour to add option lines to save sequence file
+        void save_sequence_add_lines(LinkedList<String> *lines) {
+            //LinkedList<String> lines = LinkedList<String>();
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                lines->add("behaviour_start=" + String(behaviours.get(i)->get_label()));
+                behaviours.get(i)->save_sequence_add_lines(lines);
+                lines->add("behaviour_end=" + String(behaviours.get(i)->get_label()));
+            }
+        }
 
         void reset_all_mappings() {
             for (int i = 0 ; i < behaviours.size() ; i++) {

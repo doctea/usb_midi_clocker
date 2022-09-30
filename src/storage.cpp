@@ -117,7 +117,9 @@ namespace storage {
     LinkedList<String> behaviour_lines = LinkedList<String>();
     behaviour_manager->save_sequence_add_lines(&behaviour_lines);
     for (int i = 0 ; i < behaviour_lines.size() ; i++) {
-      myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
+      //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
+      Serial.printf("\tsequence writing behaviour line '%s'\n", behaviour_lines.get(i).c_str());
+      myFile.printf("%s\n", behaviour_lines.get(i).c_str());
     }
     myFile.println("; end sequence");
     myFile.close();
@@ -228,14 +230,16 @@ namespace storage {
       }
       if (debug) Serial.println("]");
       sequence_data_index++;
-    } else if (project.isLoadBehaviourOptions() && line.startsWith("behaviour_option_")) {
-      Serial.printf("behaviour_option read line '%s'\n", line.c_str());
-      String partial = line.remove(0,String("behaviour_option_").length());
+    } else if (project.isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
+      Serial.printf("sequence read line '%s', processed by behaviour_manager\n", line.c_str());
+      /*String partial = line.remove(0,String("behaviour_option_").length());
       // todo: something is off with my understanding of how remove works here
       int split_point = partial.indexOf("=");
       String key = partial.remove(split_point);
-      String value = line.remove(0,split_point+1);
-      behaviour_manager->load_sequence_parse_key_value(key, value);
+      String value = line.remove(0,split_point+1);*/
+      /*String key = line.substring(0, line.indexOf('='));
+      String value = line.substring(line.indexOf("=")+1);
+      behaviour_manager->load_parse_key_value(key, value);*/
     }
   }
 
@@ -250,9 +254,9 @@ namespace storage {
 
     clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
-    if(project.isLoadBehaviourOptions()) {
+    /*if(project.isLoadBehaviourOptions()) {
       behaviour_manager->reset_all_mappings();
-    }
+    }*/
 
     if (!myFile) {
       Serial.printf("Error: Couldn't open %s for reading!\n", filename);
