@@ -104,3 +104,15 @@ void setup_behaviour_manager() {
     usb_manager->registerBehaviour(new USBDevice_MPK49());
     usb_manager->registerBehaviour(new USBDevice_Subclocker());*/
 }
+
+
+#ifdef ENABLE_SCREEN
+    void DeviceBehaviourManager::make_menu_items(Menu *menu) {
+        for (int i = 0 ; i < behaviours.size() ; i++) {
+            LinkedList<MenuItem *> items = behaviours.get(i)->make_menu_items();
+            for (int n = 0 ; n < items.size() ; n++) {
+                menu->add(items.get(n));
+            }
+        }
+    }
+#endif

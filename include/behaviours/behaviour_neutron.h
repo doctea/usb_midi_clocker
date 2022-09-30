@@ -114,6 +114,10 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
             return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
         }
 
+        #ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem *> make_menu_items() override;
+        #endif
+
 };
 
 extern DeviceBehaviour_Neutron behaviour_neutron;

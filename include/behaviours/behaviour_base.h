@@ -12,6 +12,8 @@
 
 #include "parameters/Parameter.h"
 
+class MenuItem;
+
 using namespace midi;
 
 enum BehaviourType {
@@ -189,6 +191,14 @@ class DeviceBehaviourUltimateBase {
         Serial.printf("load_parse_key_value(%s, %s) isn't a parameter");
         return false;
     }
+
+    #ifdef ENABLE_SCREEN
+        virtual LinkedList<MenuItem*> make_menu_items() {
+            LinkedList<MenuItem*> menuitems = LinkedList<MenuItem*>();
+            return menuitems;
+        }
+    #endif
+    
 };
 
 
@@ -321,6 +331,10 @@ class DividedClockedBehaviour : public ClockedBehaviour {
 
             return false;
         }
+
+        #ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem*> make_menu_items() override;
+        #endif
 
 };
 

@@ -7,6 +7,8 @@
 
 #include "multi_usb_handlers.h"
 
+#include "mymenu.h"
+
 #include <LinkedList.h>
 
 class DeviceBehaviourManager {
@@ -198,6 +200,11 @@ class DeviceBehaviourManager {
             }
         }
 
+        #ifdef ENABLE_SCREEN
+            void make_menu_items(Menu *menu);
+        #endif
+
+
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
             for (int i = 0 ; i < this->behaviours.size() ; i++) {
                 if (label.equals(this->behaviours.get(i)->get_label()))
@@ -230,32 +237,6 @@ class DeviceBehaviourManager {
             Serial.printf("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n", key.c_str(), value.c_str());
             return false;
         }
-
-        /*void load_project_parse_key_value(String key, String value) {
-            Serial.printf("BehaviourManager#load_project_parse_key_value('%s', '%s')\n", key.c_str(), value.c_str());
-            //String initial_key = key.substring(0, key.indexOf('_'));
-            for (int i = 0 ; i < behaviours.size() ; i++) {
-                //if (behaviours.get(i)->matches(initial_key))
-                    if (behaviours.get(i)->parse_project_key_value(key, value))
-                        return;
-            }
-        }
-
-        void save_project_add_lines(LinkedList<String> *lines) { 
-            for (int i = 0 ; i < behaviours.size() ; i++) {
-                behaviours.get(i)->save_project_add_lines(lines);
-            }
-        }
-
-        // ask behaviours if a sequence save key-value pair applies to them; early return if one is found
-        void load_sequence_parse_key_value(String key, String value) {
-            Serial.printf("BehaviourManager#load_sequence_parse_key_value('%s', '%s')\n", key.c_str(), value.c_str());
-            for (int i = 0 ; i < behaviours.size() ; i++) {
-                if (behaviours.get(i)->parse_sequence_key_value(key, value)) {
-                    return;
-                }
-            }
-        }*/
 
         // ask each behaviour to add option lines to save project file
         void save_project_add_lines(LinkedList<String> *lines) {

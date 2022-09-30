@@ -117,7 +117,7 @@ BehavioursPanel behaviours_panel = BehavioursPanel();
 
 MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
 
-#ifdef ENABLE_SUBCLOCKER
+/*#ifdef ENABLE_SUBCLOCKER
     ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_divisor_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
         "Subclocker div", 
         behaviour_subclocker, 
@@ -171,7 +171,7 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
         &DeviceBehaviour_Beatstep::is_set_restart_on_bar,
         "Restarting.."
     );
-#endif
+#endif*/
 
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
@@ -272,37 +272,7 @@ void setup_menu() {
         menu->add(&beatstep_notes);
     #endif
 
-    #ifdef ENABLE_BASS_TRANSPOSE
-        MIDIOutputWrapper_Behaviour *neutron_wrapper = (MIDIOutputWrapper_Behaviour *)midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4");
-        ObjectNumberControl<MIDIOutputWrapper,int> *neutron_transpose_control = new ObjectNumberControl<MIDIOutputWrapper,int>(
-            "Neutron octave",
-            neutron_wrapper, 
-            &MIDIOutputWrapper::setForceOctave, 
-            &MIDIOutputWrapper::getForceOctave, 
-            nullptr,
-            -1,
-            8
-        );
-        //DeviceBehaviour_Neutron *behaviour_neutron = static_cast<DeviceBehaviour_Neutron *>(neutron_wrapper->output);
-        HarmonyStatus *neutron_harmony = new HarmonyStatus("Neutron output", 
-            &neutron_wrapper->last_transposed_note, 
-            &neutron_wrapper->current_transposed_note, 
-            &behaviour_neutron.last_drone_note
-        );
-        
-        //TODO: see commented-out section in DeviceBehaviour_Neutron
-        ObjectToggleControl<DeviceBehaviour_Neutron> *neutron_drone_bass = new ObjectToggleControl<DeviceBehaviour_Neutron> (
-            "Neutron bass drone",
-            &behaviour_neutron,
-            &DeviceBehaviour_Neutron::set_drone,
-            &DeviceBehaviour_Neutron::is_drone,
-            nullptr
-        );
-        menu->add(neutron_drone_bass);
-        
-        menu->add(neutron_transpose_control);  // beatstep transposed to neutron control
-        menu->add(neutron_harmony);
-    #endif
+    behaviour_manager->make_menu_items(menu);
 
     // sequencer
     #ifdef ENABLE_SEQUENCER
@@ -329,7 +299,7 @@ void setup_menu() {
         menu->add(&craftsynth_clock_toggle);
     #endif
 
-    #ifdef ENABLE_SUBCLOCKER
+    /*#ifdef ENABLE_SUBCLOCKER
         subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
         subclocker_restart_action.target_object = 
             subclocker_divisor_control.target_object = 
@@ -349,7 +319,7 @@ void setup_menu() {
         menu->add(&beatstep_divisor_control);
         menu->add(&beatstep_delay_ticks_control);
         menu->add(&beatstep_restart_action);
-    #endif
+    #endif*/
 
     menu->add(&usbdevices_panel);
     menu->add(&behaviours_panel);
