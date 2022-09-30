@@ -470,14 +470,14 @@ class MIDITrack {
 
         // render the frames (array of linked list of messages) to a 'bitmap' 2d array of time * pitch
         void draw_piano_roll_bitmap_from_save() {
-            Serial.println("draw_piano_roll_bitmap_from_save"); Serial.flush();
+            if(this->debug) { Serial.println("draw_piano_roll_bitmap_from_save"); Serial.flush(); }
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
 
-            Serial.println("wiping bitmap.."); Serial.flush();
+            if(this->debug) { Serial.println("wiping bitmap.."); Serial.flush(); }
             this->wipe_piano_roll_bitmap();
 
-            Serial.println("building bitmap.."); Serial.flush();
+            if(this->debug) { Serial.println("building bitmap.."); Serial.flush(); }
             for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
                 for (int m = 0 ; m < frames[x].size() ; m++) {
                     midi_message message = frames[x].get(m);
@@ -496,7 +496,7 @@ class MIDITrack {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
-            Serial.println("bitmap built.."); Serial.flush();
+            if(this->debug) { Serial.println("bitmap built.."); Serial.flush(); }
 
             /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {

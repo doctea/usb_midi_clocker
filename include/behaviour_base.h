@@ -131,8 +131,9 @@ class DeviceBehaviourUltimateBase {
     }
 
     virtual void save_sequence_add_lines(LinkedList<String> *lines) {
-        // todo: rewrite/finish this!
         // save all the parameter mapping settings 
+        static String prefix = "parameter_" + this->get_label();
+
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
@@ -155,7 +156,7 @@ class DeviceBehaviourUltimateBase {
                 sprintf(
                     line, 
                     "%s_%s_%i=%3.3f", 
-                    this->get_label(),
+                    prefix,
                     parameter->label,
                     slot,
                     //parameter->get_connection_slot_name(slot),
@@ -168,7 +169,8 @@ class DeviceBehaviourUltimateBase {
     virtual bool parse_sequence_key_value(String key, String value) {
         // todo: reload parameter mappings...
         Serial.printf("parse_sequence_key_value passed '%s' => '%s'\n", key.c_str(), value.c_str());
-        if (key.startsWith(this->get_label())) {
+        static String prefix = "parameter_" + this->get_label();
+        if (key.startsWith(prefix)) {
             key = key.replace(String(this->get_label()) + "_", "");
 
             String parameter_name = key.substring(0, key.indexOf('_'));
