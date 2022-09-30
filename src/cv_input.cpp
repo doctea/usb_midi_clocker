@@ -62,15 +62,9 @@ void setup_parameters() {
     parameter_manager.addParameters(params);
 
     // setup the default mappings
-    // TODO: make this a property of the Parameter, not the ParameterInputs, so we can have multiple mappings
     // TODO: load this from a saved config file
-    /*Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
-    vpi1->setTarget(behaviour_craftsynth->getParameterForLabel("Cutoff")); 
-    vpi2->setTarget(behaviour_craftsynth->getParameterForLabel("Filter Morph"));
-    vpi3->setTarget(behaviour_craftsynth->getParameterForLabel("Distortion")); 
-    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");*/
     Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
-    behaviour_craftsynth->getParameterForLabel((char*)F("Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
+    behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
     Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");

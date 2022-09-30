@@ -145,6 +145,34 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
     );
 #endif
 
+#ifdef ENABLE_BEATSTEP_DIVISOR
+    ObjectNumberControl<DeviceBehaviour_Beatstep,int> beatstep_divisor_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
+        "Beatstep div", 
+        behaviour_beatstep, 
+        &DeviceBehaviour_Beatstep::DividedClockedBehaviour::set_divisor, 
+        &DeviceBehaviour_Beatstep::DividedClockedBehaviour::get_divisor, 
+        nullptr, // change callback on_Beatstep_divisor_changed
+        1,  //min
+        48  //max
+    );
+    ObjectNumberControl<DeviceBehaviour_Beatstep,int> beatstep_delay_ticks_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
+        "Beatstep delay",
+        behaviour_beatstep,
+        &DeviceBehaviour_Beatstep::set_delay_ticks,
+        &DeviceBehaviour_Beatstep::get_delay_ticks,
+        nullptr,
+        0,
+        PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
+    );
+    ObjectActionItem<DeviceBehaviour_Beatstep> beatstep_restart_action = ObjectActionItem<DeviceBehaviour_Beatstep>(
+        "Restart Beatstep on bar",
+        behaviour_beatstep,
+        &DeviceBehaviour_Beatstep::set_restart_on_bar,
+        &DeviceBehaviour_Beatstep::is_set_restart_on_bar,
+        "Restarting.."
+    );
+#endif
+
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
@@ -310,6 +338,17 @@ void setup_menu() {
         menu->add(&subclocker_divisor_control);
         menu->add(&subclocker_delay_ticks_control);
         menu->add(&subclocker_restart_action);
+    #endif
+
+    #ifdef ENABLE_BEATSTEP_DIVISOR
+        beatstep_divisor_control.go_back_on_select = beatstep_delay_ticks_control.go_back_on_select = true; 
+        beatstep_restart_action.target_object = 
+            beatstep_divisor_control.target_object = 
+                beatstep_delay_ticks_control.target_object = 
+                    behaviour_beatstep;   // because behaviour_beatstep pointer won't be set before now..?
+        menu->add(&beatstep_divisor_control);
+        menu->add(&beatstep_delay_ticks_control);
+        menu->add(&beatstep_restart_action);
     #endif
 
     menu->add(&usbdevices_panel);

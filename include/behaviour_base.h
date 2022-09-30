@@ -177,7 +177,10 @@ class DeviceBehaviourUltimateBase {
             double amount = value.substring(key.indexOf('|')+1).toFloat();
 
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
-            this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_amount(slot_number, amount);
+            DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
+            if (p!=nullptr)
+                p->set_slot_amount(slot_number, amount);
+            return true;
         }
         return false;
     }
@@ -233,6 +236,64 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
         virtual bool isClockEnabled() {
             return this->clock_enabled;
+        }
+};
+
+#include "bpm.h"
+#include "MIDI.h"
+
+class DividedClockedBehaviour : public ClockedBehaviour {
+    public:
+        unsigned long clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
+        int clock_divisor = 1; //DEFAULT_DIVISOR;
+
+        virtual void set_delay_ticks(int delay_ticks) {
+            this->clock_delay_ticks = delay_ticks;
+        }
+        virtual int get_delay_ticks() {
+            return this->clock_delay_ticks;
+        }
+        virtual void set_divisor (int divisor) {
+            this->clock_divisor = divisor;
+        }
+        virtual int get_divisor() {
+            return this->clock_divisor;
+        }
+
+        int32_t real_ticks = 0;
+        virtual void send_clock(unsigned long ticks) override {
+            this->real_ticks = ticks;
+            if (ticks<clock_delay_ticks) return;
+
+            /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
+                DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
+            }*/
+            if (is_bpm_on_bar(real_ticks - clock_delay_ticks)) {
+                ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
+            }
+
+            if (/*ticks==0 || */ticks % clock_divisor == 0)
+                ClockedBehaviour::send_clock(ticks - clock_delay_ticks);
+        }
+        
+        virtual void on_bar(int bar_number) override {
+            // don't do anything - handle the delayed clocks in send_clock
+            //if (is_bpm_on_bar(real_ticks - clock_delay_ticks))
+        }
+        virtual void on_phrase(uint32_t phrase_number) override {
+            // don't do anything - handle the delayed clocks in send_clock
+        }
+
+        virtual void on_restart() override {
+            Serial.println("\ton_restart() in DividedClockedBehaviour");
+            if (this->is_connected() && this->clock_enabled) {
+                this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
+                this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
+                //this->sendNow();
+                this->started = true;
+            } else {
+                Serial.println("\tin DividedClockedBehaviour on_restart, no device!");
+            }
         }
 };
 

@@ -19,7 +19,8 @@ void beatstep_setOutputWrapper(MIDIOutputWrapper *);
 void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
+    using DividedClockedBehaviour::on_restart;
     public:
         #define NUM_PATTERNS 16
         bool auto_advance_pattern = false;   // todo: make configurable!

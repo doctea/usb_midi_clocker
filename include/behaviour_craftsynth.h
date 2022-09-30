@@ -79,6 +79,9 @@ SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 =1/4 / 24-31 =1/2 / 32-39
 Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
 class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+    //using ClockedBehaviour::DeviceBehaviourUltimateBase;
+    using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
+    
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x04D8, pid = 0xEE1F;
@@ -114,7 +117,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             Serial.printf("DeviceBehaviour_CraftSynth#initialise_parameters()...");
             static bool already_initialised = false;
             if (already_initialised)
-                return parameters;
+                return this->parameters;
 
             Serial.println("\tcalling DeviceBehaviourUSBBase::initialise_parameters()"); 
             DeviceBehaviourUSBBase::initialise_parameters();
@@ -137,8 +140,6 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             parameters->add(new CraftSynthSpreadParameter((char*)"Spread", this));
             parameters->add(new MIDICCParameter((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Cutoff", this,   (byte)34,   (byte)1));
-            parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
-
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
 
             Serial.printf("Finished initialise_parameters() in %s\n", this->get_label());

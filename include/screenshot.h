@@ -67,7 +67,7 @@ bool save_screenshot(ST7789_t3 *screen) {
 
     // create padding (based on the number of pixels in a row
     unsigned char bmpPad[rowSize - 3*w];
-    for (int i=0; i<sizeof(bmpPad); i++) {         // fill with 0s
+    for (uint16_t i=0; i<sizeof(bmpPad); i++) {         // fill with 0s
         bmpPad[i] = 0;
     }
 

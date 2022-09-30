@@ -84,6 +84,8 @@
     #error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
 #endif
 
+#define ENABLE_BEATSTEP_DIVISOR
+
 //#define ENABLE_CRAFTSYNTH_CLOCKTOGGLE   // enable menu item to enable/disable clock output to CraftSynth - only really useful for debug i think?
 
 #define ENABLE_BPM
