@@ -9,7 +9,7 @@
 
 #include "multi_usb_handlers.h"
 
-#include "behaviour_bamble.h"
+#include "behaviours/behaviour_bamble.h"
 
 #include "midi_mapper_matrix_manager.h"
 

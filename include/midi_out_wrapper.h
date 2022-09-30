@@ -246,7 +246,7 @@ class MIDIOutputWrapper_LoopTrack : public MIDIOutputWrapper {
 };
 
 
-#include "behaviour_base.h"
+#include "behaviours/behaviour_base.h"
 
 class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
     public:

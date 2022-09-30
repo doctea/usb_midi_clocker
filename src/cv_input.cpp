@@ -13,9 +13,8 @@
 
 //#include "midi_mapper_matrix_manager.h"
 
-#include "behaviour_base.h"
-//#include "behaviour_manager.h"
-#include "behaviour_craftsynth.h"
+#include "behaviours/behaviour_base.h"
+#include "behaviours/behaviour_craftsynth.h"
 
 ParameterManager parameter_manager = ParameterManager();
 

@@ -1,6 +1,6 @@
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
-//#include "behaviour_apcmini.h"
+//#include "behaviours/behaviour_apcmini.h"
 /*#include "midi_usb_bamble.h"
 #include "midi_usb_beatstep.h"
 #include "midi_usb_keystep.h"

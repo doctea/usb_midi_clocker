@@ -1,5 +1,5 @@
 #include "Config.h"
-//#include "behaviour_apcmini->device.h"
+//#include "behaviours/behaviour_apcmini->device.h"
 #include "midi_apcmini_display.h"
 
 //#define ATOMIC(X) noInterrupts(); X; interrupts();
@@ -11,7 +11,7 @@
 #include "storage.h"
 #include "project.h"
 
-#include "behaviour_apcmini.h"
+#include "behaviours/behaviour_apcmini.h"
 
 /*const byte colour_intensity[] = {
   APCMINI_GREEN,

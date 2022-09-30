@@ -57,7 +57,7 @@ void do_tick(uint32_t ticks);
 
 #include "multi_usb_handlers.h"
 
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 #include "input_keyboard.h"
 

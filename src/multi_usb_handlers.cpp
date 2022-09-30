@@ -7,7 +7,7 @@
 
 #include "tft.h"
 
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32

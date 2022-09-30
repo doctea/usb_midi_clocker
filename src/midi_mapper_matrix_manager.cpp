@@ -5,16 +5,16 @@
 
 #include "midi_mapper_matrix_manager.h"
 
-#include "behaviour_bamble.h"
-#include "behaviour_craftsynth.h"
-#include "behaviour_mpk49.h"
-#include "behaviour_beatstep.h"
-#include "behaviour_keystep.h"
+#include "behaviours/behaviour_bamble.h"
+#include "behaviours/behaviour_craftsynth.h"
+#include "behaviours/behaviour_mpk49.h"
+#include "behaviours/behaviour_beatstep.h"
+#include "behaviours/behaviour_keystep.h"
 
-#include "behaviour_bitbox.h"
-#include "behaviour_neutron.h"
-#include "behaviour_lestrum.h"
-#include "behaviour_drumkit.h"
+#include "behaviours/behaviour_bitbox.h"
+#include "behaviours/behaviour_neutron.h"
+#include "behaviours/behaviour_lestrum.h"
+#include "behaviours/behaviour_drumkit.h"
 
 #include "midi_mapper_update_wrapper_menus.h"
 

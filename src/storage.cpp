@@ -3,7 +3,7 @@
 
 #include "project.h"
 
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 #include "SD.h"
 //#include "SdFat.h"

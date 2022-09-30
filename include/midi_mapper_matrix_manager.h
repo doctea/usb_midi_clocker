@@ -11,7 +11,7 @@
 
 void setup_midi_mapper_matrix_manager();
 
-//#include "behaviour_bamble.h"
+//#include "behaviours/behaviour_bamble.h"
 
 #define NUM_SOURCES 24
 #define NUM_TARGETS 24

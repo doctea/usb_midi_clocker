@@ -4,13 +4,13 @@
 #include "storage.h"
 #include "midi_looper.h"
 
-#include "behaviour_subclocker.h"
-/*#include "behaviour_beatstep.h"
-#include "behaviour_keystep.h"
-#include "behaviour_mpk49.h"*/
+#include "behaviours/behaviour_subclocker.h"
+/*#include "behaviours/behaviour_beatstep.h"
+#include "behaviours/behaviour_keystep.h"
+#include "behaviours/behaviour_mpk49.h"*/
 
 #include "midi_mapper_matrix_manager.h"
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
