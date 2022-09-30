@@ -285,8 +285,13 @@ class Project {
             myFile.printf("id=%i\n", save_to_project_number);
 
             // subclocker settings
-            myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
-            myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
+            //myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
+            //myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
+            LinkedList<String> behaviour_lines = LinkedList<String>();
+            behaviour_manager->save_project_add_lines(&behaviour_lines);
+            for (int i = 0 ; i < behaviour_lines.size() ; i++) {
+                myFile.println(behaviour_lines.get(i));
+            }
 
             // midi matrix settings
             for (int source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
@@ -344,10 +349,10 @@ class Project {
         void load_project_parse_line(String line) {
             if (line.charAt(0)==';') {
                 return;  // skip comment lines
-            } else if (line.startsWith("subclocker_divisor=")) {
+            /*} else if (line.startsWith("subclocker_divisor=")) {
                 behaviour_subclocker->set_divisor((int) line.remove(0,String("subclocker_divisor=").length()).toInt());
             } else if (line.startsWith("subclocker_delay_ticks=")) {
-                behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
+                behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());*/
             } else if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
                 // legacy save format, pre-matrix
                 Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
@@ -365,6 +370,10 @@ class Project {
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+            } else if (this->isLoadBehaviourOptions()) {
+                String key = line.substring(0, line.indexOf('='));
+                String value = line.substring(line.indexOf('=')+1);
+                behaviour_manager->load_project_parse_key_value(key, value);
             }
         }
 };

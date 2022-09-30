@@ -198,6 +198,44 @@ class DeviceBehaviourManager {
             }
         }
 
+        DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
+            for (int i = 0 ; i < this->behaviours.size() ; i++) {
+                if (label.equals(this->behaviours.get(i)->get_label()))
+                    return this->behaviours.get(i);
+            }
+        }
+
+        bool load_parse_key_value(String key, String value) {
+            static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
+            if (key.equals("behaviour_start")) {
+                current_behaviour = this->find_behaviour_for_label(value);
+                return true;
+            } else if (key.equals("behaviour_end")) {
+                current_behaviour = nullptr;
+                return true;
+            } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value))
+                return true;
+            }
+            return false;
+        }
+
+
+        void load_project_parse_key_value(String key, String value) {
+            Serial.printf("BehaviourManager#load_project_parse_key_value('%s', '%s')\n", key.c_str(), value.c_str());
+            //String initial_key = key.substring(0, key.indexOf('_'));
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                //if (behaviours.get(i)->matches(initial_key))
+                    if (behaviours.get(i)->parse_project_key_value(key, value))
+                        return;
+            }
+        }
+
+        void save_project_add_lines(LinkedList<String> *lines) { 
+            for (int i = 0 ; i < behaviours.size() ; i++) {
+                behaviours.get(i)->save_project_add_lines(lines);
+            }
+        }
+
         // ask behaviours if a sequence save key-value pair applies to them; early return if one is found
         void load_sequence_parse_key_value(String key, String value) {
             Serial.printf("BehaviourManager#load_sequence_parse_key_value('%s', '%s')\n", key.c_str(), value.c_str());
@@ -214,6 +252,7 @@ class DeviceBehaviourManager {
                 behaviours.get(i)->save_sequence_add_lines(lines);
             }
         }
+
 
         void reset_all_mappings() {
             for (int i = 0 ; i < behaviours.size() ; i++) {

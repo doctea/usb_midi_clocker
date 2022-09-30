@@ -130,6 +130,13 @@ class DeviceBehaviourUltimateBase {
         }
     }
 
+    virtual void save_project_add_lines(LinkedList<String> *lines) {
+
+    }
+    virtual bool parse_project_key_value(String key, String value) {
+        return false;
+    }
+
     virtual void save_sequence_add_lines(LinkedList<String> *lines) {
         // save all the parameter mapping settings 
         static String prefix = "parameter_" + this->get_label();
@@ -297,6 +304,26 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 Serial.println("\tin DividedClockedBehaviour on_restart, no device!");
             }
         }
+
+        virtual bool parse_sequence_key_value(String key, String value) override {
+            if (ClockedBehaviour::parse_project_key_value(key, value))
+                return true;
+            if (key.equals("divisor")) {
+                this->set_divisor((int) value.toInt());
+                returm true;
+            } else if (key.equals("delay_ticks")) {
+                this->set_delay_ticks(value.toInt());
+                return true;
+            }
+            return false;
+        }
+
+        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+            ClockedBehaviour::save_project_add_lines(lines);
+            lines->add("divisor=" + this->clock_divisor);
+            lines->add("delay_ticks=" + this->clock_delay_ticks);
+        }
+
 };
 
 #endif
