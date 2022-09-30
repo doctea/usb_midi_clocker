@@ -1,6 +1,6 @@
-#include "midi_out_wrapper.h"
+#include "midi/midi_out_wrapper.h"
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 void setup_pc_usb();
 void read_usb_from_computer();

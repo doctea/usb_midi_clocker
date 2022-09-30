@@ -42,10 +42,10 @@ void do_tick(uint32_t ticks);
 #endif
 
 //#include "usb.h"
-#include "midi_pc_usb.h"
+#include "midi/midi_pc_usb.h"
 
-#include "MidiMappings.h"
-#include "midi_outs.h"
+#include "midi/MidiMappings.h"
+#include "midi/midi_outs.h"
 
 #include "bpm.h"
 #include "clock.h"

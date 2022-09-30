@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 #include "Config.h"
 #include "behaviours/behaviour_base_serial.h"

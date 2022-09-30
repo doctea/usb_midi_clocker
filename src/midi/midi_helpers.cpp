@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "midi_helpers.h"
+#include "midi/midi_helpers.h"
 
 String get_note_name(int pitch) {
   if (pitch==-1 || pitch>127) {

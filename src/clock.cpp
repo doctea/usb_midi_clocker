@@ -1,6 +1,6 @@
 #include "Config.h"
 #include "clock.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 #ifdef USE_UCLOCK
 

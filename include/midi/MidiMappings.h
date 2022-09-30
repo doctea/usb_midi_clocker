@@ -5,7 +5,7 @@
 
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "midi_out_wrapper.h"
+#include "midi/midi_out_wrapper.h"
 
 //#ifdef ENABLE_BITBOX
 extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox;//      = &ENABLE_BITBOX;

@@ -5,7 +5,7 @@
 #include <USBHost_t36.h>
 #include <SdFat.h>
 
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 30
 

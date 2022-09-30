@@ -1,6 +1,6 @@
 #include "Config.h"
 //#include "behaviours/behaviour_apcmini->device.h"
-#include "midi_apcmini_display.h"
+#include "midi/midi_apcmini_display.h"
 
 //#define ATOMIC(X) noInterrupts(); X; interrupts();
 #define ATOMIC(X) X

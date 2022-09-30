@@ -4,7 +4,7 @@
 #include "Config.h"
 #include "ConfigMidi.h"
 #include "bpm.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 
 //#include "usb_device_handler.h"

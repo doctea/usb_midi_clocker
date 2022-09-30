@@ -5,7 +5,7 @@
 
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "MidiMappings.h"
+#include "midi/MidiMappings.h"
 
 #define NUM_MIDI_OUTS   8
 

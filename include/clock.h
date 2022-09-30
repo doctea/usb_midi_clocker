@@ -1,6 +1,6 @@
 #include "Config.h"
 #include "bpm.h"
-//#include "midi_outs.h"
+//#include "midi/midi_outs.h"
 
 #define CLOCK_INTERNAL          0
 #define CLOCK_EXTERNAL_USB_HOST 1

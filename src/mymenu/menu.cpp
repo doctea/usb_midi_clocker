@@ -25,9 +25,9 @@
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_neutron.h"
 
-#include "midi_out_wrapper.h"
-#include "midi_outs.h"
-#include "midi_pc_usb.h"
+#include "midi/midi_out_wrapper.h"
+#include "midi/midi_outs.h"
+#include "midi/midi_pc_usb.h"
 
 #include "behaviours/behaviour_subclocker.h"
 

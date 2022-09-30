@@ -4,11 +4,11 @@
 #include <LinkedList.h>
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "MidiMappings.h"
-//#include "midi_out_wrapper.h"
+#include "midi/MidiMappings.h"
+//#include "midi/midi_out_wrapper.h"
 
-#include "midi_mapper_matrix_types.h"
-//#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_types.h"
+//#include "midi/midi_mapper_matrix_manager.h"
 
 #include "bpm.h"
 

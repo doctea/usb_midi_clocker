@@ -2,7 +2,7 @@
 #include "Config.h"
 #include "ConfigMidi.h"
 
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 #include "behaviours/behaviour_bitbox.h"
 

@@ -3,12 +3,12 @@
 
 #include "Config.h"
 //#include "ConfigMidi.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
-#include "MidiMappings.h"
+#include "midi/MidiMappings.h"
 //#include "usb.h"
 
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 //////////////////////////////// SERIAL MIDI DIN INPUTS
 

@@ -5,15 +5,15 @@
 
 #include "Config.h"
 #include "behaviours/behaviour_base_usb.h"
-#include "midi_apcmini.h"
+#include "midi/midi_apcmini.h"
 #include "project.h"
 #include "clock.h"
 
 #include "multi_usb_handlers.h"
 
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
-#include "midi_apcmini_display.h"
+#include "midi/midi_apcmini_display.h"
 
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;

@@ -3,7 +3,7 @@
 
 #include "parameters/Parameter.h"
 
-#include "midi_out_wrapper.h"
+#include "midi/midi_out_wrapper.h"
 
 //template<class MIDIOutputWrapper, class DataType>
 //template<class OutputClass>

@@ -1,7 +1,7 @@
-#include "midi_pc_usb.h"
+#include "midi/midi_pc_usb.h"
 
-#include "midi_out_wrapper.h"
-#include "MidiMappings.h"
+#include "midi/midi_out_wrapper.h"
+#include "midi/MidiMappings.h"
 
 #include "clock.h"
 
@@ -11,7 +11,7 @@
 
 #include "behaviours/behaviour_bamble.h"
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 // TODO: turn this into a behaviour instead
 

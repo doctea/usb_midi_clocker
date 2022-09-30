@@ -1,8 +1,8 @@
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "MidiMappings.h"
-#include "midi_outs.h"
-#include "midi_out_wrapper.h"
+#include "midi/MidiMappings.h"
+#include "midi/midi_outs.h"
+#include "midi/midi_out_wrapper.h"
 
 void setup_midi_serial_devices() {
     // todo: move to DeviceBehaviourSerialBase..

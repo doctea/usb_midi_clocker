@@ -8,7 +8,7 @@
 
 #include "multi_usb_handlers.h"
 
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
 extern MIDIOutputWrapper *mpk49_output;
 void mpk49_setOutputWrapper(MIDIOutputWrapper *);

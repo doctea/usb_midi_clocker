@@ -2,7 +2,7 @@
 
 #if defined(ENABLE_LOOPER)
 
-//#include "midi_mpk49.h"
+//#include "midi/midi_mpk49.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "project.h"
 #include "mymenu.h"

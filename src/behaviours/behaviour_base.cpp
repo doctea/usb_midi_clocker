@@ -1,6 +1,6 @@
 #include "behaviours/behaviour_base.h"
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 // called when a receive_note_on message is received from the device
 void DeviceBehaviourUltimateBase::receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {

@@ -3,12 +3,12 @@
 
 #include <Arduino.h>
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 #include "Config.h"
 #include "behaviours/behaviour_base_serial.h"
 
-#include "Drums.h"
+#include "midi/Drums.h"
 
 void drumkit_note_on(byte pitch, byte velocity, byte channel);
 void drumkit_note_off(byte pitch, byte velocity, byte channel);

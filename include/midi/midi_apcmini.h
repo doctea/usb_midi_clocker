@@ -47,7 +47,7 @@
 void apcmini_loop(unsigned long ticks); 
 
 #ifdef ENABLE_APCMINI_DISPLAY
-    #include "midi_apcmini_display.h"
+    #include "midi/midi_apcmini_display.h"
 #endif
 
 void apcmini_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);

@@ -2,10 +2,10 @@
 #define MIDI_MAPPER_MATRIX__INCLUDED
 
 #include "Config.h"
-#include "midi_outs.h"
-#include "midi_out_wrapper.h"
+#include "midi/midi_outs.h"
+#include "midi/midi_out_wrapper.h"
 
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
 #include "LinkedList.h"
 
@@ -16,7 +16,7 @@ void setup_midi_mapper_matrix_manager();
 #define NUM_SOURCES 24
 #define NUM_TARGETS 24
 
-#include "midi_mapper_matrix_types.h"
+#include "midi/midi_mapper_matrix_types.h"
 
 class MIDITrack;
 class DeviceBehaviourUltimateBase;

@@ -1,7 +1,7 @@
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "MidiMappings.h"
-#include "midi_outs.h"
+#include "midi/MidiMappings.h"
+#include "midi/midi_outs.h"
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);

@@ -3,7 +3,7 @@
 
 #include "Config.h"
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 #include "behaviours/behaviour_bamble.h"
 #include "behaviours/behaviour_craftsynth.h"
@@ -16,9 +16,9 @@
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
 
-#include "midi_mapper_update_wrapper_menus.h"
+#include "midi/midi_mapper_update_wrapper_menus.h"
 
-#include "midi_pc_usb.h"
+#include "midi/midi_pc_usb.h"
 
 MIDIMatrixManager *midi_matrix_manager = nullptr;
 MIDIMatrixManager* MIDIMatrixManager::inst_ = nullptr;

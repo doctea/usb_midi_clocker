@@ -2,15 +2,15 @@
 #include <MIDI.h>
 
 #include "bpm.h"
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
-#include "midi_drums.h"
+#include "midi/midi_drums.h"
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 // TODO: rewrite all this to work a lot better, ie:-
 //      [DONE    >1 event per tick]

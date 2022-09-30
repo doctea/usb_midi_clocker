@@ -2,13 +2,13 @@
 
 #if defined(ENABLE_LOOPER)
 
-//#include "midi_mpk49.h"
+//#include "midi/midi_mpk49.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "project.h"
 #include "mymenu.h"
 #include "menu.h"
 
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
 class LooperDisplay : public MenuItem {
     public:

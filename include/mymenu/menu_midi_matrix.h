@@ -2,9 +2,9 @@
 #define MENU_MIDI_MATRIX__INCLUDED
 
 #include "Config.h"
-#include "midi_outs.h"
-#include "midi_out_wrapper.h"
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_outs.h"
+#include "midi/midi_out_wrapper.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 #include "menuitems.h"
 

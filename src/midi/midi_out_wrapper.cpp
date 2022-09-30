@@ -1,6 +1,6 @@
-#include "midi_out_wrapper.h"
+#include "midi/midi_out_wrapper.h"
 
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 #include "bpm.h"
 
 /*

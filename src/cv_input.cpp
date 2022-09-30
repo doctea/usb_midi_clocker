@@ -11,8 +11,6 @@
 
 #include "devices/ADCPimoroni24v.h"
 
-//#include "midi_mapper_matrix_manager.h"
-
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_craftsynth.h"
 

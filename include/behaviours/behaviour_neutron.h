@@ -7,7 +7,7 @@
 #include "behaviours/behaviour_base_serial.h"
 #include "bpm.h"
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
 
 class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour {
     public:

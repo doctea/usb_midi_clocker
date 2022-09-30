@@ -8,7 +8,7 @@
 
 #include <LinkedList.h>
 
-#include "midi_mapper_matrix_types.h"
+#include "midi/midi_mapper_matrix_types.h"
 
 #include "parameters/Parameter.h"
 
