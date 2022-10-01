@@ -3,8 +3,8 @@
 #ifdef ENABLE_SCREEN
     #include "menu.h"
 
-    LinkedList<MenuItem*> ClockedBehaviour::make_menu_items() {
-        LinkedList<MenuItem*> menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
+        DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
             String restart_label = String("Restart " + String(this->get_label()) + " on bar");
 
@@ -16,7 +16,7 @@
                 "Restarting.."
             );
 
-            menuitems.add(restart_action);
+            menuitems->add(restart_action);
         }
 
         return menuitems;
@@ -24,8 +24,9 @@
 
     #include "submenuitem_bar.h"
 
-    LinkedList<MenuItem*> DividedClockedBehaviour::make_menu_items() {
-        LinkedList<MenuItem*> menuitems = ClockedBehaviour::make_menu_items();
+    LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
+        DeviceBehaviourUltimateBase::make_menu_items();
+
         String bar_label = String(this->get_label()) + String(" Clock");
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
@@ -53,7 +54,9 @@
 
         bar->add(divisor_control);
         bar->add(delay_ticks_control);
-        menuitems.add(bar);
+        menuitems->add(bar);
+
+        ClockedBehaviour::make_menu_items();
 
         return menuitems;
     }

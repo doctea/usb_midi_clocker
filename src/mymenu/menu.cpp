@@ -117,62 +117,6 @@ BehavioursPanel behaviours_panel = BehavioursPanel();
 
 MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
 
-/*#ifdef ENABLE_SUBCLOCKER
-    ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_divisor_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
-        "Subclocker div", 
-        behaviour_subclocker, 
-        &DeviceBehaviour_Subclocker::set_divisor, 
-        &DeviceBehaviour_Subclocker::get_divisor, 
-        nullptr, // change callback on_subclocker_divisor_changed
-        1,  //min
-        48  //max
-    );
-    ObjectNumberControl<DeviceBehaviour_Subclocker,int> subclocker_delay_ticks_control = ObjectNumberControl<DeviceBehaviour_Subclocker,int>(
-        "Subclocker delay",
-        behaviour_subclocker,
-        &DeviceBehaviour_Subclocker::set_delay_ticks,
-        &DeviceBehaviour_Subclocker::get_delay_ticks,
-        nullptr,
-        0,
-        PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
-    );
-    ObjectActionItem<DeviceBehaviour_Subclocker> subclocker_restart_action = ObjectActionItem<DeviceBehaviour_Subclocker>(
-        "Restart Subclocker on bar",
-        behaviour_subclocker,
-        &DeviceBehaviour_Subclocker::set_restart_on_bar,
-        &DeviceBehaviour_Subclocker::is_set_restart_on_bar,
-        "Restarting.."
-    );
-#endif
-
-#ifdef ENABLE_BEATSTEP_DIVISOR
-    ObjectNumberControl<DeviceBehaviour_Beatstep,int> beatstep_divisor_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
-        "Beatstep div", 
-        behaviour_beatstep, 
-        &DeviceBehaviour_Beatstep::DividedClockedBehaviour::set_divisor, 
-        &DeviceBehaviour_Beatstep::DividedClockedBehaviour::get_divisor, 
-        nullptr, // change callback on_Beatstep_divisor_changed
-        1,  //min
-        48  //max
-    );
-    ObjectNumberControl<DeviceBehaviour_Beatstep,int> beatstep_delay_ticks_control = ObjectNumberControl<DeviceBehaviour_Beatstep,int>(
-        "Beatstep delay",
-        behaviour_beatstep,
-        &DeviceBehaviour_Beatstep::set_delay_ticks,
-        &DeviceBehaviour_Beatstep::get_delay_ticks,
-        nullptr,
-        0,
-        PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
-    );
-    ObjectActionItem<DeviceBehaviour_Beatstep> beatstep_restart_action = ObjectActionItem<DeviceBehaviour_Beatstep>(
-        "Restart Beatstep on bar",
-        behaviour_beatstep,
-        &DeviceBehaviour_Beatstep::set_restart_on_bar,
-        &DeviceBehaviour_Beatstep::is_set_restart_on_bar,
-        "Restarting.."
-    );
-#endif*/
-
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
@@ -272,7 +216,9 @@ void setup_menu() {
         menu->add(&beatstep_notes);
     #endif
 
+    Serial.println("...starting behaviour_manager#make_menu_items...");
     behaviour_manager->make_menu_items(menu);
+    Serial.println("...finished behaviour_manager#make_menu_items...");
 
     // sequencer
     #ifdef ENABLE_SEQUENCER

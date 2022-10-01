@@ -73,24 +73,36 @@ class DeviceBehaviourUltimateBase {
 
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
-        Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
+        //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
+        this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
-        Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
+        //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
+        this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change
     virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
-        Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
+        //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
+        this->actualSendControlChange(number, value, channel);
     };
     // tell the device to send a realtime message
     virtual void sendRealTime(uint8_t message) {
-        Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
+        //Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
+        this->actualSendRealTime(message);
     };    
     virtual void sendNow() {
-
     };
 
+    // use the underlying object to actually send a value
+    virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+    }
+    virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+    }
+    virtual void actualSendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
+    }
+    virtual void actualSendRealTime(uint8_t message) {
+    }
 
     // parameter handling shit
     LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
@@ -193,9 +205,11 @@ class DeviceBehaviourUltimateBase {
     }
 
     #ifdef ENABLE_SCREEN
-        virtual LinkedList<MenuItem*> make_menu_items() {
-            LinkedList<MenuItem*> menuitems = LinkedList<MenuItem*>();
-            return menuitems;
+        LinkedList<MenuItem*> *menuitems = nullptr;
+        virtual LinkedList<MenuItem*> *make_menu_items() {
+            if (this->menuitems == nullptr)
+                this->menuitems = new LinkedList<MenuItem*>();
+            return this->menuitems;
         }
     #endif
     

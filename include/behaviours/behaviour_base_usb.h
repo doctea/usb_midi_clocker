@@ -61,19 +61,19 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             while(this->device->read()); 
         };
 
-        virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (!is_connected()) return;
             this->device->sendNoteOn(note, velocity, channel);
         };
-        virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (!is_connected()) return;
             this->device->sendNoteOff(note, velocity, channel);
         };
-        virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
+        virtual void actualSendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
             if (!is_connected()) return;
             this->device->sendControlChange(number, value, channel);
         };
-        virtual void sendRealTime(uint8_t message) override {
+        virtual void actualSendRealTime(uint8_t message) override {
             if (!is_connected()) return;
             this->device->sendRealTime(message);
         };

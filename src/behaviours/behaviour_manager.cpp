@@ -109,9 +109,11 @@ void setup_behaviour_manager() {
 #ifdef ENABLE_SCREEN
     void DeviceBehaviourManager::make_menu_items(Menu *menu) {
         for (int i = 0 ; i < behaviours.size() ; i++) {
-            LinkedList<MenuItem *> items = behaviours.get(i)->make_menu_items();
-            for (int n = 0 ; n < items.size() ; n++) {
-                menu->add(items.get(n));
+            Serial.printf("\t%i: calling make_menu_items on behaviour '%s'\n", i, behaviours.get(i)->get_label()); Serial.flush(); 
+            LinkedList<MenuItem *> *menuitems = behaviours.get(i)->make_menu_items();
+            for (int n = 0 ; n < menuitems->size() ; n++) {
+                Serial.printf("\t\tadding menuitem '%s'\n", menuitems->get(n)->label);
+                menu->add(menuitems->get(n));
             }
         }
     }

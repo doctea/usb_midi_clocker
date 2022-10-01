@@ -1,17 +1,18 @@
-//#define USE_UCLOCK  // experimental: crashes a lot
+//#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
-//#define WAIT_FOR_SERIAL       // wait for serial terminal before starting setup -- for debugging startup
+#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
-//#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here?
-
+//#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
 //#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
-#define ENABLE_CV_INPUT 0x49
-#define TIME_BETWEEN_CV_INPUT_UPDATES 25
-#define FAST_VOLTAGE_READS
+//// CV input options
+#define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
+#define TIME_BETWEEN_CV_INPUT_UPDATES 25    
+#define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 
+// enable USB typing keyboard as a control method
 #define ENABLE_TYPING_KEYBOARD
 
 #define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
@@ -57,6 +58,7 @@
 //#define ENABLE_DRUM_LOOPER
 
 // enable transposing beatstep to a particular octave
+#define ENABLE_NEUTRON
 #define ENABLE_BASS_TRANSPOSE MIDI3
 #define DEFAULT_NEUTRON_OCTAVE 2    // set to 1 for 'disabled'
 
@@ -64,6 +66,8 @@
 //#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead
 
 //#define ENABLE_CRAFTSYNTH   // serial MIDI version
+
+#define ENABLE_DISTING
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI

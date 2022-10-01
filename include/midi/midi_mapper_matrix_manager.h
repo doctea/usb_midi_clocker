@@ -201,11 +201,16 @@ class MIDIMatrixManager {
         return this->register_target(make_midioutputwrapper(handle, target));
     }
     target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
-        Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s'\n", handle);
         strcpy(targets[targets_count].handle, handle);
         targets[targets_count].wrapper = target;
+        Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n", handle, targets_count);
         return targets_count++;
     }
+    /*target_id_t register_target(DeviceBehaviourUltimateBase *target, const char *handle) {
+        Serial.printf("midi_mapper_matrix_manager#register_target(DeviceBehaviour) registering handle '%s'\n", handle);
+        MIDIOutputWrapper_Behaviour wrapper = make_midioutputwrapper(handle, target, )
+        target->target_id = targets_count;
+    }*/
 
     target_id_t get_target_id_for_handle(const char *handle) {
         Serial.printf("get_target_id_for_handle(%s)\n", handle);
