@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "behaviours/behaviour_base_serial.h"
+#include "behaviours/behaviour_clocked.h"
 #include "bpm.h"
 
 class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public ClockedBehaviour {

@@ -8,6 +8,7 @@
 #ifdef ENABLE_BEATSTEP
 
 #include "behaviours/behaviour_base_usb.h"
+#include "behaviours/behaviour_clocked.h"
 
 #include "multi_usb_handlers.h"
 

@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "behaviours/behaviour_base_serial.h"
+#include "behaviours/behaviour_clocked.h"
 #include "bpm.h"
 
 #include "midi/midi_mapper_matrix_manager.h"

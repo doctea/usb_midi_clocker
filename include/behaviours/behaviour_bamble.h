@@ -5,6 +5,7 @@
 
 #include "Config.h"
 #include "behaviours/behaviour_base.h"
+#include "behaviours/behaviour_clocked.h"
 #include "project.h"
 #include "clock.h"
 
@@ -74,7 +75,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
 
         virtual void init() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
-            started = false;
+            this->started = false;
 
             #ifdef ENABLE_BAMBLE_INPUT
                 // enable midi echo - crashes it ?
