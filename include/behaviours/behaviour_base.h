@@ -201,13 +201,15 @@ class DeviceBehaviourUltimateBase {
     
 };
 
-
 class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
-
     public:
         bool restart_on_bar = true;
         bool started = false;
         bool clock_enabled = true;
+
+        virtual bool should_show_restart_option() {
+            return false;
+        }
 
         virtual void send_clock(uint32_t ticks) override {
             if (!is_connected()) return;
@@ -252,6 +254,10 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual bool isClockEnabled() {
             return this->clock_enabled;
         }
+
+        #ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem*> make_menu_items() override;
+        #endif
 };
 
 #include "bpm.h"
@@ -261,6 +267,10 @@ class DividedClockedBehaviour : public ClockedBehaviour {
     public:
         unsigned long clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
         int clock_divisor = 1; //DEFAULT_DIVISOR;
+        
+        virtual bool should_show_restart_option() override {
+            return true;
+        }
 
         virtual void set_delay_ticks(int delay_ticks) {
             this->clock_delay_ticks = delay_ticks;
@@ -335,7 +345,6 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         #ifdef ENABLE_SCREEN
             virtual LinkedList<MenuItem*> make_menu_items() override;
         #endif
-
 };
 
 #endif

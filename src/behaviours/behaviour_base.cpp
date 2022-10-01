@@ -19,9 +19,32 @@ void DeviceBehaviourUltimateBase::receive_control_change (uint8_t inChannel, uin
 
 #ifdef ENABLE_SCREEN
     #include "menu.h"
-    //#include "menuitems_numbers.h"
+
+    LinkedList<MenuItem*> ClockedBehaviour::make_menu_items() {
+        LinkedList<MenuItem*> menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+        if (this->should_show_restart_option()) {
+            String restart_label = String("Restart " + String(this->get_label()) + " on bar");
+
+            ObjectActionItem<ClockedBehaviour> *restart_action = new ObjectActionItem<ClockedBehaviour>(
+                restart_label.c_str(),
+                this,
+                &ClockedBehaviour::set_restart_on_bar,
+                &ClockedBehaviour::is_set_restart_on_bar,
+                "Restarting.."
+            );
+
+            menuitems.add(restart_action);
+        }
+
+        return menuitems;
+    }
+
+    #include "submenuitem_bar.h"
+
     LinkedList<MenuItem*> DividedClockedBehaviour::make_menu_items() {
         LinkedList<MenuItem*> menuitems = ClockedBehaviour::make_menu_items();
+        String bar_label = String(this->get_label()) + String(" Clock");
+        SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
         ObjectNumberControl<DividedClockedBehaviour,int> *divisor_control = new ObjectNumberControl<DividedClockedBehaviour,int>(
             "Divider",
@@ -42,23 +65,12 @@ void DeviceBehaviourUltimateBase::receive_control_change (uint8_t inChannel, uin
             0,
             PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
         );
-        ObjectActionItem<DividedClockedBehaviour> *restart_action = new ObjectActionItem<DividedClockedBehaviour>(
-            "Restart on bar",
-            this,
-            &DividedClockedBehaviour::set_restart_on_bar,
-            &DividedClockedBehaviour::is_set_restart_on_bar,
-            "Restarting.."
-        );
 
         divisor_control->go_back_on_select = delay_ticks_control->go_back_on_select = true; 
-        /*restart_action.target_object = 
-            divisor_control.target_object = 
-                delay_ticks_control.target_object = 
-                    behaviour_subclocker;   // because behaviour_subclocker pointer won't be set before now..?*/
 
-        menuitems.add(divisor_control);
-        menuitems.add(delay_ticks_control);
-        menuitems.add(restart_action);
+        bar->add(divisor_control);
+        bar->add(delay_ticks_control);
+        menuitems.add(bar);
 
         return menuitems;
     }
