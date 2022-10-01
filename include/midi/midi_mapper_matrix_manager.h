@@ -219,9 +219,14 @@ class MIDIMatrixManager {
         return -1;
     }
     MIDIOutputWrapper *get_target_for_handle(char *handle) {
-        return this->targets[this->get_target_id_for_handle(handle)].wrapper;
+        //return this->targets[this->get_target_id_for_handle(handle)].wrapper;
+        return this->get_target_for_id(this->get_target_id_for_handle(handle));
     }
-
+    MIDIOutputWrapper *get_target_for_id(target_id_t target_id) {
+        if (target_id>=0 && targets[target_id].wrapper!=nullptr)
+            return targets[target_id].wrapper;
+        return nullptr;
+    }
 
     private:
         // stuff for making singleton

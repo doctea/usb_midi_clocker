@@ -13,9 +13,7 @@
 /*void subclocker_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void subclocker_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void subclocker_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);*/
-
 /*void on_subclocker_divisor_changed(int new_value, int old_value) {
-
 }*/
 
 class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {

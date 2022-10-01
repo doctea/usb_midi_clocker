@@ -9,7 +9,6 @@
 DeviceBehaviour_Neutron behaviour_neutron = DeviceBehaviour_Neutron(); //(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>>*)nullptr, &ENABLE_BASS); //midi_out_serial[2]);
 
 #ifdef ENABLE_SCREEN
-
     #include "menu.h"
     #include "menuitems_object.h"
     #include "submenuitem_bar.h"
@@ -19,7 +18,9 @@ DeviceBehaviour_Neutron behaviour_neutron = DeviceBehaviour_Neutron(); //(midi::
         #ifdef ENABLE_BASS_TRANSPOSE
             SubMenuItemBar *bar = new SubMenuItemBar(this->get_label());
 
-            MIDIOutputWrapper_Behaviour *neutron_wrapper = (MIDIOutputWrapper_Behaviour *)midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4");
+            //MIDIOutputWrapper_Behaviour *neutron_wrapper = (MIDIOutputWrapper_Behaviour *)midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4");
+            //neutron_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
+            MIDIOutputWrapper *neutron_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
 
             HarmonyStatus *neutron_harmony = new HarmonyStatus("Neutron output", 
                 &neutron_wrapper->last_transposed_note, 
