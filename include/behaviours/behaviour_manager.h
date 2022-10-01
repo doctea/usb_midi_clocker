@@ -32,7 +32,6 @@ class DeviceBehaviourManager {
             this->behaviours_usb.add(behaviour);
             this->behaviours.add(behaviour);
         }
-
         void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
                 Serial.println("registerBehaviour<DeviceSerialBase> passed a nullptr!"); Serial.flush();
@@ -48,25 +47,21 @@ class DeviceBehaviourManager {
             const int size = behaviours_usb.size();
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUSBBase *behaviour = behaviours_usb.get(i);
-                //if (behaviour->getType()==BehaviourType::usb) {
-                    //DeviceBehaviourUSBBase *usb_behaviour = behaviour;
-                    //if (this->debug) 
-                    Serial.printf("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n", i, packed_id);
-                    usb_midi_slots[idx].packed_id = packed_id;
-                    if (behaviour->matches_identifiers(packed_id)) {
-                        Serial.printf("\tDetected!  Behaviour %i on usb midi idx %i\n", i, idx); //-- does it match %u?\n", i, packed_id);
-                        behaviour->connect_device(usb_midi_slots[idx].device);
-                        return true;
-                    } else {
-                        Serial.printf("Didn't find a behaviour for %u, %08X!", idx, packed_id);
-                    }
-                //}
+                Serial.printf("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n", i, packed_id);
+                usb_midi_slots[idx].packed_id = packed_id;
+                if (behaviour->matches_identifiers(packed_id)) {
+                    Serial.printf("\tDetected!  Behaviour %i on usb midi idx %i\n", i, idx); //-- does it match %u?\n", i, packed_id);
+                    behaviour->connect_device(usb_midi_slots[idx].device);
+                    return true;
+                }
             }
+            Serial.printf("Didn't find a behaviour for device #%u with %08X!\n", idx, packed_id);
             return false;
         }
 
         void do_reads() {
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours.get(i)); Serial.flush();
                 behaviours.get(i)->read();
                 //Serial.printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours.get(i)); Serial.flush();
@@ -130,31 +125,23 @@ class DeviceBehaviourManager {
                 behaviours.get(i)->send_clock(ticks);
                 //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial.flush();
             }  
-            /*size = behaviours_serial.size();
-            for (int i = 0 ; i < size ; i++) {
-                behaviours_serial.get(i)->send_clock(ticks);
-            }*/
         }
 
         void do_phrase(int phrase) {
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours.get(i)->on_phrase(phrase);
             }
-            /*size = behaviours_serial.size();
-            for (int i = 0 ; i < size ; i++) {
-                behaviours_serial.get(i)->on_phrase(phrase);
-            }*/
         }
 
         void do_bar(int bar) {
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours.get(i)->on_bar(bar);
             }
         }
         void do_end_bar(int bar) {
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours.get(i)->on_end_bar(bar);
             }
@@ -164,26 +151,26 @@ class DeviceBehaviourManager {
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours.get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
-                    behaviours.get(i)->loop(temp_tick);
+                    behaviour->loop(temp_tick);
                     //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial.flush();
                 }
             }
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 behaviours.get(i)->on_pre_clock(in_ticks);
             }
         }
 
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial.flush();
                 behaviours.get(i)->on_tick(in_ticks);
@@ -192,7 +179,7 @@ class DeviceBehaviourManager {
         }
 
         void on_restart() {
-            int size = behaviours.size();
+            const int size = behaviours.size();
             for(int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
                 behaviours.get(i)->on_restart();
@@ -206,9 +193,11 @@ class DeviceBehaviourManager {
 
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
-            for (int i = 0 ; i < this->behaviours.size() ; i++) {
-                if (label.equals(this->behaviours.get(i)->get_label()))
-                    return this->behaviours.get(i);
+            const int size = this->behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
+                DeviceBehaviourUltimateBase *device = this->behaviours.get(i);
+                if (label.equals(device->get_label()))
+                    return device;
             }
             return nullptr;
         }
@@ -240,25 +229,30 @@ class DeviceBehaviourManager {
 
         // ask each behaviour to add option lines to save project file
         void save_project_add_lines(LinkedList<String> *lines) {
-            for (int i = 0 ; i < behaviours.size() ; i++) {
-                lines->add("behaviour_start=" + String(behaviours.get(i)->get_label()));
-                behaviours.get(i)->save_project_add_lines(lines);
-                lines->add("behaviour_end=" + String(behaviours.get(i)->get_label()));
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
+                DeviceBehaviourUltimateBase *device = behaviours.get(i);
+                lines->add("behaviour_start=" + String(device->get_label()));
+                device->save_project_add_lines(lines);
+                lines->add("behaviour_end=" + String(device->get_label()));
             }
         }
 
         // ask each behaviour to add option lines to save sequence file
         void save_sequence_add_lines(LinkedList<String> *lines) {
             //LinkedList<String> lines = LinkedList<String>();
-            for (int i = 0 ; i < behaviours.size() ; i++) {
-                lines->add("behaviour_start=" + String(behaviours.get(i)->get_label()));
-                behaviours.get(i)->save_sequence_add_lines(lines);
-                lines->add("behaviour_end=" + String(behaviours.get(i)->get_label()));
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
+                DeviceBehaviourUltimateBase *device = behaviours.get(i);
+                lines->add("behaviour_start=" + String(device->get_label()));
+                device->save_sequence_add_lines(lines);
+                lines->add("behaviour_end=" + String(device->get_label()));
             }
         }
 
         void reset_all_mappings() {
-            for (int i = 0 ; i < behaviours.size() ; i++) {
+            const int size = behaviours.size();
+            for (int i = 0 ; i < size ; i++) {
                 behaviours.get(i)->reset_all_mappings();
             }
         }
