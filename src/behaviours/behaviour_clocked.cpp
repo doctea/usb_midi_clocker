@@ -49,11 +49,19 @@
             0,
             PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
         );
+        ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
+            "Auto-restart",
+            this,
+            &DividedClockedBehaviour::set_auto_restart_on_change,
+            &DividedClockedBehaviour::should_auto_restart_on_change,
+            nullptr
+        );
 
         divisor_control->go_back_on_select = delay_ticks_control->go_back_on_select = true; 
 
         bar->add(divisor_control);
         bar->add(delay_ticks_control);
+        bar->add(auto_restart_control);
         menuitems->add(bar);
 
         ClockedBehaviour::make_menu_items();

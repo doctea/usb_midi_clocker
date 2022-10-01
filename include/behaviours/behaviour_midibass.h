@@ -19,11 +19,14 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 this->kill_drone_note();
                 this->last_drone_note = -1;
             } else if (!this->drone_enabled && value) {
+                // turning drone on
                 // should kill any (non-drone) notes that we have playing... except thats handled by the MIDIOutputWrapper that's wrapped around this behaviour, rather than the output that this is connected to.  
                 // hmmm.  so, how do we untangle this?  should DeviceBehaviours be subclasses of MIDIOutputWrapper too?
-                // TODO: yeah this ugly af kludge should work for now
-                if (this->target_id == -1)     // at least cache it
-                    target_id = midi_matrix_manager->get_target_id_for_handle("S3 : Neutron : ch 4");
+                    // TODO: yeah this ugly af kludge should work for now
+                    //if (this->target_id == -1)     // at least cache it
+                    //    target_id = midi_matrix_manager->get_target_id_for_handle("S3 : Neutron : ch 4");
+                if (this->target_id == -1)
+                    Serial.printf("WARNING: MIDIBassBehaviour#set_drone has target_id of -1 in %s!\n", this->get_label());
                 midi_matrix_manager->stop_all_notes_for_target(this->target_id);
             }
             this->drone_enabled = value;
@@ -42,8 +45,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void send_drone_note() {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
             if (last_drone_note>=0) {
-                //if (this->debug) 
-                Serial.printf("\t\tsend_drone_note sending (%i, %i, %i)\n", last_drone_note, 127, drone_channel);
+                if (this->debug) Serial.printf("\t\tsend_drone_note sending (%i, %i, %i)\n", last_drone_note, 127, drone_channel);
                 DeviceBehaviourUltimateBase::sendNoteOn(last_drone_note, 127, drone_channel);
             }
         }
@@ -71,8 +73,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 if (this->debug) Serial.printf("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n");
                 if (last_drone_note==-1 && new_bar) {
                     last_drone_note = pitch;
-                    //if (this->debug) 
-                    Serial.printf("\tDeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i) got new last_drone_note: %i\n", pitch, velocity, channel, last_drone_note);
+                    if (this->debug) Serial.printf("\tDeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i) got new last_drone_note: %i\n", pitch, velocity, channel, last_drone_note);
                     new_bar = false;
                     drone_channel = channel;
                     this->send_drone_note();

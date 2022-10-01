@@ -70,18 +70,35 @@ class DividedClockedBehaviour : public ClockedBehaviour {
     public:
         unsigned long clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
         int clock_divisor = 1; //DEFAULT_DIVISOR;
-        
+        bool auto_restart_on_change = true;
+
         virtual bool should_show_restart_option() override {
             return true;
         }
 
+        // check if we should set the restart_on_bar flag when one of the delay_ticks or divisor value changes
+        bool should_auto_restart_on_change () {
+            return this->auto_restart_on_change;
+        }
+        // set if we should set the restart_on_bar flag when one of the delay_ticks or divisor value changes
+        void set_auto_restart_on_change(bool value) {
+            this->auto_restart_on_change = value;
+        }
+
+        // set how many ticks we should wait after a restart before we start playing (effectively an offset)
         virtual void set_delay_ticks(int delay_ticks) {
+            if ((uint16_t)delay_ticks != this->clock_delay_ticks && this->should_auto_restart_on_change())
+                this->set_restart_on_bar(true);
             this->clock_delay_ticks = delay_ticks;
         }
         virtual int get_delay_ticks() {
             return this->clock_delay_ticks;
         }
+
+        // set how many real ticks count for one of our internal ticks -- for use in doing half-time, etc 
         virtual void set_divisor (int divisor) {
+            if (divisor!=this->get_divisor() && this->should_auto_restart_on_change()) 
+                this->set_restart_on_bar(true);
             this->clock_divisor = divisor;
         }
         virtual int get_divisor() {
@@ -91,7 +108,10 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         int32_t real_ticks = 0;
         virtual void send_clock(unsigned long ticks) override {
             this->real_ticks = ticks;
-            if (ticks<clock_delay_ticks) return;
+            if (ticks<clock_delay_ticks) {
+                Serial.printf("DividedClockBehaviour with tick %i, not sending because haven't reached clock_delay_ticks of %i\n", ticks, clock_delay_ticks);
+                return;
+            }
 
             /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
                 DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
@@ -113,7 +133,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         virtual void on_restart() override {
-            Serial.println("\ton_restart() in DividedClockedBehaviour");
+            Serial.printf("\ton_restart() in DividedClockedBehaviour for %s", this->get_label());
             if (this->is_connected() && this->clock_enabled) {
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
