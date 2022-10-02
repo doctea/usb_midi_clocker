@@ -21,8 +21,8 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void on_bar(int bar_number) override {
-            //Serial.printf("ClockedBehaviour#on_bar in %p\n", this);
             if (this->restart_on_bar) {
+                Serial.printf("%s:\tClockedBehaviour#on_bar and restart_on_bar set!\n", this->get_label());
                 this->restart_on_bar = false;
                 this->on_restart();
             }
@@ -114,6 +114,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 return;
             }
             if (waiting) {
+                Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n", this->get_label(), real_ticks, clock_delay_ticks);
+                //this->on_restart(); = true;
+                this->started = true;
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
                 if (this->debug) Serial.println("\tnot waiting anymore!\n");
                 waiting = false;
@@ -127,7 +130,8 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
                 DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
             }*/
-            if (is_bpm_on_bar(real_ticks - clock_delay_ticks)) {
+            if (is_bpm_on_bar(real_ticks, clock_delay_ticks)) {
+                Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n", this->get_label(), real_ticks, clock_delay_ticks);
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
             }
 
@@ -136,21 +140,21 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
         
         // actually, we do want to respond to on_bar, because that's when we actually need to start the delay from!
-        /*virtual void on_bar(int bar_number) override {
+        virtual void on_bar(int bar_number) override {
             // don't do anything - handle the delayed clocks in send_clock
             //if (is_bpm_on_bar(real_ticks - clock_delay_ticks))
-        }*/
+        }
         virtual void on_phrase(uint32_t phrase_number) override {
             // don't do anything - handle the delayed clocks in send_clock
         }
 
         virtual void on_restart() override {
-            Serial.printf("\ton_restart() in DividedClockedBehaviour for %s\n", this->get_label());
+            Serial.printf("%s: on_restart() in DividedClockedBehaviour\n", this->get_label());
             if (this->is_connected() && this->clock_enabled) {
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
                 //this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
                 //this->sendNow();
-                this->started = true;
+                this->started = false;
                 this->real_ticks = 0;
                 this->waiting = true;
             } else {

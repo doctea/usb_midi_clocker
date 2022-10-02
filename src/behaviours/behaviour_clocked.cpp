@@ -23,6 +23,9 @@
     }
 
     #include "submenuitem_bar.h"
+    //#include "mymenu/menu_delayticks.h"
+    #include "menuitems.h"
+    #include "menuitems_selector.h"
 
     LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
@@ -40,15 +43,26 @@
             1,  //min
             48  //max
         );
-        ObjectNumberControl<DividedClockedBehaviour,int> *delay_ticks_control = new ObjectNumberControl<DividedClockedBehaviour,int>(
-            "Delay",
+
+        ObjectSelectorControl<DividedClockedBehaviour,int> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,int>(
+            "Delay (beats)",
             this,
             &DividedClockedBehaviour::set_delay_ticks,
             &DividedClockedBehaviour::get_delay_ticks,
-            nullptr,
-            0,
-            PPQN * BEATS_PER_BAR * BARS_PER_PHRASE
-        );
+            nullptr
+        );       
+        delay_ticks_control->add_available_value(0,     "None");
+        delay_ticks_control->add_available_value(PPQN/4,"1/4");
+        delay_ticks_control->add_available_value(PPQN/2,"1/2");
+        delay_ticks_control->add_available_value(PPQN,  "1");
+        delay_ticks_control->add_available_value(PPQN*2,"2");
+        delay_ticks_control->add_available_value(PPQN*3,"3");
+        delay_ticks_control->add_available_value(PPQN*4,"4");
+        delay_ticks_control->add_available_value(PPQN*5,"5");
+        delay_ticks_control->add_available_value(PPQN*6,"6");
+        delay_ticks_control->add_available_value(PPQN*7,"7");
+        delay_ticks_control->add_available_value(PPQN*8,"8");
+
         ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
             "Auto-restart",
             this,
