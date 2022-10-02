@@ -86,8 +86,8 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         // set how many ticks we should wait after a restart before we start playing (effectively an offset)
-        virtual void set_delay_ticks(int delay_ticks) {
-            if ((uint16_t)delay_ticks != this->clock_delay_ticks && this->should_auto_restart_on_change())
+        virtual void set_delay_ticks(uint32_t delay_ticks) {
+            if ((uint32_t)delay_ticks != this->clock_delay_ticks && this->should_auto_restart_on_change())
                 this->set_restart_on_bar(true);
             this->clock_delay_ticks = delay_ticks;
         }
@@ -101,15 +101,19 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->set_restart_on_bar(true);
             this->clock_divisor = divisor;
         }
-        virtual int get_divisor() {
+        virtual uint32_t get_divisor() {
             return this->clock_divisor;
         }
 
         int32_t real_ticks = 0;
         bool waiting = true;
         virtual void send_clock(unsigned long ticks) override {
-            real_ticks = ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE);
-            if (waiting && (real_ticks) < clock_delay_ticks) {
+            uint32_t tick_of_phrase = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE));
+            //real_ticks = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE)) - clock_delay_ticks;
+            //real_ticks++;
+            real_ticks = (int32_t)tick_of_phrase - clock_delay_ticks;
+            //if (this->waiting && real_ticks<0) { //(real_ticks) < clock_delay_ticks) {
+            if (this->waiting && tick_of_phrase < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
                 if (this->debug) Serial.printf("DividedClockBehaviour with phrase tick %i, not sending because real_ticks %i haven't reached clock_delay_ticks of %i\n", ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE), real_ticks, clock_delay_ticks);
                 return;
             }
@@ -117,6 +121,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n", this->get_label(), real_ticks, clock_delay_ticks);
                 //this->on_restart(); = true;
                 this->started = true;
+                this->sendRealTime((uint8_t)(midi::Stop)); //sendStart();
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
                 if (this->debug) Serial.println("\tnot waiting anymore!\n");
                 waiting = false;
@@ -130,7 +135,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
                 DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
             }*/
-            if (is_bpm_on_bar(real_ticks, clock_delay_ticks)) {
+            if (is_bpm_on_bar(real_ticks)) { //}, clock_delay_ticks)) {
                 Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n", this->get_label(), real_ticks, clock_delay_ticks);
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
             }
@@ -155,8 +160,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 //this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
                 //this->sendNow();
                 this->started = false;
-                this->real_ticks = 0;
+                //this->real_ticks = this->clock_delay_ticks * -1;
                 this->waiting = true;
+                Serial.printf("%s:\tsetting waiting!", this->get_label());
             } else {
                 Serial.println("\tin DividedClockedBehaviour on_restart, no device!");
             }

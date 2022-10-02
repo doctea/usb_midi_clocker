@@ -76,7 +76,15 @@
         bar->add(divisor_control);
         bar->add(delay_ticks_control);
         bar->add(auto_restart_control);
+
         menuitems->add(bar);
+
+        SubMenuItemBar *bar2 = new SubMenuItemBar("debug bar");
+
+        bar2->add(new NumberControl<uint32_t>("ticks", (uint32_t*)&ticks, (uint32_t)ticks, (uint32_t)0, (uint32_t)2*32, nullptr));
+        bar2->add(new NumberControl<int32_t>("real_ticks", &real_ticks, (int32_t)real_ticks, (int32_t)0, (int32_t)2*31, nullptr));
+        bar2->add(new NumberControl<bool>("waiting", &waiting, false, false, true, nullptr));
+        menuitems->add(bar2);
 
         ClockedBehaviour::make_menu_items();
 
