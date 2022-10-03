@@ -68,12 +68,10 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
 
 class DividedClockedBehaviour : public ClockedBehaviour {
     public:
-        uint32_t  clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
-        uint32_t  clock_divisor = 1; //DEFAULT_DIVISOR;
+        uint32_t clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
+        uint32_t clock_divisor = 1; //DEFAULT_DIVISOR;
         bool auto_restart_on_change = true;
         byte pause_during_delay = false;
-
-
 
         virtual bool should_show_restart_option() override {
             return true;
