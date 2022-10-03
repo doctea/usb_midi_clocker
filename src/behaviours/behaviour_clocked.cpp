@@ -71,25 +71,30 @@
             nullptr
         );
 
-        //ObjectToggleControl<DividedClockedBehaviour> *pause_during_delay_control = new ObjectToggleControl<DividedClockedBehaviour>(
-        ObjectSelectorControl<DividedClockedBehaviour,byte> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,byte>(
-            "Start pause",
-            this,
-            &DividedClockedBehaviour::set_pause_during_delay,
-            &DividedClockedBehaviour::get_pause_during_delay,
-            nullptr
-        );
-        pause_during_delay_control->add_available_value(DELAY_PAUSE::OFF,    "Off");
-        pause_during_delay_control->add_available_value(DELAY_PAUSE::BAR,    "Bar");
-        pause_during_delay_control->add_available_value(DELAY_PAUSE::TWO_BAR,"2Bar");
-        pause_during_delay_control->add_available_value(DELAY_PAUSE::PHRASE, "Phrase");
+        //#define ENABLE_PAUSE_DURING_DELAY_CONTROL
+        #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
+            //ObjectToggleControl<DividedClockedBehaviour> *pause_during_delay_control = new ObjectToggleControl<DividedClockedBehaviour>(
+            ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
+                "Start pause",
+                this,
+                &DividedClockedBehaviour::set_pause_during_delay,
+                &DividedClockedBehaviour::get_pause_during_delay,
+                nullptr
+            );
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::OFF,    "Off");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::BAR,    "Bar");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::TWO_BAR,"2Bar");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::PHRASE, "Phrase");
+        #endif
         
         divisor_control->go_back_on_select = delay_ticks_control->go_back_on_select = true; 
 
         bar->add(divisor_control);
         bar->add(delay_ticks_control);
         bar->add(auto_restart_control);
-        bar->add(pause_during_delay_control);
+        #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
+            bar->add(pause_during_delay_control);
+        #endif
 
         menuitems->add(bar);
 

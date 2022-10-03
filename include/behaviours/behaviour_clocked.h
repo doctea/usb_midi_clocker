@@ -78,11 +78,11 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         // check if we should set the restart_on_bar flag when one of the delay_ticks or divisor value changes
-        virtual bool should_auto_restart_on_change () {
+        bool should_auto_restart_on_change () {
             return this->auto_restart_on_change;
         }
         // set if we should set the restart_on_bar flag when one of the delay_ticks or divisor value changes
-        virtual void set_auto_restart_on_change(bool value) {
+        void set_auto_restart_on_change(bool value) {
             this->auto_restart_on_change = value;
         }
 
@@ -110,13 +110,13 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         enum DELAY_PAUSE {
             OFF, BAR, TWO_BAR, PHRASE
         };
-        virtual void set_pause_during_delay (byte value) {
+        virtual void set_pause_during_delay (uint32_t value) {
             this->pause_during_delay = value;
         }
-        virtual byte get_pause_during_delay() {
+        virtual uint32_t get_pause_during_delay() {
             return this->pause_during_delay;
         }
-        virtual bool should_pause_during_delay(byte type) {
+        virtual bool should_pause_during_delay(uint32_t type) {
             return this->pause_during_delay >= type;
         }
         virtual bool should_pause_during_delay_bar_number(uint32_t bar_number) {
