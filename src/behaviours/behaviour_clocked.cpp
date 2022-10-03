@@ -33,7 +33,7 @@
         String bar_label = String(this->get_label()) + String(" Clock");
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
-        ObjectNumberControl<DividedClockedBehaviour,int> *divisor_control = new ObjectNumberControl<DividedClockedBehaviour,int>(
+        ObjectNumberControl<DividedClockedBehaviour,uint32_t> *divisor_control = new ObjectNumberControl<DividedClockedBehaviour,uint32_t>(
             "Divider",
             //"Subclocker div", 
             this, 
@@ -44,7 +44,7 @@
             48  //max
         );
 
-        ObjectSelectorControl<DividedClockedBehaviour,int> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,int>(
+        ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
             "Delay (beats)",
             this,
             &DividedClockedBehaviour::set_delay_ticks,
@@ -71,20 +71,36 @@
             nullptr
         );
 
+        //ObjectToggleControl<DividedClockedBehaviour> *pause_during_delay_control = new ObjectToggleControl<DividedClockedBehaviour>(
+        ObjectSelectorControl<DividedClockedBehaviour,byte> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,byte>(
+            "Start pause",
+            this,
+            &DividedClockedBehaviour::set_pause_during_delay,
+            &DividedClockedBehaviour::get_pause_during_delay,
+            nullptr
+        );
+        pause_during_delay_control->add_available_value(DELAY_PAUSE::OFF,    "Off");
+        pause_during_delay_control->add_available_value(DELAY_PAUSE::BAR,    "Bar");
+        pause_during_delay_control->add_available_value(DELAY_PAUSE::TWO_BAR,"2Bar");
+        pause_during_delay_control->add_available_value(DELAY_PAUSE::PHRASE, "Phrase");
+        
         divisor_control->go_back_on_select = delay_ticks_control->go_back_on_select = true; 
 
         bar->add(divisor_control);
         bar->add(delay_ticks_control);
         bar->add(auto_restart_control);
+        bar->add(pause_during_delay_control);
 
         menuitems->add(bar);
 
-        SubMenuItemBar *bar2 = new SubMenuItemBar("debug bar");
+        if (this->debug) {
+            SubMenuItemBar *debugbar2 = new SubMenuItemBar("debug bar");
 
-        bar2->add(new NumberControl<uint32_t>("ticks", (uint32_t*)&ticks, (uint32_t)ticks, (uint32_t)0, (uint32_t)2*32, nullptr));
-        bar2->add(new NumberControl<int32_t>("real_ticks", &real_ticks, (int32_t)real_ticks, (int32_t)0, (int32_t)2*31, nullptr));
-        bar2->add(new NumberControl<bool>("waiting", &waiting, false, false, true, nullptr));
-        menuitems->add(bar2);
+            debugbar2->add(new NumberControl<uint32_t>("ticks", (uint32_t*)&ticks, (uint32_t)ticks, (uint32_t)0, (uint32_t)2*32, nullptr));
+            debugbar2->add(new NumberControl<int32_t>("real_ticks", &real_ticks, (int32_t)real_ticks, (int32_t)0, (int32_t)2*31, nullptr));
+            debugbar2->add(new NumberControl<bool>("waiting", &waiting, false, false, true, nullptr));
+            menuitems->add(debugbar2);
+        }
 
         ClockedBehaviour::make_menu_items();
 

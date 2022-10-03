@@ -68,20 +68,23 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
 
 class DividedClockedBehaviour : public ClockedBehaviour {
     public:
-        long clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
-        int clock_divisor = 1; //DEFAULT_DIVISOR;
+        uint32_t  clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
+        uint32_t  clock_divisor = 1; //DEFAULT_DIVISOR;
         bool auto_restart_on_change = true;
+        byte pause_during_delay = false;
+
+
 
         virtual bool should_show_restart_option() override {
             return true;
         }
 
         // check if we should set the restart_on_bar flag when one of the delay_ticks or divisor value changes
-        bool should_auto_restart_on_change () {
+        virtual bool should_auto_restart_on_change () {
             return this->auto_restart_on_change;
         }
         // set if we should set the restart_on_bar flag when one of the delay_ticks or divisor value changes
-        void set_auto_restart_on_change(bool value) {
+        virtual void set_auto_restart_on_change(bool value) {
             this->auto_restart_on_change = value;
         }
 
@@ -91,12 +94,12 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->set_restart_on_bar(true);
             this->clock_delay_ticks = delay_ticks;
         }
-        virtual int get_delay_ticks() {
+        virtual uint32_t get_delay_ticks() {
             return this->clock_delay_ticks;
         }
 
         // set how many real ticks count for one of our internal ticks -- for use in doing half-time, etc 
-        virtual void set_divisor (int divisor) {
+        virtual void set_divisor (uint32_t divisor) {
             if (divisor!=this->get_divisor() && this->should_auto_restart_on_change()) 
                 this->set_restart_on_bar(true);
             this->clock_divisor = divisor;
@@ -105,10 +108,27 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             return this->clock_divisor;
         }
 
+        // pause during delay
+        enum DELAY_PAUSE {
+            OFF, BAR, TWO_BAR, PHRASE
+        };
+        virtual void set_pause_during_delay (byte value) {
+            this->pause_during_delay = value;
+        }
+        virtual byte get_pause_during_delay() {
+            return this->pause_during_delay;
+        }
+        virtual bool should_pause_during_delay(byte type) {
+            return this->pause_during_delay >= type;
+        }
+        virtual bool should_pause_during_delay_bar_number(uint32_t bar_number) {
+            return bar_number % 2 == 0;
+        }
+
         int32_t real_ticks = 0;
         bool waiting = true;
         virtual void send_clock(unsigned long ticks) override {
-            uint32_t tick_of_phrase = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE));
+            uint32_t tick_of_phrase = (ticks%(PPQN*BEATS_PER_BAR)); //*BARS_PER_PHRASE));
             //real_ticks = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE)) - clock_delay_ticks;
             //real_ticks++;
             real_ticks = (int32_t)tick_of_phrase - clock_delay_ticks;
@@ -123,7 +143,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->started = true;
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStart();
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
-                if (this->debug) Serial.println("\tnot waiting anymore!\n");
+                if (this->debug) Serial.printf("%s:\tunsetting waitin!\n", this->get_label());
                 waiting = false;
             }
             /*if (real_ticks++ < clock_delay_ticks && clock_delay_ticks>0) {
@@ -148,9 +168,13 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         virtual void on_bar(int bar_number) override {
             // don't do anything - handle the delayed clocks in send_clock
             //if (is_bpm_on_bar(real_ticks - clock_delay_ticks))
+            if (this->should_pause_during_delay_bar_number(bar_number) && this->get_delay_ticks()>0)
+                this->waiting = true;
         }
         virtual void on_phrase(uint32_t phrase_number) override {
             // don't do anything - handle the delayed clocks in send_clock
+            if (this->should_pause_during_delay(DELAY_PAUSE::PHRASE) && this->get_delay_ticks()>0)
+                this->waiting = true;
         }
 
         virtual void on_restart() override {
@@ -162,7 +186,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->started = false;
                 //this->real_ticks = this->clock_delay_ticks * -1;
                 this->waiting = true;
-                Serial.printf("%s:\tsetting waiting!", this->get_label());
+                Serial.printf("%s:\tsetting waiting!\n", this->get_label());
             } else {
                 Serial.println("\tin DividedClockedBehaviour on_restart, no device!");
             }
@@ -170,8 +194,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             ClockedBehaviour::save_project_add_lines(lines);
-            lines->add(String("divisor=") + String(this->clock_divisor));
-            lines->add(String("delay_ticks=") + String(this->clock_delay_ticks));
+            lines->add(String("divisor=") + String(this->get_divisor()));
+            lines->add(String("delay_ticks=") + String(this->get_delay_ticks()));
+            lines->add(String("pause_on=") + String(this->get_pause_during_delay()));
         }
 
         // ask behaviour to process the key/value pair
@@ -182,6 +207,8 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             } else if (key.equals("delay_ticks")) {
                 this->set_delay_ticks((int) value.toInt());
                 return true;
+            } else if (key.equals("pause_on")) {
+                this->set_pause_during_delay((byte)value.toInt());
             } else if (ClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             }
