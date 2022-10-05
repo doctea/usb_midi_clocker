@@ -34,6 +34,6 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
 
 };
 
-extern DeviceBehaviour_Neutron behaviour_neutron;
+extern DeviceBehaviour_Neutron *behaviour_neutron;
 
 #endif

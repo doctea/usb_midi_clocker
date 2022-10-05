@@ -44,6 +44,6 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
         }
 };
 
-extern DeviceBehaviour_DrumKit behaviour_drumkit;
+extern DeviceBehaviour_DrumKit *behaviour_drumkit;
 
 #endif

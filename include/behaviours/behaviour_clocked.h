@@ -4,11 +4,15 @@
 #include "Config.h"
 #include "behaviour_base.h"
 
+#include "midi/midi_mapper_matrix_manager.h"
+
 class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
         bool restart_on_bar = true;
         bool started = false;
         bool clock_enabled = true;
+
+        bool stop_notes_when_paused = false;
 
         virtual bool should_show_restart_option() {
             return false;
@@ -108,7 +112,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
 
         // pause during delay
         enum DELAY_PAUSE {
-            OFF, BAR, TWO_BAR, PHRASE
+            PAUSE_OFF, PAUSE_BAR, PAUSE_TWO_BAR, PAUSE_PHRASE
         };
         virtual void set_pause_during_delay (uint32_t value) {
             this->pause_during_delay = value;
@@ -116,11 +120,25 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         virtual uint32_t get_pause_during_delay() {
             return this->pause_during_delay;
         }
-        virtual bool should_pause_during_delay(uint32_t type) {
-            return this->pause_during_delay >= type;
+        /*virtual bool should_pause_during_delay(uint32_t type) {
+            bool should = this->pause_during_delay >= type;
         }
         virtual bool should_pause_during_delay_bar_number(uint32_t bar_number) {
-            return bar_number % 2 == 0;
+            // todo: this needs fixing so that it returns true under correct circumstances!
+
+            if (should_pause_during_delay(DELAY_PAUSE::PAUSE_TWO_BAR))
+                return bar_number % 2 == 0;
+            return false;
+        }*/
+        virtual bool should_pause_during_bar_number(uint32_t bar_number) {
+            bar_number %= BARS_PER_PHRASE;
+            switch(this->pause_during_delay) {
+                case PAUSE_OFF: return false;
+                case PAUSE_BAR: return true;
+                case PAUSE_TWO_BAR: return (bar_number%2==0);
+                case PAUSE_PHRASE: return bar_number==0;
+                default: return false;
+            }
         }
 
         int32_t real_ticks = 0;
@@ -166,13 +184,20 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         virtual void on_bar(int bar_number) override {
             // don't do anything - handle the delayed clocks in send_clock
             //if (is_bpm_on_bar(real_ticks - clock_delay_ticks))
-            if (this->should_pause_during_delay_bar_number(bar_number) && this->get_delay_ticks()>0)
+            //if (this->should_pause_during_delay_bar_number(bar_number) && this->get_delay_ticks()>0)
+            if (this->get_delay_ticks()>0 && this->should_pause_during_bar_number(bar_number)) {
+                this->sendRealTime((uint8_t)(midi::Stop));
+                if (this->stop_notes_when_paused && this->target_id!=-1) {
+                    MIDIOutputWrapper *tgt = midi_matrix_manager->get_target_for_id(this->target_id);
+                    if (tgt!=nullptr) tgt->stop_all_notes();
+                }
                 this->waiting = true;
+            }
         }
         virtual void on_phrase(uint32_t phrase_number) override {
             // don't do anything - handle the delayed clocks in send_clock
-            if (this->should_pause_during_delay(DELAY_PAUSE::PHRASE) && this->get_delay_ticks()>0)
-                this->waiting = true;
+            //if (this->should_pause_during_delay(DELAY_PAUSE::PAUSE_PHRASE) && this->get_delay_ticks()>0)
+            //    this->waiting = true;
         }
 
         virtual void on_restart() override {
@@ -207,6 +232,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 return true;
             } else if (key.equals("pause_on")) {
                 this->set_pause_during_delay((byte)value.toInt());
+                return true;
             } else if (ClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             }

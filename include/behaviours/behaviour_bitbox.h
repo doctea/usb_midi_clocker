@@ -20,6 +20,6 @@ class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public ClockedB
         ) : DeviceBehaviourSerialBase (input_device, output_device) {}*/
 };
 
-extern DeviceBehaviour_Bitbox behaviour_bitbox;
+extern DeviceBehaviour_Bitbox *behaviour_bitbox;
 
 #endif

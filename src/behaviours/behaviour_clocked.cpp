@@ -43,69 +43,79 @@
             1,  //min
             48  //max
         );
+        divisor_control->go_back_on_select = true;
 
-        ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
-            "Delay (beats)",
-            this,
-            &DividedClockedBehaviour::set_delay_ticks,
-            &DividedClockedBehaviour::get_delay_ticks,
-            nullptr
-        );       
-        delay_ticks_control->add_available_value(0,     "None");
-        delay_ticks_control->add_available_value(PPQN/4,"1/4");
-        delay_ticks_control->add_available_value(PPQN/2,"1/2");
-        delay_ticks_control->add_available_value(PPQN,  "1");
-        delay_ticks_control->add_available_value(PPQN*2,"2");
-        delay_ticks_control->add_available_value(PPQN*3,"3");
-        delay_ticks_control->add_available_value(PPQN*4,"4");
-        delay_ticks_control->add_available_value(PPQN*5,"5");
-        delay_ticks_control->add_available_value(PPQN*6,"6");
-        delay_ticks_control->add_available_value(PPQN*7,"7");
-        delay_ticks_control->add_available_value(PPQN*8,"8");
+        #define ENABLE_DELAY_TICKS_CONTROL
+        #define ENABLE_AUTO_RESTART_CONTROL
+        #define ENABLE_PAUSE_DURING_DELAY_CONTROL
 
-        ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
-            "Auto-restart",
-            this,
-            &DividedClockedBehaviour::set_auto_restart_on_change,
-            &DividedClockedBehaviour::should_auto_restart_on_change,
-            nullptr
-        );
+        #ifdef ENABLE_DELAY_TICKS_CONTROL
+            ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
+                "Delay",
+                this,
+                &DividedClockedBehaviour::set_delay_ticks,
+                &DividedClockedBehaviour::get_delay_ticks,
+                nullptr
+            );       
+            delay_ticks_control->add_available_value(0,                 "None");
+            delay_ticks_control->add_available_value(PPQN/4,            "1/4");
+            delay_ticks_control->add_available_value(PPQN/2,            "1/2");
+            delay_ticks_control->add_available_value(PPQN,              "1");
+            delay_ticks_control->add_available_value(PPQN+(PPQN/2),     "1.5");
+            delay_ticks_control->add_available_value(PPQN*2,            "2");
+            delay_ticks_control->add_available_value((PPQN*2)+(PPQN/2), "2.5");
+            delay_ticks_control->add_available_value(PPQN*3,            "3");
+            delay_ticks_control->add_available_value((PPQN*3)+(PPQN/2), "3.5");
+            delay_ticks_control->go_back_on_select = true;
+        #endif
 
-        //#define ENABLE_PAUSE_DURING_DELAY_CONTROL
+        #ifdef ENABLE_AUTO_RESTART_CONTROL
+            ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
+                "Restart",
+                this,
+                &DividedClockedBehaviour::set_auto_restart_on_change,
+                &DividedClockedBehaviour::should_auto_restart_on_change,
+                nullptr
+            );
+            //auto_restart_control->debug = true;
+        #endif
+
         #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
-            //ObjectToggleControl<DividedClockedBehaviour> *pause_during_delay_control = new ObjectToggleControl<DividedClockedBehaviour>(
             ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
-                "Start pause",
+                "Pause",
                 this,
                 &DividedClockedBehaviour::set_pause_during_delay,
                 &DividedClockedBehaviour::get_pause_during_delay,
                 nullptr
             );
-            pause_during_delay_control->add_available_value(DELAY_PAUSE::OFF,    "Off");
-            pause_during_delay_control->add_available_value(DELAY_PAUSE::BAR,    "Bar");
-            pause_during_delay_control->add_available_value(DELAY_PAUSE::TWO_BAR,"2Bar");
-            pause_during_delay_control->add_available_value(DELAY_PAUSE::PHRASE, "Phrase");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_OFF,    "Off");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_BAR,    "Bar");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_TWO_BAR,"2Bar");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_PHRASE, "Phrs");
+            pause_during_delay_control->go_back_on_select = true;
         #endif
         
-        divisor_control->go_back_on_select = delay_ticks_control->go_back_on_select = true; 
-
         bar->add(divisor_control);
-        bar->add(delay_ticks_control);
-        bar->add(auto_restart_control);
+        #ifdef ENABLE_DELAY_TICKS_CONTROL
+            bar->add(delay_ticks_control);
+        #endif
+        #ifdef ENABLE_AUTO_RESTART_CONTROL
+            bar->add(auto_restart_control);
+        #endif
         #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
             bar->add(pause_during_delay_control);
         #endif
 
         menuitems->add(bar);
 
-        if (this->debug) {
+        /*if (this->debug) {
             SubMenuItemBar *debugbar2 = new SubMenuItemBar("debug bar");
-
-            debugbar2->add(new NumberControl<uint32_t>("ticks", (uint32_t*)&ticks, (uint32_t)ticks, (uint32_t)0, (uint32_t)2*32, nullptr));
-            debugbar2->add(new NumberControl<int32_t>("real_ticks", &real_ticks, (int32_t)real_ticks, (int32_t)0, (int32_t)2*31, nullptr));
+            //debugbar2->add(new NumberControl<uint32_t>("ticks", (uint32_t*)&ticks, (uint32_t)ticks, (uint32_t)0, (uint32_t)2*32, nullptr));
+            //debugbar2->add(new NumberControl<int32_t>("real_ticks", &real_ticks, (int32_t)real_ticks, (int32_t)0, (int32_t)2*31, nullptr));
+            // ^^ adding this sends memory usage over the limit, wtf?
             debugbar2->add(new NumberControl<bool>("waiting", &waiting, false, false, true, nullptr));
             menuitems->add(debugbar2);
-        }
+        }*/
 
         ClockedBehaviour::make_menu_items();
 

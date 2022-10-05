@@ -56,14 +56,14 @@ void setup_midi_mapper_matrix_manager() {
     // first, add all the output options that will exist
 
     #ifdef ENABLE_BITBOX
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", &behaviour_bitbox, 1));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", &behaviour_bitbox, 2));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", &behaviour_bitbox, 3));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
     #endif
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
     #ifdef ENABLE_NEUTRON
-        behaviour_neutron.target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", &behaviour_neutron, 4));
-        Serial.printf("#####behaviour_neutron is at %p, has target_id of %i\n", &behaviour_neutron, behaviour_neutron.target_id);
+        behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
+        Serial.printf("#####behaviour_neutron is at %p, has target_id of %i\n", behaviour_neutron, behaviour_neutron->target_id);
     #endif
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
@@ -90,7 +90,7 @@ void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_DRUMKIT
         //drumkit_source_id = midi_matrix_manager->register_source("drumkit");
-        midi_matrix_manager->register_source(&behaviour_drumkit, "drumkit");
+        midi_matrix_manager->register_source(behaviour_drumkit, "drumkit");
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
@@ -120,8 +120,8 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_LESTRUM
-        behaviour_lestrum.source_id     = midi_matrix_manager->register_source("lestrum_arp");
-        behaviour_lestrum.source_id_2   = midi_matrix_manager->register_source("lestrum_pads");
+        behaviour_lestrum->source_id     = midi_matrix_manager->register_source("lestrum_arp");
+        behaviour_lestrum->source_id_2   = midi_matrix_manager->register_source("lestrum_pads");
         midi_matrix_manager->connect("lestrum_arp",         "USB : Bamble : ch 1");
         midi_matrix_manager->connect("lestrum_pads",        "USB : Bamble : ch 2");
     #endif

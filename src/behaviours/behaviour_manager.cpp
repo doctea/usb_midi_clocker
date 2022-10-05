@@ -79,23 +79,23 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_BITBOX
-        behaviour_manager->registerBehaviour(&behaviour_bitbox);
-        behaviour_bitbox.connect_device_output(&ENABLE_BITBOX);
+        behaviour_manager->registerBehaviour(behaviour_bitbox);
+        behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
     #endif
 
     #ifdef ENABLE_BASS
-        behaviour_manager->registerBehaviour(&behaviour_neutron);
-        behaviour_neutron.connect_device_output(&ENABLE_BASS);
+        behaviour_manager->registerBehaviour(behaviour_neutron);
+        behaviour_neutron->connect_device_output(&ENABLE_BASS);
     #endif
 
     #ifdef ENABLE_LESTRUM
-        behaviour_manager->registerBehaviour(&behaviour_lestrum);
-        behaviour_lestrum.connect_device_input(&ENABLE_LESTRUM);
+        behaviour_manager->registerBehaviour(behaviour_lestrum);
+        behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
     #endif
     
     #ifdef ENABLE_DRUMKIT
-        behaviour_manager->registerBehaviour(&behaviour_drumkit);
-        behaviour_drumkit.connect_device_input(&ENABLE_DRUMKIT);
+        behaviour_manager->registerBehaviour(behaviour_drumkit);
+        behaviour_drumkit->connect_device_input(&ENABLE_DRUMKIT);
     #endif
     
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());

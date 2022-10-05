@@ -51,6 +51,6 @@ class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
         }
 };
 
-extern DeviceBehaviour_LeStrum behaviour_lestrum;
+extern DeviceBehaviour_LeStrum *behaviour_lestrum;
 
 #endif
