@@ -154,7 +154,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 return;
             }
             if (waiting) {
-                Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n", this->get_label(), real_ticks, clock_delay_ticks);
+                if (this->debug) Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n", this->get_label(), real_ticks, clock_delay_ticks);
                 //this->on_restart(); = true;
                 this->started = true;
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStart();
@@ -172,7 +172,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
             }*/
             if (is_bpm_on_bar(real_ticks)) { //}, clock_delay_ticks)) {
-                Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n", this->get_label(), real_ticks, clock_delay_ticks);
+                if (this->debug) Serial.printf("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n", this->get_label(), real_ticks, clock_delay_ticks);
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
             }
 

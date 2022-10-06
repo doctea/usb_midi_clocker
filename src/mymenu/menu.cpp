@@ -203,9 +203,9 @@ void setup_menu() {
         menu->add(&beatstep_auto_advance);
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
             (char*)"Beatstep advance",
-            &behaviour_beatstep,
-            &DeviceBehaviour_Beatstep::set_auto_advance_pattern(),
-            &DeviceBehaviour_Beatstep::is_auto_advance_pattern()
+            behaviour_beatstep,
+            &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
+            &DeviceBehaviour_Beatstep::is_auto_advance_pattern
         ));
     #endif
     menu->add(project_multi_autoadvance);

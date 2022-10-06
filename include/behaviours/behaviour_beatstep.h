@@ -94,6 +94,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             virtual void on_phrase(uint32_t phrase) override {
                 if (this->device==nullptr) return;
 
+                DividedClockedBehaviour::on_phrase(phrase);
+
                 if (this->auto_advance_pattern) {
                     on_restart(); //TODO: which of these is actually doing the work??
 
