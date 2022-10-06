@@ -71,11 +71,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - recorded notes are shown on display in piano roll style
   - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
   - momentary overwrite mode that cuts notes
-- Allow Behaviours to register CCs they respond to and can generate
-  - So that can remap these as sources and targets
-  - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
-  - Allow CV input to be mapped to CC outputs
 - CV to MIDI CC 
+  - Allow CV input to be mapped to CC outputs
 
 ### Behaviours
 
@@ -84,12 +81,14 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
 - behaviour_bitbox: clock to 1010 Music Bitbox mk2, also notes, over midi DIN
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
+- behaviour_clocked: base classes for handling midi clock delay and divison
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0
 - behaviour_drumkit: input from midi drumkit over DIN
 - behaviour_keystep: sends clock and receives notes
 - behaviour_lestrum: input from LeStrum on both channels
 - behaviour_mpk49: input from Akai MK49, including control over looper
 - behaviour_neutron: bass drone and clock to Neutron over MIDI DIN
+- behaviour_midibass: base classes for octave-locking and droning 
 - behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
@@ -238,7 +237,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - shortcuts for different functions would make this something that could be performed with
   - also opens the door to allow naming of patterns/projects?
 - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
-
+- Allow Behaviours to register CCs they respond to and can generate
+  - So that can remap these as sources and targets
+  - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
+  
+  
 ## Explanation/demo
 
 ![my unit](https://github.com/doctea/usb_midi_clocker/blob/main/media/my%20unit.jpg "My unit")
