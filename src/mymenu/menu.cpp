@@ -99,12 +99,6 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     LooperQuantizeControl   drum_loop_quantizer_setting = LooperQuantizeControl("Drum Loop quant",   &drums_loop_track);   // todo: make this part of the LooperStatus object
 #endif
 
-#ifdef ENABLE_USB
-    USBDevicesPanel usbdevices_panel = USBDevicesPanel();
-#endif
-
-BehavioursPanel behaviours_panel = BehavioursPanel();
-
 #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
     ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
         "CraftSynth clock enable",
@@ -267,11 +261,6 @@ void setup_menu() {
         menu->add(&beatstep_restart_action);
     #endif*/
 
-    menu->add(&usbdevices_panel);
-    menu->add(&behaviours_panel);
-
-    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Debug: Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
-    menu->add(debug_times_control);
 
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);

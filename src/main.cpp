@@ -21,6 +21,7 @@
 #ifdef ENABLE_SCREEN
   //#include "tft.h"
   #include "menu.h"
+  #include "mymenu/menu_debug.h"
 #endif
 #include "project.h"
 
@@ -147,6 +148,8 @@ void setup() {
     menu->start();
     //tft_start();
   #endif
+
+  setup_debug_menu();
 
   Serial.println("Finished setup()!");
 }

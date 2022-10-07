@@ -4,4 +4,6 @@
 int freeRam();
 void debug_free_ram();
 
+void reset_teensy();
+
 #endif
