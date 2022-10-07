@@ -201,7 +201,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         virtual void on_restart() override {
-            Serial.printf("%s: on_restart() in DividedClockedBehaviour\n", this->get_label());
+            if (this->debug) Serial.printf("%s: on_restart() in DividedClockedBehaviour\n", this->get_label());
             if (this->is_connected() && this->clock_enabled) {
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
                 //this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
@@ -209,9 +209,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->started = false;
                 //this->real_ticks = this->clock_delay_ticks * -1;
                 this->waiting = true;
-                Serial.printf("%s:\tsetting waiting!\n", this->get_label());
+                if (this->debug) Serial.printf("%s:\tsetting waiting!\n", this->get_label());
             } else {
-                Serial.println("\tin DividedClockedBehaviour on_restart, no device!");
+                if (this->debug) Serial.println("\tin DividedClockedBehaviour on_restart, no device!");
             }
         }
 
