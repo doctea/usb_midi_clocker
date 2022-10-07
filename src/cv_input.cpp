@@ -35,8 +35,8 @@ void setup_cv_input() {
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
 void setup_parameters() {
     // add the available parameters to a list used globally and later passed to each selector menuitem
-    Serial.println(F("==== begin setup_parameters ===="));
-    tft_print((char*)"setup_parameters...");
+    Serial.println(F("==== begin setup_parameters ====")); Serial.flush();
+    tft_print((char*)"..setup_parameters...");
 
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
@@ -60,11 +60,11 @@ void setup_parameters() {
 
     // setup the default mappings
     // TODO: load this from a saved config file
-    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
+    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS........."); Serial.flush();
     behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");
+    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS"); Serial.flush();
 
     parameter_manager.setDefaultParameterConnections();
 
