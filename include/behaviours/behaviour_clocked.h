@@ -74,6 +74,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
     public:
         uint32_t clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
         uint32_t clock_divisor = 1; //DEFAULT_DIVISOR;
+        uint32_t queued_clock_divisor = 1;
         bool auto_restart_on_change = true;
         byte pause_during_delay = false;
 
@@ -102,9 +103,14 @@ class DividedClockedBehaviour : public ClockedBehaviour {
 
         // set how many real ticks count for one of our internal ticks -- for use in doing half-time, etc 
         virtual void set_divisor (uint32_t divisor) {
-            if (divisor!=this->get_divisor() && this->should_auto_restart_on_change()) 
+            if (divisor!=this->get_divisor() && this->should_auto_restart_on_change()) {
                 this->set_restart_on_bar(true);
-            this->clock_divisor = divisor;
+            }
+            if (is_bpm_on_beat(ticks))
+                this->clock_divisor = divisor;
+            else
+                this->queued_clock_divisor = divisor;
+
         }
         virtual uint32_t get_divisor() {
             return this->clock_divisor;
@@ -154,6 +160,10 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         int32_t real_ticks = 0;
         bool waiting = true;
         virtual void send_clock(unsigned long ticks) override {
+            if (is_bpm_on_beat(ticks) && this->queued_clock_divisor!=clock_divisor) {
+                // if we've been waiting for a beat to tick before changing divisor, do so now
+                this->set_divisor(this->queued_clock_divisor);
+            }
             int32_t period_length = this->get_period_length();
             uint32_t tick_of_period = (ticks%period_length); //*BARS_PER_PHRASE));
             //real_ticks = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE)) - clock_delay_ticks;
