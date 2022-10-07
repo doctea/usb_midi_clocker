@@ -66,6 +66,33 @@
             delay_ticks_control->add_available_value((PPQN*2)+(PPQN/2), "2.5");
             delay_ticks_control->add_available_value(PPQN*3,            "3");
             delay_ticks_control->add_available_value((PPQN*3)+(PPQN/2), "3.5");
+            delay_ticks_control->add_available_value(PPQN*4,            "4");
+            delay_ticks_control->add_available_value((PPQN*4)+(PPQN/2), "4.5");
+            delay_ticks_control->add_available_value(PPQN*5,            "5");
+            delay_ticks_control->add_available_value((PPQN*5)+(PPQN/2), "5.5");
+            delay_ticks_control->add_available_value(PPQN*6,            "6");
+            delay_ticks_control->add_available_value((PPQN*6)+(PPQN/2), "6.5");
+            delay_ticks_control->add_available_value(PPQN*7,            "7");
+            delay_ticks_control->add_available_value((PPQN*7)+(PPQN/2), "7.5");
+            delay_ticks_control->add_available_value(PPQN*8,            "8");
+            delay_ticks_control->add_available_value((PPQN*8)+(PPQN/2), "8.5");
+            delay_ticks_control->add_available_value(PPQN*9,            "9");
+            delay_ticks_control->add_available_value((PPQN*9)+(PPQN/2), "9.5");
+            delay_ticks_control->add_available_value(PPQN*10,            "10");
+            delay_ticks_control->add_available_value((PPQN*10)+(PPQN/2), "10.5");
+            delay_ticks_control->add_available_value(PPQN*11,            "11");
+            delay_ticks_control->add_available_value((PPQN*11)+(PPQN/2), "11.5");
+            delay_ticks_control->add_available_value(PPQN*12,            "12");
+            delay_ticks_control->add_available_value((PPQN*12)+(PPQN/2), "12.5");
+            delay_ticks_control->add_available_value(PPQN*13,            "13");
+            delay_ticks_control->add_available_value((PPQN*13)+(PPQN/2), "13.5");
+            delay_ticks_control->add_available_value(PPQN*14,            "14");
+            delay_ticks_control->add_available_value((PPQN*4)+(PPQN/2), "14.5");
+            delay_ticks_control->add_available_value(PPQN*15,            "15");
+            delay_ticks_control->add_available_value((PPQN*15)+(PPQN/2), "15.5");
+            delay_ticks_control->add_available_value(PPQN*16,            "16");
+            delay_ticks_control->add_available_value((PPQN*16)+(PPQN/2), "16.5");
+
             delay_ticks_control->go_back_on_select = true;
         #endif
 

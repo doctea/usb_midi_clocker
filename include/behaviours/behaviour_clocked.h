@@ -141,15 +141,26 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             }
         }
 
+        int32_t get_period_length() {
+            switch(this->pause_during_delay) {
+                case PAUSE_PHRASE: 
+                case PAUSE_OFF: 
+                    return PPQN*BEATS_PER_BAR*BARS_PER_PHRASE;
+                case PAUSE_BAR: return PPQN*BEATS_PER_BAR;
+                case PAUSE_TWO_BAR: return PPQN*BEATS_PER_BAR*2;
+            }
+        }
+
         int32_t real_ticks = 0;
         bool waiting = true;
         virtual void send_clock(unsigned long ticks) override {
-            uint32_t tick_of_phrase = (ticks%(PPQN*BEATS_PER_BAR)); //*BARS_PER_PHRASE));
+            int32_t period_length = this->get_period_length();
+            uint32_t tick_of_period = (ticks%period_length); //*BARS_PER_PHRASE));
             //real_ticks = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE)) - clock_delay_ticks;
             //real_ticks++;
-            real_ticks = (int32_t)tick_of_phrase - clock_delay_ticks;
+            real_ticks = (int32_t)tick_of_period - clock_delay_ticks;
             //if (this->waiting && real_ticks<0) { //(real_ticks) < clock_delay_ticks) {
-            if (this->waiting && tick_of_phrase < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
+            if (this->waiting && tick_of_period < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
                 if (this->debug) Serial.printf("DividedClockBehaviour with phrase tick %i, not sending because real_ticks %i haven't reached clock_delay_ticks of %i\n", ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE), real_ticks, clock_delay_ticks);
                 return;
             }
