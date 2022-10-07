@@ -118,7 +118,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
 
         // pause during delay
         enum DELAY_PAUSE {
-            PAUSE_OFF, PAUSE_BAR, PAUSE_TWO_BAR, PAUSE_PHRASE
+            PAUSE_OFF, PAUSE_BAR, PAUSE_TWO_BAR, PAUSE_PHRASE, PAUSE_FINAL_PHRASE
         };
         virtual void set_pause_during_delay (uint32_t value) {
             this->pause_during_delay = value;
@@ -143,18 +143,28 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 case PAUSE_BAR: return true;
                 case PAUSE_TWO_BAR: return (bar_number%2==0);
                 case PAUSE_PHRASE: return bar_number==0;
+                case PAUSE_FINAL_PHRASE: {
+                    Serial.printf("should_pause_during_bar_number(%i) with PAUSE_FINAL_PHRASE and BARS_PER_PHRASE is %i!\n", bar_number, BARS_PER_PHRASE);
+                    bool val = bar_number==0 || (bar_number%BARS_PER_PHRASE)==(BARS_PER_PHRASE-1);
+                    if (val) Serial.printf("matches final bar!\n");
+                    return val;
+                }
                 default: return false;
             }
         }
 
+        // get the longest time that looping should be possible
         int32_t get_period_length() {
             switch(this->pause_during_delay) {
+                case PAUSE_BAR: return PPQN*BEATS_PER_BAR;
+                case PAUSE_TWO_BAR: return PPQN*BEATS_PER_BAR*2;
                 case PAUSE_PHRASE: 
                 case PAUSE_OFF: 
                     return PPQN*BEATS_PER_BAR*BARS_PER_PHRASE;
-                case PAUSE_BAR: return PPQN*BEATS_PER_BAR;
-                case PAUSE_TWO_BAR: return PPQN*BEATS_PER_BAR*2;
+                case PAUSE_FINAL_PHRASE:
+                    return PPQN*BEATS_PER_BAR; //*(BARS_PER_PHRASE+1);
             }
+            return PPQN*BEATS_PER_BAR*BARS_PER_PHRASE;
         }
 
         int32_t real_ticks = 0;

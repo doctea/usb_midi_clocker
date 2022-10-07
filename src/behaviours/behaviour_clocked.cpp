@@ -90,8 +90,8 @@
             delay_ticks_control->add_available_value((PPQN*4)+(PPQN/2), "14.5");
             delay_ticks_control->add_available_value(PPQN*15,            "15");
             delay_ticks_control->add_available_value((PPQN*15)+(PPQN/2), "15.5");
-            delay_ticks_control->add_available_value(PPQN*16,            "16");
-            delay_ticks_control->add_available_value((PPQN*16)+(PPQN/2), "16.5");
+            //delay_ticks_control->add_available_value(PPQN*16,            "16");
+            //delay_ticks_control->add_available_value((PPQN*16)+(PPQN/2), "16.5");
 
             delay_ticks_control->go_back_on_select = true;
         #endif
@@ -119,6 +119,7 @@
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_BAR,    "Bar");
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_TWO_BAR,"2Bar");
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_PHRASE, "Phrs");
+            pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_FINAL_PHRASE, "FiPh");
             pause_during_delay_control->go_back_on_select = true;
         #endif
         
