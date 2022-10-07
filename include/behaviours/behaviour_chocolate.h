@@ -39,6 +39,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         virtual const char *get_label() override {
             return (char*)"Chocolate";
         }
+        virtual bool has_input() { return true; }
 
         DeviceBehaviour_Chocolate () {
             for (int i = 0 ; i < NUM_TRACK_NOTES ; i++) {

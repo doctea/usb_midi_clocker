@@ -26,6 +26,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
         virtual const char *get_label() override {
             return (char*)"APCMini";
         }
+        virtual bool has_input() { return true; }
 
         bool apcmini_shift_held = false;
 

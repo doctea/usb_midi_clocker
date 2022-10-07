@@ -11,6 +11,9 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         DeviceBehaviourSerialBase() = default;
         virtual ~DeviceBehaviourSerialBase() = default;
 
+        virtual bool has_input() { return this->input_device!=nullptr; }
+        virtual bool has_output() { return this->output_device!=nullptr; }
+
         /*DeviceBehaviourSerialBase (
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device

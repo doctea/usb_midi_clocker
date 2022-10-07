@@ -29,6 +29,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         virtual const char *get_label() override {
             return (char*)"MPK49";
         }
+        virtual bool has_input() { return true; }
 
         void setup_callbacks() override {
             Serial.println("Setting up callbacks for the MPK49");

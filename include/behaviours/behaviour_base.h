@@ -39,6 +39,18 @@ class DeviceBehaviourUltimateBase {
         return (char*)"UltimateBase";
     }
 
+    virtual bool has_input() { return false; }
+    virtual bool has_output() { return false; }
+    // input/output indicator
+    virtual const char *get_indicator() {
+        static bool done = false;
+        static char indicator_text[5];
+        if (!done) {
+            sprintf(indicator_text,"%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
+        }
+        return indicator_text;
+    }
+
     virtual int getType() {
         return BehaviourType::undefined;
     }

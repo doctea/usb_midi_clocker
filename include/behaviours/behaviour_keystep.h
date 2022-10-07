@@ -24,6 +24,7 @@ class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual p
         virtual const char *get_label() override {
             return (char*)"Keystep";
         }
+        virtual bool has_input() { return true; }
 
         virtual void setup_callbacks() override {
             this->device->setHandleNoteOn(keystep_handle_note_on);

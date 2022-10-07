@@ -10,6 +10,8 @@
 #include "bpm.h"
 
 class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour {
+    using DeviceBehaviourSerialBase::has_input;
+    using ClockedBehaviour::has_output;
     //using MIDIBassBehaviour::on_bar;
     public:
         virtual const char *get_label() override {

@@ -35,6 +35,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         virtual const char *get_label() override {
             return (char*)"BeatStep";
         }
+        virtual bool has_input() { return true; }
 
         virtual void setup_callbacks() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
