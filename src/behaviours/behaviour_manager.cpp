@@ -79,25 +79,35 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_BITBOX
+        Serial.println("about to register behaviour_bitbox..."); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_bitbox);
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
+        Serial.println("Finished registering"); Serial.flush();
     #endif
 
     #ifdef ENABLE_BASS
+        Serial.println("about to register behaviour_neutron..."); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_neutron);
         behaviour_neutron->connect_device_output(&ENABLE_BASS);
+        Serial.println("Finished registering"); Serial.flush();
     #endif
 
     #ifdef ENABLE_LESTRUM
+        Serial.println("aboutg to register behaviour_lestrum..."); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);
         behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
+        Serial.println("Finished registering"); Serial.flush();
     #endif
     
     #ifdef ENABLE_DRUMKIT
+        Serial.println("aboutg to register behaviour_drumkit..."); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_drumkit);
         behaviour_drumkit->connect_device_input(&ENABLE_DRUMKIT);
+        Serial.println("Finished registering"); Serial.flush();
     #endif
     
+    Serial.println("Exiting setup_behaviour_manager()");
+
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());
     usb_manager->registerBehaviour(new USBDevice_Beatstep());
     usb_manager->registerBehaviour(new USBDevice_Keystep());
