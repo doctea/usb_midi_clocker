@@ -144,9 +144,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 case PAUSE_TWO_BAR: return (bar_number%2==0);
                 case PAUSE_PHRASE: return bar_number==0;
                 case PAUSE_FINAL_PHRASE: {
-                    Serial.printf("should_pause_during_bar_number(%i) with PAUSE_FINAL_PHRASE and BARS_PER_PHRASE is %i!\n", bar_number, BARS_PER_PHRASE);
+                    //Serial.printf("should_pause_during_bar_number(%i) with PAUSE_FINAL_PHRASE and BARS_PER_PHRASE is %i!\n", bar_number, BARS_PER_PHRASE);
                     bool val = bar_number==0 || (bar_number%BARS_PER_PHRASE)==(BARS_PER_PHRASE-1);
-                    if (val) Serial.printf("matches final bar!\n");
+                    //if (val) Serial.printf("matches final bar!\n");
                     return val;
                 }
                 default: return false;
@@ -162,7 +162,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 case PAUSE_OFF: 
                     return PPQN*BEATS_PER_BAR*BARS_PER_PHRASE;
                 case PAUSE_FINAL_PHRASE:
-                    return PPQN*BEATS_PER_BAR; //*(BARS_PER_PHRASE+1);
+                    return PPQN*BEATS_PER_BAR*(BPM_CURRENT_BAR_OF_PHRASE+1); //*BARS_PER_PHRASE; //*(BARS_PER_PHRASE+1);
             }
             return PPQN*BEATS_PER_BAR*BARS_PER_PHRASE;
         }
@@ -174,6 +174,8 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 // if we've been waiting for a beat to tick before changing divisor, do so now
                 this->set_divisor(this->queued_clock_divisor);
             }
+            //if (this->clock_delay_ticks==PPQN*4) this->debug = true; else this->debug = false;
+
             int32_t period_length = this->get_period_length();
             uint32_t tick_of_period = (ticks%period_length); //*BARS_PER_PHRASE));
             //real_ticks = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE)) - clock_delay_ticks;
@@ -181,7 +183,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             real_ticks = (int32_t)tick_of_period - clock_delay_ticks;
             //if (this->waiting && real_ticks<0) { //(real_ticks) < clock_delay_ticks) {
             if (this->waiting && tick_of_period < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
-                if (this->debug) Serial.printf("DividedClockBehaviour with phrase tick %i, not sending because real_ticks %i haven't reached clock_delay_ticks of %i\n", ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE), real_ticks, clock_delay_ticks);
+                if (this->debug) Serial.printf("DividedClockBehaviour with global ticks %i of, not sending because tick_of_period %i hasn't reached clock_delay_ticks of %i\n", ticks, tick_of_period, clock_delay_ticks);
                 return;
             }
             if (waiting) {
@@ -190,7 +192,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->started = true;
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStart();
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
-                if (this->debug) Serial.printf("%s:\tunsetting waitin!\n", this->get_label());
+                if (this->debug) Serial.printf("%s:\tunsetting waiting!\n", this->get_label());
                 waiting = false;
             }
             /*if (real_ticks++ < clock_delay_ticks && clock_delay_ticks>0) {
