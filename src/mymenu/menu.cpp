@@ -67,7 +67,7 @@ ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,
 #ifdef ENABLE_LOOPER
     ObjectToggleControl<Project> project_auto_advance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
 #endif*/
-ActionItem project_save = ActionItem("Save settings", &save_project_settings);
+ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_project_settings);
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
 
