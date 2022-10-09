@@ -47,7 +47,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         #endif
 
         void handle_system_exclusive(uint8_t *data, unsigned int size) {
-            if (DeviceBehaviourUSBBase::debug) {
+            if (this->debug) {
                 Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
                 for (unsigned int i = 0 ; i < size ; i++) {
                     Serial.printf("%02x ", data[i]);
@@ -57,26 +57,33 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 
             if (data[3]==0x06) {
                 if (data[4]==0x06) { // record pressed
+                    Serial.printf("%s: callinghandle_mmc_record()\n", this->get_label()); Serial.flush();
                     handle_mmc_record();
                 } else if (data[4]==0x01) { // stop pressed
+                    Serial.printf("%s: callinghandle_mmc_stop()\n", this->get_label()); Serial.flush();
                     handle_mmc_stop();
                 } else if (data[4]==0x02) { // start pressed
+                    Serial.printf("%s: calling handle_mmc_start()\n", this->get_label()); Serial.flush();
                     handle_mmc_start();
                 }
             }
         }
 
         void handle_mmc_record() {
-            loop_track->toggle_recording();
+            if (loop_track!=nullptr)
+                loop_track->toggle_recording();
         }
         void handle_mmc_start() {
-            loop_track->start_playing();
-            playing = true;
+            if (loop_track!=nullptr) {
+                loop_track->start_playing();
+                playing = true;
+            }
         }
-
         void handle_mmc_stop() {
-            loop_track->stop_recording();
-            loop_track->stop_playing();
+            if (loop_track!=nullptr) {
+                loop_track->stop_recording();
+                loop_track->stop_playing();
+            }
         }
 
 };

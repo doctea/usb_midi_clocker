@@ -1,7 +1,7 @@
 //#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
-#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
+//#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
@@ -11,6 +11,8 @@
 #define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
+#define LOAD_CALIBRATION_ON_BOOT
+//#define ENABLE_STORAGE
 
 // enable USB typing keyboard as a control method
 #define ENABLE_TYPING_KEYBOARD
@@ -144,3 +146,4 @@
         */
     #endif
 #endif
+

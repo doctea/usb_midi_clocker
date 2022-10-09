@@ -15,6 +15,7 @@ void setup_midi_mapper_matrix_manager();
 
 #define NUM_SOURCES 24
 #define NUM_TARGETS 24
+#define NUM_REGISTERED_TARGETS targets_count
 
 #include "midi/midi_mapper_matrix_types.h"
 
@@ -79,7 +80,7 @@ class MIDIMatrixManager {
     // reset all connections (eg loading preset)
     void reset_matrix() {
         for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
-            for (target_id_t target_id  = 0 ; target_id < targets_count ; target_id++) {
+            for (target_id_t target_id  = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
                 disconnect(source_id, target_id);
             }
         }
@@ -129,7 +130,7 @@ class MIDIMatrixManager {
             return;
         }
         if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOn(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
-        for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
+        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
@@ -144,7 +145,7 @@ class MIDIMatrixManager {
             return;
         }
         if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
-        for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
+        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
@@ -154,14 +155,21 @@ class MIDIMatrixManager {
         }
     }
     void processControlChange(source_id_t source_id, byte cc, byte value, byte channel = 0) {
-        for (target_id_t target_id = 0 ; target_id < NUM_TARGETS ; target_id++) {
+        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
+                /*Serial.printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
+                    source_id, cc, value, channel, source_id, target_id
+                ); Serial.flush();
+                if (targets[target_id].wrapper==nullptr) {
+                    Serial.printf("target_id %i has a nullptr wrapper!\n", target_id); Serial.flush();
+                }*/
                 targets[target_id].wrapper->sendControlChange(cc, value, channel);
+                //Serial.println("successfully sent!"); Serial.flush();
             }
         }
     }
     void stop_all_notes_for_source(source_id_t source_id) {
-        for (target_id_t target_id = 0 ; target_id < NUM_TARGETS ; target_id++) {
+        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 this->stop_all_notes_for_target(target_id);
             }
@@ -204,6 +212,9 @@ class MIDIMatrixManager {
         strcpy(targets[targets_count].handle, handle);
         targets[targets_count].wrapper = target;
         Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n", handle, targets_count);
+        if (target==nullptr) {
+            Serial.printf("WARNING: register_target for handle %s (target_id %i) passed a null target wrapper!!!\n", target, targets_count);
+        }
         return targets_count++;
     }
     /*target_id_t register_target(DeviceBehaviourUltimateBase *target, const char *handle) {
@@ -214,7 +225,7 @@ class MIDIMatrixManager {
 
     target_id_t get_target_id_for_handle(const char *handle) {
         Serial.printf("get_target_id_for_handle(%s)\n", handle);
-        for (int i = 0; i < targets_count ; i++) {
+        for (int i = 0; i < NUM_REGISTERED_TARGETS ; i++) {
             Serial.printf("\t%i: looking for '%s', comparing '%s'..\n", i, handle, targets[i].handle);
             if (strcmp(handle, targets[i].handle)==0) {
                 return i;
