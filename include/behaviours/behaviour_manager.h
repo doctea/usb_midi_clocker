@@ -26,7 +26,7 @@ class DeviceBehaviourManager {
 
         FLASHMEM void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceSerialUSB> passed a nullptr!")); Serial.flush();
+                Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial.flush();
                 return;
             }
             this->behaviours_usb->add(behaviour);
@@ -34,11 +34,19 @@ class DeviceBehaviourManager {
         }
         FLASHMEM void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceSerialBase> passed a nullptr!")); Serial.flush();
+                Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial.flush();
                 return;
             }
             Serial.printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial.flush();
             this->behaviours_serial->add(behaviour);
+            this->behaviours->add(behaviour);
+        }
+        FLASHMEM void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
+            if (behaviour==nullptr) {
+                Serial.println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial.flush();
+                return;
+            }
+            Serial.printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial.flush();
             this->behaviours->add(behaviour);
         }
 

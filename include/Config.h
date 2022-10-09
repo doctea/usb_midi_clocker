@@ -12,6 +12,7 @@
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 #define LOAD_CALIBRATION_ON_BOOT
+#define ENABLE_CV_INPUT_PITCH
 //#define ENABLE_STORAGE
 
 // enable USB typing keyboard as a control method

@@ -14,6 +14,8 @@
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
 
+#include "behaviours/behaviour_cvinput.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -104,6 +106,12 @@ void setup_behaviour_manager() {
         Serial.println(F("about to register behaviour_drumkit...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_drumkit);
         behaviour_drumkit->connect_device_input(&ENABLE_DRUMKIT);
+        Serial.println(F("Finished registering")); Serial.flush();
+    #endif
+
+    #ifdef ENABLE_CV_INPUT_PITCH
+        Serial.println(F("about to register behaviour_cvinput...")); Serial.flush();
+        behaviour_manager->registerBehaviour(behaviour_cvinput);
         Serial.println(F("Finished registering")); Serial.flush();
     #endif
     

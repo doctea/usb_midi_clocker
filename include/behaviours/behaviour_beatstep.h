@@ -48,22 +48,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             //Serial.printf("beatstep got note on %i\n", note); Serial.flush();
 
             this->current_note = note;
-
-            /*#ifdef ENABLE_BASS_TRANSPOSE
-                // send incoming notes from beatstep back out to neutron on serial3, but transposed down
-                uint8_t note2 = note % 12;
-                note2 += (bass_transpose_octave*12); //24;
-                //Serial.printf("beatstep note on %i : %i : %i\n", BASS_MIDI_CHANNEL, note, velocity);
-                //Serial.printf("beatstep note2 is %i\n", note2);
-                note = note2;
-            #endif*/
-
             ClockedBehaviour::receive_note_on(channel, note, 127);
-
-            /*#ifdef ENABLE_BASS_TRANSPOSE
-                // update current / remember last played TRANSPOSED note
-                this->current_transposed_note = note;
-            #endif*/
         }
 
         virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
@@ -73,15 +58,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             this->last_note = note;
             if (this->current_note==note) 
                 current_note = -1;
-
-            /*#ifdef ENABLE_BASS_TRANSPOSE
-                uint8_t note2 = note % 12;
-                note2 += (bass_transpose_octave*12);// note2 += 24;
-                note = note2;
-            #endif*/
-
             ClockedBehaviour::receive_note_off(channel, note, 127);
-
         }
 
         #ifdef ENABLE_BEATSTEP_SYSEX

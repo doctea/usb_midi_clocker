@@ -16,6 +16,8 @@
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
 
+#include "behaviours/behaviour_cvinput.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_pc_usb.h"
@@ -156,6 +158,10 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->connect("loop_track_drums", "USB : Bamble : drums");
         drums_loop_track.set_quantization_value(0);
         //drums_loop_track.debug = true;
+    #endif
+
+    #ifdef ENABLE_CV_INPUT_PITCH
+        midi_matrix_manager->register_source(behaviour_cvinput, "CV input");
     #endif
 
     Serial.println("##### finished setup_midi_mapper_matrix_manager"); Serial.flush();
