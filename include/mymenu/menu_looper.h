@@ -85,7 +85,7 @@ class LooperQuantizeControl : public SelectorControl {
             Serial.printf("SelectorControl %s changed to %i!\n", label, available_values[selected_value_index]);
         }*/
         virtual const char*get_label_for_value(int value) {
-            //static char value_label[20];
+            //static char value_label[MENU_C_MAX];
             //sprintf(value_label, "%i", value);
             //Serial.printf("get_label_for_value(%i) returning '%s'\n", value, value_label);
             //return value_label;

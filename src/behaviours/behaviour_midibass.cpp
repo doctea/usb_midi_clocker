@@ -7,7 +7,7 @@
     #include "menuitems_object.h"
     #include "submenuitem_bar.h"
 
-    LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
+    FLASHMEM LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         #ifdef ENABLE_BASS_TRANSPOSE
             SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" MIDI bass")).c_str());

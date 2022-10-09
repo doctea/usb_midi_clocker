@@ -211,7 +211,7 @@ FLASHMEM void setup_menu() {
     #endif
 
     Serial.println("...starting behaviour_manager#make_menu_items...");
-    behaviour_manager->make_menu_items(menu);
+    behaviour_manager->create_behaviour_menu_items(menu);
     Serial.println("...finished behaviour_manager#make_menu_items...");
 
     // sequencer

@@ -54,18 +54,18 @@ class MIDIMatrixManager {
 
     source_entry sources[NUM_SOURCES] = {};
     // assign a source_id for the given name
-    source_id_t register_source(const char *handle) {
+    FLASHMEM source_id_t register_source(const char *handle) {
         Serial.printf("midi_mapper_matrix_manager#register_source() registering handle '%s'\n", handle);
         strcpy(sources[sources_count].handle, handle);
         return sources_count++;
     }
     // assign a source_id for the midi track
-    source_id_t register_source(MIDITrack *loop_track, const char *handle);
+    FLASHMEM source_id_t register_source(MIDITrack *loop_track, const char *handle);
     // assign a source_id for the device
-    source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle);
+    FLASHMEM source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle);
 
     // get id of source for string
-    source_id_t get_source_id_for_handle(const char *handle) {
+    FLASHMEM source_id_t get_source_id_for_handle(const char *handle) {
         for (source_id_t i = 0; i < sources_count ; i++) {
             if (strcmp(handle, sources[i].handle)==0)
                 return i;

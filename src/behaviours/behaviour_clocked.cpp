@@ -3,7 +3,7 @@
 #ifdef ENABLE_SCREEN
     #include "menu.h"
 
-    LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
+    FLASHMEM LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
             String restart_label = String("Restart " + String(this->get_label()) + " on bar");
@@ -27,11 +27,14 @@
     #include "menuitems.h"
     #include "menuitems_selector.h"
 
-    LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
+    FLASHMEM LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
+        Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial.flush();
         DeviceBehaviourUltimateBase::make_menu_items();
 
         String bar_label = String(this->get_label()) + String(" Clock");
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
+
+        Serial.println(F("\tDividedClockedBehaviour creating divisor_control")); Serial.flush();
 
         ObjectNumberControl<DividedClockedBehaviour,uint32_t> *divisor_control = new ObjectNumberControl<DividedClockedBehaviour,uint32_t>(
             "Divider",
@@ -50,6 +53,7 @@
         #define ENABLE_PAUSE_DURING_DELAY_CONTROL
 
         #ifdef ENABLE_DELAY_TICKS_CONTROL
+            Serial.println(F("\tDividedClockedBehaviour creating delay_ticks_control")); Serial.flush();
             ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
                 "Delay",
                 this,
@@ -97,6 +101,7 @@
         #endif
 
         #ifdef ENABLE_AUTO_RESTART_CONTROL
+            Serial.println(F("\tDividedClockedBehaviour creating auto_restart_control")); Serial.flush();
             ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
                 "Restart",
                 this,
@@ -108,6 +113,7 @@
         #endif
 
         #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
+            Serial.println(F("\tDividedClockedBehaviour creating pause_during_delay_control")); Serial.flush();
             ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
                 "Pause",
                 this,
@@ -145,6 +151,7 @@
             menuitems->add(debugbar2);
         }*/
 
+        Serial.println(F("\tDividedClockedBehaviour calling ClockedBehaviour::make_menu_items()")); Serial.flush();        
         ClockedBehaviour::make_menu_items();
 
         return menuitems;

@@ -18,17 +18,13 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
             return (char*)"Neutron";
         }
 
-        /*#ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem *> make_menu_items() override;
-        #endif*/
-
         virtual void on_bar(int bar) override {
             MIDIBassBehaviour::on_bar(bar);
             ClockedBehaviour::on_bar(bar);
         }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items() override {
+            FLASHMEM virtual LinkedList<MenuItem*> *make_menu_items() override {
                 ClockedBehaviour::make_menu_items();
                 return MIDIBassBehaviour::make_menu_items();
             }

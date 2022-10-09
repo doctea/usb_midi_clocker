@@ -25,7 +25,7 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
     return inst_;
 }
 
-FLASHMEM void setup_behaviour_manager() {
+void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
     #ifdef ENABLE_APCMINI
@@ -118,12 +118,13 @@ FLASHMEM void setup_behaviour_manager() {
 
 
 #ifdef ENABLE_SCREEN
-    FLASHMEM void DeviceBehaviourManager::make_menu_items(Menu *menu) {
+    void DeviceBehaviourManager::create_behaviour_menu_items(Menu *menu) {
         for (int i = 0 ; i < behaviours->size() ; i++) {
-            Serial.printf(F("\t%i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
+            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items %i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
             LinkedList<MenuItem *> *menuitems = behaviours->get(i)->make_menu_items();
+            Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size());
             for (int n = 0 ; n < menuitems->size() ; n++) {
-                Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label);
+                Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label); Serial.flush();
                 menu->add(menuitems->get(n));
             }
         }

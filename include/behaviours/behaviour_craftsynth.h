@@ -26,7 +26,7 @@ class CraftSynthSpreadParameter : public MIDICCParameter {
         }
 
         virtual const char* parseFormattedDataType(byte value) {
-            static char fmt[20] = "              ";
+            static char fmt[MENU_C_MAX] = "              ";
             switch (value) {
                 case 0 ... 63:
                     sprintf(fmt, "%-3i", value); break;
@@ -114,18 +114,18 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#note_off"); };
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-            Serial.printf("DeviceBehaviour_CraftSynth#initialise_parameters()...");
+        FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+            Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)
                 return this->parameters;
 
-            Serial.println("\tcalling DeviceBehaviourUSBBase::initialise_parameters()"); 
+            Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
             DeviceBehaviourUSBBase::initialise_parameters();
-            Serial.println("\tcalling ClockedBehaviour::initialise_parameters()"); 
+            Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
             ClockedBehaviour::initialise_parameters();
 
-            Serial.println("\tAdding parameters...");
+            Serial.println(F("\tAdding parameters..."));
             //parameters->clear();
             // todo: read these from a file
             //this->add_parameters();

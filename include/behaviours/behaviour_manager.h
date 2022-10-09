@@ -24,7 +24,7 @@ class DeviceBehaviourManager {
         LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb;// = LinkedList<DeviceBehaviourUSBBase *>();
         LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial;// = LinkedList<DeviceBehaviourSerialBase *>();
 
-        void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
+        FLASHMEM void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
                 Serial.println(F("registerBehaviour<DeviceSerialUSB> passed a nullptr!")); Serial.flush();
                 return;
@@ -32,7 +32,7 @@ class DeviceBehaviourManager {
             this->behaviours_usb->add(behaviour);
             this->behaviours->add(behaviour);
         }
-        void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
+        FLASHMEM void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
                 Serial.println(F("registerBehaviour<DeviceSerialBase> passed a nullptr!")); Serial.flush();
                 return;
@@ -188,9 +188,8 @@ class DeviceBehaviourManager {
         }
 
         #ifdef ENABLE_SCREEN
-            void make_menu_items(Menu *menu);
+            void create_behaviour_menu_items(Menu *menu);
         #endif
-
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
             const int size = this->behaviours->size();
