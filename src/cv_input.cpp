@@ -33,7 +33,7 @@ void setup_cv_input() {
 }
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
-void setup_parameters() {
+FLASHMEM void setup_parameters() {
     // add the available parameters to a list used globally and later passed to each selector menuitem
     Serial.println(F("==== begin setup_parameters ====")); Serial.flush();
     tft_print((char*)"..setup_parameters...");
@@ -72,7 +72,7 @@ void setup_parameters() {
 }
 
 // set up the menus to provide control over the Parameters and ParameterInputs
-void setup_parameter_menu() {
+FLASHMEM void setup_parameter_menu() {
     Serial.println("==== setup_parameter_menu starting ====");
 
     Serial.println("Adding ParameterSelectorControls for available_inputs...");
@@ -81,7 +81,13 @@ void setup_parameter_menu() {
 
     // ask ParameterManager to add all the menu items for the Parameters
     // todo: dynamically loop over all the available behaviours
-    parameter_manager.addParameterSubMenuItems(menu, behaviour_craftsynth->get_label(), behaviour_craftsynth->get_parameters());
+    parameter_manager.addParameterSubMenuItems(
+        menu, 
+        behaviour_craftsynth->get_label(), 
+        behaviour_craftsynth->get_parameters()
+    );
+
+    parameter_manager.addAllVoltageSourceMenuItems(menu);
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);

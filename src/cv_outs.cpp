@@ -82,7 +82,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
     );
 }
 
-void setup_cv_output() {
+FLASHMEM void setup_cv_output() {
   #ifdef ENABLE_CLOCKS
     for (int i = 0 ; i < NUM_CLOCKS ; i++) {
       pinMode(cv_out_clock_pin[i], OUTPUT);

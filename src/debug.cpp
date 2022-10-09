@@ -14,7 +14,7 @@
     Serial.printf("debug_free_ram: %i\n", freeRam());
   }
 
-  void reset_teensy() {
+  FLASHMEM void reset_teensy() {
       // https://forum.pjrc.com/threads/57810-Soft-reboot-on-Teensy4-0
       #define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
       #define CPU_RESTART_VAL 0x5FA0004

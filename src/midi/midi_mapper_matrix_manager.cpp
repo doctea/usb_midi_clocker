@@ -49,7 +49,7 @@ void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char 
 }
 
 // initialise the output pointers, initialise the outputs and assign them to their defaults
-void setup_midi_mapper_matrix_manager() {
+FLASHMEM void setup_midi_mapper_matrix_manager() {
     Serial.println("##### setup_midi_mapper_matrix_manager.."); Serial.flush();
     midi_matrix_manager = MIDIMatrixManager::getInstance();
 

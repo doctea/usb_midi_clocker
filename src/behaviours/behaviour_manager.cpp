@@ -25,7 +25,7 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
     return inst_;
 }
 
-void setup_behaviour_manager() {
+FLASHMEM void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
     #ifdef ENABLE_APCMINI
@@ -65,48 +65,49 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
-        Serial.println("about to register DeviceBehaviour_CraftSynth..."); Serial.flush();
+        Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial.flush();
         //behaviour_craftsynth = new DeviceBehaviour_CraftSynth();  // can be used as an output so has to be instantiated at compile time
         behaviour_manager->registerBehaviour(behaviour_craftsynth);
-        Serial.println("Finished registering"); Serial.flush();
+        Serial.println(F("Finished registering")); Serial.flush();
     #endif
 
     #ifdef ENABLE_CHOCOLATEFEET_USB
-        Serial.println("about to register DeviceBehaviour_Chocolate..."); Serial.flush();
+        Serial.println(F("about to register DeviceBehaviour_Chocolate...")); Serial.flush();
         behaviour_chocolate = new DeviceBehaviour_Chocolate();
         behaviour_manager->registerBehaviour(behaviour_chocolate);
-        Serial.println("Finished registering"); Serial.flush();
+        Serial.println(F("Finished registering")); Serial.flush();
     #endif
 
     #ifdef ENABLE_BITBOX
-        Serial.println("about to register behaviour_bitbox..."); Serial.flush();
+        Serial.println(F("about to register behaviour_bitbox...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_bitbox);
+        Serial.println(F("connecting device output..")); Serial.flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-        Serial.println("Finished registering"); Serial.flush();
+        Serial.println(F("Finished registering")); Serial.flush();
     #endif
 
     #ifdef ENABLE_BASS
-        Serial.println("about to register behaviour_neutron..."); Serial.flush();
+        Serial.println(F("about to register behaviour_neutron...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_neutron);
         behaviour_neutron->connect_device_output(&ENABLE_BASS);
-        Serial.println("Finished registering"); Serial.flush();
+        Serial.println(F("Finished registering")); Serial.flush();
     #endif
 
     #ifdef ENABLE_LESTRUM
-        Serial.println("aboutg to register behaviour_lestrum..."); Serial.flush();
+        Serial.println(F("about to register behaviour_lestrum...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);
         behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
-        Serial.println("Finished registering"); Serial.flush();
+        Serial.println(F("Finished registering")); Serial.flush();
     #endif
     
     #ifdef ENABLE_DRUMKIT
-        Serial.println("aboutg to register behaviour_drumkit..."); Serial.flush();
+        Serial.println(F("about to register behaviour_drumkit...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_drumkit);
         behaviour_drumkit->connect_device_input(&ENABLE_DRUMKIT);
-        Serial.println("Finished registering"); Serial.flush();
+        Serial.println(F("Finished registering")); Serial.flush();
     #endif
     
-    Serial.println("Exiting setup_behaviour_manager()");
+    Serial.println(F("Exiting setup_behaviour_manager()"));
 
     /*usb_manager->registerBehaviour(new USBDevice_Bamble());
     usb_manager->registerBehaviour(new USBDevice_Beatstep());
@@ -117,12 +118,12 @@ void setup_behaviour_manager() {
 
 
 #ifdef ENABLE_SCREEN
-    void DeviceBehaviourManager::make_menu_items(Menu *menu) {
-        for (int i = 0 ; i < behaviours.size() ; i++) {
-            Serial.printf("\t%i: calling make_menu_items on behaviour '%s'\n", i, behaviours.get(i)->get_label()); Serial.flush(); 
-            LinkedList<MenuItem *> *menuitems = behaviours.get(i)->make_menu_items();
+    FLASHMEM void DeviceBehaviourManager::make_menu_items(Menu *menu) {
+        for (int i = 0 ; i < behaviours->size() ; i++) {
+            Serial.printf(F("\t%i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
+            LinkedList<MenuItem *> *menuitems = behaviours->get(i)->make_menu_items();
             for (int n = 0 ; n < menuitems->size() ; n++) {
-                Serial.printf("\t\tadding menuitem '%s'\n", menuitems->get(n)->label);
+                Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label);
                 menu->add(menuitems->get(n));
             }
         }

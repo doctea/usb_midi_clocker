@@ -119,7 +119,7 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 //DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
 DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
 
-void setup_menu() {
+FLASHMEM void setup_menu() {
 
     Serial.println("Instantiating DisplayTranslator_STeensy..");
     tft = &steensy; //DisplayTranslator_STeensy();

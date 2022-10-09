@@ -50,7 +50,7 @@ extern DisplayTranslator_Configured steensy;
         }
     }
 
-    void setup_typing_keyboard() {
+    FLASHMEM void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
     }
 #endif

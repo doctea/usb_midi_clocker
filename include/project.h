@@ -79,7 +79,7 @@ class Project {
             //initialise_sequence_slots();
         }
 
-        void setup_project() {
+        FLASHMEM void setup_project() {
             setProjectNumber(this->current_project_number);
 
             initialise_sequence_slots();

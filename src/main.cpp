@@ -62,7 +62,7 @@ void do_tick(uint32_t ticks);
 
 #include "input_keyboard.h"
 
-void setup() {
+FLASHMEM void setup() {
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif

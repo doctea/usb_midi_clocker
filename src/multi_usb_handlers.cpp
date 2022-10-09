@@ -185,7 +185,7 @@ void global_on_restart() {
   Serial.println(F("<==on_restart()"));
 }
 
-void setup_multi_usb() {
+FLASHMEM void setup_multi_usb() {
   Serial.print(F("Arduino initialising usb/midi...")); Serial.flush();
 
   Usb.begin();
