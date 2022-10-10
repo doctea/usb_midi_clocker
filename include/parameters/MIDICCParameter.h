@@ -62,7 +62,8 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             return bvalue;
         }*/
 
-        virtual void setTargetValueFromData(byte value) override {
+        //virtual void setTargetValueFromData(byte value) override {
+        virtual void setTargetValueFromData(byte value, bool force = false) override {
             /*if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData passed %f\n", value);
             value = (value + 1.0f) / 2.0;
             if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData re-normalised to %f\n", value);
@@ -74,7 +75,7 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             
             if (this->target!=nullptr) {
                 if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData(%i, %i, %i)\n", cc_number, value, this->channel);
-                if (last_value!=value)
+                if (last_value!=value || force)
                     this->target->sendControlChange(this->cc_number, (byte)value, this->channel);
                 last_value = value;
             } else {
