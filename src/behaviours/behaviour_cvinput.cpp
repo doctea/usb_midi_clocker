@@ -16,8 +16,7 @@
     FLASHMEM LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         #ifdef ENABLE_BASS_TRANSPOSE
-            SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
-
+            //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
             /*
                     const char *label, 
                     TargetClass *target_object, 
