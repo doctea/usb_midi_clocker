@@ -1,6 +1,12 @@
 
 #include "Config.h"
 
+#include "storage.h"
+
+extern DisplayTranslator_Configured steensy;
+
+#include "screenshot.h"
+
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
@@ -16,30 +22,35 @@
 
     void OnPress(int key) {
         switch(key) {
-            case KEYD_UP        : menu->knob_left(); Serial.println("UP"); break;
-            case KEYD_DOWN      : menu->knob_right(); Serial.println("DN"); break;
+            case KEYD_DELETE    : 
+                if (keyboard1.getModifiers()==5)  
+                    reset_teensy();  
+                break; /* ctrl+alt+delete to soft reboot */
+            case KEYD_UP        : Serial.println("UP");     menu->knob_left(); break;
+            case KEYD_DOWN      : Serial.println("DN");     menu->knob_right(); break;
             case KEYD_LEFT      : 
-            case KEYD_BACKSPACE :
-                Serial.println("LEFT");
-                menu->button_back();
+            case KEYD_BACKSPACE : Serial.println("LEFT");   menu->button_back(); break;
+            case KEYD_RIGHT     : Serial.println("RIGHT"); 
+            case KEYD_ENTER     : Serial.println("selecting");      menu->button_select(); break;
+            case KEYD_HASH      : Serial.println("right-button");   menu->button_right(); break;
+            case 'r'            : 
+                Serial.println("setting restart_on_next_bar");
+                restart_on_next_bar = true; 
                 break;
-            case KEYD_RIGHT     : 
-                Serial.println("RIGHT"); 
-            case KEYD_ENTER     :
-                menu->button_select();
-                Serial.println("selecting"); 
+            case 'l'            : 
+                Serial.println("loading selected sequence");
+                project.load_selected_sequence(); 
                 break;
-            case KEYD_HASH      :
-                menu->button_right();
+            case ' '            :
+                Serial.println("Saving screenshot!");
+                save_screenshot(&steensy.actual);
                 break;
-            case 'r'            : restart_on_next_bar = true; break;
-            case 'l'            : project.load_selected_sequence(); break;
             default:
-                Serial.printf("receiving OnPress(%i)\n", key);
+                Serial.printf("received unhandled OnPress(%i) with modifier %i!\n", key, keyboard1.getModifiers());
         }
     }
 
-    void setup_typing_keyboard() {
+    FLASHMEM void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
     }
 #endif

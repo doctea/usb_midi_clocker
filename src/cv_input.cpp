@@ -11,11 +11,8 @@
 
 #include "devices/ADCPimoroni24v.h"
 
-//#include "midi_mapper_matrix_manager.h"
-
-#include "behaviour_base.h"
-//#include "behaviour_manager.h"
-#include "behaviour_craftsynth.h"
+#include "behaviours/behaviour_base.h"
+#include "behaviours/behaviour_craftsynth.h"
 
 ParameterManager parameter_manager = ParameterManager();
 
@@ -36,10 +33,10 @@ void setup_cv_input() {
 }
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
-void setup_parameters() {
+FLASHMEM void setup_parameters() {
     // add the available parameters to a list used globally and later passed to each selector menuitem
-    Serial.println(F("==== begin setup_parameters ===="));
-    tft_print((char*)"setup_parameters...");
+    Serial.println(F("==== begin setup_parameters ====")); Serial.flush();
+    tft_print((char*)"..setup_parameters...");
 
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
@@ -62,18 +59,12 @@ void setup_parameters() {
     parameter_manager.addParameters(params);
 
     // setup the default mappings
-    // TODO: make this a property of the Parameter, not the ParameterInputs, so we can have multiple mappings
     // TODO: load this from a saved config file
-    /*Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
-    vpi1->setTarget(behaviour_craftsynth->getParameterForLabel("Cutoff")); 
-    vpi2->setTarget(behaviour_craftsynth->getParameterForLabel("Filter Morph"));
-    vpi3->setTarget(behaviour_craftsynth->getParameterForLabel("Distortion")); 
-    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");*/
-    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS.........");
-    behaviour_craftsynth->getParameterForLabel((char*)F("Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
+    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS........."); Serial.flush();
+    behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS");
+    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS"); Serial.flush();
 
     parameter_manager.setDefaultParameterConnections();
 
@@ -81,7 +72,7 @@ void setup_parameters() {
 }
 
 // set up the menus to provide control over the Parameters and ParameterInputs
-void setup_parameter_menu() {
+FLASHMEM void setup_parameter_menu() {
     Serial.println("==== setup_parameter_menu starting ====");
 
     Serial.println("Adding ParameterSelectorControls for available_inputs...");
@@ -90,7 +81,14 @@ void setup_parameter_menu() {
 
     // ask ParameterManager to add all the menu items for the Parameters
     // todo: dynamically loop over all the available behaviours
-    parameter_manager.addParameterSubMenuItems(menu, behaviour_craftsynth->get_label(), behaviour_craftsynth->get_parameters());
+    parameter_manager.addParameterSubMenuItems(
+        menu, 
+        behaviour_craftsynth->get_label(), 
+        behaviour_craftsynth->get_parameters()
+    );
+
+    //parameter_manager.addAllVoltageSourceMenuItems(menu);
+    parameter_manager.addAllVoltageSourceCalibrationMenuItems(menu);
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);

@@ -3,8 +3,8 @@
 
 #include "Config.h"
 #include "ConfigMidi.h"
-#include "midi_outs.h"
-//#include "MidiMappings.h"
+#include "midi/midi_outs.h"
+//#include "midi/MidiMappings.h"
 #include <MIDI.h>
 //#include "usb.h"
 

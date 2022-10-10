@@ -3,7 +3,7 @@
 
 #include "parameters/Parameter.h"
 
-#include "midi_out_wrapper.h"
+#include "midi/midi_out_wrapper.h"
 
 //template<class MIDIOutputWrapper, class DataType>
 //template<class OutputClass>
@@ -20,15 +20,18 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 this->channel = channel;
                 this->minimumDataValue = 0;
                 this->maximumDataValue = 127;
+
+                //this->debug = true;
         }
 
         MIDICCParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel, byte maximum_value) 
             : MIDICCParameter(label, target, cc_number, channel) {
-                //this->maximumNormalValue = maximum_value;
+                this->maximumDataValue = maximum_value;
+                //this->debug = true;
         }
 
         /*virtual const char* parseFormattedDataType(byte value) {
-            static char fmt[20] = "              ";
+            static char fmt[MENU_C_MAX] = "              ";
             //sprintf(fmt, "%5i (signed)",      (int)(this->maximum_value*this->getCurrentValue())); //getCurrentValue());
             sprintf(fmt, "%i", value); //this->get_midi_value_for_double(this->getCurrentValue()));
             return fmt;
@@ -36,7 +39,7 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
 
         virtual const char* getFormattedValue() override {
             //return this->parseFormattedDataType(this->get_midi_value_for_double(this->getCurrentValue()));
-            static char fmt[20] = "              ";
+            static char fmt[MENU_C_MAX] = "              ";
             //sprintf(fmt, "%i", this->get_midi_value_for_double(this->getCurrentNormalValue()));
             sprintf(fmt, "%i", this->getCurrentDataValue()); //get_midi_value_for_double(this->getCurrentNormalValue()));
             //Serial.printf("getFormattedValue: '%s'\n", fmt);
@@ -45,7 +48,7 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
 
         /*virtual const char* getFormattedValue(double value) override {
             //return this->parseFormattedDataType(this->get_midi_value_for_double(this->getCurrentValue()));
-            static char fmt[20] = "              ";
+            static char fmt[MENU_C_MAX] = "              ";
             sprintf(fmt, "%i    ", this->get_midi_value_for_double(this->getCurrentValue()));
             //Serial.printf("getFormattedValue: '%s'\n", fmt);
             return fmt;
@@ -62,7 +65,6 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             return bvalue;
         }*/
 
-        //virtual void setTargetValueFromData(byte value) override {
         virtual void setTargetValueFromData(byte value, bool force = false) override {
             /*if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData passed %f\n", value);
             value = (value + 1.0f) / 2.0;
@@ -82,7 +84,6 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 if (this->debug) Serial.printf("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n", this->label);
             }
         }
-
 };
 
 #endif

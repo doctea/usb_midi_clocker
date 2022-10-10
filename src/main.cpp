@@ -21,6 +21,7 @@
 #ifdef ENABLE_SCREEN
   //#include "tft.h"
   #include "menu.h"
+  #include "mymenu/menu_debug.h"
 #endif
 #include "project.h"
 
@@ -42,10 +43,10 @@ void do_tick(uint32_t ticks);
 #endif
 
 //#include "usb.h"
-#include "midi_pc_usb.h"
+#include "midi/midi_pc_usb.h"
 
-#include "MidiMappings.h"
-#include "midi_outs.h"
+#include "midi/MidiMappings.h"
+#include "midi/midi_outs.h"
 
 #include "bpm.h"
 #include "clock.h"
@@ -57,11 +58,11 @@ void do_tick(uint32_t ticks);
 
 #include "multi_usb_handlers.h"
 
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 #include "input_keyboard.h"
 
-void setup() {
+FLASHMEM void setup() {
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif
@@ -147,6 +148,8 @@ void setup() {
     menu->start();
     //tft_start();
   #endif
+
+  setup_debug_menu();
 
   Serial.println("Finished setup()!");
 }

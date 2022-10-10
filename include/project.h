@@ -2,14 +2,15 @@
 #define PROJECT__INCLUDED
 
 #include "storage.h"
-#include "midi_looper.h"
+#include "midi/midi_looper.h"
 
-#include "behaviour_subclocker.h"
-/*#include "behaviour_beatstep.h"
-#include "behaviour_keystep.h"
-#include "behaviour_mpk49.h"*/
+#include "behaviours/behaviour_subclocker.h"
+/*#include "behaviours/behaviour_beatstep.h"
+#include "behaviours/behaviour_keystep.h"
+#include "behaviours/behaviour_mpk49.h"*/
 
-#include "midi_mapper_matrix_manager.h"
+#include "midi/midi_mapper_matrix_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
@@ -78,7 +79,7 @@ class Project {
             //initialise_sequence_slots();
         }
 
-        void setup_project() {
+        FLASHMEM void setup_project() {
             setProjectNumber(this->current_project_number);
 
             initialise_sequence_slots();
@@ -209,7 +210,7 @@ class Project {
             }
 
             bool load_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf("load for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
+                Serial.printf("load for selected_sequence_number project %i / loop %i\n", current_project_number, selected_loop_number);
                 //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
@@ -217,7 +218,7 @@ class Project {
                 return result;
             }
             bool save_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf("save for selected_sequence_number %i/%i\n", current_project_number, selected_loop_number);
+                Serial.printf("save for selected_sequence_number project %i / loop %i\n", current_project_number, selected_loop_number);
                 //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
                 bool result = track->save_loop(current_project_number, selected_loop_number);
                 if (result) {
@@ -285,8 +286,13 @@ class Project {
             myFile.printf("id=%i\n", save_to_project_number);
 
             // subclocker settings
-            myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
-            myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
+            //myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
+            //myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
+            LinkedList<String> behaviour_lines = LinkedList<String>();
+            behaviour_manager->save_project_add_lines(&behaviour_lines);
+            for (int i = 0 ; i < behaviour_lines.size() ; i++) {
+                myFile.println(behaviour_lines.get(i));
+            }
 
             // midi matrix settings
             for (int source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
@@ -312,7 +318,7 @@ class Project {
             File myFile;
 
             if (isLoadMatrixMappings()) {
-                Serial.printf("load_project_settings(%i) resetting matrix!\n");
+                Serial.printf("load_project_settings(%i) resetting matrix!\n", project_number);
                 midi_matrix_manager->reset_matrix(); 
             }
 
@@ -342,13 +348,13 @@ class Project {
         }
 
         void load_project_parse_line(String line) {
-            if (line.charAt(0)==';') {
+            if (line.charAt(0)==';') 
                 return;  // skip comment lines
-            } else if (line.startsWith("subclocker_divisor=")) {
-                behaviour_subclocker->set_divisor((int) line.remove(0,String("subclocker_divisor=").length()).toInt());
-            } else if (line.startsWith("subclocker_delay_ticks=")) {
-                behaviour_subclocker->set_delay_ticks((int) line.remove(0,String("subclocker_delay_ticks=").length()).toInt());
-            } else if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
+
+            String key = line.substring(0, line.indexOf('='));
+            String value = line.substring(line.indexOf('=')+1);
+
+            if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
                 // legacy save format, pre-matrix
                 Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
                 line = line.remove(0,String("midi_output_map=").length());
@@ -365,6 +371,9 @@ class Project {
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+            } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
+                // ask behaviour_manager to process the line
+                Serial.printf("project read line '%s', processed by behaviour_manager\n", line.c_str());
             }
         }
 };

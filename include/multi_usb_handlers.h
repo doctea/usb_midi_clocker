@@ -4,7 +4,7 @@
 #include "Config.h"
 #include "ConfigMidi.h"
 #include "bpm.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 
 //#include "usb_device_handler.h"
@@ -55,7 +55,7 @@ extern use_MIDIDevice_BigBuffer midi15;
 //extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES];
 //extern uint64_t usb_midi_connected[NUM_USB_DEVICES];
 
-//#include "behaviour_base.h"
+//#include "behaviours/behaviour_base.h"
 
 class DeviceBehaviourUSBBase;
 

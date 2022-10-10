@@ -71,11 +71,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - recorded notes are shown on display in piano roll style
   - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
   - momentary overwrite mode that cuts notes
-- Allow Behaviours to register CCs they respond to and can generate
-  - So that can remap these as sources and targets
-  - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
-  - Allow CV input to be mapped to CC outputs
 - CV to MIDI CC 
+  - Allow CV input to be mapped to CC outputs
 
 ### Behaviours
 
@@ -84,12 +81,14 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
 - behaviour_bitbox: clock to 1010 Music Bitbox mk2, also notes, over midi DIN
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
+- behaviour_clocked: base classes for handling midi clock delay and divison
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0
 - behaviour_drumkit: input from midi drumkit over DIN
 - behaviour_keystep: sends clock and receives notes
 - behaviour_lestrum: input from LeStrum on both channels
 - behaviour_mpk49: input from Akai MK49, including control over looper
 - behaviour_neutron: bass drone and clock to Neutron over MIDI DIN
+- behaviour_midibass: base classes for octave-locking and droning 
 - behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
@@ -99,17 +98,17 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 - Teensy 4.1
   - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs)
-- ST7789 oled screen + rotary encoder + two wired buttons for control
+- ST7789 oled screen for display
   - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789
   - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu
-  - https://github.com/doctea/mymenu
-- Rotary encoder and some buttons for controlling the screen and options
+- Rotary encoder + two wired buttons for control or USB typing keyboard
+  - and [mymenu](https://github.com/doctea/mymenu) library
 - Akai APCMini for controlling the sequencer and clocks
-- SD card in the onboard Teensy SD card reader
+- SD card in the onboard Teensy SD card reader for saving projects, sequences and loops
 - DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' below
   - I was originally using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377 originally -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
   - But I am now using one of these instead: https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e?_pos=1&_sid=b1dce7a8e&_ss=r (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
-- For CV input: Pimoroni +/- 24v 1015 module https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003 with https://github.com/doctea/parameters
+- For CV input: Pimoroni +/- 24v 1015 module https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003 and [parameters](https://github.com/doctea/parameters) library
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
 
 ## Suggested wiring 
@@ -207,17 +206,19 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~MIDI input/output matrix?~~
 - Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CC modulation
-  - CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)
+  - ~~CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)~~
     - this is mostly working now..!
       - some performance issues in reading the data, though
         - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart?
     - some todos remain:
       - reassign modulation sources
       - load/save modulation settings
+         - working; but kinda impractical; how do we want to handle this?
       - lock/hold modulation settings
       - auto-advance modulation settings?
     - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
   - Record and playback CCs as well as MIDI
+  - tempo-synced LFOs etc...
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
 - Improve looper quantizer (take note length into consideration)
@@ -236,7 +237,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - shortcuts for different functions would make this something that could be performed with
   - also opens the door to allow naming of patterns/projects?
 - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
-
+- Allow Behaviours to register CCs they respond to and can generate
+  - So that can remap these as sources and targets
+  - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
+  
+  
 ## Explanation/demo
 
 ![my unit](https://github.com/doctea/usb_midi_clocker/blob/main/media/my%20unit.jpg "My unit")

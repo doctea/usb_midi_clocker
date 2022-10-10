@@ -1,6 +1,6 @@
 #include "Config.h"
 #include "clock.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 #ifdef USE_UCLOCK
 
@@ -37,7 +37,7 @@
 
   /// use cheapclock clock
   unsigned long last_ticked_at_micros = micros();
-  void setup_cheapclock() {
+  FLASHMEM void setup_cheapclock() {
     ticks = 0;
     set_bpm(bpm_current);
   }

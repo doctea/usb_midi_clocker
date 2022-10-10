@@ -1,13 +1,13 @@
 #include "Config.h"
 
 #include "bpm.h"
-#include "midi_outs.h"
+#include "midi/midi_outs.h"
 
 #include "multi_usb_handlers.h"
 
 #include "tft.h"
 
-#include "behaviour_manager.h"
+#include "behaviours/behaviour_manager.h"
 
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
@@ -185,15 +185,18 @@ void global_on_restart() {
   Serial.println(F("<==on_restart()"));
 }
 
-void setup_multi_usb() {
-  Serial.print(F("Arduino initialising usb/midi..."));
+FLASHMEM void setup_multi_usb() {
+  Serial.print(F("Arduino initialising usb/midi...")); Serial.flush();
 
   Usb.begin();
+  Serial.println(F("Usb.begin() returned")); Serial.flush();
   for (int i = 0 ; i < 5 ; i++) {
     //digitalWrite(LED_BUILTIN, HIGH);
+    Serial.printf(F("%i/5: Waiting 500ms for USB to settle down.."), i+1); Serial.flush();
     tft_print((char*)".");
     delay(500);
     //digitalWrite(LED_BUILTIN, LOW);
   }
-  tft_print((char*)"\n");
+  tft_print((char*)"done.\n");
+  Serial.println(F("setup_multi_usb() finishing.")); Serial.flush();
 }

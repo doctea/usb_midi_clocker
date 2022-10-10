@@ -5,7 +5,7 @@
 
 //#define byte uint8_t
 
-void init_sequence() {
+FLASHMEM void init_sequence() {
   /*for (int seq = 0 ; seq < NUM_SEQUENCES ; seq++) {
     for (int ste = 0 ; ste < NUM_STEPS ; ste++) {
       if (ste%(byte)clock_multiplier[seq]==0 || clock_multiplier[seq]<1.0) {
