@@ -62,6 +62,8 @@ void do_tick(uint32_t ticks);
 
 #include "input_keyboard.h"
 
+#include "profiler.h"
+
 FLASHMEM void setup() {
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
@@ -156,10 +158,15 @@ FLASHMEM void setup() {
 
 //long loop_counter = 0;
 
-// -----------------------------------------------------------------------------`
-//
+#define NUMBER_AVERAGES 1024
+unsigned long long main_loop_length_averages[NUMBER_AVERAGES];
+int count = 0;
+
+// -----------------------------------------------------------------------------
+// 
 // -----------------------------------------------------------------------------
 void loop() {
+  unsigned long long start_loop_micros_stamp = micros();
   bool debug = false;
   if (debug) { Serial.println("start of loop!"); Serial.flush(); }
 
@@ -173,6 +180,7 @@ void loop() {
       //Serial.println(F("100000th loop()"));
     }
   #endif
+
   if (debug) { Serial.println("about to Usb.Task()"); Serial.flush(); }
   Usb.Task();
   if (debug) { Serial.println("just did Usb.Task()"); Serial.flush(); }
@@ -217,8 +225,10 @@ void loop() {
       restart_on_next_bar = false;
     }
     */
-
-  } else {
+  }
+  //} else {
+  if (ticked || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
+      // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
     #ifdef ENABLE_SCREEN
       //tft_update(ticks);
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial.flush();
@@ -288,6 +298,16 @@ void loop() {
         //delay(1000);
         //Serial.println("exiting sleep before end of loop"); Serial.flush();
 
+  //delay(5);
+
+  main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
+  unsigned long long accumulator = 0;
+  for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
+    accumulator += main_loop_length_averages[i];
+  }
+  average_loop_micros = accumulator / (unsigned long long)NUMBER_AVERAGES;
+  //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
+  if (count>=NUMBER_AVERAGES) count = 0;
 }
 
 // called inside interrupt

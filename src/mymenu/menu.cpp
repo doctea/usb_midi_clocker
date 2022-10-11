@@ -33,6 +33,8 @@
 
 #include "clock.h"
 
+#include "profiler.h"
+
 //DisplayTranslator *tft;
 DisplayTranslator_STeensy_Big *tft;
 Menu *menu; // = Menu();
@@ -238,6 +240,18 @@ FLASHMEM void setup_menu() {
     #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
         menu->add(&craftsynth_clock_toggle);
     #endif
+
+    //DirectNumberControl(const char* label, DataType *target_variable, DataType start_value, DataType min_value, DataType max_value, void (*on_change_handler)(DataType last_value, DataType new_value) = nullptr) 
+    DirectNumberControl<unsigned long long> *average = new DirectNumberControl<unsigned long long>(
+        "averages micros per loop", 
+        &average_loop_micros, 
+        average_loop_micros,
+        (unsigned long long)0, 
+        (unsigned long long)(2^64)
+//        nullptr
+    );
+    average->readOnly = true;
+    menu->add(average);
 
     /*#ifdef ENABLE_SUBCLOCKER
         subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
