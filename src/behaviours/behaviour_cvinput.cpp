@@ -15,30 +15,60 @@
 
     FLASHMEM LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
-        #ifdef ENABLE_BASS_TRANSPOSE
-            //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
-            /*
-                    const char *label, 
-                    TargetClass *target_object, 
-                    void(TargetClass::*setter_func)(BaseParameterInput*), 
-                    BaseParameterInput *initial_parameter_input,
-                    LinkedList<BaseParameterInput*> *available_parameter_inputs,
-            */
-            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
-                = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
-                    "Select Parameter Input",
-                    this,
-                    &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                    &parameter_manager.available_inputs
-            );
-            HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
-                &this->last_note, 
-                &this->current_note
-            );
+        //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
+        /*
+                const char *label, 
+                TargetClass *target_object, 
+                void(TargetClass::*setter_func)(BaseParameterInput*), 
+                BaseParameterInput *initial_parameter_input,
+                LinkedList<BaseParameterInput*> *available_parameter_inputs,
+        */
+        ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
+            = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
+                "Select Parameter Input",
+                this,
+                &DeviceBehaviour_CVInput::set_selected_parameter_input,
+                &parameter_manager.available_inputs
+        );
+        HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
+            &this->last_note, 
+            &this->current_note
+        );
 
-            menuitems->add(parameter_input_selector);
-            menuitems->add(harmony);
-        #endif
+        ObjectNumberControl<DeviceBehaviour_CVInput,uint32_t> *length_ticks_control = new
+            ObjectNumberControl<DeviceBehaviour_CVInput,uint32_t> (
+                "Note length",
+                this,
+                &DeviceBehaviour_CVInput::set_note_length,
+                &DeviceBehaviour_CVInput::get_note_length,
+                nullptr
+            );
+        menuitems->add(length_ticks_control);
+
+        /*Serial.println("about to create length_ticks_control.."); Serial.flush();
+        ObjectSelectorControl<DeviceBehaviour_CVInput,uint32_t> *length_ticks_control 
+            = new ObjectSelectorControl<DeviceBehaviour_CVInput,uint32_t>(
+                "Note length",
+                this,
+                &DeviceBehaviour_CVInput::set_note_length,
+                &DeviceBehaviour_CVInput::get_note_length,
+                nullptr
+        );*/
+        /*Serial.println("about to add values.."); Serial.flush();
+        length_ticks_control->add_available_value(0,                 "None");
+        length_ticks_control->add_available_value(PPQN/PPQN,         "-");
+        length_ticks_control->add_available_value(PPQN/4,            "1/32");
+        length_ticks_control->add_available_value(PPQN/3,            "1/12");
+        length_ticks_control->add_available_value(PPQN/2,            "1/8");
+        length_ticks_control->add_available_value(PPQN,              "1/4");
+        length_ticks_control->add_available_value(PPQN*2,            "1/2");
+        length_ticks_control->add_available_value(PPQN*4,            "1");
+        Serial.println("about to add to menuitems list.."); Serial.flush();*/
+        //menuitems->add(length_ticks_control);
+
+        menuitems->add(parameter_input_selector);
+        menuitems->add(harmony);
+
         return menuitems;
     }
 #endif
