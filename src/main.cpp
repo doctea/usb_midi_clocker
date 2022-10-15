@@ -64,6 +64,12 @@ void do_tick(uint32_t ticks);
 
 #include "profiler.h"
 
+#ifdef ENABLE_PROFILER
+  #define NUMBER_AVERAGES 1024
+  unsigned long long *main_loop_length_averages; //[NUMBER_AVERAGES];
+  int count = 0;
+#endif
+
 FLASHMEM void setup() {
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
@@ -153,20 +159,23 @@ FLASHMEM void setup() {
 
   setup_debug_menu();
 
+  #ifdef ENABLE_PROFILER
+    Serial.printf("Allocating array for profiler");
+    main_loop_length_averages = malloc(sizeof(unsigned long long)*NUMBER_AVERAGES);
+  #endif
+
   Serial.println("Finished setup()!");
 }
 
 //long loop_counter = 0;
 
-#define NUMBER_AVERAGES 1024
-unsigned long long main_loop_length_averages[NUMBER_AVERAGES];
-int count = 0;
-
 // -----------------------------------------------------------------------------
 // 
 // -----------------------------------------------------------------------------
 void loop() {
-  unsigned long long start_loop_micros_stamp = micros();
+  #ifdef ENABLE_PROFILER
+    unsigned long long start_loop_micros_stamp = micros();
+  #endif
   bool debug = false;
   if (debug) { Serial.println("start of loop!"); Serial.flush(); }
 
@@ -299,15 +308,16 @@ void loop() {
         //Serial.println("exiting sleep before end of loop"); Serial.flush();
 
   //delay(5);
-
-  main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
-  unsigned long long accumulator = 0;
-  for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
-    accumulator += main_loop_length_averages[i];
-  }
-  average_loop_micros = accumulator / (unsigned long long)NUMBER_AVERAGES;
-  //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
-  if (count>=NUMBER_AVERAGES) count = 0;
+  #ifdef ENABLE_PROFILER
+    main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
+    unsigned long long accumulator = 0;
+    for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
+      accumulator += main_loop_length_averages[i];
+    }
+    average_loop_micros = accumulator / (unsigned long long)NUMBER_AVERAGES;
+    //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
+    if (count>=NUMBER_AVERAGES) count = 0;
+  #endif
 }
 
 // called inside interrupt
