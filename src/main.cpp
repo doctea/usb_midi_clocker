@@ -66,7 +66,7 @@ void do_tick(uint32_t ticks);
 
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
-  unsigned long long *main_loop_length_averages; //[NUMBER_AVERAGES];
+  uint32_t *main_loop_length_averages; //[NUMBER_AVERAGES];
   int count = 0;
 #endif
 
@@ -161,7 +161,7 @@ FLASHMEM void setup() {
 
   #ifdef ENABLE_PROFILER
     Serial.printf("Allocating array for profiler");
-    main_loop_length_averages = malloc(sizeof(unsigned long long)*NUMBER_AVERAGES);
+    main_loop_length_averages = malloc(sizeof(uint32_t)*NUMBER_AVERAGES);
   #endif
 
   Serial.println("Finished setup()!");
@@ -173,9 +173,9 @@ FLASHMEM void setup() {
 // 
 // -----------------------------------------------------------------------------
 void loop() {
-  #ifdef ENABLE_PROFILER
-    unsigned long long start_loop_micros_stamp = micros();
-  #endif
+  //#ifdef ENABLE_PROFILER
+    uint32_t start_loop_micros_stamp = micros();
+  //#endif
   bool debug = false;
   if (debug) { Serial.println("start of loop!"); Serial.flush(); }
 
@@ -310,13 +310,15 @@ void loop() {
   //delay(5);
   #ifdef ENABLE_PROFILER
     main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
-    unsigned long long accumulator = 0;
+    uint32_t accumulator = 0;
     for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
       accumulator += main_loop_length_averages[i];
     }
     average_loop_micros = accumulator / (unsigned long long)NUMBER_AVERAGES;
     //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
     if (count>=NUMBER_AVERAGES) count = 0;
+  #else
+    average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
 }
 

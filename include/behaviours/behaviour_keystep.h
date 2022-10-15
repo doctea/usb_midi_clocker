@@ -31,17 +31,6 @@ class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual p
             this->device->setHandleNoteOff(keystep_handle_note_off);
             this->device->setHandleControlChange(keystep_handle_control_change);
         }
-
-        /*void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            if (keystep_output!=nullptr)
-                keystep_output->sendNoteOn(note, velocity); //, MIDI_CHANNEL_BITBOX 3);
-        }
-
-        void note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            if (keystep_output!=nullptr)
-                keystep_output->sendNoteOff(note, velocity);
-        }*/
-
 };
 
 extern DeviceBehaviour_Keystep *behaviour_keystep;

@@ -1,1 +1,1 @@
-extern unsigned long long average_loop_micros;
+extern uint32_t average_loop_micros;

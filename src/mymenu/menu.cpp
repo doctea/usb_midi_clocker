@@ -243,13 +243,12 @@ FLASHMEM void setup_menu() {
 
     #ifdef ENABLE_PROFILER
         //DirectNumberControl(const char* label, DataType *target_variable, DataType start_value, DataType min_value, DataType max_value, void (*on_change_handler)(DataType last_value, DataType new_value) = nullptr) 
-        DirectNumberControl<unsigned long long> *average = new DirectNumberControl<unsigned long long>(
+        DirectNumberControl<uint32_t> *average = new DirectNumberControl<uint32_t>(
             "averages micros per loop", 
             &average_loop_micros, 
             average_loop_micros,
-            (unsigned long long)0, 
-            (unsigned long long)(2^64)
-    //        nullptr
+            (uint32_t)0, 
+            (uint32_t)(2^64)
         );
         average->readOnly = true;
         menu->add(average);

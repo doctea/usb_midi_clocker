@@ -36,13 +36,6 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual void set_note_length(int32_t length_ticks) {
             this->note_length_ticks = length_ticks;
         }
-        /*virtual void set_selected_parameter_input(BaseParameterInput *input) {
-            //this->source_input = input;
-            if (input!=nullptr)
-                Serial.printf("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n", this->get_label(), input->name);
-            else
-                Serial.printf("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n");
-        }*/
         virtual int32_t get_note_length () {
             return this->note_length_ticks;
         }

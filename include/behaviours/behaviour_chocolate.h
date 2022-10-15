@@ -13,10 +13,6 @@
 
 #include "project.h"
 
-//extern MIDIOutputWrapper *beatstep_output;
-//void beatstep_setOutputWrapper(MIDIOutputWrapper *);
-
-//void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void chocolate_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void chocolate_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void chocolate_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
