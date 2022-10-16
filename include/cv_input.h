@@ -25,4 +25,4 @@ void setup_cv_input();
 void setup_parameters();
 void setup_parameter_menu();
 
-extern ParameterManager parameter_manager;
+extern ParameterManager *parameter_manager;

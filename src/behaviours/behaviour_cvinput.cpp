@@ -11,9 +11,10 @@
     #include "ParameterManager.h"
     #include "mymenu_items/ParameterInputMenuItems.h"
 
-    extern ParameterManager parameter_manager;
+    extern ParameterManager *parameter_manager;
 
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
+        Serial.println("DeviceBehaviour_CVInput::make_menu_items() start"); Serial.flush();
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
         /*
@@ -23,15 +24,17 @@
                 BaseParameterInput *initial_parameter_input,
                 LinkedList<BaseParameterInput*> *available_parameter_inputs,
         */
+        Serial.println("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl"); Serial.flush();
         ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
                 "Select Parameter Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                &parameter_manager.available_inputs
+                parameter_manager->available_inputs
         );
         menuitems->add(parameter_input_selector);
 
+        Serial.println("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus"); Serial.flush();
         HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
             &this->last_note, 
             &this->current_note
@@ -47,7 +50,7 @@
             );
         menuitems->add(length_ticks_control);*/
 
-        Serial.println("about to create length_ticks_control.."); Serial.flush();
+        Serial.println("about to create length_ticks_control ObjectSelectorControl.."); Serial.flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *length_ticks_control 
             = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
                 "Note length",
@@ -67,6 +70,7 @@
         Serial.println("about to add to menuitems list.."); Serial.flush();
         menuitems->add(length_ticks_control);
 
+        Serial.println("returning.."); Serial.flush();
         return menuitems;
     }
 #endif

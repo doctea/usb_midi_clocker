@@ -130,7 +130,7 @@ void setup_behaviour_manager() {
         for (int i = 0 ; i < behaviours->size() ; i++) {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items %i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
             LinkedList<MenuItem *> *menuitems = behaviours->get(i)->make_menu_items();
-            Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size());
+            Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
             for (int n = 0 ; n < menuitems->size() ; n++) {
                 Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label); Serial.flush();
                 menu->add(menuitems->get(n));

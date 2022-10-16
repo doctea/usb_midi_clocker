@@ -6,7 +6,7 @@
 #include "parameter_inputs/VoltageParameterInput.h"
 
 #include "ParameterManager.h"
-extern ParameterManager parameter_manager;
+extern ParameterManager *parameter_manager;
 
 class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
     public:
@@ -110,7 +110,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 this->set_note_length((int) value.toInt());
                 return true;
             } else if (key.equals("parameter_source")) {
-                this->source_input = (VoltageParameterInput*)parameter_manager.getInputForName(value.charAt(0));
+                this->source_input = (VoltageParameterInput*)parameter_manager->getInputForName(value.charAt(0));
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }

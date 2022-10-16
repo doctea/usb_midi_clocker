@@ -77,20 +77,31 @@ FLASHMEM void setup() {
 
   Serial.begin(115200);
   #ifdef WAIT_FOR_SERIAL
+    //tft_print("\nWaiting for serial connection..");
     while (!Serial);
+    //tft_print("Connected serial!\n");
+    Serial.println("Connected serial!"); Serial.flush();
   #endif
+
+  /*while (1) {
+    Serial.printf(".");
+  }*/
+
+  Serial.printf("At start of setup(), free RAM is %u\n", freeRam());
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
   // TODO: have the behaviours add their menu items
-  Serial.println("..USB device handler..");
+  Serial.println(F("..USB device handler.."));
   setup_behaviour_manager();
+  Serial.printf("after setup_behaviour_manager(), free RAM is %u\n", freeRam());
 
   //Serial.println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
-  Serial.println("..MIDI matrix manager..");
+  Serial.println(F("..MIDI matrix manager.."));
   //setup_midi_output_wrapper_manager();
   setup_midi_mapper_matrix_manager();
+  Serial.printf(F("after setup_midi_mapper_matrix_manager(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
@@ -106,28 +117,37 @@ FLASHMEM void setup() {
     tft_print((char*)"Setting up CV..\n");
     setup_cv_output();
   #endif
+  Serial.printf(F("after setup_cv_output(), free RAM is %u\n"), freeRam());
 
   delay( 100 );
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
+  Serial.printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
 
   tft_print((char*)"..storage..\n");
   storage::setup_storage();
+  Serial.printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
+
 
   tft_print((char*)"..setup project..\n");
   project.setup_project();
+  Serial.printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_CV_INPUT
     setup_cv_input();
+    Serial.printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
     setup_parameters();
+    Serial.printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
     setup_parameter_menu();
+    Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
     init_sequence();
+    Serial.printf(F("after init_sequence(), free RAM is %u\n"), freeRam());
   #endif
 
   #ifdef USE_UCLOCK
@@ -140,11 +160,13 @@ FLASHMEM void setup() {
 
   tft_print((char*)"..PC USB..\n");
   setup_pc_usb();
+  Serial.printf(F("after setup_pc_usb(), free RAM is %u\n"), freeRam());
   
   #ifdef ENABLE_USB
     tft_print((char*)"..USB..");
     setup_multi_usb();
     Serial.println(F("USB ready.")); Serial.flush();
+    Serial.printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
 
   Serial.println(F("Arduino ready.")); Serial.flush();
@@ -152,19 +174,22 @@ FLASHMEM void setup() {
     tft_print((char*)"Ready!"); 
     tft_clear();
 
-    Serial.println("About to init menu.."); Serial.flush();
+    Serial.println(F("About to init menu..")); Serial.flush();
     menu->start();
+    Serial.printf(F("after menu->start(), free RAM is %u\n"), freeRam());
     //tft_start();
   #endif
 
   setup_debug_menu();
+  Serial.printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_PROFILER
     Serial.printf("Allocating array for profiler");
     main_loop_length_averages = malloc(sizeof(uint32_t)*NUMBER_AVERAGES);
   #endif
 
-  Serial.println("Finished setup()!");
+  Serial.println(F("Finished setup()!"));
+  Serial.printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 }
 
 //long loop_counter = 0;
@@ -176,7 +201,7 @@ void loop() {
   //#ifdef ENABLE_PROFILER
     uint32_t start_loop_micros_stamp = micros();
   //#endif
-  bool debug = false;
+  bool debug = true;
   if (debug) { Serial.println("start of loop!"); Serial.flush(); }
 
   #ifdef DEBUG_LED
@@ -260,14 +285,15 @@ void loop() {
     #ifdef ENABLE_CV_INPUT
       static unsigned long time_of_last_param_update = 0;
       if (!screen_was_drawn && millis() - time_of_last_param_update > TIME_BETWEEN_CV_INPUT_UPDATES) {
-        if(debug) parameter_manager.debug = true;
-        if(debug) Serial.println("about to do parameter_manager.update_voltage_sources()..");
-        parameter_manager.update_voltage_sources();
-        if(debug) Serial.println("just did parameter_manager.update_voltage_sources()..");
-        if(debug) Serial.println("about to do parameter_manager.update_inputs()..");
-        parameter_manager.update_inputs();
-        parameter_manager.update_mixers();
-        if(debug) Serial.println("just did parameter_manager.update_inputs()..");
+        if(debug) parameter_manager->debug = true;
+        if(debug) Serial.println("about to do parameter_manager->update_voltage_sources().."); Serial.flush();
+        parameter_manager->update_voltage_sources();
+        if(debug) Serial.println("just did parameter_manager->update_voltage_sources().."); Serial.flush();
+        if(debug) Serial.println("about to do parameter_manager->update_inputs().."); Serial.flush();
+        parameter_manager->update_inputs();
+        if(debug) Serial.println("about to do parameter_manager->update_mixers().."); Serial.flush();
+        parameter_manager->update_mixers();
+        if(debug) Serial.println("just did parameter_manager->update_inputs().."); Serial.flush();
         time_of_last_param_update = millis();
       }
     #endif
@@ -314,12 +340,13 @@ void loop() {
     for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
       accumulator += main_loop_length_averages[i];
     }
-    average_loop_micros = accumulator / (unsigned long long)NUMBER_AVERAGES;
+    average_loop_micros = accumulator / NUMBER_AVERAGES;
     //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
     if (count>=NUMBER_AVERAGES) count = 0;
   #else
     average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
+  if(debug) Serial.println("reached end of loop()!"); Serial.flush();
 }
 
 // called inside interrupt
