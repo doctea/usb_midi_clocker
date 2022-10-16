@@ -66,7 +66,7 @@ namespace storage {
     }
   }
 
-  void setup_storage() {
+  FLASHMEM void setup_storage() {
     SD.begin(chipSelect);
 
     if (!SD.exists("sequences")) {
