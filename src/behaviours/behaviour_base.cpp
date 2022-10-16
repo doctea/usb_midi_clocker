@@ -2,6 +2,7 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+
 // called when a receive_note_on message is received from the device
 void DeviceBehaviourUltimateBase::receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
     midi_matrix_manager->processNoteOn(this->source_id, note, velocity); //, channel);
