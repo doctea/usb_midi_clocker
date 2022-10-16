@@ -218,7 +218,7 @@ class DeviceBehaviourUltimateBase {
 
     #ifdef ENABLE_SCREEN
         LinkedList<MenuItem*> *menuitems = nullptr;
-        virtual LinkedList<MenuItem*> *make_menu_items();
+        FLASHMEM virtual LinkedList<MenuItem*> *make_menu_items();
     #endif
     
 };

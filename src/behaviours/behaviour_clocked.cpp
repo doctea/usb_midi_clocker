@@ -31,7 +31,7 @@
         Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial.flush();
         DeviceBehaviourUltimateBase::make_menu_items();
 
-        String bar_label = String(this->get_label()) + String(" Clock");
+        String bar_label = String(this->get_label()) + String(F(" Clock"));
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
         Serial.println(F("\tDividedClockedBehaviour creating divisor_control")); Serial.flush();

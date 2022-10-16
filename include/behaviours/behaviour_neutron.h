@@ -24,7 +24,7 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
         }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items() override {
+            FLASHMEM virtual LinkedList<MenuItem*> *make_menu_items() override {
                 ClockedBehaviour::make_menu_items();
                 return MIDIBassBehaviour::make_menu_items();
             }

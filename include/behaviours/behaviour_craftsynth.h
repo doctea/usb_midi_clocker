@@ -97,7 +97,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             //this->device->setHandleControlChange(craftsynth_control_change);
             //this->device->setHandleNoteOn(craftsynth_note_on);
             //this->device->setHandleNoteOff(craftsynth_note_off);
-            Serial.println("DeviceBehaviour_CraftSynth#setup_callbacks()"); Serial.flush();
+            Serial.println(F("DeviceBehaviour_CraftSynth#setup_callbacks()")); Serial.flush();
         };
 
         /*virtual void init() override {
@@ -143,7 +143,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             parameters->add(new MIDICCParameter((char*)"Filter Cutoff", this,   (byte)34,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
 
-            Serial.printf("Finished initialise_parameters() in %s\n", this->get_label());
+            Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
             return parameters;
         }
