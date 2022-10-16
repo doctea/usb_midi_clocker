@@ -23,7 +23,7 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
             return (char*)"Drumkit";
         }
 
-        virtual void setup_callbacks() override {
+        FLASHMEM virtual void setup_callbacks() override {
             Serial.println("DeviceBehaviour_DrumKit#setup_callbacks..");
             this->input_device->setHandleNoteOn(drumkit_note_on);
             this->input_device->setHandleNoteOff(drumkit_note_off);

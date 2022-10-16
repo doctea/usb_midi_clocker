@@ -92,7 +92,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         }
         virtual bool has_output() { return true; }
 
-        virtual void setup_callbacks() override {
+        FLASHMEM virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             //this->device->setHandleControlChange(craftsynth_control_change);
             //this->device->setHandleNoteOn(craftsynth_note_on);
