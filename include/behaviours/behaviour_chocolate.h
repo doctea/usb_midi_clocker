@@ -47,14 +47,14 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
-        void setup_callbacks() override {
+        virtual void setup_callbacks() override {
             Serial.println("DeviceBehaviour_Chocolate#setup_callbacks()");
             this->device->setHandleNoteOn(chocolate_handle_note_on);
             this->device->setHandleNoteOff(chocolate_handle_note_off);
             //this->device->setHandleNoteOff(chocolate_handle_control_change);
         }
 
-        void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
             //Serial.printf("chocolate got noteOn chan %i, note %i, velocity %i\n", channel, note, velocity); Serial.flush();
             // TODO: control looper(s) from here
             // check other notes to see if they are held; if so then trigger extended action
@@ -88,7 +88,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
             // otherwise, wait for the loop() to fire single events       
         }
 
-        void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
+        virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
             // TODO: control looper(s) from here
             if (note>=NUM_TRACK_NOTES) 
                 return;

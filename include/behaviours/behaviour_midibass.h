@@ -107,7 +107,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
 
         #ifdef ENABLE_SCREEN
-            FLASHMEM LinkedList<MenuItem *> *make_menu_items() override;
+            LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
 

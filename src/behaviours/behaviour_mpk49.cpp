@@ -20,10 +20,3 @@ void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
     //Serial.println("mpk49_handle_system_exclusive");
     if (behaviour_mpk49!=nullptr) behaviour_mpk49->handle_system_exclusive(data, size);
 }
-
-/*MIDIOutputWrapper *mpk49_output = nullptr; //&midi_out_bitbox_wrapper;
-void mpk49_setOutputWrapper(MIDIOutputWrapper *wrapper) {
-    if (mpk49_output!=nullptr)
-        mpk49_output->stop_all_notes();
-    mpk49_output = wrapper;    
-}*/

@@ -12,7 +12,6 @@
 #include "midi/midi_looper.h"
 
 extern MIDIOutputWrapper *mpk49_output;
-void mpk49_setOutputWrapper(MIDIOutputWrapper *);
 
 void mpk49_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
@@ -31,8 +30,8 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         }
         virtual bool has_input() { return true; }
 
-        void setup_callbacks() override {
-            Serial.println("Setting up callbacks for the MPK49");
+        virtual void setup_callbacks() override {
+            Serial.println(F("Setting up callbacks for the MPK49"));
             this->device->setHandleNoteOn(mpk49_handle_note_on);
             this->device->setHandleNoteOff(mpk49_handle_note_off);
             this->device->setHandleControlChange(mpk49_handle_control_change);
@@ -46,9 +45,9 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
             }
         #endif
 
-        void handle_system_exclusive(uint8_t *data, unsigned int size) {
+        virtual void handle_system_exclusive(uint8_t *data, unsigned int size) {
             if (this->debug) {
-                Serial.printf("mpk_handle_system_exclusive of size %i: [",size);
+                Serial.printf(F("mpk_handle_system_exclusive of size %i: ["), size);
                 for (unsigned int i = 0 ; i < size ; i++) {
                     Serial.printf("%02x ", data[i]);
                 }
@@ -57,29 +56,29 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 
             if (data[3]==0x06) {
                 if (data[4]==0x06) { // record pressed
-                    Serial.printf("%s: callinghandle_mmc_record()\n", this->get_label()); Serial.flush();
+                    Serial.printf(F("%s: calling handle_mmc_record()\n"), this->get_label()); Serial.flush();
                     handle_mmc_record();
                 } else if (data[4]==0x01) { // stop pressed
-                    Serial.printf("%s: callinghandle_mmc_stop()\n", this->get_label()); Serial.flush();
+                    Serial.printf(F("%s: calling handle_mmc_stop()\n"), this->get_label()); Serial.flush();
                     handle_mmc_stop();
                 } else if (data[4]==0x02) { // start pressed
-                    Serial.printf("%s: calling handle_mmc_start()\n", this->get_label()); Serial.flush();
+                    Serial.printf(F("%s: calling handle_mmc_start()\n"), this->get_label()); Serial.flush();
                     handle_mmc_start();
                 }
             }
         }
 
-        void handle_mmc_record() {
+        virtual void handle_mmc_record() {
             if (loop_track!=nullptr)
                 loop_track->toggle_recording();
         }
-        void handle_mmc_start() {
+        virtual void handle_mmc_start() {
             if (loop_track!=nullptr) {
                 loop_track->start_playing();
                 playing = true;
             }
         }
-        void handle_mmc_stop() {
+        virtual void handle_mmc_stop() {
             if (loop_track!=nullptr) {
                 loop_track->stop_recording();
                 loop_track->stop_playing();
