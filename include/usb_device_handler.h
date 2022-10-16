@@ -11,4 +11,4 @@
 
 DeviceBehaviourManager* behaviour_manager;
 
-void setup_behaviour_manager();
+FLASHMEM void setup_behaviour_manager();

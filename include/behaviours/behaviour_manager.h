@@ -18,13 +18,13 @@ class DeviceBehaviourManager {
         static DeviceBehaviourManager* getInstance();
 
         // all of the registered behaviours
-        LinkedList<DeviceBehaviourUltimateBase *> *behaviours;// = LinkedList<DeviceBehaviourUltimateBase *>();
+        LinkedList<DeviceBehaviourUltimateBase *> *behaviours = nullptr;// = LinkedList<DeviceBehaviourUltimateBase *>();
 
         // registered behaviours separated by type, so that we can treat them differently for connection and listing purposes
-        LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb;// = LinkedList<DeviceBehaviourUSBBase *>();
-        LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial;// = LinkedList<DeviceBehaviourSerialBase *>();
+        LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb = nullptr;// = LinkedList<DeviceBehaviourUSBBase *>();
+        LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial = nullptr;// = LinkedList<DeviceBehaviourSerialBase *>();
 
-        FLASHMEM void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
+        void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
                 Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial.flush();
                 return;
@@ -32,16 +32,18 @@ class DeviceBehaviourManager {
             this->behaviours_usb->add(behaviour);
             this->behaviours->add(behaviour);
         }
-        FLASHMEM void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
+        void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
                 Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial.flush();
                 return;
             }
             Serial.printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial.flush();
             this->behaviours_serial->add(behaviour);
+            Serial.println(F("Added item to behaviours_serial."));
             this->behaviours->add(behaviour);
+            Serial.println(F("Added item to behaviours."));
         }
-        FLASHMEM void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
+        void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
             if (behaviour==nullptr) {
                 Serial.println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial.flush();
                 return;
@@ -218,19 +220,19 @@ class DeviceBehaviourManager {
 
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
-            if (key.equals("behaviour_start")) {
-                Serial.printf("found behaviour_start for '%s'\n", value.c_str());
+            if (key.equals(F("behaviour_start"))) {
+                Serial.printf(F("found behaviour_start for '%s'\n"), value.c_str());
                 current_behaviour = this->find_behaviour_for_label(value);
                 return true;
-            } else if (key.equals("behaviour_end")) {
-                Serial.printf("found behaviour_end for '%s'\n", value.c_str());
+            } else if (key.equals(F("behaviour_end"))) {
+                Serial.printf(F("found behaviour_end for '%s'\n"), value.c_str());
                 current_behaviour = nullptr;
                 return true;
             } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
-                Serial.printf("loaded key %s for value '%s'\n", key.c_str(), value.c_str());
+                Serial.printf(F("loaded key %s for value '%s'\n"), key.c_str(), value.c_str());
                 return true;
             }
-            Serial.printf("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n", key.c_str(), value.c_str());
+            Serial.printf(F("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n"), key.c_str(), value.c_str());
             return false;
         }
 

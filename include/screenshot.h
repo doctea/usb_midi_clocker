@@ -27,7 +27,7 @@
 
 bool save_screenshot(ST7789_t3 *screen) {
 
-    Serial.println("save_screenshot!");
+    Serial.println(F("save_screenshot!"));
 
     char name[] = "9px_0000.bmp";       // filename convention (will auto-increment)
     const int w = screen->width();                   // image width in pixels
@@ -40,7 +40,7 @@ bool save_screenshot(ST7789_t3 *screen) {
 
     SdFile file;
 
-    Serial.println("Looking for a free filename.."); Serial.flush();
+    Serial.println(F("Looking for a free filename..")); Serial.flush();
     // if name exists, create new filename
     for (int i=0; i<10000; i++) {
         name[4] = (i/1000)%10 + '0';    // thousands place
@@ -51,7 +51,7 @@ bool save_screenshot(ST7789_t3 *screen) {
             break;
         }
     }
-    Serial.printf("Found one in %s!\n", name); Serial.flush();
+    Serial.printf(F("Found one in %s!\n"), name); Serial.flush();
 
     // set fileSize (used in bmp header)
     int rowSize = 4 * ((3*w + 3)/4);      // how many bytes in the row (used to create padding)

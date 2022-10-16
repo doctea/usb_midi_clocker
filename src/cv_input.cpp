@@ -14,7 +14,7 @@
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_craftsynth.h"
 
-ParameterManager *parameter_manager = new ParameterManager(); //nullptr; //ParameterManager();
+ParameterManager *parameter_manager = new ParameterManager();
 
 // initialise the voltage-reading hardware/librareis and the ParameterManager
 void setup_cv_input() {
@@ -56,16 +56,21 @@ FLASHMEM void setup_parameters() {
     // get the available target parameters
     // todo: dynamically pull these from all available behaviours
     // todo: dynamically pull them from other things that could have parameters available
-    LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
-    parameter_manager->addParameters(params);
+    #ifdef ENABLE_CRAFTSYNTH_USB
+        Serial.println("setup_parameters() about to do get_parameters on behaviour_craftsynth.."); Serial.flush();
+        LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
+        Serial.println("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()"); Serial.flush();
+        parameter_manager->addParameters(params);
+        Serial.println("setup_parameters() just did parameter_manager->addParameters(params)"); Serial.flush();
 
-    // setup the default mappings
-    // TODO: load this from a saved config file
-    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS........."); Serial.flush();
-    behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
-    behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
-    behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS"); Serial.flush();
+        // setup the default mappings
+        // TODO: load this from a saved config file
+        Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
+        behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
+        behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
+        behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
+        Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();
+    #endif
 
     parameter_manager->setDefaultParameterConnections();
 
@@ -74,27 +79,29 @@ FLASHMEM void setup_parameters() {
 
 // set up the menus to provide control over the Parameters and ParameterInputs
 FLASHMEM void setup_parameter_menu() {
-    Serial.println("==== setup_parameter_menu starting ====");
+    Serial.println(F("==== setup_parameter_menu starting ===="));
 
-    Serial.println("Adding ParameterSelectorControls for available_inputs...");
+    Serial.println(F("Adding ParameterSelectorControls for available_inputs..."));
     // ask ParameterManager to add all the menu items for the ParameterInputs
     parameter_manager->addAllParameterInputMenuItems(menu);
 
     // ask ParameterManager to add all the menu items for the Parameters
     // todo: dynamically loop over all the available behaviours
-    parameter_manager->addParameterSubMenuItems(
-        menu, 
-        behaviour_craftsynth->get_label(), 
-        behaviour_craftsynth->get_parameters()
-    );
+    #ifdef ENABLE_CRAFTSYNTH_USB
+        parameter_manager->addParameterSubMenuItems(
+            menu, 
+            behaviour_craftsynth->get_label(), 
+            behaviour_craftsynth->get_parameters()
+        );
+    #endif
 
-    //parameter_manager.addAllVoltageSourceMenuItems(menu);
+    //parameter_manager->addAllVoltageSourceMenuItems(menu);
     parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu);
 
-    //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, (int)0, (int)1000000, nullptr);
+    //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
 
-    Serial.println("setup_parameter_menu done ==================");
+    Serial.println(F("setup_parameter_menu done =================="));
 }
 
 

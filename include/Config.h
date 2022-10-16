@@ -1,7 +1,7 @@
 //#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
-#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
+//#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
@@ -18,8 +18,8 @@
 // enable USB typing keyboard as a control method
 #define ENABLE_TYPING_KEYBOARD
 
-#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
-//#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
+//#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
+#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
 
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
 #define DEFAULT_SUBCLOCKER_DIVISOR          4

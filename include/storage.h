@@ -65,7 +65,7 @@ namespace storage {
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/
   void load_sequence_parse_line(String line, savestate *output);
-  void setup_storage();
+  FLASHMEM void setup_storage();
 
   void make_project_folders(int project_number);
 

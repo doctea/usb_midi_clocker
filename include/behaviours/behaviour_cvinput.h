@@ -22,7 +22,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         int32_t note_length_ticks = PPQN;
 
         #ifdef ENABLE_SCREEN
-            FLASHMEM LinkedList<MenuItem *> *make_menu_items() override;
+            LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
         virtual void set_selected_parameter_input(VoltageParameterInput *input) {

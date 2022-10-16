@@ -270,20 +270,20 @@ class Project {
             // determine filename, delete if exists, and open the file up for writing
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
-            Serial.printf("save_sequence(%i) writing to %s\n", save_to_project_number, filename);
+            Serial.printf(F("save_sequence(%i) writing to %s\n"), save_to_project_number, filename);
             if (SD.exists(filename)) {
-                Serial.printf("%s exists, deleting first\n", filename);
+                Serial.printf(F("%s exists, deleting first\n"), filename);
                 SD.remove(filename);
             }
             myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!myFile) {    
-                Serial.printf("Error: couldn't open %s for writing\n", filename);
+                Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
                 return false;
             }
 
             // header
-            myFile.println("; begin project");
-            myFile.printf("id=%i\n", save_to_project_number);
+            myFile.println(F("; begin project"));
+            myFile.printf(F("id=%i\n"), save_to_project_number);
 
             // subclocker settings
             //myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
@@ -299,7 +299,7 @@ class Project {
                 for (int target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                     if (midi_matrix_manager->is_connected(source_id,target_id)) {
                         myFile.printf(
-                            "midi_matrix_map=%s|%s\n", 
+                            F("midi_matrix_map=%s|%s\n"), 
                             midi_matrix_manager->sources[source_id].handle, 
                             midi_matrix_manager->targets[target_id].handle
                         );
@@ -308,9 +308,9 @@ class Project {
             }
             //midi_matrix_manager->save_to_file(myFile);
 
-            myFile.println("; end project");
+            myFile.println(F("; end project"));
             myFile.close();
-            Serial.println("Finished saving.");
+            Serial.println(F("Finished saving."));
             return true;
         }
 
@@ -318,18 +318,18 @@ class Project {
             File myFile;
 
             if (isLoadMatrixMappings()) {
-                Serial.printf("load_project_settings(%i) resetting matrix!\n", project_number);
+                Serial.printf(F("load_project_settings(%i) resetting matrix!\n"), project_number);
                 midi_matrix_manager->reset_matrix(); 
             }
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
-            Serial.printf("load_project_settings(%i) opening %s\n", project_number, filename);
+            Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
             myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);
 
             if (!myFile) {
-                Serial.printf("Error: Couldn't open %s for reading!\n", filename);
+                Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
                 return false;
             }
 
@@ -337,13 +337,13 @@ class Project {
             while (line = myFile.readStringUntil('\n')) {
                 load_project_parse_line(line);
             }
-            Serial.println("Closing file..");
+            Serial.println(F("Closing file.."));
             myFile.close();
-            Serial.println("File closed");
+            Serial.println(F("File closed"));
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
             current_project_number = project_number;
-            Serial.printf("Loaded project settings.\n");
+            Serial.printf(F("Loaded project settings.\n"));
             return true;
         }
 
@@ -354,26 +354,26 @@ class Project {
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
 
-            if (this->isLoadMatrixMappings() && line.startsWith("midi_output_map=")) {
+            if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
                 // legacy save format, pre-matrix
-                Serial.printf("----\nLoading midi_output_map line '%s'\n", line.c_str());
-                line = line.remove(0,String("midi_output_map=").length());
+                Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
+                line = line.remove(0,String(F("midi_output_map=")).length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);
-                source_label = source_label.replace("_output","");  // translate pre-matrix style naming to matrix-style naming
+                source_label = source_label.replace(F("_output"),F(""));  // translate pre-matrix style naming to matrix-style naming
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
-            } else if (this->isLoadMatrixMappings() && line.startsWith("midi_matrix_map=")) {
+            } else if (this->isLoadMatrixMappings() && line.startsWith(F("midi_matrix_map="))) {
                 // midi matrix version
-                Serial.printf("----\nLoading midi_matrix_map line '%s'\n", line.c_str());
-                line = line.remove(0,String("midi_matrix_map=").length());
+                Serial.printf(F("----\nLoading midi_matrix_map line '%s'\n"), line.c_str());
+                line = line.remove(0,String(F("midi_matrix_map=")).length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
-                Serial.printf("project read line '%s', processed by behaviour_manager\n", line.c_str());
+                Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
             }
         }
 };

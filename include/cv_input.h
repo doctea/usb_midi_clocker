@@ -22,7 +22,7 @@
 //#define MAX_INPUT_VOLTAGE_24V 10.0
 
 void setup_cv_input();
-void setup_parameters();
+FLASHMEM void setup_parameters();
 void setup_parameter_menu();
 
 extern ParameterManager *parameter_manager;

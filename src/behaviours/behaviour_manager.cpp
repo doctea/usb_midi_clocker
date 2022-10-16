@@ -98,8 +98,9 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_LESTRUM
         Serial.println(F("about to register behaviour_lestrum...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);
+        Serial.println(F("Finished registering - connecting!")); Serial.flush();
         behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished connect_device_input")); Serial.flush();
     #endif
     
     #ifdef ENABLE_DRUMKIT
@@ -130,10 +131,15 @@ void setup_behaviour_manager() {
         for (int i = 0 ; i < behaviours->size() ; i++) {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items %i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
             LinkedList<MenuItem *> *menuitems = behaviours->get(i)->make_menu_items();
-            Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
-            for (int n = 0 ; n < menuitems->size() ; n++) {
-                Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label); Serial.flush();
-                menu->add(menuitems->get(n));
+            if (menuitems->size()>0) {
+                String s = String((char*)(behaviours->get(i)->get_label())) + String(" >>>");
+                menu->add(new SeparatorMenuItem((char*)s.c_str(), BLUE));
+
+                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
+                for (int n = 0 ; n < menuitems->size() ; n++) {
+                    Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label); Serial.flush();
+                    menu->add(menuitems->get(n));
+                }
             }
         }
     }

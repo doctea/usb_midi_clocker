@@ -137,7 +137,7 @@ void redraw_sequence_row(byte c) {
       )
     }
     //delay(1000);
-    Serial.println("Leaving APC display");
+    Serial.println(F("Leaving APC display"));
   }
 
   void apcmini_update_clock_display() {

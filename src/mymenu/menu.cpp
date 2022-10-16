@@ -123,15 +123,15 @@ DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
 
 FLASHMEM void setup_menu() {
 
-    Serial.println("Instantiating DisplayTranslator_STeensy..");
+    Serial.println(F("Instantiating DisplayTranslator_STeensy.."));
     tft = &steensy; //DisplayTranslator_STeensy();
     delay(50);
-    Serial.println("Finished DisplayTranslator_SS_OLED constructor");
+    Serial.println(F("Finished DisplayTranslator_SS_OLED constructor"));
     Serial.flush();
-    Serial.println("Creating Menu object..");
+    Serial.println(F("Creating Menu object.."));
     Serial.flush();
     menu = new Menu(tft);
-    Serial.println("Created Menu object..");
+    Serial.println(F("Created Menu object.."));
     Serial.flush();
 
     menu->add_pinned(&top_loop_marker_panel); 
@@ -212,9 +212,9 @@ FLASHMEM void setup_menu() {
         menu->add(&beatstep_notes);
     #endif
 
-    Serial.println("...starting behaviour_manager#make_menu_items...");
+    Serial.println(F("...starting behaviour_manager#make_menu_items..."));
     behaviour_manager->create_behaviour_menu_items(menu);
-    Serial.println("...finished behaviour_manager#make_menu_items...");
+    Serial.println(F("...finished behaviour_manager#make_menu_items..."));
 
     // sequencer
     #ifdef ENABLE_SEQUENCER
@@ -281,7 +281,7 @@ FLASHMEM void setup_menu() {
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
     pinMode(PIN_BUTTON_C, INPUT_PULLUP);
 
-    Serial.println("Exiting setup_menu");
+    Serial.println(F("Exiting setup_menu"));
     Serial.flush();
 
     /*menu->add(&test_item_1);

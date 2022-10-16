@@ -23,20 +23,20 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
             return (char*)"Drumkit";
         }
 
-        void setup_callbacks() override {
-            Serial.println("DeviceBehaviour_DrumKit#setup_callbacks..");
+        virtual void setup_callbacks() override {
+            Serial.println(F("DeviceBehaviour_DrumKit#setup_callbacks.."));
             this->input_device->setHandleNoteOn(drumkit_note_on);
             this->input_device->setHandleNoteOff(drumkit_note_off);
         }
 
-        void receive_note_on(byte note, byte velocity, byte channel) override {
+        virtual void receive_note_on(byte note, byte velocity, byte channel) override {
             if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;
             if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HI_MID_TOM;
 
             DeviceBehaviourSerialBase::receive_note_on(note, velocity, channel);
         }
 
-        void receive_note_off(byte note, byte velocity, byte channel) override {
+        virtual void receive_note_off(byte note, byte velocity, byte channel) override {
             if (note==GM_NOTE_ACOUSTIC_SNARE)   note = GM_NOTE_ELECTRIC_SNARE;
             if (note==GM_NOTE_LOW_FLOOR_TOM)    note = GM_NOTE_HI_MID_TOM;
 

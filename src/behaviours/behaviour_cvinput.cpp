@@ -58,7 +58,7 @@
                 &DeviceBehaviour_CVInput::set_note_length,
                 &DeviceBehaviour_CVInput::get_note_length
         );
-        Serial.println("about to add values.."); Serial.flush();
+        Serial.println(F("about to add values..")); Serial.flush();
         length_ticks_control->add_available_value(0,                 "None");
         length_ticks_control->add_available_value(PPQN/PPQN,         "-");
         length_ticks_control->add_available_value(PPQN/4,            "1/32");
@@ -67,7 +67,7 @@
         length_ticks_control->add_available_value(PPQN,              "1/4");
         length_ticks_control->add_available_value(PPQN*2,            "1/2");
         length_ticks_control->add_available_value(PPQN*4,            "1");
-        Serial.println("about to add to menuitems list.."); Serial.flush();
+        Serial.println(F("about to add to menuitems list..")); Serial.flush();
         menuitems->add(length_ticks_control);
 
         Serial.println("returning.."); Serial.flush();

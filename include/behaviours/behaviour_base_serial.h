@@ -32,16 +32,15 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             return BehaviourType::serial;
         }
 
-        virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
+        FLASHMEM virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             //if (!is_connected()) return;
 
             if (this->debug) Serial.printf("DeviceBehaviourSerialBase#connect_device_output connecting device %p\n", device);
             this->output_device = device;
             this->connected_flag = true;
-            //this->setup_callbacks();
             this->init();
         }
-        virtual void connect_device_input(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
+        FLASHMEM virtual void connect_device_input(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             //if (!is_connected()) return;
 
             //device->begin(MIDI_CHANNEL_OMNI);
@@ -50,8 +49,11 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             if (this->debug) Serial.printf("DeviceBehaviourSerialBase#connect_device_input connecting %p\n", device);
             this->input_device = device;
             this->connected_flag = true;
+            Serial.printf("about to call setup_callbacks on %s..\n", this->get_label()); Serial.flush();
             this->setup_callbacks();
+            Serial.printf("about to call init on %s..\n", this->get_label()); Serial.flush();
             this->init();
+
         }
         // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
         virtual void disconnect_device() {
