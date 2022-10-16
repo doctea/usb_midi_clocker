@@ -180,12 +180,12 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
                 project.save_sequence(); //project.selected_sequence_number);
                 #ifdef ENABLE_SEQUENCER
                 } else if (!apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
-                    Serial.println("---- debug");
+                    Serial.println(F("---- debug"));
                     for (int i = 0 ; i < 8 ; i++) {
                         if (usb_midi_slots[i].device!=nullptr)
-                            Serial.printf("usb_midi_device[%i] is %04X:%04X aka %s:%s\n", i, usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct(), usb_midi_slots[i].device->manufacturer(), usb_midi_slots[i].device->product() );
+                            Serial.printf(F("usb_midi_device[%i] is %04X:%04X aka %s:%s\n"), i, usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct(), usb_midi_slots[i].device->manufacturer(), usb_midi_slots[i].device->product() );
                     }
-                    Serial.println("---- debug");
+                    Serial.println(F("---- debug"));
                 } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
                     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
                     Serial.print(F("For inNumber "));

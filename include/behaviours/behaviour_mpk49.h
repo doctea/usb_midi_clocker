@@ -51,7 +51,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
                 for (unsigned int i = 0 ; i < size ; i++) {
                     Serial.printf("%02x ", data[i]);
                 }
-                Serial.println("]");
+                Serial.println(F("]"));
             }
 
             if (data[3]==0x06) {

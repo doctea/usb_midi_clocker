@@ -60,11 +60,11 @@ FLASHMEM void setup_parameters() {
 
     // setup the default mappings
     // TODO: load this from a saved config file
-    Serial.println("=========== SETTING DEFAULT PARAMETER MAPS........."); Serial.flush();
+    Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
     behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
     behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-    Serial.println("=========== FINISHED SETTING DEFAULT PARAMETER MAPS"); Serial.flush();
+    Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();
 
     parameter_manager.setDefaultParameterConnections();
 
@@ -73,9 +73,9 @@ FLASHMEM void setup_parameters() {
 
 // set up the menus to provide control over the Parameters and ParameterInputs
 FLASHMEM void setup_parameter_menu() {
-    Serial.println("==== setup_parameter_menu starting ====");
+    Serial.println(F("==== setup_parameter_menu starting ===="));
 
-    Serial.println("Adding ParameterSelectorControls for available_inputs...");
+    Serial.println(F("Adding ParameterSelectorControls for available_inputs..."));
     // ask ParameterManager to add all the menu items for the ParameterInputs
     parameter_manager.addAllParameterInputMenuItems(menu);
 
@@ -93,7 +93,7 @@ FLASHMEM void setup_parameter_menu() {
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager.profile_update_mixers, parameter_manager.profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
 
-    Serial.println("setup_parameter_menu done ==================");
+    Serial.println(F("setup_parameter_menu done =================="));
 }
 
 

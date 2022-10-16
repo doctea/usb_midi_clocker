@@ -26,27 +26,27 @@ extern DisplayTranslator_Configured steensy;
                 if (keyboard1.getModifiers()==5)  
                     reset_teensy();  
                 break; /* ctrl+alt+delete to soft reboot */
-            case KEYD_UP        : Serial.println("UP");     menu->knob_left(); break;
-            case KEYD_DOWN      : Serial.println("DN");     menu->knob_right(); break;
+            case KEYD_UP        : Serial.println(F("UP"));     menu->knob_left(); break;
+            case KEYD_DOWN      : Serial.println(F("DN"));     menu->knob_right(); break;
             case KEYD_LEFT      : 
-            case KEYD_BACKSPACE : Serial.println("LEFT");   menu->button_back(); break;
-            case KEYD_RIGHT     : Serial.println("RIGHT"); 
-            case KEYD_ENTER     : Serial.println("selecting");      menu->button_select(); break;
-            case KEYD_HASH      : Serial.println("right-button");   menu->button_right(); break;
+            case KEYD_BACKSPACE : Serial.println(F("LEFT"));   menu->button_back(); break;
+            case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
+            case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); break;
+            case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
             case 'r'            : 
-                Serial.println("setting restart_on_next_bar");
+                Serial.println(F("setting restart_on_next_bar"));
                 restart_on_next_bar = true; 
                 break;
             case 'l'            : 
-                Serial.println("loading selected sequence");
+                Serial.println(F("loading selected sequence"));
                 project.load_selected_sequence(); 
                 break;
             case ' '            :
-                Serial.println("Saving screenshot!");
+                Serial.println(F("Saving screenshot!"));
                 save_screenshot(&steensy.actual);
                 break;
             default:
-                Serial.printf("received unhandled OnPress(%i) with modifier %i!\n", key, keyboard1.getModifiers());
+                Serial.printf(F("received unhandled OnPress(%i) with modifier %i!\n"), key, keyboard1.getModifiers());
         }
     }
 

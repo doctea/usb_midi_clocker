@@ -118,10 +118,10 @@ void update_usb_device_connections() {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
       // unassign the midi_xxx helper pointers if appropriate
       usb_midi_slots[port].behaviour = nullptr;
-      Serial.printf("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n", port, packed_id, usb_midi_slots[port].packed_id);
+      Serial.printf(F("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_midi_slots[port].packed_id);
       // call setup_usb_midi_device() to assign device to port and set handlers
       setup_usb_midi_device(port, packed_id);
-      Serial.println("-----");
+      Serial.println(F("-----"));
     }
   }
 }

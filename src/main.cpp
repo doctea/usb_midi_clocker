@@ -172,7 +172,7 @@ FLASHMEM void setup() {
     tft_print((char*)"Ready!"); 
     tft_clear();
 
-    Serial.println("About to init menu.."); Serial.flush();
+    Serial.println(F("About to init menu..")); Serial.flush();
     menu->start();
     Serial.printf(F("after menu->start(), free RAM is %u\n"), freeRam());
     //tft_start();
