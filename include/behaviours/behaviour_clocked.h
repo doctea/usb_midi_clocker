@@ -72,11 +72,11 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
 
 class DividedClockedBehaviour : public ClockedBehaviour {
     public:
-        uint32_t clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
+        int32_t clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
         uint32_t clock_divisor = 1; //DEFAULT_DIVISOR;
         uint32_t queued_clock_divisor = 1;
         bool auto_restart_on_change = true;
-        byte pause_during_delay = false;
+        int8_t pause_during_delay = false;
 
         virtual bool should_show_restart_option() override {
             return true;
@@ -92,12 +92,12 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         // set how many ticks we should wait after a restart before we start playing (effectively an offset)
-        virtual void set_delay_ticks(uint32_t delay_ticks) {
-            if ((uint32_t)delay_ticks != this->clock_delay_ticks && this->should_auto_restart_on_change())
+        virtual void set_delay_ticks(int32_t delay_ticks) {
+            if ((int32_t)delay_ticks != this->clock_delay_ticks && this->should_auto_restart_on_change())
                 this->set_restart_on_bar(true);
             this->clock_delay_ticks = delay_ticks;
         }
-        virtual uint32_t get_delay_ticks() {
+        virtual int32_t get_delay_ticks() {
             return this->clock_delay_ticks;
         }
 
@@ -120,10 +120,10 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         enum DELAY_PAUSE {
             PAUSE_OFF, PAUSE_BAR, PAUSE_TWO_BAR, PAUSE_PHRASE, PAUSE_FINAL_PHRASE
         };
-        virtual void set_pause_during_delay (uint32_t value) {
+        virtual void set_pause_during_delay (int8_t value) {
             this->pause_during_delay = value;
         }
-        virtual uint32_t get_pause_during_delay() {
+        virtual int8_t get_pause_during_delay() {
             return this->pause_during_delay;
         }
         /*virtual bool should_pause_during_delay(uint32_t type) {

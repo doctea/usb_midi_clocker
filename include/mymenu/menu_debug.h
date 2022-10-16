@@ -5,7 +5,6 @@
 #include "mymenu/menu_behaviours.h"
 
 FLASHMEM void setup_debug_menu() {
-
     #ifdef ENABLE_USB
         USBDevicesPanel *usbdevices_panel = new USBDevicesPanel();
     #endif

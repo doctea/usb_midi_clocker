@@ -123,7 +123,7 @@ class DeviceBehaviourUltimateBase {
             this->initialise_parameters();
         return parameters;
     }
-    FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() {
+    virtual LinkedList<DoubleParameter*> *initialise_parameters() {
         /*if (parameters==nullptr)
             parameters = new LinkedList<DoubleParameter*>();*/
         return parameters;

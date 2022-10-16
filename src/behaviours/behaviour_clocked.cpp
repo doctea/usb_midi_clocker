@@ -54,7 +54,7 @@
 
         #ifdef ENABLE_DELAY_TICKS_CONTROL
             Serial.println(F("\tDividedClockedBehaviour creating delay_ticks_control")); Serial.flush();
-            ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
+            ObjectSelectorControl<DividedClockedBehaviour,int32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,int32_t>(
                 "Delay",
                 this,
                 &DividedClockedBehaviour::set_delay_ticks,
@@ -114,7 +114,7 @@
 
         #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
             Serial.println(F("\tDividedClockedBehaviour creating pause_during_delay_control")); Serial.flush();
-            ObjectSelectorControl<DividedClockedBehaviour,uint32_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,uint32_t>(
+            ObjectSelectorControl<DividedClockedBehaviour,int8_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,int8_t>(
                 "Pause",
                 this,
                 &DividedClockedBehaviour::set_pause_during_delay,

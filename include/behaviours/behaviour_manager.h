@@ -18,11 +18,11 @@ class DeviceBehaviourManager {
         static DeviceBehaviourManager* getInstance();
 
         // all of the registered behaviours
-        LinkedList<DeviceBehaviourUltimateBase *> *behaviours;// = LinkedList<DeviceBehaviourUltimateBase *>();
+        LinkedList<DeviceBehaviourUltimateBase *> *behaviours = nullptr;// = LinkedList<DeviceBehaviourUltimateBase *>();
 
         // registered behaviours separated by type, so that we can treat them differently for connection and listing purposes
-        LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb;// = LinkedList<DeviceBehaviourUSBBase *>();
-        LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial;// = LinkedList<DeviceBehaviourSerialBase *>();
+        LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb = nullptr;// = LinkedList<DeviceBehaviourUSBBase *>();
+        LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial = nullptr;// = LinkedList<DeviceBehaviourSerialBase *>();
 
         void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
@@ -39,7 +39,9 @@ class DeviceBehaviourManager {
             }
             Serial.printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial.flush();
             this->behaviours_serial->add(behaviour);
+            Serial.println(F("Added item to behaviours_serial."));
             this->behaviours->add(behaviour);
+            Serial.println(F("Added item to behaviours."));
         }
         void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
             if (behaviour==nullptr) {

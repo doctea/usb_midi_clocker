@@ -98,8 +98,9 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_LESTRUM
         Serial.println(F("about to register behaviour_lestrum...")); Serial.flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);
+        Serial.println(F("Finished registering - connecting!")); Serial.flush();
         behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished connect_device_input")); Serial.flush();
     #endif
     
     #ifdef ENABLE_DRUMKIT

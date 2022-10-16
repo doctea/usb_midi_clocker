@@ -77,13 +77,15 @@ FLASHMEM void setup() {
 
   Serial.begin(115200);
   #ifdef WAIT_FOR_SERIAL
-    tft_print("\nWaiting for serial connection..");
-    while (!Serial) {
-      tft_print(".");
-      delay(500);
-    }
-    tft_print("Connected serial!\n");
+    //tft_print("\nWaiting for serial connection..");
+    while (!Serial);
+    //tft_print("Connected serial!\n");
+    Serial.println("Connected serial!"); Serial.flush();
   #endif
+
+  /*while (1) {
+    Serial.printf(".");
+  }*/
 
   Serial.printf("At start of setup(), free RAM is %u\n", freeRam());
 
@@ -283,14 +285,14 @@ void loop() {
     #ifdef ENABLE_CV_INPUT
       static unsigned long time_of_last_param_update = 0;
       if (!screen_was_drawn && millis() - time_of_last_param_update > TIME_BETWEEN_CV_INPUT_UPDATES) {
-        if(debug) parameter_manager.debug = true;
-        if(debug) Serial.println("about to do parameter_manager.update_voltage_sources()..");
-        parameter_manager.update_voltage_sources();
-        if(debug) Serial.println("just did parameter_manager.update_voltage_sources()..");
-        if(debug) Serial.println("about to do parameter_manager.update_inputs()..");
-        parameter_manager.update_inputs();
-        parameter_manager.update_mixers();
-        if(debug) Serial.println("just did parameter_manager.update_inputs()..");
+        if(debug) parameter_manager->debug = true;
+        if(debug) Serial.println("about to do parameter_manager->update_voltage_sources()..");
+        parameter_manager->update_voltage_sources();
+        if(debug) Serial.println("just did parameter_manager->update_voltage_sources()..");
+        if(debug) Serial.println("about to do parameter_manager->update_inputs()..");
+        parameter_manager->update_inputs();
+        parameter_manager->update_mixers();
+        if(debug) Serial.println("just did parameter_manager->update_inputs()..");
         time_of_last_param_update = millis();
       }
     #endif
@@ -337,7 +339,7 @@ void loop() {
     for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
       accumulator += main_loop_length_averages[i];
     }
-    average_loop_micros = accumulator / (unsigned long long)NUMBER_AVERAGES;
+    average_loop_micros = accumulator / NUMBER_AVERAGES;
     //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
     if (count>=NUMBER_AVERAGES) count = 0;
   #else

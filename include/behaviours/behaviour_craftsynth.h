@@ -92,13 +92,13 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         }
         virtual bool has_output() { return true; }
 
-        FLASHMEM virtual void setup_callbacks() override {
+        /*virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             //this->device->setHandleControlChange(craftsynth_control_change);
             //this->device->setHandleNoteOn(craftsynth_note_on);
             //this->device->setHandleNoteOff(craftsynth_note_off);
             Serial.println(F("DeviceBehaviour_CraftSynth#setup_callbacks()")); Serial.flush();
-        };
+        };*/
 
         /*virtual void init() override {
             Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial.flush();
@@ -114,7 +114,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#note_off"); };
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
-        FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)

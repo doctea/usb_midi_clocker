@@ -11,7 +11,7 @@
     #include "ParameterManager.h"
     #include "mymenu_items/ParameterInputMenuItems.h"
 
-    extern ParameterManager parameter_manager;
+    extern ParameterManager *parameter_manager;
 
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
@@ -28,7 +28,7 @@
                 "Select Parameter Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                &parameter_manager.available_inputs
+                parameter_manager->available_inputs
         );
         menuitems->add(parameter_input_selector);
 
