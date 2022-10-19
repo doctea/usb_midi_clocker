@@ -127,13 +127,14 @@ void setup_behaviour_manager() {
 
 
 #ifdef ENABLE_SCREEN
+    #include "menuitems.h"
     void DeviceBehaviourManager::create_behaviour_menu_items(Menu *menu) {
         for (int i = 0 ; i < behaviours->size() ; i++) {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items %i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
             LinkedList<MenuItem *> *menuitems = behaviours->get(i)->make_menu_items();
             if (menuitems->size()>0) {
                 String s = String((char*)(behaviours->get(i)->get_label())) + String(" >>>");
-                menu->add(new SeparatorMenuItem((char*)s.c_str(), BLUE));
+                menu->add(new SeparatorMenuItem((char*)s.c_str()));
 
                 Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
                 for (int n = 0 ; n < menuitems->size() ; n++) {

@@ -58,20 +58,11 @@ Menu *menu; // = Menu();
 
 LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN, BEATS_PER_BAR, BARS_PER_PHRASE);
 
+BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
-//ObjectToggleControl<Project> project_load_matrix_mappings = ObjectToggleControl<Project>("Load project MIDI matrix settings", &project, &Project::setLoadMatrixMappings, &Project::isLoadMatrixMappings, nullptr);
-
-/*#ifdef ENABLE_SEQUENCER
-    ObjectToggleControl<Project> project_auto_advance_sequencer  = ObjectToggleControl<Project>("Sequencer auto-advance", &project, &Project::set_auto_advance_sequencer, &Project::is_auto_advance_sequencer, nullptr);
-#endif
-#ifdef ENABLE_LOOPER
-    ObjectToggleControl<Project> project_auto_advance_looper     = ObjectToggleControl<Project>("Looper auto-advance",    &project, &Project::set_auto_advance_looper, &Project::is_auto_advance_looper, nullptr);
-#endif*/
 ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_project_settings);
-
-BPMPositionIndicator posbar = BPMPositionIndicator();
+ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
 
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
@@ -81,7 +72,6 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
     LooperStatus            mpk49_looper_status =       LooperStatus("Looper",                  &mpk49_loop_track);
     LooperQuantizeControl   quantizer_setting =         LooperQuantizeControl("Loop quant",     &mpk49_loop_track);   
     LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
-    //MidiOutputSelectorControl looper_output_selector =  MidiOutputSelectorControl("Looper MIDI Output"); 
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER
@@ -110,7 +100,6 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
 
 FLASHMEM void setup_menu() {
-
     Serial.println(F("Instantiating DisplayTranslator_STeensy.."));
     tft = &steensy; //DisplayTranslator_STeensy();
     delay(50);
@@ -122,13 +111,13 @@ FLASHMEM void setup_menu() {
     Serial.println(F("Created Menu object.."));
     Serial.flush();
 
-    menu->add_pinned(&top_loop_marker_panel); 
-    menu->add(&posbar);
+    menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
+    menu->add(&posbar);     // bpm and position indicator
 
-    menu->add(&clock_source_selector);
+    menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
 
-    menu->add(&project_save);
-    menu->add(&project_selector);
+    menu->add(&project_save);       // save project settings button
+    menu->add(&project_selector);   // save project selector button
 
     // project loading options (whether to load or hold matrix settings, clock, sequence, behaviour options)
     ObjectMultiToggleControl *project_multi_load_options = new ObjectMultiToggleControl("Recall options", true);
@@ -138,18 +127,22 @@ FLASHMEM void setup_menu() {
         &Project::setLoadMatrixMappings,
         &Project::isLoadMatrixMappings    
     );
-    MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
-        (char*)"Clock Settings",
-        &project,
-        &Project::setLoadClockSettings,
-        &Project::isLoadClockSettings    
-    );
-    MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
-        (char*)"Sequence Settings",
-        &project,
-        &Project::setLoadSequencerSettings,
-        &Project::isLoadSequencerSettings    
-    );
+    #ifdef ENABLE_CLOCKS
+        MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
+            (char*)"Clock Settings",
+            &project,
+            &Project::setLoadClockSettings,
+            &Project::isLoadClockSettings    
+        );
+    #endif
+    #ifdef ENABLE_SEQUENCER
+        MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
+            (char*)"Sequence Settings",
+            &project,
+            &Project::setLoadSequencerSettings,
+            &Project::isLoadSequencerSettings    
+        );
+    #endif
     MultiToggleItemClass<Project> *load_behaviour_settings = new MultiToggleItemClass<Project> {
         (char*)"Behaviour Options",
         &project,
@@ -157,21 +150,27 @@ FLASHMEM void setup_menu() {
         &Project::isLoadBehaviourOptions
     };
     project_multi_load_options->addItem(load_matrix);
-    project_multi_load_options->addItem(load_clock);
-    project_multi_load_options->addItem(load_sequence);
+    #ifdef ENABLE_CLOCKS
+        project_multi_load_options->addItem(load_clock);
+    #endif
+    #ifdef ENABLE_SEQUENCER
+        project_multi_load_options->addItem(load_sequence);
+    #endif
     project_multi_load_options->addItem(load_behaviour_settings);
     //menu->add(&project_load_matrix_mappings);
     menu->add(project_multi_load_options);
 
     // options for whether to auto-advance looper/sequencer/beatstep
     ObjectMultiToggleControl *project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
-    MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
-        (char*)"Sequence",
-        &project,
-        &Project::set_auto_advance_sequencer,
-        &Project::is_auto_advance_sequencer
-    );
-    project_multi_autoadvance->addItem(auto_advance_sequencer);
+    #ifdef ENABLE_SEQUENCER
+        MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
+            (char*)"Sequence",
+            &project,
+            &Project::set_auto_advance_sequencer,
+            &Project::is_auto_advance_sequencer
+        );
+        project_multi_autoadvance->addItem(auto_advance_sequencer);
+    #endif
 
     #ifdef ENABLE_LOOPER
         MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
@@ -184,7 +183,6 @@ FLASHMEM void setup_menu() {
     #endif
 
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
-        menu->add(&beatstep_auto_advance);
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
             (char*)"Beatstep advance",
             behaviour_beatstep,
@@ -238,29 +236,7 @@ FLASHMEM void setup_menu() {
         menu->add(average);
     #endif
 
-    /*#ifdef ENABLE_SUBCLOCKER
-        subclocker_divisor_control.go_back_on_select = subclocker_delay_ticks_control.go_back_on_select = true; 
-        subclocker_restart_action.target_object = 
-            subclocker_divisor_control.target_object = 
-                subclocker_delay_ticks_control.target_object = 
-                    behaviour_subclocker;   // because behaviour_subclocker pointer won't be set before now..?
-        menu->add(&subclocker_divisor_control);
-        menu->add(&subclocker_delay_ticks_control);
-        menu->add(&subclocker_restart_action);
-    #endif
-
-    #ifdef ENABLE_BEATSTEP_DIVISOR
-        beatstep_divisor_control.go_back_on_select = beatstep_delay_ticks_control.go_back_on_select = true; 
-        beatstep_restart_action.target_object = 
-            beatstep_divisor_control.target_object = 
-                beatstep_delay_ticks_control.target_object = 
-                    behaviour_beatstep;   // because behaviour_beatstep pointer won't be set before now..?
-        menu->add(&beatstep_divisor_control);
-        menu->add(&beatstep_delay_ticks_control);
-        menu->add(&beatstep_restart_action);
-    #endif*/
-
-
+    // enable encoder and separate buttons
     pinMode(PIN_BUTTON_A, INPUT_PULLUP);
     pinMode(PIN_BUTTON_B, INPUT_PULLUP);
     pinMode(PIN_BUTTON_C, INPUT_PULLUP);
