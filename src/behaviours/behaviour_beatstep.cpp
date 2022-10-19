@@ -19,6 +19,27 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->receive_note_off(inChannel, inNumber, inVelocity);
 }
 
+#ifdef ENABLE_SCREEN
+    #include "mymenu/menu_looper.h"
+    LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
+        DividedClockedBehaviour::make_menu_items();
+        this->menuitems->add(
+            new HarmonyStatus("Beatstep harmony",   &behaviour_beatstep->last_note,          &behaviour_beatstep->current_note)
+        );
+        #ifdef ENABLE_BEATSTEP_SYSEX
+            ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = new ObjectToggleControl<DeviceBehaviour_Beatstep> (
+                "Beatstep auto-advance",
+                behaviour_beatstep,
+                &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
+                &DeviceBehaviour_Beatstep::is_auto_advance_pattern,
+                nullptr
+            );
+            this->menuitems->add(beatstep_auto_advance);
+        #endif
+        return this->menuitems;
+    }
+#endif
+
 /*MIDIOutputWrapper *beatstep_output = nullptr;// = &midi_out_bass_wrapper;
 void beatstep_setOutputWrapper(MIDIOutputWrapper *wrapper) {
     if (beatstep_output!=nullptr)

@@ -73,18 +73,6 @@ ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_projec
 
 BPMPositionIndicator posbar = BPMPositionIndicator();
 
-#ifdef ENABLE_BEATSTEP
-    HarmonyStatus beatstep_notes = HarmonyStatus("Beatstep harmony",   &behaviour_beatstep->last_note,          &behaviour_beatstep->current_note);
-    #ifdef ENABLE_BEATSTEP_SYSEX
-        ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = ObjectToggleControl<DeviceBehaviour_Beatstep> (
-            "Beatstep auto-advance",
-            behaviour_beatstep,
-            &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
-            &DeviceBehaviour_Beatstep::is_auto_advance_pattern,
-            nullptr
-        );
-    #endif
-#endif
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
 #endif
@@ -207,10 +195,6 @@ FLASHMEM void setup_menu() {
     menu->add(project_multi_autoadvance);
 
     menu->add(&midi_matrix_selector);
-
-    #ifdef ENABLE_BEATSTEP
-        menu->add(&beatstep_notes);
-    #endif
 
     Serial.println(F("...starting behaviour_manager#make_menu_items..."));
     behaviour_manager->create_behaviour_menu_items(menu);

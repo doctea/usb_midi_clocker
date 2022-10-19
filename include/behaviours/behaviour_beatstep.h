@@ -97,6 +97,10 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
         #endif
 
+        #ifdef ENABLE_SCREEN
+            LinkedList<MenuItem*> *make_menu_items() override;
+        #endif
+
 };
 
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
