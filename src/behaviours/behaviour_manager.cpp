@@ -39,12 +39,10 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_BAMBLE
-        //behaviour_bamble = new DeviceBehaviour_Bamble();      // can be used as an output so has to be instantiated at compile time
         behaviour_manager->registerBehaviour(behaviour_bamble);
     #endif
 
     #ifdef ENABLE_BEATSTEP
-        //behaviour_beatstep = new DeviceBehaviour_Beatstep();  // referred to by menu controls so has to be instantiated at compile time
         behaviour_manager->registerBehaviour(behaviour_beatstep);
     #endif
 
@@ -68,7 +66,6 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial.flush();
-        //behaviour_craftsynth = new DeviceBehaviour_CraftSynth();  // can be used as an output so has to be instantiated at compile time
         behaviour_manager->registerBehaviour(behaviour_craftsynth);
         Serial.println(F("Finished registering")); Serial.flush();
     #endif
@@ -117,12 +114,6 @@ void setup_behaviour_manager() {
     #endif
     
     Serial.println(F("Exiting setup_behaviour_manager()"));
-
-    /*usb_manager->registerBehaviour(new USBDevice_Bamble());
-    usb_manager->registerBehaviour(new USBDevice_Beatstep());
-    usb_manager->registerBehaviour(new USBDevice_Keystep());
-    usb_manager->registerBehaviour(new USBDevice_MPK49());
-    usb_manager->registerBehaviour(new USBDevice_Subclocker());*/
 }
 
 

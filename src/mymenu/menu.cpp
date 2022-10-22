@@ -67,12 +67,6 @@ ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
 #endif
-#ifdef ENABLE_LOOPER
-    //SubMenuItem     looper_submenu = SubMenuItem("Looper Submenu");
-    LooperStatus            mpk49_looper_status =       LooperStatus("Looper",                  &mpk49_loop_track);
-    LooperQuantizeControl   quantizer_setting =         LooperQuantizeControl("Loop quant",     &mpk49_loop_track);   
-    LooperTransposeControl  looper_transpose_control =  LooperTransposeControl("Loop transpose",&mpk49_loop_track);
-#endif
 
 #ifdef ENABLE_DRUM_LOOPER
     LooperStatus            drum_looper_status  =   LooperStatus("Drum looper", &drums_loop_track);
@@ -206,13 +200,7 @@ FLASHMEM void setup_menu() {
 
     // looper stuff
     #ifdef ENABLE_LOOPER
-        //looper_submenu.set_tft(tft);
-        //menu->add(&project_auto_advance_looper);
-        menu->add(&mpk49_looper_status); 
-        menu->add(&quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
-        //menu->add(&looper_output_selector);
-        menu->add(&looper_transpose_control);
-        //menu->add(&looper_submenu);
+        menu->add(mpk49_loop_track.make_menu_items());
     #endif
     #ifdef ENABLE_DRUM_LOOPER
         menu->add(&drum_looper_status);

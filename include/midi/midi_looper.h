@@ -21,6 +21,10 @@
 #define MAX_INSTRUCTIONS            100
 #define MAX_INSTRUCTION_ARGUMENTS   4
 
+#ifdef ENABLE_SCREEN
+    class MenuItem;
+#endif
+
 using namespace storage;
 
 //#define LOWEST_LOOPER_NOTE  24
@@ -790,6 +794,10 @@ class MIDITrack {
 
             return true;
         }       
+
+        #ifdef ENABLE_SCREEN
+            LinkedList<MenuItem*> *make_menu_items();
+        #endif
 
 };
 
