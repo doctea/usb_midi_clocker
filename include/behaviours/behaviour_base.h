@@ -128,6 +128,9 @@ class DeviceBehaviourUltimateBase {
             parameters = new LinkedList<DoubleParameter*>();*/
         return parameters;
     }
+    virtual bool has_parameters() {
+        return this->get_parameters()->size()>0;
+    }
     virtual DoubleParameter* getParameterForLabel(char *label) {
         Serial.printf("getParameterForLabel(%s) in behaviour %s..\n", label, this->get_label());
 

@@ -119,20 +119,34 @@ void setup_behaviour_manager() {
 
 #ifdef ENABLE_SCREEN
     #include "menuitems.h"
-    void DeviceBehaviourManager::create_behaviour_menu_items(Menu *menu) {
+    void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         for (int i = 0 ; i < behaviours->size() ; i++) {
-            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items %i: calling make_menu_items on behaviour '%s'\n"), i, behaviours->get(i)->get_label()); Serial.flush(); 
-            LinkedList<MenuItem *> *menuitems = behaviours->get(i)->make_menu_items();
-            if (menuitems->size()>0) {
-                String s = String((char*)(behaviours->get(i)->get_label())) + String(" >>>");
-                menu->add(new SeparatorMenuItem((char*)s.c_str()));
-
-                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
-                for (int n = 0 ; n < menuitems->size() ; n++) {
-                    Serial.printf(F("\t\tadding menuitem '%s'\n"), menuitems->get(n)->label); Serial.flush();
-                    menu->add(menuitems->get(n));
-                }
-            }
+            this->create_single_behaviour_menu_items(menu, behaviours->get(i));
         }
+    }
+
+    void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
+            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial.flush(); 
+            LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
+
+            if (menuitems->size()>0 || behaviour->has_parameters()) {
+                // add a separator bar
+                String s = String((char*)(behaviour->get_label())) + String(" >>>");
+                menu->add(new SeparatorMenuItem((char*)s.c_str()));
+            }
+
+            if (menuitems->size()>0) {
+                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
+                menu->add(menuitems);
+            }
+
+            if (behaviour->has_parameters()) {
+                parameter_manager->addParameterSubMenuItems(
+                    menu, 
+                    behaviour->get_label(), 
+                    behaviour->get_parameters()
+                );
+            }
+
     }
 #endif

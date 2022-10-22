@@ -87,13 +87,13 @@ FLASHMEM void setup_parameter_menu() {
 
     // ask ParameterManager to add all the menu items for the Parameters
     // todo: dynamically loop over all the available behaviours
-    #ifdef ENABLE_CRAFTSYNTH_USB
+    /*#ifdef ENABLE_CRAFTSYNTH_USB
         parameter_manager->addParameterSubMenuItems(
             menu, 
             behaviour_craftsynth->get_label(), 
             behaviour_craftsynth->get_parameters()
         );
-    #endif
+    #endif*/
 
     //parameter_manager->addAllVoltageSourceMenuItems(menu);
     parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu);

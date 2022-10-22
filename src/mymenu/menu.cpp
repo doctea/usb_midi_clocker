@@ -188,9 +188,9 @@ FLASHMEM void setup_menu() {
 
     menu->add(&midi_matrix_selector);
 
-    Serial.println(F("...starting behaviour_manager#make_menu_items..."));
-    behaviour_manager->create_behaviour_menu_items(menu);
-    Serial.println(F("...finished behaviour_manager#make_menu_items..."));
+    /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
+    behaviour_manager->create_all_behaviour_menu_items(menu);
+    Serial.println(F("...finished behaviour_manager#make_menu_items..."));*/
 
     // sequencer
     #ifdef ENABLE_SEQUENCER

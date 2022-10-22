@@ -144,6 +144,10 @@ FLASHMEM void setup() {
     Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
+  Serial.println(F("...starting behaviour_manager#make_menu_items..."));
+  behaviour_manager->create_all_behaviour_menu_items(menu);
+  Serial.println(F("...finished behaviour_manager#make_menu_items..."));
+
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
     init_sequence();

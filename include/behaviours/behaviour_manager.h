@@ -198,7 +198,8 @@ class DeviceBehaviourManager {
         }
 
         #ifdef ENABLE_SCREEN
-            void create_behaviour_menu_items(Menu *menu);
+            void create_all_behaviour_menu_items(Menu *menu);
+            void create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *device);
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
