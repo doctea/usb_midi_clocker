@@ -3,7 +3,7 @@
 
 String get_note_name(int pitch) {
   if (pitch==-1 || pitch>127) {
-    String s = "_"; //note_names[chromatic_degree] + String(octave);
+    String s = "_"; 
     return s;
   }
   int octave = pitch / 12;
@@ -14,4 +14,18 @@ String get_note_name(int pitch) {
   
   String s = note_names[chromatic_degree] + String(octave);
   return s;
+}
+
+const char *get_note_name_c(int pitch) {
+  if (pitch==-1 || pitch>127) {
+    return "_";
+  }
+  int octave = pitch / 12;
+  int chromatic_degree = pitch % 12;
+  const char *note_names[] = {
+    "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
+  };
+  static char note_name[4];
+  sprintf(note_name, "%s%i", note_names[chromatic_degree], octave);
+  return note_name;
 }

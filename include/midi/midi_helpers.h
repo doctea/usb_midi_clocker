@@ -6,3 +6,4 @@
 #endif
 
 String get_note_name(int pitch);
+const char *get_note_name_c(int pitch);
