@@ -100,7 +100,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual bool load_parse_key_value(String key, String value) override {
             if (key.equals(F("drone"))) {
                 this->set_drone(value.equals(F("enabled")));
-                Serial.printf(F("neutron_drone found - setting to %s!\n"), drone_enabled?F("true"):F("false"));
+                Serial.printf(F("drone found - setting to %s!\n"), drone_enabled?F("true"):F("false"));
                 return true;
             }
             return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);

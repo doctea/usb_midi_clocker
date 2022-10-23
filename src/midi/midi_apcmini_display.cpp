@@ -13,6 +13,23 @@
 
 #include "behaviours/behaviour_apcmini.h"
 
+byte apc_note_last_sent[127];
+
+// cached send note on
+void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel, bool force ) {
+  if (force || value!=apc_note_last_sent[pitch])
+    behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
+  apc_note_last_sent[pitch] = value;
+}
+//cached send note off
+void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel, bool force) {
+  apcdisplay_sendNoteOn(pitch, value, channel, force);
+}
+void apcdisplay_initialise_last_sent() {
+  for(int i = 0 ; i < 127 ; i++)
+    apc_note_last_sent[i] = 0;
+}
+
 /*const byte colour_intensity[] = {
   APCMINI_GREEN,
   APCMINI_YELLOW,
@@ -42,13 +59,13 @@ void apcmini_update_position_display(int ticks) {
     #endif
     //Serial.printf("On %i\n", beat_counter);
     ATOMIC(
-      behaviour_apcmini->device->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
+      apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
     );
   } else if (is_bpm_on_beat(ticks,duration)) {
     //Serial.printf("Off %i (ticks %i with duration %i)\n", beat_counter, ticks, duration);
     ATOMIC(
-      behaviour_apcmini->device->sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      behaviour_apcmini->device->sendNoteOff(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
+      apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
+      apcdisplay_sendNoteOff(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
       //behaviour_apcmini->device->send_now();
     )
   }
@@ -74,6 +91,7 @@ byte get_colour_for_clock_multiplier(float cm) {
   return get_colour(LEVEL_1);
 }
 
+
 void redraw_clock_row(byte c) {
     if (behaviour_apcmini->device==nullptr) return;
 
@@ -82,14 +100,14 @@ void redraw_clock_row(byte c) {
       byte io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
       float cm = get_clock_multiplier(c);
       if (is_clock_off(c)) {
-        behaviour_apcmini->device->sendNoteOn(start_row+i, APCMINI_OFF, 1);
+        apcdisplay_sendNoteOn(start_row+i, APCMINI_OFF, 1);
       } else if (cm<=1.0) {
-        behaviour_apcmini->device->sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
+        apcdisplay_sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
       } else if (io%(byte)cm==0) {
-        behaviour_apcmini->device->sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
+        apcdisplay_sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1);
       } else { // shouldn't reach this
         //Serial.printf("WARNING: reached unexpected branch for clock %i: cm is %0.2f\n", c, cm);
-        behaviour_apcmini->device->sendNoteOn(start_row+i, APCMINI_OFF, 1);  // turn the led off
+        apcdisplay_sendNoteOn(start_row+i, APCMINI_OFF, 1);  // turn the led off
       }
     }
 }
@@ -97,8 +115,8 @@ void redraw_clock_row(byte c) {
 void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
   if (behaviour_apcmini->device==nullptr) return;
 
-  ATOMIC(behaviour_apcmini->device->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + old_clock_selected, APCMINI_OFF, 1);)
-  ATOMIC(behaviour_apcmini->device->sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_selected,     APCMINI_ON,  1);)
+  ATOMIC(apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP + old_clock_selected, APCMINI_OFF, 1);)
+  ATOMIC(apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_selected,     APCMINI_ON,  1);)
 }
 #endif
 
@@ -110,9 +128,9 @@ void redraw_sequence_row(byte c) {
   for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
     byte v = read_sequence(c,i);
     if (v) { //should_trigger_sequence(i*PPQN,c)) {
-      ATOMIC(behaviour_apcmini->device->sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
+      ATOMIC(apcdisplay_sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
     } else {
-      ATOMIC(behaviour_apcmini->device->sendNoteOn(start_row+i, APCMINI_OFF, 1);)
+      ATOMIC(apcdisplay_sendNoteOn(start_row+i, APCMINI_OFF, 1);)
     }
   }
 }
@@ -126,18 +144,19 @@ void redraw_sequence_row(byte c) {
     Serial.println(F("Clearing APC display.."));
     for (uint8_t x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
       for (uint8_t y = 0 ; y < APCMINI_DISPLAY_WIDTH ; y++) {
-        ATOMIC(
-          behaviour_apcmini->device->sendNoteOn(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1);
-        )
+          apcdisplay_sendNoteOff(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
+          //behaviour_apcmini->device->send_now();
+          //behaviour_apcmini->device->sendRealTime(midi::Clock);
       }
     }
     for (byte x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
       ATOMIC(
-        behaviour_apcmini->device->sendNoteOn(x, APCMINI_OFF, 1);
+        apcdisplay_sendNoteOff(x, APCMINI_OFF, 1, true);
       )
     }
     //delay(1000);
     Serial.println(F("Leaving APC display"));
+    //while(1);
   }
 
   void apcmini_update_clock_display() {

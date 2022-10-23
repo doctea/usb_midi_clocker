@@ -47,6 +47,12 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
             this->device->setHandleNoteOff(apcmini_note_off);
         };
 
+        virtual void init() override {
+            DeviceBehaviourUSBBase::init();
+            apcdisplay_initialise_last_sent();
+            apcmini_clear_display();
+        }
+
         virtual void loop(unsigned long ticks) override {
             if (!is_connected()) return;
 
@@ -95,7 +101,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
                 Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
                 #ifdef ENABLE_APCMINI_DISPLAY
                     //ATOMIC(
-                    sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
+                    //sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
+                    apcdisplay_sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
                     //)  // turn on the 'going to restart on next bar' flashing indicator
                 #endif
                 restart_on_next_bar = true;
@@ -255,7 +262,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
         virtual void on_restart() override {
             if (device!=nullptr) {
                 #ifdef ENABLE_APCMINI_DISPLAY
-                    sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
+                    apcdisplay_sendNoteOn(7, APCMINI_OFF, 1);  // turn off the flashing 'going to restart on next bar' indicator
                 #endif
             }
         }

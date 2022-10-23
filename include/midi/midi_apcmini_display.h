@@ -20,6 +20,7 @@
 #define APCMINI_YELLOW        5
 #define APCMINI_YELLOW_BLINK  6
 
+extern byte apc_note_last_sent[127];
 
 // gradation of colours to use
 #define LEVEL_1 0
@@ -35,6 +36,10 @@ inline byte get_colour(byte lev);
 
 void apcmini_update_position_display(int ticks);
 
+
+void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel = 1, bool force = false);
+void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel = 1, bool force = false);
+void apcdisplay_initialise_last_sent();
 
 #ifdef ENABLE_CLOCKS
 void redraw_clock_row(byte c);
