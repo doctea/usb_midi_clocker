@@ -2,6 +2,8 @@
 
 #include "bpm.h"
 
+#include "midi/midi_helpers.h"
+
 #include "behaviour_base.h"
 #include "parameter_inputs/VoltageParameterInput.h"
 
@@ -38,10 +40,6 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
         virtual int32_t get_note_length () {
             return this->note_length_ticks;
-        }
-
-        bool is_valid_note(byte note) {
-            return note <= 127;
         }
 
         void on_tick(unsigned long ticks) override {

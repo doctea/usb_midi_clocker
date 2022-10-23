@@ -2,7 +2,7 @@
 #include "midi/midi_helpers.h"
 
 String get_note_name(int pitch) {
-  if (pitch==-1 || pitch>127) {
+  if (!is_valid_note(pitch)) {
     String s = "_"; 
     return s;
   }
@@ -17,7 +17,7 @@ String get_note_name(int pitch) {
 }
 
 const char *get_note_name_c(int pitch) {
-  if (pitch==-1 || pitch>127) {
+  if (!is_valid_note(pitch)) {
     return "_";
   }
   int octave = pitch / 12;
@@ -28,4 +28,8 @@ const char *get_note_name_c(int pitch) {
   static char note_name[4];
   sprintf(note_name, "%s%i", note_names[chromatic_degree], octave);
   return note_name;
+}
+
+bool is_valid_note(int8_t note) {
+    return note >= 0 && note <= 127;
 }

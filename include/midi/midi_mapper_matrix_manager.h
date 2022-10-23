@@ -5,6 +5,8 @@
 #include "midi/midi_outs.h"
 #include "midi/midi_out_wrapper.h"
 
+#include "midi/midi_helpers.h"
+
 #include "midi/midi_looper.h"
 
 #include "LinkedList.h"
@@ -125,6 +127,7 @@ class MIDIMatrixManager {
 
     ///// handle incoming events (from midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
+        if (!is_valid_note(pitch)) return;
         if (source_id<0) {
             if (this->debug) Serial.printf("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n", source_id);
             return;
@@ -140,6 +143,7 @@ class MIDIMatrixManager {
         }
     }
     void processNoteOff(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
+        if (!is_valid_note(pitch)) return;
         if (source_id<0) {
             if (this->debug) Serial.printf("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n", source_id);
             return;
