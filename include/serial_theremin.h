@@ -1,3 +1,5 @@
+#ifdef SERIAL_THEREMIN_HACK
+
 #include "USBHost_t36.h"
 #include "multi_usb_handlers.h"
 
@@ -6,7 +8,6 @@ uint32_t baud = USBBAUD;
 uint32_t format = USBHOST_SERIAL_8N1;
 
 //extern USBHost Usb;
-
 
 class USBSerialWrapper : public USBSerial {
     public:
@@ -57,6 +58,8 @@ void poll_serials() {
         Serial.printf("Received %c\n", userial.read()); Serial.flush();
     }*/
     while(midi_in_theremin.read()) {
-        Serial.printf("recieved a message?\n");
+        Serial.printf("received a message?\n");
     }
 }
+
+#endif

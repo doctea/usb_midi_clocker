@@ -83,7 +83,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
             if (!is_connected() || this->output_device==nullptr) return;
-            if (this->debug) Serial.printf("DeviceBehaviour_MIDISerial#sendNoteOn(%i, %i, %i)!\n", note, velocity, channel);
+            if (this->debug) Serial.printf("DeviceBehaviour_SerialBase#sendNoteOn(%i, %i, %i)!\n", note, velocity, channel);
             this->output_device->sendNoteOn(note, velocity, channel);
         };
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {

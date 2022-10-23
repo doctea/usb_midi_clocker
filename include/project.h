@@ -35,12 +35,14 @@ class Project {
     MIDITrack *temp_loop = new MIDITrack();
 
     void initialise_sequence_slots() {
+        Serial.println("initialise_sequence_slots starting..");
         for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];
             sprintf(filepath, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
-            Serial.printf("sequence_slot_has_file[i] = %i for %s\n", sequence_slot_has_file[i], filepath);
+            Serial.printf("\tsequence_slot_has_file[i] = %i for %s\n", sequence_slot_has_file[i], filepath);
         }
+        Serial.println("initialise_sequence_slots finished");
     }
     void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
@@ -50,14 +52,14 @@ class Project {
             sprintf(filepath, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
-                Serial.printf("checking if slot %i is actually empty...\n");
+                Serial.printf("initialise_loop_slots: checking if loop slot %i is actually empty...\n", i);
                 temp_loop->load_loop(this->current_project_number, i);
-                Serial.printf("loaded ok\n");
+                Serial.printf("initialise_loop_slots: loaded loop ok\n"); Serial.flush();
                 if (temp_loop->count_events()==0)
                     loop_slot_has_file[i] = false;
-                Serial.printf("did count_events\n");
+                Serial.printf("initialise_loop_slots: did count_events\n");
             }
-            Serial.printf("loop_slot_has_file[i] = %i for %s\n", loop_slot_has_file[i], filepath);
+            Serial.printf("initialise_loop_slots: loop_slot_has_file[i] = %i for %s\n", loop_slot_has_file[i], filepath);
         }
         temp_loop->clear_all();
     }

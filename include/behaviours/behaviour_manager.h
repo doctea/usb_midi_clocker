@@ -4,6 +4,7 @@
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_base_serial.h"
+#include "behaviours/behaviour_base_usbserial.h"
 
 #include "multi_usb_handlers.h"
 
@@ -18,11 +19,12 @@ class DeviceBehaviourManager {
         static DeviceBehaviourManager* getInstance();
 
         // all of the registered behaviours
-        LinkedList<DeviceBehaviourUltimateBase *> *behaviours = nullptr;// = LinkedList<DeviceBehaviourUltimateBase *>();
+        LinkedList<DeviceBehaviourUltimateBase *> *behaviours = nullptr;
 
         // registered behaviours separated by type, so that we can treat them differently for connection and listing purposes
-        LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb = nullptr;// = LinkedList<DeviceBehaviourUSBBase *>();
-        LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial = nullptr;// = LinkedList<DeviceBehaviourSerialBase *>();
+        LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb = nullptr;
+        LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial = nullptr;
+        LinkedList<DeviceBehaviourUSBSerialBase *> *behaviours_usbserial = nullptr;
 
         void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
@@ -42,6 +44,14 @@ class DeviceBehaviourManager {
             Serial.println(F("Added item to behaviours_serial."));
             this->behaviours->add(behaviour);
             Serial.println(F("Added item to behaviours."));
+        }
+        void registerBehaviour(DeviceBehaviourUSBSerialBase *behaviour) {
+            if (behaviour==nullptr) {
+                Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial.flush();
+                return;
+            }
+            this->behaviours_usbserial->add(behaviour);
+            this->behaviours->add(behaviour);
         }
         void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
             if (behaviour==nullptr) {
@@ -66,6 +76,24 @@ class DeviceBehaviourManager {
                 }
             }
             Serial.printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
+            return false;
+        }
+
+        bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
+            Serial.printf("attempt_usbserial_device_connect(%i, %i)...\n", idx, packed_id); Serial.flush();
+            // loop over the registered behaviours and if the correct one is found, set it up
+            const int size = behaviours_usbserial->size();
+            for (int i = 0 ; i < size ; i++) {
+                DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
+                Serial.printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
+                usbserial_midi_slots[idx].packed_id = packed_id;
+                if (behaviour->matches_identifiers(packed_id)) {
+                    Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
+                    behaviour->connect_device(usbserial_midi_slots[idx].usbdevice, usbserial_midi_slots[idx].midiinterface);
+                    return true;
+                }
+            }
+            Serial.printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id); Serial.flush();
             return false;
         }
 
@@ -270,8 +298,9 @@ class DeviceBehaviourManager {
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {
-            this->behaviours_serial = new LinkedList<DeviceBehaviourSerialBase*>();
             this->behaviours_usb = new LinkedList<DeviceBehaviourUSBBase*>();
+            this->behaviours_serial = new LinkedList<DeviceBehaviourSerialBase*>();
+            this->behaviours_usbserial = new LinkedList<DeviceBehaviourUSBSerialBase*>();
             this->behaviours = new LinkedList<DeviceBehaviourUltimateBase*>();
         }
         DeviceBehaviourManager(const DeviceBehaviourManager&);

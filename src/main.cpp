@@ -57,14 +57,13 @@ void do_tick(uint32_t ticks);
 #include "cv_outs.h"
 
 #include "multi_usb_handlers.h"
+#include "multi_usbserial_handlers.h"
 
 #include "behaviours/behaviour_manager.h"
 
 #include "input_keyboard.h"
 
 #include "profiler.h"
-
-#include "serial_theremin.h"
 
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
@@ -128,9 +127,7 @@ FLASHMEM void setup() {
   Serial.println(F("Serial ready."));   
   Serial.printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
 
-  setup_serials();
-
-  tft_print((char*)"..storage..\n");
+   tft_print((char*)"..storage..\n");
   storage::setup_storage();
   Serial.printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
 
@@ -176,6 +173,11 @@ FLASHMEM void setup() {
     Serial.println(F("USB ready.")); Serial.flush();
     Serial.printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
+
+  tft_print((char*)"..USBSerial..");
+  setup_multi_usbserial();
+  Serial.println(F("USBSerial ready.")); Serial.flush();
+  Serial.printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
 
   Serial.println(F("Arduino ready.")); Serial.flush();
   #ifdef ENABLE_SCREEN
@@ -226,7 +228,7 @@ void loop() {
   if (debug) { Serial.println("about to Usb.Task()"); Serial.flush(); }
   Usb.Task();
   if (debug) { Serial.println("just did Usb.Task()"); Serial.flush(); }
-  poll_serials();
+  //poll_serials();
   //while (usbMIDI.read());
 
   //static unsigned long last_ticked_at_micros = 0;
@@ -322,6 +324,7 @@ void loop() {
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
+    update_usbserial_device_connections();
     //read_midi_usb_devices();
     
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)

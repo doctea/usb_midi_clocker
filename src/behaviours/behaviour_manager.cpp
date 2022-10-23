@@ -16,6 +16,8 @@
 
 #include "behaviours/behaviour_cvinput.h"
 
+#include "behaviours/behaviour_opentheremin.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -112,6 +114,9 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_cvinput);
         Serial.println(F("Finished registering")); Serial.flush();
     #endif
+
+    behaviour_opentheremin = new DeviceBehaviour_OpenTheremin();
+    behaviour_manager->registerBehaviour(behaviour_opentheremin);
     
     Serial.println(F("Exiting setup_behaviour_manager()"));
 }

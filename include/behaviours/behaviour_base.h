@@ -18,8 +18,9 @@ using namespace midi;
 
 enum BehaviourType {
     undefined,
-    usb,
-    serial
+    usb,        // a USB MIDI device that identifies as a USB MIDI device
+    serial,     // a MIDI device connected over a hardware serial port
+    usbserial   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
 };
 
 class DeviceBehaviourUltimateBase {

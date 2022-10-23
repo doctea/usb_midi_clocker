@@ -52,13 +52,13 @@ void MIDITrack::stop_all_notes() {
 
         LinkedList<MenuItem*> *menuitems = new LinkedList<MenuItem*>();
 
-        LooperStatus            *mpk49_looper_status =       new LooperStatus("Looper", this);
-        LooperQuantizeControl   *quantizer_setting =         new LooperQuantizeControl("Loop quantisation", this);   
-        LooperTransposeControl  *looper_transpose_control =  new LooperTransposeControl("Loop transpose", this);
+        LooperStatus            *looper_status =            new LooperStatus("Looper", this);
+        LooperQuantizeControl   *looper_quantizer_setting = new LooperQuantizeControl("Loop quantisation", this);   
+        LooperTransposeControl  *looper_transpose_control = new LooperTransposeControl("Loop transpose", this);
 
-        menuitems->add(new SeparatorMenuItem("Looper"));
-        menuitems->add(mpk49_looper_status); 
-        menuitems->add(quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
+        menuitems->add(new SeparatorMenuItem((char*)"Looper"));
+        menuitems->add(looper_status); 
+        menuitems->add(looper_quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
         //menu->add(&looper_output_selector);
         menuitems->add(looper_transpose_control);
 

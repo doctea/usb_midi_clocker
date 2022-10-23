@@ -702,12 +702,12 @@ class MIDITrack {
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
-            Serial.printf(F("midi_looper::load_sequence(%i) opening %s\n"), recording_number, filename);
+            Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial.flush();
             f = SD.open(filename, FILE_READ);
             f.setTimeout(0);
 
             if (!f) {
-                Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+                Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename); Serial.flush();
                 /*#ifdef ENABLE_SCREEN
                     menu.set_last_message("Error loading recording!");//, recording_number);
                     menu.set_message_colour(ST77XX_RED);
@@ -716,6 +716,9 @@ class MIDITrack {
             }
 
             clear_all();
+
+            Serial.printf("Entering load loop for project %i and recording_number %i..\n", project_number, recording_number);
+            Serial.flush();
 
             int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
 
@@ -783,7 +786,7 @@ class MIDITrack {
                 menu.set_last_message("Loaded recording %i"); //, recording_number);
                 menu.set_message_colour(ST77XX_GREEN);
             #endif*/
-            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages);
+            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial.flush();
             
             loaded_recording_number = recording_number;
             clear_hanging();

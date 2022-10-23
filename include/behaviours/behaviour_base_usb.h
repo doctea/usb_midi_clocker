@@ -14,11 +14,11 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         DeviceBehaviourUSBBase() = default;
         virtual ~DeviceBehaviourUSBBase() = default;
 
-        virtual uint32_t get_packed_id() { return (this->vid<<16 | this->pid); }
-
         virtual int getType() override {
             return BehaviourType::usb;
         }
+
+        virtual uint32_t get_packed_id() { return (this->vid<<16 | this->pid); }
 
         // interface methods - static
         virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
