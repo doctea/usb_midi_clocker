@@ -18,6 +18,8 @@
 
 #include "behaviours/behaviour_cvinput.h"
 
+#include "behaviours/behaviour_opentheremin.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_pc_usb.h"
@@ -65,7 +67,6 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
     #ifdef ENABLE_NEUTRON
         behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
-        Serial.printf("#####behaviour_neutron is at %p, has target_id of %i\n", behaviour_neutron, behaviour_neutron->target_id);
     #endif
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
@@ -100,7 +101,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_USB
-        // add the sources these are *from* PC *to* Teensy
+        // add the sources - these are *from* PC *to* Teensy
         pc_usb_sources[0] = midi_matrix_manager->register_source((const char*)"pc_usb_1");
         pc_usb_sources[1] = midi_matrix_manager->register_source((const char*)"pc_usb_2");
         pc_usb_sources[2] = midi_matrix_manager->register_source((const char*)"pc_usb_3");
@@ -112,7 +113,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->connect("pc_usb_3", (char*)"USB : Bamble : drums");
         midi_matrix_manager->connect("pc_usb_4", (char*)"USB : Bamble : ch 4");
 
-        // other direction -- from teensy to PC
+        // other direction -- from Teensy to PC
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 1", 0, 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 2", 1, 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 3", 2, 1));
@@ -162,6 +163,10 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_CV_INPUT_PITCH
         midi_matrix_manager->register_source(behaviour_cvinput, "CV input");
+    #endif
+
+    #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)
+        midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");
     #endif
 
     Serial.println("##### finished setup_midi_mapper_matrix_manager"); Serial.flush();

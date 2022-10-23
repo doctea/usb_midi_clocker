@@ -50,7 +50,7 @@
     #define ENCODER_KNOB_R  3   // pin to receive right-encoder pulses
 #endif
 
-//#define ENABLE_USBSERIAL    // enable USB devices that present as serial interfaces
+#define ENABLE_USBSERIAL    // enable USB devices that present as serial interfaces
 #ifdef ENABLE_USBSERIAL
     #define ENABLE_OPENTHEREMIN
 #endif
@@ -70,9 +70,9 @@
 #define ENABLE_BASS_TRANSPOSE MIDI3
 #define DEFAULT_NEUTRON_OCTAVE 2    // set to 1 for 'disabled'
 
+// serial MIDI devices
 //#define ENABLE_LESTRUM    // these are defined in ConfigMidi.h instead
 //#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead
-
 //#define ENABLE_CRAFTSYNTH   // serial MIDI version
 
 #define ENABLE_DISTING

@@ -29,6 +29,14 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             return (this->get_packed_id()==packed_id);
         }
 
+        virtual int getType() override {
+            return BehaviourType::usbserial;
+        }
+
+        virtual const char *get_label() {
+            return (char*)"USBSerialBase";
+        }
+
         virtual int getConnectionBaudRate() {
             return 115200;
         }
@@ -44,10 +52,6 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         virtual bool is_connected() override {
             //return this->output_device!=nullptr || this->input_device!=nullptr;
             return this->connected_flag;
-        }
-
-        virtual int getType() override {
-            return BehaviourType::usbserial;
         }
 
         virtual void connect_device_output(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {

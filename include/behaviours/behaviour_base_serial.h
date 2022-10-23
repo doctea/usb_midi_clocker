@@ -35,7 +35,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         FLASHMEM virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             //if (!is_connected()) return;
 
-            if (this->debug) Serial.printf("DeviceBehaviourSerialBase#connect_device_output connecting device %p\n", device);
+            if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_output connecting device %p\n"), device);
             this->output_device = device;
             this->connected_flag = true;
             this->init();
@@ -46,12 +46,12 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             //device->begin(MIDI_CHANNEL_OMNI);
             //device->turnThruOff();
 
-            if (this->debug) Serial.printf("DeviceBehaviourSerialBase#connect_device_input connecting %p\n", device);
+            if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_input connecting %p\n"), device);
             this->input_device = device;
             this->connected_flag = true;
-            Serial.printf("about to call setup_callbacks on %s..\n", this->get_label()); Serial.flush();
+            Serial.printf(F("about to call setup_callbacks on %s..\n"), this->get_label()); Serial.flush();
             this->setup_callbacks();
-            Serial.printf("about to call init on %s..\n", this->get_label()); Serial.flush();
+            Serial.printf(F("about to call init on %s..\n"), this->get_label()); Serial.flush();
             this->init();
 
         }
@@ -83,7 +83,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
             if (!is_connected() || this->output_device==nullptr) return;
-            if (this->debug) Serial.printf("DeviceBehaviour_SerialBase#sendNoteOn(%i, %i, %i)!\n", note, velocity, channel);
+            if (this->debug) Serial.printf(F("DeviceBehaviour_SerialBase#sendNoteOn(%i, %i, %i)!\n"), note, velocity, channel);
             this->output_device->sendNoteOn(note, velocity, channel);
         };
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {

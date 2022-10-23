@@ -1,5 +1,5 @@
 #ifdef SERIAL_THEREMIN_HACK
-
+/*
 #include "USBHost_t36.h"
 #include "multi_usb_handlers.h"
 
@@ -53,13 +53,9 @@ void poll_serials() {
         Serial.println("userial does not exist!"); Serial.flush();
         return;
     } 
-    /*while (userial && userial.available()) {
-        Serial.println("userial available!"); Serial.flush();
-        Serial.printf("Received %c\n", userial.read()); Serial.flush();
-    }*/
     while(midi_in_theremin.read()) {
         Serial.printf("received a message?\n");
     }
-}
+}*/
 
 #endif

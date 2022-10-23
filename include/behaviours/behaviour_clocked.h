@@ -26,7 +26,7 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         virtual void on_bar(int bar_number) override {
             if (this->restart_on_bar) {
-                Serial.printf(F("%s:\tClockedBehaviour#on_bar and restart_on_bar set!\n"), this->get_label());
+                //Serial.printf(F("%s:\tClockedBehaviour#on_bar and restart_on_bar set!\n"), this->get_label());
                 this->restart_on_bar = false;
                 this->on_restart();
             }
@@ -183,16 +183,16 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             real_ticks = (int32_t)tick_of_period - clock_delay_ticks;
             //if (this->waiting && real_ticks<0) { //(real_ticks) < clock_delay_ticks) {
             if (this->waiting && ((int32_t)tick_of_period) < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
-                if (this->debug) Serial.printf(F("DividedClockBehaviour with global ticks %i of, not sending because tick_of_period %i hasn't reached clock_delay_ticks of %i\n"), ticks, tick_of_period, clock_delay_ticks);
+                //if (this->debug) Serial.printf(F("DividedClockBehaviour with global ticks %i of, not sending because tick_of_period %i hasn't reached clock_delay_ticks of %i\n"), ticks, tick_of_period, clock_delay_ticks);
                 return;
             }
             if (waiting) {
-                if (this->debug) Serial.printf(F("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n"), this->get_label(), real_ticks, clock_delay_ticks);
+                //if (this->debug) Serial.printf(F("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n"), this->get_label(), real_ticks, clock_delay_ticks);
                 //this->on_restart(); = true;
                 this->started = true;
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStart();
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
-                if (this->debug) Serial.printf(F("%s:\tunsetting waiting!\n"), this->get_label());
+                //if (this->debug) Serial.printf(F("%s:\tunsetting waiting!\n"), this->get_label());
                 waiting = false;
             }
             /*if (real_ticks++ < clock_delay_ticks && clock_delay_ticks>0) {
@@ -205,7 +205,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
             }*/
             if (is_bpm_on_bar(real_ticks)) { //}, clock_delay_ticks)) {
-                if (this->debug) Serial.printf(F("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n"), this->get_label(), real_ticks, clock_delay_ticks);
+                //if (this->debug) Serial.printf(F("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n"), this->get_label(), real_ticks, clock_delay_ticks);
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
             }
 
@@ -234,7 +234,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         virtual void on_restart() override {
-            if (this->debug) Serial.printf(F("%s: on_restart() in DividedClockedBehaviour\n"), this->get_label());
+            //if (this->debug) Serial.printf(F("%s: on_restart() in DividedClockedBehaviour\n"), this->get_label());
             if (this->is_connected() && this->clock_enabled) {
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
                 //this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
@@ -242,9 +242,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->started = false;
                 //this->real_ticks = this->clock_delay_ticks * -1;
                 this->waiting = true;
-                if (this->debug) Serial.printf(F("%s:\tsetting waiting!\n"), this->get_label());
+                //if (this->debug) Serial.printf(F("%s:\tsetting waiting!\n"), this->get_label());
             } else {
-                if (this->debug) Serial.println(F("\tin DividedClockedBehaviour on_restart, no device!"));
+                //if (this->debug) Serial.println(F("\tin DividedClockedBehaviour on_restart, no device!"));
             }
         }
 

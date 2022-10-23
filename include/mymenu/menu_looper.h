@@ -143,19 +143,21 @@ class LooperStatus : public SlotController {
         LooperStatus(const char *label, MIDITrack *loop_track) : SlotController(label) {
             this->lrs = new LooperRecStatus("Looper status", loop_track);
             #ifdef ENABLE_LOOPER_PIANOROLL
+            if (loop_track->bitmap_enabled) {
                 this->lds = new LooperDisplay("Piano roll", loop_track);
                 this->lds->show_header = false;
+            }
             #endif
             this->lhs = new HarmonyStatus("Last / current note", &loop_track->last_note, &loop_track->current_note);
             this->show_header = false;
         }
 
         virtual void on_add() override {
-            lrs->set_tft(this->tft);
+            this->lrs->set_tft(this->tft);
             #ifdef ENABLE_LOOPER_PIANOROLL
-                lds->set_tft(this->tft);
+                this->lds->set_tft(this->tft);
             #endif
-            lhs->set_tft(this->tft);
+            this->lhs->set_tft(this->tft);
         };
 
         virtual void update_ticks(unsigned long ticks) override {

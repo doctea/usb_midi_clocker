@@ -35,7 +35,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         virtual void connect_device(MIDIDeviceBase *device) {
             //if (!is_connected()) return;
 
-            Serial.printf("DeviceBehaviourUSBBase#connected_device connecting %p\n", device);
+            //Serial.printf("DeviceBehaviourUSBBase#connected_device connecting %p\n", device);
             this->device = device;
             this->setup_callbacks();
             this->init();

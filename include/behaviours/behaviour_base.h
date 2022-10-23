@@ -133,14 +133,14 @@ class DeviceBehaviourUltimateBase {
         return this->get_parameters()->size()>0;
     }
     virtual DoubleParameter* getParameterForLabel(char *label) {
-        Serial.printf("getParameterForLabel(%s) in behaviour %s..\n", label, this->get_label());
+        //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
 
         for (int i = 0 ; i < parameters->size() ; i++) {
-            Serial.printf("Comparing '%s' to '%s'\n", parameters->get(i)->label, label);
+            //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
             if (strcmp(parameters->get(i)->label, label)==0) 
                 return parameters->get(i);
         }
-        Serial.printf("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n", this->get_label(), label);
+        //Serial.printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
         return nullptr;
     }
 
@@ -195,7 +195,7 @@ class DeviceBehaviourUltimateBase {
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
         // todo: reload parameter mappings...
-        Serial.printf("parse_sequence_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
+        //Serial.printf(F("parse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         if (this->has_parameters() && key.startsWith("parameter_")) {
             // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
@@ -210,14 +210,14 @@ class DeviceBehaviourUltimateBase {
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
             DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
             if (p!=nullptr) {
-                Serial.printf("\t%s: setting slot_number %i to %f\n", p->label, slot_number, amount);
+                //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
                 p->set_slot_amount(slot_number, amount);
                 return true;
             }
-            Serial.printf("\t slot_number %i and amount %f but no parameter found for %s in %s\n", slot_number, amount, parameter_name.c_str(), this->get_label());
+            //Serial.printf(F("\t slot_number %i and amount %f but no parameter found for %s in %s\n"), slot_number, amount, parameter_name.c_str(), this->get_label());
             return true;
         }
-        Serial.printf("...load_parse_key_value(%s, %s) isn't a parameter!\n");
+        ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a parameter!\n"));
         return false;
     }
 

@@ -27,6 +27,13 @@ class BehavioursPanel : public MenuItem {
                 sprintf(buf, "%i %19s %s [serial]\n", i, serial_behaviour->get_label(), serial_behaviour->get_indicator());
                 tft->printf(buf);
             }
+            #ifdef ENABLE_USBSERIAL
+                for (int i = 0 ; i < behaviour_manager->behaviours_usbserial->size() ; i++) {
+                    DeviceBehaviourUSBSerialBase *usbserial_behaviour = behaviour_manager->behaviours_usbserial->get(i);
+                    sprintf(buf, "%i %19s %s [usb-ser]\n", i, usbserial_behaviour->get_label(), usbserial_behaviour->get_indicator());
+                    tft->printf(buf);
+                }
+            #endif
 
             /*for (int i = 0 ; i < (NUM_USB_DEVICES - connected) ; i++) { // blank unused rows
                 tft->printf("%21s\n","");

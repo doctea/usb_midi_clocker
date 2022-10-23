@@ -15,12 +15,12 @@ void DeviceBehaviourUltimateBase::receive_note_off(uint8_t channel, uint8_t note
 
 // called when a receive_control_change message is received from the device; default behaviour is to pass it on to the midi_matrix_manager to route it
 void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
-    if (this->debug) {
+    /*if (this->debug) {
         Serial.printf(F("%s: DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i)...\n"), this->get_label(), inChannel, inNumber, inValue);
         if (midi_matrix_manager==nullptr) {
             Serial.println(F("YO, midi_matrix_manager is null?!")); Serial.flush();
         }
-    }
+    }*/
     midi_matrix_manager->processControlChange(this->source_id, inNumber, inValue); //, inChannel);
-    if (this->debug) Serial.printf(F("...DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i) done!\n"), this->get_label(), inChannel, inNumber, inValue);
+    //if (this->debug) Serial.printf(F("...DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i) done!\n"), this->get_label(), inChannel, inNumber, inValue);
 }

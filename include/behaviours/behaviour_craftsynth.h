@@ -115,17 +115,17 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-            Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
+            //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)
                 return this->parameters;
 
-            Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
+            //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
             DeviceBehaviourUSBBase::initialise_parameters();
-            Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
+            //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
             ClockedBehaviour::initialise_parameters();
 
-            Serial.println(F("\tAdding parameters..."));
+            //Serial.println(F("\tAdding parameters..."));
             //parameters->clear();
             // todo: read these from a file
             //this->add_parameters();
@@ -143,7 +143,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             parameters->add(new MIDICCParameter((char*)"Filter Cutoff", this,   (byte)34,   (byte)1));
             parameters->add(new MIDICCParameter((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
 
-            Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
+            //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
             return parameters;
         }
