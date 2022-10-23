@@ -79,7 +79,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                     this->send_drone_note();
                 }
             } else 
-                //DeviceBehaviourSerialBase::sendNoteOn(pitch, velocity, channel);
                 DeviceBehaviourUltimateBase::sendNoteOn(pitch, velocity, channel);
         }
 
@@ -87,7 +86,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             if (drone_enabled) {
                 //
             } else
-                //DeviceBehaviourSerialBase::sendNoteOff(pitch, velocity, channel);
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
         }
 

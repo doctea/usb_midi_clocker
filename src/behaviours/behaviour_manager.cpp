@@ -129,22 +129,28 @@ void setup_behaviour_manager() {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial.flush(); 
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
+            int16_t group_colour = C_WHITE;
             if (menuitems->size()>0 || behaviour->has_parameters()) {
+                group_colour = menu->get_next_colour();
+
                 // add a separator bar
                 String s = String((char*)(behaviour->get_label())) + String(" >>>");
-                menu->add(new SeparatorMenuItem((char*)s.c_str()));
+                SeparatorMenuItem *separator = new SeparatorMenuItem((char*)s.c_str());
+                separator->set_default_colours(group_colour, BLACK);
+                menu->add(separator);
             }
 
             if (menuitems->size()>0) {
                 Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
-                menu->add(menuitems);
+                menu->add(menuitems, group_colour);
             }
 
             if (behaviour->has_parameters()) {
                 parameter_manager->addParameterSubMenuItems(
                     menu, 
                     behaviour->get_label(), 
-                    behaviour->get_parameters()
+                    behaviour->get_parameters(),
+                    group_colour
                 );
             }
 
