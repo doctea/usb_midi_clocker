@@ -29,6 +29,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Modal CraftSynth 2.0 (route an input or looper to play CraftSynth notes, with tempo sync for arpeggiation etc)
   - M-Vave/Cuvave Chocolate footswitch controller (controls the MIDI looper from left to right: play (toggle), record (toggle), overwrite (momentary), record (momentary))
     - Use the app to configure it as a custom config that outputs note on/note offs on notes 0,1,2,3
+- Support for USB serial devices that don't present as proper MIDI devices, eg OpenTheremin, Arduino Uno with CH340, á la Hairless MIDI
 - Send and receive MIDI events to host PC
 - Support for MIDI DIN devices (clock and note in/outs), eg
   - Route USB MIDI from Beatstep to DIN Behringer Neutron, while transposing all notes to target octave range
@@ -38,6 +39,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Route MIDI to/from a Disting Ex with the Expert Sleepers MIDI breakout board
 - A MIDI routing matrix, to route notes from any of the configured sources (usb-midi, serial-midi, looper) and output it to any of the configured outputs (usb-midi, serial-midi, loopers)
 - 'Bass drone' feature on the Neutron output where it'll drone on the first note played of a bar
+- Per-device synced clock divider, pause, saved to sequencer pattern
 - Re-sync clocked devices 'now' or 'on next bar start' (using ACPMini shift+Up and shift+Device respectively) that resets internal clock and sends stop/start messages to attached MIDI devices
 - Feedback & configuration via UI
   - ST7899 display using ST7899_t3 library for info via [custom menu system](https://github.com/doctea/mymenu)
@@ -46,12 +48,12 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Run from internal clock, with BPM controlled by APCMini slider
   - Or sync to external MIDI clock and obey start/stop from USB host (ie sync to PC/DAW)
   - APCMini shortcuts to 'send restarts' to synced devices to get everything in sync
-- CV outputs for clock divisions and sequencer tracks
+- CV trigger outputs for clock divisions and sequencer tracks
   - on Teensy's digital pins, via level shifter (see wiring diagram/schematic below)
   - 4 tracks of an 8-beat sequencer, configurable on-the-fly via APCMini
     - trigger once per beat, twice per beat, 4 times per beat, 0 times per beat
   - 4 clock division outputs, configurable on-the-fly via APCMini
-    - 32nds, 16ths, 8ths, 4ths, whole note, half bar, bar, 2-bar, phrase, two phrases
+    - 32nds, 16ths, 8ths, 4ths, whole note, half bar, bar, 2-bar, phrase, every two phrases
     - offset up to +/-7 beats from start of phrase
 - Save sequences, clock settings and device matrix routings to SD card
   - Multiple (effectively unlimited?) projects
@@ -82,13 +84,14 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_bitbox: clock to 1010 Music Bitbox mk2, also notes, over midi DIN
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
 - behaviour_clocked: base classes for handling midi clock delay and divison
-- behaviour_craftsynth: send notes to the Modal CraftSynth 2.0
+- behaviour_craftsynth: send notes to the Modal CraftSynth 2.0, also CC parameters that can be modulated from CV input
 - behaviour_drumkit: input from midi drumkit over DIN
 - behaviour_keystep: sends clock and receives notes
 - behaviour_lestrum: input from LeStrum on both channels
 - behaviour_mpk49: input from Akai MK49, including control over looper
-- behaviour_neutron: bass drone and clock to Neutron over MIDI DIN
+- behaviour_neutron: bass drone, octave-forcing, and clock sent to Neutron over MIDI DIN
 - behaviour_midibass: base classes for octave-locking and droning 
+- behaviour_opentheremin: accepts MIDI input from [OpenTheremin V4 with MIDI](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
 - behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
@@ -119,11 +122,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Known issues (current)
 
-- BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as above.
+- BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as mentioned below.
 - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Enabling BEATSTEP_SYSEX causes crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers..?  ~~might be due to dodgy cable or usb hubs, or akai apcmini?~~  runs for hours perfectly OK then will suddenly lock up inside the USBHost_t36 queue_Data_Transfer 
-- Think it may be be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?
+- Think it may be be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
 
 ## Known issues (may be solved)
 
@@ -225,9 +228,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Optimise memory usage of looper with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
 - Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
-  - eg for the OpenTheremin v4 with USB MIDI modification
+  - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
   - and for Arduino Unos without needing to use USB Midi Klik
-  - or for things like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
+  - or for things that don't even talk MIDI, like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
 - Transposition of everything (Beatstep etc?) in chord progressions
 - ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
   - Make the pc_usb connections work using behaviours
