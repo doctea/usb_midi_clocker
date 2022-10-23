@@ -56,8 +56,12 @@ void do_tick(uint32_t ticks);
 #endif
 #include "cv_outs.h"
 
-#include "multi_usb_handlers.h"
-#include "multi_usbserial_handlers.h"
+#ifdef ENABLE_USB
+  #include "multi_usb_handlers.h"
+#endif
+#ifdef ENABLE_USBSERIAL
+  #include "multi_usbserial_handlers.h"
+#endif
 
 #include "behaviours/behaviour_manager.h"
 
@@ -174,10 +178,12 @@ FLASHMEM void setup() {
     Serial.printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
 
-  tft_print((char*)"..USBSerial..");
-  setup_multi_usbserial();
-  Serial.println(F("USBSerial ready.")); Serial.flush();
-  Serial.printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
+  #ifdef ENABLE_USBSERIAL
+    tft_print((char*)"..USBSerial..");
+    setup_multi_usbserial();
+    Serial.println(F("USBSerial ready.")); Serial.flush();
+    Serial.printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
+  #endif
 
   Serial.println(F("Arduino ready.")); Serial.flush();
   #ifdef ENABLE_SCREEN
@@ -324,7 +330,9 @@ void loop() {
 
   #ifdef ENABLE_USB
     update_usb_device_connections();
-    update_usbserial_device_connections();
+    #ifdef ENABLE_USBSERIAL
+      update_usbserial_device_connections();
+    #endif 
     //read_midi_usb_devices();
     
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)

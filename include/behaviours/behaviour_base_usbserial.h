@@ -1,6 +1,9 @@
 #ifndef BEHAVIOUR_BASE_USBSERIAL__INCLUDED
 #define BEHAVIOUR_BASE_USBSERIAL__INCLUDED
 
+#include "Config.h"
+#ifdef ENABLE_USBSERIAL
+
 #include "USBHost_t36.h"
 
 #include "behaviours/behaviour_base.h"
@@ -47,7 +50,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             return BehaviourType::usbserial;
         }
 
-        FLASHMEM virtual void connect_device_output(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
+        virtual void connect_device_output(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
             //if (!is_connected()) return;
 
             if (this->debug) Serial.printf("DeviceBehaviour_USBSerialBase#connect_device_output connecting device %p\n", usbdevice);
@@ -56,7 +59,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             this->connected_flag = true;
             this->init();
         }
-        FLASHMEM virtual void connect_device_input(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
+        virtual void connect_device_input(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
             //if (!is_connected()) return;
 
             //device->begin(MIDI_CHANNEL_OMNI);
@@ -124,4 +127,5 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         };
 };
 
+#endif
 #endif

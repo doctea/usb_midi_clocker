@@ -46,6 +46,7 @@ class Project {
     }
     void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
+        temp_loop->bitmap_enabled = false;
 
         for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];

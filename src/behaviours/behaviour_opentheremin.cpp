@@ -1,3 +1,5 @@
+#ifdef ENABLE_OPENTHEREMIN
+
 #include "behaviours/behaviour_opentheremin.h"
 
 DeviceBehaviour_OpenTheremin *behaviour_opentheremin = nullptr;
@@ -14,3 +16,5 @@ void handle_theremin_note_off(byte inNumber, byte inVelocity, byte inChannel) {
     Serial.printf("handle_theremin_note_off(\t%i,\t%i,\t%i)!\n", inNumber, inVelocity, inChannel);
     if (behaviour_opentheremin!=nullptr) behaviour_opentheremin->receive_note_off(inChannel, inNumber, inVelocity);
 }
+
+#endif

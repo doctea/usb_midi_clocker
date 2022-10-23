@@ -115,8 +115,10 @@ void setup_behaviour_manager() {
         Serial.println(F("Finished registering")); Serial.flush();
     #endif
 
-    behaviour_opentheremin = new DeviceBehaviour_OpenTheremin();
-    behaviour_manager->registerBehaviour(behaviour_opentheremin);
+    #ifdef ENABLE_OPENTHEREMIN
+        behaviour_opentheremin = new DeviceBehaviour_OpenTheremin();
+        behaviour_manager->registerBehaviour(behaviour_opentheremin);
+    #endif
     
     Serial.println(F("Exiting setup_behaviour_manager()"));
 }

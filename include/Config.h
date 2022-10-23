@@ -50,6 +50,11 @@
     #define ENCODER_KNOB_R  3   // pin to receive right-encoder pulses
 #endif
 
+//#define ENABLE_USBSERIAL    // enable USB devices that present as serial interfaces
+#ifdef ENABLE_USBSERIAL
+    #define ENABLE_OPENTHEREMIN
+#endif
+
 #define ENABLE_USB
 #define ENABLE_CV_OUTPUT
 

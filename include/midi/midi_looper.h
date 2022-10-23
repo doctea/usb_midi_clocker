@@ -121,6 +121,8 @@ class MIDITrack {
 
         int transpose_amount = 0;
 
+        bool bitmap_enabled = true;
+
         MIDITrack() {
             this->wipe_piano_roll_bitmap();
             for(int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
@@ -323,9 +325,10 @@ class MIDITrack {
             tick = ticks_to_sequence_step(tick); //tick % LOOP_LENGTH;
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
-                for (int i = 0 ; i < 127 ; i++) {
-                    (*piano_roll_bitmap)[tick][i] = false;
-                }
+                if (this->bitmap_enabled) 
+                    for (int i = 0 ; i < 127 ; i++) {
+                        (*piano_roll_bitmap)[tick][i] = false;
+                    }
                 frames[tick]->clear();
                 last_cleared_tick = tick;
             }
@@ -449,6 +452,8 @@ class MIDITrack {
 
         // live update of the 'bitmap' - called from process_tick after erase head - updates for any notes that are currently being recorded
         void update_bitmap(uint32_t ticks) {
+            if (!this->bitmap_enabled) return;
+            
             for (int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     (*piano_roll_bitmap)[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
@@ -462,6 +467,8 @@ class MIDITrack {
         // wipe all of the bitmap, ready for redrawing etc
         // TODO: speed this up (memset?)
         void wipe_piano_roll_bitmap() {
+            if (!this->bitmap_enabled) return;
+
             if (this->piano_roll_bitmap==nullptr)
                 this->piano_roll_bitmap = (loop_bitmap*)malloc(LOOP_LENGTH_STEPS * 127);
             memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
@@ -477,6 +484,8 @@ class MIDITrack {
 
         // render the frames (array of linked list of messages) to a 'bitmap' 2d array of time * pitch
         void draw_piano_roll_bitmap_from_save() {
+            if (!this->bitmap_enabled) return;
+
             if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial.flush(); }
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
@@ -573,6 +582,8 @@ class MIDITrack {
 
         // convert bitmap to the linkedlist-of-messages save format
         void convert_from_bitmap() {
+            if (!this->bitmap_enabled) return;
+
             if (this->debug) Serial.println(F(("Converting from bitmap...")));
 
             // store current quantization setting so that we don't quantize during conversion, else shit gets all fucked up!

@@ -1,4 +1,7 @@
 #include "Config.h"
+
+#ifdef ENABLE_OPENTHEREMIN
+
 #include <Arduino.h>
 #include "USBHost_t36.h"
 #include "behaviour_base_usbserial.h"
@@ -13,7 +16,7 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialBase {
         uint16_t vid = 0x1c75, pid = 0x0288;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
-        void setup_callbacks() {
+        void setup_callbacks() override {
             this->input_interface->setHandleControlChange(handle_theremin_control_change);
             this->input_interface->setHandleNoteOn(handle_theremin_note_on);
             this->input_interface->setHandleNoteOn(handle_theremin_note_off);
@@ -21,3 +24,5 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialBase {
 };
 
 extern DeviceBehaviour_OpenTheremin *behaviour_opentheremin;
+
+#endif

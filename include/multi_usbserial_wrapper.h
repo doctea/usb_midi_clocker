@@ -1,5 +1,8 @@
 #ifndef USBSERIALWRAPPER__INCLUDED
 #define USBSERIALWRAPPER__INCLUDED
+#include "Config.h"
+
+#ifdef ENABLE_USBSERIAL
 
 #include "USBHost_t36.h"
 
@@ -16,4 +19,5 @@ class USBSerialWrapper : public USBSerial {
         
 };
 
+#endif
 #endif
