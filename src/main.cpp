@@ -64,6 +64,8 @@ void do_tick(uint32_t ticks);
 
 #include "profiler.h"
 
+#include "serial_theremin.h"
+
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
   uint32_t *main_loop_length_averages; //[NUMBER_AVERAGES];
@@ -125,6 +127,8 @@ FLASHMEM void setup() {
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
   Serial.printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
+
+  setup_serials();
 
   tft_print((char*)"..storage..\n");
   storage::setup_storage();
@@ -222,6 +226,7 @@ void loop() {
   if (debug) { Serial.println("about to Usb.Task()"); Serial.flush(); }
   Usb.Task();
   if (debug) { Serial.println("just did Usb.Task()"); Serial.flush(); }
+  poll_serials();
   //while (usbMIDI.read());
 
   //static unsigned long last_ticked_at_micros = 0;
