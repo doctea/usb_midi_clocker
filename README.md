@@ -229,8 +229,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
 - Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
   - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
-  - and for Arduino Unos without needing to use USB Midi Klik
+  - and for Arduino Unos without needing to use USB Midi Klik (havent tested whether we need to do something different with pid+vid+serial number to do this)
   - or for things that don't even talk MIDI, like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
+    - todo: improve this by not requiring the behaviour to implement MIDI -- could possibly let the behaviour itself deal with that, just have the usbserial connection stuff pass the usb device
 - Transposition of everything (Beatstep etc?) in chord progressions
 - ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
   - Make the pc_usb connections work using behaviours
