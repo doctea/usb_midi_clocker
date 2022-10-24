@@ -59,7 +59,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
                 // has pitch become invalid?  is so and if note playing, stop note
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {
-                    if (this->debug) Serial.printf("Stopping note\t%i because playing and new_note=255\n", new_note);
+                    if (this->debug) Serial.printf("Stopping note\t%i because playing and new_note isn't valid\n", new_note);
                     this->receive_note_off(1, this->current_note, 0);
                     this->is_playing = false;
                     this->current_note = 255;
