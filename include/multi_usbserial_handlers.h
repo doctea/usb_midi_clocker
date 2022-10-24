@@ -12,7 +12,7 @@
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
 */
 
-#define NUM_USBSERIAL_DEVICES 1
+#define NUM_USBSERIAL_DEVICES 3
 
 // assign device to port and set appropriate handlers
 void setup_usbserial_midi_device(uint8_t idx, uint32_t packed_id);
@@ -40,7 +40,7 @@ struct usbserial_midi_slot {
     DeviceBehaviourUSBSerialBase *behaviour = nullptr;
 };
 
-extern usbserial_midi_slot usbserial_midi_slots[NUM_USBSERIAL_DEVICES];
+extern usbserial_midi_slot usbserial_slots[NUM_USBSERIAL_DEVICES];
 
 #endif
 #endif

@@ -75,6 +75,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - momentary overwrite mode that cuts notes
 - CV to MIDI CC 
   - Allow CV input to be mapped to CC outputs
+  - Only CraftSynth currently has Parameters
+  - Working 1V/oct input that can be routed to MIDI outputs; some latency though
 
 ### Behaviours
 
@@ -95,6 +97,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_subclocker: send clock to an attached Arduino usb_midi_clocker, with delay / clock division
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
+- behaviour_base_usbserial: base class for USB serial and USB serial MIDI devices
 - ClockedBehaviour: send clock messages
 
 ## Requirements
@@ -156,15 +159,16 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Panic / all notes off action
 - ~~Bass drone mode~~
  - ~~toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..~~
+ - stutter/machinegun mode? (eg play 32nd stabs instead of drone)
 - ~~Move bass transposition options into the OutputWrapper?~~ done!
  - ~~remove debug output for this~~
  - ~~set default transposition~~
  - save transposition info to project?
- - should actually probably be part of the DeviceBehaviour instead now?
+ - ~~should actually probably be part of the DeviceBehaviour instead now?~~
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
-- More efficient Akai APCMini display output (don't need to send as many messages as we do, can just update when it needs to)
+- ~~More efficient Akai APCMini display output (don't need to send as many messages as we do, can just update when it needs to)~~
 - ~~Enable switching between multiple projects~~ done
 - ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
@@ -182,6 +186,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - configurable chaining of sequences ie 'song mode'?
   - sequencer mutations / fills
   - allow offbeat tracks or individual steps
+  - stutter trigger mode
 - Sequencer/looper that ~~records and playback MIDI notes or~~ CV
   - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
   - improve by writing & saving real MIDI files?
@@ -212,13 +217,14 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)~~
     - this is mostly working now..!
       - some performance issues in reading the data, though
-        - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart?
+        - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart, or even usbserial now?
     - some todos remain:
       - reassign modulation sources
       - load/save modulation settings
          - working; but kinda impractical; how do we want to handle this?
       - lock/hold modulation settings
       - auto-advance modulation settings?
+      - modulation sources other than voltages
     - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
   - Record and playback CCs as well as MIDI
   - tempo-synced LFOs etc...
@@ -229,9 +235,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
 - Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
   - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
-  - and for Arduino Unos without needing to use USB Midi Klik (havent tested whether we need to do something different with pid+vid+serial number to do this)
+  - and for Arduino Unos without needing to use USB Midi Klik 
+    - todo: see whether we need to use device unique id rather than pid+vid to ensure correct detection of mltiple devices
   - or for things that don't even talk MIDI, like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
-    - todo: improve this by not requiring the behaviour to implement MIDI -- could possibly let the behaviour itself deal with that, just have the usbserial connection stuff pass the usb device
+    - ~~todo: improve this by not requiring the behaviour to implement MIDI -- could possibly let the behaviour itself deal with that, just have the usbserial connection stuff pass the usb device~~
+    - todo: implement a proof-of-concept non-MIDI usb serial device
 - Transposition of everything (Beatstep etc?) in chord progressions
 - ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
   - Make the pc_usb connections work using behaviours
@@ -246,7 +254,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
   
   
-## Explanation/demo
+## Explanation/demo (very much out of date!)
 
 ![my unit](https://github.com/doctea/usb_midi_clocker/blob/main/media/my%20unit.jpg "My unit")
 

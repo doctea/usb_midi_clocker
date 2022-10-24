@@ -12,15 +12,16 @@
 
 class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase {
     public:
-        midi::MidiInterface<USBSerialWrapper> *input_interface = nullptr;
-        midi::MidiInterface<USBSerialWrapper> *output_interface = nullptr;
 
         DeviceBehaviourUSBSerialBase() = default;
         virtual ~DeviceBehaviourUSBSerialBase() = default;
 
+        USBSerialWrapper *usbdevice = nullptr;
+        bool connected_flag = false;
+
         const uint32_t vid = 0x0000, pid = 0x0000;
         virtual uint32_t get_packed_id() { return (this->vid<<16 | this->pid); }
-    
+
         // interface methods - static
         virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
             return vid==this->vid && pid==this->pid;
@@ -44,45 +45,68 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             return USBHOST_SERIAL_8N1;
         }
 
-        virtual bool has_input() { return this->input_interface!=nullptr; }
-        virtual bool has_output() { return this->output_interface!=nullptr; }
+        virtual void connect_device(USBSerialWrapper *usbdevice) {
+            Serial.printf("DeviceBehaviour_USBSerialBase#connect_device for %s connecting %p\n", this->get_label(), usbdevice);
 
-        bool connected_flag = false;
+            if (this->usbdevice!=nullptr && this->usbdevice != usbdevice) {
+                Serial.printf("\tit is already connected to a different usbdevice! disconnecting first..");
+                this->disconnect_device();
+            }
+
+            this->usbdevice = usbdevice;
+
+            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+
+            this->init();
+            this->setup_callbacks();
+        }
+
+        virtual void disconnect_device() {
+            if (!this->is_connected()) return;
+            this->usbdevice = nullptr;
+        }
 
         virtual bool is_connected() override {
             //return this->output_device!=nullptr || this->input_device!=nullptr;
-            return this->connected_flag;
+            return this->usbdevice!=nullptr && this->usbdevice; // connected_flag;
         }
 
-        virtual void connect_device_output(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
-            //if (!is_connected()) return;
-
-            if (this->debug) Serial.printf("DeviceBehaviour_USBSerialBase#connect_device_output connecting device %p\n", usbdevice);
-            //this->output_device = usbdevice;
-            this->output_interface = midiinterface;
-            this->connected_flag = true;
-            this->init();
+        virtual void init() override {
+            // do anything we need to do after we've just connected a new serial midi device..?
         }
-        virtual void connect_device_input(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
-            //if (!is_connected()) return;
 
-            //device->begin(MIDI_CHANNEL_OMNI);
-            //device->turnThruOff();
+};
 
-            if (this->debug) Serial.printf("DeviceBehaviourUSBSerialBase#connect_device_input connecting %p\n", usbdevice);
-            this->input_interface = midiinterface;
-            this->connected_flag = true;
-            Serial.printf("about to call setup_callbacks on %s..\n", this->get_label()); Serial.flush();
-            this->setup_callbacks();
-            Serial.printf("about to call init on %s..\n", this->get_label()); Serial.flush();
-            this->init();
+class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerialBase {
+    public:
+        midi::MidiInterface<USBSerialWrapper> *midi_interface = nullptr;
+
+        DeviceBehaviourUSBSerialMIDIBase() = default;
+        virtual ~DeviceBehaviourUSBSerialMIDIBase() = default;
+
+        virtual int getType() override {
+            return BehaviourType::usbserialmidi;
         }
-        virtual void connect_device(USBSerialWrapper *usbdevice, midi::MidiInterface<USBSerialWrapper> *midiinterface) {
-            Serial.printf("DeviceBehaviour_USBSerialBase#connect_device connecting %p\n", usbdevice);
-            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
 
-            this->connect_device_input(usbdevice, midiinterface);
-            this->connect_device_output(usbdevice, midiinterface);
+        virtual const char *get_label() {
+            return (char*)"USBSerialMIDIBase";
+        }
+
+        //virtual bool has_input()    { return this->input_interface!=nullptr; }
+        //virtual bool has_output()   { return this->output_interface!=nullptr; }
+
+        virtual void init() override {
+            if (this->usbdevice==nullptr) {
+                Serial.printf("DeviceBehaviourUSBSerialMIDIBase#init() in %s failed - usbdevice is nullptr!\n", this->get_label());
+                return;
+            }
+
+            if (this->midi_interface!=nullptr) {
+                Serial.printf("DeviceBehaviourUSBSerialMIDIBase#init() in %s already has a midi_interface - disconnecting it!\n", this->get_label());
+                this->disconnect_device();
+            }
+
+            this->midi_interface = new midi::MidiInterface<USBSerialWrapper>(*this->usbdevice);
         }
 
         // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
@@ -92,42 +116,43 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
 
             this->connected_flag = false;
             
-            if (this->input_interface==nullptr) return;
+            if (this->midi_interface==nullptr) return;
 
-            this->input_interface->setHandleNoteOn(nullptr);
-            this->input_interface->setHandleNoteOff(nullptr);
-            this->input_interface->setHandleControlChange(nullptr);
-            this->input_interface->setHandleClock(nullptr);
-            this->input_interface->setHandleStart(nullptr);
-            this->input_interface->setHandleStop(nullptr);
-            this->input_interface->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
-            this->input_interface = nullptr;
-            this->output_interface = nullptr;
+            this->midi_interface->setHandleNoteOn(nullptr);
+            this->midi_interface->setHandleNoteOff(nullptr);
+            this->midi_interface->setHandleControlChange(nullptr);
+            this->midi_interface->setHandleClock(nullptr);
+            this->midi_interface->setHandleStart(nullptr);
+            this->midi_interface->setHandleStop(nullptr);
+            this->midi_interface->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
+            this->midi_interface = nullptr;
+
+            delete this->midi_interface;
         }
 
         virtual void read() override {
-            if (!is_connected() || this->input_interface==nullptr) return;
-            //Serial.println("DeviceBehaviourSerialBase#read() about to go into loop..");
-            while(this->input_interface->read()); 
-            //Serial.println("DeviceBehaviourSerialBase#read() came out of loop..");
+            if (!is_connected() || this->midi_interface==nullptr) return;
+            //Serial.println("DeviceBehaviourSerialMIDIBase#read() about to go into loop..");
+            while(this->midi_interface->read()); 
+            //Serial.println("DeviceBehaviourSerialMIDIBase#read() came out of loop..");
         };
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
-            if (!is_connected() || this->output_interface==nullptr) return;
-            if (this->debug) Serial.printf("DeviceBehaviour_USBSerialBase#sendNoteOn(%i, %i, %i)!\n", note, velocity, channel);
-            this->output_interface->sendNoteOn(note, velocity, channel);
+            if (!is_connected() || this->midi_interface==nullptr) return;
+            if (this->debug) Serial.printf("DeviceBehaviour_USBSerialMIDIBase#sendNoteOn(%i, %i, %i)!\n", note, velocity, channel);
+            this->midi_interface->sendNoteOn(note, velocity, channel);
         };
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
-            if (!is_connected() || this->output_interface==nullptr) return;
-            this->output_interface->sendNoteOff(note, velocity, channel);
+            if (!is_connected() || this->midi_interface==nullptr) return;
+            this->midi_interface->sendNoteOff(note, velocity, channel);
         };
         virtual void actualSendControlChange(uint8_t number, uint8_t value, uint8_t channel = 0) override {
-            if (!is_connected() || this->output_interface==nullptr) return;
-            this->output_interface->sendControlChange(number, value, channel);
+            if (!is_connected() || this->midi_interface==nullptr) return;
+            this->midi_interface->sendControlChange(number, value, channel);
         };
         virtual void actualSendRealTime(uint8_t message) override {
-            if (!is_connected() || this->output_interface==nullptr) return;
-            this->output_interface->sendRealTime((midi::MidiType)message);
+            if (!is_connected() || this->midi_interface==nullptr) return;
+            this->midi_interface->sendRealTime((midi::MidiType)message);
         };
 };
 
