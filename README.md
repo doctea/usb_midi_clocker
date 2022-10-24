@@ -250,8 +250,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - also opens the door to allow naming of patterns/projects?
 - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
 - Allow Behaviours to register CCs they respond to and can generate
+  - CraftSynth has Parameters, can assign modulation to them
   - So that can remap these as sources and targets
   - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
+  - expose internal settings as Parameters, so that can have modulation mapped to them too...
+- Reassignable Parameters that can be pointed at any given Behaviour+CC, configured from menus
   
   
 ## Explanation/demo (very much out of date!)

@@ -12,14 +12,6 @@
 
     #include "behaviours/behaviour_manager.h"
 
-    /*
-    usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
-    usb_midi_device[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
-    usb_midi_device[2] is 1C75:0206 aka Arturia:Arturia BeatStep
-    usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI       
-    usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
-    */
-
     extern USBHost Usb;
 
     USBSerialWrapper userial1(Usb);
