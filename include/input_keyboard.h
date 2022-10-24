@@ -23,7 +23,7 @@ extern DisplayTranslator_Configured steensy;
     void OnPress(int key) {
         switch(key) {
             case KEYD_DELETE    : 
-                if (keyboard1.getModifiers()==5)  
+                if (keyboard1.getModifiers()==5)  // ctrl + alt
                     reset_teensy();  
                 break; /* ctrl+alt+delete to soft reboot */
             case KEYD_UP        : Serial.println(F("UP"));     menu->knob_left(); break;
