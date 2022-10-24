@@ -137,9 +137,9 @@ class MidiMatrixSelectorControl : public SelectorControl {
                 const uint16_t col = this->get_colour_for_target_id(target_id);
                 colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
                 const char indicator = is_current_value_connected ? '*' : ' ';
-                tft->printf((char*)"%c %1x %15s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
+                tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
 
-                tft->printf("%s:%s", 
+                tft->printf("  %3s:%3s", 
                     (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->current_note),
                     (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->last_note)
                 );

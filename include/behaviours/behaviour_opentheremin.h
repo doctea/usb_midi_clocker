@@ -14,6 +14,9 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
     public:
         uint16_t vid = 0x1a86, pid = 0x7523;            // 1a867523
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
+
+        virtual bool has_input() override   { return true; }
+        virtual bool has_output() override  { return false; }
         
         virtual const char *get_label() {
             return (char*)"OpenTheremin";

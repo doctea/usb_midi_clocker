@@ -76,12 +76,12 @@
     void update_usbserial_device_connections() {
         for (int port = 0 ; port < NUM_USBSERIAL_DEVICES ; port++) {
             uint32_t packed_id = (usbserial_slots[port].usbdevice->idVendor()<<16) | (usbserial_slots[port].usbdevice->idProduct());
-            //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
+            //Serial.printf("update_usbserial_device_connections(): packed %04X and %04X to %08X\n", usbserial_slots[port].usbdevice->idVendor(),  usbserial_slots[port].usbdevice->idProduct(), packed_id);
             if (usbserial_slots[port].packed_id != packed_id) {
                 // device at this port has changed since we last saw it -- ie, disconnection or connection
                 // unassign the midi_xxx helper pointers if appropriate
                 usbserial_slots[port].behaviour = nullptr;
-                Serial.printf(F("update_usbserial_device_connections: device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usbserial_slots[port].packed_id);
+                Serial.printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usbserial_slots[port].packed_id);
                 // call setup_usb_midi_device() to assign device to port and set handlers
                 setup_usbserial_midi_device(port, packed_id);
                 Serial.println(F("-----"));
