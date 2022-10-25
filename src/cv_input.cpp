@@ -14,7 +14,7 @@
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_craftsynth.h"
 
-ParameterManager *parameter_manager = new ParameterManager();
+ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
 // initialise the voltage-reading hardware/librareis and the ParameterManager
 void setup_cv_input() {
@@ -56,6 +56,7 @@ FLASHMEM void setup_parameters() {
     // get the available target parameters
     // todo: dynamically pull these from all available behaviours
     // todo: dynamically pull them from other things that could have parameters available
+    // todo: move this to the behaviour initialising!
     #ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println("setup_parameters() about to do get_parameters on behaviour_craftsynth.."); Serial.flush();
         LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
@@ -65,11 +66,12 @@ FLASHMEM void setup_parameters() {
 
         // setup the default mappings
         // TODO: load this from a saved config file
-        Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
+        // hmmm if this section is uncommented then it causes 'conflicting section type' problems due to FLASHMEM..?
+        /*Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
         behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
         behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
         behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-        Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();
+        Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();*/
     #endif
 
     parameter_manager->setDefaultParameterConnections();

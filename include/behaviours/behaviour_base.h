@@ -57,7 +57,7 @@ class DeviceBehaviourUltimateBase {
         return BehaviourType::undefined;
     }
 
-    virtual void setup_callbacks() {};
+    FLASHMEM virtual void setup_callbacks() {};
 
     virtual bool is_connected() {
         return false;
@@ -125,7 +125,7 @@ class DeviceBehaviourUltimateBase {
             this->initialise_parameters();
         return parameters;
     }
-    virtual LinkedList<DoubleParameter*> *initialise_parameters() {
+    FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() {
         /*if (parameters==nullptr)
             parameters = new LinkedList<DoubleParameter*>();*/
         return parameters;

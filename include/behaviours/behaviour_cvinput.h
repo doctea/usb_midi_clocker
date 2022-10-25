@@ -27,9 +27,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
-        virtual void set_selected_parameter_input(VoltageParameterInput *input) {
+        virtual void set_selected_parameter_input(BaseParameterInput *input) {
             Serial.printf("set_selected_parameter_input(%c)\n", input->name);
-            this->source_input = input;
+            this->source_input = (VoltageParameterInput*)input;
             if (input==nullptr)
                 Serial.printf("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n");
             //else
