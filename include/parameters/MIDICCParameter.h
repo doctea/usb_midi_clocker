@@ -5,6 +5,8 @@
 
 #include "midi/midi_out_wrapper.h"
 
+#include "menu.h"
+
 class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
     byte cc_number = 0, channel = 0;
 
@@ -43,6 +45,8 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 if (this->debug) Serial.printf("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n", this->label);
             }
         }
+
+        virtual LinkedList<MenuItem *> *makeControls() override;
 };
 
 #endif
