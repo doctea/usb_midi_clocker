@@ -17,7 +17,6 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         virtual ~DeviceBehaviourUSBSerialBase() = default;
 
         USBSerialWrapper *usbdevice = nullptr;
-        bool connected_flag = false;
 
         const uint32_t vid = 0x0000, pid = 0x0000;
         virtual uint32_t get_packed_id() { return (this->vid<<16 | this->pid); }
@@ -113,9 +112,8 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
         virtual void disconnect_device() {
             //if (this->device==nullptr) return;
             if (!is_connected()) return;
+            DeviceBehaviourUSBSerialBase::disconnect_device();
 
-            this->connected_flag = false;
-            
             if (this->midi_interface==nullptr) return;
 
             this->midi_interface->setHandleNoteOn(nullptr);
