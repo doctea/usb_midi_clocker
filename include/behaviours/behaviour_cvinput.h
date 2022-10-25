@@ -28,10 +28,10 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         #endif
 
         virtual void set_selected_parameter_input(BaseParameterInput *input) {
-            Serial.printf("set_selected_parameter_input(%c)\n", input->name);
+            Serial.printf(F("set_selected_parameter_input(%c)\n"), input->name);
             this->source_input = (VoltageParameterInput*)input;
             if (input==nullptr)
-                Serial.printf("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n");
+                Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
             //else
             //Serial.printf("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n", this->get_label(), input->name);               
         }
@@ -46,7 +46,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
             // check if playing note duration has passed regardless of whether source_input is set, so that notes will still finish even if disconncted
             if (is_playing && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
-                if (this->debug) Serial.printf("Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n", current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
+                if (this->debug) Serial.printf(F("Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n"), current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
                 this->last_note = current_note;
                 is_playing = false;
                 this->receive_note_off(1, this->current_note, 0);
@@ -59,7 +59,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
                 // has pitch become invalid?  is so and if note playing, stop note
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {
-                    if (this->debug) Serial.printf("Stopping note\t%i because playing and new_note isn't valid\n", new_note);
+                    if (this->debug) Serial.printf(F("Stopping note\t%i because playing and new_note isn't valid\n"), new_note);
                     this->receive_note_off(1, this->current_note, 0);
                     this->is_playing = false;
                     this->current_note = 255;

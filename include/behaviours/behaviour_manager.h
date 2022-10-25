@@ -85,7 +85,7 @@ class DeviceBehaviourManager {
 
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
-                Serial.printf("attempt_usbserial_device_connect(%i, %i)...\n", idx, packed_id); Serial.flush();
+                Serial.printf(F("attempt_usbserial_device_connect(%i, %i)...\n"), idx, packed_id); Serial.flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const int size = behaviours_usbserial->size();
                 for (int i = 0 ; i < size ; i++) {

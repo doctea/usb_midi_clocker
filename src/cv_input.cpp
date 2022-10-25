@@ -58,11 +58,11 @@ FLASHMEM void setup_parameters() {
     // todo: dynamically pull them from other things that could have parameters available
     // todo: move this to the behaviour initialising!
     #ifdef ENABLE_CRAFTSYNTH_USB
-        Serial.println("setup_parameters() about to do get_parameters on behaviour_craftsynth.."); Serial.flush();
+        Serial.println(F("setup_parameters() about to do get_parameters on behaviour_craftsynth..")); Serial.flush();
         LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
-        Serial.println("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()"); Serial.flush();
+        Serial.println(F("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()")); Serial.flush();
         parameter_manager->addParameters(params);
-        Serial.println("setup_parameters() just did parameter_manager->addParameters(params)"); Serial.flush();
+        Serial.println(F("setup_parameters() just did parameter_manager->addParameters(params)")); Serial.flush();
 
         // setup the default mappings
         // TODO: load this from a saved config file

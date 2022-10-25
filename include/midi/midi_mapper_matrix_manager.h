@@ -20,6 +20,8 @@ void setup_midi_mapper_matrix_manager();
 #define NUM_REGISTERED_TARGETS targets_count
 #define NUM_REGISTERED_SOURCES sources_count
 
+#define LANGST_HANDEL_ROUT 20   // get roo to do it
+
 #include "midi/midi_mapper_matrix_types.h"
 
 class MIDITrack;
@@ -52,14 +54,16 @@ class MIDIMatrixManager {
 
     /* stuff for handling sources of midi data */
     struct source_entry {
-        char handle[25];
+        char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
     };
     int sources_count = 0;
 
-    source_entry sources[MAX_NUM_SOURCES] = {};
+    //DMAMEM source_entry sources[MAX_NUM_SOURCES];
+    source_entry *sources = nullptr;
+
     // assign a source_id for the given name
     FLASHMEM source_id_t register_source(const char *handle) {
-        Serial.printf("midi_mapper_matrix_manager#register_source() registering handle '%s'\n", handle);
+        Serial.printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
         strcpy(sources[NUM_REGISTERED_SOURCES].handle, handle);
         return NUM_REGISTERED_SOURCES++;
     }
@@ -74,11 +78,11 @@ class MIDIMatrixManager {
             if (strcmp(handle, sources[i].handle)==0)
                 return i;
         }
-        Serial.printf("!! get_source_id_for_handle couldn't find a source for handle '%s'\n", handle);
+        Serial.printf(F("!! get_source_id_for_handle couldn't find a source for handle '%s'\n"), handle);
         return -1;
     }
 
-    bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
+    bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
@@ -94,14 +98,15 @@ class MIDIMatrixManager {
     }
 
     void toggle_connect(source_id_t source_id, target_id_t target_id) {
-        if (!is_connected(source_id, target_id))
-            this->connect(source_id, target_id);
-        else
+        if (is_connected(source_id, target_id))
             this->disconnect(source_id, target_id);
+        else
+            this->connect(source_id, target_id);
     }
     
-    void connect(MIDITrack *track, DeviceBehaviourUltimateBase *device);
-    void connect(DeviceBehaviourUltimateBase *device, const char *handle);
+    // connect source to target)
+    void connect(MIDITrack *source_track, DeviceBehaviourUltimateBase *target_behaviour);
+    void connect(DeviceBehaviourUltimateBase *source_behaviour, const char *target_handle);
     void connect(const char *source_handle, const char *target_handle) {
         this->connect(
             this->get_source_id_for_handle(source_handle),
@@ -126,14 +131,14 @@ class MIDIMatrixManager {
         source_to_targets[source_id][target_id] = false;
     }
 
-    ///// handle incoming events (from midi device, looper, etc) and route to connected outputs
+    ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
         if (!is_valid_note(pitch)) return;
         if (source_id<0) {
-            if (this->debug) Serial.printf("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n", source_id);
+            if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOn(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
+        if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n"), source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
@@ -146,14 +151,14 @@ class MIDIMatrixManager {
     void processNoteOff(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
         if (!is_valid_note(pitch)) return;
         if (source_id<0) {
-            if (this->debug) Serial.printf("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n", source_id);
+            if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n", source_id, pitch, velocity, channel);
+        if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n"), source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
+                if (this->debug) Serial.printf(F("\t%i: %s should send to %s\n"), target_id, sources[source_id].handle, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
@@ -191,7 +196,7 @@ class MIDIMatrixManager {
     const char *get_label_for_target_id(target_id_t target_id) {
         if(this->targets[target_id].wrapper!=nullptr) 
             return this->targets[target_id].wrapper->label;
-        return (const char*)"[error - unknown]";
+        return (const char*)F("[error - unknown]");
     }
 
     //// stuff for handling targets of midi data
@@ -217,9 +222,9 @@ class MIDIMatrixManager {
     target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
         strcpy(targets[NUM_REGISTERED_TARGETS].handle, handle);
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
-        Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n", handle, NUM_REGISTERED_TARGETS);
+        Serial.printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);
         if (target==nullptr) {
-            Serial.printf("WARNING: register_target for handle %s (target_id %i) passed a null target wrapper!!!\n", target, NUM_REGISTERED_TARGETS);
+            Serial.printf(F("WARNING: register_target for handle %s (target_id %i) passed a null target wrapper!!!\n"), target, NUM_REGISTERED_TARGETS);
         }
         return NUM_REGISTERED_TARGETS++;
     }
@@ -230,14 +235,14 @@ class MIDIMatrixManager {
     }*/
 
     target_id_t get_target_id_for_handle(const char *handle) {
-        Serial.printf("get_target_id_for_handle(%s)\n", handle);
+        //Serial.printf(F("get_target_id_for_handle(%s)\n"), handle);
         for (int i = 0; i < NUM_REGISTERED_TARGETS ; i++) {
-            Serial.printf("\t%i: looking for '%s', comparing '%s'..\n", i, handle, targets[i].handle);
+            //Serial.printf(F("\t%i: looking for '%s', comparing '%s'..\n"), i, handle, targets[i].handle);
             if (strcmp(handle, targets[i].handle)==0) {
                 return i;
             }
         }
-        Serial.printf("!! get_target_id_for_handle couldn't find a target for handle '%s'\n", handle);
+        Serial.printf(F("!! get_target_id_for_handle couldn't find a target for handle '%s'\n"), handle);
         return -1;
     }
     MIDIOutputWrapper *get_target_for_handle(char *handle) {
@@ -255,6 +260,9 @@ class MIDIMatrixManager {
         static MIDIMatrixManager* inst_;
         MIDIMatrixManager() {
             //setup_midi_output_wrapper_manager();
+            //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
+            sources = (source_entry*)malloc(sizeof(source_entry) * MAX_NUM_SOURCES);
+            memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);
