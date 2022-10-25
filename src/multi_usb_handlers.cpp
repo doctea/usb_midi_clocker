@@ -20,8 +20,8 @@ usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 USBHost Usb;
 USBHub hub1(Usb);
 USBHub hub2(Usb);
-//USBHub hub3(Usb);
-//USBHub hub4(Usb);
+USBHub hub3(Usb);
+USBHub hub4(Usb);
 use_MIDIDevice_BigBuffer midi01(Usb);
 use_MIDIDevice_BigBuffer midi02(Usb);
 use_MIDIDevice_BigBuffer midi03(Usb);
