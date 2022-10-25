@@ -19,10 +19,11 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
     LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
-        DividedClockedBehaviour::make_menu_items();
+        DeviceBehaviourUltimateBase::make_menu_items();
         this->menuitems->add(
             new HarmonyStatus("Beatstep harmony",   &this->last_note,          &this->current_note)
         );
+        DividedClockedBehaviour::make_menu_items();
         #ifdef ENABLE_BEATSTEP_SYSEX
             ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = new ObjectToggleControl<DeviceBehaviour_Beatstep> (
                 "Beatstep auto-advance",

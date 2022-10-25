@@ -37,10 +37,11 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
 
             //Serial.printf("DeviceBehaviourUSBBase#connected_device connecting %p\n", device);
             this->device = device;
-            this->setup_callbacks();
             this->init();
+            this->setup_callbacks();
         }
-        // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
+
+        // remove handlers that might already be set on this port -- new ones assigned thru setup_callbacks functions
         virtual void disconnect_device() {
             //if (this->device==nullptr) return;
             if (!is_connected()) return;

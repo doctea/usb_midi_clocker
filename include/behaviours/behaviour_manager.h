@@ -91,10 +91,10 @@ class DeviceBehaviourManager {
                 for (int i = 0 ; i < size ; i++) {
                     DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
                     Serial.printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
-                    usbserial_midi_slots[idx].packed_id = packed_id;
+                    usbserial_slots[idx].packed_id = packed_id;
                     if (behaviour->matches_identifiers(packed_id)) {
                         Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
-                        behaviour->connect_device(usbserial_midi_slots[idx].usbdevice, usbserial_midi_slots[idx].midiinterface);
+                        behaviour->connect_device(usbserial_slots[idx].usbdevice);
                         return true;
                     }
                 }
