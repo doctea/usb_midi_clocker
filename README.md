@@ -244,6 +244,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Allow Behaviours to register CCs they respond to and can generate
   - So that can remap these as sources and targets
   - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
+- Reassignable ParameterInputs, that can be set to take their values from an incoming MIDI stream
+  - Register them with the midi_matrix_mapper_manager so that when it receives a CC value change, it updates the ParameterInput current_value
   
   
 ## Explanation/demo

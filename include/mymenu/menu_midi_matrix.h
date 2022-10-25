@@ -12,7 +12,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
-    const uint16_t target_colours[NUM_TARGETS] = {
+    const uint16_t target_colours[MAX_NUM_TARGETS] = {
         0xF800, //#define ST77XX_RED        
         0x07E0,        //#define ST77XX_GREEN      
         0x001F,        //#define ST77XX_BLUE       

@@ -15,9 +15,10 @@ void setup_midi_mapper_matrix_manager();
 
 //#include "behaviours/behaviour_bamble.h"
 
-#define NUM_SOURCES 24
-#define NUM_TARGETS 24
+#define MAX_NUM_SOURCES 24
+#define MAX_NUM_TARGETS 24
 #define NUM_REGISTERED_TARGETS targets_count
+#define NUM_REGISTERED_SOURCES sources_count
 
 #include "midi/midi_mapper_matrix_types.h"
 
@@ -55,12 +56,12 @@ class MIDIMatrixManager {
     };
     int sources_count = 0;
 
-    source_entry sources[NUM_SOURCES] = {};
+    source_entry sources[MAX_NUM_SOURCES] = {};
     // assign a source_id for the given name
     FLASHMEM source_id_t register_source(const char *handle) {
         Serial.printf("midi_mapper_matrix_manager#register_source() registering handle '%s'\n", handle);
-        strcpy(sources[sources_count].handle, handle);
-        return sources_count++;
+        strcpy(sources[NUM_REGISTERED_SOURCES].handle, handle);
+        return NUM_REGISTERED_SOURCES++;
     }
     // assign a source_id for the midi track
     FLASHMEM source_id_t register_source(MIDITrack *loop_track, const char *handle);
@@ -69,7 +70,7 @@ class MIDIMatrixManager {
 
     // get id of source for string
     FLASHMEM source_id_t get_source_id_for_handle(const char *handle) {
-        for (source_id_t i = 0; i < sources_count ; i++) {
+        for (source_id_t i = 0; i < NUM_REGISTERED_SOURCES ; i++) {
             if (strcmp(handle, sources[i].handle)==0)
                 return i;
         }
@@ -77,11 +78,11 @@ class MIDIMatrixManager {
         return -1;
     }
 
-    bool source_to_targets[NUM_SOURCES][NUM_TARGETS] = {};
+    bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
-        for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
+        for (source_id_t source_id = 0 ; source_id < NUM_REGISTERED_SOURCES ; source_id++) {
             for (target_id_t target_id  = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
                 disconnect(source_id, target_id);
             }
@@ -180,6 +181,7 @@ class MIDIMatrixManager {
         }
     }
     void stop_all_notes_for_target(target_id_t target_id) {
+        if (target_id >= NUM_REGISTERED_TARGETS) return;
         targets[target_id].wrapper->stop_all_notes();
     }
 
@@ -199,7 +201,7 @@ class MIDIMatrixManager {
     };
 
     int targets_count = 0;
-    target_entry targets[NUM_TARGETS] = {};
+    target_entry targets[MAX_NUM_TARGETS] = {};
 
     /*target_id_t register_target(DeviceBehaviourUltimateBase *target_behaviour, const char *handle) {
         target_id_t t = this->register_target(make_midioutputwrapper(handle, target_behaviour));
@@ -213,13 +215,13 @@ class MIDIMatrixManager {
         return this->register_target(make_midioutputwrapper(handle, target));
     }
     target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
-        strcpy(targets[targets_count].handle, handle);
-        targets[targets_count].wrapper = target;
-        Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n", handle, targets_count);
+        strcpy(targets[NUM_REGISTERED_TARGETS].handle, handle);
+        targets[NUM_REGISTERED_TARGETS].wrapper = target;
+        Serial.printf("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n", handle, NUM_REGISTERED_TARGETS);
         if (target==nullptr) {
-            Serial.printf("WARNING: register_target for handle %s (target_id %i) passed a null target wrapper!!!\n", target, targets_count);
+            Serial.printf("WARNING: register_target for handle %s (target_id %i) passed a null target wrapper!!!\n", target, NUM_REGISTERED_TARGETS);
         }
-        return targets_count++;
+        return NUM_REGISTERED_TARGETS++;
     }
     /*target_id_t register_target(DeviceBehaviourUltimateBase *target, const char *handle) {
         Serial.printf("midi_mapper_matrix_manager#register_target(DeviceBehaviour) registering handle '%s'\n", handle);
