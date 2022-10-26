@@ -465,7 +465,6 @@ class MIDITrack {
         }
 
         // wipe all of the bitmap, ready for redrawing etc
-        // TODO: speed this up (memset?)
         void wipe_piano_roll_bitmap() {
             if (!this->bitmap_enabled) return;
 
@@ -474,26 +473,20 @@ class MIDITrack {
             memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(piano_roll_held, 0, 127);
             memset(this->pitch_contains_notes, 0, 127);
-            /*for (int p = 0 ; p < 127 ; p++) {
-                for (int x = 0  ; x < LOOP_LENGTH ; x++) {
-                    piano_roll_bitmap[x][p] = 0;
-                }
-                piano_roll_held[p] = 0;
-            }*/
         }
 
         // render the frames (array of linked list of messages) to a 'bitmap' 2d array of time * pitch
         void draw_piano_roll_bitmap_from_save() {
             if (!this->bitmap_enabled) return;
 
-            if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial.flush(); }
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
 
-            if(this->debug) { Serial.println(F("wiping bitmap..")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("wiping bitmap..")); Serial.flush(); }
             this->wipe_piano_roll_bitmap();
 
-            if(this->debug) { Serial.println(F("building bitmap..")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("building bitmap..")); Serial.flush(); }
             for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
                 for (int m = 0 ; m < frames[x]->size() ; m++) {
                     midi_message message = frames[x]->get(m);
@@ -512,7 +505,7 @@ class MIDITrack {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
-            if(this->debug) { Serial.println(F("bitmap built..")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("bitmap built..")); Serial.flush(); }
 
             /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {
@@ -601,17 +594,17 @@ class MIDITrack {
             // todo: fix notes that wrap around from end of loop?
             //          maybe just set initial held_state to be the last frame..?
             for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
-                Serial.printf(F("doing time %i:\n"), t);
+                //Serial.printf(F("doing time %i:\n"), t);
                 frames[t]->clear();
                 for (int p = 0 ; p < 127 ; p++) {
                     if ((*piano_roll_bitmap)[t][p]>0           && !held_state[p]) { // note on
                     //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
-                        if (this->debug) Serial.printf(F("Found note on with\tpitch %i\t"), p);
+                        //if (this->debug) Serial.printf(F("Found note on with\tpitch %i\t"), p);
                         held_state[p] = true;
                         note_on_count++;
                         this->store_event(t * LOOP_LENGTH_STEP_SIZE, midi::NoteOn, p, (*piano_roll_bitmap)[t][p]);
                     } else if ((*piano_roll_bitmap)[t][p]==0   && held_state[p]) {
-                        if (this->debug) Serial.printf(F("\tFound note off with\tpitch %i\t\n"), p);
+                        //if (this->debug) Serial.printf(F("\tFound note off with\tpitch %i\t\n"), p);
                     //} else if (piano_roll_bitmap[t][p]==0   && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]>0) {
                         held_state[p] = false;
                         note_off_count++;
@@ -622,13 +615,13 @@ class MIDITrack {
                     }
                 }
             }
-            if (this->debug) Serial.printf(F("Converted: found %i note ons, %i note offs\n"), note_on_count, note_off_count);
+            //if (this->debug) Serial.printf(F("Converted: found %i note ons, %i note offs\n"), note_on_count, note_off_count);
             if (note_on_count>note_off_count) {
                 Serial.printf(F("WARNING in MIDITrack#convert_from_bitmap: found more note ons than note offs!"));
                 // todo: fix note on/off mismatches
             }
 
-            if (this->debug) { 
+            /*if (this->debug) { 
                 for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
                     if (frames[t]->size()>0) {
                         Serial.printf(F("frames[%i] now has %i events:\n"), t, frames[t]->size());
@@ -638,7 +631,7 @@ class MIDITrack {
                     }
                 }
                 Serial.println(F("Done convert_from_bitmap"));
-            }
+            }*/
 
             this->quantization_value = previous_quant;  // restore original quantization setting
         }
@@ -654,12 +647,12 @@ class MIDITrack {
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf(F("midi_looper::save_sequence(%i) writing to %s\n"), recording_number, filename);
             if (SD.exists(filename)) {
-                Serial.printf(F("%s exists, deleting first\n"), filename);
+                Serial.printf(F("\t%s exists, deleting first\n"), filename);
                 SD.remove(filename);
             }
             f = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!f) {    
-                Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+                Serial.printf(F("\tError: couldn't open %s for writing\n"), filename);
                 return false;
             }
             f.println(F("; begin loop"));
@@ -718,7 +711,7 @@ class MIDITrack {
             f.setTimeout(0);
 
             if (!f) {
-                Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename); Serial.flush();
+                Serial.printf(F("\tError: Couldn't open %s for reading!\n"), filename); Serial.flush();
                 /*#ifdef ENABLE_SCREEN
                     menu.set_last_message("Error loading recording!");//, recording_number);
                     menu.set_message_colour(ST77XX_RED);
@@ -728,7 +721,7 @@ class MIDITrack {
 
             clear_all();
 
-            Serial.printf("Entering load loop for project %i and recording_number %i..\n", project_number, recording_number);
+            Serial.printf("\tEntering load loop for project %i and recording_number %i..\n", project_number, recording_number);
             Serial.flush();
 
             int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format

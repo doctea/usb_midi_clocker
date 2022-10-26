@@ -84,11 +84,10 @@ class MIDIOutputWrapper {
             if (pitch<0 || pitch>127) return;
 
             if (playing_notes[pitch]<8) {
-                if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
+                //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
                 playing_notes[pitch]++;
             } else {
-                if (this->debug) 
-                    Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+                //if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
             }
 
             current_transposed_note = pitch;
@@ -105,7 +104,7 @@ class MIDIOutputWrapper {
 
             int pitch = recalculate_pitch(in_pitch);
 
-            if (this->debug) Serial.printf("MIDIOutputWrapper:sendNoteOff(%i, %i, %i) current count is %i\n", pitch, velocity, channel, playing_notes[pitch]);
+            //if (this->debug) Serial.printf("MIDIOutputWrapper:sendNoteOff(%i, %i, %i) current count is %i\n", pitch, velocity, channel, playing_notes[pitch]);
 
             if (pitch<0 || pitch>127) return;
             if (playing_notes[pitch]>0) playing_notes[pitch]--;

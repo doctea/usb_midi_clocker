@@ -29,6 +29,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         virtual void set_selected_parameter_input(BaseParameterInput *input) {
             Serial.printf(F("set_selected_parameter_input(%c)\n"), input->name);
+            // TODO: make this tolerant of other ParameterInput types
             this->source_input = (VoltageParameterInput*)input;
             if (input==nullptr)
                 Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
