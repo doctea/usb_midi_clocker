@@ -141,7 +141,7 @@ class DeviceBehaviourUltimateBase {
             if (strcmp(parameters->get(i)->label, label)==0) 
                 return parameters->get(i);
         }
-        //Serial.printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
+        Serial.printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
         return nullptr;
     }
 
@@ -181,10 +181,13 @@ class DeviceBehaviourUltimateBase {
                 if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
                 if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
 
+                char input_name = parameter->get_input_name_for_slot(slot);
+
                 sprintf(line, "parameter_%s_%i=%c|%3.3f", 
                     parameter->label, 
                     slot, 
-                    'A'+slot, //TODO: implement proper saving of mapping! /*parameter->get_connection_slot_name(slot), */
+                    input_name,
+                    //'A'+slot, //TODO: implement proper saving of mapping! /*parameter->get_connection_slot_name(slot), */
                     //parameter->connections[slot].parameter_input->name,
                     parameter->connections[slot].amount
                 );
@@ -198,10 +201,11 @@ class DeviceBehaviourUltimateBase {
         // todo: reload parameter mappings...
         //Serial.printf(F("parse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
-        if (this->has_parameters() && key.startsWith("parameter_")) {
+        const char *prefix = "parameter_";
+        if (this->has_parameters() && key.startsWith(prefix)) {
             // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
             //                                 ^^head ^^_^^param name^_slot=ParameterInputName|Amount
-            key = key.replace("parameter_", "");
+            key = key.replace(prefix, "");
 
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();
@@ -211,9 +215,15 @@ class DeviceBehaviourUltimateBase {
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
             DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
             if (p!=nullptr) {
-                Serial.printf(F("\t%s: setting set_slot_amount: %i to %f\n"), p->label, slot_number, amount);
+                Serial.printf(F("\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
+                //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
+                //BaseParameterInput *input = parameter_manager->getInputForName(input_name.c_str()[0]);
+                p->set_slot_input(slot_number, input_name.c_str()[0]);
                 p->set_slot_amount(slot_number, amount);
                 return true;
+            } else {
+                Serial.printf("WARNING: Couldn't find a Parameter for name %s\n", parameter_name.c_str());
+                return false;
             }
             //Serial.printf(F("\t slot_number %i and amount %f but no parameter found for %s in %s\n"), slot_number, amount, parameter_name.c_str(), this->get_label());
             return true;

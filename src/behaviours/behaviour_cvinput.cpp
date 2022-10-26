@@ -30,7 +30,8 @@
                 "Select Parameter Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                parameter_manager->available_inputs
+                parameter_manager->available_inputs,
+                this->source_input
         );
         menuitems->add(parameter_input_selector);
 

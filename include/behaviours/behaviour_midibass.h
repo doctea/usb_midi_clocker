@@ -15,7 +15,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void set_drone(bool value) {
             if (this->drone_enabled && !value && this->last_drone_note>=0) {
                 // turning drone off and there is a note to kill
-                if (this->debug) Serial.println(F("set_drone setting drone_enabled off - calling kill_drone_note!"));
+                //if (this->debug) Serial.println(F("set_drone setting drone_enabled off - calling kill_drone_note!"));
                 this->kill_drone_note();
                 this->last_drone_note = -1;
             } else if (!this->drone_enabled && value) {
@@ -37,7 +37,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         virtual void kill_drone_note() {            
             if (last_drone_note>=0) {
-                if (this->debug) Serial.printf(F("\t\tkill_drone_note(%i, %i, %i)\n"), last_drone_note, 0, drone_channel);
+                //if (this->debug) Serial.printf(F("\t\tkill_drone_note(%i, %i, %i)\n"), last_drone_note, 0, drone_channel);
                 DeviceBehaviourUltimateBase::sendNoteOff(last_drone_note, 0, drone_channel);
             }
             last_drone_note = -1;
@@ -45,13 +45,13 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void send_drone_note() {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
             if (last_drone_note>=0) {
-                if (this->debug) Serial.printf(F("\t\tsend_drone_note sending (%i, %i, %i)\n"), last_drone_note, 127, drone_channel);
+                //if (this->debug) Serial.printf(F("\t\tsend_drone_note sending (%i, %i, %i)\n"), last_drone_note, 127, drone_channel);
                 DeviceBehaviourUltimateBase::sendNoteOn(last_drone_note, 127, drone_channel);
             }
         }
 
         virtual void on_bar(int bar) override {
-            if (this->debug) Serial.printf(F("begin>=DeviceBehaviour_Neutron#on_bar(%i)\n"), bar);
+            //if (this->debug) Serial.printf(F("begin>=DeviceBehaviour_Neutron#on_bar(%i)\n"), bar);
             //if (drone && last_drone_note>=0) {
             //    Serial.printf("\tDeviceBehaviour_Neutron#on_bar is in drone mode with drone note %i!\n", last_drone_note);
             //    this->send_drone_note();
@@ -61,7 +61,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             //Serial.println("end<=DeviceBehaviour_Neutron#on_bar()");
         }
         virtual void on_end_bar(int bar) override {
-            if (this->debug) Serial.println(F("DeviceBehaviour_Neutron#on_end_bar!"));
+            //if (this->debug) Serial.println(F("DeviceBehaviour_Neutron#on_end_bar!"));
             if (drone_enabled && last_drone_note>=0)
                 this->kill_drone_note();
         }
@@ -70,10 +70,10 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             //Serial.printf("DeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i)\n", pitch, velocity, channel, last_drone_note);
             if (drone_enabled) {
                 // do drone stuff
-                if (this->debug) Serial.printf(F("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n"));
+                //if (this->debug) Serial.printf(F("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n"));
                 if (last_drone_note==-1 && new_bar) {
                     last_drone_note = pitch;
-                    if (this->debug) Serial.printf(F("\tDeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i) got new last_drone_note: %i\n"), pitch, velocity, channel, last_drone_note);
+                    //if (this->debug) Serial.printf(F("\tDeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i) got new last_drone_note: %i\n"), pitch, velocity, channel, last_drone_note);
                     new_bar = false;
                     drone_channel = channel;
                     this->send_drone_note();
@@ -98,7 +98,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual bool load_parse_key_value(String key, String value) override {
             if (key.equals(F("drone"))) {
                 this->set_drone(value.equals(F("enabled")));
-                Serial.printf(F("drone found - setting to %s!\n"), drone_enabled?F("true"):F("false"));
+                //Serial.printf(F("drone found - setting to %s!\n"), drone_enabled?F("true"):F("false"));
                 return true;
             }
             return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);

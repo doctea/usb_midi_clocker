@@ -16,7 +16,7 @@
 
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
-// initialise the voltage-reading hardware/librareis and the ParameterManager
+// initialise the voltage-reading hardware/libraries and the ParameterManager
 void setup_cv_input() {
     Serial.println((char*)"setup_cv_input...");
     tft_print((char*)"...setup_cv_input...\n");

@@ -196,6 +196,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Variable repeats
   - more efficient memory/cpu usage
 - ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
+  - todo: use ili9340 screen + touchscreen
 - ~~Encoder for controlling options and parameters~~
 - Give better control over Beatstep via sysex if possible?
   - added auto-advance pattern mode, but isn't working reliably -- might be something weird with the USB MIDI problems discovered mentioned in Known issues?
@@ -230,8 +231,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - tempo-synced LFOs etc...
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
-- Improve looper quantizer (take note length into consideration)
-- Optimise memory usage of looper with more efficient data structure
+- Looper improvements
+  - Improve quantizer (take note length into consideration)
+  - Optimise memory usage with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
 - Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
   - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
@@ -244,11 +246,15 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
   - Make the pc_usb connections work using behaviours
   - .. think there might be some duplication in purpose between MIDIOutputWrapper and Behaviours now...?
-- Allow to control via USB typing keyboard
+- ~~Allow to control via USB typing keyboard~~
   - ~~control the menus so that I can still fiddle with the device without disturbing my cat~~
   - shortcuts for different functions would make this something that could be performed with
   - also opens the door to allow naming of patterns/projects?
 - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
+- Figure out how to better support MIDI features like:-
+  - NPRNs
+  - Pitch bend
+  - Aftertouch
 - Allow Behaviours to register CCs they respond to and can generate
   - CraftSynth has Parameters, can assign modulation to them
   - So that can remap these as sources and targets

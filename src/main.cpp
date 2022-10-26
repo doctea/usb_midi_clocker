@@ -218,7 +218,7 @@ void loop() {
     uint32_t start_loop_micros_stamp = micros();
   //#endif
   bool debug = false;
-  if (debug) { Serial.println("start of loop!"); Serial.flush(); }
+  if (debug) { Serial.println(F("start of loop!")); Serial.flush(); }
 
   #ifdef DEBUG_LED
     static int loop_counter;
@@ -231,9 +231,9 @@ void loop() {
     }
   #endif
 
-  if (debug) { Serial.println("about to Usb.Task()"); Serial.flush(); }
+  if (debug) { Serial.println(F("about to Usb.Task()")); Serial.flush(); }
   Usb.Task();
-  if (debug) { Serial.println("just did Usb.Task()"); Serial.flush(); }
+  if (debug) { Serial.println(F("just did Usb.Task()")); Serial.flush(); }
   //poll_serials();
   //while (usbMIDI.read());
 
@@ -254,13 +254,13 @@ void loop() {
         Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
       #endif
     }
-    if (debug) { Serial.println("about to do_tick"); Serial.flush(); }
+    if (debug) { Serial.println(F("about to do_tick")); Serial.flush(); }
     do_tick(ticks);
-    if (debug) { Serial.println("just did do_tick"); Serial.flush(); }
+    if (debug) { Serial.println(F("just did do_tick")); Serial.flush(); }
 
-    if (debug) { Serial.println("about to do menu->update_ticks(ticks)"); Serial.flush(); }
+    if (debug) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial.flush(); }
     menu->update_ticks(ticks);
-    if (debug) { Serial.println("just did menu->update_ticks(ticks)"); Serial.flush(); }
+    if (debug) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial.flush(); }
 
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();
@@ -288,10 +288,10 @@ void loop() {
       menu->update_inputs();
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
-        if (debug) { Serial.println("about to menu->display"); Serial.flush(); }
+        if (debug) { Serial.println(F("about to menu->display")); Serial.flush(); }
         if (debug) menu->debug = true;
         menu->display(); //update(ticks);
-        if (debug) { Serial.println("just did menu->display"); Serial.flush(); }
+        if (debug) { Serial.println(F("just did menu->display")); Serial.flush(); }
         //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
         screen_was_drawn = true;
@@ -305,10 +305,10 @@ void loop() {
         if(debug) parameter_manager->debug = true;
         if(debug) Serial.println("about to do parameter_manager->update_voltage_sources().."); Serial.flush();
         parameter_manager->update_voltage_sources();
-        if(debug) Serial.println("just did parameter_manager->update_voltage_sources().."); Serial.flush();
-        if(debug) Serial.println("about to do parameter_manager->update_inputs().."); Serial.flush();
+        //if(debug) Serial.println("just did parameter_manager->update_voltage_sources().."); Serial.flush();
+        //if(debug) Serial.println("about to do parameter_manager->update_inputs().."); Serial.flush();
         parameter_manager->update_inputs();
-        if(debug) Serial.println("about to do parameter_manager->update_mixers().."); Serial.flush();
+        //if(debug) Serial.println("about to do parameter_manager->update_mixers().."); Serial.flush();
         parameter_manager->update_mixers();
         if(debug) Serial.println("just did parameter_manager->update_inputs().."); Serial.flush();
         time_of_last_param_update = millis();
@@ -366,7 +366,7 @@ void loop() {
   #else
     average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
-  if(debug) Serial.println("reached end of loop()!"); Serial.flush();
+  if(debug) Serial.println(F("reached end of loop()!")); Serial.flush();
 }
 
 // called inside interrupt
@@ -388,7 +388,7 @@ void do_tick(uint32_t in_ticks) {
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
-    if (debug) Serial.println("do_tick(): about to global_on_restart");
+    if (debug) Serial.println(F("do_tick(): about to global_on_restart"));
     //in_ticks = ticks = 0;
     global_on_restart();
     //ATOMIC(
@@ -398,7 +398,7 @@ void do_tick(uint32_t in_ticks) {
   }
 
   if (is_bpm_on_phrase(ticks)) {
-    if (debug) Serial.println("do_tick(): about to project.on_phrase()");
+    if (debug) Serial.println(F("do_tick(): about to project.on_phrase()"));
     project.on_phrase(BPM_CURRENT_PHRASE);
     #ifdef ENABLE_USB
       behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
@@ -406,15 +406,15 @@ void do_tick(uint32_t in_ticks) {
   }
   if (is_bpm_on_bar(ticks)) {
     //project.on_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (debug) Serial.println("do_tick(): about to behaviour_manager->do_bar()");
+    if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_bar()"));
     behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (debug) Serial.println("do_tick(): just did behaviour_manager->do_bar()");
+    if (debug) Serial.println(F("do_tick(): just did behaviour_manager->do_bar()"));
   } else if (is_bpm_on_bar(ticks+1)) {
     behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
   }
 
   #ifdef ENABLE_USB
-    if (debug) Serial.println("do_tick(): about to behaviour_manager->do_pre_clock()");
+    if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
     behaviour_manager->do_pre_clock(in_ticks);
   #endif
 

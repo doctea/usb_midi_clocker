@@ -16,7 +16,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return (char*)"CV Input";
         }
 
-        VoltageParameterInput *source_input = nullptr;
+        BaseParameterInput *source_input = nullptr;
 
         bool is_playing = false;
         int last_note = -1, current_note = -1;
@@ -29,7 +29,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         virtual void set_selected_parameter_input(BaseParameterInput *input) {
             Serial.printf(F("set_selected_parameter_input(%c)\n"), input->name);
-            this->source_input = (VoltageParameterInput*)input;
+            // TODO: make this tolerant of other ParameterInput types
+            //this->source_input = (VoltageParameterInput*)input;
+            this->source_input = input;
             if (input==nullptr)
                 Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
             //else
@@ -43,7 +45,6 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         void on_tick(unsigned long ticks) override {
-
             // check if playing note duration has passed regardless of whether source_input is set, so that notes will still finish even if disconncted
             if (is_playing && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
                 if (this->debug) Serial.printf(F("Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n"), current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
@@ -55,7 +56,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
             // if source input is connected, we wanna check for values
             if (this->source_input!=nullptr) {
-                int new_note = this->source_input->get_voltage_pitch();
+                // TODO: make this tolerant of other types of ParameterInput!
+                VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->source_input;
+                int new_note = voltage_source_input->get_voltage_pitch();
 
                 // has pitch become invalid?  is so and if note playing, stop note
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {

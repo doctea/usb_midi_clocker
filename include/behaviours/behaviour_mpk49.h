@@ -40,7 +40,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 
         // TODO: move this elsewhere, since the looper is no longer explicitly tied to the mpk49..
         #ifdef ENABLE_LOOPER
-            void on_pre_clock(unsigned long ticks) {
+            virtual void on_pre_clock(unsigned long ticks) {
                 this->loop_track->process_tick(ticks);
             }
         #endif
