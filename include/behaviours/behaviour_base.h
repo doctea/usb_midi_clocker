@@ -211,7 +211,7 @@ class DeviceBehaviourUltimateBase {
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
             DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
             if (p!=nullptr) {
-                //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
+                Serial.printf(F("\t%s: setting set_slot_amount: %i to %f\n"), p->label, slot_number, amount);
                 p->set_slot_amount(slot_number, amount);
                 return true;
             }
