@@ -46,7 +46,9 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             }
         }
 
-        virtual LinkedList<MenuItem *> *makeControls() override;
+        #ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem *> *makeControls() override;
+        #endif
 };
 
 #endif

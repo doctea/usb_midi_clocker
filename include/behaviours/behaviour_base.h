@@ -191,6 +191,7 @@ class DeviceBehaviourUltimateBase {
                     //parameter->connections[slot].parameter_input->name,
                     parameter->connections[slot].amount
                 );
+                Serial.printf("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n", line);
                 lines->add(String(line));
             }
         }
@@ -199,7 +200,7 @@ class DeviceBehaviourUltimateBase {
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
         // todo: reload parameter mappings...
-        //Serial.printf(F("parse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        Serial.printf(F("PARAMETERS\tparse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
@@ -210,19 +211,27 @@ class DeviceBehaviourUltimateBase {
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();
             String input_name = value.substring(0, key.indexOf('|'));
-            double amount = value.substring(key.indexOf('|')+1).toFloat();
+            double amount = value.substring(value.indexOf('|')+1).toFloat();
 
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
             DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
+            //Serial.printf("PARAMETERS\t\t%s: Got value substring to convert to float '%s' => %f\n", p->label, value.substring(value.indexOf('|')+1).c_str(), amount);
+
             if (p!=nullptr) {
-                Serial.printf(F("\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
+                //Serial.printf(F("PARAMETERS\t\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
                 //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
                 //BaseParameterInput *input = parameter_manager->getInputForName(input_name.c_str()[0]);
                 p->set_slot_input(slot_number, input_name.c_str()[0]);
                 p->set_slot_amount(slot_number, amount);
+                /*Serial.printf("PARAMETERS\t\t%s: after setting slot %i, values look like name=%c and amount=%f\n", 
+                    p->label, 
+                    slot_number, 
+                    p->get_input_name_for_slot(slot_number),
+                    p->get_amount_for_slot(slot_number)
+                );*/
                 return true;
             } else {
-                Serial.printf("WARNING: Couldn't find a Parameter for name %s\n", parameter_name.c_str());
+                Serial.printf("PARAMETERS\tWARNING: Couldn't find a Parameter for name %s\n", parameter_name.c_str());
                 return false;
             }
             //Serial.printf(F("\t slot_number %i and amount %f but no parameter found for %s in %s\n"), slot_number, amount, parameter_name.c_str(), this->get_label());

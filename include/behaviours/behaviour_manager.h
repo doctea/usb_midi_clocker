@@ -256,15 +256,15 @@ class DeviceBehaviourManager {
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
             if (key.equals(F("behaviour_start"))) {
-                Serial.printf(F("found behaviour_start for '%s'\n"), value.c_str());
+                //Serial.printf(F("found behaviour_start for '%s'\n"), value.c_str());
                 current_behaviour = this->find_behaviour_for_label(value);
                 return true;
             } else if (key.equals(F("behaviour_end"))) {
-                Serial.printf(F("found behaviour_end for '%s'\n"), value.c_str());
+                //Serial.printf(F("found behaviour_end for '%s'\n"), value.c_str());
                 current_behaviour = nullptr;
                 return true;
             } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
-                Serial.printf(F("loaded key %s for value '%s'\n"), key.c_str(), value.c_str());
+                Serial.printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
                 return true;
             }
             Serial.printf(F("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n"), key.c_str(), value.c_str());
