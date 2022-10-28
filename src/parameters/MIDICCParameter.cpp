@@ -17,10 +17,18 @@ LinkedList<MenuItem *> *MIDICCParameter::makeControls() {
     Serial.printf("in makeControls() in %s, parameter_manager is @%p and available_inputs is @%p\n", this->label, parameter_manager, parameter_manager->available_inputs);
 
     SubMenuItemBar *input_selectors_bar = new SubMenuItemBar("Inputs");
+    input_selectors_bar->show_header = false;
+    input_selectors_bar->show_sub_headers = false;
     //input_selectors_bar->debug = true;  // TODO: remove this !
     this->connections[0].amount_control = fullmenuitem->items->get(1);
     this->connections[1].amount_control = fullmenuitem->items->get(2);
     this->connections[2].amount_control = fullmenuitem->items->get(3);
+
+    MenuItem *spacer1 = new MenuItem("Inputs");
+    MenuItem *spacer2 = new MenuItem("");
+    spacer1->selectable = false;
+    spacer2->selectable = false;
+    input_selectors_bar->add(spacer1);
 
     input_selectors_bar->add(new ParameterInputSelectorControl<MIDICCParameter>(
         "Input 1", 
@@ -46,6 +54,7 @@ LinkedList<MenuItem *> *MIDICCParameter::makeControls() {
         parameter_manager->getInputForName(this->get_input_name_for_slot(2)),
         fullmenuitem->items->get(3)     // fourth item of ParameterMenuItem is third slot
     ));
+    input_selectors_bar->add(spacer2);
 
     /*for (int i = 0 ; i < MAX_SLOT_CONNECTIONS ; i++) {
         input_selectors_bar->add(this->connections[i].amount_control);
