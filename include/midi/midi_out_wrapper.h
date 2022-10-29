@@ -6,6 +6,7 @@
 #include <SdFat.h>
 
 #include "midi/midi_looper.h"
+#include "midi/midi_helpers.h"
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 30
 
@@ -123,7 +124,7 @@ class MIDIOutputWrapper {
                 current_transposed_note = -1;
         }
 
-        virtual void sendControlChange(byte pitch, byte velocity, byte channel) {
+        virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) {
             if (channel == 0 ) channel = this->default_channel;
             this->actual_sendControlChange(pitch, velocity, channel);
         };
@@ -135,19 +136,20 @@ class MIDIOutputWrapper {
 
         virtual inline bool is_note_playing(int pitch) {
             pitch = recalculate_pitch(pitch);
-            if (pitch<0 || pitch>127) return false;
+            if (!is_valid_note(pitch)) return false;
             return playing_notes[pitch]>0;
         }
 
-        virtual void stop_all_notes() {
+        virtual void stop_all_notes(bool force = false) {
             if (this->debug) Serial.printf("stop_all_notes in %s...\n", label);
+            sendControlChange(123,127);
             for (int pitch = 0 ; pitch < 127 ; pitch++) {
                 //int pitch = recalculate_pitch(i);
 
                 if (is_note_playing(pitch)) {
                     //if (this->debug) 
                     if (this->debug) Serial.printf("Got %i notes of pitch %i to stop on channel %i..\n", playing_notes[pitch], pitch, default_channel);
-                    sendNoteOff(pitch, 0, default_channel);
+                    if(force) sendNoteOff(pitch, 0, default_channel);
                     playing_notes[pitch] = 0;
                 }
             }

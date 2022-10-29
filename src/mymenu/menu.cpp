@@ -65,7 +65,7 @@ ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_projec
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
 
 #ifdef ENABLE_SEQUENCER
-    SequencerStatus sequencer_status =      SequencerStatus("Sequencer");
+    SequencerStatus sequencer_status =      SequencerStatus("Pattern");
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER
@@ -109,6 +109,8 @@ FLASHMEM void setup_menu() {
     menu->add(&posbar);     // bpm and position indicator
 
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
+
+    menu->add(new SeparatorMenuItem("Project"));
 
     menu->add(&project_save);       // save project settings button
     menu->add(&project_selector);   // save project selector button
@@ -186,8 +188,10 @@ FLASHMEM void setup_menu() {
     #endif
     menu->add(project_multi_autoadvance);
 
+    menu->add(new SeparatorMenuItem("MIDI"));
+    menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(&midi_matrix_selector);
-
+    
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
     behaviour_manager->create_all_behaviour_menu_items(menu);
     Serial.println(F("...finished behaviour_manager#make_menu_items..."));*/
@@ -195,6 +199,7 @@ FLASHMEM void setup_menu() {
     // sequencer
     #ifdef ENABLE_SEQUENCER
         //menu->add(&project_auto_advance_sequencer);
+        menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
     #endif
 

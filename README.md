@@ -145,6 +145,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
 - Beatstep sysex commands don't work, probably for the same reason?
 - MIDI looper uses a LOT of RAM (~48k for 1 phrase -- 384 (ticks) * 127 (notes)) - less memory-hungry polyphony can be used, but drawing the pianoroll to screen would become more intensive...
+- Voltage Source Calibration UI is ugly / changing sizes constantly
 
 ## Configuration
 
@@ -264,6 +265,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - expose internal settings (like bpm, clock delays...?) as Parameters, so that can have modulation mapped to them too...
 - Reassignable ParameterInputs, that can be set to take their values from an incoming MIDI stream
   - Register them with the midi_matrix_mapper_manager so that when it receives a CC value change, it updates the ParameterInput current_value
+- Add 'all notes off' on 'extra button' press in midi_matrix_mapper menu
   
 ## Explanation/demo (very much out of date!)
 

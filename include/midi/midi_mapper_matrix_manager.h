@@ -20,7 +20,7 @@ void setup_midi_mapper_matrix_manager();
 #define NUM_REGISTERED_TARGETS targets_count
 #define NUM_REGISTERED_SOURCES sources_count
 
-#define LANGST_HANDEL_ROUT 20   // get roo to do it
+#define LANGST_HANDEL_ROUT 20   // get roo to do it <3
 
 #include "midi/midi_mapper_matrix_types.h"
 
@@ -178,16 +178,28 @@ class MIDIMatrixManager {
             }
         }
     }
-    void stop_all_notes_for_source(source_id_t source_id) {
+    void stop_all_notes_for_source(source_id_t source_id, bool force = false) {
+        if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
-                this->stop_all_notes_for_target(target_id);
+                this->stop_all_notes_for_target(target_id, force);
             }
         }
     }
-    void stop_all_notes_for_target(target_id_t target_id) {
+    void stop_all_notes_for_target(target_id_t target_id, bool force = false) {
         if (target_id >= NUM_REGISTERED_TARGETS) return;
-        targets[target_id].wrapper->stop_all_notes();
+        Serial.printf("stop_all_notes on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial.flush();
+        targets[target_id].wrapper->stop_all_notes(force);
+    }
+
+    void stop_all_notes(bool force = false) {
+        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
+            Serial.printf("stop_all_notes on target_id=%i..\n", target_id); Serial.flush();
+            this->stop_all_notes_for_target(target_id, force);
+        }
+    }
+    void stop_all_notes_force() {
+        this->stop_all_notes(true);
     }
 
     const char *get_label_for_source_id(source_id_t source_id) {
