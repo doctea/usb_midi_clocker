@@ -181,9 +181,9 @@ class DeviceBehaviourUltimateBase {
                 if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
                 if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
 
-                char input_name = parameter->get_input_name_for_slot(slot);
+                char *input_name = parameter->get_input_name_for_slot(slot);
 
-                sprintf(line, "parameter_%s_%i=%c|%3.3f", 
+                sprintf(line, "parameter_%s_%i=%s|%3.3f", 
                     parameter->label, 
                     slot, 
                     input_name,
@@ -221,7 +221,7 @@ class DeviceBehaviourUltimateBase {
                 //Serial.printf(F("PARAMETERS\t\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
                 //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
                 //BaseParameterInput *input = parameter_manager->getInputForName(input_name.c_str()[0]);
-                p->set_slot_input(slot_number, input_name.c_str()[0]);
+                p->set_slot_input(slot_number, (char*)input_name.c_str());
                 p->set_slot_amount(slot_number, amount);
                 /*Serial.printf("PARAMETERS\t\t%s: after setting slot %i, values look like name=%c and amount=%f\n", 
                     p->label, 
