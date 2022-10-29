@@ -118,7 +118,8 @@ class SlotController : public MenuItem {
                 menu->set_message_colour(ST77XX_RED);
                 menu->set_last_message(msg);
             }
-            return false;
+
+            return go_back_on_select;
         }
 
         // save 

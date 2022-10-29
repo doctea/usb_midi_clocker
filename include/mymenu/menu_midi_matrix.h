@@ -164,7 +164,8 @@ class MidiMatrixSelectorControl : public SelectorControl {
         //Serial.printf("about to set_last_message!");
         msg[tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
         menu_set_last_message(msg,GREEN);
-        return false;
+
+        return go_back_on_select;
     }
 
     virtual bool button_back() override {

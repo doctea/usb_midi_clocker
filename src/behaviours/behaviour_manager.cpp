@@ -141,8 +141,9 @@ void setup_behaviour_manager() {
                 group_colour = menu->get_next_colour();
 
                 // add a separator bar
-                String s = String((char*)(behaviour->get_label())) + String(" >>>");
-                SeparatorMenuItem *separator = new SeparatorMenuItem((char*)s.c_str());
+                //String s = String((char*)(behaviour->get_label())) + String(" >>>");
+                //SeparatorMenuItem *separator = new SeparatorMenuItem((char*)s.c_str());
+                SeparatorMenuItem *separator = new SeparatorMenuItem((char*)behaviour->get_label());
                 separator->set_default_colours(group_colour, BLACK);
                 menu->add(separator);
             }

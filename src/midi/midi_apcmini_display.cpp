@@ -16,18 +16,18 @@
 byte apc_note_last_sent[127];
 
 // cached send note on
-void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel, bool force ) {
+void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel, bool force) {
   if (force || value!=apc_note_last_sent[pitch])
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
   apc_note_last_sent[pitch] = value;
 }
 //cached send note off
 void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel, bool force) {
-  apcdisplay_sendNoteOn(pitch, value, channel, force);
+  apcdisplay_sendNoteOn(pitch, 0 /*value*/, channel, force);
 }
 void apcdisplay_initialise_last_sent() {
   for(int i = 0 ; i < 127 ; i++)
-    apc_note_last_sent[i] = 0;
+    apc_note_last_sent[i] = 0xFF;
 }
 
 /*const byte colour_intensity[] = {
