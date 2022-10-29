@@ -7,6 +7,8 @@ extern DisplayTranslator_Configured steensy;
 
 #include "screenshot.h"
 
+#include "midi/midi_mapper_matrix_manager.h"
+
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
@@ -22,7 +24,7 @@ extern DisplayTranslator_Configured steensy;
 
     void OnPress(int key) {
         switch(key) {
-            case KEYD_DELETE    : 
+            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
                 if (keyboard1.getModifiers()==5)  // ctrl + alt
                     reset_teensy();  
                 break; /* ctrl+alt+delete to soft reboot */
@@ -40,6 +42,10 @@ extern DisplayTranslator_Configured steensy;
             case 'l'            : 
                 Serial.println(F("loading selected sequence"));
                 project.load_selected_sequence(); 
+                break;
+            case 'p'            :
+                Serial.println(F("MIDI PANIC AT THE DISCO"));
+                midi_matrix_manager->stop_all_notes();
                 break;
             case ' '            :
                 Serial.println(F("Saving screenshot!"));
