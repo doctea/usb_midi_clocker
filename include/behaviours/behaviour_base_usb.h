@@ -59,7 +59,9 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         virtual void read() override {
             if (!is_connected()) return;
 
-            while(this->device->read()); 
+            Serial.printf("Entering read loop on %s...\n", this->get_label()); Serial.flush();
+            if (this->device!=nullptr) while(this->device->read()); 
+            Serial.printf("Exited read loop on %s!\n", this->get_label()); Serial.flush();
         };
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {

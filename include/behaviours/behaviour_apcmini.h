@@ -10,16 +10,27 @@
 #include "clock.h"
 
 #include "multi_usb_handlers.h"
-
 #include "midi/midi_looper.h"
 
 #include "midi/midi_apcmini_display.h"
 
+// use parameter library adapter to handle cc events
+#include "midi/midi_cc_source.h"
+
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
 
-class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
+class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
     public:
+        DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
+            
+            // initialise the CCs that this device can translate into ParameterInputs
+            this->addParameterInput("Fade1", 48, 1);
+            this->addParameterInput("Fade2", 49, 1);
+            this->addParameterInput("Fade3", 50, 1);
+            this->addParameterInput("Fade4", 51, 1);
+        }
+
         uint16_t vid = 0x09e8, pid = 0x0028;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
@@ -234,7 +245,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
         }
 
         // called from loop, already inside ATOMIC, so don't use ATOMIC here
-        virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) override {
+        virtual void receive_control_change (uint8_t channel, uint8_t number, uint8_t value) override {
             //ATOMIC(
                 /*Serial.print(F("APCMINI CC ch"));
                 Serial.print(inChannel);
@@ -246,12 +257,15 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase {
             //debug_free_ram();
 
             #ifdef ENABLE_BPM
-                if (inNumber==APCMINI_FADER_MASTER) {   // 56 == "master" fader set bpm 
+                if (number==APCMINI_FADER_MASTER) {   // 56 == "master" fader set bpm 
                     if (clock_mode==CLOCK_INTERNAL)
-                        set_bpm(map(inValue, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
+                        set_bpm(map(value, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
                 }
             #endif
+
+            this->update_parameter_inputs_cc(number, value, channel);
         }
+
 
         virtual void on_tick(volatile uint32_t ticks) override {
             if (device!=nullptr) {

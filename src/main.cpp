@@ -217,7 +217,7 @@ void loop() {
   //#ifdef ENABLE_PROFILER
     uint32_t start_loop_micros_stamp = micros();
   //#endif
-  bool debug = false;
+  bool debug = true;
   if (debug) { Serial.println(F("start of loop!")); Serial.flush(); }
 
   #ifdef DEBUG_LED

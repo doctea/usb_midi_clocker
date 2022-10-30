@@ -4,9 +4,7 @@
 #include "Config.h"
 #include "midi/midi_outs.h"
 #include "midi/midi_out_wrapper.h"
-
 #include "midi/midi_helpers.h"
-
 #include "midi/midi_looper.h"
 
 #include "LinkedList.h"
