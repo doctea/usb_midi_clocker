@@ -54,6 +54,9 @@ LinkedList<MenuItem *> *MIDICCParameter::makeControls() {
         parameter_manager->getInputForName(this->get_input_name_for_slot(2)),
         fullmenuitem->items->get(3)     // fourth item of ParameterMenuItem is third slot
     );
+    this->connections[0].input_control = source_selector_1;
+    this->connections[1].input_control = source_selector_2;
+    this->connections[2].input_control = source_selector_3;
 
     source_selector_1->go_back_on_select = true;
     source_selector_2->go_back_on_select = true;

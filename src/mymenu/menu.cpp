@@ -110,7 +110,7 @@ FLASHMEM void setup_menu() {
 
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
 
-    menu->add(new SeparatorMenuItem("Project"));
+    menu->add(new SeparatorMenuItem((char*)"Project"));
 
     menu->add(&project_save);       // save project settings button
     menu->add(&project_selector);   // save project selector button
@@ -188,7 +188,7 @@ FLASHMEM void setup_menu() {
     #endif
     menu->add(project_multi_autoadvance);
 
-    menu->add(new SeparatorMenuItem("MIDI"));
+    menu->add(new SeparatorMenuItem((char*)"MIDI"));
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(&midi_matrix_selector);
     
@@ -199,7 +199,7 @@ FLASHMEM void setup_menu() {
     // sequencer
     #ifdef ENABLE_SEQUENCER
         //menu->add(&project_auto_advance_sequencer);
-        menu->add(new SeparatorMenuItem("Sequencer"));
+        menu->add(new SeparatorMenuItem((char*)"Sequencer"));
         menu->add(&sequencer_status);
     #endif
 

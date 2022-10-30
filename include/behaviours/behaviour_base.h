@@ -210,7 +210,7 @@ class DeviceBehaviourUltimateBase {
 
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();
-            String input_name = value.substring(0, key.indexOf('|'));
+            String input_name = value.substring(0, value.indexOf('|'));
             double amount = value.substring(value.indexOf('|')+1).toFloat();
 
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
