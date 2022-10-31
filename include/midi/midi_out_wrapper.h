@@ -24,10 +24,10 @@ class MIDITrack;
 // TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
 //          ^^ think this is better handled by the midi matrix manager..?
 class MIDIOutputWrapper {
-    midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
+    /*midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
     MIDIDeviceBase *output_usb = nullptr;
     MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
-    MIDITrack *output_looper = nullptr;
+    MIDITrack *output_looper = nullptr;*/
 
     int force_octave = -1;
 
@@ -82,7 +82,7 @@ class MIDIOutputWrapper {
 
             current_note = in_pitch;
             int pitch = recalculate_pitch(in_pitch);
-            if (pitch<0 || pitch>127) return;
+            if (!is_valid_note(pitch)) return;
 
             if (playing_notes[pitch]<8) {
                 //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
@@ -142,7 +142,7 @@ class MIDIOutputWrapper {
 
         virtual void stop_all_notes(bool force = false) {
             if (this->debug) Serial.printf("stop_all_notes in %s...\n", label);
-            sendControlChange(123,127);
+            sendControlChange(midi::AllNotesOff, 127);
             for (int pitch = 0 ; pitch < 127 ; pitch++) {
                 //int pitch = recalculate_pitch(i);
 

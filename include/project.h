@@ -197,6 +197,19 @@ class Project {
             loop_slot_has_file[slot] = state;
         }
 
+        void next_sequence() {
+            loaded_sequence_number++;
+            if (loaded_sequence_number>=NUM_SEQUENCE_SLOTS_PER_PROJECT)
+                loaded_sequence_number = 0;
+            load_sequence(loaded_sequence_number);
+        }
+        void previous_sequence() {
+            loaded_sequence_number--;
+            if (loaded_sequence_number < 0)
+                loaded_sequence_number = NUM_SEQUENCE_SLOTS_PER_PROJECT-1;
+            load_sequence(loaded_sequence_number);
+        }
+
         #ifdef ENABLE_LOOPER
             // load and save sequences / clock settings etc
             bool load_loop(int selected_loop_number) {
