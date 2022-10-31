@@ -57,6 +57,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             // if source input is connected, we wanna check for values
             if (this->source_input!=nullptr) {
                 // TODO: make this tolerant of other types of ParameterInput!
+                if (!this->source_input->supports_pitch()) return;
+                
                 VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->source_input;
                 int new_note = voltage_source_input->get_voltage_pitch();
 
@@ -111,7 +113,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 this->set_note_length((int) value.toInt());
                 return true;
             } else if (key.equals("parameter_source")) {
-                this->source_input = (VoltageParameterInput*)parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
+                this->source_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }

@@ -64,8 +64,8 @@ extern DisplayTranslator_Configured steensy;
             case 49 ... 57      :
                 int adjust = 49;
                 if (modifiers & 4)
-                    adjust = 49 + 9;
-                Serial.printf("%i pressed, loading project %i!\n", key - adjust);
+                    adjust = 49 - 9;
+                Serial.printf("%i pressed, loading project %i!\n", key, key - adjust);
                 project.load_project_settings(key - adjust);
                 break;
             default:
