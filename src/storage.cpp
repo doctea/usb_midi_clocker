@@ -233,7 +233,7 @@ namespace storage {
       if (debug) Serial.println(F("]"));
       sequence_data_index++;
     } else if (project.isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      Serial.printf(F("sequence read line '%s', processed by behaviour_manager\n"), line.c_str());
+      Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
       /*String partial = line.remove(0,String("behaviour_option_").length());
       // todo: something is off with my understanding of how remove works here
       int split_point = partial.indexOf("=");
@@ -251,7 +251,7 @@ namespace storage {
 
     char filename[255] = "";
     sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-    Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename);
+    Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial.flush();
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);
 
@@ -262,7 +262,7 @@ namespace storage {
     }*/
 
     if (!myFile) {
-      Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+      Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial.flush();
       return false;
     }
 
@@ -270,15 +270,15 @@ namespace storage {
     while (line = myFile.readStringUntil('\n')) {
       load_sequence_parse_line(line, output);
     }
-    Serial.println(F("Closing file.."));
+    Serial.println(F("Closing file..")); Serial.flush();
     myFile.close();
-    Serial.println(F("File closed"));
+    Serial.println(F("File closed")); Serial.flush();
 
     #ifdef ENABLE_APCMINI_DISPLAY
       //redraw_immediately = true;
     #endif
 
-    Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps);
+    Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial.flush();
     interrupts();
     return true;
   }

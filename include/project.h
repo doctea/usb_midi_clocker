@@ -197,13 +197,23 @@ class Project {
             loop_slot_has_file[slot] = state;
         }
 
-        void next_sequence() {
+        void select_next_sequence() {
+            selected_sequence_number++;
+            if (selected_sequence_number>=NUM_SEQUENCE_SLOTS_PER_PROJECT)
+                selected_sequence_number = 0;
+        }
+        void select_previous_sequence() {
+            selected_sequence_number--;
+            if (selected_sequence_number < 0) 
+                selected_sequence_number = NUM_SEQUENCE_SLOTS_PER_PROJECT-1;
+        }
+        void load_next_sequence() {
             loaded_sequence_number++;
             if (loaded_sequence_number>=NUM_SEQUENCE_SLOTS_PER_PROJECT)
                 loaded_sequence_number = 0;
             load_sequence(loaded_sequence_number);
         }
-        void previous_sequence() {
+        void load_previous_sequence() {
             loaded_sequence_number--;
             if (loaded_sequence_number < 0)
                 loaded_sequence_number = NUM_SEQUENCE_SLOTS_PER_PROJECT-1;
@@ -389,7 +399,8 @@ class Project {
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
-                Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
+                //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
+                Serial.printf(F("processed by behaviour_manager\n"), line.c_str());
             }
         }
 };
