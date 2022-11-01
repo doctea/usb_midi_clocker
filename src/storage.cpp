@@ -233,7 +233,7 @@ namespace storage {
       if (debug) Serial.println(F("]"));
       sequence_data_index++;
     } else if (project.isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
+      //Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
       /*String partial = line.remove(0,String("behaviour_option_").length());
       // todo: something is off with my understanding of how remove works here
       int split_point = partial.indexOf("=");

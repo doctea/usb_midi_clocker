@@ -35,7 +35,7 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
             }
         #endif
 
-        virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) {
+        virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) override {
             Serial.printf("behaviour_neutron sendControlChange(cc=%i, value=%i, channel=%i)\n", cc_number, value, channel);
             // if we receive a value from another device, then update the proxy parameter, which will handle the actual sending
             //if (cc_number==this->modwheel_proxy->cc_number)

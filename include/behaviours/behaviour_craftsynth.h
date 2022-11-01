@@ -8,6 +8,7 @@
 #ifdef ENABLE_CRAFTSYNTH_USB
 
 #include "behaviours/behaviour_base_usb.h"
+#include "behaviours/behaviour_modwheelreceiver.h"
 #include "project.h"
 #include "clock.h"
 
@@ -78,7 +79,7 @@ SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 =1/4 / 24-31 =1/2 / 32-39
 /* 0-32 Sine to Triangle / 33-64 - Triangle to Sawtooth / 65-96 -
 Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
-class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour { //},  public ModwheelReceiver {
+class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour,  public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     
@@ -114,6 +115,16 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#note_off"); };
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
+        virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) override {
+            if (this->debug) Serial.printf("%s#sendControlChange(cc=%i, value=%i, channel=%i)\n", this->get_label(), cc_number, value, channel);
+            // if we receive a value from another device, then update the proxy parameter, which will handle the actual sending
+            // if modwheel should handle this event, handle it and return early
+            if (ModwheelReceiver::process(cc_number, value, channel)) 
+                return;
+
+            DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
+        }
+
         FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
@@ -124,6 +135,8 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             DeviceBehaviourUSBBase::initialise_parameters();
             //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
             ClockedBehaviour::initialise_parameters();
+
+            ModwheelReceiver::initialise_parameters();
 
             //Serial.println(F("\tAdding parameters..."));
             //parameters->clear();

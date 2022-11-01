@@ -68,14 +68,12 @@ class MIDICCProxyParameter : public MIDICCParameter {
             static byte last_value = -1;
             
             if (this->target!=nullptr) {
-                //if (this->debug) 
-                Serial.printf(F("MIDICCProxyParameter#setTargetValueFromData(%i, %i, %i)\n"), this->cc_number, value, this->channel);
+                if (this->debug) Serial.printf(F("MIDICCProxyParameter#setTargetValueFromData(%i, %i, %i)\n"), this->cc_number, value, this->channel);
                 if (last_value!=value || force)
                     this->target->sendProxiedControlChange(this->cc_number, (byte)value, this->channel);
                 last_value = value;
             } else {
-                //if (this->debug) 
-                Serial.printf(F("WARNING: No target set in MIDICCProxyParameter#setTargetValueFromData in '%s'!\n"), this->label);
+                if (this->debug) Serial.printf(F("WARNING: No target set in MIDICCProxyParameter#setTargetValueFromData in '%s'!\n"), this->label);
             }
         }
 };
