@@ -53,11 +53,16 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
         #endif
 };
 
-// for parameters where we want to both accept updates from a mapping (eg a keyboard routed to the device), while also applying modulation before sending the actual value out to the target device
-// eg, modwheel
+// for parameters where we want to both accept updates from a mapping (eg a keyboard routed to the device), while also applying modulation before sending the actual value out to the target device, eg, modwheel
 class MIDICCProxyParameter : public MIDICCParameter {
     public:
         MIDICCProxyParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel) : MIDICCParameter(label, target, cc_number, channel) {}
+
+        virtual bool responds_to(byte cc_number, byte channel) {
+            if (this->channel!=0 && this->channel!=channel) return false;
+            if (cc_number==this->cc_number) return true;
+            return false;
+        }
 
         virtual void setTargetValueFromData(byte value, bool force = false) override {
             static byte last_value = -1;

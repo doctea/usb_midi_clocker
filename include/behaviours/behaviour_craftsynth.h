@@ -78,7 +78,7 @@ SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 =1/4 / 24-31 =1/2 / 32-39
 /* 0-32 Sine to Triangle / 33-64 - Triangle to Sawtooth / 65-96 -
 Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
-class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour { //},  public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     
