@@ -209,6 +209,12 @@ class MIDIMatrixManager {
         return (const char*)F("[error - unknown]");
     }
 
+    byte getDefaultChannelForTargetId(target_id_t target_id) {
+        if (target_id>=0 && target_id < NUM_REGISTERED_TARGETS)
+            return this->targets[target_id].wrapper->default_channel;
+        return 0;
+    }
+
     //// stuff for handling targets of midi data
     struct target_entry {
         char handle[25];

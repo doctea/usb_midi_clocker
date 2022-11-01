@@ -57,7 +57,7 @@ FLASHMEM void setup_parameters() {
     // todo: dynamically pull these from all available behaviours
     // todo: dynamically pull them from other things that could have parameters available
     // todo: move this to the behaviour initialising!
-    #ifdef ENABLE_CRAFTSYNTH_USB
+    /*#ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println(F("setup_parameters() about to do get_parameters on behaviour_craftsynth..")); Serial.flush();
         LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
         Serial.println(F("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()")); Serial.flush();
@@ -67,12 +67,15 @@ FLASHMEM void setup_parameters() {
         // setup the default mappings
         // TODO: load this from a saved config file
         // hmmm if this section is uncommented then it causes 'conflicting section type' problems due to FLASHMEM..?
-        /*Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
-        behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
-        behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
-        behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-        Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();*/
-    #endif
+        //Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
+        //behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
+        //behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
+        //behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
+        //Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();
+    #endif*/
+    for(int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
+        parameter_manager->addParameters(behaviour_manager->behaviours->get(i)->get_parameters());
+    }
 
     parameter_manager->setDefaultParameterConnections();
 

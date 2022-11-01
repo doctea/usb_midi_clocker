@@ -108,6 +108,11 @@ class DeviceBehaviourUltimateBase {
     virtual void sendNow() {
     };
 
+    virtual void sendProxiedControlChange(byte cc_number, byte value, byte channel = 0) {
+        Serial.printf("%s#sendProxiedControlChange(%i, %i, %i)\n", this->get_label(), cc_number, value, channel);
+        this->actualSendControlChange(cc_number, value, channel);
+    }
+
     // use the underlying object to actually send a value
     virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
     }

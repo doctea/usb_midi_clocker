@@ -3,6 +3,7 @@
 
 #include "behaviours/behaviour_base.h"
 
+// a hardware MIDI device over HardwareSerial uart (ie on DIN or stereo jack)
 class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
     public:
         midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device = nullptr;

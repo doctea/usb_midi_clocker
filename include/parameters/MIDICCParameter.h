@@ -8,9 +8,9 @@
 #include "menu.h"
 
 class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
-    byte cc_number = 0, channel = 0;
-
     public:
+        byte cc_number = 0, channel = 0;
+
         MIDICCParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel)
             : DataParameter(label, target) { //}, initial_value) {
                 this->cc_number = cc_number;
@@ -49,6 +49,26 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
         #ifdef ENABLE_SCREEN
             virtual LinkedList<MenuItem *> *makeControls() override;
         #endif
+};
+
+class MIDICCProxyParameter : public MIDICCParameter {
+    public:
+        MIDICCProxyParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel) : MIDICCParameter(label, target, cc_number, channel) {}
+
+        virtual void setTargetValueFromData(byte value, bool force = false) override {
+            static byte last_value = -1;
+            
+            if (this->target!=nullptr) {
+                //if (this->debug) 
+                Serial.printf("MIDICCProxyParameter#setTargetValueFromData(%i, %i, %i)\n", this->cc_number, value, this->channel);
+                if (last_value!=value || force)
+                    this->target->sendProxiedControlChange(this->cc_number, (byte)value, this->channel);
+                last_value = value;
+            } else {
+                //if (this->debug) 
+                Serial.printf("WARNING: No target set in MIDICCProxyParameter#setTargetValueFromData in '%s'!\n", this->label);
+            }
+        }
 };
 
 #endif
