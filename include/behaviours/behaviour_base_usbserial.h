@@ -10,6 +10,7 @@
 #include "multi_usbserial_handlers.h"
 #include "multi_usbserial_wrapper.h"
 
+// USB device that presents as a Serial connection, instead of as a MIDI device
 class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase {
     public:
 
@@ -76,6 +77,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
 
 };
 
+// USB device that presents as Serial, but supports MIDI (for eg plain Arduino, Hairless-MIDI-alike)
 class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerialBase {
     public:
         midi::MidiInterface<USBSerialWrapper> *midi_interface = nullptr;

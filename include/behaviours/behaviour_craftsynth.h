@@ -114,7 +114,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) { Serial.println("CraftSynth#note_off"); };
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)

@@ -45,7 +45,7 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
                 DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }
 
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)

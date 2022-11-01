@@ -35,11 +35,11 @@ extern DisplayTranslator_Configured steensy;
                 if (modifiers==(1+4) || modifiers==(64+16))  // ctrl + alt
                     reset_teensy();  
                 break; /* ctrl+alt+delete to soft reboot */
-            case KEYD_UP        : Serial.println(F("UP"));     menu->knob_left(); break;
-            case KEYD_DOWN      : Serial.println(F("DN"));     menu->knob_right(); break;
+            case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
+            case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
             case KEY_ESC        :
             case KEYD_LEFT      : 
-            case KEYD_BACKSPACE : Serial.println(F("LEFT"));   menu->button_back(); break;
+            case KEYD_BACKSPACE : Serial.println(F("LEFT"));           menu->button_back(); break;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
