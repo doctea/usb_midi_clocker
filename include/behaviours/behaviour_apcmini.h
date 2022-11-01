@@ -89,7 +89,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         }
 
         virtual void receive_note_on(byte inChannel, byte inNumber, byte inVelocity) override {
-            Serial.printf("apcmini_note_on for %i, %i, %i\n", inChannel, inNumber, inVelocity);
+            Serial.printf(F("apcmini_note_on for %i, %i, %i\n"), inChannel, inNumber, inVelocity);
             if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
                 // start / stop play
                 if (!playing)
@@ -162,11 +162,11 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     clock_selected = clock_number;
                     
                     if (apcmini_shift_held) {
-                    increase_clock_multiplier(clock_number);
-                    //clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
+                        increase_clock_multiplier(clock_number);
+                        //clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
                     } else {
-                    decrease_clock_multiplier(clock_number);
-                    //clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
+                        decrease_clock_multiplier(clock_number);
+                        //clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
                     }
                     
                     /*if (clock_multiplier[clock_number]>CLOCK_MULTIPLIER_MAX)

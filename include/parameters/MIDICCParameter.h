@@ -7,6 +7,8 @@
 
 #include "menu.h"
 
+// for applying modulation to a value before sending CC values out to the target device
+// eg, a synth's cutoff value
 class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
     public:
         byte cc_number = 0, channel = 0;
@@ -37,20 +39,22 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
             static byte last_value = -1;
             
             if (this->target!=nullptr) {
-                if (this->debug) Serial.printf("MIDICCParameter#setTargetValueFromData(%i, %i, %i)\n", cc_number, value, this->channel);
+                if (this->debug) Serial.printf(F("MIDICCParameter#setTargetValueFromData(%i, %i, %i)\n"), cc_number, value, this->channel);
                 if (last_value!=value || force)
                     this->target->sendControlChange(this->cc_number, (byte)value, this->channel);
                 last_value = value;
             } else {
-                if (this->debug) Serial.printf("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n", this->label);
+                if (this->debug) Serial.printf(F("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n"), this->label);
             }
         }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem *> *makeControls() override;
+            FLASHMEM virtual LinkedList<MenuItem *> *makeControls() override;
         #endif
 };
 
+// for parameters where we want to both accept updates from a mapping (eg a keyboard routed to the device), while also applying modulation before sending the actual value out to the target device
+// eg, modwheel
 class MIDICCProxyParameter : public MIDICCParameter {
     public:
         MIDICCProxyParameter(char* label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel) : MIDICCParameter(label, target, cc_number, channel) {}
@@ -60,13 +64,13 @@ class MIDICCProxyParameter : public MIDICCParameter {
             
             if (this->target!=nullptr) {
                 //if (this->debug) 
-                Serial.printf("MIDICCProxyParameter#setTargetValueFromData(%i, %i, %i)\n", this->cc_number, value, this->channel);
+                Serial.printf(F("MIDICCProxyParameter#setTargetValueFromData(%i, %i, %i)\n"), this->cc_number, value, this->channel);
                 if (last_value!=value || force)
                     this->target->sendProxiedControlChange(this->cc_number, (byte)value, this->channel);
                 last_value = value;
             } else {
                 //if (this->debug) 
-                Serial.printf("WARNING: No target set in MIDICCProxyParameter#setTargetValueFromData in '%s'!\n", this->label);
+                Serial.printf(F("WARNING: No target set in MIDICCProxyParameter#setTargetValueFromData in '%s'!\n"), this->label);
             }
         }
 };

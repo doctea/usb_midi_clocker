@@ -5,16 +5,16 @@
 #include "mymenu_items/ParameterMenuItems.h"
 #include "mymenu_items/ParameterInputMenuItems.h"
 
-LinkedList<MenuItem *> *MIDICCParameter::makeControls() {
+FLASHMEM LinkedList<MenuItem *> *MIDICCParameter::makeControls() {
     LinkedList<MenuItem *> *controls = new LinkedList<MenuItem *>();
     
-    Serial.printf("MIDICCParameter#makeControls for %s\n", this->label);
+    Serial.printf(F("MIDICCParameter#makeControls for %s\n"), this->label);
     // first set up the submenu to hold the values
     ParameterMenuItem *fullmenuitem = new ParameterMenuItem(this->label, this);
     controls->add(fullmenuitem);
 
     //while(!Serial);
-    Serial.printf("in makeControls() in %s, parameter_manager is @%p and available_inputs is @%p\n", this->label, parameter_manager, parameter_manager->available_inputs);
+    Serial.printf(F("in makeControls() in %s, parameter_manager is @%p and available_inputs is @%p\n"), this->label, parameter_manager, parameter_manager->available_inputs);
 
     SubMenuItemBar *input_selectors_bar = new SubMenuItemBar("Inputs");
     input_selectors_bar->show_header = false;

@@ -229,13 +229,13 @@ class MIDIMatrixManager {
         target_behaviour->target_id = t;
         return t;
     }*/
-    target_id_t register_target(MIDIOutputWrapper *target) {
+    FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
-    target_id_t register_target(MIDITrack *target, const char *handle) {
+    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle) {
         return this->register_target(make_midioutputwrapper(handle, target));
     }
-    target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
+    FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
         strcpy(targets[NUM_REGISTERED_TARGETS].handle, handle);
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
         Serial.printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);
