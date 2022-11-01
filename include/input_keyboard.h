@@ -7,6 +7,8 @@ extern DisplayTranslator_Configured steensy;
 
 #include "screenshot.h"
 
+#include "mymenu.h"
+
 #include "midi/midi_mapper_matrix_manager.h"
 
 #ifdef ENABLE_TYPING_KEYBOARD
@@ -25,12 +27,17 @@ extern DisplayTranslator_Configured steensy;
     void OnPress(int key) {
         int modifiers = keyboard1.getModifiers();
         switch(key) {
+            /*case KEY_ESC             :  // ESCAPE
+                while(menu->is_opened())
+                    menu->button_back();
+                break;*/
             case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                if (modifiers==5)  // ctrl + alt
+                if (modifiers==(1+4) || modifiers==(64+16))  // ctrl + alt
                     reset_teensy();  
                 break; /* ctrl+alt+delete to soft reboot */
             case KEYD_UP        : Serial.println(F("UP"));     menu->knob_left(); break;
             case KEYD_DOWN      : Serial.println(F("DN"));     menu->knob_right(); break;
+            case KEY_ESC        :
             case KEYD_LEFT      : 
             case KEYD_BACKSPACE : Serial.println(F("LEFT"));   menu->button_back(); break;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
