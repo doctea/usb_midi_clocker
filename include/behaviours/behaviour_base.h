@@ -109,7 +109,7 @@ class DeviceBehaviourUltimateBase {
     };
 
     virtual void sendProxiedControlChange(byte cc_number, byte value, byte channel = 0) {
-        Serial.printf("%s#sendProxiedControlChange(%i, %i, %i)\n", this->get_label(), cc_number, value, channel);
+        if (this->debug) Serial.printf(F("%s#sendProxiedControlChange(%i, %i, %i)\n"), this->get_label(), cc_number, value, channel);
         this->actualSendControlChange(cc_number, value, channel);
     }
 
@@ -126,13 +126,11 @@ class DeviceBehaviourUltimateBase {
     // parameter handling shit
     LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
     virtual LinkedList<DoubleParameter*> *get_parameters () {
-        if (parameters->size()==0)
+        if (parameters==nullptr || parameters->size()==0)
             this->initialise_parameters();
         return parameters;
     }
-    FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() {
-        /*if (parameters==nullptr)
-            parameters = new LinkedList<DoubleParameter*>();*/
+    virtual LinkedList<DoubleParameter*> *initialise_parameters() {
         return parameters;
     }
     virtual bool has_parameters() {
@@ -140,7 +138,6 @@ class DeviceBehaviourUltimateBase {
     }
     virtual DoubleParameter* getParameterForLabel(char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
-
         for (int i = 0 ; i < parameters->size() ; i++) {
             //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
             if (strcmp(parameters->get(i)->label, label)==0) 
@@ -149,16 +146,6 @@ class DeviceBehaviourUltimateBase {
         Serial.printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
         return nullptr;
     }
-
-    /*
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
-        // todo: save parameter mappings...
-    }
-    virtual bool parse_sequence_key_value(String key, String value) {
-        // todo: reload parameter mappings...
-        return false;
-    }
-    */
 
     virtual void reset_all_mappings() {
         for (int i = 0 ; i < this->parameters->size() ; i++) {
@@ -196,7 +183,7 @@ class DeviceBehaviourUltimateBase {
                     //parameter->connections[slot].parameter_input->name,
                     parameter->connections[slot].amount
                 );
-                Serial.printf("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n", line);
+                Serial.printf(F("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n"), line);
                 lines->add(String(line));
             }
         }
@@ -236,7 +223,7 @@ class DeviceBehaviourUltimateBase {
                 );*/
                 return true;
             } else {
-                Serial.printf("PARAMETERS\tWARNING: Couldn't find a Parameter for name %s\n", parameter_name.c_str());
+                Serial.printf(F("PARAMETERS\tWARNING: Couldn't find a Parameter for name %s\n"), parameter_name.c_str());
                 return false;
             }
             //Serial.printf(F("\t slot_number %i and amount %f but no parameter found for %s in %s\n"), slot_number, amount, parameter_name.c_str(), this->get_label());

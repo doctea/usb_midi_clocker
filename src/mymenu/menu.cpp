@@ -94,15 +94,15 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
 
 FLASHMEM void setup_menu() {
-    Serial.println(F("Instantiating DisplayTranslator_STeensy.."));
+    Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
     tft = &steensy; //DisplayTranslator_STeensy();
-    delay(50);
-    Serial.println(F("Finished DisplayTranslator_SS_OLED constructor"));
+    //delay(50);
+    //Serial.println(F("Finished  constructor"));
     Serial.flush();
     Serial.println(F("Creating Menu object.."));
     Serial.flush();
     menu = new Menu(tft);
-    Serial.println(F("Created Menu object.."));
+    Serial.println(F("Created Menu object"));
     Serial.flush();
 
     menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
