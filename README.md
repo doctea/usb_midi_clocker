@@ -125,6 +125,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Known issues (current)
 
+- Occasional freezes/crashes for unknown reasons
+- GDB debug mode doesn't work / does't even compile
 - BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as mentioned below.
 - Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
@@ -145,7 +147,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
 - Beatstep sysex commands don't work, probably for the same reason?
 - MIDI looper uses a LOT of RAM (~48k for 1 phrase -- 384 (ticks) * 127 (notes)) - less memory-hungry polyphony can be used, but drawing the pianoroll to screen would become more intensive...
-- Voltage Source Calibration UI is ugly / changing sizes constantly
+- ~~Voltage Source Calibration UI is ugly / changing sizes constantly~~
 
 ## Configuration
 
@@ -238,7 +240,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
 - Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
   - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
-  - and for Arduino Unos without needing to use USB Midi Klik 
+  - TODO: and for Arduino Unos without needing to use USB Midi Klik 
     - todo: see whether we need to use device unique id rather than pid+vid to ensure correct detection of mltiple devices
   - or for things that don't even talk MIDI, like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
     - ~~todo: improve this by not requiring the behaviour to implement MIDI -- could possibly let the behaviour itself deal with that, just have the usbserial connection stuff pass the usb device~~
