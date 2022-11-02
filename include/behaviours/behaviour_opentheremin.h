@@ -23,7 +23,8 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
             return (char*)"OpenTheremin";
         }
 
-        FLASHMEM void setup_callbacks() override {
+        FLASHMEM 
+        virtual void setup_callbacks() override {
             this->midi_interface->setHandleControlChange(handle_theremin_control_change);
             this->midi_interface->setHandleNoteOn(handle_theremin_note_on);
             this->midi_interface->setHandleNoteOff(handle_theremin_note_off);

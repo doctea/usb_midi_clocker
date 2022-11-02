@@ -175,10 +175,10 @@ class MIDITrack {
         }
         // for actually storing values into buffer (also used when reloading from save)
         void store_event(unsigned long time, midi_message midi_event) {
-            if (this->debug) Serial.printf("store_event passed time %i...\n", time);
+            if (this->debug) Serial.printf(F("store_event passed time %i...\n"), time);
             time = quantize_time(time);
             time = ticks_to_sequence_step(time);
-            if (this->debug) Serial.printf("Recording event at\t%i\n", time);
+            if (this->debug) Serial.printf(F("Recording event at\t%i\n"), time);
             frames[time]->add(midi_event);
             if (midi_event.message_type==midi::NoteOn) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
@@ -195,7 +195,7 @@ class MIDITrack {
             }
             //Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
             pitch_contains_notes[midi_event.pitch] = true;
-            if (this->debug) Serial.printf("sizeof frames at %i is now %i\n", time, frames[time]->size());
+            if (this->debug) Serial.printf(F("sizeof frames at %i is now %i\n"), time, frames[time]->size());
         }
 
         // get total event count across entire loop

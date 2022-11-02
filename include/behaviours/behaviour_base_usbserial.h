@@ -46,10 +46,10 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         }
 
         virtual void connect_device(USBSerialWrapper *usbdevice) {
-            Serial.printf("DeviceBehaviour_USBSerialBase#connect_device for %s connecting %p\n", this->get_label(), usbdevice);
+            Serial.printf(F("DeviceBehaviour_USBSerialBase#connect_device for %s connecting %p\n"), this->get_label(), usbdevice);
 
             if (this->usbdevice!=nullptr && this->usbdevice != usbdevice) {
-                Serial.printf("\tit is already connected to a different usbdevice! disconnecting first..");
+                Serial.printf(F("\tit is already connected to a different usbdevice! disconnecting first.."));
                 this->disconnect_device();
             }
 
@@ -98,12 +98,12 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
 
         virtual void init() override {
             if (this->usbdevice==nullptr) {
-                Serial.printf("DeviceBehaviourUSBSerialMIDIBase#init() in %s failed - usbdevice is nullptr!\n", this->get_label());
+                Serial.printf(F("DeviceBehaviourUSBSerialMIDIBase#init() in %s failed - usbdevice is nullptr!\n"), this->get_label());
                 return;
             }
 
             if (this->midi_interface!=nullptr) {
-                Serial.printf("DeviceBehaviourUSBSerialMIDIBase#init() in %s already has a midi_interface - disconnecting it!\n", this->get_label());
+                Serial.printf(F("DeviceBehaviourUSBSerialMIDIBase#init() in %s already has a midi_interface - disconnecting it!\n"), this->get_label());
                 this->disconnect_device();
             }
 
@@ -140,7 +140,7 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
             if (!is_connected() || this->midi_interface==nullptr) return;
-            if (this->debug) Serial.printf("DeviceBehaviour_USBSerialMIDIBase#sendNoteOn(%i, %i, %i)!\n", note, velocity, channel);
+            if (this->debug) Serial.printf(F("DeviceBehaviour_USBSerialMIDIBase#sendNoteOn(%i, %i, %i)!\n"), note, velocity, channel);
             this->midi_interface->sendNoteOn(note, velocity, channel);
         };
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {

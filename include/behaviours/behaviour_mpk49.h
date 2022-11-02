@@ -30,6 +30,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         }
         virtual bool has_input() { return true; }
 
+        FLASHMEM 
         virtual void setup_callbacks() override {
             Serial.println(F("Setting up callbacks for the MPK49"));
             this->device->setHandleNoteOn(mpk49_handle_note_on);
@@ -49,7 +50,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
             if (this->debug) {
                 Serial.printf(F("mpk_handle_system_exclusive of size %i: ["), size);
                 for (unsigned int i = 0 ; i < size ; i++) {
-                    Serial.printf("%02x ", data[i]);
+                    Serial.printf(F("%02x "), data[i]);
                 }
                 Serial.println(F("]"));
             }

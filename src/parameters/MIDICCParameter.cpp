@@ -14,7 +14,7 @@ FLASHMEM LinkedList<MenuItem *> *MIDICCParameter::makeControls() {
     controls->add(fullmenuitem);
 
     //while(!Serial);
-    Serial.printf(F("in makeControls() in %s, parameter_manager is @%p and available_inputs is @%p\n"), this->label, parameter_manager, parameter_manager->available_inputs);
+    //Serial.printf(F("in makeControls() in %s, parameter_manager is @%p and available_inputs is @%p\n"), this->label, parameter_manager, parameter_manager->available_inputs);
 
     SubMenuItemBar *input_selectors_bar = new SubMenuItemBar("Inputs");
     input_selectors_bar->show_header = false;

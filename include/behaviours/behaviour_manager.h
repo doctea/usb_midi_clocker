@@ -227,7 +227,9 @@ class DeviceBehaviourManager {
         }
 
         #ifdef ENABLE_SCREEN
+            //FLASHMEM 
             void create_all_behaviour_menu_items(Menu *menu);
+            //FLASHMEM
             void create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *device);
         #endif
 

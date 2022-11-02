@@ -27,6 +27,7 @@ class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual p
         }
         virtual bool has_input() { return true; }
 
+        FLASHMEM 
         virtual void setup_callbacks() override {
             this->device->setHandleNoteOn(keystep_handle_note_on);
             this->device->setHandleNoteOff(keystep_handle_note_off);

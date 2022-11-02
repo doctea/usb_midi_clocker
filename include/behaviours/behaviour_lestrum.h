@@ -23,6 +23,7 @@ class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
 
         source_id_t source_id_2 = -1;
 
+        FLASHMEM 
         virtual void setup_callbacks() override {
             Serial.println(F("DeviceBehaviour_LeStrum#setup_callbacks..")); Serial.flush();
             this->input_device->setHandleNoteOn(lestrum_note_on);

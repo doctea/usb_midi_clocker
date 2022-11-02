@@ -33,21 +33,23 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             return BehaviourType::serial;
         }
 
-        FLASHMEM virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
+        //FLASHMEM
+        virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             //if (!is_connected()) return;
 
-            if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_output connecting device %p\n"), device);
+            //if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_output connecting device %p\n"), device);
             this->output_device = device;
             this->connected_flag = true;
             this->init();
         }
-        FLASHMEM virtual void connect_device_input(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
+        //FLASHMEM
+        virtual void connect_device_input(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             //if (!is_connected()) return;
 
             //device->begin(MIDI_CHANNEL_OMNI);
             //device->turnThruOff();
 
-            if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_input connecting %p\n"), device);
+            //if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_input connecting %p\n"), device);
             this->input_device = device;
             this->connected_flag = true;
             //Serial.printf(F("about to call setup_callbacks on %s..\n"), this->get_label()); Serial.flush();
