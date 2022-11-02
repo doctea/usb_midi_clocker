@@ -53,6 +53,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             this->device->setHandleStart(nullptr);
             this->device->setHandleStop(nullptr);
             this->device->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
+            this->device->setHandlePitchChange(nullptr);
             this->device = nullptr;
         }
 
@@ -78,7 +79,10 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             if (!is_connected()) return;
             this->device->sendRealTime(message);
         };
-
+        virtual void actualSendPitchBend(int16_t bend, uint8_t channel = 0) {
+            if (!is_connected() || this->device==nullptr) return;
+            this->device->sendPitchBend(bend, channel);
+        }
 };
 
 #endif

@@ -16,6 +16,10 @@ void keystep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelo
     if (behaviour_keystep!=nullptr) behaviour_keystep->receive_note_off(inChannel, inNumber, inVelocity);
 }
 
+void keystep_handle_pitchbend(uint8_t inChannel, int bend) {
+    if (behaviour_keystep!=nullptr) behaviour_keystep->receive_pitch_bend(inChannel, bend);
+}
+
 /*MIDIOutputWrapper *keystep_output = nullptr; //&midi_out_bitbox_wrapper;
 void keystep_setOutputWrapper(MIDIOutputWrapper *wrapper) {
     if (keystep_output!=nullptr)

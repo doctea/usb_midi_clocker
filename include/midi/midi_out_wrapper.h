@@ -129,10 +129,16 @@ class MIDIOutputWrapper {
             this->actual_sendControlChange(pitch, velocity, channel);
         };
 
+        virtual void sendPitchBend(int bend, byte channel = 0) {
+            if (channel == 0 ) channel = this->default_channel;
+            this->actual_sendPitchBend(bend, channel);
+        }
+
         // these are the parts that actually send using the underlying objects -- split out so that can override in subclasses
         virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) {};
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) {};
         virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) {};
+        virtual void actual_sendPitchBend(int pitch, byte channel) {};
 
         virtual inline bool is_note_playing(int pitch) {
             pitch = recalculate_pitch(pitch);
@@ -188,6 +194,10 @@ class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
     virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
         usbMIDI.sendControlChange(pitch, velocity, channel, this->cable_number);
     }
+
+    virtual void actual_sendPitchBend(int bend, byte channel) override {
+        usbMIDI.sendPitchBend(bend, channel);
+    }
 };
 
 class MIDIOutputWrapper_MIDISerial : public MIDIOutputWrapper {
@@ -210,6 +220,10 @@ class MIDIOutputWrapper_MIDISerial : public MIDIOutputWrapper {
         virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
             output->sendControlChange(pitch, velocity, channel);
         }
+
+        virtual void actual_sendPitchBend(int bend, byte channel) override {
+            output->sendPitchBend(bend, channel);
+        }
 };
 
 class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
@@ -231,6 +245,10 @@ class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
         virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
             output->sendControlChange(pitch, velocity, channel);
         }
+
+        virtual void actual_sendPitchBend(int bend, byte channel) override {
+            output->sendPitchBend(bend, channel);
+        }
 };
 
 class MIDIOutputWrapper_LoopTrack : public MIDIOutputWrapper {
@@ -244,6 +262,9 @@ class MIDIOutputWrapper_LoopTrack : public MIDIOutputWrapper {
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel);
         virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel);
         virtual void actual_sendControlChange(byte number, byte value, byte channel);
+        /*virtual void actual_sendPitchBend(int bend, byte channel) override {
+            //output->sendPitchBend(bend, channel);
+        }*/
 };
 
 
@@ -268,6 +289,10 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
 
         virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
             output->sendControlChange(pitch, velocity, channel);
+        }
+
+        virtual void actual_sendPitchBend(int bend, byte channel) override {
+            output->sendPitchBend(bend, channel);
         }
 };
 

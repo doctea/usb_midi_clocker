@@ -72,6 +72,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             this->input_device->setHandleStart(nullptr);
             this->input_device->setHandleStop(nullptr);
             this->input_device->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
+            this->input_device->setHandlePitchBend(nullptr);
             this->input_device = nullptr;
         }
 
@@ -99,6 +100,10 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             if (!is_connected() || this->output_device==nullptr) return;
             this->output_device->sendRealTime((midi::MidiType)message);
         };
+        virtual void actualSendPitchBend(int16_t bend, uint8_t channel = 0) {
+            if (!is_connected() || this->output_device==nullptr) return;
+            this->output_device->sendPitchBend(bend, channel);
+        }
 };
 
 #endif

@@ -125,6 +125,7 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
             this->midi_interface->setHandleStart(nullptr);
             this->midi_interface->setHandleStop(nullptr);
             this->midi_interface->setHandleSystemExclusive((void (*)(uint8_t *, unsigned int))nullptr);
+            this->midi_interface->setHandlePitchBend(nullptr);
             this->midi_interface = nullptr;
 
             delete this->midi_interface;
@@ -154,6 +155,10 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
             if (!is_connected() || this->midi_interface==nullptr) return;
             this->midi_interface->sendRealTime((midi::MidiType)message);
         };
+        virtual void actualSendPitchBend(int16_t bend, uint8_t channel = 0) {
+            if (!is_connected() || this->midi_interface==nullptr) return;
+            this->midi_interface->sendPitchBend(bend, channel);
+        }
 };
 
 #endif

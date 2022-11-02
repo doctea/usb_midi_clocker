@@ -15,6 +15,7 @@ void keystep_setOutputWrapper(MIDIOutputWrapper *);
 void keystep_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void keystep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void keystep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+void keystep_handle_pitchbend(uint8_t inChannel, int bend);
 
 class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
     public:
@@ -30,6 +31,7 @@ class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual p
             this->device->setHandleNoteOn(keystep_handle_note_on);
             this->device->setHandleNoteOff(keystep_handle_note_off);
             this->device->setHandleControlChange(keystep_handle_control_change);
+            this->device->setHandlePitchChange(keystep_handle_pitchbend);
         }
 };
 

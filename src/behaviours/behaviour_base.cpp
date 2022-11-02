@@ -24,3 +24,7 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
     midi_matrix_manager->processControlChange(this->source_id, inNumber, inValue); //, inChannel);
     //if (this->debug) Serial.printf(F("...DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i) done!\n"), this->get_label(), inChannel, inNumber, inValue);
 }
+
+void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend) {
+    midi_matrix_manager->processPitchBend(this->source_id, bend);
+}

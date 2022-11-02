@@ -83,6 +83,8 @@ class DeviceBehaviourUltimateBase {
     // called when a note_off message is received from the device
     virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
     virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+    virtual void receive_pitch_bend(uint8_t inChannel, int bend);
+
     virtual void init() {};
 
     // tell the device to play a note on
@@ -100,6 +102,9 @@ class DeviceBehaviourUltimateBase {
         //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
         this->actualSendControlChange(number, value, channel);
     };
+    virtual void sendPitchBend(int16_t bend, uint8_t channel) {
+        this->actualSendPitchBend(bend, channel);
+    }
     // tell the device to send a realtime message
     virtual void sendRealTime(uint8_t message) {
         //Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
@@ -114,14 +119,11 @@ class DeviceBehaviourUltimateBase {
     }
 
     // use the underlying object to actually send a value
-    virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
-    }
-    virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
-    }
-    virtual void actualSendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
-    }
-    virtual void actualSendRealTime(uint8_t message) {
-    }
+    virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {}
+    virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {}
+    virtual void actualSendControlChange(uint8_t number, uint8_t value, uint8_t channel) {}
+    virtual void actualSendRealTime(uint8_t message) {}
+    virtual void actualSendPitchBend(int16_t bend, uint8_t channel) {}
 
     // parameter handling shit
     LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();

@@ -176,6 +176,20 @@ class MIDIMatrixManager {
             }
         }
     }
+    void processPitchBend(source_id_t source_id, int bend, byte channel = 0) {
+        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
+            if (is_connected(source_id, target_id)) {
+                /*Serial.printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
+                    source_id, cc, value, channel, source_id, target_id
+                ); Serial.flush();
+                if (targets[target_id].wrapper==nullptr) {
+                    Serial.printf("target_id %i has a nullptr wrapper!\n", target_id); Serial.flush();
+                }*/
+                targets[target_id].wrapper->sendPitchBend(bend, channel);
+                //Serial.println("successfully sent!"); Serial.flush();
+            }
+        }
+    }
     void stop_all_notes_for_source(source_id_t source_id, bool force = false) {
         if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
