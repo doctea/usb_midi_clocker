@@ -37,7 +37,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
         virtual bool has_input() { return true; }
 
-        //FLASHMEM 
+        FLASHMEM 
         virtual void setup_callbacks() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
 
