@@ -21,7 +21,7 @@
 
 //#define MAX_INPUT_VOLTAGE_24V 10.0
 
-//FLASHMEM 
+FLASHMEM 
 void setup_cv_input();
 FLASHMEM
 void setup_parameters();
