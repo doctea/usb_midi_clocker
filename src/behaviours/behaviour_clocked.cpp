@@ -3,7 +3,7 @@
 #ifdef ENABLE_SCREEN
     #include "menu.h"
 
-    LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
+    FLASHMEM LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
         LinkedList<MenuItem*> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
             String restart_label = String(F("Restart ") + String(this->get_label()) + F(" on bar"));

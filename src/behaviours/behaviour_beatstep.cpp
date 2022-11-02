@@ -18,6 +18,7 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
+    //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
     LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
         this->menuitems->add(

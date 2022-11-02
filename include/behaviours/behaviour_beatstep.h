@@ -14,8 +14,7 @@
 
 extern MIDIOutputWrapper *beatstep_output;
 
-void beatstep_setOutputWrapper(MIDIOutputWrapper *);
-
+//void beatstep_setOutputWrapper(MIDIOutputWrapper *);
 //void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
@@ -99,6 +98,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         #endif
 
         #ifdef ENABLE_SCREEN
+            //FLASHMEM
             LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 
