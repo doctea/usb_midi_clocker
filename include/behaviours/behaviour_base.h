@@ -57,7 +57,8 @@ class DeviceBehaviourUltimateBase {
         return BehaviourType::undefined;
     }
 
-    FLASHMEM virtual void setup_callbacks() {};
+    //FLASHMEM 
+    virtual void setup_callbacks() {};
 
     virtual bool is_connected() {
         return false;

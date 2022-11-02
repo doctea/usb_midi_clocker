@@ -35,7 +35,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
             return (char*)"Bambleweeny57";
         }
 
-        FLASHMEM virtual void setup_callbacks() override {
+        //FLASHMEM 
+        virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             if (this->device==nullptr) return;
             this->device->setHandleControlChange(bamble_control_change);

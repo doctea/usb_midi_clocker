@@ -47,7 +47,8 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
-        FLASHMEM virtual void setup_callbacks() override {
+        //FLASHMEM 
+        virtual void setup_callbacks() override {
             //Serial.println(F("DeviceBehaviour_Chocolate#setup_callbacks()"));
             this->device->setHandleNoteOn(chocolate_handle_note_on);
             this->device->setHandleNoteOff(chocolate_handle_note_off);

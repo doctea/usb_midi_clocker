@@ -17,7 +17,8 @@
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
 // initialise the voltage-reading hardware/libraries and the ParameterManager
-FLASHMEM void setup_cv_input() {
+//FLASHMEM
+void setup_cv_input() {
     Serial.println((char*)"setup_cv_input...");
     tft_print((char*)"...setup_cv_input...\n");
 
@@ -33,7 +34,8 @@ FLASHMEM void setup_cv_input() {
 }
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
-FLASHMEM void setup_parameters() {
+//FLASHMEM 
+void setup_parameters() {
     //parameter_manager = new ParameterManager();
     // add the available parameters to a list used globally and later passed to each selector menuitem
     Serial.println(F("==== begin setup_parameters ====")); Serial.flush();

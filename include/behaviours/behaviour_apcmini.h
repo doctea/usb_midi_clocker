@@ -49,7 +49,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         bool redraw_immediately = false;
         unsigned long last_updated_display = 0;
 
-        FLASHMEM virtual void setup_callbacks() override {
+        //FLASHMEM 
+        virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             if (!is_connected()) return;
 
