@@ -75,7 +75,7 @@ void pc_usb_midi_handle_stop() {
   }
 }
 
-//FLASHMEM
+FLASHMEM
 void setup_pc_usb() {
   usbMIDI.setHandleNoteOn(pc_usb_handle_note_on);
   usbMIDI.setHandleNoteOff(pc_usb_handle_note_off);

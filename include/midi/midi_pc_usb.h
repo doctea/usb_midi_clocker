@@ -2,7 +2,7 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
-void setup_pc_usb();
+FLASHMEM void setup_pc_usb();
 void read_usb_from_computer();
 
 bool check_and_unset_pc_usb_midi_clock_ticked();
