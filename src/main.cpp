@@ -85,21 +85,21 @@ FLASHMEM void setup() {
     //tft_print("\nWaiting for serial connection..");
     while (!Serial);
     //tft_print("Connected serial!\n");
-    Serial.println("Connected serial!"); Serial.flush();
+    Serial.println(F("Connected serial!")); Serial.flush();
   #endif
 
   /*while (1) {
     Serial.printf(".");
   }*/
 
-  Serial.printf("At start of setup(), free RAM is %u\n", freeRam());
+  Serial.printf(F("At start of setup(), free RAM is %u\n"), freeRam());
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
   // TODO: have the behaviours add their menu items
   Serial.println(F("..USB device handler.."));
   setup_behaviour_manager();
-  Serial.printf("after setup_behaviour_manager(), free RAM is %u\n", freeRam());
+  Serial.printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
 
   //Serial.println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
@@ -303,14 +303,14 @@ void loop() {
       static unsigned long time_of_last_param_update = 0;
       if (!screen_was_drawn && millis() - time_of_last_param_update > TIME_BETWEEN_CV_INPUT_UPDATES) {
         if(debug) parameter_manager->debug = true;
-        if(debug) Serial.println("about to do parameter_manager->update_voltage_sources().."); Serial.flush();
+        if(debug) Serial.println(F("about to do parameter_manager->update_voltage_sources()..")); Serial.flush();
         parameter_manager->update_voltage_sources();
         //if(debug) Serial.println("just did parameter_manager->update_voltage_sources().."); Serial.flush();
         //if(debug) Serial.println("about to do parameter_manager->update_inputs().."); Serial.flush();
         parameter_manager->update_inputs();
         //if(debug) Serial.println("about to do parameter_manager->update_mixers().."); Serial.flush();
         parameter_manager->update_mixers();
-        if(debug) Serial.println("just did parameter_manager->update_inputs().."); Serial.flush();
+        if(debug) Serial.println(F("just did parameter_manager->update_inputs()..")); Serial.flush();
         time_of_last_param_update = millis();
       }
     #endif
@@ -320,13 +320,13 @@ void loop() {
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
-  if (debug) Serial.println("about to behaviour_manager->do_reads()..");
+  if (debug) Serial.println(F("about to behaviour_manager->do_reads().."));
   behaviour_manager->do_reads();
-  if (debug) Serial.println("just did behaviour_manager->do_reads()");
+  if (debug) Serial.println(F("just did behaviour_manager->do_reads()"));
 
-  if (debug) Serial.println("about to behaviour_manager->do_loops()..");
+  if (debug) Serial.println(F("about to behaviour_manager->do_loops().."));
   behaviour_manager->do_loops();
-  if (debug) Serial.println("just did behaviour_manager->do_loops()");
+  if (debug) Serial.println(F("just did behaviour_manager->do_loops()"));
 
   #ifdef ENABLE_USB
     update_usb_device_connections();

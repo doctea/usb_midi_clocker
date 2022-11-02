@@ -185,7 +185,8 @@ void global_on_restart() {
   Serial.println(F("<==on_restart()"));
 }
 
-void setup_multi_usb() {
+//FLASHMEM 
+void setup_multi_usb() { // error: void setup_multi_usb() causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
   Serial.print(F("Arduino initialising usb/midi...")); Serial.flush();
 
   Usb.begin();

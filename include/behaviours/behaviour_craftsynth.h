@@ -116,7 +116,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue) { Serial.println("CraftSynth#receive_control_change");};*/
 
         virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) override {
-            if (this->debug) Serial.printf("%s#sendControlChange(cc=%i, value=%i, channel=%i)\n", this->get_label(), cc_number, value, channel);
+            //if (this->debug) Serial.printf(F("%s#sendControlChange(cc=%i, value=%i, channel=%i)\n"), this->get_label(), cc_number, value, channel);
             // if we receive a value from another device, then update the proxy parameter, which will handle the actual sending
             // if modwheel should handle this event, handle it and return early
             if (ModwheelReceiver::process(cc_number, value, channel)) 

@@ -25,6 +25,7 @@ void update_usb_device_connections();
 //void read_midi_usb_devices();
 
 void global_on_restart();
+//FLASHMEM  // // error: void setup_multi_usb() causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
 void setup_multi_usb();
 
 //#include <MIDI.h>

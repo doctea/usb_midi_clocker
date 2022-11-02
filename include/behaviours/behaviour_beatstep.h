@@ -37,7 +37,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
         virtual bool has_input() { return true; }
 
-        virtual void setup_callbacks() override {
+        FLASHMEM virtual void setup_callbacks() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
 
             this->device->setHandleNoteOn(beatstep_handle_note_on);

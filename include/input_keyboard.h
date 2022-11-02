@@ -87,10 +87,10 @@ extern DisplayTranslator_Configured steensy;
                         modifiers &= ~4;
                     }
                     if (modifiers==0) {
-                        Serial.printf("%i pressed -- loading project %i!\n", key, key - adjust);
+                        Serial.printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
                         project.setProjectNumber(key - adjust);
                     } else {
-                        Serial.printf("Ignoring %i with modifiers %i\n", key, modifiers);
+                        Serial.printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
                     }
                 }
                 break;

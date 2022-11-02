@@ -21,7 +21,6 @@
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
-
 DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
     if (inst_ == nullptr) {
         inst_ = new DeviceBehaviourManager();
@@ -29,6 +28,7 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
     return inst_;
 }
 
+//FLASHMEM
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
@@ -126,13 +126,15 @@ void setup_behaviour_manager() {
 
 #ifdef ENABLE_SCREEN
     #include "menuitems.h"
+    //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         for (int i = 0 ; i < behaviours->size() ; i++) {
             this->create_single_behaviour_menu_items(menu, behaviours->get(i));
         }
     }
 
-    void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
+    //FLASHMEM 
+    inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial.flush(); 
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
