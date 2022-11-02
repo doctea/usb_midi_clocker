@@ -34,7 +34,7 @@ void setup_cv_input() {
 }
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
-//FLASHMEM 
+FLASHMEM 
 void setup_parameters() {
     //parameter_manager = new ParameterManager();
     // add the available parameters to a list used globally and later passed to each selector menuitem

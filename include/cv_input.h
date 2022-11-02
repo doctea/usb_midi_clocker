@@ -23,7 +23,7 @@
 
 //FLASHMEM 
 void setup_cv_input();
-//FLASHMEM
+FLASHMEM
 void setup_parameters();
 void setup_parameter_menu();
 
