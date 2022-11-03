@@ -180,7 +180,7 @@ FLASHMEM void setup_menu() {
 
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
-            (char*)"Beatstep advance",
+            (char*)"Beatstep",
             behaviour_beatstep,
             &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
             &DeviceBehaviour_Beatstep::is_auto_advance_pattern

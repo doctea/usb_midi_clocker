@@ -172,6 +172,12 @@ class DeviceBehaviourManager {
                 behaviours->get(i)->on_phrase(phrase);
             }
         }
+        void do_end_phrase(int phrase) {
+            const int size = behaviours->size();
+            for (int i = 0 ; i < size ; i++) {
+                behaviours->get(i)->on_end_phrase(phrase);
+            }
+        }
 
         void do_bar(int bar) {
             const int size = behaviours->size();

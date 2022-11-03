@@ -104,13 +104,16 @@ class DividedClockedBehaviour : public ClockedBehaviour {
 
         // set how many real ticks count for one of our internal ticks -- for use in doing half-time, etc 
         virtual void set_divisor (uint32_t divisor) {
+            //Serial.printf("%s#set_divisor(%i)\n", this->get_label(), divisor);
             if (divisor!=this->get_divisor() && this->should_auto_restart_on_change()) {
                 this->set_restart_on_bar(true);
             }
             if (is_bpm_on_beat(ticks))
-                this->clock_divisor = divisor;
-            else
+                this->clock_divisor = this->queued_clock_divisor = divisor;
+            else {
+                //Serial.printf("%s#set_divisor queueing %i\n", this->get_label(), divisor);
                 this->queued_clock_divisor = divisor;
+            }
 
         }
         virtual uint32_t get_divisor() {
@@ -171,9 +174,11 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         int32_t real_ticks = 0;
         bool waiting = true;
         virtual void send_clock(unsigned long ticks) override {
-            if (is_bpm_on_beat(ticks) && this->queued_clock_divisor!=clock_divisor) {
-                // if we've been waiting for a beat to tick before changing divisor, do so now
+            //if (this->debug) Serial.print("/");
+            // if we've been waiting to be on-beat before changing divisor, do so now
+            if (is_bpm_on_beat(ticks) && this->queued_clock_divisor!=this->clock_divisor) {
                 this->set_divisor(this->queued_clock_divisor);
+                this->clock_divisor = queued_clock_divisor;
             }
             //if (this->clock_delay_ticks==PPQN*4) this->debug = true; else this->debug = false;
 
@@ -184,7 +189,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             real_ticks = (int32_t)tick_of_period - clock_delay_ticks;
             //if (this->waiting && real_ticks<0) { //(real_ticks) < clock_delay_ticks) {
             if (this->waiting && ((int32_t)tick_of_period) < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
-                //if (this->debug) Serial.printf(F("DividedClockBehaviour with global ticks %i of, not sending because tick_of_period %i hasn't reached clock_delay_ticks of %i\n"), ticks, tick_of_period, clock_delay_ticks);
+                ////if (this->debug) 
+                //if (this->debug) Serial.printf(F("DividedClockBehaviour with global ticks %i, not sending because waiting %i && (tick_of_period %i < clock_delay_ticks of %i\n"), ticks, waiting, tick_of_period, clock_delay_ticks);
+                //Serial.printf("%s#sendClock() not sending due to tick %% clock_divisor test failed", this->get_label());
                 return;
             }
             if (waiting) {
@@ -210,8 +217,12 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
             }
 
-            if (/*ticks==0 || */ticks % clock_divisor == 0)
+            if (/*ticks==0 || */ticks % clock_divisor == 0) {
+                //if (this->debug) Serial.print("\\");
                 ClockedBehaviour::send_clock(ticks - clock_delay_ticks);
+            } else {
+                //if (this->debug) Serial.printf("%s#sendClock() not sending due to tick %% clock_divisor test failed", this->get_label());
+            }
         }
         
         // actually, we do want to respond to on_bar, because that's when we actually need to start the delay from!
@@ -240,9 +251,15 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
                 //this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
                 //this->sendNow();
-                this->started = false;
+                
                 //this->real_ticks = this->clock_delay_ticks * -1;
-                this->waiting = true;
+                if (this->get_delay_ticks()>0) {
+                    this->waiting = true;
+                    this->started = false;
+                } else {
+                    this->sendRealTime((uint8_t)(midi::Start));
+                    this->started = true;
+                }
                 //if (this->debug) Serial.printf(F("%s:\tsetting waiting!\n"), this->get_label());
             } else {
                 //if (this->debug) Serial.println(F("\tin DividedClockedBehaviour on_restart, no device!"));

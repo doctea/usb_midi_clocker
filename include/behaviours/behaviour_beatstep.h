@@ -21,6 +21,7 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 
 class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
+    
     public:
         #define NUM_PATTERNS 16
         bool auto_advance_pattern = false;   // todo: make configurable!
@@ -69,10 +70,10 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 return this->auto_advance_pattern;
             }
 
-            virtual void on_phrase(uint32_t phrase) override {
+            virtual void on_end_phrase(uint32_t phrase) override {
                 if (this->device==nullptr) return;
 
-                DividedClockedBehaviour::on_phrase(phrase);
+                DividedClockedBehaviour::on_end_phrase(phrase);
 
                 if (this->auto_advance_pattern) {
                     //on_restart(); //TODO: which of these is actually doing the work??
@@ -80,7 +81,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     uint8_t phrase_number = (uint8_t)(phrase % NUM_PATTERNS);
                     this->send_preset_change(phrase_number);
 
-                    on_restart(); //TODO: which of these is actually doing the work??
+                    this->on_restart(); //TODO: which of these is actually doing the work??
                     //Serial.printf("sending sysex to switch to phrase_number %i?\n", phrase_number);
                 }
             }
@@ -88,11 +89,11 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf(F("beatstep#send_preset_change switching to pattern %i\n"), phrase_number % NUM_PATTERNS);
+                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
                     // sending a 0 as the pattern seems to crash it out!
-                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)1+(phrase_number % NUM_PATTERNS), 0xF7
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
             }
