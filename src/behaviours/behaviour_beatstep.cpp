@@ -26,7 +26,7 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
         );
         DividedClockedBehaviour::make_menu_items();
         #ifdef ENABLE_BEATSTEP_SYSEX
-            ObjectToggleControl<DeviceBehaviour_Beatstep> beatstep_auto_advance = new ObjectToggleControl<DeviceBehaviour_Beatstep> (
+            ObjectToggleControl<DeviceBehaviour_Beatstep> *beatstep_auto_advance = new ObjectToggleControl<DeviceBehaviour_Beatstep> (
                 "Beatstep auto-advance",
                 this,
                 &DeviceBehaviour_Beatstep::set_auto_advance_pattern,

@@ -1,7 +1,7 @@
 //#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
-#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
+//#define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading
 //#define DEBUG_LOOPER          // debug LOOPER playback
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
@@ -80,7 +80,7 @@
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
-    //#define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
+    #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     #define ENABLE_BAMBLE
     //#defined ENABLE_BAMBLE_INPUT    // for collecting input from bambleweeny
     #define ENABLE_MPK49

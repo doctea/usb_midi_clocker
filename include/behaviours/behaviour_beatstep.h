@@ -75,7 +75,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DividedClockedBehaviour::on_phrase(phrase);
 
                 if (this->auto_advance_pattern) {
-                    on_restart(); //TODO: which of these is actually doing the work??
+                    //on_restart(); //TODO: which of these is actually doing the work??
 
                     uint8_t phrase_number = (uint8_t)(phrase % NUM_PATTERNS);
                     this->send_preset_change(phrase_number);
@@ -88,10 +88,11 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf("beatstep#send_preset_change switching to pattern %i\n", phrase_number % NUM_PATTERNS);
+                Serial.printf(F("beatstep#send_preset_change switching to pattern %i\n"), phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
-                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)(phrase_number % NUM_PATTERNS), 0xF7
+                    // sending a 0 as the pattern seems to crash it out!
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)1+(phrase_number % NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
             }
