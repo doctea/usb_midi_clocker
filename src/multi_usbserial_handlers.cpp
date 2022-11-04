@@ -43,7 +43,7 @@
             return;
         }
         Serial.printf(F("USBSerial Port %d changed from %08X to %08X (now "), idx, usbserial_slots[idx].packed_id, packed_id);
-        Serial.printf("'%s' '%s')\n", usbserial_slots[idx].usbdevice->manufacturer(), usbserial_slots[idx].usbdevice->product());
+        Serial.printf(F("'%s' '%s')\n"), usbserial_slots[idx].usbdevice->manufacturer(), usbserial_slots[idx].usbdevice->product());
         usbserial_slots[idx].packed_id = packed_id;
 
         // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions

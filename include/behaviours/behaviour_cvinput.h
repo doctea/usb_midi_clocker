@@ -13,7 +13,7 @@ extern ParameterManager *parameter_manager;
 class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
     public:
         virtual const char *get_label() override {
-            return (char*)"CV Input";
+            return "Pitch CV Input";
         }
 
         BaseParameterInput *source_input = nullptr;
@@ -79,14 +79,14 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 } else if (is_valid_note(new_note) && new_note!=this->current_note) {
                     // note has changed from valid to a different valid
                     if (is_playing) {
-                        if (this->debug) Serial.printf("Stopping note\t%i because of new_note\t%i\n", this->current_note, new_note);
+                        if (this->debug) Serial.printf(F("Stopping note\t%i because of new_note\t%i\n"), this->current_note, new_note);
                         this->receive_note_off(1, this->current_note, 0);
                         this->last_note = current_note;
                         this->current_note = 255;
                         this->is_playing = false;
                     }
                     if (this->get_note_length()>0) {
-                        if (this->debug) Serial.printf("Starting note %i\tat\t%u\n", new_note, ticks);
+                        if (this->debug) Serial.printf(F("Starting note %i\tat\t%u\n"), new_note, ticks);
                         this->current_note = new_note;
                         this->note_started_at_tick = ticks;
                         this->receive_note_on(1, this->current_note, 127);
@@ -99,20 +99,20 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         // todo: do we like, want a 'save_global_add_lines' sorta thing for global configs?  or should this be project config?
         virtual void save_project_add_lines(LinkedList<String> *lines) override {               
             if (this->source_input!=nullptr)
-                lines->add(String("parameter_source=") + String(this->source_input->name));
+                lines->add(String(F("parameter_source=")) + String(this->source_input->name));
         }
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_project_add_lines(lines);
-            lines->add(String("note_length_ticks=") + String(this->get_note_length()));
+            lines->add(String(F("note_length_ticks=")) + String(this->get_note_length()));
         }
 
         // ask behaviour to process the key/value pair
         virtual bool load_parse_key_value(String key, String value) override {
-            if (key.equals("note_length_ticks")) {
+            if (key.equals(F("note_length_ticks"))) {
                 this->set_note_length((int) value.toInt());
                 return true;
-            } else if (key.equals("parameter_source")) {
+            } else if (key.equals(F("parameter_source"))) {
                 this->source_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;

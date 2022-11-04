@@ -279,9 +279,9 @@ class DeviceBehaviourManager {
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                lines->add("behaviour_start=" + String(device->get_label()));
+                lines->add(F("behaviour_start=") + String(device->get_label()));
                 device->save_project_add_lines(lines);
-                lines->add("behaviour_end=" + String(device->get_label()));
+                lines->add(F("behaviour_end=") + String(device->get_label()));
             }
         }
 
@@ -291,9 +291,9 @@ class DeviceBehaviourManager {
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                lines->add("behaviour_start=" + String(device->get_label()));
+                lines->add(F("behaviour_start=") + String(device->get_label()));
                 device->save_sequence_add_lines(lines);
-                lines->add("behaviour_end=" + String(device->get_label()));
+                lines->add(F("behaviour_end=") + String(device->get_label()));
             }
         }
 

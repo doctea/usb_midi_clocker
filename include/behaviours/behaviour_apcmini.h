@@ -25,10 +25,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
             
             // initialise the CCs that this device can translate into ParameterInputs
-            this->addParameterInput("Fade1", 48, 1);
-            this->addParameterInput("Fade2", 49, 1);
-            this->addParameterInput("Fade3", 50, 1);
-            this->addParameterInput("Fade4", 51, 1);
+            this->addParameterInput("Fade1", (byte)48, (byte)1);
+            this->addParameterInput("Fade2", (byte)49, (byte)1);
+            this->addParameterInput("Fade3", (byte)50, (byte)1);
+            this->addParameterInput("Fade4", (byte)51, (byte)1);
         }
 
         uint16_t vid = 0x09e8, pid = 0x0028;
@@ -198,20 +198,13 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 //save_sequence(project.selected_sequence_number, &project.current_state);
                 project.save_sequence(); //project.selected_sequence_number);
                 #ifdef ENABLE_SEQUENCER
-                } else if (!apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
-                    Serial.println(F("---- debug"));
-                    for (int i = 0 ; i < 8 ; i++) {
-                        if (usb_midi_slots[i].device!=nullptr)
-                            Serial.printf(F("usb_midi_device[%i] is %04X:%04X aka %s:%s\n"), i, usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct(), usb_midi_slots[i].device->manufacturer(), usb_midi_slots[i].device->product() );
-                    }
-                    Serial.println(F("---- debug"));
-                } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+            } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
                     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
-                    Serial.print(F("For inNumber "));
+                    /*Serial.print(F("For inNumber "));
                     Serial.print(inNumber);
                     Serial.print(F(" got row (ie clock) "));
                     Serial.print(row);
-                    Serial.print(F(" and column "));
+                    Serial.print(F(" and column "));*/
                     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
                     Serial.println(col);
                     sequencer_press(row, col, apcmini_shift_held);

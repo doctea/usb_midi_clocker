@@ -186,17 +186,17 @@ namespace storage {
     bool debug = false;
     if (line.charAt(0)==';') 
       return;  // skip comment lines
-    if (line.startsWith("id=")) {
-      output->id = (uint8_t) line.remove(0,String("id=").length()).toInt();
+    if (line.startsWith(F("id="))) {
+      output->id = (uint8_t) line.remove(0,String(F("id=")).length()).toInt();
       if (debug) Serial.printf(F("Read id %i\n"), output->id);
     } else if (line.startsWith(F("size_clocks="))) {
-      output->size_clocks = (uint8_t) line.remove(0,String("size_clocks=").length()).toInt();
+      output->size_clocks = (uint8_t) line.remove(0,String(F("size_clocks=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_clocks %i\n"), output->size_clocks);
     } else if (line.startsWith(F("size_sequences="))) {
-      output->size_sequences = (uint8_t) line.remove(0,String("size_sequences=").length()).toInt();
+      output->size_sequences = (uint8_t) line.remove(0,String(F("size_sequences=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_sequences %i\n"), output->size_sequences);
     } else if (line.startsWith(F("size_steps="))) {
-      output->size_steps = (uint8_t) line.remove(0,String("size_steps=").length()).toInt();
+      output->size_steps = (uint8_t) line.remove(0,String(F("size_steps=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_steps %i\n"), output->size_steps);
     } else if (project.isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
       if (clock_multiplier_index>NUM_CLOCKS) {
@@ -211,8 +211,8 @@ namespace storage {
         Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
         return;
       }
-      output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String("clock_delay=").length()).toInt();      
-      if (debug) Serial.printf("Read a clock_delay: %i\n", output->clock_delay[clock_delay_index]);
+      output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String(F("clock_delay=")).length()).toInt();      
+      if (debug) Serial.printf(F("Read a clock_delay: %i\n"), output->clock_delay[clock_delay_index]);
       clock_delay_index++;
     } else if (project.isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
       if (clock_delay_index>NUM_SEQUENCES) {
@@ -230,7 +230,7 @@ namespace storage {
         //Serial.printf("%i:%i, ", x, output->sequence_data[sequence_data_index][x]);
         if (debug) Serial.printf(F("%i"), output->sequence_data[sequence_data_index][x]);
       }
-      if (debug) Serial.println(F("]"));
+      if (debug) Serial.println(']');
       sequence_data_index++;
     } else if (project.isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
       //Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());

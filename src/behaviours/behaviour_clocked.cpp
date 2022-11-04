@@ -158,10 +158,10 @@
             menuitems->add(new NumberControl<bool>("Started?", &this->started, false, false, true, nullptr));
         }*/
 
-        menuitems->add(
+        /*menuitems->add(
             new NumberControl<uint32_t>
                 ("Queued divisor", &this->queued_clock_divisor, this->queued_clock_divisor, (uint32_t)0, (uint32_t)16, nullptr)
-        );
+        );*/
 
         //Serial.println(F("\tDividedClockedBehaviour calling ClockedBehaviour::make_menu_items()")); Serial.flush();        
         ClockedBehaviour::make_menu_items();

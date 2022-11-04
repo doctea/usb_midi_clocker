@@ -43,6 +43,10 @@ extern DisplayTranslator_Configured steensy;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
+            /*case 'A'            :
+                Serial.println(F("Toggling auto-advances"));
+                recall_options_toggle();
+                break;*/
             case 'r'            : 
                 Serial.println(F("Setting (r)estart_on_next_bar"));
                 restart_on_next_bar = true; 

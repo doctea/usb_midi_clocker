@@ -61,14 +61,14 @@ void decrease_clock_delay(byte clock_selected, byte amount) {
   current_state.clock_delay[clock_selected] -= amount; // wraps around to 255
   if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
     current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;  
-  Serial.print(F("Decreased selected clock delay to "));
+  //Serial.print(F("Decreased selected clock delay to "));
   Serial.println(get_clock_delay(clock_selected));
 }
 void increase_clock_delay(byte clock_selected, byte amount) {
   current_state.clock_delay[clock_selected] += amount;
   if (current_state.clock_delay[clock_selected]>7)
     current_state.clock_delay[clock_selected] = 0;
-  Serial.print(F("Increased selected clock delay to "));
+  //Serial.print(F("Increased selected clock delay to "));
   Serial.println(current_state.clock_delay[clock_selected]);
 }
 

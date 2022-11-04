@@ -10,11 +10,11 @@ DeviceBehaviour_DrumKit *behaviour_drumkit = new DeviceBehaviour_DrumKit(); //(&
 
 // callback
 void drumkit_note_on(byte pitch, byte velocity, byte channel) {
-    Serial.println("drumkit_note_on()");
+    Serial.println(F("drumkit_note_on()"));
     behaviour_drumkit->receive_note_on(pitch, velocity, channel);
 }
 // callback
 void drumkit_note_off(byte pitch, byte velocity, byte channel) {
-    Serial.println("drumkit_note_off()");
+    Serial.println(F("drumkit_note_off()"));
     behaviour_drumkit->receive_note_off(pitch, velocity, channel);
 }

@@ -10,11 +10,11 @@ DeviceBehaviour_LeStrum *behaviour_lestrum = new DeviceBehaviour_LeStrum(); //(&
 
 // callback
 void lestrum_note_on(byte pitch, byte velocity, byte channel) {
-    Serial.println("lestrum_note_on()");
+    Serial.println(F("lestrum_note_on()"));
     behaviour_lestrum->receive_note_on(pitch, velocity, channel);
 }
 // callback
 void lestrum_note_off(byte pitch, byte velocity, byte channel) {
-    Serial.println("lestrum_note_off()");
+    Serial.println(F("lestrum_note_off()"));
     behaviour_lestrum->receive_note_off(pitch, velocity, channel);
 }

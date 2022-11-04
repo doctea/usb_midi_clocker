@@ -11,7 +11,7 @@
 
   void debug_free_ram() {
     //Serial.println(F("debug_free_ram() not implemented on Teensy"));
-    Serial.printf("debug_free_ram: %i\n", freeRam());
+    Serial.printf(F("debug_free_ram: %i\n"), freeRam());
   }
 
   FLASHMEM void reset_teensy() {
@@ -19,9 +19,9 @@
       #define CPU_RESTART_ADDR (uint32_t *)0xE000ED0C
       #define CPU_RESTART_VAL 0x5FA0004
       #define CPU_RESTART (*CPU_RESTART_ADDR = CPU_RESTART_VAL);
-      Serial.println("Restarting!\n"); Serial.flush();
+      Serial.println(F("Restarting!\n")); Serial.flush();
       CPU_RESTART;
-      Serial.println("Restarted?!"); Serial.flush();
+      //Serial.println(F("Restarted?!"); Serial.flush();
   }
 
 #else

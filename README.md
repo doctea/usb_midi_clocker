@@ -161,7 +161,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### TODO/Future 
 
-- Panic / all notes off action
+- ~~Panic / all notes off action~~
 - ~~Bass drone mode~~
  - ~~toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..~~
  - stutter/machinegun mode? (eg play 32nd stabs instead of drone)
