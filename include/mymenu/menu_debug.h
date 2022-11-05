@@ -4,7 +4,9 @@
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
 
+#ifndef GDB_DEBUG
 FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
+#endif
 void setup_debug_menu() {
     #ifdef ENABLE_USB
         USBDevicesPanel *usbdevices_panel = new USBDevicesPanel();

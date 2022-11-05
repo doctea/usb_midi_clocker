@@ -18,7 +18,53 @@ void bamble_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue)
 void bamble_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
+#define CC_DEMO_MODE 19
+#define CC_FILLS_MODE 28
+#define CC_EUCLIDIAN_DENSITY 114
+#define CC_EUCLIDIAN_SET_MINIMUM_PATTERN 25	
+#define CC_EUCLIDIAN_SET_MAXIMUM_PATTERN 26	
+
+#include "midi/Drums.h"
+
+/// these for mappable parameters
+#include "parameters/MIDICCParameter.h"
+/*
+class BamblePlaybackModeParameter : public MIDICCParameter {
+    public:
+        BamblePlaybackModeParameter (char *label, DeviceBehaviourUltimateBase *target) 
+            : MIDICCParameter(label, target, (byte)CC_DEMO_MODE, (byte)10) {
+        }
+
+        virtual const char* parseFormattedDataType(byte value) {
+            switch (value) {
+                case 0: return "None";
+                case 1: return "Eucl";
+                case 2: return "Muta";
+                case 3: return "Demo";
+                case 4: return "Rand";
+                default:
+                    return "????";
+            }
+        };
+};
+
+class BambleFillsParameter : public MIDICCParameter {
+    public:
+        BambleFillsParameter(char *label, DeviceBehaviourUltimateBase *target) 
+            : MIDICCParameter(label, target, (byte)CC_FILLS_MODE, (byte)10) {
+        }
+
+        virtual const char* parseFormattedDataType(byte value) {
+            switch (value) {
+                case 0: return "Off";
+                case 1 ... 127: return "On";
+                default:
+                    return "???";
+            }
+        };
+};*/
+
+class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
     public:
         using DeviceBehaviourUltimateBase::receive_control_change;
         using DeviceBehaviourUltimateBase::receive_note_on;
@@ -35,13 +81,59 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
             return (char*)"Bambleweeny57";
         }
 
+        int8_t demo_mode = 0;
+        bool fills_mode = 0;
+        float density = 64;
+        byte minimum_pattern = 0;
+        byte maximum_pattern = 16;
+
+        int8_t getDemoMode() {
+            return demo_mode;
+        }
+        void setDemoMode(int8_t mode) {
+            this->demo_mode = mode;
+            this->sendControlChange(CC_DEMO_MODE, mode, 10);
+        }
+        bool getFillsMode() {
+            return fills_mode;
+        }
+        void setFillsMode(bool mode) {
+            this->fills_mode = mode;
+            this->sendControlChange(CC_FILLS_MODE, mode, 10);
+        }
+        void setDensity(float density) {
+            Serial.printf("setDensity %3.3f\n", density);
+            this->density = density;
+            this->sendControlChange(CC_EUCLIDIAN_DENSITY, map(density, 0.0, 1.0, 0, 127), 10);
+        }
+        float getDensity() {
+            return this->density;
+        }
+        void setMinimumPattern(int8_t v) {
+            this->minimum_pattern = v;
+            this->sendControlChange(CC_EUCLIDIAN_SET_MINIMUM_PATTERN, v, 10);
+        }
+        int8_t getMinimumPattern() {
+            return this->minimum_pattern;
+        }
+        void setMaximumPattern(int8_t v) {
+            this->maximum_pattern = v;
+            this->sendControlChange(CC_EUCLIDIAN_SET_MAXIMUM_PATTERN, v, 10);
+        }
+        int8_t getMaximumPattern() {
+            return this->maximum_pattern;
+        }
+
+
         FLASHMEM 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             if (this->device==nullptr) return;
-            this->device->setHandleControlChange(bamble_control_change);
-            this->device->setHandleNoteOn(bamble_note_on);
-            this->device->setHandleNoteOff(bamble_note_off);
+            #ifdef ENABLE_BAMBLE_INPUT
+                this->device->setHandleControlChange(bamble_control_change);
+                this->device->setHandleNoteOn(bamble_note_on);
+                this->device->setHandleNoteOff(bamble_note_off);
+            #endif
         };
 
         source_id_t source_ids[5] = { -1, -1, -1, -1, -1 };
@@ -54,6 +146,26 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
             midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 4", this, 4));
             midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",this, 10));
         }
+
+        /// these for mappable parameters
+        /*FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+            Serial.printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
+            static bool already_initialised = false;
+            if (already_initialised)
+                return this->parameters;
+
+            Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
+            DeviceBehaviourUSBBase::initialise_parameters();
+            Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
+            DividedClockedBehaviour::initialise_parameters();
+
+            //parameters->add(new BamblePlaybackModeParameter((char*)"Playback mode", this));
+            //parameters->add(new BambleFillsParameter(       (char*)"Fills",         this));
+            //parameters->add(new MIDICCParameter((char*)"Density", this, 114, 10));
+            //parameters->add(new MIDICCParameter((char*)"Density", this, 114, 10));
+
+            return parameters;
+        }*/
 
         #ifdef ENABLE_BAMBLE_INPUT
             virtual void self_register_midi_matrix_sources(MIDIMatrixManager *midi_matrix_manager) {
@@ -86,6 +198,17 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
                 DeviceBehaviourUSBBase::sendControlChange(21, 127, 10);
             #endif
 
+            // disable playing from own BPM (ie require clock to play)
+            DeviceBehaviourUSBBase::sendControlChange(16, 0, 10);
+            //this->setDemoMode(1);       // initialise in playing/non-mutating state
+            this->setDemoMode(2);       // initialise in playing+mutating state
+            this->setFillsMode(true);   // initialise in fills mode
+            this->setDensity(0.5);      // initialise density to 50%
+            this->setMinimumPattern(TRIGGER_KICK);
+            this->setMaximumPattern(TRIGGER_RIDE_CYM);
+
+            DeviceBehaviourUSBBase::sendControlChange(7, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
+
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2
             DeviceBehaviourUSBBase::sendControlChange(78, 0, 10);
             DeviceBehaviourUSBBase::sendControlChange(79, 0, 10);
@@ -104,6 +227,33 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, virtual pu
             DeviceBehaviourUSBBase::sendControlChange(99, 127, 10);
             DeviceBehaviourUSBBase::sendControlChange(99, 127, 11);
         }
+
+        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+            DividedClockedBehaviour::save_project_add_lines(lines);
+            lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
+            lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
+            lines->add(String(F("density="))        + String(this->getDensity()));
+        }
+
+        virtual bool load_parse_key_value(String key, String value) override {
+            if (key.equals(F("euclidian_mode"))) {
+                this->setDemoMode((byte)    value.toInt());
+                return true;
+            } else if (key.equals(F("fills_mode"))) {
+                this->setFillsMode((bool)   value.toInt());
+                return true;
+            } else if (key.equals(F("density"))) {
+                this->setDensity((float)    value.toFloat());
+            } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
+                return true;
+            }
+            return false;
+        }
+
+        #ifdef ENABLE_SCREEN
+            // FLASHMEM // virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
+            LinkedList<MenuItem*> *make_menu_items();
+        #endif
 };
 
 extern DeviceBehaviour_Bamble *behaviour_bamble;

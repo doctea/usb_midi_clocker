@@ -28,12 +28,12 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 this->maximumDataValue = maximum_value;
         }
 
-        virtual const char* getFormattedValue() override {
+        /*virtual const char* getFormattedValue() override {
             static char fmt[MENU_C_MAX] = "              ";
             sprintf(fmt, "%i", this->getCurrentDataValue());
             //Serial.printf("getFormattedValue: '%s'\n", fmt);
             return fmt;
-        };
+        };*/
 
         virtual void setTargetValueFromData(byte value, bool force = false) override {
             static byte last_value = -1;

@@ -20,6 +20,7 @@
 //void craftsynth_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 //void craftsynth_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
+// customised parameter control widget for the Spread parameter that shows the equivalent value
 class CraftSynthSpreadParameter : public MIDICCParameter {
     public:
         CraftSynthSpreadParameter (char *label, DeviceBehaviourUltimateBase *target) 
@@ -32,27 +33,26 @@ class CraftSynthSpreadParameter : public MIDICCParameter {
                 case 0 ... 63:
                     sprintf(fmt, "%-3i", value); break;
                 case 64 ... 70:
-                    strcpy(fmt, "Maj"); break;
+                    return "Maj";
                 case 71 ... 77:
-                    strcpy(fmt, "Min"); break;
+                    return "Min";
                 case 78 ... 84:
-                    strcpy(fmt, "M6"); break;
+                    return "M6";
                 case 85 ... 91:
-                    strcpy(fmt, "Su4"); break;
+                    return "Su4";
                 case 92 ... 98:
-                    strcpy(fmt, "5th"); break;
+                    return "5th";
                 case 99 ... 105:
-                    strcpy(fmt, "5tO"); break;
+                    return "5tO";
                 case 106 ... 112:
-                    strcpy(fmt, "O++"); break;
+                    return "O++";
                 case 113 ... 119:
-                    strcpy(fmt, "O+-"); break;
+                    return "O+-";
                 case 120 ... 127:
-                    strcpy(fmt, "O--"); break;
-                default:
-                    strcpy(fmt, "??"); break;
+                    return "O--";
             }
             return fmt;
+            //return "??";
         };
 };
 

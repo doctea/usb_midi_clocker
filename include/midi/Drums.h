@@ -92,7 +92,7 @@
 #endif*/
 
 // defines to help with which trigger number/euclidian track number maps to which
-/*#define TRIGGER_KICK        0
+#define TRIGGER_KICK        0
 #define TRIGGER_SIDESTICK   1
 #define TRIGGER_CLAP        2
 #define TRIGGER_SNARE       3
@@ -113,7 +113,7 @@
 #define TRIGGER_PITCH_1_CH1 18
 #define TRIGGER_PITCH_2_CH2 19
 
-
+/*
 // the CC values that the midimuso translates into the CV outputs
 #define MUSO_CC_CV_1  1
 #define MUSO_CC_CV_2  7
