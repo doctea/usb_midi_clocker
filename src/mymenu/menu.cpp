@@ -64,6 +64,10 @@ ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("C
 ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_project_settings);
 ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
 
+// make these global so that we can toggle it from input_keyboard
+ObjectMultiToggleControl *project_multi_recall_options = nullptr;
+ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
+
 #ifdef ENABLE_SEQUENCER
     SequencerStatus sequencer_status =      SequencerStatus("Pattern");
 #endif
@@ -116,7 +120,7 @@ FLASHMEM void setup_menu() {
     menu->add(&project_selector);   // save project selector button
 
     // project loading options (whether to load or hold matrix settings, clock, sequence, behaviour options)
-    ObjectMultiToggleControl *project_multi_load_options = new ObjectMultiToggleControl("Recall options", true);
+    project_multi_recall_options = new ObjectMultiToggleControl("Recall options", true);
     MultiToggleItemClass<Project> *load_matrix = new MultiToggleItemClass<Project> (
         (char*)"MIDI Mappings",
         &project,
@@ -145,19 +149,19 @@ FLASHMEM void setup_menu() {
         &Project::setLoadBehaviourOptions,
         &Project::isLoadBehaviourOptions
     };
-    project_multi_load_options->addItem(load_matrix);
+    project_multi_recall_options->addItem(load_matrix);
     #ifdef ENABLE_CLOCKS
-        project_multi_load_options->addItem(load_clock);
+        project_multi_recall_options->addItem(load_clock);
     #endif
     #ifdef ENABLE_SEQUENCER
-        project_multi_load_options->addItem(load_sequence);
+        project_multi_recall_options->addItem(load_sequence);
     #endif
-    project_multi_load_options->addItem(load_behaviour_settings);
+    project_multi_recall_options->addItem(load_behaviour_settings);
     //menu->add(&project_load_matrix_mappings);
-    menu->add(project_multi_load_options);
+    menu->add(project_multi_recall_options);
 
     // options for whether to auto-advance looper/sequencer/beatstep
-    ObjectMultiToggleControl *project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
+    project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
     #ifdef ENABLE_SEQUENCER
         MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
             (char*)"Sequence",

@@ -11,6 +11,9 @@ extern DisplayTranslator_Configured steensy;
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+void toggle_autoadvance(bool on = false);
+void toggle_recall(bool on = false);
+
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
@@ -19,6 +22,13 @@ extern DisplayTranslator_Configured steensy;
     #define KEYD_BACKSPACE 127
     #define KEYD_ENTER     10
     #define KEYD_HASH      92
+    #define MOD_LCTRL      1
+    #define MOD_LSHIFT     2
+    #define MOD_LALT       4
+    #define MOD_WINDOWS    8
+    #define MOD_RCTRL      16
+    #define MOD_RSHIFT     32
+    #define MOD_RALT       64
 
     extern USBHost Usb;
 
@@ -32,7 +42,7 @@ extern DisplayTranslator_Configured steensy;
                     menu->button_back();
                 break;*/
             case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                if (modifiers==(1+4) || modifiers==(64+16))  // ctrl + alt
+                if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT))
                     reset_teensy();  
                 break; /* ctrl+alt+delete to soft reboot */
             case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
@@ -43,10 +53,14 @@ extern DisplayTranslator_Configured steensy;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
-            /*case 'A'            :
-                Serial.println(F("Toggling auto-advances"));
-                recall_options_toggle();
-                break;*/
+            case 'A': case 'a':
+                Serial.println(F("Toggling (a)uto-advances"));
+                toggle_autoadvance(key=='A');
+                break;
+            case 'Q': case 'q':
+                Serial.println(F("Toggling Re(q)all"));
+                toggle_recall(key=='Q');
+                break;
             case 'r'            : 
                 Serial.println(F("Setting (r)estart_on_next_bar"));
                 restart_on_next_bar = true; 
