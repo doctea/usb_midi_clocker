@@ -177,6 +177,14 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Enable switching between multiple projects~~ done
 - ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
+  - Done some of this!
+  - ~~Playback mode~~
+  - ~~Fills on/off~~
+  - ~~Density~~
+  - ~~Low mutate/High mutate~~
+  - ~~Pattern enables~~
+  - Select/lock seed (think need to fix some stuff in the original project to achieve this)
+  - Control over the envelopes
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - eg Euclidian sequencer
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
@@ -210,8 +218,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Partially done, can be improved further
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
-  - ~~Done for Subclocker and saves with Project settings~~ -- maybe it should save with pattern instead though - could then ?
-  - add it for devices it might be useful for, eg CraftSynth
+  - ~~Done for Subclocker and saves with Project settings~~ ~~-- maybe it should save with pattern instead though - could then ? ~~
+  - ~~add it for devices it might be useful for, eg CraftSynth~~
   - tricks like 'half-time beatstep for last bar of phrase'
 - ~~Save and recall MIDI device+channel routings~~
   - ~~Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded~~
@@ -224,23 +232,23 @@ Both are encouraged, I would love to have this be useful to others and to accept
     - this is mostly working now..!
       - some performance issues in reading the data, though
         - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart, or even usbserial now?
+        - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
     - some todos remain:
-      - reassign modulation sources
-      - load/save modulation settings
-         - working; but kinda impractical; how do we want to handle this?
+      - ~~reassign modulation sources~~
+      - ~~load/save modulation settings~~
       - lock/hold modulation settings
       - auto-advance modulation settings?
       - modulation sources other than voltages
-    - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
-  - Record and playback CCs as well as MIDI
-  - tempo-synced LFOs etc...
+        - ~~MIDI CCs~~ done for first 4 faders
+      - tempo-synced LFOs etc...
+      - Record and playback CCs as well as MIDI
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
 - Looper improvements
   - Improve quantizer (take note length into consideration)
   - Optimise memory usage with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
-- Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations
+- ~~Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations~~
   - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
   - TODO: and for Arduino Unos without needing to use USB Midi Klik 
     - todo: see whether we need to use device unique id rather than pid+vid to ensure correct detection of mltiple devices
@@ -258,7 +266,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - maybe even also add VGA/HDMI output so that we're not tied to a tiny little screen..?
 - Figure out how to better support MIDI features like:-
   - NPRNs
-  - Pitch bend
+  - ~~Pitch bend~~ kinda support this now -- it is passed through at least, and allowed to be Proxied to add modulation on top of it
+    - might be good to be able to enable/disable it for certain mappings tho?
   - Aftertouch
 - Allow Behaviours to register CCs they respond to and can generate
   - CraftSynth has Parameters, can assign modulation to them
@@ -269,7 +278,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - expose internal settings (like bpm, clock delays...?) as Parameters, so that can have modulation mapped to them too...
 - Reassignable ParameterInputs, that can be set to take their values from an incoming MIDI stream
   - Register them with the midi_matrix_mapper_manager so that when it receives a CC value change, it updates the ParameterInput current_value
-- Add 'all notes off' on 'extra button' press in midi_matrix_mapper menu
+- ~~Add 'all notes off' on 'extra button' press in midi_matrix_mapper menu~~
+  - done -- added a 'PANIC' menu option and keyboard shortcut (p)
   
 ## Explanation/demo (very much out of date!)
 

@@ -58,12 +58,11 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::getDemoMode
     );
     euclidian_mode_control->go_back_on_select = true;
-    
-    euclidian_mode_control->add_available_value(0, "None");
+    euclidian_mode_control->add_available_value(0, "Standby");
     euclidian_mode_control->add_available_value(1, "Euclidian");
     euclidian_mode_control->add_available_value(2, "Mutate");
-    euclidian_mode_control->add_available_value(3, "Long");
-    euclidian_mode_control->add_available_value(4, "??");
+    euclidian_mode_control->add_available_value(3, "Experimental");
+    euclidian_mode_control->add_available_value(4, "ArtsEtc");
     euclidian_mode_control->add_available_value(5, "Random");
 
     ObjectToggleControl<DeviceBehaviour_Bamble> *fills_control = new ObjectToggleControl<DeviceBehaviour_Bamble>(
