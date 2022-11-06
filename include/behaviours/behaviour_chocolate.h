@@ -27,22 +27,22 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         uint16_t vid = 0x4353, pid = 0x4B4D;
         //uint16_t vid = 0x1c75, pid = 0x0288;
 
-        #define NUM_TRACK_NOTES 4
+        /*#define NUM_TRACK_NOTES 4
         signed long note_pressed_at[NUM_TRACK_NOTES];
         signed long note_released_at[NUM_TRACK_NOTES];
-        bool already_processed[NUM_TRACK_NOTES];
+        bool already_processed[NUM_TRACK_NOTES];*/
 
         virtual const char *get_label() override {
-            return (char*)"Chocolate";
+            return (const char*)"Chocolate";
         }
         virtual bool has_input() { return true; }
 
         DeviceBehaviour_Chocolate () {
-            for (int i = 0 ; i < NUM_TRACK_NOTES ; i++) {
+            /*for (int i = 0 ; i < NUM_TRACK_NOTES ; i++) {
                 note_pressed_at[i] = -1;
                 note_released_at[i] = -1;
                 already_processed[i] = false;
-            }
+            }*/
         };
 
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
@@ -59,13 +59,13 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
             //Serial.printf("chocolate got noteOn chan %i, note %i, velocity %i\n", channel, note, velocity); Serial.flush();
             // TODO: control looper(s) from here
             // check other notes to see if they are held; if so then trigger extended action
-            if (note>=NUM_TRACK_NOTES)
+            /*if (note>=NUM_TRACK_NOTES)
                 return;
 
             note_pressed_at[note] = millis();
             note_released_at[note] = -1;
 
-            already_processed[note] = false;
+            already_processed[note] = false;*/
 
             #ifdef ENABLE_LOOPER
                 if (note==CHOC_NOTE_TOGGLEPLAY) {
@@ -91,7 +91,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
         virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
             // TODO: control looper(s) from here
-            if (note>=NUM_TRACK_NOTES) 
+/*            if (note>=NUM_TRACK_NOTES) 
                 return;
 
             unsigned long now = millis();
@@ -99,7 +99,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
             note_released_at[note] = now;
             note_pressed_at[note] = -1;
 
-            already_processed[note] = false;
+            already_processed[note] = false;*/
 
             #ifdef ENABLE_LOOPER
                 if (note==CHOC_NOTE_RECORD_MOM) {
@@ -120,12 +120,12 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
             //Serial.printf("chocolate got noteOff chan %i, note %i, velocity %i\n", channel, note, velocity); Serial.flush();
         }
 
-        #define DOUBLE_BOUNCE_TIME 80
+        /*#define DOUBLE_BOUNCE_TIME 80
         bool together(long *type, int note1, int note2) {
             return type[note1]>=0 && type[note2]>=0 && abs(type[note1] - type[note2]) < DOUBLE_BOUNCE_TIME;
         }
 
-        bool e_held = false, f_held = false;
+        bool e_held = false, f_held = false;*/
 
         /*void loop(uint32_t ticks) override {
             

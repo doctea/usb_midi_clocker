@@ -23,7 +23,6 @@
 class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
     public:
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
-            
             // initialise the CCs that this device can translate into ParameterInputs
             this->addParameterInput("Fade1", (byte)48, (byte)1);
             this->addParameterInput("Fade2", (byte)49, (byte)1);
@@ -59,6 +58,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             this->device->setHandleNoteOff(apcmini_note_off);
         };
 
+        FLASHMEM
         virtual void init() override {
             DeviceBehaviourUSBBase::init();
             apcdisplay_initialise_last_sent();

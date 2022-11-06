@@ -13,6 +13,7 @@
 
     extern ParameterManager *parameter_manager;
 
+    FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial.flush();
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();

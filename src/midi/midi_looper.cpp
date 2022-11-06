@@ -48,6 +48,8 @@ void MIDITrack::stop_all_notes() {
 
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
+
+    FLASHMEM
     LinkedList<MenuItem*> *MIDITrack::make_menu_items() {
 
         LinkedList<MenuItem*> *menuitems = new LinkedList<MenuItem*>();

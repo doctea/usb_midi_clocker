@@ -11,7 +11,7 @@
 class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public ClockedBehaviour {
     public:
         virtual const char *get_label() override {
-            return (char*)"BitBox";
+            return (const char*)"BitBox";
         }
 };
 

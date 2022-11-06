@@ -14,9 +14,11 @@
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
 
-void bamble_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
-void bamble_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
-void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+#ifdef ENABLE_BAMBLE_INPUT
+    void bamble_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+    void bamble_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+    void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+#endif
 
 #define CC_DEMO_MODE 19
 #define CC_FILLS_MODE 28
@@ -78,7 +80,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
         virtual const char *get_label() override {
-            return (char*)"Bambleweeny57";
+            return (const char*)"Bambleweeny57";
         }
 
         int8_t demo_mode = 0;
@@ -124,8 +126,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             return this->maximum_pattern;
         }
 
-
-        FLASHMEM 
+        //FLASHMEM 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
             if (this->device==nullptr) return;
@@ -137,6 +138,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         };
 
         source_id_t source_ids[5] = { -1, -1, -1, -1, -1 };
+        //FLASHMEM
         virtual void self_register_midi_matrix_targets(MIDIMatrixManager *midi_matrix_manager) {
             // register multiple inputs / outputs
 
@@ -189,6 +191,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             }
         #endif
 
+        //FLASHMEM
         virtual void init() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
             this->started = false;
@@ -252,6 +255,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         #ifdef ENABLE_SCREEN
             // FLASHMEM // virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
+            FLASHMEM
             LinkedList<MenuItem*> *make_menu_items();
         #endif
 };
