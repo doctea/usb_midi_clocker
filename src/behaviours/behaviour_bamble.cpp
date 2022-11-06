@@ -36,8 +36,9 @@ class PatternToggle : public MultiToggleItemBase {
             return this->target_pattern->current_state;
         }
         virtual void do_setter(bool state) override {
-            this->target_pattern->current_state = state;
-            this->target_object->sendControlChange(this->target_pattern->cc_number, state ? 127:0, 10);
+            target_object->setPatternEnabled(this->target_pattern->cc_number - 32, state);
+            //this->target_pattern->current_state = state;
+            //this->target_object->sendControlChange(this->target_pattern->cc_number, state ? 127:0, 10);
         }
 };
 
@@ -47,7 +48,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial.flush();
     DeviceBehaviourUltimateBase::make_menu_items();
 
-    //String bar_label = String(this->get_label()) + String(F(" Clock"));
+    // Euclidian settings bar /////////////////////////////////////////////////
     SubMenuItemBar *bar = new SubMenuItemBar("Euclidian settings");
 
     ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t> *euclidian_mode_control = new ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t>(
@@ -83,7 +84,12 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     );
     euclidian_density_control->go_back_on_select = true;
 
-    // mutate pattern range 
+    bar->add(euclidian_mode_control);
+    bar->add(fills_control);
+    bar->add(euclidian_density_control);
+
+
+    // mutate pattern range bar ////////////////////////////////////////////////////////////////
     SubMenuItemBar *mutate_range = new SubMenuItemBar("Mutate pattern range");
 
     ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t> *minimum_pattern = new ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t>(
@@ -92,7 +98,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setMinimumPattern,
         &DeviceBehaviour_Bamble::getMinimumPattern
     );
-    for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    for (uint8_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         minimum_pattern->add_available_value(i, patterns[i].label);
     }
     minimum_pattern->go_back_on_select = true;
@@ -104,21 +110,21 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setMaximumPattern,
         &DeviceBehaviour_Bamble::getMaximumPattern
     );
-    for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    for (uint8_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         maximum_pattern->add_available_value(i, patterns[i].label);
     }
     maximum_pattern->go_back_on_select = true;
     mutate_range->add(maximum_pattern);
 
+
+    // select patterns on/off ////////////////////////////////////////////////////////////////
     ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled patterns", true);
-    for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    for (uint8_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         pattern_selector->addItem(new PatternToggle(this, &patterns[i]));
     }
 
-    bar->add(euclidian_mode_control);
-    bar->add(fills_control);
-    bar->add(euclidian_density_control);
 
+    //// add all to final menu 
     menuitems->add(bar);
     menuitems->add(mutate_range);
     menuitems->add(pattern_selector);
@@ -126,7 +132,6 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     DividedClockedBehaviour::make_menu_items();
 
     return menuitems;
-
 }
 
 #endif

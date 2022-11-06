@@ -114,7 +114,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->sendControlChange(CC_FILLS_MODE, mode, 10);
         }
         void setDensity(float density) {
-            Serial.printf("setDensity %3.3f\n", density);
+            //Serial.printf("setDensity %3.3f\n", density);
             this->density = density;
             this->sendControlChange(CC_EUCLIDIAN_DENSITY, map(density, 0.0, 1.0, 0, 127), 10);
         }
@@ -159,6 +159,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             { 50, "Pitch1Ch1" },
             { 51, "Pitch2Ch2" }*/
         };
+
+        void setPatternEnabled(int number, bool state) {
+            this->patterns[number].current_state = state;
+            this->sendControlChange(patterns[number].cc_number, state ? 127:0, 10);
+        }
 
         //FLASHMEM 
         virtual void setup_callbacks() override {
@@ -270,6 +275,13 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
             lines->add(String(F("density="))        + String(this->getDensity()));
+            const uint8_t size = sizeof(this->patterns)/sizeof(bamble_pattern);
+            for (uint8_t i = 0 ; i < size ; i++) {
+                lines->add(
+                    String(F("pattern_enable_")) + String(i) + String('=') + 
+                    String(this->patterns[i].current_state?F("enabled"):F("disabled"))
+                );
+            }
         }
 
         virtual bool load_parse_key_value(String key, String value) override {
@@ -281,6 +293,9 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                 return true;
             } else if (key.equals(F("density"))) {
                 this->setDensity((float)    value.toFloat());
+            } else if (key.startsWith(F("pattern_enable_"))) {
+                int number = key.replace(F("pattern_enable_"),"").toInt();
+                this->setPatternEnabled(number, value.equals(F("enabled")));
             } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             }
