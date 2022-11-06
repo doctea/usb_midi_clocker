@@ -93,7 +93,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::getMinimumPattern
     );
     for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
-        minimum_pattern->add_available_value(patterns[i].cc_number, patterns[i].label);
+        minimum_pattern->add_available_value(i, patterns[i].label);
     }
     minimum_pattern->go_back_on_select = true;
     mutate_range->add(minimum_pattern);
@@ -105,7 +105,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::getMaximumPattern
     );
     for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
-        maximum_pattern->add_available_value(patterns[i].cc_number, patterns[i].label);
+        maximum_pattern->add_available_value(i, patterns[i].label);
     }
     maximum_pattern->go_back_on_select = true;
     mutate_range->add(maximum_pattern);

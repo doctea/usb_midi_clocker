@@ -136,7 +136,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             return this->maximum_pattern;
         }
 
-        bamble_pattern patterns[20] = {
+        bamble_pattern patterns[16] = {
             //CC, label
             { 32, "Kick" },
             { 33, "Sidestick" },
@@ -154,10 +154,10 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             { 45, "Vibra" },
             { 46, "Ride Bell" },
             { 47, "Ride Cym" },
-            { 48, "BassCh4" },
+            /*{ 48, "BassCh4" },
             { 49, "BitsCh3" },
             { 50, "Pitch1Ch1" },
-            { 51, "Pitch2Ch2" }
+            { 51, "Pitch2Ch2" }*/
         };
 
         //FLASHMEM 
