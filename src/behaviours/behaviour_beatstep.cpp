@@ -25,6 +25,8 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
             new HarmonyStatus("Beatstep harmony",   &this->last_note,          &this->current_note)
         );
         DividedClockedBehaviour::make_menu_items();
+        /* 
+        // this is added to the multi-select control, so we don't need it here too
         #ifdef ENABLE_BEATSTEP_SYSEX
             ObjectToggleControl<DeviceBehaviour_Beatstep> *beatstep_auto_advance = new ObjectToggleControl<DeviceBehaviour_Beatstep> (
                 "Beatstep auto-advance",
@@ -34,7 +36,7 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
                 nullptr
             );
             this->menuitems->add(beatstep_auto_advance);
-        #endif
+        #endif*/
         return this->menuitems;
     }
 #endif
