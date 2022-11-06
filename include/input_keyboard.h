@@ -118,7 +118,10 @@ void toggle_recall(bool on = false);
         }
     }
 
-    FLASHMEM void setup_typing_keyboard() {
+    #ifndef GDB_DEBUG
+    FLASHMEM 
+    #endif
+    void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
     }
 #endif

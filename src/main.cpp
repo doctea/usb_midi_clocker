@@ -75,7 +75,10 @@ void do_tick(uint32_t ticks);
   int count = 0;
 #endif
 
-FLASHMEM void setup() {
+#ifndef GDB_DEBUG
+FLASHMEM 
+#endif
+void setup() {
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif

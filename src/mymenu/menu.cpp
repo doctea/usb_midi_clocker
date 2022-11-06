@@ -97,7 +97,10 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 //DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
 DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
 
-FLASHMEM void setup_menu() {
+#ifndef GDB_DEBUG
+FLASHMEM 
+#endif
+void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
     tft = &steensy; //DisplayTranslator_STeensy();
     //delay(50);
