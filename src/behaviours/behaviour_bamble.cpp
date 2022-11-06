@@ -17,26 +17,29 @@ DeviceBehaviour_Bamble *behaviour_bamble = new DeviceBehaviour_Bamble(); //nullp
 #endif
 
 #ifdef ENABLE_SCREEN
-
 #include "submenuitem_bar.h"
-#include "midi/Drums.h"
 
-const char *LABEL_KICK      = "Kick";
-const char *LABEL_SIDESTICK = "Sidestick";
-const char *LABEL_CLAP      = "Clap";
-const char *LABEL_SNARE     = "Snare";
-const char *LABEL_CRASH_1   = "Crash 1";
-const char *LABEL_TAMB      = "Tamb";
-const char *LABEL_HITOM     = "HiTom";
-const char *LABEL_LOTOM     = "LoTom";
-const char *LABEL_PEDALHAT  = "Pedal";
-const char *LABEL_OPENHAT   = "OHH";
-const char *LABEL_CLOSEDHAT = "CHH";
-const char *LABEL_CRASH_2   = "Crash 2";
-const char *LABEL_SPLASH    = "Splash";
-const char *LABEL_VIBRA     = "Vibra";
-const char *LABEL_RIDE_BELL = "Ride Bell";
-const char *LABEL_RIDE_CYM  = "Ride Cym";
+#include "menuitems_object_multitoggle.h"
+
+class PatternToggle : public MultiToggleItemBase {
+    bamble_pattern *target_pattern = nullptr;
+    DeviceBehaviour_Bamble *target_object = nullptr;
+
+    public:
+        PatternToggle(DeviceBehaviour_Bamble *target_object, bamble_pattern *pattern) 
+            : MultiToggleItemBase(pattern->label) {
+            this->target_object = target_object;
+            this->target_pattern = pattern;
+            this->label = pattern->label;
+        }
+        virtual bool do_getter() override {
+            return this->target_pattern->current_state;
+        }
+        virtual void do_setter(bool state) override {
+            this->target_pattern->current_state = state;
+            this->target_object->sendControlChange(this->target_pattern->cc_number, state ? 127:0, 10);
+        }
+};
 
 //FLASHMEM //virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
 //FLASHMEM
@@ -89,22 +92,9 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setMinimumPattern,
         &DeviceBehaviour_Bamble::getMinimumPattern
     );
-    minimum_pattern->add_available_value(TRIGGER_KICK,      LABEL_KICK);
-    minimum_pattern->add_available_value(TRIGGER_SIDESTICK, LABEL_SIDESTICK);
-    minimum_pattern->add_available_value(TRIGGER_CLAP,      LABEL_CLAP);
-    minimum_pattern->add_available_value(TRIGGER_SNARE,     LABEL_SNARE);
-    minimum_pattern->add_available_value(TRIGGER_CRASH_1,   LABEL_CRASH_1);
-    minimum_pattern->add_available_value(TRIGGER_TAMB,      LABEL_TAMB);
-    minimum_pattern->add_available_value(TRIGGER_HITOM,     LABEL_HITOM);
-    minimum_pattern->add_available_value(TRIGGER_LOTOM,     LABEL_LOTOM);
-    minimum_pattern->add_available_value(TRIGGER_PEDALHAT,  LABEL_PEDALHAT);
-    minimum_pattern->add_available_value(TRIGGER_OPENHAT,   LABEL_OPENHAT);
-    minimum_pattern->add_available_value(TRIGGER_CLOSEDHAT, LABEL_CLOSEDHAT);
-    minimum_pattern->add_available_value(TRIGGER_CRASH_2,   LABEL_CRASH_2);
-    minimum_pattern->add_available_value(TRIGGER_SPLASH,    LABEL_SPLASH);
-    minimum_pattern->add_available_value(TRIGGER_VIBRA,     LABEL_VIBRA);
-    minimum_pattern->add_available_value(TRIGGER_RIDE_BELL, LABEL_RIDE_BELL);
-    minimum_pattern->add_available_value(TRIGGER_RIDE_CYM,  LABEL_RIDE_CYM);
+    for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+        minimum_pattern->add_available_value(patterns[i].cc_number, patterns[i].label);
+    }
     minimum_pattern->go_back_on_select = true;
     mutate_range->add(minimum_pattern);
 
@@ -114,24 +104,16 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setMaximumPattern,
         &DeviceBehaviour_Bamble::getMaximumPattern
     );
-    maximum_pattern->add_available_value(TRIGGER_KICK,      LABEL_KICK);
-    maximum_pattern->add_available_value(TRIGGER_SIDESTICK, LABEL_SIDESTICK);
-    maximum_pattern->add_available_value(TRIGGER_CLAP,      LABEL_CLAP);
-    maximum_pattern->add_available_value(TRIGGER_SNARE,     LABEL_SNARE);
-    maximum_pattern->add_available_value(TRIGGER_CRASH_1,   LABEL_CRASH_1);
-    maximum_pattern->add_available_value(TRIGGER_TAMB,      LABEL_TAMB);
-    maximum_pattern->add_available_value(TRIGGER_HITOM,     LABEL_HITOM);
-    maximum_pattern->add_available_value(TRIGGER_LOTOM,     LABEL_LOTOM);
-    maximum_pattern->add_available_value(TRIGGER_PEDALHAT,  LABEL_PEDALHAT);
-    maximum_pattern->add_available_value(TRIGGER_OPENHAT,   LABEL_OPENHAT);
-    maximum_pattern->add_available_value(TRIGGER_CLOSEDHAT, LABEL_CLOSEDHAT);
-    maximum_pattern->add_available_value(TRIGGER_CRASH_2,   LABEL_CRASH_2);
-    maximum_pattern->add_available_value(TRIGGER_SPLASH,    LABEL_SPLASH);
-    maximum_pattern->add_available_value(TRIGGER_VIBRA,     LABEL_VIBRA);
-    maximum_pattern->add_available_value(TRIGGER_RIDE_BELL, LABEL_RIDE_BELL);
-    maximum_pattern->add_available_value(TRIGGER_RIDE_CYM,  LABEL_RIDE_CYM);
+    for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+        maximum_pattern->add_available_value(patterns[i].cc_number, patterns[i].label);
+    }
     maximum_pattern->go_back_on_select = true;
     mutate_range->add(maximum_pattern);
+
+    ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled patterns", true);
+    for (int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+        pattern_selector->addItem(new PatternToggle(this, &patterns[i]));
+    }
 
     bar->add(euclidian_mode_control);
     bar->add(fills_control);
@@ -139,6 +121,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
 
     menuitems->add(bar);
     menuitems->add(mutate_range);
+    menuitems->add(pattern_selector);
 
     DividedClockedBehaviour::make_menu_items();
 

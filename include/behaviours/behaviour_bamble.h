@@ -66,6 +66,14 @@ class BambleFillsParameter : public MIDICCParameter {
         };
 };*/
 
+#include "midi/Drums.h"
+
+struct bamble_pattern {
+    uint8_t cc_number;
+    const char *label;
+    bool    current_state = true;
+};
+
 class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
     public:
         using DeviceBehaviourUltimateBase::receive_control_change;
@@ -82,6 +90,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         virtual const char *get_label() override {
             return (const char*)"Bambleweeny57";
         }
+
+        /*** for tracking/setting Bambleweeny options */
 
         int8_t demo_mode = 0;
         bool fills_mode = 0;
@@ -125,6 +135,30 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         int8_t getMaximumPattern() {
             return this->maximum_pattern;
         }
+
+        bamble_pattern patterns[20] = {
+            //CC, label
+            { 32, "Kick" },
+            { 33, "Sidestick" },
+            { 34, "Clap" },
+            { 35, "Snare" },
+            { 36, "Crash 1" },
+            { 37, "Tamb" },
+            { 38, "HiTom" },
+            { 39, "LoTom" },
+            { 40, "Pedal" },
+            { 41, "OHH" },
+            { 42, "CHH" },
+            { 43, "Crash 2" },
+            { 44, "Splash" },
+            { 45, "Vibra" },
+            { 46, "Ride Bell" },
+            { 47, "Ride Cym" },
+            { 48, "BassCh4" },
+            { 49, "BitsCh3" },
+            { 50, "Pitch1Ch1" },
+            { 51, "Pitch2Ch2" }
+        };
 
         //FLASHMEM 
         virtual void setup_callbacks() override {
