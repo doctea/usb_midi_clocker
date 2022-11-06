@@ -76,6 +76,7 @@ class DeviceBehaviourManager {
                 if (behaviour->matches_identifiers(packed_id)) {
                     Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                     behaviour->connect_device(usb_midi_slots[idx].device);
+                    usb_midi_slots[idx].behaviour = behaviour;
                     return true;
                 }
             }
@@ -85,20 +86,32 @@ class DeviceBehaviourManager {
 
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
-                Serial.printf(F("attempt_usbserial_device_connect(%i, %08x)...\n"), idx, packed_id); Serial.flush();
+                Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial.flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const int size = behaviours_usbserial->size();
                 for (int i = 0 ; i < size ; i++) {
+                    if (!usb_serial_slots[idx].usbdevice || usb_serial_slots[idx].packed_id!=packed_id) {
+                        Serial.printf("WARNING: device at %i went away!\n", idx);
+                        return false;
+                    }
                     DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
                     Serial.printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
-                    usbserial_slots[idx].packed_id = packed_id;
+                    usb_serial_slots[idx].packed_id = packed_id;
+                    //__disable_irq();
                     if (behaviour->matches_identifiers(packed_id)) {
-                        Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
-                        behaviour->connect_device(usbserial_slots[idx].usbdevice);
+                        Serial.printf(F("\tDetected!  Behaviour %i on usb serial idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
+                        Serial.printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'\n"), 
+                            behaviour->get_label(), 
+                            behaviour->get_packed_id(), 
+                            usb_serial_slots[idx].usbdevice->idProduct()
+                        );
+                        behaviour->connect_device(usb_serial_slots[idx].usbdevice);
+                        usb_serial_slots[idx].behaviour = behaviour;
                         return true;
                     }
+                    //__enable_irq();
                 }
-                Serial.printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id); Serial.flush();
+                Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->idProduct()); Serial.flush();
                 return false;
             }
         #endif
@@ -132,16 +145,16 @@ class DeviceBehaviourManager {
 
         /*void read_midi_usb_devices() {
         #ifdef SINGLE_FRAME_READ_ALL
-            for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+            for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
             while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
             }
         #else
             #ifdef SINGLE_FRAME_READ_ONCE
             //static int counter;
-            for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+            for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
                 //while(usb_midi_device[i]->read());
                 if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
-                //usb_midi_device[counter%NUM_USB_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
+                //usb_midi_device[counter%NUM_USB_MIDI_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
                 //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
                 }
                 //counter++;
@@ -149,7 +162,7 @@ class DeviceBehaviourManager {
             #else
             static int counter;
             // only all messages from one device per loop
-            if (counter>=NUM_USB_DEVICES)
+            if (counter>=NUM_USB_MIDI_DEVICES)
                 counter = 0;
             while(usb_midi_slots[counter].read());
             counter++;

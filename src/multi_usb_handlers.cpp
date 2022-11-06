@@ -38,11 +38,11 @@ use_MIDIDevice_BigBuffer midi13(Usb);
 use_MIDIDevice_BigBuffer midi14(Usb);
 use_MIDIDevice_BigBuffer midi15(Usb);*/
 
-/*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES] = {
+/*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_MIDI_DEVICES] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
 };*/
 
-usb_midi_slot usb_midi_slots[NUM_USB_DEVICES] = {
+usb_midi_slot usb_midi_slots[NUM_USB_MIDI_DEVICES] = {
   { 0x00, 0x00, 0x0000, &midi01, nullptr },
   { 0x00, 0x00, 0x0000, &midi02, nullptr },
   { 0x00, 0x00, 0x0000, &midi03, nullptr },
@@ -60,7 +60,7 @@ usb_midi_slot usb_midi_slots[NUM_USB_DEVICES] = {
   { 0x00, 0x00, 0x0000, &midi15, nullptr },*/
 };
 
-//uint64_t usb_midi_connected[NUM_USB_DEVICES] = { 0,0,0,0,0,0,0,0 };
+//uint64_t usb_midi_connected[NUM_USB_MIDI_DEVICES] = { 0,0,0,0,0,0,0,0 };
 
 // assign device to port and set appropriate handlers
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
@@ -103,22 +103,19 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
   //usb_midi_connected[idx] = packed_id;
   usb_midi_slots[idx].packed_id = packed_id;
 
-  Serial.print(F("Detected unknown (or disabled) device vid="));
-  Serial.print(vid);
-  Serial.print(F(", pid="));
-  Serial.println(pid);
+  Serial.printf(F("Detected unknown (or disabled) USBMIDI device vid=%04x pid=%04x\n"), vid, pid);
 }
 
 
-void update_usb_device_connections() {
-  for (int port = 0 ; port < NUM_USB_DEVICES ; port++) {
+void update_usb_midi_device_connections() {
+  for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
     uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
     //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
     if (usb_midi_slots[port].packed_id != packed_id) {
       // device at this port has changed since we last saw it -- ie, disconnection or connection
       // unassign the midi_xxx helper pointers if appropriate
       //usb_midi_slots[port].behaviour = nullptr;
-      Serial.printf(F("update_usb_device_connections: device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_midi_slots[port].packed_id);
+      Serial.printf(F("update_usb_midi_device_connections: device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_midi_slots[port].packed_id);
       // call setup_usb_midi_device() to assign device to port and set handlers
       setup_usb_midi_device(port, packed_id);
       Serial.println(F("-----"));
@@ -131,16 +128,16 @@ void update_usb_device_connections() {
 
 /*void read_midi_usb_devices() {
   #ifdef SINGLE_FRAME_READ_ALL
-    for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+    for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
       while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
     }
   #else
     #ifdef SINGLE_FRAME_READ_ONCE
       //static int counter;
-      for (int i = 0 ; i < NUM_USB_DEVICES ; i++) {
+      for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
         //while(usb_midi_device[i]->read());
         if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
-          //usb_midi_device[counter%NUM_USB_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
+          //usb_midi_device[counter%NUM_USB_MIDI_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
           //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
         }
         //counter++;
@@ -148,7 +145,7 @@ void update_usb_device_connections() {
     #else
       static int counter;
       // only all messages from one device per loop
-      if (counter>=NUM_USB_DEVICES)
+      if (counter>=NUM_USB_MIDI_DEVICES)
         counter = 0;
       while(usb_midi_slots[counter].read());
       counter++;

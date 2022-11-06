@@ -53,6 +53,8 @@ void toggle_recall(bool on = false);
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
+            case '-':
+                Serial.println(F("------------------------")); break;
             case 'A': case 'a':
                 Serial.println(F("Toggling (a)uto-advances"));
                 toggle_autoadvance(key=='A');

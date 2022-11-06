@@ -17,11 +17,11 @@ usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI
 usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 */
 
-#define NUM_USB_DEVICES 10
+#define NUM_USB_MIDI_DEVICES 10
 
 // assign device to port and set appropriate handlers
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id);
-void update_usb_device_connections();
+void update_usb_midi_device_connections();
 //void read_midi_usb_devices();
 
 void global_on_restart();
@@ -53,21 +53,21 @@ extern use_MIDIDevice_BigBuffer midi13;
 extern use_MIDIDevice_BigBuffer midi14;
 extern use_MIDIDevice_BigBuffer midi15;*/
 
-//extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_DEVICES];
-//extern uint64_t usb_midi_connected[NUM_USB_DEVICES];
+//extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_MIDI_DEVICES];
+//extern uint64_t usb_midi_connected[NUM_USB_MIDI_DEVICES];
 
 //#include "behaviours/behaviour_base.h"
 
 class DeviceBehaviourUSBBase;
 
 struct usb_midi_slot {
-    uint16_t vid = 0x00;
-    uint16_t pid = 0x00;
-    uint32_t packed_id = 0x00;
+    uint16_t vid = 0x0000;
+    uint16_t pid = 0x0000;
+    uint32_t packed_id = 0x00000000;
     MIDIDeviceBase *device = nullptr;
     DeviceBehaviourUSBBase *behaviour = nullptr;
 };
 
-extern usb_midi_slot usb_midi_slots[NUM_USB_DEVICES];
+extern usb_midi_slot usb_midi_slots[NUM_USB_MIDI_DEVICES];
 
 #endif

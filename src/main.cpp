@@ -332,7 +332,7 @@ void loop() {
   if (debug) Serial.println(F("just did behaviour_manager->do_loops()"));
 
   #ifdef ENABLE_USB
-    update_usb_device_connections();
+    update_usb_midi_device_connections();
     #ifdef ENABLE_USBSERIAL
       update_usbserial_device_connections();
     #endif 

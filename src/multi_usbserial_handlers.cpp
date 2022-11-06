@@ -18,7 +18,7 @@
     USBSerialWrapper userial2(Usb);
     USBSerialWrapper userial3(Usb);
 
-    usbserial_midi_slot usbserial_slots[NUM_USBSERIAL_DEVICES] = {
+    usbserial_midi_slot usb_serial_slots[NUM_USB_SERIAL_DEVICES] = {
         { 0x00, 0x00, 0x0000, &userial1, nullptr },
         { 0x00, 0x00, 0x0000, &userial2, nullptr },
         { 0x00, 0x00, 0x0000, &userial3, nullptr }
@@ -28,60 +28,57 @@
     void setup_usbserial_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
         uint16_t vid, pid;
         if (packed_id==0) {
-            vid = usbserial_slots[idx].usbdevice->idVendor();
-            pid = usbserial_slots[idx].usbdevice->idProduct();
-            packed_id = (usbserial_slots[idx].usbdevice->idVendor()<<16) | (usbserial_slots[idx].usbdevice->idProduct());
+            vid = usb_serial_slots[idx].usbdevice->idVendor();
+            pid = usb_serial_slots[idx].usbdevice->idProduct();
+            packed_id = (usb_serial_slots[idx].usbdevice->idVendor()<<16) | (usb_serial_slots[idx].usbdevice->idProduct());
         } else {
             vid = packed_id >> 16;
             pid = 0x0000FFFF & packed_id;
         }
-        if ((uint32_t)((usbserial_slots[idx].usbdevice->idVendor()<<16) | (usbserial_slots[idx].usbdevice->idProduct())) != packed_id) {
+        if ((uint32_t)((usb_serial_slots[idx].usbdevice->idVendor()<<16) | (usb_serial_slots[idx].usbdevice->idProduct())) != packed_id) {
             Serial.printf(F("packed_id %08X and newly-generated packed_id %08X don't match already?!"), 
-                (usbserial_slots[idx].usbdevice->idVendor()<<16) | (usbserial_slots[idx].usbdevice->idProduct()),
+                (usb_serial_slots[idx].usbdevice->idVendor()<<16) | (usb_serial_slots[idx].usbdevice->idProduct()),
                 packed_id 
             );
             return;
         }
-        Serial.printf(F("USBSerial Port %d changed from %08X to %08X (now "), idx, usbserial_slots[idx].packed_id, packed_id);
-        Serial.printf(F("'%s' '%s')\n"), usbserial_slots[idx].usbdevice->manufacturer(), usbserial_slots[idx].usbdevice->product());
-        usbserial_slots[idx].packed_id = packed_id;
+        Serial.printf(F("USBSerial Port %d changed from %08X to %08X (now "), idx, usb_serial_slots[idx].packed_id, packed_id);
+        Serial.printf(F("'%s' '%s')\n"), usb_serial_slots[idx].usbdevice->manufacturer(), usb_serial_slots[idx].usbdevice->product());
+        usb_serial_slots[idx].packed_id = packed_id;
 
         // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
-        if (usbserial_slots[idx].behaviour!=nullptr) {
+        if (usb_serial_slots[idx].behaviour!=nullptr) {
             Serial.printf(F("Disconnecting usbserial_slot %i behaviour\n"), idx);
-            usbserial_slots[idx].behaviour->disconnect_device();
+            usb_serial_slots[idx].behaviour->disconnect_device();
         }
 
         if (packed_id==0) {
-            usbserial_slots[idx].packed_id = 0;
+            usb_serial_slots[idx].packed_id = 0;
             Serial.printf(F("Disconnected usbserial device on port %i\n"), idx);
             return;
         }
 
         // attempt to connect this device to a registered behaviour type
-        Serial.printf(F("about to attempt to connect %d w/ %4x\n"), idx, packed_id);
+        Serial.printf(F("About to attempt to connect port %d w/ %08x\n"), idx, packed_id);
         if (behaviour_manager->attempt_usbserial_device_connect(idx, packed_id))
             return;
 
         //usb_midi_connected[idx] = packed_id;
-        usbserial_slots[idx].packed_id = packed_id;
+        usb_serial_slots[idx].packed_id = packed_id;
 
-        Serial.print(F("Detected unknown (or disabled) device vid="));
-        Serial.print(vid);
-        Serial.print(F(", pid="));
-        Serial.println(pid);
+        Serial.printf(F("Detected unknown (or disabled) USB Serial device vid=%04x pid=%04x\n"), vid, pid);
     }
 
 
     void update_usbserial_device_connections() {
-        for (int port = 0 ; port < NUM_USBSERIAL_DEVICES ; port++) {
-            uint32_t packed_id = (usbserial_slots[port].usbdevice->idVendor()<<16) | (usbserial_slots[port].usbdevice->idProduct());
-            //Serial.printf("update_usbserial_device_connections(): packed %04X and %04X to %08X\n", usbserial_slots[port].usbdevice->idVendor(),  usbserial_slots[port].usbdevice->idProduct(), packed_id);
-            if (usbserial_slots[port].packed_id != packed_id) {
+        for (int port = 0 ; port < NUM_USB_SERIAL_DEVICES ; port++) {
+            uint32_t packed_id = (usb_serial_slots[port].usbdevice->idVendor()<<16) | (usb_serial_slots[port].usbdevice->idProduct());
+            //Serial.printf("update_usbserial_device_connections(): packed %04X and %04X to %08X\n", usb_serial_slots[port].usbdevice->idVendor(),  usb_serial_slots[port].usbdevice->idProduct(), packed_id);
+            if (usb_serial_slots[port].packed_id != packed_id) {
                 // device at this port has changed since we last saw it -- ie, disconnection or connection
                 // unassign the midi_xxx helper pointers if appropriate
-                //usbserial_slots[port].behaviour = nullptr;
-                Serial.printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usbserial_slots[port].packed_id);
+                //usb_serial_slots[port].behaviour = nullptr;
+                Serial.printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_serial_slots[port].packed_id);
                 // call setup_usb_midi_device() to assign device to port and set handlers
                 setup_usbserial_midi_device(port, packed_id);
                 Serial.println(F("-----"));
