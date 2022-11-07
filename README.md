@@ -184,7 +184,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~Low mutate/High mutate~~
   - ~~Pattern enables~~
   - Select/lock seed (think need to fix some stuff in the original project to achieve this)
-  - Control over the envelopes
+  - Control over the envelopes AHDSR + modulation
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - eg Euclidian sequencer
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
@@ -212,8 +212,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - todo: use ili9340 screen + touchscreen
 - ~~Encoder for controlling options and parameters~~
 - Give better control over Beatstep via sysex if possible?
-  - added auto-advance pattern mode, but isn't working reliably -- might be something weird with the USB MIDI problems discovered mentioned in Known issues?
-  - ie, change pattern, change speed..?
+  - ~~auto-advance pattern mode~~
+  - ie, ~~change speed..?~~
+  - note length
+  - legato
+  - shuffle
 - Better way to define custom behaviour in order to add new USB MIDI devices
   - Partially done, can be improved further
   - Write up docs on how to add a new device behaviour
