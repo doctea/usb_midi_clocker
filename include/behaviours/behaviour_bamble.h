@@ -293,9 +293,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                 return true;
             } else if (key.equals(F("density"))) {
                 this->setDensity((float)    value.toFloat());
+                return true;
             } else if (key.startsWith(F("pattern_enable_"))) {
                 int number = key.replace(F("pattern_enable_"),"").toInt();
                 this->setPatternEnabled(number, value.equals(F("enabled")));
+                return true;
             } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             }
