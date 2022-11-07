@@ -1,7 +1,14 @@
 
 #ifdef ENABLE_USB
     #include "multi_usb_handlers.h"
-    #include "multi_usbserial_handlers.h"
+    #ifdef ENABLE_USBSERIAL
+        #include "multi_usbserial_handlers.h"
+    #endif
+    #ifdef ENABLE_TYPING_KEYBOARD
+        //#include "input_keyboard.h"
+        #include "USBHost_t36.h"
+        extern KeyboardController keyboard1;
+    #endif
     class USBDevicesPanel : public MenuItem {
         public:
             USBDevicesPanel() : MenuItem("USB Devices") {}
@@ -20,14 +27,23 @@
                         tft->printf(buf);
                     }            
                 }
-                for (int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
-                    if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
-                        connected++;
-                        char buf[100];
-                        sprintf(buf, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
-                        tft->printf(buf);
+                #ifdef ENABLE_USBSERIAL
+                    for (int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
+                        if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
+                            connected++;
+                            char buf[100];
+                            sprintf(buf, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
+                            tft->printf(buf);
+                        }
                     }
-                }
+                #endif
+                #ifdef ENABLE_TYPING_KEYBOARD
+                    if (keyboard1)
+                        tft->printf("K %19s\n", (char*)keyboard1.product());
+                    else
+                        tft->printf("K (Typing disconnected)\n");
+                #endif
+
                 return tft->getCursorY();
             }
     };
