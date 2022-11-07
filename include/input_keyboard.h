@@ -1,3 +1,5 @@
+#ifndef KEYBOARD__INCLUDED
+#define KEYBOARD__INCLUDED
 
 #include "Config.h"
 
@@ -51,7 +53,7 @@ void toggle_recall(bool on = false);
             case KEYD_LEFT      : 
             case KEYD_BACKSPACE : Serial.println(F("LEFT"));           menu->button_back(); break;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
-            case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); break;
+            case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
             case '-':
                 Serial.println(F("------------------------")); break;
@@ -70,6 +72,7 @@ void toggle_recall(bool on = false);
             case 'L'            : 
                 Serial.println(F("(L)oad selected sequence"));
                 project.load_selected_sequence(); 
+                Serial.println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
                 Serial.println(F("(S)ave sequencer!"));
@@ -84,20 +87,30 @@ void toggle_recall(bool on = false);
                 save_screenshot(&steensy.actual);
                 break;
             case 'J'            :
-                Serial.println(F("Load previous sequence"));
+                Serial.println(F("==== Loading previous sequence.."));
                 project.load_previous_sequence();
+                Serial.println(F("==== Loaded previous sequence!"));
                 break;
             case 'j'            :
                 Serial.println(F("Select previous sequence"));
                 project.select_previous_sequence();
                 break;
             case ':'            :
-                Serial.println(F("Load next sequence"));
+                Serial.println(F("==== Loading next sequence")); Serial.flush();
                 project.load_next_sequence();
+                Serial.println(F("==== Loaded next sequence!")); Serial.flush();
                 break;
             case ';'            :
                 Serial.println(F("Select next sequence"));
                 project.select_next_sequence();
+                break;
+            case 'Z'    :
+                Serial.clear();
+                Serial.clearWriteError();
+                Serial.end();
+                Serial.begin(115200);
+                Serial.setTimeout(0);
+                Serial.println("---restarted serial---");
                 break;
             case 49 ... 57      :
                 {
@@ -126,4 +139,6 @@ void toggle_recall(bool on = false);
     void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
     }
+#endif
+
 #endif
