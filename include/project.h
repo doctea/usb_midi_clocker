@@ -167,10 +167,11 @@ class Project {
         }
 
         bool load_sequence(int selected_sequence_number) {
-            Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number);
+            Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number); Serial.flush();
             bool result = storage::load_sequence(current_project_number, selected_sequence_number, &storage::current_state);
             if (result)
                 loaded_sequence_number = selected_sequence_number;
+            Serial.println(F("returning\n"));
             return result;
         }
         bool save_sequence(int selected_sequence_number) {
@@ -267,17 +268,19 @@ class Project {
         // callbacks so project can respond to events eg on_phrase...
         bool auto_advance_sequencer = false;
         void on_phrase(int phrase) {
-            phrase = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+            int slot = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+            Serial.printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
             if (auto_advance_sequencer) {
-                this->selected_sequence_number = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+                this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
                 this->load_sequence(this->selected_sequence_number);
             }
             #ifdef ENABLE_LOOPER
                 if (auto_advance_looper) {
-                    this->selected_loop_number = phrase % NUM_LOOP_SLOTS_PER_PROJECT;
+                    this->selected_loop_number = slot % NUM_LOOP_SLOTS_PER_PROJECT;
                     this->load_loop(this->selected_loop_number);
                 }
             #endif
+            Serial.printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
         }
         bool is_auto_advance_sequencer() {
             return this->auto_advance_sequencer;
