@@ -84,6 +84,7 @@ void setup() {
   #endif
 
   Serial.begin(115200);
+  Serial.setTimeout(0);
   #ifdef WAIT_FOR_SERIAL
     //tft_print("\nWaiting for serial connection..");
     while (!Serial);
@@ -217,6 +218,13 @@ void setup() {
 // 
 // -----------------------------------------------------------------------------
 void loop() {
+  if (Serial.getReadError() || Serial.getWriteError()) {
+      Serial.end();
+      Serial.clearReadError(); Serial.clearWriteError();
+      Serial.begin(115200);
+      Serial.setTimeout(0);
+  }
+
   //#ifdef ENABLE_PROFILER
     uint32_t start_loop_micros_stamp = micros();
   //#endif
@@ -237,9 +245,6 @@ void loop() {
   if (debug) { Serial.println(F("about to Usb.Task()")); Serial.flush(); }
   Usb.Task();
   if (debug) { Serial.println(F("just did Usb.Task()")); Serial.flush(); }
-  //poll_serials();
-  //while (usbMIDI.read());
-
   //static unsigned long last_ticked_at_micros = 0;
 
   bool ticked = false;
@@ -369,7 +374,7 @@ void loop() {
   #else
     average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
-  if(debug) Serial.println(F("reached end of loop()!")); Serial.flush();
+  if(debug) { Serial.println(F("reached end of loop()!")); Serial.flush(); }
 }
 
 // called inside interrupt
