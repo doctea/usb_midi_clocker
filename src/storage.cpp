@@ -81,7 +81,7 @@ namespace storage {
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
     //Serial.println("save_sequence not implemented on teensy");
-    noInterrupts();
+    __disable_irq();
     File myFile;
 
     char filename[255] = "";
@@ -125,7 +125,7 @@ namespace storage {
     myFile.println(F("; end sequence"));
     myFile.close();
     Serial.println(F("Finished saving."));
-    interrupts();
+    __enable_irq();
     return true;
   }
 
@@ -246,7 +246,7 @@ namespace storage {
   }
 
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
-    noInterrupts();
+    __disable_irq();
     File myFile;   
 
     char filename[255] = "";
@@ -279,7 +279,7 @@ namespace storage {
     #endif
 
     Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial.flush();
-    interrupts();
+    __enable_irq();
     return true;
   }
 

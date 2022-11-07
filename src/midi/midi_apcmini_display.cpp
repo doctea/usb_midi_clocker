@@ -95,9 +95,9 @@ byte get_colour_for_clock_multiplier(float cm) {
 void redraw_clock_row(byte c) {
     if (behaviour_apcmini->device==nullptr) return;
 
-    byte start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
-    for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-      byte io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
+    int start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
+    for (int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+      int io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
       float cm = get_clock_multiplier(c);
       if (is_clock_off(c)) {
         apcdisplay_sendNoteOn(start_row+i, APCMINI_OFF, 1);
@@ -124,9 +124,9 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected) {
 void redraw_sequence_row(byte c) {
   if (behaviour_apcmini->device==nullptr) return;
 
-  byte start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
-  for (byte i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-    byte v = read_sequence(c,i);
+  int start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
+  for (int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+    int v = read_sequence(c,i);
     if (v) { //should_trigger_sequence(i*PPQN,c)) {
       ATOMIC(apcdisplay_sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
     } else {
@@ -149,7 +149,7 @@ void redraw_sequence_row(byte c) {
           //behaviour_apcmini->device->sendRealTime(midi::Clock);
       }
     }
-    for (byte x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
+    for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
       ATOMIC(
         apcdisplay_sendNoteOff(x, APCMINI_OFF, 1, true);
       )
@@ -163,13 +163,13 @@ void redraw_sequence_row(byte c) {
     //Serial.println(F("starting apcmini_update_clock_display().."));
     // draw the clock divisions
     #ifdef ENABLE_CLOCKS
-      for (byte c = 0 ; c < NUM_CLOCKS ; c++) {
+      for (int c = 0 ; c < NUM_CLOCKS ; c++) {
         //byte start_row = (8-NUM_CLOCKS) * 8;
         redraw_clock_row(c);
       }
     #endif
     #ifdef ENABLE_SEQUENCER
-      for (byte c = 0 ; c < NUM_SEQUENCES ; c++) {
+      for (int c = 0 ; c < NUM_SEQUENCES ; c++) {
         redraw_sequence_row(c);
       }
     #endif

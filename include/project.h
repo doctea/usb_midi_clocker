@@ -294,6 +294,7 @@ class Project {
             return this->save_project_settings(current_project_number);
         }
         bool save_project_settings(int save_to_project_number) {
+            __disable_irq();
             File myFile;
 
             // determine filename, delete if exists, and open the file up for writing
@@ -340,10 +341,12 @@ class Project {
             myFile.println(F("; end project"));
             myFile.close();
             Serial.println(F("Finished saving."));
+            __enable_irq();
             return true;
         }
 
         bool load_project_settings(int project_number) {
+            __disable_irq();
             File myFile;
 
             if (isLoadMatrixMappings()) {
@@ -368,11 +371,13 @@ class Project {
             }
             Serial.println(F("Closing file.."));
             myFile.close();
+            __enable_irq();            
             Serial.println(F("File closed"));
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
             current_project_number = project_number;
             Serial.printf(F("Loaded project settings.\n"));
+
             return true;
         }
 

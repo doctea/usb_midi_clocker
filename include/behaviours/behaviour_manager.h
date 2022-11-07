@@ -100,10 +100,10 @@ class DeviceBehaviourManager {
                     //__disable_irq();
                     if (behaviour->matches_identifiers(packed_id)) {
                         Serial.printf(F("\tDetected!  Behaviour %i on usb serial idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
-                        Serial.printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'\n"), 
+                        Serial.printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'?\n"), 
                             behaviour->get_label(), 
                             behaviour->get_packed_id(), 
-                            usb_serial_slots[idx].usbdevice->idProduct()
+                            usb_serial_slots[idx].usbdevice->product()
                         );
                         behaviour->connect_device(usb_serial_slots[idx].usbdevice);
                         usb_serial_slots[idx].behaviour = behaviour;
@@ -111,7 +111,7 @@ class DeviceBehaviourManager {
                     }
                     //__enable_irq();
                 }
-                Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->idProduct()); Serial.flush();
+                Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial.flush();
                 return false;
             }
         #endif

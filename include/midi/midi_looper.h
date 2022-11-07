@@ -405,7 +405,7 @@ class MIDITrack {
             Serial.println(F("looper stopped recording"));
             recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
-            for (byte i = 0 ; i < 127 ; i++) {
+            for (int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     this->sendNoteOff(i, 0);
                     store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, 0);
