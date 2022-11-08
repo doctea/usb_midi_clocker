@@ -214,6 +214,8 @@ void setup() {
 
 //long loop_counter = 0;
 
+bool debug = false;
+
 // -----------------------------------------------------------------------------
 // 
 // -----------------------------------------------------------------------------
@@ -225,10 +227,15 @@ void loop() {
       Serial.setTimeout(0);
   }
 
+  if (debug_insane_sequencer_load && ticks % 6 == 1)  {
+    OnPress(';');
+    OnPress('L');
+  }
+
   //#ifdef ENABLE_PROFILER
     uint32_t start_loop_micros_stamp = micros();
   //#endif
-  bool debug = false;
+  //bool debug = true;
   if (debug) { Serial.println(F("start of loop!")); Serial.flush(); }
 
   #ifdef DEBUG_LED

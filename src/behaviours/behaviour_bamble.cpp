@@ -97,7 +97,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setMinimumPattern,
         &DeviceBehaviour_Bamble::getMinimumPattern
     );
-    for (uint8_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    for (uint32_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         minimum_pattern->add_available_value(i, patterns[i].label);
     }
     minimum_pattern->go_back_on_select = true;
@@ -109,7 +109,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setMaximumPattern,
         &DeviceBehaviour_Bamble::getMaximumPattern
     );
-    for (uint8_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    for (uint32_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         maximum_pattern->add_available_value(i, patterns[i].label);
     }
     maximum_pattern->go_back_on_select = true;
@@ -118,7 +118,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
 
     // select patterns on/off ////////////////////////////////////////////////////////////////
     ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled patterns", true);
-    for (uint8_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    for (uint32_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         pattern_selector->addItem(new PatternToggle(this, &patterns[i]));
     }
 

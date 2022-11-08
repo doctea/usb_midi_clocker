@@ -16,6 +16,8 @@ extern DisplayTranslator_Configured steensy;
 void toggle_autoadvance(bool on = false);
 void toggle_recall(bool on = false);
 
+bool debug_insane_sequencer_load = false;
+
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
@@ -33,7 +35,8 @@ void toggle_recall(bool on = false);
     #define MOD_RALT       64
 
     extern USBHost Usb;
-
+    extern bool debug;
+      
     KeyboardController keyboard1(Usb);
 
     void OnPress(int key) {
@@ -55,6 +58,18 @@ void toggle_recall(bool on = false);
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
+            case 'T':
+                debug_insane_sequencer_load = true;
+                break;
+            case 't':
+                debug_insane_sequencer_load = false;
+                break;
+            case 'D'    :
+                debug = true;
+                break;
+            case 'd'    :
+                debug = false;
+                break;
             case '-':
                 Serial.println(F("------------------------")); break;
             case 'A': case 'a':

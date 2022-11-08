@@ -163,6 +163,13 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         void setPatternEnabled(int number, bool state) {
             this->patterns[number].current_state = state;
             this->sendControlChange(patterns[number].cc_number, state ? 127:0, 10);
+            Serial.printf(
+                "%s#setPatternEnabled(%i, %s) sending ControlChange for %s\n", 
+                this->get_label(), 
+                number, 
+                state?"On":"Off", 
+                this->patterns[number].label
+            );
         }
 
         //FLASHMEM 
@@ -275,8 +282,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
             lines->add(String(F("density="))        + String(this->getDensity()));
-            const uint8_t size = sizeof(this->patterns)/sizeof(bamble_pattern);
-            for (uint8_t i = 0 ; i < size ; i++) {
+            const int size = sizeof(this->patterns)/sizeof(bamble_pattern);
+            for (int i = 0 ; i < size ; i++) {
                 lines->add(
                     String(F("pattern_enable_")) + String(i) + String('=') + 
                     String(this->patterns[i].current_state?F("enabled"):F("disabled"))

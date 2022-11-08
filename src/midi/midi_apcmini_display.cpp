@@ -142,8 +142,8 @@ void redraw_sequence_row(byte c) {
     if (behaviour_apcmini->device==nullptr) return;
     
     Serial.println(F("Clearing APC display.."));
-    for (uint8_t x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
-      for (uint8_t y = 0 ; y < APCMINI_DISPLAY_WIDTH ; y++) {
+    for (int x = 0 ; x < APCMINI_NUM_ROWS ; x++) {
+      for (int y = 0 ; y < APCMINI_DISPLAY_WIDTH ; y++) {
           apcdisplay_sendNoteOff(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
           //behaviour_apcmini->device->send_now();
           //behaviour_apcmini->device->sendRealTime(midi::Clock);
