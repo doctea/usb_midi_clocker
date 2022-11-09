@@ -284,7 +284,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            DividedClockedBehaviour::save_project_add_lines(lines);
+            DividedClockedBehaviour::save_sequence_add_lines(lines);
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
             lines->add(String(F("density="))        + String(this->getDensity()));
