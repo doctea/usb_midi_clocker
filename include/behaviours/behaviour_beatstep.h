@@ -76,13 +76,9 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DividedClockedBehaviour::on_end_phrase(phrase);
 
                 if (this->auto_advance_pattern) {
-                    //on_restart(); //TODO: which of these is actually doing the work??
-
-                    uint8_t phrase_number = (uint8_t)(phrase % NUM_PATTERNS);
+                    int phrase_number = (phrase % NUM_PATTERNS);
                     this->send_preset_change(phrase_number);
-
-                    this->on_restart(); //TODO: which of these is actually doing the work??
-                    //Serial.printf("sending sysex to switch to phrase_number %i?\n", phrase_number);
+                    this->on_restart(); 
                 }
             }
 

@@ -4,6 +4,7 @@
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
 #include "menuitems_numbers.h"
+#include "submenuitem_bar.h"
 
 extern bool debug, debug_insane_sequencer_load;
 
@@ -23,10 +24,12 @@ void setup_debug_menu() {
     ActionConfirmItem *reset_control = new ActionConfirmItem("RESET TEENSY?", reset_teensy);
     menu->add(reset_control);
 
-    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Debug: Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
-    menu->add(debug_times_control);
+    SubMenuItemBar *bar = new SubMenuItemBar("Debug");
 
-    menu->add(new NumberControl<bool>("Debug to serial", (bool*)&debug, debug, false, true));
-    menu->add(new NumberControl<bool>("Debug insane autoload", (bool*)&debug_insane_sequencer_load, debug, false, true));
+    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Debug: Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
+    bar->add(debug_times_control);
+    bar->add(new NumberControl<bool>("Debug to serial", (bool*)&debug, debug, false, true));
+    bar->add(new NumberControl<bool>("Debug insane autoload", (bool*)&debug_insane_sequencer_load, debug, false, true));
+    menu->add(bar);
 
 }

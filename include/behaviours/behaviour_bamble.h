@@ -159,10 +159,12 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             { 50, "Pitch1Ch1" },
             { 51, "Pitch2Ch2" }*/
         };
+        #define NUM_EUCLIDIAN_PATTERNS (int)(sizeof(patterns) / sizeof(bamble_pattern))
 
+        // update internal state and send message to bamble to match
         void setPatternEnabled(int number, bool state) {
             this->patterns[number].current_state = state;
-            this->sendControlChange(patterns[number].cc_number, state ? 127:0, 10);
+            this->sendControlChange(patterns[number].cc_number, state ? 127 : 0, 10);
             Serial.printf(
                 "%s#setPatternEnabled(%i, %s) sending ControlChange for %s\n", 
                 this->get_label(), 
@@ -247,7 +249,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                 DeviceBehaviourUSBBase::sendControlChange(21, 127, 10);
             #endif
 
-            // disable playing from own BPM (ie require clock to play)
+            // disable playing from own BPM (ie, require clock to play)
             DeviceBehaviourUSBBase::sendControlChange(16, 0, 10);
             //this->setDemoMode(1);       // initialise in playing/non-mutating state
             this->setDemoMode(2);       // initialise in playing+mutating state
@@ -255,6 +257,10 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->setDensity(0.5);      // initialise density to 50%
             this->setMinimumPattern(TRIGGER_KICK);
             this->setMaximumPattern(TRIGGER_RIDE_CYM);
+
+            for (int i = 0 ; i < NUM_EUCLIDIAN_PATTERNS ; i++) {
+                this->setPatternEnabled(i, true);
+            }
 
             DeviceBehaviourUSBBase::sendControlChange(7, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
 
@@ -282,7 +288,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
             lines->add(String(F("density="))        + String(this->getDensity()));
-            const int size = sizeof(this->patterns)/sizeof(bamble_pattern);
+            const int size = NUM_EUCLIDIAN_PATTERNS;
             for (int i = 0 ; i < size ; i++) {
                 lines->add(
                     String(F("pattern_enable_")) + String(i) + String('=') + 
