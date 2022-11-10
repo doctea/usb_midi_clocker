@@ -171,11 +171,11 @@ class Project {
             bool result = storage::load_sequence(current_project_number, selected_sequence_number, &storage::current_state);
             if (result)
                 loaded_sequence_number = selected_sequence_number;
-            Serial.println(F("returning\n"));
+            Serial.println(F("returning\n"));  Serial.flush();
             return result;
         }
         bool save_sequence(int selected_sequence_number) {
-            Serial.printf(F("save for selected_sequence_number %i\n"), selected_sequence_number);
+            Serial.printf(F("save for selected_sequence_number %i\n"), selected_sequence_number); Serial.flush();
             bool result = storage::save_sequence(current_project_number, selected_sequence_number, &storage::current_state);
             if (result) {
                 sequence_slot_has_file[selected_sequence_number] = true;
@@ -294,6 +294,7 @@ class Project {
             return this->save_project_settings(current_project_number);
         }
         bool save_project_settings(int save_to_project_number) {
+            bool irqs_enabled = __irq_enabled();
             __disable_irq();
             File myFile;
 
@@ -341,11 +342,12 @@ class Project {
             myFile.println(F("; end project"));
             myFile.close();
             Serial.println(F("Finished saving."));
-            __enable_irq();
+            if (irqs_enabled) __enable_irq();
             return true;
         }
 
         bool load_project_settings(int project_number) {
+            bool irqs_enabled = __irq_enabled();
             __disable_irq();
             File myFile;
 
@@ -371,7 +373,7 @@ class Project {
             }
             Serial.println(F("Closing file.."));
             myFile.close();
-            __enable_irq();            
+            if (irqs_enabled) __enable_irq();
             Serial.println(F("File closed"));
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);

@@ -39,8 +39,70 @@ bool debug_insane_sequencer_load = false;
       
     KeyboardController keyboard1(Usb);
 
+    // track commands received over usb keyboard so that they can be executed inside of main loop(), instead of potentially causing crashes by eg overlapping file accesses
+    class InputKeyboardQueue {
+        public:
+            volatile bool    queued_load_selected_sequence = false,
+                    queued_save_selected_sequence = false,
+                    queued_load_next_sequence = false,
+                    queued_load_previous_sequence = false,
+                    queued_save_screenshot = false
+            ;
+            volatile int queued_setprojectnumber = -1;
+
+            void queue_load_selected_sequence() {
+                this->queued_load_selected_sequence = true;
+            }
+            void queue_save_selected_sequence() {
+                this->queued_save_selected_sequence = true;
+            }
+            void queue_load_next_sequence() {
+                this->queued_load_next_sequence = true;
+            }
+            void queue_load_previous_sequence() {
+                this->queued_load_previous_sequence = true;
+            }
+            void queue_save_screenshot() {
+                this->queued_save_screenshot = true;
+            }
+            void queue_setProjectNumber(int number) {
+                this->queued_setprojectnumber = number;
+            }
+
+            void process_queue() {
+                if (this->queued_load_selected_sequence) {
+                    project.load_selected_sequence();
+                    this->queued_load_selected_sequence = false;
+                }
+                if (this->queued_save_selected_sequence) {
+                    project.save_selected_sequence();
+                    this->queued_save_selected_sequence = false;
+                }
+                if (this->queued_load_next_sequence) {
+                    project.load_next_sequence();
+                    this->queued_load_next_sequence = false;
+                }
+                if (this->queued_load_previous_sequence) {
+                    project.load_previous_sequence();
+                    this->queued_load_previous_sequence = false;
+                }
+                if (this->queued_save_screenshot) {
+                    save_screenshot(&steensy.actual);
+                    this->queued_save_screenshot = false;
+                }
+                if (this->queued_setprojectnumber>=0) {
+                    project.setProjectNumber(this->queued_setprojectnumber);
+                    this->queued_setprojectnumber = -1;
+                }
+            }
+    };
+
+    InputKeyboardQueue input_keyboard;
+
     void OnPress(int key) {
         int modifiers = keyboard1.getModifiers();
+        bool irqs_enabled = __irq_enabled();
+        __disable_irq();
         switch(key) {
             /*case KEY_ESC             :  // ESCAPE
                 while(menu->is_opened())
@@ -72,6 +134,10 @@ bool debug_insane_sequencer_load = false;
                 break;
             case '-':
                 Serial.println(F("------------------------")); break;
+            case 'p'            :
+                Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
+                midi_matrix_manager->stop_all_notes();
+                break;
             case 'A': case 'a':
                 Serial.println(F("Toggling (a)uto-advances"));
                 toggle_autoadvance(key=='A');
@@ -84,41 +150,40 @@ bool debug_insane_sequencer_load = false;
                 Serial.println(F("Setting (r)estart_on_next_bar"));
                 restart_on_next_bar = true; 
                 break;
+            // take screenshot
+            case ' '            :
+                Serial.println(F("Taking screenshot!"));
+                input_keyboard.queue_save_screenshot();
+                break;
+            // load/save/move selected sequence
             case 'L'            : 
                 Serial.println(F("(L)oad selected sequence"));
-                project.load_selected_sequence(); 
+                input_keyboard.queue_load_selected_sequence(); 
                 Serial.println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
                 Serial.println(F("(S)ave sequencer!"));
-                project.save_selected_sequence();
-                break;
-            case 'p'            :
-                Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
-                midi_matrix_manager->stop_all_notes();
-                break;
-            case ' '            :
-                Serial.println(F("Taking screenshot!"));
-                save_screenshot(&steensy.actual);
+                input_keyboard.queue_save_selected_sequence();
                 break;
             case 'J'            :
                 Serial.println(F("==== Loading previous sequence.."));
-                project.load_previous_sequence();
+                input_keyboard.queue_load_previous_sequence();
                 Serial.println(F("==== Loaded previous sequence!"));
+                break;
+            case ':'            :
+                Serial.println(F("==== Loading next sequence")); Serial.flush();
+                input_keyboard.queue_load_next_sequence();
+                Serial.println(F("==== Loaded next sequence!")); Serial.flush();
                 break;
             case 'j'            :
                 Serial.println(F("Select previous sequence"));
                 project.select_previous_sequence();
                 break;
-            case ':'            :
-                Serial.println(F("==== Loading next sequence")); Serial.flush();
-                project.load_next_sequence();
-                Serial.println(F("==== Loaded next sequence!")); Serial.flush();
-                break;
             case ';'            :
                 Serial.println(F("Select next sequence"));
                 project.select_next_sequence();
                 break;
+            // debug
             case 'Z'    :
                 Serial.clear();
                 Serial.clearWriteError();
@@ -127,16 +192,17 @@ bool debug_insane_sequencer_load = false;
                 Serial.setTimeout(0);
                 Serial.println("---restarted serial---");
                 break;
+            // change project number
             case 49 ... 57      :
                 {
                     int adjust = 49;
                     if (modifiers & 4) {
                         adjust = 49 - 9;
-                        modifiers &= ~4;
+                        modifiers &= ~MOD_LALT;
                     }
                     if (modifiers==0) {
                         Serial.printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
-                        project.setProjectNumber(key - adjust);
+                        input_keyboard.queue_setProjectNumber(key - adjust);
                     } else {
                         Serial.printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
                     }
@@ -146,6 +212,7 @@ bool debug_insane_sequencer_load = false;
                 Serial.printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
                 break;
         }
+        if (irqs_enabled) __enable_irq();
     }
 
     #ifndef GDB_DEBUG

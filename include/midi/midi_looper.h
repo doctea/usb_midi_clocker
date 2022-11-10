@@ -639,6 +639,8 @@ class MIDITrack {
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
+            bool irqs_enabled = __irq_enabled();
+            __disable_irq();
             File f;
             clear_hanging();
             convert_from_bitmap();
@@ -685,6 +687,7 @@ class MIDITrack {
             }
             f.println(F("; end loop"));
             f.close();
+            if (irqs_enabled) __enable_irq();
             Serial.printf(F("Finished saving, %i lines written!\n"), lines_written);
 
             if (lines_written==0) {
@@ -702,6 +705,8 @@ class MIDITrack {
 
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
+            bool irqs_enabled = __irq_enabled();
+            __disable_irq();
             File f;
 
             char filename[255] = "";
@@ -781,6 +786,7 @@ class MIDITrack {
                 Serial.println(F("Closing file.."));
             #endif
             f.close();
+            if (irqs_enabled) __enable_irq();
             #ifdef DEBUG_LOOP_LOADER
                 Serial.println(F("File closed"));
             #endif

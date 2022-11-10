@@ -81,6 +81,7 @@ namespace storage {
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
     //Serial.println("save_sequence not implemented on teensy");
+    bool irqs_enabled = __irq_enabled();
     __disable_irq();
     File myFile;
 
@@ -124,8 +125,8 @@ namespace storage {
     }
     myFile.println(F("; end sequence"));
     myFile.close();
+    if (irqs_enabled) __enable_irq();
     Serial.println(F("Finished saving."));
-    __enable_irq();
     return true;
   }
 
@@ -246,6 +247,7 @@ namespace storage {
   }
 
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
+    bool irqs_enabled = __irq_enabled();
     __disable_irq();
     File myFile;   
 
@@ -272,6 +274,7 @@ namespace storage {
     }
     Serial.println(F("Closing file..")); Serial.flush();
     myFile.close();
+    if (irqs_enabled) __enable_irq();
     Serial.println(F("File closed")); Serial.flush();
 
     #ifdef ENABLE_APCMINI_DISPLAY
@@ -294,6 +297,8 @@ namespace storage {
   }*/
 
   bool copy_file(const char *sourceFile, const char *destnFile) {
+    bool irqs_enabled = __irq_enabled();
+    __disable_irq();
     SdFile myOrigFile;
     SdFile myDestFile;
 
@@ -317,6 +322,7 @@ namespace storage {
 
     myOrigFile.close();
     myDestFile.close();    
+    if (irqs_enabled) __enable_irq();
 
     return true;
   }

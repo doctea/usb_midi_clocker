@@ -135,7 +135,7 @@ void setup() {
   Serial.println(F("Serial ready."));   
   Serial.printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
 
-   tft_print((char*)"..storage..\n");
+  tft_print((char*)"..storage..\n");
   storage::setup_storage();
   Serial.printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
 
@@ -352,6 +352,9 @@ void loop() {
     
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
+
+  // process any events that are waiting from the usb keyboard handler
+  input_keyboard.process_queue();
 
   //Serial.println("end of loop!"); Serial.flush();
 
