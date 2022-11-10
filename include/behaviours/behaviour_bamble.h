@@ -167,6 +167,10 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             return this->euclidian_seed_use_phrase;
         }
 
+        void setRandomSeed() {
+            this->setEuclidianSeedModifier(random(16384));
+        }
+
         bamble_pattern patterns[16] = {
             //CC, label
             { 32, "Kick" },

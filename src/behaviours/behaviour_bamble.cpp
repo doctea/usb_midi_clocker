@@ -116,7 +116,6 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     maximum_pattern->go_back_on_select = true;
     mutate_range->add(maximum_pattern);
 
-
     // select patterns on/off ////////////////////////////////////////////////////////////////
     ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled patterns", true);
     for (uint32_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
@@ -125,15 +124,6 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
 
     //// further euclidian options
     SubMenuItemBar *further_euclidian_options = new SubMenuItemBar("Further Euclidian settings");
-    further_euclidian_options->add(new ObjectNumberControl<DeviceBehaviour_Bamble,uint16_t>(
-        "Seed modifier", 
-        this, 
-        &DeviceBehaviour_Bamble::setEuclidianSeedModifier, 
-        &DeviceBehaviour_Bamble::getEuclidianSeedModifier,
-        nullptr,
-        (uint16_t)0,
-        (uint16_t)(2^16)
-    ));
     further_euclidian_options->add(new ObjectToggleControl<DeviceBehaviour_Bamble>(
         "Add Phrase", 
         this,
@@ -141,10 +131,24 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase
     ));
     further_euclidian_options->add(new ObjectToggleControl<DeviceBehaviour_Bamble>(
-        "Phrase Reset",
+        "Auto-reset",
         this,
         &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,
         &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate
+    ));
+    further_euclidian_options->add(new ObjectNumberControl<DeviceBehaviour_Bamble,uint16_t>(
+        "Seed bank", 
+        this, 
+        &DeviceBehaviour_Bamble::setEuclidianSeedModifier, 
+        &DeviceBehaviour_Bamble::getEuclidianSeedModifier,
+        nullptr,
+        (uint16_t)0,
+        (uint16_t)16384
+    ));
+    further_euclidian_options->add(new ObjectActionItem<DeviceBehaviour_Bamble>(
+       "RaNdOm",
+       this,
+       &DeviceBehaviour_Bamble::setRandomSeed
     ));
 
     //// add all to final menu 
