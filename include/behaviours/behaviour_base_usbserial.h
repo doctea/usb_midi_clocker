@@ -56,6 +56,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             this->usbdevice = usbdevice;
 
             usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+            usbdevice->setTimeout(0);
 
             this->init();
             this->setup_callbacks();
@@ -63,6 +64,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
 
         virtual void disconnect_device() {
             if (!this->is_connected()) return;
+            //if (this->usbdevice) this->usbdevice->end();
             this->usbdevice = nullptr;
         }
 

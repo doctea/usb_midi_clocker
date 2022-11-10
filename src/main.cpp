@@ -8,6 +8,7 @@
 
 #include <Arduino.h>
 
+#include "BootConfig.h"
 #include "Config.h"
 
 #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)

@@ -67,6 +67,9 @@ class DeviceBehaviourManager {
         }
 
         bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
+            bool irqs_enabled = __irq_enabled();
+            __disable_irq();
+
             // loop over the registered behaviours and if the correct one is found, set it up
             const int size = behaviours_usb->size();
             for (int i = 0 ; i < size ; i++) {
@@ -77,15 +80,20 @@ class DeviceBehaviourManager {
                     Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                     behaviour->connect_device(usb_midi_slots[idx].device);
                     usb_midi_slots[idx].behaviour = behaviour;
+                    if (irqs_enabled) __enable_irq();
                     return true;
                 }
             }
             Serial.printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
+            if (irqs_enabled) __enable_irq();
+
             return false;
         }
 
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
+                bool irqs_enabled = __irq_enabled();
+                __disable_irq();
                 Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial.flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const int size = behaviours_usbserial->size();
@@ -107,10 +115,12 @@ class DeviceBehaviourManager {
                         );
                         behaviour->connect_device(usb_serial_slots[idx].usbdevice);
                         usb_serial_slots[idx].behaviour = behaviour;
+                        if (irqs_enabled) __enable_irq();
                         return true;
                     }
                     //__enable_irq();
                 }
+                if (irqs_enabled) __enable_irq();
                 Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial.flush();
                 return false;
             }
@@ -171,7 +181,7 @@ class DeviceBehaviourManager {
         }*/
 
         void send_clocks() {    // replaces behaviours_send_clock
-            int size = behaviours->size();
+            const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial.flush();
                 behaviours->get(i)->send_clock(ticks);
