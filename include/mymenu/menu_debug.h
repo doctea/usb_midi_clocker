@@ -26,10 +26,9 @@ void setup_debug_menu() {
 
     SubMenuItemBar *bar = new SubMenuItemBar("Debug");
 
-    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Debug: Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
+    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
     bar->add(debug_times_control);
-    bar->add(new NumberControl<bool>("Debug to serial", (bool*)&debug, debug, false, true));
-    bar->add(new NumberControl<bool>("Debug insane autoload", (bool*)&debug_stress_sequencer_load, debug, false, true));
+    bar->add(new NumberControl<bool>("Extra", (bool*)&debug, debug, false, true));
+    bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug, false, true));
     menu->add(bar);
-
 }
