@@ -16,7 +16,7 @@ extern DisplayTranslator_Configured steensy;
 void toggle_autoadvance(bool on = false);
 void toggle_recall(bool on = false);
 
-bool debug_insane_sequencer_load = false;
+bool debug_stress_sequencer_load = false;
 
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
@@ -121,10 +121,10 @@ bool debug_insane_sequencer_load = false;
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
             case 'T':
-                debug_insane_sequencer_load = true;
+                debug_stress_sequencer_load = true;
                 break;
             case 't':
-                debug_insane_sequencer_load = false;
+                debug_stress_sequencer_load = false;
                 break;
             case 'D'    :
                 debug = true;

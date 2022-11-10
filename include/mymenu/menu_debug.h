@@ -6,7 +6,7 @@
 #include "menuitems_numbers.h"
 #include "submenuitem_bar.h"
 
-extern bool debug, debug_insane_sequencer_load;
+extern bool debug, debug_stress_sequencer_load;
 
 #ifndef GDB_DEBUG
 FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
@@ -29,7 +29,7 @@ void setup_debug_menu() {
     ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Debug: Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
     bar->add(debug_times_control);
     bar->add(new NumberControl<bool>("Debug to serial", (bool*)&debug, debug, false, true));
-    bar->add(new NumberControl<bool>("Debug insane autoload", (bool*)&debug_insane_sequencer_load, debug, false, true));
+    bar->add(new NumberControl<bool>("Debug insane autoload", (bool*)&debug_stress_sequencer_load, debug, false, true));
     menu->add(bar);
 
 }

@@ -227,9 +227,15 @@ void loop() {
       Serial.setTimeout(0);
   }
 
-  if (debug_insane_sequencer_load && ticks % 6 == 1)  {
-    OnPress(';');
+  if (debug_stress_sequencer_load && ticks % 6 == 1)  {
+    OnPress(':');
     OnPress('L');
+    OnPress('J');
+    OnPress('K');
+    OnPress('L');
+    OnPress('J');
+    OnPress('K');
+    OnPress(':');
   }
 
   //#ifdef ENABLE_PROFILER
@@ -333,6 +339,18 @@ void loop() {
   }
 
 
+  if (debug_stress_sequencer_load && ticks % 6 == 3)  {
+    OnPress(':');
+    OnPress('L');
+    OnPress('J');
+    OnPress('K');
+    OnPress('L');
+    OnPress('J');
+    OnPress('K');
+    OnPress(':');
+    OnPress(';');
+  }
+
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
   if (debug) Serial.println(F("about to behaviour_manager->do_reads().."));
@@ -352,6 +370,19 @@ void loop() {
     
     read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
   #endif
+
+
+  if (debug_stress_sequencer_load && ticks % 6 == 2)  {
+    OnPress(':');
+    OnPress('L');
+    OnPress('J');
+    OnPress('K');
+    OnPress('L');
+    OnPress('J');
+    OnPress('K');
+    OnPress(':');
+    OnPress(';');
+  }
 
   // process any events that are waiting from the usb keyboard handler
   input_keyboard.process_queue();
