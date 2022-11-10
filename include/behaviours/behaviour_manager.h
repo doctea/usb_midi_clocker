@@ -92,21 +92,21 @@ class DeviceBehaviourManager {
 
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
-                bool irqs_enabled = __irq_enabled();
-                __disable_irq();
+                // for some reason, doing this irq enable/disable stuff here causes prog to lock up before menu display, but ONLY if serial monitor ISN'T connected?!
+                //bool irqs_enabled = __irq_enabled();
+                //__disable_irq();
                 Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial.flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const int size = behaviours_usbserial->size();
                 for (int i = 0 ; i < size ; i++) {
                     if (!usb_serial_slots[idx].usbdevice || usb_serial_slots[idx].packed_id!=packed_id) {
                         Serial.printf(F("WARNING: usb serial device at %i went away!\n"), idx);
-                        if (irqs_enabled) __enable_irq();
+                        //if (irqs_enabled) __enable_irq();
                         return false;
                     }
                     DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
                     Serial.printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                     usb_serial_slots[idx].packed_id = packed_id;
-                    //__disable_irq();
                     if (behaviour->matches_identifiers(packed_id)) {
                         Serial.printf(F("\tDetected!  Behaviour %i on usb serial idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                         Serial.printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'?\n"), 
@@ -116,11 +116,11 @@ class DeviceBehaviourManager {
                         );
                         behaviour->connect_device(usb_serial_slots[idx].usbdevice);
                         usb_serial_slots[idx].behaviour = behaviour;
-                        if (irqs_enabled) __enable_irq();
+                        //if (irqs_enabled) __enable_irq();
                         return true;
                     }
                 }
-                if (irqs_enabled) __enable_irq();
+                //if (irqs_enabled) __enable_irq();
                 Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial.flush();
                 return false;
             }
