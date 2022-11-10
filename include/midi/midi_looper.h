@@ -654,6 +654,7 @@ class MIDITrack {
             }
             f = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!f) {    
+                if (irqs_enabled) __enable_irq();
                 Serial.printf(F("\tError: couldn't open %s for writing\n"), filename);
                 return false;
             }
@@ -721,6 +722,7 @@ class MIDITrack {
                     menu.set_last_message("Error loading recording!");//, recording_number);
                     menu.set_message_colour(ST77XX_RED);
                 #endif*/
+                if (irqs_enabled) __enable_irq();
                 return false;
             }
 

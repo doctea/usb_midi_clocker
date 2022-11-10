@@ -20,6 +20,7 @@ DeviceBehaviour_Bamble *behaviour_bamble = new DeviceBehaviour_Bamble(); //nullp
 #include "submenuitem_bar.h"
 
 #include "menuitems_object_multitoggle.h"
+#include "menuitems_numbers.h"
 
 class PatternToggle : public MultiToggleItemBase {
     bamble_pattern *target_pattern = nullptr;
@@ -49,7 +50,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     DeviceBehaviourUltimateBase::make_menu_items();
 
     // Euclidian settings bar /////////////////////////////////////////////////
-    SubMenuItemBar *bar = new SubMenuItemBar("Euclidian settings");
+    SubMenuItemBar *euclidian_options = new SubMenuItemBar("Euclidian settings");
 
     ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t> *euclidian_mode_control = new ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t>(
         "Mode",
@@ -83,9 +84,9 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     );
     euclidian_density_control->go_back_on_select = true;
 
-    bar->add(euclidian_mode_control);
-    bar->add(fills_control);
-    bar->add(euclidian_density_control);
+    euclidian_options->add(euclidian_mode_control);
+    euclidian_options->add(fills_control);
+    euclidian_options->add(euclidian_density_control);
 
 
     // mutate pattern range bar ////////////////////////////////////////////////////////////////
@@ -122,9 +123,33 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         pattern_selector->addItem(new PatternToggle(this, &patterns[i]));
     }
 
+    //// further euclidian options
+    SubMenuItemBar *further_euclidian_options = new SubMenuItemBar("Further Euclidian settings");
+    further_euclidian_options->add(new ObjectNumberControl<DeviceBehaviour_Bamble,uint16_t>(
+        "Seed modifier", 
+        this, 
+        &DeviceBehaviour_Bamble::setEuclidianSeedModifier, 
+        &DeviceBehaviour_Bamble::getEuclidianSeedModifier,
+        nullptr,
+        (uint16_t)0,
+        (uint16_t)(2^16)
+    ));
+    further_euclidian_options->add(new ObjectToggleControl<DeviceBehaviour_Bamble>(
+        "Add Phrase", 
+        this,
+        &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,
+        &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase
+    ));
+    further_euclidian_options->add(new ObjectToggleControl<DeviceBehaviour_Bamble>(
+        "Phrase Reset",
+        this,
+        &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,
+        &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate
+    ));
 
     //// add all to final menu 
-    menuitems->add(bar);
+    menuitems->add(euclidian_options);
+    menuitems->add(further_euclidian_options);
     menuitems->add(mutate_range);
     menuitems->add(pattern_selector);
 

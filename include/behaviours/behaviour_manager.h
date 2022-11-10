@@ -99,7 +99,8 @@ class DeviceBehaviourManager {
                 const int size = behaviours_usbserial->size();
                 for (int i = 0 ; i < size ; i++) {
                     if (!usb_serial_slots[idx].usbdevice || usb_serial_slots[idx].packed_id!=packed_id) {
-                        Serial.printf("WARNING: device at %i went away!\n", idx);
+                        Serial.printf(F("WARNING: usb serial device at %i went away!\n"), idx);
+                        if (irqs_enabled) __enable_irq();
                         return false;
                     }
                     DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
@@ -118,7 +119,6 @@ class DeviceBehaviourManager {
                         if (irqs_enabled) __enable_irq();
                         return true;
                     }
-                    //__enable_irq();
                 }
                 if (irqs_enabled) __enable_irq();
                 Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial.flush();

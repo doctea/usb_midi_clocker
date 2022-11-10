@@ -95,6 +95,7 @@ namespace storage {
     myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
     if (!myFile) {    
       Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+      if (irqs_enabled) __enable_irq();
       return false;
     }
     myFile.println(F("; begin sequence"));
@@ -265,6 +266,7 @@ namespace storage {
 
     if (!myFile) {
       Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial.flush();
+      if (irqs_enabled) __enable_irq();
       return false;
     }
 
@@ -305,12 +307,14 @@ namespace storage {
     if (!myOrigFile.open(sourceFile, FILE_READ)) {
       //SD.errorHalt("opening source file for read failed");
       Serial.printf(F("Error opening source file for copy '%s'\n"), sourceFile);
+      if (irqs_enabled) __enable_irq();
       return false;
     }
 
     if (!myDestFile.open(destnFile, FILE_WRITE)) {
       //SD.errorHalt("opening destn file for write failed");
       Serial.printf(F("Error opening dest file for copy '%s'\n"), destnFile);
+      if (irqs_enabled) __enable_irq();
       return false;
     }    
 
@@ -322,8 +326,8 @@ namespace storage {
 
     myOrigFile.close();
     myDestFile.close();    
-    if (irqs_enabled) __enable_irq();
 
+    if (irqs_enabled) __enable_irq();
     return true;
   }
 

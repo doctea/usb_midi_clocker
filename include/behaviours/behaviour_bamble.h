@@ -20,11 +20,16 @@
     void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 #endif
 
+#define CC_EUCLIDIAN_MUTATE_DENSITY 7
 #define CC_DEMO_MODE 19
-#define CC_FILLS_MODE 28
 #define CC_EUCLIDIAN_DENSITY 114
 #define CC_EUCLIDIAN_SET_MINIMUM_PATTERN 25	
 #define CC_EUCLIDIAN_SET_MAXIMUM_PATTERN 26	
+#define CC_EUCLIDIAN_SEED_MODIFIER 22
+#define CC_EUCLIDIAN_SEED_MODIFIER_2 23
+#define CC_EUCLIDIAN_RESET_BEFORE_MUTATE 24
+#define CC_EUCLIDIAN_SEED_USE_PHRASE 27
+#define CC_EUCLIDIAN_FILLS 28
 
 #include "midi/Drums.h"
 
@@ -53,7 +58,7 @@ class BamblePlaybackModeParameter : public MIDICCParameter {
 class BambleFillsParameter : public MIDICCParameter {
     public:
         BambleFillsParameter(char *label, DeviceBehaviourUltimateBase *target) 
-            : MIDICCParameter(label, target, (byte)CC_FILLS_MODE, (byte)10) {
+            : MIDICCParameter(label, target, (byte)CC_EUCLIDIAN_FILLS, (byte)10) {
         }
 
         virtual const char* parseFormattedDataType(byte value) {
@@ -111,7 +116,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
         void setFillsMode(bool mode) {
             this->fills_mode = mode;
-            this->sendControlChange(CC_FILLS_MODE, mode, 10);
+            this->sendControlChange(CC_EUCLIDIAN_FILLS, mode, 10);
         }
         void setDensity(float density) {
             //Serial.printf("setDensity %3.3f\n", density);
@@ -134,6 +139,32 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
         int8_t getMaximumPattern() {
             return this->maximum_pattern;
+        }
+
+        uint16_t euclidian_seed_modifier = 0;
+        bool euclidian_reset_before_mutate = true;
+        bool euclidian_seed_use_phrase = true;
+        void setEuclidianSeedModifier(uint16_t v) {
+            this->euclidian_seed_modifier = v;
+            this->sendControlChange(CC_EUCLIDIAN_SEED_MODIFIER, v >> 8, 10);
+            this->sendControlChange(CC_EUCLIDIAN_SEED_MODIFIER_2, 0x00FF & v, 10);
+        }
+        uint16_t getEuclidianSeedModifier() {
+            return this->euclidian_seed_modifier;
+        }
+        void setEuclidianResetBeforeMutate(bool v) {
+            this->euclidian_reset_before_mutate = v;
+            this->sendControlChange(CC_EUCLIDIAN_RESET_BEFORE_MUTATE, v?127:0, 10);
+        }
+        bool getEuclidianResetBeforeMutate() {
+            return this->euclidian_reset_before_mutate;
+        }
+        void setEuclidianSeedUsePhrase(bool v) {
+            this->euclidian_seed_use_phrase = v;
+            this->sendControlChange(CC_EUCLIDIAN_SEED_USE_PHRASE, v?127:0, 10);
+        }
+        bool getEuclidianSeedUsePhrase() {
+            return this->euclidian_seed_use_phrase;
         }
 
         bamble_pattern patterns[16] = {
@@ -257,12 +288,15 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->setDensity(0.5);      // initialise density to 50%
             this->setMinimumPattern(TRIGGER_KICK);
             this->setMaximumPattern(TRIGGER_RIDE_CYM);
+            this->setEuclidianSeedModifier(0);          // 22, 23 CC_EUCLIDIAN_SEED_MODIFIER_2
+            this->setEuclidianResetBeforeMutate(true);  // 24 CC_EUCLIDIAN_RESET_BEFORE_MUTATE
+            this->setEuclidianSeedUsePhrase(true);      //  `27` | `CC_EUCLIDIAN_SEED_USE_PHRASE`
 
             for (int i = 0 ; i < NUM_EUCLIDIAN_PATTERNS ; i++) {
                 this->setPatternEnabled(i, true);
             }
 
-            DeviceBehaviourUSBBase::sendControlChange(7, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
+            DeviceBehaviourUSBBase::sendControlChange(CC_EUCLIDIAN_MUTATE_DENSITY, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
 
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2
             DeviceBehaviourUSBBase::sendControlChange(78, 0, 10);
@@ -288,6 +322,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
             lines->add(String(F("density="))        + String(this->getDensity()));
+            lines->add(String(F("mutate_low="))     + String(this->getMinimumPattern()));
+            lines->add(String(F("mutate_high="))    + String(this->getMaximumPattern()));
+            lines->add(String(F("mutate_seed_modifier=")) + String(this->getEuclidianSeedModifier()));
+            lines->add(String(F("reset_before_mutate=")) + String(this->getEuclidianResetBeforeMutate()?"true":"false"));
+            lines->add(String(F("seed_use_phrase=")) + String(this->getEuclidianSeedUsePhrase()?"true":"false"));
             const int size = NUM_EUCLIDIAN_PATTERNS;
             for (int i = 0 ; i < size ; i++) {
                 lines->add(
@@ -311,6 +350,16 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                 int number = key.replace(F("pattern_enable_"),"").toInt();
                 this->setPatternEnabled(number, value.equals(F("enabled")));
                 return true;
+            } else if (key.startsWith(F("mutate_low"))) {
+                this->setMinimumPattern(value.toInt());
+            } else if (key.startsWith(F("mutate_high"))) {
+                this->setMaximumPattern(value.toInt());
+            } else if (key.startsWith(F("mutate_seed_modifier"))) {
+                this->setEuclidianSeedModifier(value.toInt());
+            } else if (key.startsWith(F("reset_before_mutate"))) {
+                this->setEuclidianResetBeforeMutate(value.equals("true"));
+            } else if (key.startsWith(F("seed_use_phrase"))) {
+                this->setEuclidianSeedUsePhrase(value.equals("true"));
             } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             }

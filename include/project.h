@@ -309,6 +309,7 @@ class Project {
             myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!myFile) {    
                 Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+                if (irqs_enabled) __enable_irq();
                 return false;
             }
 
@@ -364,6 +365,7 @@ class Project {
 
             if (!myFile) {
                 Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+                if (irqs_enabled) __enable_irq();
                 return false;
             }
 
