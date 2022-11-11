@@ -386,6 +386,7 @@ void loop() {
   }
 
   // process any events that are waiting from the usb keyboard handler
+  process_key_buffer();
   input_keyboard.process_queue();
 
   //Serial.println("end of loop!"); Serial.flush();

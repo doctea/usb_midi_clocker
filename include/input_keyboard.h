@@ -42,7 +42,7 @@ bool debug_stress_sequencer_load = false;
     // track commands received over usb keyboard so that they can be executed inside of main loop(), instead of potentially causing crashes by eg overlapping file accesses
     class InputKeyboardQueue {
         public:
-            volatile bool    queued_load_selected_sequence = false,
+            volatile bool queued_load_selected_sequence = false,
                     queued_save_selected_sequence = false,
                     queued_load_next_sequence = false,
                     queued_load_previous_sequence = false,
@@ -98,11 +98,34 @@ bool debug_stress_sequencer_load = false;
     };
 
     InputKeyboardQueue input_keyboard;
+    volatile bool already_pressing = false;
+
+    struct keypress_t {
+        int key = 0;
+        byte modifiers = 0;
+    };
+
+    volatile keypress_t key_log[10];
+    volatile int key_log_count = -1;
 
     void OnPress(int key) {
-        int modifiers = keyboard1.getModifiers();
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
+        key_log_count++;
+        if (key_log_count>=10) key_log_count = -1;
+        key_log[key_log_count].key = key;
+        key_log[key_log_count].modifiers = keyboard1.getModifiers();
+        if (irqs_enabled) __enable_irq();
+    }
+
+
+    void process_key(int key, int modifiers) {
+        if (already_pressing) return;
+        already_pressing = true;
+
+        //int modifiers = keyboard1.getModifiers();
+        //bool irqs_enabled = __irq_enabled();
+        //__disable_irq();
         switch(key) {
             /*case KEY_ESC             :  // ESCAPE
                 while(menu->is_opened())
@@ -211,6 +234,21 @@ bool debug_stress_sequencer_load = false;
             default:
                 Serial.printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
                 break;
+        }
+        already_pressing = false;
+        //if (irqs_enabled) __enable_irq();
+    }
+
+    void process_key_buffer() {
+        bool irqs_enabled = __irq_enabled();
+        __disable_irq();
+
+        for (int i = 0 ; i < 10 ; i++) {
+            if (key_log[key_log_count].key>=0) {
+                process_key(key_log[key_log_count].key, key_log[key_log_count].modifiers);
+                key_log[key_log_count].key = -1;
+                key_log[key_log_count].modifiers = -1;
+            }
         }
         if (irqs_enabled) __enable_irq();
     }

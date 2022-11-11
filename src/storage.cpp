@@ -81,8 +81,8 @@ namespace storage {
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
     //Serial.println("save_sequence not implemented on teensy");
-    bool irqs_enabled = __irq_enabled();
-    __disable_irq();
+    //bool irqs_enabled = __irq_enabled();
+    //__disable_irq();
     File myFile;
 
     char filename[255] = "";
@@ -95,7 +95,7 @@ namespace storage {
     myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
     if (!myFile) {    
       Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
-      if (irqs_enabled) __enable_irq();
+      //if (irqs_enabled) __enable_irq();
       return false;
     }
     myFile.println(F("; begin sequence"));
@@ -126,7 +126,7 @@ namespace storage {
     }
     myFile.println(F("; end sequence"));
     myFile.close();
-    if (irqs_enabled) __enable_irq();
+    //if (irqs_enabled) __enable_irq();
     Serial.println(F("Finished saving."));
     return true;
   }
@@ -248,8 +248,12 @@ namespace storage {
   }
 
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
-    bool irqs_enabled = __irq_enabled();
-    __disable_irq();
+    static volatile bool already_loading = false;
+    if (already_loading) return false;
+    already_loading = true;
+
+    //bool irqs_enabled = __irq_enabled();
+    //__disable_irq();
     File myFile;   
 
     char filename[255] = "";
@@ -266,7 +270,8 @@ namespace storage {
 
     if (!myFile) {
       Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial.flush();
-      if (irqs_enabled) __enable_irq();
+      //if (irqs_enabled) __enable_irq();
+      already_loading = false;
       return false;
     }
 
@@ -276,7 +281,7 @@ namespace storage {
     }
     Serial.println(F("Closing file..")); Serial.flush();
     myFile.close();
-    if (irqs_enabled) __enable_irq();
+    //if (irqs_enabled) __enable_irq();
     Serial.println(F("File closed")); Serial.flush();
 
     #ifdef ENABLE_APCMINI_DISPLAY
@@ -284,6 +289,7 @@ namespace storage {
     #endif
 
     Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial.flush();
+    already_loading = false;
     return true;
   }
 
@@ -298,22 +304,22 @@ namespace storage {
   }*/
 
   bool copy_file(const char *sourceFile, const char *destnFile) {
-    bool irqs_enabled = __irq_enabled();
-    __disable_irq();
+    //bool irqs_enabled = __irq_enabled();
+    //__disable_irq();
     SdFile myOrigFile;
     SdFile myDestFile;
 
     if (!myOrigFile.open(sourceFile, FILE_READ)) {
       //SD.errorHalt("opening source file for read failed");
       Serial.printf(F("Error opening source file for copy '%s'\n"), sourceFile);
-      if (irqs_enabled) __enable_irq();
+      //if (irqs_enabled) __enable_irq();
       return false;
     }
 
     if (!myDestFile.open(destnFile, FILE_WRITE)) {
       //SD.errorHalt("opening destn file for write failed");
       Serial.printf(F("Error opening dest file for copy '%s'\n"), destnFile);
-      if (irqs_enabled) __enable_irq();
+      //if (irqs_enabled) __enable_irq();
       return false;
     }    
 
@@ -326,7 +332,7 @@ namespace storage {
     myOrigFile.close();
     myDestFile.close();    
 
-    if (irqs_enabled) __enable_irq();
+    //if (irqs_enabled) __enable_irq();
     return true;
   }
 

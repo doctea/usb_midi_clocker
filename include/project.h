@@ -294,8 +294,8 @@ class Project {
             return this->save_project_settings(current_project_number);
         }
         bool save_project_settings(int save_to_project_number) {
-            bool irqs_enabled = __irq_enabled();
-            __disable_irq();
+            //bool irqs_enabled = __irq_enabled();
+            //__disable_irq();
             File myFile;
 
             // determine filename, delete if exists, and open the file up for writing
@@ -309,7 +309,7 @@ class Project {
             myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!myFile) {    
                 Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
-                if (irqs_enabled) __enable_irq();
+                //if (irqs_enabled) __enable_irq();
                 return false;
             }
 
@@ -343,13 +343,13 @@ class Project {
             myFile.println(F("; end project"));
             myFile.close();
             Serial.println(F("Finished saving."));
-            if (irqs_enabled) __enable_irq();
+            //if (irqs_enabled) __enable_irq();
             return true;
         }
 
         bool load_project_settings(int project_number) {
-            bool irqs_enabled = __irq_enabled();
-            __disable_irq();
+            //bool irqs_enabled = __irq_enabled();
+            //__disable_irq();
             File myFile;
 
             if (isLoadMatrixMappings()) {
@@ -365,7 +365,7 @@ class Project {
 
             if (!myFile) {
                 Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
-                if (irqs_enabled) __enable_irq();
+                //if (irqs_enabled) __enable_irq();
                 return false;
             }
 
@@ -375,7 +375,7 @@ class Project {
             }
             Serial.println(F("Closing file.."));
             myFile.close();
-            if (irqs_enabled) __enable_irq();
+            //if (irqs_enabled) __enable_irq();
             Serial.println(F("File closed"));
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);

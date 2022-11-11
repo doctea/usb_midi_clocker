@@ -67,8 +67,8 @@ class DeviceBehaviourManager {
         }
 
         bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
-            bool irqs_enabled = __irq_enabled();
-            __disable_irq();
+            //bool irqs_enabled = __irq_enabled();
+            //__disable_irq();
 
             // loop over the registered behaviours and if the correct one is found, set it up
             const int size = behaviours_usb->size();
@@ -80,12 +80,12 @@ class DeviceBehaviourManager {
                     Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                     behaviour->connect_device(usb_midi_slots[idx].device);
                     usb_midi_slots[idx].behaviour = behaviour;
-                    if (irqs_enabled) __enable_irq();
+                    //if (irqs_enabled) __enable_irq();
                     return true;
                 }
             }
             Serial.printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
-            if (irqs_enabled) __enable_irq();
+            //if (irqs_enabled) __enable_irq();
 
             return false;
         }
