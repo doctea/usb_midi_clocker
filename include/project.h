@@ -237,7 +237,7 @@ class Project {
             }
 
             bool load_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf(F("load for selected_sequence_number project %i / loop %i\n"), current_project_number, selected_loop_number);
+                Serial.printf(F("load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
@@ -245,7 +245,7 @@ class Project {
                 return result;
             }
             bool save_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf(F("save for selected_sequence_number project %i / loop %i\n"), current_project_number, selected_loop_number);
+                Serial.printf(F("save for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
                 bool result = track->save_loop(current_project_number, selected_loop_number);
                 if (result) {

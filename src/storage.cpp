@@ -284,7 +284,6 @@ namespace storage {
     #endif
 
     Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial.flush();
-    __enable_irq();
     return true;
   }
 
