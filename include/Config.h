@@ -70,6 +70,8 @@
 #define ENABLE_BASS_TRANSPOSE MIDI3
 #define DEFAULT_NEUTRON_OCTAVE 2    // set to 1 for 'disabled'
 
+#define ENABLE_DPT_LOOPER MIDI8
+
 // serial MIDI devices
 //#define ENABLE_LESTRUM    // these are defined in ConfigMidi.h instead
 //#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead
@@ -88,7 +90,7 @@
     #define ENABLE_SUBCLOCKER
     #define ENABLE_CRAFTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
-
+    
     #define ENABLE_APCMINI_DISPLAY
 #endif
 

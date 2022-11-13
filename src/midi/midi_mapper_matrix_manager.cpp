@@ -15,6 +15,7 @@
 #include "behaviours/behaviour_neutron.h"
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
+#include "behaviours/behaviour_dptlooper.h"
 
 #include "behaviours/behaviour_cvinput.h"
 
@@ -71,6 +72,15 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
     #endif
+
+    /*midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : DPT : ch 1", midi_out_serial[4], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : DPT : ch 1", midi_out_serial[5], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : DPT : ch 1", midi_out_serial[6], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : DPT : ch 1", midi_out_serial[7], 1));*/
+    #ifdef ENABLE_DPT_LOOPER
+        midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
+    #endif
+
     //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
     //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
