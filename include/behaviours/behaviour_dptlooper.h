@@ -29,7 +29,16 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
                 this->sendRealTime(midi::Start);
             }
         }
+        virtual void on_tick (uint32_t tick) override {
+            send_clock(tick);
+        }
 
+        virtual void send_clock(uint32_t ticks) override {
+            if (!is_connected()) return;
+            this->sendRealTime(midi::Clock);
+            this->sendNow();
+        }
+        
         void setLoopType(int loop_type) {
             this->loop_type = loop_type;
         }

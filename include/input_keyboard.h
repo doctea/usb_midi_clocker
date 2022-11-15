@@ -199,11 +199,11 @@ bool debug_stress_sequencer_load = false;
                 Serial.println(F("==== Loaded next sequence!")); Serial.flush();
                 break;
             case 'j'            :
-                Serial.println(F("Select previous sequence"));
+                //Serial.println(F("Select previous sequence"));
                 project.select_previous_sequence();
                 break;
             case ';'            :
-                Serial.println(F("Select next sequence"));
+                //Serial.println(F("Select next sequence"));
                 project.select_next_sequence();
                 break;
             // debug
@@ -213,7 +213,7 @@ bool debug_stress_sequencer_load = false;
                 Serial.end();
                 Serial.begin(115200);
                 Serial.setTimeout(0);
-                Serial.println("---restarted serial---");
+                Serial.println(F("---restarted serial---"));
                 break;
             // change project number
             case 49 ... 57      :
