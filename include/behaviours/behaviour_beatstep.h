@@ -78,7 +78,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 if (this->auto_advance_pattern) {
                     int phrase_number = (phrase % NUM_PATTERNS);
                     this->send_preset_change(phrase_number);
-                    this->on_restart(); 
+                    //this->on_restart(); 
+                    this->set_restart_on_bar(true);
                 }
             }
 
