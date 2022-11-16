@@ -88,6 +88,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_clocked: base classes for handling midi clock delay and divison
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0, also CC parameters that can be modulated from CV input
 - behaviour_drumkit: input from midi drumkit over DIN
+- behaviour_dptlooper: send clock and bar/phrase starts for [DPTLooper](https://github.com/doctea/dptlooper) [experimental/WIP]
 - behaviour_keystep: sends clock and receives notes
 - behaviour_lestrum: input from LeStrum on both channels
 - behaviour_mpk49: input from Akai MK49, including control over looper
@@ -126,17 +127,15 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Known issues (current)
 
-- Occasional freezes/crashes for unknown reasons
-- GDB debug mode doesn't work / does't even compile
-- Device stops responding/sending clocks for a moment while a new USB device is initialised -- think this is a limitation of the underlying library
+- Occasional freezes/crashes... pretty sure related to something in the USB library
+- GDB debug mode doesn't work
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
-- Enabling BEATSTEP_SYSEX causes crashes in the USBHost_t36 library sometimes - sometimes hit null transfer pointers..?  ~~might be due to dodgy cable or usb hubs, or akai apcmini?~~  runs for hours perfectly OK then will suddenly lock up inside the USBHost_t36 queue_Data_Transfer 
 - Think it may be be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
 
 ## Known issues (may be solved)
 
 - Although it has been known run for many hours solidly, been getting some occasional crashes lately (especially while working on the looper code, though unsure if this is related).  Might be because of bugs in my attempt to patch the problem with the USBHost_t36 USB MIDI clock problem...
-- MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the debug serial output?!  Think maybe a problem in the underlying USBHost_t36 code?
+- ~~MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the debug serial output?!  Think maybe a problem in the underlying USBHost_t36 code?~~
   - notes work fine though if sending clock is disabled?!
   - and MIDI that comes in from USB device eg beatstep and then sent to the same output device seems to work ok regardless?
   - something to do with USB/MIDI buffers I guess?  maybe isn't getting flushed properly or messages get trashed before being sent?
@@ -145,72 +144,49 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - workaround for the time being is to use hardware serial MIDI when notes+clock are needed
   - hmm, may have worked around this by sending looper notes before sending clocks, in a do_pre_clock() function...?
     - OK so yeah, problem seems to have been solved by sending the note on/offs in a separate loop before then sending all the clocks in a separate loop.
-- Beatstep sysex commands don't work, probably for the same reason?
+- ~~Beatstep sysex commands don't work, probably for the same reason?~~
 - MIDI looper uses a LOT of RAM (~48k for 1 phrase -- 384 (ticks) * 127 (notes)) - less memory-hungry polyphony can be used, but drawing the pianoroll to screen would become more intensive...
 - ~~Voltage Source Calibration UI is ugly / changing sizes constantly~~
-- BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as mentioned below.
-  - 2022-11-02: re-enabled this, made a tweak, now seems to work...?
+- ~~BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as mentioned below.~~
 
 ## Configuration
 
 - see `include/Config.h` for lots of switches to enable/disable features, set pin assignments, and the like
+- `include/BootConfig.h` to turn on 'wait for serial on boot'
 - see also `include/ConfigMidi.h` for a few more switches
-- `src/midi_mapper_matrix_manager.cpp` is where a lot of midi device input/output mappings are initialised and defaults assigned, so you may need to tweak stuff here to match your hardware
+- `src/midi_mapper_matrix_manager.cpp` is where a lot of midi device input/output mappings are initialised and defaults assigned - tweak stuff here to match your available devices
 - `src/behaviour_manager.cpp` is where devices are set up and configured, so this may need tweaking to match your hardware too
-- `src/menu.cpp` is where the display and menu system are initialised and menu items configured, so you may need to tweak stuff here too
+- `src/menu.cpp` is where the display and menu system are initialised and menu items configured, so you may need to tweak stuff here too to match what other features you have enabled
 
 ### TODO/Future 
 
-- ~~Panic / all notes off action~~
-- ~~Bass drone mode~~
- - ~~toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..~~
- - stutter/machinegun mode? (eg play 32nd stabs instead of drone)
-- ~~Move bass transposition options into the OutputWrapper?~~ done!
- - ~~remove debug output for this~~
- - ~~set default transposition~~
- - save transposition info to project?
- - ~~should actually probably be part of the DeviceBehaviour instead now?~~
+
+- stutter/machinegun mode? (eg play 32nd stabs instead of drone)
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
-- ~~More efficient Akai APCMini display output (don't need to send as many messages as we do, can just update when it needs to)~~
-- ~~Enable switching between multiple projects~~ done
-- ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
 - Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
-  - Done some of this!
-  - ~~Playback mode~~
-  - ~~Fills on/off~~
-  - ~~Density~~
-  - ~~Low mutate/High mutate~~
-  - ~~Pattern enables~~
-  - Select/lock seed (think need to fix some stuff in the original project to achieve this)
   - Control over the envelopes AHDSR + modulation
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - eg Euclidian sequencer
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
 - Improve stability of clock by getting it working in uClock/interrupts mode without crashes
-- ~~Sync from external clock input (MIDI)~~ done
-  - Sync from external clock input (CV)
+- Sync from external clock input (CV)
 - ~~More outputs~~ - done, now works with 4 clock outs and 4 separate sequencer track outs
   - add 2 more for use as resets
-- ~~MIDI DIN or TRS input + output~~ now using Deftaudio 8x8 interface board so get 8 MIDI DIN-ins and 8 MIDI DIN-outs!
 - Better sequencer
   - better how?
   - configurable chaining of sequences ie 'song mode'?
   - sequencer mutations / fills
   - allow offbeat tracks or individual steps
   - stutter trigger mode
-- Sequencer/looper that ~~records and playback MIDI notes or~~ CV
-  - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
+- Sequencer/looper that records and playback CV/modulation
   - improve by writing & saving real MIDI files?
-  - ~~Genericise MIDI looper functionality, so can eg record and loop drums ~~
   - Make a looper manager or something to allow easier control of multiple loopers
   - Variable loop length
   - Variable repeats
   - more efficient memory/cpu usage
-- ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
-  - todo: use ili9340 screen + touchscreen
-- ~~Encoder for controlling options and parameters~~
+- Port menu etc to use ili9340 screen + touchscreen
 - Give better control over Beatstep via sysex if possible?
   - ~~auto-advance pattern mode~~
   - ie, ~~change speed..?~~
@@ -221,14 +197,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Partially done, can be improved further
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
-  - ~~Done for Subclocker and saves with Project settings~~ ~~-- maybe it should save with pattern instead though - could then ? ~~
-  - ~~add it for devices it might be useful for, eg CraftSynth~~
   - tricks like 'half-time beatstep for last bar of phrase'
-- ~~Save and recall MIDI device+channel routings~~
-  - ~~Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded~~
 - Full configuration of MIDI device+channel routing
-- ~~Allow input/loops to be redirected to multiple MIDI outputs.~~
-  - ~~MIDI input/output matrix?~~
 - Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CC modulation
   - ~~CV-to-MIDI, for modulating MIDI devices from Eurorack CV (eg modulate the cutoff on CraftSynth from incoming CV; use the [parameters](https://github.com/doctea/parameters) library to do this)~~
@@ -251,17 +221,12 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Improve quantizer (take note length into consideration)
   - Optimise memory usage with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
-- ~~Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations~~
-  - DONE eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)
-  - TODO: and for Arduino Unos without needing to use USB Midi Klik 
-    - todo: see whether we need to use device unique id rather than pid+vid to ensure correct detection of mltiple devices
+- TODO: usbserial and for Arduino Unos without needing to use USB Midi Klik 
+  - todo: see whether we need to use device unique id rather than pid+vid to ensure correct detection of mltiple devices
   - or for things that don't even talk MIDI, like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
-    - ~~todo: improve this by not requiring the behaviour to implement MIDI -- could possibly let the behaviour itself deal with that, just have the usbserial connection stuff pass the usb device~~
-    - todo: implement a proof-of-concept non-MIDI usb serial device
+  - todo: implement a proof-of-concept non-MIDI usb serial device
 - Transposition of everything (Beatstep etc?) in chord progressions
-- ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
-  - Make the pc_usb connections work using behaviours
-  - .. think there might be some duplication in purpose between MIDIOutputWrapper and Behaviours now...?
+- Make the pc_usb connections work using behaviours
 - ~~Allow to control via USB typing keyboard~~
   - ~~control the menus so that I can still fiddle with the device without disturbing my cat~~
   - shortcuts for different functions would make this something that could be performed with
@@ -273,17 +238,60 @@ Both are encouraged, I would love to have this be useful to others and to accept
     - might be good to be able to enable/disable it for certain mappings tho?
   - Aftertouch
 - Allow Behaviours to register CCs they respond to and can generate
-  - CraftSynth has Parameters, can assign modulation to them
   - So that can remap these as sources and targets
-  - eg remap APCMini faders to Bamble options, remap Bamble envelopes to CraftSynth cutoff, etc...
+  - remap Bamble envelopes to CraftSynth cutoff, etc...
   - expose internal settings as Parameters, so that can have modulation mapped to them too...
 - Reassignable Parameters that can be pointed at any given Behaviour+CC, configured from menus
   - expose internal settings (like bpm, clock delays...?) as Parameters, so that can have modulation mapped to them too...
 - Reassignable ParameterInputs, that can be set to take their values from an incoming MIDI stream
   - Register them with the midi_matrix_mapper_manager so that when it receives a CC value change, it updates the ParameterInput current_value
+  
+## Done
+
+- ~~Panic / all notes off action~~
 - ~~Add 'all notes off' on 'extra button' press in midi_matrix_mapper menu~~
   - done -- added a 'PANIC' menu option and keyboard shortcut (p)
-  
+- ~~Move bass transposition options into the OutputWrapper?~~ done!
+ - ~~remove debug output for this~~
+ - ~~set default transposition~~
+ - save transposition info to project?
+ - ~~should actually probably be part of the DeviceBehaviour instead now?~~
+ - ~~More efficient Akai APCMini display output (don't need to send as many messages as we do, can just update when it needs to)~~
+- ~~Enable switching between multiple projects~~ done
+- ~~Port to Teensy 4.1 and~~ (done - teensy version is now the main branch!)
+- ~~Sequencer/looper that records and playback MIDI notes~~
+  - ~~rudimentary MIDI looper~~ working, and saves to SD, 8 slots per project, with auto-advance
+  - ~~Genericise MIDI looper functionality, so can eg record and loop drums ~~
+- Bambleweeny controls
+  - ~~Playback mode~~
+  - ~~Fills on/off~~
+  - ~~Density~~
+  - ~~Low mutate/High mutate~~
+  - ~~Pattern enables~~
+  - ~~Select/lock seed~~
+- ~~Sync from external clock input (MIDI)~~ done
+- ~~MIDI DIN or TRS input + output~~ now using Deftaudio 8x8 interface board so get 8 MIDI DIN-ins and 8 MIDI DIN-outs!
+- ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
+- ~~Encoder for controlling options and parameters~~
+- ~~Configurable per-device MIDI clock divisions/multiplier~~
+  - ~~Done for Subclocker and saves with Project settings~~ ~~-- maybe it should save with pattern instead though - could then ? ~~
+  - ~~add it for devices it might be useful for, eg CraftSynth~~
+- ~~Save and recall MIDI device+channel routings~~
+  - ~~Improve saving and recalling of MIDI device+channel routing, rather than having the names hardcoded~~
+- ~~Allow input/loops to be redirected to multiple MIDI outputs.~~
+  - ~~MIDI input/output matrix?~~
+- ~~Treat serial USB devices as MIDI devices -- for devices that can behave like MIDI devices, but that don't expose the correct USB device enumerations~~
+- ~~todo: improve this by not requiring the behaviour to implement MIDI -- could possibly let the behaviour itself deal with that, just have the usbserial connection stuff pass the usb device~~
+  - DONE ~~eg for the [OpenTheremin v4 with USB MIDI modification](https://github.com/MrDham/OpenTheremin_V4_with_MIDI)~~
+- ~~Make DeviceBehaviours work on serial inputs/outputs too, ...?~~
+- ~~Bass drone mode~~
+ - ~~toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..~~
+- ~~CraftSynth has Parameters, can assign modulation to them~~
+- ~~eg remap APCMini faders to Bamble options~~
+
+---
+
+
 ## Explanation/demo (very much out of date!)
 
 ![my unit](https://github.com/doctea/usb_midi_clocker/blob/main/media/my%20unit.jpg "My unit")
