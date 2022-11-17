@@ -171,7 +171,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->setEuclidianSeedModifier(random(16384));
         }
 
-        bamble_pattern patterns[16] = {
+        bamble_pattern patterns[20] = {
             //CC, label
             { 32, "Kick" },
             { 33, "Sidestick" },
@@ -189,10 +189,10 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             { 45, "Vibra" },
             { 46, "Ride Bell" },
             { 47, "Ride Cym" },
-            /*{ 48, "BassCh4" },
+            { 48, "BassCh4" },
             { 49, "BitsCh3" },
             { 50, "Pitch1Ch1" },
-            { 51, "Pitch2Ch2" }*/
+            { 51, "Pitch2Ch2" }
         };
         #define NUM_EUCLIDIAN_PATTERNS (int)(sizeof(patterns) / sizeof(bamble_pattern))
 
@@ -201,7 +201,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->patterns[number].current_state = state;
             this->sendControlChange(patterns[number].cc_number, state ? 127 : 0, 10);
             Serial.printf(
-                "%s#setPatternEnabled(%i, %s) sending ControlChange for %s\n", 
+                F("%s#setPatternEnabled(%i, %s) sending ControlChange for %s\n"), 
                 this->get_label(), 
                 number, 
                 state?"On":"Off", 
@@ -286,12 +286,13 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
             // disable playing from own BPM (ie, require clock to play)
             DeviceBehaviourUSBBase::sendControlChange(16, 0, 10);
+
             //this->setDemoMode(1);       // initialise in playing/non-mutating state
             this->setDemoMode(2);       // initialise in playing+mutating state
             this->setFillsMode(true);   // initialise in fills mode
             this->setDensity(0.5);      // initialise density to 50%
             this->setMinimumPattern(TRIGGER_KICK);
-            this->setMaximumPattern(TRIGGER_RIDE_CYM);
+            this->setMaximumPattern(TRIGGER_PITCH_2_CH2);
             this->setEuclidianSeedModifier(0);          // 22, 23 CC_EUCLIDIAN_SEED_MODIFIER_2
             this->setEuclidianResetBeforeMutate(true);  // 24 CC_EUCLIDIAN_RESET_BEFORE_MUTATE
             this->setEuclidianSeedUsePhrase(true);      //  `27` | `CC_EUCLIDIAN_SEED_USE_PHRASE`
@@ -303,10 +304,10 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             DeviceBehaviourUSBBase::sendControlChange(CC_EUCLIDIAN_MUTATE_DENSITY, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
 
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2
-            DeviceBehaviourUSBBase::sendControlChange(78, 0, 10);
+            /*DeviceBehaviourUSBBase::sendControlChange(78, 0, 10);
             DeviceBehaviourUSBBase::sendControlChange(79, 0, 10);
             DeviceBehaviourUSBBase::sendControlChange(50, 0, 10);
-            DeviceBehaviourUSBBase::sendControlChange(51, 0, 10);
+            DeviceBehaviourUSBBase::sendControlChange(51, 0, 10);*/
 
             // sustain to max for the envelope outputs
             DeviceBehaviourUSBBase::sendControlChange(67, 127, 10);

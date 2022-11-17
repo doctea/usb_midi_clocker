@@ -117,10 +117,16 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     mutate_range->add(maximum_pattern);
 
     // select patterns on/off ////////////////////////////////////////////////////////////////
-    ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled patterns", true);
-    for (uint32_t i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+    ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled drum patterns", true);
+    for (uint32_t i = 0 ; i < 16/*sizeof(this->patterns) / sizeof(bamble_pattern)*/ ; i++ ) {
         pattern_selector->addItem(new PatternToggle(this, &patterns[i]));
     }
+
+    ObjectMultiToggleControl *pattern_selector_2 = new ObjectMultiToggleControl("Enabled melody patterns", true);
+    for (uint32_t i = 16 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
+        pattern_selector_2->addItem(new PatternToggle(this, &patterns[i]));
+    }
+
 
     //// further euclidian options
     SubMenuItemBar *further_euclidian_options = new SubMenuItemBar("Further Euclidian settings");
@@ -156,6 +162,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     menuitems->add(further_euclidian_options);
     menuitems->add(mutate_range);
     menuitems->add(pattern_selector);
+    menuitems->add(pattern_selector_2);
 
     DividedClockedBehaviour::make_menu_items();
 

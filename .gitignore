@@ -15,3 +15,5 @@ __offcuts/*
 lib/
 circuits/*
 USBHost_t36
+media/screenshots
+sd_card_files
