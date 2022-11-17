@@ -47,10 +47,6 @@ class MIDICCParameter : public DataParameter<DeviceBehaviourUltimateBase,byte> {
                 if (this->debug) Serial.printf(F("WARNING: No target set in MIDICCParameter#setTargetValueFromData in '%s'!\n"), this->label);
             }
         }
-
-        #ifdef ENABLE_SCREEN
-            FLASHMEM virtual LinkedList<MenuItem *> *makeControls() override;
-        #endif
 };
 
 // for parameters where we want to both accept updates from a mapping (eg a keyboard routed to the device), while also applying modulation before sending the actual value out to the target device, eg, modwheel
