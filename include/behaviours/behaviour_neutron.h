@@ -59,6 +59,8 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
 
             ModwheelReceiver::initialise_parameters();
 
+            already_initialised = true;
+
             return parameters;
         }
 

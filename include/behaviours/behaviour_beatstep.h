@@ -63,13 +63,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
 
         #ifdef ENABLE_BEATSTEP_SYSEX
+            // thank you to https://www.untergeek.de/2014/11/taming-arturias-beatstep-sysex-codes-for-programming-via-ipad/ for this info
+            // stuff for advancing pattern
             void set_auto_advance_pattern(bool auto_advance_pattern) {
                 this->auto_advance_pattern = auto_advance_pattern;
             }
             bool is_auto_advance_pattern() {
                 return this->auto_advance_pattern;
             }
-
             virtual void on_end_phrase(uint32_t phrase) override {
                 if (this->device==nullptr) return;
 
@@ -82,7 +83,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     this->set_restart_on_bar(true);
                 }
             }
-
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
@@ -93,6 +93,46 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
+            }
+
+            // pattern length settings
+            byte pattern_length = 16;
+            void setPatternLength(byte length) {
+                // Pattern length: F0 00 20 6B 7F 42 02 00 50 06 nn F7 (1-16 steps, 1-0x10).
+                length = constrain(length,1,16);
+                if (this->pattern_length!=length) {
+                    uint8_t data[] = {
+                        0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x50, 0x06, (byte)(length), 0xF7
+                    };
+                    this->device->sendSysEx(sizeof(data), data, true);
+                    Serial.printf(F("%s#setPatternLength(%i)\n"), this->get_label(), length);
+                }
+                this->pattern_length = length;
+            }
+            byte getPatternLength() {
+                return pattern_length;
+            }
+
+            FLASHMEM
+            virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+                static bool already_initialised = false;
+                if (already_initialised)
+                    return this->parameters;
+                DeviceBehaviourUSBBase::initialise_parameters();
+                //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
+                ClockedBehaviour::initialise_parameters();
+
+                // todo: this actually isn't much use as a modulation target since the beatstep restarts when this changes, so instead make it into a regular menuitem thing
+                this->parameters->add((new DataParameter<DeviceBehaviour_Beatstep,byte>(
+                        (const char*)"Pattern length", 
+                        this, 
+                        &DeviceBehaviour_Beatstep::setPatternLength, 
+                        &DeviceBehaviour_Beatstep::getPatternLength
+                ))->initialise_values(1,16));
+
+                already_initialised = true;
+
+                return parameters;
             }
         #endif
 
