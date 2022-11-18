@@ -166,9 +166,27 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         bool getEuclidianSeedUsePhrase() {
             return this->euclidian_seed_use_phrase;
         }
-
         void setRandomSeed() {
             this->setEuclidianSeedModifier(random(16384));
+        }
+
+        // Trigger/LFO settings: 0->19 = trigger #, 20 = off, 32->51 = trigger #+loop, 64->83 = trigger #+invert, 96->115 = trigger #+loop+invert
+        // CC 71, 87, 95, 103        
+        int envelope_trigger_on[9] = {
+            11, 12, 13, 14, 15, 18, 18, 19, 19
+        };
+        const int envelope_trigger_on_cc[9] = {
+            71, 79, 87, 95, 103, 71, 79, 87, 95
+        };
+        void set_envelope_trigger_on(int env, int v) {
+            if (env<0 || env >= 9) return;
+            int channel = env >= 5 ? 11 : 10;
+            this->envelope_trigger_on[env] = v;
+            this->sendControlChange((byte)envelope_trigger_on_cc[env], v, channel);
+        }
+        int get_envelope_trigger_on(int env) {
+            if (env<0 || env >= 9) return 0;
+            return this->envelope_trigger_on[env];
         }
 
         bamble_pattern patterns[20] = {
