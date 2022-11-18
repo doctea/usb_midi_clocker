@@ -11,59 +11,24 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
         int envelope_number = -1;
         DeviceBehaviour_Bamble *behaviour = nullptr;
         BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int envelope_number, LinkedList<option> *available_values = nullptr) 
-            : ObjectSelectorControl(label, this, nullptr, nullptr, nullptr)//, &BambleTriggerOnSelectorControl::setE &DeviceBehaviour_Bamble::get_envelope_trigger_on, nullptr)
+            : ObjectSelectorControl(label, this, &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn, &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn, nullptr)//, &BambleTriggerOnSelectorControl::setE &DeviceBehaviour_Bamble::get_envelope_trigger_on, nullptr)
         {
-            Serial.printf("BambleTriggerOnSelectorControl constructor %s, %i starting..\n", label, envelope_number); Serial.flush();
             strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->behaviour = behaviour;
-            this->target_object = this;
-            this->getter = &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn;
-            this->setter = &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn;
             this->envelope_number = envelope_number;
 
-            //this->set_internal_value (this->get_index_for_value( (this->target_object->*this->getter)() ));
-            //this->set_internal_value((this->target_object->*this->getter)());
-
-            /*if (available_values==nullptr)
-                this->setup_available_values();
-            else
-                this->available_values = available_values;*/
-
-            Serial.printf("BambleTriggerOnSelectorControl constructor %s, %i finished!\n", label, envelope_number); Serial.flush();
+            this->go_back_on_select = true;
         }
 
         LinkedList<option> *setup_available_values() override {
             ObjectSelectorControl::setup_available_values();
-            Serial.println("setup_available_values start");
-            // envelope trigger selectors
-            // Trigger/LFO settings: 
-            //  0->19 = trigger #, 
-            //  20 = off, 
-            //  32->51 = trigger #+loop, 
-            //  64->83 = trigger #+invert, 
-            //  96->115 = trigger #+loop+invert
+
             const int num_patterns = (int)(sizeof(behaviour->patterns) / sizeof(bamble_pattern));
             for (int i = 0 ; i < num_patterns ; i++) {
-                Serial.printf("\t%i: %s\n", i, behaviour->patterns[i].label);
                 this->add_available_value(i, behaviour->patterns[i].label);
             }
             this->add_available_value(20, "Off");
-            /*for (int i = 0 ; i < num_patterns ; i++) {
-                char label[MAX_LABEL_LENGTH] = "";
-                sprintf(label, "%s+loop", behaviour->patterns[i].label);
-                this->add_available_value(i+32, label);
-            }
-            for (int i = 0 ; i < num_patterns ; i++) {
-                char label[MAX_LABEL_LENGTH] = "";
-                sprintf(label, "%s+invert", behaviour->patterns[i].label);
-                this->add_available_value(i+64, label);
-            }
-            for (int i = 0 ; i < num_patterns ; i++) {
-                char label[MAX_LABEL_LENGTH] = "";
-                sprintf(label, "%s+loop+invert", behaviour->patterns[i].label);
-                this->add_available_value(i+96, label);
-            }*/
-            Serial.println("setup_available_values end");
+
             return this->available_values;
         }
 
@@ -119,10 +84,10 @@ class BambleTriggerOnBar : public SubMenuItemBar {
             this->envelope_number = envelope_number;
             //this->debug = true;
 
-            this->pattern_selector = new BambleTriggerOnSelectorControl("Pattern", behaviour, envelope_number); //, LinkedList<option> *available_values = nullptr));
-            this->pattern_selector->debug = true;
-            this->loop_toggler =     new ObjectToggleControl<BambleTriggerOnBar> ("Loop", this,   &BambleTriggerOnBar::setLoop,   &BambleTriggerOnBar::getLoop);
-            this->invert_toggler =   new ObjectToggleControl<BambleTriggerOnBar> ("Invert", this, &BambleTriggerOnBar::setInvert, &BambleTriggerOnBar::getInvert);
+            this->pattern_selector = new BambleTriggerOnSelectorControl("Trigger on", behaviour, envelope_number); //, LinkedList<option> *available_values = nullptr));
+            //this->pattern_selector->debug = true;
+            this->loop_toggler =     new ObjectToggleControl<BambleTriggerOnBar>("Loop", this,   &BambleTriggerOnBar::setLoop,   &BambleTriggerOnBar::getLoop);
+            this->invert_toggler =   new ObjectToggleControl<BambleTriggerOnBar>("Invert", this, &BambleTriggerOnBar::setInvert, &BambleTriggerOnBar::getInvert);
             this->add(pattern_selector);
             this->add(loop_toggler);
             this->add(invert_toggler);
@@ -149,12 +114,20 @@ class BambleTriggerOnBar : public SubMenuItemBar {
             return behaviour->is_envelope_trigger_invert(this->envelope_number);
         }
 
-        LinkedList<BambleTriggerOnSelectorControl::option> *get_available_values() {
-            Serial.printf("get_available_values() in %s", this->label);
+        virtual LinkedList<BambleTriggerOnSelectorControl::option> *get_available_values() {
+            //Serial.printf("get_available_values() in %s", this->label);
             return this->pattern_selector->get_available_values();
         }
-        void set_available_values(LinkedList<BambleTriggerOnSelectorControl::option> *available_values) {
+        virtual void set_available_values(LinkedList<BambleTriggerOnSelectorControl::option> *available_values) {
             this->pattern_selector->set_available_values(available_values);
+        }
+
+        virtual inline int get_max_pixel_width(int item_number) override {
+            switch(item_number) {
+                case 1: case 2: return tft->width()/4; //return (tft->characterWidth() * 7);
+                case 0: return tft->width()/2; // - (tft->characterWidth()*10);
+            }
+            return tft->width() / tft->characterWidth();
         }
 };
 
