@@ -69,7 +69,6 @@ class LooperQuantizeControl : public SelectorControl {
             //num_values = sizeof(*available_values);
             this->loop_track = target;
             available_values = &quantizer_available_values[0];
-            
             num_values = sizeof(quantizer_available_values)/sizeof(int);
         }
 

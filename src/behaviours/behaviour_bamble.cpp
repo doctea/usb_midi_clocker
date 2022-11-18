@@ -160,24 +160,21 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
        &DeviceBehaviour_Bamble::setRandomSeed
     ));
 
-    //for (int i = 0 ; i < 9 ; i++) {
-        //char label[MAX_LABEL_LENGTH] = "";
-        Serial.printf("BambleTriggerOnSelectorControl creating...\n"); Serial.flush();
-        BambleTriggerOnSelectorControl *a = new BambleTriggerOnSelectorControl("Envelope PT 1", this, 5);
-        BambleTriggerOnSelectorControl *b = new BambleTriggerOnSelectorControl("Envelope PT 2", this, 6);
-        BambleTriggerOnSelectorControl *c = new BambleTriggerOnSelectorControl("Envelope PT 3", this, 7);
-        BambleTriggerOnSelectorControl *d = new BambleTriggerOnSelectorControl("Envelope PT 4", this, 8);
-        b->available_values = c->available_values = d->available_values = a->setup_available_values();
-        Serial.printf("BambleTriggerOnSelectorControl created all...\n"); Serial.flush();
-
-        menuitems->add(a);
-        Serial.printf("BambleTriggerOnSelectorControl added first...\n"); Serial.flush();
-        menuitems->add(b);
-        menuitems->add(c);
-        menuitems->add(d);
-
-        Serial.println("added all"); Serial.flush();
-    //}
+    //Serial.printf("BambleTriggerOnSelectorControl creating...\n"); Serial.flush();
+    BambleTriggerOnBar *a = new BambleTriggerOnBar("Envelope PT 1", this, 5);
+    BambleTriggerOnBar *b = new BambleTriggerOnBar("Envelope PT 2", this, 6);
+    BambleTriggerOnBar *c = new BambleTriggerOnBar("Envelope PT 3", this, 7);
+    BambleTriggerOnBar *d = new BambleTriggerOnBar("Envelope PT 4", this, 8);
+    b->set_available_values(a->get_available_values());
+    c->set_available_values(a->get_available_values());
+    d->set_available_values(a->get_available_values());
+    /*Serial.printf("BambleTriggerOnSelectorControl created all...\n"); Serial.flush();
+    Serial.printf("\t!!!a has %i available_values\n", a->get_available_values()->size());
+    Serial.printf("\t!!!b has %i available_values\n", b->get_available_values()->size());*/
+    menuitems->add(a);
+    menuitems->add(b);
+    menuitems->add(c);
+    menuitems->add(d);
 
     //// add all to final menu 
     menuitems->add(euclidian_options);

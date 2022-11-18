@@ -479,21 +479,21 @@ void do_tick(uint32_t in_ticks) {
   //send_midi_serial_clocks();
 
   #ifdef ENABLE_USB
-    if (debug) { Serial.println("in do_tick() about to behaviour_manager->send_clocks()"); Serial.flush(); }
+    if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial.flush(); }
     behaviour_manager->send_clocks();
-    if (debug) { Serial.println("in do_tick() just did behaviour_manager->send_clocks()"); Serial.flush(); }
+    if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial.flush(); }
   #endif
 
   #ifdef ENABLE_CV_OUTPUT
-    if (debug) { Serial.println("in do_tick() about to update_cv_outs()"); Serial.flush(); }
+    if (debug) { Serial.println(F("in do_tick() about to update_cv_outs()")); Serial.flush(); }
     update_cv_outs(in_ticks);
-    if (debug) { Serial.println("in do_tick() just did update_cv_outs()"); Serial.flush(); }
+    if (debug) { Serial.println(F("in do_tick() just did update_cv_outs()")); Serial.flush(); }
   #endif
 
   #ifdef ENABLE_USB
-    if (debug) { Serial.println("in do_tick() about to behaviour_manager->do_ticks()"); Serial.flush(); }
+    if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial.flush(); }
     behaviour_manager->do_ticks(in_ticks);
-    if (debug) { Serial.println("in do_tick() just did behaviour_manager->do_ticks()"); Serial.flush(); }
+    if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial.flush(); }
   #endif
 
   /*#ifdef ENABLE_USB2

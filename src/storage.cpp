@@ -70,11 +70,11 @@ namespace storage {
     SD.begin(chipSelect);
 
     if (!SD.exists("sequences")) {
-      Serial.println("Folder 'sequences' doesn't exist on SD, creating!");
+      Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));
       SD.mkdir("sequences");
     }
     if (!SD.exists("loops")) {
-      Serial.println("Folder 'loops' doesn't exist on SD, creating!");
+      Serial.println(F("Folder 'loops' doesn't exist on SD, creating!"));
       SD.mkdir("loops");
     }
   }

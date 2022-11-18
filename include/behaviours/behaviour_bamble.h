@@ -172,21 +172,67 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         // Trigger/LFO settings: 0->19 = trigger #, 20 = off, 32->51 = trigger #+loop, 64->83 = trigger #+invert, 96->115 = trigger #+loop+invert
         // CC 71, 87, 95, 103        
-        int envelope_trigger_on[9] = {
+        struct envelope_trigger_on_t {
+            const int cc;
+            const int channel = 10;
+            int pattern_number;
+            bool loop = false;
+            bool invert = false;
+        };
+        /*int envelope_trigger_on[9] = {
             11, 12, 13, 14, 15, 18, 18, 19, 19
         };
         const int envelope_trigger_on_cc[9] = {
             71, 79, 87, 95, 103, 71, 79, 87, 95
+        };*/
+        #define NUM_ENVELOPES 9
+        envelope_trigger_on_t envelope_trigger_on[NUM_ENVELOPES] = {
+            //cc, channel, pattern
+            { 71, 10, 11 },
+            { 79, 10, 12 },
+            { 87, 10, 13 },
+            { 95, 10, 14 },
+            { 103, 10, 15 },
+            { 71, 11, 18 },
+            { 79, 11, 18 },
+            { 87, 11, 19 },
+            { 95, 11, 19 }
         };
-        void set_envelope_trigger_on(int env, int v) {
-            if (env<0 || env >= 9) return;
-            int channel = env >= 5 ? 11 : 10;
-            this->envelope_trigger_on[env] = v;
-            this->sendControlChange((byte)envelope_trigger_on_cc[env], v, channel);
+        // actually send update
+        void send_envelope_trigger_on_value(int env) {
+            if (env<0 || env >= NUM_ENVELOPES) return;
+            //int channel = env >= 5 ? 11 : 10;
+            int v = envelope_trigger_on[env].pattern_number | (32*envelope_trigger_on[env].loop | (64*envelope_trigger_on[env].invert));
+            this->sendControlChange((byte)envelope_trigger_on[env].cc, v, envelope_trigger_on[env].channel);
+        }
+        void set_envelope_trigger_on(int env, int pattern_number) {
+            if (env<0 || env >= NUM_ENVELOPES) return;
+            this->envelope_trigger_on[env].pattern_number = pattern_number;
+            this->send_envelope_trigger_on_value(env);
+            // todo: add 32 + 64 if its there
         }
         int get_envelope_trigger_on(int env) {
-            if (env<0 || env >= 9) return 0;
-            return this->envelope_trigger_on[env];
+            if (env<0 || env >= NUM_ENVELOPES) return 0;
+            // todo: remove 32 + 64 if its there
+            return this->envelope_trigger_on[env].pattern_number; // & ~(32+64);
+        }
+        bool is_envelope_trigger_loop(int env) {
+            if (env<0 || env >= NUM_ENVELOPES) return false;
+            return this->envelope_trigger_on[env].loop;
+        }
+        void set_envelope_trigger_loop(int env, bool v) {
+            if (env<0 || env >= NUM_ENVELOPES) return;
+            this->envelope_trigger_on[env].loop = v;
+            this->send_envelope_trigger_on_value(env);
+        }
+        bool is_envelope_trigger_invert(int env) {
+            if (env<0 || env >= NUM_ENVELOPES) return false;
+            return this->envelope_trigger_on[env].invert;
+        }
+        void set_envelope_trigger_invert(int env, bool v) {
+            if (env<0 || env >= NUM_ENVELOPES) return;
+            this->envelope_trigger_on[env].invert = v;
+            this->send_envelope_trigger_on_value(env);
         }
 
         bamble_pattern patterns[20] = {
@@ -320,6 +366,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             }
 
             DeviceBehaviourUSBBase::sendControlChange(CC_EUCLIDIAN_MUTATE_DENSITY, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
+
+            // send envelope trigger-on values to match initial setup
+            for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+                this->send_envelope_trigger_on_value(i);
+            }
 
             // this should disable euclidian pulses on the pitch outputs ch1 + ch2
             /*DeviceBehaviourUSBBase::sendControlChange(78, 0, 10);
