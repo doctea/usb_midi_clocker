@@ -12,6 +12,8 @@
 
 #include "parameters/Parameter.h"
 
+#include "parameters/MIDICCParameter.h"
+
 class MenuItem;
 
 using namespace midi;
@@ -24,7 +26,7 @@ enum BehaviourType {
     usbserialmidi   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
 };
 
-class DeviceBehaviourUltimateBase {
+class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     public:
 
     bool debug = false;

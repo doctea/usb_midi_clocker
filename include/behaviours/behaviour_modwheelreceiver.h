@@ -8,11 +8,11 @@
 // add a mappable proxy parameter for modwheel output
 class ModwheelReceiver : public virtual DeviceBehaviourUltimateBase {
     public:
-        MIDICCProxyParameter *modwheel_proxy = nullptr;
+        MIDICCProxyParameter<> *modwheel_proxy = nullptr;
 
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-           this->modwheel_proxy = new MIDICCProxyParameter(
+           this->modwheel_proxy = new MIDICCProxyParameter<>(
                 (char*)"Modwheel",      
                 this,   
                 (byte)midi::ModulationWheel,
