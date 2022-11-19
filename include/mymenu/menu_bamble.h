@@ -124,8 +124,8 @@ class BambleTriggerOnBar : public SubMenuItemBar {
 
         virtual inline int get_max_pixel_width(int item_number) override {
             switch(item_number) {
-                case 1: case 2: return tft->width()/4; //return (tft->characterWidth() * 7);
-                case 0: return tft->width()/2; // - (tft->characterWidth()*10);
+                case 1: case 2: return tft->width()/4;
+                case 0: return tft->width()/2;
             }
             return tft->width() / tft->characterWidth();
         }

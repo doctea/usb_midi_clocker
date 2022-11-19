@@ -171,7 +171,6 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
 
         // Trigger/LFO settings: 0->19 = trigger #, 20 = off, 32->51 = trigger #+loop, 64->83 = trigger #+invert, 96->115 = trigger #+loop+invert
-        // CC 71, 87, 95, 103        
         struct envelope_trigger_on_t {
             const int cc;
             const int channel = 10;
@@ -179,42 +178,36 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             bool loop = false;
             bool invert = false;
         };
-        /*int envelope_trigger_on[9] = {
-            11, 12, 13, 14, 15, 18, 18, 19, 19
-        };
-        const int envelope_trigger_on_cc[9] = {
-            71, 79, 87, 95, 103, 71, 79, 87, 95
-        };*/
+        #define LOOP_MASK 32
+        #define INVERT_MASK 64
         #define NUM_ENVELOPES 9
         envelope_trigger_on_t envelope_trigger_on[NUM_ENVELOPES] = {
             //cc, channel, pattern
-            { 71, 10, 11 },
-            { 79, 10, 12 },
-            { 87, 10, 13 },
-            { 95, 10, 14 },
-            { 103, 10, 15 },
-            { 71, 11, 18 },
-            { 79, 11, 18 },
-            { 87, 11, 19 },
-            { 95, 11, 19 }
+            { 71,   10,   TRIGGER_CRASH_2       },
+            { 79,   10,   TRIGGER_SPLASH        },
+            { 87,   10,   TRIGGER_VIBRA         },
+            { 95,   10,   TRIGGER_RIDE_BELL     },
+            { 103,  10,   TRIGGER_RIDE_CYM      },
+            { 71,   11,   TRIGGER_PITCH_1_CH1   },
+            { 79,   11,   TRIGGER_PITCH_1_CH1   },
+            { 87,   11,   TRIGGER_PITCH_2_CH2   },
+            { 95,   11,   TRIGGER_PITCH_2_CH2   }
         };
         // actually send update
         void send_envelope_trigger_on_value(int env) {
             if (env<0 || env >= NUM_ENVELOPES) return;
             //int channel = env >= 5 ? 11 : 10;
-            int v = envelope_trigger_on[env].pattern_number | (32*envelope_trigger_on[env].loop | (64*envelope_trigger_on[env].invert));
+            int v = envelope_trigger_on[env].pattern_number | (LOOP_MASK*envelope_trigger_on[env].loop) | (INVERT_MASK*envelope_trigger_on[env].invert);
             this->sendControlChange((byte)envelope_trigger_on[env].cc, v, envelope_trigger_on[env].channel);
         }
         void set_envelope_trigger_on(int env, int pattern_number) {
             if (env<0 || env >= NUM_ENVELOPES) return;
             this->envelope_trigger_on[env].pattern_number = pattern_number;
             this->send_envelope_trigger_on_value(env);
-            // todo: add 32 + 64 if its there
         }
         int get_envelope_trigger_on(int env) {
             if (env<0 || env >= NUM_ENVELOPES) return 0;
-            // todo: remove 32 + 64 if its there
-            return this->envelope_trigger_on[env].pattern_number; // & ~(32+64);
+            return this->envelope_trigger_on[env].pattern_number;
         }
         bool is_envelope_trigger_loop(int env) {
             if (env<0 || env >= NUM_ENVELOPES) return false;

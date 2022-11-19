@@ -136,14 +136,14 @@ class LooperDisplay : public MenuItem {
                 continue;
             //Serial.printf("for pitch %i\n", pitch);
             
-            const uint16_t draw_at_y = base_row + (range - (pitch - first_pitch)); //last_pitch-first_pitch);
+            const int draw_at_y = base_row + (range - (pitch - first_pitch)); //last_pitch-first_pitch);
             //Serial.printf("for pitch %i with first_pitch %i and last_pitch %i, base_row = %i, drawing at: %i\n", pitch, first_pitch, last_pitch, base_row, draw_at_y);
-            for (uint16_t screen_x = 0 ; screen_x < tft->width() ; screen_x++) {
+            for (int screen_x = 0 ; screen_x < tft->width() ; screen_x++) {
                 const uint16_t tick_for_screen_X = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
                 //const uint16_t tick_for_screen_X = this->get_tick_for_screen_x(screen_x);// ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel)); // the tick corresponding to this screen position
                 uint16_t colour = C_WHITE - ((pitch%12) * 32);
 
-                const byte current_velocity = (*loop_track->piano_roll_bitmap)[tick_for_screen_X][pitch];
+                const int current_velocity = (*loop_track->piano_roll_bitmap)[tick_for_screen_X][pitch];
                 if (current_velocity > 0) {                  
                     //Serial.printf("\tat %i with velocity %i\n", pitch, tick_for_screen_X, current_velocity);
 
