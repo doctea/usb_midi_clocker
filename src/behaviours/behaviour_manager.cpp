@@ -147,9 +147,9 @@ void setup_behaviour_manager() {
 
             int16_t group_colour = C_WHITE;
             if (menuitems->size()>0 || behaviour->has_parameters()) {
-                menu->add_page(behaviour->get_label(), group_colour);
-
                 group_colour = menu->get_next_colour();
+
+                menu->add_page(behaviour->get_label(), group_colour);
 
                 // add a separator bar
                 //String s = String((char*)(behaviour->get_label())) + String(" >>>");
