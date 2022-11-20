@@ -258,7 +258,7 @@ namespace storage {
 
     char filename[255] = "";
     sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-    Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial.flush();
+    Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);
 
@@ -269,7 +269,7 @@ namespace storage {
     }*/
 
     if (!myFile) {
-      Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial.flush();
+      Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
       //if (irqs_enabled) __enable_irq();
       already_loading = false;
       return false;
@@ -279,16 +279,16 @@ namespace storage {
     while (line = myFile.readStringUntil('\n')) {
       load_sequence_parse_line(line, output);
     }
-    Serial.println(F("Closing file..")); Serial.flush();
+    Serial.println(F("Closing file..")); Serial_flush();
     myFile.close();
     //if (irqs_enabled) __enable_irq();
-    Serial.println(F("File closed")); Serial.flush();
+    Serial.println(F("File closed")); Serial_flush();
 
     #ifdef ENABLE_APCMINI_DISPLAY
       //redraw_immediately = true;
     #endif
 
-    Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial.flush();
+    Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
     already_loading = false;
     return true;
   }

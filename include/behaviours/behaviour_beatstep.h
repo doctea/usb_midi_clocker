@@ -46,14 +46,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            //Serial.printf("beatstep got note on %i\n", note); Serial.flush();
+            //Serial.printf("beatstep got note on %i\n", note); Serial_flush();
 
             this->current_note = note;
             ClockedBehaviour::receive_note_on(channel, note, 127);
         }
 
         virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            //Serial.printf("beatstep got note off %i\n", note); Serial.flush();
+            //Serial.printf("beatstep got note off %i\n", note); Serial_flush();
 
             // update current / remember last played note
             this->last_note = note;

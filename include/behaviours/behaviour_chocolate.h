@@ -56,7 +56,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         }
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            //Serial.printf("chocolate got noteOn chan %i, note %i, velocity %i\n", channel, note, velocity); Serial.flush();
+            //Serial.printf("chocolate got noteOn chan %i, note %i, velocity %i\n", channel, note, velocity); Serial_flush();
             // TODO: control looper(s) from here
             // check other notes to see if they are held; if so then trigger extended action
             /*if (note>=NUM_TRACK_NOTES)
@@ -117,7 +117,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
                 Serial.println("released C+D -> F");
             }*/
 
-            //Serial.printf("chocolate got noteOff chan %i, note %i, velocity %i\n", channel, note, velocity); Serial.flush();
+            //Serial.printf("chocolate got noteOff chan %i, note %i, velocity %i\n", channel, note, velocity); Serial_flush();
         }
 
         /*#define DOUBLE_BOUNCE_TIME 80
@@ -212,7 +212,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         }*/
 
         /*void receive_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
-            Serial.printf("chocolate got controlchange chan %i, cc %i, value %i\n", inChannel, inNumber, inValue); Serial.flush();
+            Serial.printf("chocolate got controlchange chan %i, cc %i, value %i\n", inChannel, inNumber, inValue); Serial_flush();
         }*/
 };
 

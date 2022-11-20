@@ -167,12 +167,12 @@ class MIDIMatrixManager {
             if (is_connected(source_id, target_id)) {
                 /*Serial.printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
                     source_id, cc, value, channel, source_id, target_id
-                ); Serial.flush();
+                ); Serial_flush();
                 if (targets[target_id].wrapper==nullptr) {
-                    Serial.printf("target_id %i has a nullptr wrapper!\n", target_id); Serial.flush();
+                    Serial.printf("target_id %i has a nullptr wrapper!\n", target_id); Serial_flush();
                 }*/
                 targets[target_id].wrapper->sendControlChange(cc, value, channel);
-                //Serial.println("successfully sent!"); Serial.flush();
+                //Serial.println("successfully sent!"); Serial_flush();
             }
         }
     }
@@ -181,12 +181,12 @@ class MIDIMatrixManager {
             if (is_connected(source_id, target_id)) {
                 /*Serial.printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
                     source_id, cc, value, channel, source_id, target_id
-                ); Serial.flush();
+                ); Serial_flush();
                 if (targets[target_id].wrapper==nullptr) {
-                    Serial.printf("target_id %i has a nullptr wrapper!\n", target_id); Serial.flush();
+                    Serial.printf("target_id %i has a nullptr wrapper!\n", target_id); Serial_flush();
                 }*/
                 targets[target_id].wrapper->sendPitchBend(bend, channel);
-                //Serial.println("successfully sent!"); Serial.flush();
+                //Serial.println("successfully sent!"); Serial_flush();
             }
         }
     }
@@ -200,13 +200,13 @@ class MIDIMatrixManager {
     }
     void stop_all_notes_for_target(target_id_t target_id, bool force = false) {
         if (target_id >= NUM_REGISTERED_TARGETS) return;
-        Serial.printf("stop_all_notes on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial.flush();
+        Serial.printf("stop_all_notes on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial_flush();
         targets[target_id].wrapper->stop_all_notes(force);
     }
 
     void stop_all_notes(bool force = false) {
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-            Serial.printf("stop_all_notes on target_id=%i..\n", target_id); Serial.flush();
+            Serial.printf("stop_all_notes on target_id=%i..\n", target_id); Serial_flush();
             this->stop_all_notes_for_target(target_id, force);
         }
     }

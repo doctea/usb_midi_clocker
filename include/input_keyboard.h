@@ -194,9 +194,9 @@ bool debug_stress_sequencer_load = false;
                 Serial.println(F("==== Loaded previous sequence!"));
                 break;
             case ':'            :
-                Serial.println(F("==== Loading next sequence")); Serial.flush();
+                Serial.println(F("==== Loading next sequence")); Serial_flush();
                 input_keyboard.queue_load_next_sequence();
-                Serial.println(F("==== Loaded next sequence!")); Serial.flush();
+                Serial.println(F("==== Loaded next sequence!")); Serial_flush();
                 break;
             case 'j'            :
                 //Serial.println(F("Select previous sequence"));

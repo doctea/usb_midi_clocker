@@ -52,9 +52,9 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             //if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_input connecting %p\n"), device);
             this->input_device = device;
             this->connected_flag = true;
-            //Serial.printf(F("about to call setup_callbacks on %s..\n"), this->get_label()); Serial.flush();
+            //Serial.printf(F("about to call setup_callbacks on %s..\n"), this->get_label()); Serial_flush();
             this->setup_callbacks();
-            //Serial.printf(F("about to call init on %s..\n"), this->get_label()); Serial.flush();
+            //Serial.printf(F("about to call init on %s..\n"), this->get_label()); Serial_flush();
             this->init();
 
         }

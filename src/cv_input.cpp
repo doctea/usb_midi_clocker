@@ -38,7 +38,7 @@ FLASHMEM
 void setup_parameters() {
     //parameter_manager = new ParameterManager();
     // add the available parameters to a list used globally and later passed to each selector menuitem
-    Serial.println(F("==== begin setup_parameters ====")); Serial.flush();
+    Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
     tft_print((char*)"..setup_parameters...");
 
     // initialise the voltage source inputs
@@ -60,20 +60,20 @@ void setup_parameters() {
     // todo: dynamically pull them from other things that could have parameters available
     // todo: move this to the behaviour initialising!
     /*#ifdef ENABLE_CRAFTSYNTH_USB
-        Serial.println(F("setup_parameters() about to do get_parameters on behaviour_craftsynth..")); Serial.flush();
+        Serial.println(F("setup_parameters() about to do get_parameters on behaviour_craftsynth..")); Serial_flush();
         LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
-        Serial.println(F("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()")); Serial.flush();
+        Serial.println(F("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()")); Serial_flush();
         parameter_manager->addParameters(params);
-        Serial.println(F("setup_parameters() just did parameter_manager->addParameters(params)")); Serial.flush();
+        Serial.println(F("setup_parameters() just did parameter_manager->addParameters(params)")); Serial_flush();
 
         // setup the default mappings
         // TODO: load this from a saved config file
         // hmmm if this section is uncommented then it causes 'conflicting section type' problems due to FLASHMEM..?
-        //Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial.flush();
+        //Serial.println(F("=========== SETTING DEFAULT PARAMETER MAPS.........")); Serial_flush();
         //behaviour_craftsynth->getParameterForLabel((char*)F("Filter Cutoff"))->set_slot_0_amount(1.0); //->connect_input(vpi1, 1.0);
         //behaviour_craftsynth->getParameterForLabel((char*)F("Filter Morph"))->set_slot_1_amount(1.0); //connect_input(vpi2, 1.0);
         //behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
-        //Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial.flush();
+        //Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial_flush();
     #endif*/
     for(int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
         parameter_manager->addParameters(behaviour_manager->behaviours->get(i)->get_parameters());

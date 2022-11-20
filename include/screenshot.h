@@ -40,7 +40,7 @@ bool save_screenshot(ST7789_t3 *screen) {
 
     SdFile file;
 
-    Serial.println(F("Looking for a free filename..")); Serial.flush();
+    Serial.println(F("Looking for a free filename..")); Serial_flush();
     // if name exists, create new filename
     for (int i=0; i<10000; i++) {
         name[4] = (i/1000)%10 + '0';    // thousands place
@@ -51,7 +51,7 @@ bool save_screenshot(ST7789_t3 *screen) {
             break;
         }
     }
-    Serial.printf(F("Found one in %s!\n"), name); Serial.flush();
+    Serial.printf(F("Found one in %s!\n"), name); Serial_flush();
 
     // set fileSize (used in bmp header)
     const int rowSize = 4 * ((3*w + 3)/4);      // how many bytes in the row (used to create padding)

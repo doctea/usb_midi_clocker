@@ -61,7 +61,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
     }
 
     virtual void setter (int new_value) override {
-        Serial.printf("MidiMatrixSelectorControl changing from %i to %i\n", this->actual_value_index, new_value); Serial.flush();
+        Serial.printf("MidiMatrixSelectorControl changing from %i to %i\n", this->actual_value_index, new_value); Serial_flush();
         if (selected_source_index==-1) { // select source
             selected_source_index = new_value;
             actual_value_index = new_value;

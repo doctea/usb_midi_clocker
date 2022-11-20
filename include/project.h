@@ -55,7 +55,7 @@ class Project {
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
                 temp_loop->load_loop(this->current_project_number, i);
-                Serial.printf(F("initialise_loop_slots: loaded loop ok\n")); Serial.flush();
+                Serial.printf(F("initialise_loop_slots: loaded loop ok\n")); Serial_flush();
                 if (temp_loop->count_events()==0)
                     loop_slot_has_file[i] = false;
                 Serial.printf(F("initialise_loop_slots: did count_events\n"));
@@ -167,15 +167,15 @@ class Project {
         }
 
         bool load_sequence(int selected_sequence_number) {
-            Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number); Serial.flush();
+            Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
             bool result = storage::load_sequence(current_project_number, selected_sequence_number, &storage::current_state);
             if (result)
                 loaded_sequence_number = selected_sequence_number;
-            Serial.println(F("returning\n"));  Serial.flush();
+            Serial.println(F("returning\n"));  Serial_flush();
             return result;
         }
         bool save_sequence(int selected_sequence_number) {
-            Serial.printf(F("save for selected_sequence_number %i\n"), selected_sequence_number); Serial.flush();
+            Serial.printf(F("save for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
             bool result = storage::save_sequence(current_project_number, selected_sequence_number, &storage::current_state);
             if (result) {
                 sequence_slot_has_file[selected_sequence_number] = true;

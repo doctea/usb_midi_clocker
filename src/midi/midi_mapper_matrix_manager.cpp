@@ -55,7 +55,7 @@ void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char 
 
 // initialise the output pointers, initialise the outputs and assign them to their defaults
 FLASHMEM void setup_midi_mapper_matrix_manager() {
-    Serial.println(F("##### setup_midi_mapper_matrix_manager..")); Serial.flush();
+    Serial.println(F("##### setup_midi_mapper_matrix_manager..")); Serial_flush();
     midi_matrix_manager = MIDIMatrixManager::getInstance();
 
     // first, add all the output options that will exist
@@ -179,7 +179,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");
     #endif
 
-    Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial.flush();
+    Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
     //while(1);
 }
 

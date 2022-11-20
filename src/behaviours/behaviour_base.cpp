@@ -18,7 +18,7 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
     /*if (this->debug) {
         Serial.printf(F("%s: DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i)...\n"), this->get_label(), inChannel, inNumber, inValue);
         if (midi_matrix_manager==nullptr) {
-            Serial.println(F("YO, midi_matrix_manager is null?!")); Serial.flush();
+            Serial.println(F("YO, midi_matrix_manager is null?!")); Serial_flush();
         }
     }*/
     midi_matrix_manager->processControlChange(this->source_id, inNumber, inValue); //, inChannel);

@@ -98,11 +98,11 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             //this->device->setHandleControlChange(craftsynth_control_change);
             //this->device->setHandleNoteOn(craftsynth_note_on);
             //this->device->setHandleNoteOff(craftsynth_note_off);
-            Serial.println(F("DeviceBehaviour_CraftSynth#setup_callbacks()")); Serial.flush();
+            Serial.println(F("DeviceBehaviour_CraftSynth#setup_callbacks()")); Serial_flush();
         };*/
 
         /*virtual void init() override {
-            Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial.flush();
+            Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial_flush();
             started = false;
         }*/
 

@@ -105,12 +105,12 @@ void setup_menu() {
     tft = &steensy; //DisplayTranslator_STeensy();
     //delay(50);
     //Serial.println(F("Finished  constructor"));
-    Serial.flush();
+    Serial_flush();
     Serial.println(F("Creating Menu object.."));
-    Serial.flush();
+    Serial_flush();
     menu = new Menu(tft);
     Serial.println(F("Created Menu object"));
-    Serial.flush();
+    Serial_flush();
 
     menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
     menu->add(&posbar);     // bpm and position indicator
@@ -242,7 +242,7 @@ void setup_menu() {
     pinMode(PIN_BUTTON_C, INPUT_PULLUP);
 
     Serial.println(F("Exiting setup_menu"));
-    Serial.flush();
+    Serial_flush();
 
     /*menu->add(&test_item_1);
     menu->add(&test_item_2);

@@ -25,10 +25,10 @@ class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
 
         FLASHMEM 
         virtual void setup_callbacks() override {
-            Serial.println(F("DeviceBehaviour_LeStrum#setup_callbacks..")); Serial.flush();
+            Serial.println(F("DeviceBehaviour_LeStrum#setup_callbacks..")); Serial_flush();
             this->input_device->setHandleNoteOn(lestrum_note_on);
             this->input_device->setHandleNoteOff(lestrum_note_off);
-            Serial.println(F("DeviceBehaviour_LeStrum#setup_callback finished.")); Serial.flush();
+            Serial.println(F("DeviceBehaviour_LeStrum#setup_callback finished.")); Serial_flush();
         }
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {

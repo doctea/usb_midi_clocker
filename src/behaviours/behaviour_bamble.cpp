@@ -49,7 +49,7 @@ class PatternToggle : public MultiToggleItemBase {
 //FLASHMEM //virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
 //FLASHMEM
 LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
-    //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial.flush();
+    //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial_flush();
     DeviceBehaviourUltimateBase::make_menu_items();
 
     // Euclidian settings bar /////////////////////////////////////////////////
@@ -160,7 +160,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
        &DeviceBehaviour_Bamble::setRandomSeed
     ));
 
-    //Serial.printf("BambleTriggerOnSelectorControl creating...\n"); Serial.flush();
+    //Serial.printf("BambleTriggerOnSelectorControl creating...\n"); Serial_flush();
     BambleTriggerOnBar *a = new BambleTriggerOnBar("Envelope PT 1", this, 5);
     BambleTriggerOnBar *b = new BambleTriggerOnBar("Envelope PT 2", this, 6);
     BambleTriggerOnBar *c = new BambleTriggerOnBar("Envelope PT 3", this, 7);
@@ -168,7 +168,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     b->set_available_values(a->get_available_values());
     c->set_available_values(a->get_available_values());
     d->set_available_values(a->get_available_values());
-    /*Serial.printf("BambleTriggerOnSelectorControl created all...\n"); Serial.flush();
+    /*Serial.printf("BambleTriggerOnSelectorControl created all...\n"); Serial_flush();
     Serial.printf("\t!!!a has %i available_values\n", a->get_available_values()->size());
     Serial.printf("\t!!!b has %i available_values\n", b->get_available_values()->size());*/
     menuitems->add(a);

@@ -30,7 +30,7 @@ class DeviceBehaviourManager {
 
         void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial.flush();
+                Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
                 return;
             }
             this->behaviours_usb->add(behaviour);
@@ -38,10 +38,10 @@ class DeviceBehaviourManager {
         }
         void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial.flush();
+                Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
                 return;
             }
-            Serial.printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial.flush();
+            Serial.printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
             this->behaviours_serial->add(behaviour);
             Serial.println(F("Added item to behaviours_serial."));
             this->behaviours->add(behaviour);
@@ -50,7 +50,7 @@ class DeviceBehaviourManager {
         #ifdef ENABLE_USBSERIAL
             void registerBehaviour(DeviceBehaviourUSBSerialBase *behaviour) {
                 if (behaviour==nullptr) {
-                    Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial.flush();
+                    Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
                     return;
                 }
                 this->behaviours_usbserial->add(behaviour);
@@ -59,10 +59,10 @@ class DeviceBehaviourManager {
         #endif
         void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial.flush();
+                Serial.println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial_flush();
                 return;
             }
-            Serial.printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial.flush();
+            Serial.printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
             this->behaviours->add(behaviour);
         }
 
@@ -95,7 +95,7 @@ class DeviceBehaviourManager {
                 // for some reason, doing this irq enable/disable stuff here causes prog to lock up before menu display, but ONLY if serial monitor ISN'T connected?!
                 //bool irqs_enabled = __irq_enabled();
                 //__disable_irq();
-                Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial.flush();
+                Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const int size = behaviours_usbserial->size();
                 for (int i = 0 ; i < size ; i++) {
@@ -121,7 +121,7 @@ class DeviceBehaviourManager {
                     }
                 }
                 //if (irqs_enabled) __enable_irq();
-                Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial.flush();
+                Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial_flush();
                 return false;
             }
         #endif
@@ -129,10 +129,10 @@ class DeviceBehaviourManager {
         void do_reads() {
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
-                //Serial.printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial.flush();
+                //Serial.printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial_flush();
                 //Serial.printf("\t\t%s\n", behaviours->get(i)->get_label());
                 behaviours->get(i)->read();
-                //Serial.printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours->get(i)); Serial.flush();
+                //Serial.printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours->get(i)); Serial_flush();
             }
         }
         /*#define SINGLE_FRAME_READ
@@ -183,9 +183,9 @@ class DeviceBehaviourManager {
         void send_clocks() {    // replaces behaviours_send_clock
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->send_clock(ticks);
-                //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial_flush();
             }  
         }
 
@@ -223,9 +223,9 @@ class DeviceBehaviourManager {
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
                 if (behaviour!=nullptr) {
-                    //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial.flush();
+                    //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial_flush();
                     behaviour->loop(temp_tick);
-                    //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial.flush();
+                    //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial_flush();
                 }
             }
         }
@@ -240,18 +240,18 @@ class DeviceBehaviourManager {
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->on_tick(in_ticks);
-                //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial_flush();
             }
         }
 
         void on_restart() {
             const int size = behaviours->size();
             for(int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->on_restart();
-                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial.flush();
+                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial_flush();
             }
         }
 

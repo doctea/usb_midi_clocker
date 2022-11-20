@@ -15,7 +15,7 @@
 
     FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
-        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial.flush();
+        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
         /*
@@ -25,7 +25,7 @@
                 BaseParameterInput *initial_parameter_input,
                 LinkedList<BaseParameterInput*> *available_parameter_inputs,
         */
-        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial.flush();
+        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
         ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
                 "Select Parameter Input",
@@ -36,7 +36,7 @@
         );
         menuitems->add(parameter_input_selector);
 
-        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial.flush();
+        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
         HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
             &this->last_note, 
             &this->current_note
@@ -52,7 +52,7 @@
             );
         menuitems->add(length_ticks_control);*/
 
-        Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial.flush();
+        Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *length_ticks_control 
             = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
                 "Note length",
@@ -60,7 +60,7 @@
                 &DeviceBehaviour_CVInput::set_note_length,
                 &DeviceBehaviour_CVInput::get_note_length
         );
-        Serial.println(F("about to add values..")); Serial.flush();
+        Serial.println(F("about to add values..")); Serial_flush();
         length_ticks_control->add_available_value(0,                 "None");
         length_ticks_control->add_available_value(PPQN/PPQN,         "-");
         length_ticks_control->add_available_value(PPQN/4,            "1/32");
@@ -69,10 +69,10 @@
         length_ticks_control->add_available_value(PPQN,              "1/4");
         length_ticks_control->add_available_value(PPQN*2,            "1/2");
         length_ticks_control->add_available_value(PPQN*4,            "1");
-        Serial.println(F("about to add to menuitems list..")); Serial.flush();
+        Serial.println(F("about to add to menuitems list..")); Serial_flush();
         menuitems->add(length_ticks_control);
 
-        Serial.println(F("returning..")); Serial.flush();
+        Serial.println(F("returning..")); Serial_flush();
         return menuitems;
     }
 #endif

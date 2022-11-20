@@ -72,12 +72,12 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 static unsigned long last_processed_tick;
 
                 if (last_processed_tick != ticks) {
-                    //Serial.println("about to call apcmini_update_position_display()"); Serial.flush();
+                    //Serial.println("about to call apcmini_update_position_display()"); Serial_flush();
                     apcmini_update_position_display(ticks);
                 
                     if (redraw_immediately || millis() - last_updated_display > 50) {
                         //Serial.println(F("redraw_immediately is set!"));
-                        //Serial.println("about to call apcmini_update_clock_display()"); Serial.flush();
+                        //Serial.println("about to call apcmini_update_clock_display()"); Serial_flush();
                         apcmini_update_clock_display();
                         redraw_immediately = false;
                     }

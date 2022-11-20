@@ -69,52 +69,52 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
-        Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial.flush();
+        Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_craftsynth);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_CHOCOLATEFEET_USB
-        Serial.println(F("about to register DeviceBehaviour_Chocolate...")); Serial.flush();
+        Serial.println(F("about to register DeviceBehaviour_Chocolate...")); Serial_flush();
         behaviour_chocolate = new DeviceBehaviour_Chocolate();
         behaviour_manager->registerBehaviour(behaviour_chocolate);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_BITBOX
-        Serial.println(F("about to register behaviour_bitbox...")); Serial.flush();
+        Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_bitbox);
-        Serial.println(F("connecting device output..")); Serial.flush();
+        Serial.println(F("connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_BASS
-        Serial.println(F("about to register behaviour_neutron...")); Serial.flush();
+        Serial.println(F("about to register behaviour_neutron...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_neutron);
         behaviour_neutron->connect_device_output(&ENABLE_BASS);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_LESTRUM
-        Serial.println(F("about to register behaviour_lestrum...")); Serial.flush();
+        Serial.println(F("about to register behaviour_lestrum...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);
-        Serial.println(F("Finished registering - connecting!")); Serial.flush();
+        Serial.println(F("Finished registering - connecting!")); Serial_flush();
         behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
-        Serial.println(F("Finished connect_device_input")); Serial.flush();
+        Serial.println(F("Finished connect_device_input")); Serial_flush();
     #endif
     
     #ifdef ENABLE_DRUMKIT
-        Serial.println(F("about to register behaviour_drumkit...")); Serial.flush();
+        Serial.println(F("about to register behaviour_drumkit...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_drumkit);
         behaviour_drumkit->connect_device_input(&ENABLE_DRUMKIT);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_CV_INPUT_PITCH
-        Serial.println(F("about to register behaviour_cvinput...")); Serial.flush();
+        Serial.println(F("about to register behaviour_cvinput...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_cvinput);
-        Serial.println(F("Finished registering")); Serial.flush();
+        Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_OPENTHEREMIN
@@ -142,7 +142,7 @@ void setup_behaviour_manager() {
 
     //FLASHMEM 
     inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
-            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial.flush(); 
+            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
             int16_t group_colour = C_WHITE;
@@ -158,7 +158,7 @@ void setup_behaviour_manager() {
             }
 
             if (menuitems->size()>0) {
-                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial.flush();
+                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
                 menu->add(menuitems, group_colour);
             }
 

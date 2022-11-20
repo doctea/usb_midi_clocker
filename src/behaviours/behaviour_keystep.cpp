@@ -3,9 +3,9 @@
 DeviceBehaviour_Keystep *behaviour_keystep = nullptr;
 
 void keystep_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
-    //Serial.printf("keystep_handle_control_change(%i, %i, %i)...\n", inChannel, inNumber, inValue); Serial.flush();
+    //Serial.printf("keystep_handle_control_change(%i, %i, %i)...\n", inChannel, inNumber, inValue); Serial_flush();
     if (behaviour_keystep!=nullptr) behaviour_keystep->receive_control_change(inChannel, inNumber, inValue);
-    //Serial.printf("...did keystep_handle_control_change(%i, %i, %i)!\n", inChannel, inNumber, inValue); Serial.flush();
+    //Serial.printf("...did keystep_handle_control_change(%i, %i, %i)!\n", inChannel, inNumber, inValue); Serial_flush();
 }
 
 void keystep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {

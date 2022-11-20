@@ -57,13 +57,13 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 
             if (data[3]==0x06) {
                 if (data[4]==0x06) { // record pressed
-                    Serial.printf(F("%s: calling handle_mmc_record()\n"), this->get_label()); Serial.flush();
+                    Serial.printf(F("%s: calling handle_mmc_record()\n"), this->get_label()); Serial_flush();
                     handle_mmc_record();
                 } else if (data[4]==0x01) { // stop pressed
-                    Serial.printf(F("%s: calling handle_mmc_stop()\n"), this->get_label()); Serial.flush();
+                    Serial.printf(F("%s: calling handle_mmc_stop()\n"), this->get_label()); Serial_flush();
                     handle_mmc_stop();
                 } else if (data[4]==0x02) { // start pressed
-                    Serial.printf(F("%s: calling handle_mmc_start()\n"), this->get_label()); Serial.flush();
+                    Serial.printf(F("%s: calling handle_mmc_start()\n"), this->get_label()); Serial_flush();
                     handle_mmc_start();
                 }
             }

@@ -64,7 +64,7 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
                 msg[this->tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
                 menu_set_last_message(msg,GREEN);
             }
-            if (this->debug) { Serial.println(F("Done.")); Serial.flush(); }
+            if (this->debug) { Serial.println(F("Done.")); Serial_flush(); }
         }*/
 };
 

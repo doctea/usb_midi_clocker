@@ -1,6 +1,8 @@
 #ifndef MIDI_OUT_WRAPPER__INCLUDED
 #define MIDI_OUT_WRAPPER__INCLUDED
 
+#include "debug.h"
+
 #include <MIDI.h>
 #include <USBHost_t36.h>
 #include <SdFat.h>
@@ -78,7 +80,7 @@ class MIDIOutputWrapper {
 
         virtual void sendNoteOn(byte in_pitch, byte velocity, byte channel) {
             if (this->debug) 
-                Serial.printf("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n", in_pitch, velocity, channel, label); Serial.flush();
+                Serial.printf(F("sendNoteOn(p=%i, v=%i, c=%i) in %s...\n"), in_pitch, velocity, channel, label); Serial_flush();
 
             current_note = in_pitch;
             int pitch = recalculate_pitch(in_pitch);
@@ -162,7 +164,7 @@ class MIDIOutputWrapper {
         }
 
         virtual void setForceOctave(int octave) {
-            //Serial.printf("Beatstep_Behaviour#setForceOctave(%i)!", octave); Serial.flush();
+            //Serial.printf("Beatstep_Behaviour#setForceOctave(%i)!", octave); Serial_flush();
             if (octave!=this->force_octave) {
                 this->stop_all_notes();
                 //midi_matrix_manager->stop_all_notes(source_id);
@@ -170,7 +172,7 @@ class MIDIOutputWrapper {
             }
         }
         virtual int getForceOctave() {
-            //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial.flush();
+            //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial_flush();
             return this->force_octave;
         }
 };

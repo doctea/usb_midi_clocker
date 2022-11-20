@@ -1,6 +1,8 @@
 #ifndef MIDI_LOOPER__INCLUDED
 #define MIDI_LOOPER__INCLUDED
 
+#include "debug.h"
+
 #include <LinkedList.h>
 #include "Config.h"
 #include "ConfigMidi.h"
@@ -230,40 +232,40 @@ class MIDITrack {
             int position = time%LOOP_LENGTH;
             //LinkedList<midi_message> frame = get_frames(position);
             #ifdef DEBUG_LOOPER
-                Serial.printf("play_events with time %u becomes position %u\n", time, position); Serial.flush();
+                Serial.printf("play_events with time %u becomes position %u\n", time, position); Serial_flush();
             #endif
 
             int number_messages = frames[position].size();
             #ifdef DEBUG_LOOPER
-                //Serial.printf("play_events got %i messages\n", number_messages); Serial.flush();
+                //Serial.printf("play_events got %i messages\n", number_messages); Serial_flush();
                 if (number_messages>0) 
-                    Serial.printf("\tfor frame\t%u got\t%i messages to play\n", position, number_messages); Serial.flush();
+                    Serial.printf("\tfor frame\t%u got\t%i messages to play\n", position, number_messages); Serial_flush();
             #endif
 
             for (int i = 0 ; i < number_messages ; i++) {
                 #ifdef DEBUG_LOOPER
-                    Serial.printf("\tprocessing message number %i/%i..\n", i, number_messages); Serial.flush();
+                    Serial.printf("\tprocessing message number %i/%i..\n", i, number_messages); Serial_flush();
                 #endif
                 midi_message m = frames[position].get(i);
                 
                 int pitch = m.pitch + transpose;
                 if (pitch<0 || pitch > 127) {
-                    if (this->debug) { Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial.flush(); }
+                    if (this->debug) { Serial.printf("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n", pitch, m.pitch, transpose); Serial_flush(); }
                     return;
                 } else {
-                    if (this->debug) { Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial.flush(); }
+                    if (this->debug) { Serial.printf("\ttransposed pitch %i (was %i with transpose %i) within range!\n", pitch, m.pitch, transpose); Serial_flush(); }
                 }
-                if (this->debug) { Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial.flush(); }
+                if (this->debug) { Serial.printf("\tgot transposed pitch %i from %i + %i\n", pitch, m.pitch, transpose); Serial_flush(); }
 
                 switch (m.message_type) {
                     case midi::NoteOn:
                         current_note = pitch;
-                        if (this->debug) { Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial.flush(); }
+                        if (this->debug) { Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial_flush(); }
                         this->sendNoteOn((uint8_t)pitch, (byte)m.velocity);
                         track_playing_on(ticks, pitch, m.velocity);
                         break;
                     case midi::NoteOff:
-                        if (this->debug) { Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial.flush(); }
+                        if (this->debug) { Serial.printf("\t\tSending note off %i at velocity %i\n", pitch, m.velocity); Serial_flush(); }
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
@@ -271,7 +273,7 @@ class MIDITrack {
                         track_playing_off(ticks, pitch, m.velocity);
                         break;
                     default:
-                        if (this->debug) Serial.printf("\t%i: !!Unhandled message type %i\n", i, 3); Serial.flush(); //m.message_type);
+                        if (this->debug) Serial.printf("\t%i: !!Unhandled message type %i\n", i, 3); Serial_flush(); //m.message_type);
                         break;
                 }
             }
@@ -284,10 +286,10 @@ class MIDITrack {
             for (int i = 0 ; i < 127 ; i++) {
                 int transposed_pitch = i + transpose_amount;
                 if (transposed_pitch<0 || transposed_pitch > 127) {
-                    if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial.flush(); }
+                    if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
                     continue;;
                 } else {
-                    if (this->debug) { Serial.printf(F("\ttransposed pitch %i (was %i with transpose %i) within range!\n"), transposed_pitch, i, transpose_amount); Serial.flush(); }
+                    if (this->debug) { Serial.printf(F("\ttransposed pitch %i (was %i with transpose %i) within range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
                 }
 
                 if (track_playing[i].playing && (*piano_roll_bitmap)[time][i]==0) {
@@ -479,14 +481,14 @@ class MIDITrack {
         void draw_piano_roll_bitmap_from_save() {
             if (!this->bitmap_enabled) return;
 
-            //if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial_flush(); }
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
 
-            //if(this->debug) { Serial.println(F("wiping bitmap..")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("wiping bitmap..")); Serial_flush(); }
             this->wipe_piano_roll_bitmap();
 
-            //if(this->debug) { Serial.println(F("building bitmap..")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("building bitmap..")); Serial_flush(); }
             for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
                 for (int m = 0 ; m < frames[x]->size() ; m++) {
                     midi_message message = frames[x]->get(m);
@@ -505,7 +507,7 @@ class MIDITrack {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
-            //if(this->debug) { Serial.println(F("bitmap built..")); Serial.flush(); }
+            //if(this->debug) { Serial.println(F("bitmap built..")); Serial_flush(); }
 
             /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {
@@ -712,12 +714,12 @@ class MIDITrack {
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
-            Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial.flush();
+            Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
             f = SD.open(filename, FILE_READ);
             f.setTimeout(0);
 
             if (!f) {
-                Serial.printf(F("\tError: Couldn't open %s for reading!\n"), filename); Serial.flush();
+                Serial.printf(F("\tError: Couldn't open %s for reading!\n"), filename); Serial_flush();
                 /*#ifdef ENABLE_SCREEN
                     menu.set_last_message("Error loading recording!");//, recording_number);
                     menu.set_message_colour(ST77XX_RED);
@@ -729,7 +731,7 @@ class MIDITrack {
             clear_all();
 
             Serial.printf("\tEntering load loop for project %i and recording_number %i..\n", project_number, recording_number);
-            Serial.flush();
+            Serial_flush();
 
             int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
 
@@ -737,7 +739,7 @@ class MIDITrack {
             String line;
             int time = 0;
             while (line = f.readStringUntil('\n')) {
-                if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial.flush(); }
+                if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
                 //load_sequence_parse_line(line, output);
                 if (line.startsWith(F("starts_at="))) {
                     time =      line.remove(0,String(F("starts_at=")).length()).toInt() * loop_length_size;
@@ -770,9 +772,9 @@ class MIDITrack {
                         m.pitch = tmp_pitch;
                         m.velocity = tmp_velocity;
                         #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("read message bytes: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial.flush();
+                            Serial.printf(F("read message bytes: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
                         #endif
-                        if (this->debug) Serial.printf(F("storing event at %i\n"), time); Serial.flush();
+                        if (this->debug) Serial.printf(F("storing event at %i\n"), time); Serial_flush();
                         store_event(time, m);
                         messages_count++;
                         tok = strtok(NULL,",;:");
@@ -798,7 +800,7 @@ class MIDITrack {
                 menu.set_last_message("Loaded recording %i"); //, recording_number);
                 menu.set_message_colour(ST77XX_GREEN);
             #endif*/
-            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial.flush();
+            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
             
             loaded_recording_number = recording_number;
             clear_hanging();
