@@ -18,6 +18,8 @@ void setup_debug_menu() {
 
     BehavioursPanel *behaviours_panel = new BehavioursPanel();
 
+    menu->add_page("Debug");
+
     menu->add(usbdevices_panel);
     menu->add(behaviours_panel);
 

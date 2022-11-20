@@ -150,8 +150,11 @@ void setup() {
     Serial.printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
     setup_parameters();
     Serial.printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
-    setup_parameter_menu();
-    Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
+    #ifdef ENABLE_SCREEN
+      menu->add_page("Parameter Inputs");
+      setup_parameter_menu();
+      Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
+    #endif
   #endif
 
   Serial.println(F("...starting behaviour_manager#make_menu_items..."));
@@ -199,10 +202,12 @@ void setup() {
     menu->start();
     Serial.printf(F("after menu->start(), free RAM is %u\n"), freeRam());
     //tft_start();
-  #endif
 
-  setup_debug_menu();
-  Serial.printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
+    setup_debug_menu();
+    Serial.printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
+
+    menu->select_page(0);
+  #endif
 
   #ifdef ENABLE_PROFILER
     Serial.printf("Allocating array for profiler");

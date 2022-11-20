@@ -174,7 +174,6 @@ void setup_menu() {
         );
         project_multi_autoadvance->addItem(auto_advance_sequencer);
     #endif
-
     #ifdef ENABLE_LOOPER
         MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
             (char*)"Looper",
@@ -184,7 +183,6 @@ void setup_menu() {
         );
         project_multi_autoadvance->addItem(auto_advance_looper);
     #endif
-
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
             (char*)"Beatstep",
@@ -195,6 +193,7 @@ void setup_menu() {
     #endif
     menu->add(project_multi_autoadvance);
 
+    menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem((char*)"MIDI"));
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(&midi_matrix_selector);
@@ -205,6 +204,7 @@ void setup_menu() {
 
     // sequencer
     #ifdef ENABLE_SEQUENCER
+        menu->add_page("Sequencer");
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem((char*)"Sequencer"));
         menu->add(&sequencer_status);
@@ -212,11 +212,12 @@ void setup_menu() {
 
     // looper stuff
     #ifdef ENABLE_LOOPER
+        menu->add_page("Looper");
         menu->add(mpk49_loop_track.make_menu_items());
-    #endif
-    #ifdef ENABLE_DRUM_LOOPER
-        menu->add(&drum_looper_status);
-        menu->add(&drum_loop_quantizer_setting);
+        #ifdef ENABLE_DRUM_LOOPER
+            menu->add(&drum_looper_status);
+            menu->add(&drum_loop_quantizer_setting);
+        #endif
     #endif
 
     #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
