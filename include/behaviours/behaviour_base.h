@@ -101,7 +101,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         this->actualSendNoteOff(note, velocity, channel);
     };
-    // tell the device to send a control change
+    // tell the device to send a control change - implements IMIDIProxiedCCTarget
     virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
         //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
         this->actualSendControlChange(number, value, channel);
@@ -117,6 +117,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual void sendNow() {
     };
 
+    // implements IMIDIProxiedCCTarget
     virtual void sendProxiedControlChange(byte cc_number, byte value, byte channel = 0) {
         if (this->debug) Serial.printf(F("%s#sendProxiedControlChange(%i, %i, %i)\n"), this->get_label(), cc_number, value, channel);
         this->actualSendControlChange(cc_number, value, channel);
@@ -241,7 +242,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     #ifdef ENABLE_SCREEN
         LinkedList<MenuItem*> *menuitems = nullptr;
-        FLASHMEM virtual LinkedList<MenuItem*> *make_menu_items();
+        //FLASHMEM
+        virtual LinkedList<MenuItem*> *make_menu_items();
     #endif
     
 };

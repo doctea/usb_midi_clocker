@@ -289,8 +289,20 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",this, 10));
         }
 
+        //FLASHMEM // error: virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::add_adhsr_parameters(const char*, int, int)
+        virtual void add_adhsr_parameters(const char *prefix, int start, int channel) {
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Attack"))).c_str(),  this, start++, 11));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Hold"))).c_str(),    this, start++, 11));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Decay"))).c_str(),   this, start++, 11));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Sustain"))).c_str(), this, start++, 11));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Release"))).c_str(), this, start++, 11));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" HD Vib"))).c_str(),  this, start++, 11));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" SR Vib"))).c_str(),  this, start++, 11));
+        }
+
         /// these for mappable parameters
-        /*FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        //FLASHMEM 
+        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             Serial.printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)
@@ -301,13 +313,19 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
             DividedClockedBehaviour::initialise_parameters();
 
+            this->add_adhsr_parameters("Env PT 1", 64, 11);
+            this->add_adhsr_parameters("Env PT 2", 72, 11);
+            this->add_adhsr_parameters("Env PT 3", 80, 11);
+            this->add_adhsr_parameters("Env PT 4", 88, 11);
+
             //parameters->add(new BamblePlaybackModeParameter((char*)"Playback mode", this));
             //parameters->add(new BambleFillsParameter(       (char*)"Fills",         this));
             //parameters->add(new MIDICCParameter((char*)"Density", this, 114, 10));
             //parameters->add(new MIDICCParameter((char*)"Density", this, 114, 10));
 
+
             return parameters;
-        }*/
+        }
 
         #ifdef ENABLE_BAMBLE_INPUT
             virtual void self_register_midi_matrix_sources(MIDIMatrixManager *midi_matrix_manager) {
@@ -385,6 +403,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
             DividedClockedBehaviour::save_sequence_add_lines(lines);
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
@@ -428,6 +447,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             } else if (key.startsWith(F("seed_use_phrase"))) {
                 this->setEuclidianSeedUsePhrase(value.equals("true"));
             } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
+                return true;
+            } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }
             return false;
