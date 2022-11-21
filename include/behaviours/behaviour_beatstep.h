@@ -89,7 +89,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 Debug_printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
-                    // sending a 0 as the pattern seems to crash it out!
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
@@ -100,18 +99,55 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             void setPatternLength(byte length) {
                 // Pattern length: F0 00 20 6B 7F 42 02 00 50 06 nn F7 (1-16 steps, 1-0x10).
                 length = constrain(length,1,16);
-                if (this->pattern_length!=length) {
+                //if (this->pattern_length!=length) {
                     uint8_t data[] = {
                         0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x50, 0x06, (byte)(length), 0xF7
                     };
                     this->device->sendSysEx(sizeof(data), data, true);
                     Debug_printf(F("%s#setPatternLength(%i)\n"), this->get_label(), length);
-                }
+                //}
                 this->pattern_length = length;
             }
             byte getPatternLength() {
                 return pattern_length;
             }
+
+            //playback direction settings
+            byte direction = 0;
+            void setDirection(byte direction) {
+                direction = constrain(direction,0,3);
+                uint8_t data[] = {
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x50, 0x04, (byte)(direction), 0xF7
+                };
+                this->device->sendSysEx(sizeof(data), data, true);
+                this->direction = direction;
+            }
+            byte getDirection() {
+                return this->direction;
+            }
+
+            /*class BeatstepDirectionParameter : public DataParameter<DeviceBehaviour_Beatstep,byte> {
+                public:
+                BeatstepDirectionParameter (char *label, DeviceBehaviour_Beatstep *target) 
+                    : DataParameter<DeviceBehaviour_Beatstep,byte>(label, target, &DeviceBehaviour_Beatstep::setDirection, &DeviceBehaviour_Beatstep::getDirection)
+                    {}
+
+                virtual const char* parseFormattedDataType(byte value) override {
+                    switch (value) {
+                        case 0:
+                            return "Fwd";
+                        case 1:
+                            return "Rev";
+                        case 2:
+                            return "Alt";
+                        case 3:
+                            return "Ran";
+                        default:
+                            return "??";
+                    }
+                    return "??";
+                };
+            };*/
 
             FLASHMEM
             virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
@@ -122,18 +158,43 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
                 ClockedBehaviour::initialise_parameters();
 
-                // todo: this actually isn't much use as a modulation target since the beatstep restarts when this changes, so instead make it into a regular menuitem thing
-                this->parameters->add((new DataParameter<DeviceBehaviour_Beatstep,byte>(
+                // this actually isn't much use as a modulation target since the beatstep restarts pattern when this changes - made instead into a regular menuitem thing
+                /*this->parameters->add((new DataParameter<DeviceBehaviour_Beatstep,byte>(
                         (const char*)"Pattern length", 
                         this, 
                         &DeviceBehaviour_Beatstep::setPatternLength, 
                         &DeviceBehaviour_Beatstep::getPatternLength
                 ))->initialise_values(1,16)->set_modulatable(false));
 
+                this->parameters->add(new BeatstepDirectionParameter("Direction", this));*/
+
                 already_initialised = true;
 
                 return parameters;
             }
+
+            virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
+                DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
+                DividedClockedBehaviour::save_sequence_add_lines(lines);
+
+                lines->add(String(F("pattern_length=")) + String(this->getPatternLength()));
+                lines->add(String(F("pattern_direction=")) + String(this->getDirection()));
+            }
+            virtual bool load_parse_key_value(String key, String value) {
+                if (key.equals(F("pattern_length"))) {
+                    this->setPatternLength(value.toInt());
+                    return true;
+                } else if (key.equals(F("pattern_direction"))) {
+                    this->setDirection(value.toInt());
+                    return true;
+                } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
+                    return true;
+                } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
+                    return true;
+                }
+                return false;
+            }
+
         #endif
 
         #ifdef ENABLE_SCREEN

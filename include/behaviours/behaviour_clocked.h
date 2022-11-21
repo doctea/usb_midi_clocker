@@ -267,7 +267,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            ClockedBehaviour::save_project_add_lines(lines);
+            ClockedBehaviour::save_sequence_add_lines(lines);
             lines->add(String(F("divisor=")) + String(this->get_divisor()));
             lines->add(String(F("delay_ticks=")) + String(this->get_delay_ticks()));
             lines->add(String(F("pause_on=")) + String(this->get_pause_during_delay()));
