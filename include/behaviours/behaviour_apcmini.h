@@ -90,7 +90,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         }
 
         virtual void receive_note_on(byte inChannel, byte inNumber, byte inVelocity) override {
-            Serial.printf(F("apcmini_note_on for %i, %i, %i\n"), inChannel, inNumber, inVelocity);
+            Debug_printf(F("apcmini_note_on for %i, %i, %i\n"), inChannel, inNumber, inVelocity);
             if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
                 // start / stop play
                 if (!playing)
@@ -106,11 +106,11 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             #endif
             } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
                 // restart/resync immediately
-                Serial.println(F("APCmini pressed, restarting downbeat"));
+                Debug_println(F("APCmini pressed, restarting downbeat"));
                 global_on_restart();
             } else if (inNumber==BUTTON_RESTART_AT_END_OF_BAR && apcmini_shift_held) {
                 // restart/resync at end of bar
-                Serial.println(F("APCmini pressed, restarting downbeat on next bar"));
+                Debug_println(F("APCmini pressed, restarting downbeat on next bar"));
                 #ifdef ENABLE_APCMINI_DISPLAY
                     //ATOMIC(
                     //sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
@@ -224,8 +224,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 }
             #endif
             } else {
-                Serial.print(F("Unknown akaiAPC button with note number "));
-                Serial.println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
+                Debug_print(F("Unknown akaiAPC button with note number "));
+                Debug_println(inNumber);//if (inNumber<(8*8) && inNumber>=(8*5)) {
             }
 
             if (redraw_immediately) 

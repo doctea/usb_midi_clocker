@@ -32,7 +32,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 
         FLASHMEM 
         virtual void setup_callbacks() override {
-            Serial.println(F("Setting up callbacks for the MPK49"));
+            //Serial.println(F("Setting up callbacks for the MPK49"));
             this->device->setHandleNoteOn(mpk49_handle_note_on);
             this->device->setHandleNoteOff(mpk49_handle_note_off);
             this->device->setHandleControlChange(mpk49_handle_control_change);
@@ -48,11 +48,11 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 
         virtual void handle_system_exclusive(uint8_t *data, unsigned int size) {
             if (this->debug) {
-                Serial.printf(F("mpk_handle_system_exclusive of size %i: ["), size);
+                Debug_printf(F("mpk_handle_system_exclusive of size %i: ["), size);
                 for (unsigned int i = 0 ; i < size ; i++) {
-                    Serial.printf(F("%02x "), data[i]);
+                    Debug_printf(F("%02x "), data[i]);
                 }
-                Serial.println(F("]"));
+                Debug_println(F("]"));
             }
 
             if (data[3]==0x06) {

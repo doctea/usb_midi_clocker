@@ -257,7 +257,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         void setPatternEnabled(int number, bool state) {
             this->patterns[number].current_state = state;
             this->sendControlChange(patterns[number].cc_number, state ? 127 : 0, 10);
-            Serial.printf(
+            Debug_printf(
                 F("%s#setPatternEnabled(%i, %s) sending ControlChange for %s\n"), 
                 this->get_label(), 
                 number, 

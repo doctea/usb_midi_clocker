@@ -86,7 +86,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
+                Debug_printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
                     // sending a 0 as the pattern seems to crash it out!
@@ -105,7 +105,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x50, 0x06, (byte)(length), 0xF7
                     };
                     this->device->sendSysEx(sizeof(data), data, true);
-                    Serial.printf(F("%s#setPatternLength(%i)\n"), this->get_label(), length);
+                    Debug_printf(F("%s#setPatternLength(%i)\n"), this->get_label(), length);
                 }
                 this->pattern_length = length;
             }

@@ -30,7 +30,7 @@ class DeviceBehaviourManager {
 
         void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
+                Debug_println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
                 return;
             }
             this->behaviours_usb->add(behaviour);
@@ -38,19 +38,19 @@ class DeviceBehaviourManager {
         }
         void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
+                Debug_println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
                 return;
             }
-            Serial.printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
+            Debug_printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
             this->behaviours_serial->add(behaviour);
-            Serial.println(F("Added item to behaviours_serial."));
+            Debug_println(F("Added item to behaviours_serial."));
             this->behaviours->add(behaviour);
-            Serial.println(F("Added item to behaviours."));
+            Debug_println(F("Added item to behaviours."));
         }
         #ifdef ENABLE_USBSERIAL
             void registerBehaviour(DeviceBehaviourUSBSerialBase *behaviour) {
                 if (behaviour==nullptr) {
-                    Serial.println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
+                    Debug_println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
                     return;
                 }
                 this->behaviours_usbserial->add(behaviour);
@@ -59,10 +59,10 @@ class DeviceBehaviourManager {
         #endif
         void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial_flush();
+                Debug_println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial_flush();
                 return;
             }
-            Serial.printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
+            Debug_printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
             this->behaviours->add(behaviour);
         }
 
@@ -74,17 +74,17 @@ class DeviceBehaviourManager {
             const int size = behaviours_usb->size();
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
-                Serial.printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
+                Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                 usb_midi_slots[idx].packed_id = packed_id;
                 if (behaviour->matches_identifiers(packed_id)) {
-                    Serial.printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
+                    Debug_printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                     behaviour->connect_device(usb_midi_slots[idx].device);
                     usb_midi_slots[idx].behaviour = behaviour;
                     //if (irqs_enabled) __enable_irq();
                     return true;
                 }
             }
-            Serial.printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
+            Debug_printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
             //if (irqs_enabled) __enable_irq();
 
             return false;
@@ -105,10 +105,10 @@ class DeviceBehaviourManager {
                         return false;
                     }
                     DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
-                    Serial.printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
+                    Debug_printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                     usb_serial_slots[idx].packed_id = packed_id;
                     if (behaviour->matches_identifiers(packed_id)) {
-                        Serial.printf(F("\tDetected!  Behaviour %i on usb serial idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
+                        Debug_printf(F("\tDetected!  Behaviour %i on usb serial idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                         Serial.printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'?\n"), 
                             behaviour->get_label(), 
                             behaviour->get_packed_id(), 
