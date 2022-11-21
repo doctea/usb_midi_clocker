@@ -43,6 +43,7 @@
                     else
                         tft->printf("K (Typing disconnected)\n");
                 #endif
+                tft->printf("Free RAM: %u\n", freeRam());
 
                 return tft->getCursorY();
             }

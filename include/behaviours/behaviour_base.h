@@ -39,9 +39,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
 
-    virtual const char *get_label() {
-        return (char*)"UltimateBase";
-    }
+    virtual const char *get_label() = 0;/*{
+        return (const char*)"UltimateBase";
+    }*/
 
     virtual bool has_input() { return false; }
     virtual bool has_output() { return false; }
@@ -114,8 +114,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         //Serial.println("DeviceBehaviourUltimateBase#sendRealTime");
         this->actualSendRealTime(message);
     };    
-    virtual void sendNow() {
-    };
+    virtual void sendNow() {};
 
     // implements IMIDIProxiedCCTarget
     virtual void sendProxiedControlChange(byte cc_number, byte value, byte channel = 0) {

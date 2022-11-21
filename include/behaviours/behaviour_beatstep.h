@@ -128,7 +128,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         this, 
                         &DeviceBehaviour_Beatstep::setPatternLength, 
                         &DeviceBehaviour_Beatstep::getPatternLength
-                ))->initialise_values(1,16));
+                ))->initialise_values(1,16)->set_modulatable(false));
 
                 already_initialised = true;
 

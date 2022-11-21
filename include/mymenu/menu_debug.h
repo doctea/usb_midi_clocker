@@ -28,7 +28,7 @@ void setup_debug_menu() {
 
     SubMenuItemBar *bar = new SubMenuItemBar("Debug");
 
-    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Menu item times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
+    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Menuitem times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
     bar->add(debug_times_control);
     bar->add(new NumberControl<bool>("Extra", (bool*)&debug, debug, false, true));
     bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug, false, true));
