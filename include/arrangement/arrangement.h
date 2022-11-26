@@ -51,9 +51,9 @@ class Arrangement {
     LinkedList<clip_instance_t*> *get_clips_at_time(int song_position) {
         this->clips_at_phrase->clear();
         int index = find_index_for_position(song_position);
-        Serial.printf("get_clips_at_time(%i)\n", song_position); Serial.flush();
+        //Serial.printf("get_clips_at_time(%i)\n", song_position); Serial.flush();
         for (int i = index ; i < this->song_structure->size() && song_structure->get(i).position == song_position ; i++) {
-            Serial.printf("get_clips_at_time(%i) got one at %i\n", song_position, i);
+            //Serial.printf("get_clips_at_time(%i) got one at %i\n", song_position, i);
             clips_at_phrase->add(&this->song_structure->get(i));
         }
         return this->clips_at_phrase;
