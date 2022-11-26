@@ -17,6 +17,7 @@
 
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
+#include "mymenu/menu_arrangement.h"
 
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
@@ -210,6 +211,9 @@ void setup_menu() {
         menu->add(&sequencer_status);
     #endif
 
+    menu->add_page("Arrangement");
+    menu->add(new ArrangementEditor("Arrangement")); //, arrangement));
+    
     // looper stuff
     #ifdef ENABLE_LOOPER
         menu->add_page("Looper");

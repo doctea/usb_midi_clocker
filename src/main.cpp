@@ -68,6 +68,9 @@ void do_tick(uint32_t ticks);
 
 #include "input_keyboard.h"
 
+#include "arrangement/arrangement.h"
+#include "clips/clip_manager.h"
+
 #include "profiler.h"
 
 #ifdef ENABLE_PROFILER
@@ -208,6 +211,9 @@ void setup() {
 
     menu->select_page(0);
   #endif
+
+  setup_clip_manager();
+  setup_arrangement();
 
   #ifdef ENABLE_PROFILER
     Serial.printf("Allocating array for profiler");
@@ -457,6 +463,7 @@ void do_tick(uint32_t in_ticks) {
 
   if (is_bpm_on_phrase(ticks)) {
     if (debug) Serial.println(F("do_tick(): about to project.on_phrase()"));
+    arrangement->on_phrase(BPM_CURRENT_PHRASE%8);
     project.on_phrase(BPM_CURRENT_PHRASE);
     #ifdef ENABLE_USB
       behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
