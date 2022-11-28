@@ -22,8 +22,9 @@ class Clip {
 
 		bool dirty = false;
 
-		virtual void prepare() = 0;
-		virtual void start() = 0;
+		//virtual void prepare() = 0;
+		//virtual void start() = 0;
+		virtual void on_phrase(int phrase) = 0;
 		virtual void on_tick(uint32_t tick) = 0;
 		virtual void on_bar(uint32_t bar) = 0;
 		virtual void set_dirty(bool v = true) {
@@ -43,12 +44,37 @@ class SequenceClip : public Clip {
 			this->sequence_number = sequence_number;
 		}
 
-		virtual void prepare() {
+		/*virtual void prepare() {
 			Serial.printf("SequenceClip clip_id=%i loading sequence_number %i!\n", clip_id, sequence_number);
 			project.load_sequence(sequence_number);
 		}
 		virtual void start() {
 			// ? nothing to do here... 
+		}*/
+		virtual void on_phrase(int phrase) {
+			Serial.printf("SequenceClip clip_id=%i loading sequence_number %i!\n", clip_id, sequence_number);
+			project.load_sequence(sequence_number);
+		}
+		virtual void on_tick(uint32_t tick) {
+			// process the tick for the loaded sequence 
+		}
+		virtual void on_bar(uint32_t bar) {
+
+		}
+};
+
+// a Clip that contains a sequence/clock information
+class LoopClip : public Clip {
+	public:
+		int loop_number; // the sequence number to load when this clip played
+
+		LoopClip(int loop_number) {
+			this->loop_number = loop_number;
+		}
+
+		virtual void on_phrase(int phrase) {
+			Serial.printf("LoopClip clip_id=%i loading loop_number %i!\n", clip_id, loop_number);
+			project.load_sequence(loop_number);
 		}
 		virtual void on_tick(uint32_t tick) {
 			// process the tick for the loaded sequence 

@@ -41,11 +41,12 @@ class ClipManager {
             // load them into memory 
         }
 
-        void add_clip(Clip *clip) {
+        Clip *add_clip(Clip *clip) {
             clip->clip_id = this->get_new_clip_id();
             Serial.printf("add_clip adding clip at index %i with id %i\n", clips->size()-1, clip->clip_id);
 
             this->clips->add(clip);
+            return clip;
         }
 
 };

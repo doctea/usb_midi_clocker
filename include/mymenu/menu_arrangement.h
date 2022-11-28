@@ -33,8 +33,31 @@ class ArrangementEditor : public MenuItem {
             }
             tft->println();
             pos.y = tft->getCursorY();
+
+            int bottom_y = pos.y;
+
+            LinkedList<ArrangementTrackBase *> *tracks = arrangement->get_tracks();
+            for (int i = 0 ; i < tracks->size() ; i++) {
+                ArrangementTrackBase *track = tracks->get(i);
+                tft->printf("%-10s: ", track->label);
+                int start_x = tft->getCursorX();
+                int start_y = tft->getCursorY();
+                for (int phrase = view_port_position_start ; phrase < view_port_position_start + view_port_width ; phrase++) {
+                    LinkedList<clip_instance_t*> *clip_instances = track->get_clips_at_time(phrase);
+                    for (int c = 0 ; c < clip_instances->size() ; c++) {
+                        tft->setCursor(
+                            start_x + phrase-view_port_position_start * tft->characterWidth(), 
+                            start_y + (c*tft->getRowHeight()-4)
+                        );
+                        tft->printf("%1x\n", clip_instances->get(c)->clip_id);
+                        if (tft->getCursorY() > bottom_y) 
+                            bottom_y = tft->getCursorY();
+                    }
+                    tft->setCursor(0, bottom_y);
+                }
+            }
           
-            for (int i = 0 ; i < clip_manager->clips->size() ; i++) {
+            /*for (int i = 0 ; i < clip_manager->clips->size() ; i++) {
                 Clip *c = clip_manager->clips->get(i);
                 if (c!=nullptr)
                     tft->printf("%i:\n", c->clip_id);
@@ -58,7 +81,7 @@ class ArrangementEditor : public MenuItem {
                     colours(phrase==BPM_CURRENT_PHRASE);
                     tft->print("X");
                 }
-            }
+            }*/
 
             return bottom_y;
         }
