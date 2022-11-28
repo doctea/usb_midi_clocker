@@ -173,6 +173,10 @@ class Arrangement {
 			return this->current_tracks;
 		}
 
+		LinkedList<ArrangementTrackBase*> *get_tracks() {
+			return this->tracks;
+		}
+
 		void on_tick(uint32_t ticks) {
 			if (current_song_phrase<0) return;
 
