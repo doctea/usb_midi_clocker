@@ -6,13 +6,13 @@ void setup_clip_manager() {
     clip_manager = new ClipManager();
 
     // for initial testing -- add a clip for every sequence slot
-    for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
+    /*for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
         clip_manager->add_clip(new SequenceClip(i));
     }
 
     for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
         clip_manager->add_clip(new LoopClip(i));
-    }
+    }*/
 
 }
 
@@ -27,7 +27,7 @@ void setup_arrangement() {
     ArrangementTrackBase *sequencer_track = arrangement->addTrack(new ArrangementSingleTrack("Sequence"));
 	for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
         Serial.printf("setup_arrangement for a sequence %i\n", i);
-		sequencer_track->insert_clip_instance(i, clip_manager->add_clip(new LoopClip(7-i))); //new SequenceClip(7-i)); //clip_manager->get_clip_for_id(7-i));
+		sequencer_track->insert_clip_instance(i, clip_manager->add_clip(new SequenceClip(7-i))); //new SequenceClip(7-i)); //clip_manager->get_clip_for_id(7-i));
 	}
 
     ArrangementTrackBase *loop_arrangement = arrangement->addTrack(new ArrangementSingleTrack("Looper"));

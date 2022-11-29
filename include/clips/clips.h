@@ -33,6 +33,8 @@ class Clip {
 		virtual bool is_dirty() {
 			return dirty;
 		}
+
+		virtual char get_name() = 0;
 };
 
 // a Clip that contains a sequence/clock information
@@ -44,6 +46,10 @@ class SequenceClip : public Clip {
 			this->sequence_number = sequence_number;
 		}
 
+		virtual char get_name() {
+			return (char)(sequence_number + 48);
+		}
+
 		/*virtual void prepare() {
 			Serial.printf("SequenceClip clip_id=%i loading sequence_number %i!\n", clip_id, sequence_number);
 			project.load_sequence(sequence_number);
@@ -51,14 +57,14 @@ class SequenceClip : public Clip {
 		virtual void start() {
 			// ? nothing to do here... 
 		}*/
-		virtual void on_phrase(int phrase) {
+		virtual void on_phrase(int phrase) override {
 			Serial.printf("SequenceClip clip_id=%i loading sequence_number %i!\n", clip_id, sequence_number);
 			project.load_sequence(sequence_number);
 		}
-		virtual void on_tick(uint32_t tick) {
+		virtual void on_tick(uint32_t tick) override {
 			// process the tick for the loaded sequence 
 		}
-		virtual void on_bar(uint32_t bar) {
+		virtual void on_bar(uint32_t bar) override {
 
 		}
 };
@@ -72,14 +78,18 @@ class LoopClip : public Clip {
 			this->loop_number = loop_number;
 		}
 
-		virtual void on_phrase(int phrase) {
-			Serial.printf("LoopClip clip_id=%i loading loop_number %i!\n", clip_id, loop_number);
-			project.load_sequence(loop_number);
+		virtual char get_name() {
+			return (char)(loop_number + 48);
 		}
-		virtual void on_tick(uint32_t tick) {
+
+		virtual void on_phrase(int phrase) override {
+			Serial.printf("LoopClip clip_id=%i loading loop_number %i!\n", clip_id, loop_number);
+			project.load_loop(loop_number);
+		}
+		virtual void on_tick(uint32_t tick) override {
 			// process the tick for the loaded sequence 
 		}
-		virtual void on_bar(uint32_t bar) {
+		virtual void on_bar(uint32_t bar) override {
 
 		}
 };

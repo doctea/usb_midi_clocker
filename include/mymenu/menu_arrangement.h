@@ -22,10 +22,10 @@ class ArrangementEditor : public MenuItem {
         int view_port_position_start = 0;
 
         virtual int display(Coord pos, bool selected, bool opened) override {
-            Serial.println("ArrangementEditor#display start");
+            //Serial.println("ArrangementEditor#display start");
             pos.y = header(label, pos, selected, opened);
-            int x = 2 * tft->characterWidth(); //->getCursorX();
-            int view_port_width = (tft->width()/tft->characterWidth())-2;
+            int x = 12 * tft->characterWidth(); //->getCursorX();
+            int view_port_width = (tft->width()/tft->characterWidth())-12;
             for (int i = 0 ; i < view_port_width ; i++) {
                 tft->setCursor(x + (i*tft->characterWidth()),pos.y);
                 colours(i==BPM_CURRENT_PHRASE);
@@ -46,13 +46,22 @@ class ArrangementEditor : public MenuItem {
                     LinkedList<clip_instance_t*> *clip_instances = track->get_clips_at_time(phrase);
                     for (int c = 0 ; c < clip_instances->size() ; c++) {
                         tft->setCursor(
-                            start_x + phrase-view_port_position_start * tft->characterWidth(), 
-                            start_y + (c*tft->getRowHeight()-4)
+                            start_x + ((phrase-view_port_position_start) * tft->characterWidth()), 
+                            start_y + c*tft->getRowHeight()
                         );
-                        tft->printf("%1x\n", clip_instances->get(c)->clip_id);
-                        if (tft->getCursorY() > bottom_y) 
-                            bottom_y = tft->getCursorY();
+                        //tft->printf("%1x\n", clip_instances->get(c)->clip_id);
+                        if (clip_instances->get(c)->clip!=nullptr) {
+                            //tft->printc((char)clip_instances->get(c)->clip->get_name());
+                            tft->printf("%1x\n", clip_instances->get(c)->clip_id);
+                            //tft->println();
+                        } else {
+                            bottom_y = start_y + tft->getRowHeight();
+                        }
                     }
+                    //tft->setCursor(start_x + tft->characterWidth(), bottom_y);
+                    if (tft->getCursorY() > bottom_y) 
+                        bottom_y = tft->getCursorY();
+
                     tft->setCursor(0, bottom_y);
                 }
             }

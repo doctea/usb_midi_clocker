@@ -74,6 +74,7 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 
 	virtual bool is_active_for_phrase(int song_position) override {
 		int index = find_index_for_position(song_position);
+        Serial.printf("find_index_for_position(%i) got index %i\n", song_position, index);
 		return index < song_structure->size() && song_structure->get(index).position==song_position;
 	}
 
@@ -81,9 +82,9 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 		if (cached_song_position!=song_position) {
 			this->clips_at_phrase->clear();
 			int index = find_index_for_position(song_position);
-			Serial.printf("get_clips_at_time(%i)\n", song_position); Serial.flush();
+			//Serial.printf("get_clips_at_time(%i)\n", song_position); Serial.flush();
 			for (int i = index ; i < this->song_structure->size() && song_structure->get(i).position == song_position ; i++) {
-				Serial.printf("get_clips_at_time(%i) got one at %i\n", song_position, i);
+				//Serial.printf("get_clips_at_time(%i) got one at %i\n", song_position, i);
 				clips_at_phrase->add(&this->song_structure->get(i));
 			}
 			this->cached_song_position = song_position;
@@ -107,9 +108,10 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 	virtual void on_phrase(int phrase_number) override {
         playhead_index = find_index_for_position(phrase_number);
 		current_song_position = phrase_number;
-        Serial.printf("Arrangement#on_phrase(%i) found playhead_index %i\n", phrase_number, playhead_index);
+        //Serial.printf("Arrangement#on_phrase(%i) found playhead_index %i\n", phrase_number, playhead_index);
 		LinkedList<clip_instance_t*> *clips = get_clips_at_time(phrase_number);
 		for (int i = 0 ; i < clips->size() ; i++) {
+            Serial.printf("ArrrangementMultipleTrack#on_phrase(%i) processing clip %i\n", phrase_number, i);
 			clips->get(i)->clip->on_phrase(phrase_number);
 		}
 	}
@@ -162,13 +164,18 @@ class Arrangement {
 		}
 
 		LinkedList<ArrangementTrackBase*> *get_active_tracks(int current_song_phrase) {
-			if (this->current_song_phrase!=current_song_phrase) {
+            Serial.printf("get_active_tracks(%i)...\n", current_song_phrase);
+			//if (this->current_song_phrase!=current_song_phrase) {
 				this->current_tracks->clear();
 				for (int i = 0 ; i < tracks->size() ; i++) {
-					if (tracks->get(i)->is_active_for_phrase(current_song_phrase))
+                    Serial.printf("\tchecking track %s..", tracks->get(i)->label);
+					if (tracks->get(i)->is_active_for_phrase(current_song_phrase)) {
+                        Serial.print("is_active!");
 						current_tracks->add(tracks->get(i));
+                    }
+                    Serial.println();
 				}
-			}
+			//}
 
 			return this->current_tracks;
 		}
@@ -196,9 +203,12 @@ class Arrangement {
 		}
 
 		void on_phrase(int phrase_number) {
+            current_song_phrase = phrase_number;
 			if (current_song_phrase<0) return;
 
 			LinkedList<ArrangementTrackBase*> *current_tracks = get_active_tracks(current_song_phrase);
+            Serial.printf("Arrangement#on_phrase(%i) got %i tracks\n", phrase_number, current_tracks->size());
+
 			for (int i = 0 ; i < current_tracks->size() ; i++) {
 				current_tracks->get(i)->on_phrase(phrase_number);
 			}
