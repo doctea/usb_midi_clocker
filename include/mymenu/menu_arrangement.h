@@ -43,18 +43,28 @@ class ArrangementEditor : public MenuItem {
                 int start_x = tft->getCursorX();
                 int start_y = tft->getCursorY();
                 for (int phrase = view_port_position_start ; phrase < view_port_position_start + view_port_width ; phrase++) {
+                    //Serial.printf("rendering phrase %i...\n", phrase);
                     LinkedList<clip_instance_t*> *clip_instances = track->get_clips_at_time(phrase);
                     for (int c = 0 ; c < clip_instances->size() ; c++) {
+                        //Serial.printf("\t\tclip index %i of %i...\n", c, clip_instances->size());
+
                         tft->setCursor(
                             start_x + ((phrase-view_port_position_start) * tft->characterWidth()), 
                             start_y + c*tft->getRowHeight()
                         );
+                        clip_instance_t *c_i = clip_instances->get(c);
                         //tft->printf("%1x\n", clip_instances->get(c)->clip_id);
                         if (clip_instances->get(c)->clip!=nullptr) {
                             //tft->printc((char)clip_instances->get(c)->clip->get_name());
-                            tft->printf("%1x\n", clip_instances->get(c)->clip_id);
+                            Clip *clip = clip_manager->get_clip_for_id(c_i->clip_id);
+                            tft->printf("%c\n", clip->get_name());
+                            /*tft->printf("%1x\n", clip_instances->get(c)->clip_id);
+                            Serial.printf("\t\t\t clip instance clip_id %i at %p\n", clip_instances->get(c)->clip_id, clip_instances->get(c)->clip); Serial.flush();
+                            Serial.printf("\t\t\t\t actual pointed-to clip's id is %i\n", clip_instances->get(c)->clip->clip_id);
+                            Serial.printf("\t\t\t\t name is '%c'\n", clip_instances->get(c)->clip->get_name());*/
                             //tft->println();
                         } else {
+                            //Serial.printf("\t\t\t %i\n", clip_instances->get(c)->clip_id); Serial.flush();
                             bottom_y = start_y + tft->getRowHeight();
                         }
                     }
