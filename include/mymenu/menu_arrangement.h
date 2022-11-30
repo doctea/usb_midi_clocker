@@ -40,12 +40,16 @@ class ArrangementEditor : public MenuItem {
             for (int i = 0 ; i < tracks->size() ; i++) {
                 ArrangementTrackBase *track = tracks->get(i);
                 colours(false, track->colour);
-                tft->printf("%-10s: ", track->label);
+                /*char label[MAX_TRACK_NAME];
+                sprintf(label, "%10s: ", track->label);
+                tft->print(label);*/
+                tft->printf("%-.10s: ", track->label);
                 int start_x = tft->getCursorX();
                 int start_y = tft->getCursorY();
                 for (int phrase = view_port_position_start ; phrase < view_port_position_start + view_port_width ; phrase++) {
                     //Serial.printf("rendering phrase %i...\n", phrase);
                     LinkedList<clip_instance_t*> *clip_instances = track->get_clips_at_time(phrase);
+                    
                     for (int c = 0 ; c < clip_instances->size() ; c++) {
                         //Serial.printf("\t\tclip index %i of %i...\n", c, clip_instances->size());
 
@@ -70,11 +74,15 @@ class ArrangementEditor : public MenuItem {
                         }
                     }
                     //tft->setCursor(start_x + tft->characterWidth(), bottom_y);
+ 
                     if (tft->getCursorY() > bottom_y) 
                         bottom_y = tft->getCursorY();
 
                     tft->setCursor(0, bottom_y);
                 }
+                if (start_y==tft->getCursorY()) // no clips to display so we need to move down a line
+                    tft->println();
+                    
             }
             colours(false, C_WHITE);
           

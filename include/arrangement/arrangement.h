@@ -140,11 +140,11 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 class ArrangementSingleTrack : public ArrangementMultipleTrack {
 	public:
 
-    ArrangementSingleTrack(const char *label) : ArrangementMultipleTrack(label) {}
 	~ArrangementSingleTrack() = default;
-	/*ArrangementSingleTrack(const char *label, uint16_t colour) : ArrangementSingleTrack(label) {
+    ArrangementSingleTrack(const char *label) : ArrangementMultipleTrack(label) {}
+	ArrangementSingleTrack(const char *label, uint16_t colour) : ArrangementSingleTrack(label) {
         this->colour = colour;
-    }*/
+    }
 
 	virtual int replace_clip_instance(int song_position, Clip *clip) {
 		// todo: use LinkedList 'set' instead to overwrite existing data instead of forcing relinking of list
