@@ -61,7 +61,9 @@ bool save_file(char *filename, ISaveKeyValueSource *source) {
       return false;
     }
     myFile.println(F("; begin clip"));
+
     source->save_sequence_add_lines(&lines);
+    
     for (int i = 0 ; i < lines.size() ; i++) {
         myFile.println(lines.get(i));
     }
