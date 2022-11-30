@@ -6,6 +6,8 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+#include "clips/behaviour_clips.h"
+
 class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
         bool restart_on_bar = true;
@@ -66,12 +68,16 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
             //FLASHMEM 
             virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
+
+        FLASHMEM
+        virtual ArrangementTrackBase *create_arrangement_track() override;
 };
 
 #include "bpm.h"
 #include "MIDI.h"
 
-class DividedClockedBehaviour : public ClockedBehaviour {
+class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public ArrangementTrackBehaviour {
+    //using ArrangementTrackBehaviour::create_arrangement_track;
     public:
         int32_t clock_delay_ticks = 0; //DEFAULT_DELAY_TICKS;
         uint32_t clock_divisor = 1; //DEFAULT_DIVISOR;

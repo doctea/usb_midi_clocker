@@ -35,6 +35,12 @@ void setup_arrangement() {
         loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
     }
 
+    /*for (int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
+        ArrangementTrackBase *behaviour_track = behaviour_manager->behaviours->get(i)->create_arrangement_track();
+        if (behaviour_track!=nullptr)
+            arrangement->addTrack(behaviour_track);
+    }*/
+
     // TODO: loop over each behaviour, add an ArrangementTrack as appropriate...
     // probably ask the behaviour itself to instantiate the track object
 }

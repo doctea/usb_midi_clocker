@@ -11,10 +11,12 @@
 #include "midi/midi_mapper_matrix_types.h"
 
 #include "parameters/Parameter.h"
-
 #include "parameters/MIDICCParameter.h"
 
+#include "file_manager/file_manager_interfaces.h"
+
 class MenuItem;
+class ArrangementTrackBase;
 
 using namespace midi;
 
@@ -26,10 +28,12 @@ enum BehaviourType {
     usbserialmidi   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
 };
 
-class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
+class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKeyValueReceiver, public ISaveKeyValueSource {
     public:
 
     bool debug = false;
+
+    uint16_t colour = C_WHITE;
 
     source_id_t source_id = -1;
     target_id_t target_id = -1;
@@ -251,6 +255,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         virtual LinkedList<MenuItem*> *make_menu_items();
     #endif
     
+    virtual ArrangementTrackBase *create_arrangement_track() {
+        return nullptr;
+    }
+
 };
 
 #endif

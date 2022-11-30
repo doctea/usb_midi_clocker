@@ -39,6 +39,7 @@ class ArrangementEditor : public MenuItem {
             LinkedList<ArrangementTrackBase *> *tracks = arrangement->get_tracks();
             for (int i = 0 ; i < tracks->size() ; i++) {
                 ArrangementTrackBase *track = tracks->get(i);
+                colours(false, track->colour);
                 tft->printf("%-10s: ", track->label);
                 int start_x = tft->getCursorX();
                 int start_y = tft->getCursorY();
@@ -75,6 +76,7 @@ class ArrangementEditor : public MenuItem {
                     tft->setCursor(0, bottom_y);
                 }
             }
+            colours(false, C_WHITE);
           
             /*for (int i = 0 ; i < clip_manager->clips->size() ; i++) {
                 Clip *c = clip_manager->clips->get(i);

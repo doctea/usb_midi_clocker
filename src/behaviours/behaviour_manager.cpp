@@ -145,9 +145,9 @@ void setup_behaviour_manager() {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
-            int16_t group_colour = C_WHITE;
+            uint16_t group_colour = C_WHITE;
             if (menuitems->size()>0 || behaviour->has_parameters()) {
-                group_colour = menu->get_next_colour();
+                group_colour = behaviour->colour = menu->get_next_colour();
 
                 menu->add_page(behaviour->get_label(), group_colour);
 

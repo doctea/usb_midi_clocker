@@ -8,6 +8,7 @@
 #ifdef ENABLE_CRAFTSYNTH_USB
 
 #include "behaviours/behaviour_base_usb.h"
+#include "behaviours/behaviour_clocked.h"
 #include "behaviours/behaviour_modwheelreceiver.h"
 #include "project.h"
 #include "clock.h"

@@ -1,9 +1,13 @@
 #ifndef ARRANGEMENT__INCLUDED
 #define ARRANGEMENT__INCLUDED
 
+#include "Config.h"
+
 #include <LinkedList.h>
 #include "clips/clips.h"
 #include "clips/clip_manager.h"
+
+#include "colours.h"
 
 #define MAX_TRACK_NAME 20
 
@@ -18,25 +22,26 @@ class ArrangementTrackBase {
 
 	char label[MAX_TRACK_NAME];
 	int current_song_position = -1;
+    uint16_t colour = C_WHITE;
 
 	ArrangementTrackBase(const char *label) {
 		strncpy(this->label, label, MAX_TRACK_NAME);
 	}
+    ~ArrangementTrackBase() = default;
 
 	// insert a clip at specified song postion; return the index
-	virtual int insert_clip_instance(int song_position, Clip *clip);
+	virtual int insert_clip_instance(int song_position, Clip *clip) = 0;
 	//virtual void replace_clip_instance(int song_position, Clip *clip);
-	virtual LinkedList<clip_instance_t*> *get_clips_at_time(int song_position);
+	virtual LinkedList<clip_instance_t*> *get_clips_at_time(int song_position) = 0;
 
-	virtual bool is_active_for_phrase(int song_position);
+	virtual bool is_active_for_phrase(int song_position) = 0;
 
-	virtual void on_tick(uint32_t tick);
-	virtual void on_bar(uint32_t bar);
-	virtual void on_phrase(int phrase);
+	virtual void on_tick(uint32_t tick) = 0;
+	virtual void on_bar(uint32_t bar) = 0;
+	virtual void on_phrase(int phrase) = 0;
 
-	virtual void debug_track();
+	virtual void debug_track() = 0;
 };
-
 
 class ArrangementMultipleTrack : public ArrangementTrackBase {
 	public:
@@ -50,6 +55,7 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 	int playhead_index = 0;	// where our internal pointer is currently pointing to
 
 	ArrangementMultipleTrack(const char *label) : ArrangementTrackBase(label) {}
+	~ArrangementMultipleTrack() = default;
 
 	// 	insert a clip_instance_t at the correct song position
 	virtual int insert_clip_instance(int song_position, Clip *clip) override {
@@ -74,7 +80,7 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 
 	virtual bool is_active_for_phrase(int song_position) override {
 		int index = find_index_for_position(song_position);
-        Serial.printf("find_index_for_position(%i) got index %i\n", song_position, index);
+        //Serial.printf("find_index_for_position(%i) got index %i\n", song_position, index);
 		return index < song_structure->size() && song_structure->get(index).position==song_position;
 	}
 
@@ -111,17 +117,17 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
         //Serial.printf("Arrangement#on_phrase(%i) found playhead_index %i\n", phrase_number, playhead_index);
 		LinkedList<clip_instance_t*> *clips = get_clips_at_time(phrase_number);
 		for (int i = 0 ; i < clips->size() ; i++) {
-            Serial.printf("ArrrangementMultipleTrack#on_phrase(%i) processing clip %i\n", phrase_number, i);
+            //Serial.printf("ArrrangementMultipleTrack#on_phrase(%i) processing clip %i\n", phrase_number, i);
 			clips->get(i)->clip->on_phrase(phrase_number);
 		}
 	}
 
     virtual void debug_track() override {
-        Serial.println("debug_arrangement:");
+        Serial.println(F("debug_arrangement:"));
         for (int i = 0 ; i < song_structure->size() ; i++) {
-            Serial.printf("\tindex %i:\tclip_id=%i,\tposition=%i,\tclip->clip_id=%i\n", i, song_structure->get(i).clip_id, song_structure->get(i).position, song_structure->get(i).clip->clip_id);
+            Serial.printf(F("\tindex %i:\tclip_id=%i,\tposition=%i,\tclip->clip_id=%i\n"), i, song_structure->get(i).clip_id, song_structure->get(i).position, song_structure->get(i).clip->clip_id);
         }
-        Serial.println("-----");
+        Serial.println(F("-----"));
     }
 
 	// have some helper functions to:-
@@ -134,7 +140,11 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 class ArrangementSingleTrack : public ArrangementMultipleTrack {
 	public:
 
-	ArrangementSingleTrack(const char *label) : ArrangementMultipleTrack(label) {}
+    ArrangementSingleTrack(const char *label) : ArrangementMultipleTrack(label) {}
+	~ArrangementSingleTrack() = default;
+	/*ArrangementSingleTrack(const char *label, uint16_t colour) : ArrangementSingleTrack(label) {
+        this->colour = colour;
+    }*/
 
 	virtual int replace_clip_instance(int song_position, Clip *clip) {
 		// todo: use LinkedList 'set' instead to overwrite existing data instead of forcing relinking of list
@@ -159,18 +169,19 @@ class Arrangement {
 		LinkedList<ArrangementTrackBase*> *current_tracks = new LinkedList<ArrangementTrackBase*> ();
 
 		ArrangementTrackBase* addTrack(ArrangementTrackBase* track) {
-			this->tracks->add(track);
+            if (track!=nullptr)
+			    this->tracks->add(track);
 			return track;
 		}
 
 		LinkedList<ArrangementTrackBase*> *get_active_tracks(int current_song_phrase) {
-            Serial.printf("get_active_tracks(%i)...\n", current_song_phrase);
+            //Serial.printf(F("get_active_tracks(%i)...\n"), current_song_phrase);
 			//if (this->current_song_phrase!=current_song_phrase) {
 				this->current_tracks->clear();
 				for (int i = 0 ; i < tracks->size() ; i++) {
-                    Serial.printf("\tchecking track %s..", tracks->get(i)->label);
+                    //Serial.printf(F("\tchecking track %s.."), tracks->get(i)->label);
 					if (tracks->get(i)->is_active_for_phrase(current_song_phrase)) {
-                        Serial.print("is_active!");
+                        //Serial.print(F("is_active!"));
 						current_tracks->add(tracks->get(i));
                     }
                     Serial.println();
@@ -207,7 +218,7 @@ class Arrangement {
 			if (current_song_phrase<0) return;
 
 			LinkedList<ArrangementTrackBase*> *current_tracks = get_active_tracks(current_song_phrase);
-            Serial.printf("Arrangement#on_phrase(%i) got %i tracks\n", phrase_number, current_tracks->size());
+            Serial.printf(F("Arrangement#on_phrase(%i) got %i tracks\n"), phrase_number, current_tracks->size());
 
 			for (int i = 0 ; i < current_tracks->size() ; i++) {
 				current_tracks->get(i)->on_phrase(phrase_number);
@@ -226,11 +237,11 @@ class Arrangement {
 			//
 		}*/
 		void debug_arrangement() {
-			Serial.println("debug_arrangement:");
+			Serial.println(F("debug_arrangement:"));
 			for (int i = 0 ; i < tracks->size() ; i++) {
 				tracks->get(i)->debug_track();
 			}
-			Serial.println("-----");
+			Serial.println(F("-----"));
 		}
 };
 

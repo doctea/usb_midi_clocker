@@ -19,14 +19,21 @@ class Clip {
 		Clip() {};
 		~Clip() = default;
 		int clip_id = -1;
-
 		bool dirty = false;
+
+		virtual char get_name() {
+			return (char)48 + this->clip_id;
+		};
 
 		//virtual void prepare() = 0;
 		//virtual void start() = 0;
 		virtual void on_phrase(int phrase) = 0;
 		virtual void on_tick(uint32_t tick) = 0;
 		virtual void on_bar(uint32_t bar) = 0;
+
+		// todo: save/load
+		virtual void save() {}
+		virtual void load() {}
 		virtual void set_dirty(bool v = true) {
 			this->dirty = v;
 		}
@@ -34,7 +41,6 @@ class Clip {
 			return dirty;
 		}
 
-		virtual char get_name() = 0;
 };
 
 // a Clip that contains a sequence/clock information
@@ -58,7 +64,7 @@ class SequenceClip : public Clip {
 			// ? nothing to do here... 
 		}*/
 		virtual void on_phrase(int phrase) override {
-			Serial.printf("SequenceClip clip_id=%i loading sequence_number %i!\n", clip_id, sequence_number);
+			Serial.printf(F("SequenceClip clip_id=%i loading sequence_number %i!\n"), clip_id, sequence_number);
 			project.load_sequence(sequence_number);
 		}
 		virtual void on_tick(uint32_t tick) override {
@@ -83,7 +89,7 @@ class LoopClip : public Clip {
 		}
 
 		virtual void on_phrase(int phrase) override {
-			Serial.printf("LoopClip clip_id=%i loading loop_number %i!\n", clip_id, loop_number);
+			Serial.printf(F("LoopClip clip_id=%i loading loop_number %i!\n"), clip_id, loop_number);
 			project.load_loop(loop_number);
 		}
 		virtual void on_tick(uint32_t tick) override {
@@ -101,10 +107,10 @@ class ParameterClip : public Clip {
 };
 
 // a Clip that contains *all* preset settings for a Behaviour (including its Parameters?)
-class BehaviourPresetClip : public Clip {
+/*class BehaviourPresetClip : public Clip {
 	public:
 
-};
+};*/
 
 // a Clip that contains ParameterInput<->Parameter mapping information
 class ParameterMapClip : public Clip {

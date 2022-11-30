@@ -4,7 +4,7 @@
 #include "storage.h"
 #include "midi/midi_looper.h"
 
-#include "behaviours/behaviour_subclocker.h"
+//#include "behaviours/behaviour_subclocker.h"
 /*#include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
 #include "behaviours/behaviour_mpk49.h"*/
@@ -269,7 +269,7 @@ class Project {
         bool auto_advance_sequencer = false;
         void on_phrase(int phrase) {
             int slot = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
-            //Serial.printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
+            Serial.printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
             if (auto_advance_sequencer) {
                 this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
                 this->load_sequence(this->selected_sequence_number);
@@ -280,7 +280,7 @@ class Project {
                     this->load_loop(this->selected_loop_number);
                 }
             #endif
-            //Serial.printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
+            Serial.printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
         }
         bool is_auto_advance_sequencer() {
             return this->auto_advance_sequencer;
