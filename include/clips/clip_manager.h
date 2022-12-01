@@ -21,11 +21,13 @@ class ClipManager {
         }
 
         Clip *get_clip_for_id(int id) {
-            Serial.printf("get_clip_for_id(%i) returning item at index %i of %i\n", id, id, this->clips->size());
+            //Serial.printf("get_clip_for_id(%i) returning item at index %i of %i\n", id, id, this->clips->size());
             return this->clips->get(id);
         }
 
+        // TODO: save clips from disk - maybe move this to be handled by teh tracks
         void save_clips(int arrangement_number) {
+            
             for (int i = 0 ; i < this->clips->size() ; i++) {
                 if (this->clips->get(i)->is_dirty()) {
                     Serial.printf(F("TODO: save clip %i to disk in arrangemnet %i\n"), i, arrangement_number);
@@ -34,6 +36,7 @@ class ClipManager {
                 }
             }
         }
+        // TODO: load clips from disk - maybe move this to be handled by teh tracks
         void load_clips() {
             // load all the available clip data from disk...
             // get directory listing
@@ -43,7 +46,7 @@ class ClipManager {
 
         Clip *add_clip(Clip *clip) {
             clip->clip_id = this->get_new_clip_id();
-            Serial.printf("add_clip adding clip at index %i with id %i\n", clips->size()-1, clip->clip_id);
+            Serial.printf(F("add_clip adding clip at index %i with id %i\n"), clips->size()-1, clip->clip_id);
 
             this->clips->add(clip);
             return clip;

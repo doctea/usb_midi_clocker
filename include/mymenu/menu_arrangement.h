@@ -1,3 +1,6 @@
+#ifndef MENU_ARRANGEMENT__INCLUDED
+#define MENU_ARRANGEMENT__INCLUDED
+
 #include "Config.h"
 
 //#include "midi/midi_mpk49.h"
@@ -5,6 +8,8 @@
 #include "project.h"
 #include "mymenu.h"
 #include "menu.h"
+
+#include "submenuitem_bar.h"
 
 #include "arrangement/arrangement.h"
 #include "clips/clip_manager.h"
@@ -44,7 +49,7 @@ class ArrangementEditor : public MenuItem {
                 sprintf(label, "%-10s", track->label);
                 label[10] = '\0';
                 tft->print(label);
-                tft->print(": ");
+                tft->print((char*)": ");
                 //tft->printf("%.10s: ", track->label);
                 int start_x = tft->getCursorX();
                 int start_y = tft->getCursorY();
@@ -116,3 +121,9 @@ class ArrangementEditor : public MenuItem {
             return bottom_y;
         }
 };
+
+
+void setup_arrangement_menu();
+
+
+#endif

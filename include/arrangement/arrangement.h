@@ -111,14 +111,15 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 		}
 	}
 
-	virtual void on_phrase(int phrase_number) override {
-        playhead_index = find_index_for_position(phrase_number);
-		current_song_position = phrase_number;
+	virtual void on_phrase(int current_song_phrase) override {
+		current_song_position = current_song_phrase;
+        playhead_index = find_index_for_position(current_song_position);
+		 //phrase_number;
         //Serial.printf("Arrangement#on_phrase(%i) found playhead_index %i\n", phrase_number, playhead_index);
-		LinkedList<clip_instance_t*> *clips = get_clips_at_time(phrase_number);
+		LinkedList<clip_instance_t*> *clips = get_clips_at_time(current_song_position);
 		for (int i = 0 ; i < clips->size() ; i++) {
             //Serial.printf("ArrrangementMultipleTrack#on_phrase(%i) processing clip %i\n", phrase_number, i);
-			clips->get(i)->clip->on_phrase(phrase_number);
+			clips->get(i)->clip->on_phrase(current_song_position);
 		}
 	}
 
@@ -163,6 +164,7 @@ class Arrangement {
 	public:
 		Arrangement() {}
 
+		bool looping = false, playing = true;
 		int current_song_phrase = -1;
 
 		LinkedList<ArrangementTrackBase*> *tracks = new LinkedList<ArrangementTrackBase*> ();
@@ -196,7 +198,10 @@ class Arrangement {
 		}
 
 		void on_tick(uint32_t ticks) {
-			if (current_song_phrase<0) return;
+			if (!playing)
+				return;
+			if (current_song_phrase<0) 
+				return;
 
 			LinkedList<ArrangementTrackBase*> *current_tracks = get_active_tracks(current_song_phrase);
 			for (int i = 0 ; i < current_tracks->size() ; i++) {
@@ -205,7 +210,10 @@ class Arrangement {
 		}
 
 		void on_bar(int bar_number) {
-			if (current_song_phrase<0) return;
+			if (!playing)
+				return;
+			if (current_song_phrase<0) 
+				return;
 
 			LinkedList<ArrangementTrackBase*> *current_tracks = get_active_tracks(current_song_phrase);
 			for (int i = 0 ; i < current_tracks->size() ; i++) {
@@ -214,14 +222,20 @@ class Arrangement {
 		}
 
 		void on_phrase(int phrase_number) {
-            current_song_phrase = phrase_number;
-			if (current_song_phrase<0) return;
+			if (!this->playing)
+				return;
+			if (!this->looping)
+            	this->current_song_phrase++; // = phrase_number;
+			if (this->current_song_phrase<0) 
+				return;
+
+			Serial.printf("Arrangement#on_phrase(%i) with current_song_phrase=%i\n", phrase_number, current_song_phrase);
 
 			LinkedList<ArrangementTrackBase*> *current_tracks = get_active_tracks(current_song_phrase);
             Serial.printf(F("Arrangement#on_phrase(%i) got %i tracks\n"), phrase_number, current_tracks->size());
 
 			for (int i = 0 ; i < current_tracks->size() ; i++) {
-				current_tracks->get(i)->on_phrase(phrase_number);
+				current_tracks->get(i)->on_phrase(current_song_phrase);
 			}
 		}
 

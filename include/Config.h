@@ -83,14 +83,14 @@
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
-    #define ENABLE_BAMBLE
+    //#define ENABLE_BAMBLE
     //#defined ENABLE_BAMBLE_INPUT    // for collecting input from bambleweeny
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
     #define ENABLE_CRAFTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
-    
+
     #define ENABLE_APCMINI_DISPLAY
 #endif
 

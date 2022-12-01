@@ -196,6 +196,10 @@ void setup() {
     Serial.printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
   #endif
 
+  // todo: move this somewhere more sensible
+  setup_clip_manager();
+  setup_arrangement();
+
   Serial.println(F("Arduino ready.")); Serial_flush();
   #ifdef ENABLE_SCREEN
     tft_print((char*)"Ready!"); 
@@ -211,9 +215,6 @@ void setup() {
 
     menu->select_page(0);
   #endif
-
-  setup_clip_manager();
-  setup_arrangement();
 
   #ifdef ENABLE_PROFILER
     Serial.printf("Allocating array for profiler");
