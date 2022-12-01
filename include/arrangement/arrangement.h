@@ -222,14 +222,16 @@ class Arrangement {
 		}
 
 		void on_phrase(int phrase_number) {
+			//if (current_song_phrase<0) current_song_phrase = 0;
 			if (!this->playing)
 				return;
 			if (!this->looping)
             	this->current_song_phrase++; // = phrase_number;
 			if (this->current_song_phrase<0) 
-				return;
+			 	current_song_phrase = 0;
+				//return;
 
-			Serial.printf("Arrangement#on_phrase(%i) with current_song_phrase=%i\n", phrase_number, current_song_phrase);
+			Serial.printf(F("Arrangement#on_phrase(%i) with current_song_phrase=%i\n"), phrase_number, current_song_phrase);
 
 			LinkedList<ArrangementTrackBase*> *current_tracks = get_active_tracks(current_song_phrase);
             Serial.printf(F("Arrangement#on_phrase(%i) got %i tracks\n"), phrase_number, current_tracks->size());

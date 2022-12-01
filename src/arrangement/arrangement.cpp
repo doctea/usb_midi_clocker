@@ -42,7 +42,7 @@ void setup_arrangement() {
             arrangement->addTrack(behaviour_track);
     }
 
-    setup_arrangement_menu();  
+    setup_arrangement_menu(arrangement);  
     
     // probably ask the behaviour itself to instantiate the track object
 }
@@ -54,15 +54,18 @@ void setup_arrangement() {
 #include "submenuitem_bar.h"
 
 FLASHMEM
-void setup_arrangement_menu() {
+void setup_arrangement_menu(Arrangement *arrangement) {
     menu->add_page("Arrangement"); //, 1);
 
-    /*SubMenuItemBar *transport = new SubMenuItemBar("Transport");
+    SubMenuItemBar *transport = new SubMenuItemBar("Transport");
     //Serial.println("instantiated transport bar");    
+
     transport->add(new NumberControl<bool>("Play", &arrangement->playing, arrangement->playing, 0, 1));
-    //transport->add(new NumberControl<bool>("Loop", &arrangement->looping, arrangement->looping, 0, 1));
-    //transport->add(new NumberControl<int> ("Phrase", &arrangement->current_song_phrase, arrangement->current_song_phrase, 0, 1024));
-    menu->add(transport);*/
+    transport->add(new NumberControl<bool>("Loop", &arrangement->looping, arrangement->looping, 0, 1));
+    transport->add(new NumberControl<int> ("Phrase", &arrangement->current_song_phrase, arrangement->current_song_phrase, 0, 1024));
+
+    menu->add(transport);
+    
     //Serial.println("added transport bar");
     
     menu->add(new ArrangementEditor("Arrangement")); //, arrangement));   

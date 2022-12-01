@@ -33,7 +33,7 @@ class ArrangementEditor : public MenuItem {
             int view_port_width = (tft->width()/tft->characterWidth())-12;
             for (int i = 0 ; i < view_port_width ; i++) {
                 tft->setCursor(x + (i*tft->characterWidth()),pos.y);
-                colours(i==BPM_CURRENT_PHRASE);
+                colours(i==arrangement->current_song_phrase); //);
                 tft->printf("%i",i%8);
             }
             tft->println();
@@ -123,7 +123,7 @@ class ArrangementEditor : public MenuItem {
 };
 
 
-void setup_arrangement_menu();
+void setup_arrangement_menu(Arrangement*);
 
 
 #endif
