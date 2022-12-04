@@ -9,6 +9,8 @@
 
 #include "behaviours/behaviour_manager.h"
 
+#include "arrangement/arrangement.h"
+
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
 usb_midi_device[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
@@ -178,6 +180,8 @@ void global_on_restart() {
   //send_midi_serial_stop_start();
 
   behaviour_manager->on_restart();
+
+  arrangement->on_restart();
 
   Serial.println(F("<==on_restart()"));
 }

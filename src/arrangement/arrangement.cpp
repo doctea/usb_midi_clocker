@@ -60,10 +60,10 @@ void setup_arrangement_menu(Arrangement *arrangement) {
     SubMenuItemBar *transport = new SubMenuItemBar("Transport");
     //Serial.println("instantiated transport bar");    
 
-    transport->add(new NumberControl<bool>("Play", &arrangement->playing, arrangement->playing, 0, 1));
-    transport->add(new NumberControl<bool>("Loop", &arrangement->looping, arrangement->looping, 0, 1));
-    transport->add(new NumberControl<int> ("Phrase", &arrangement->current_song_phrase, arrangement->current_song_phrase, 0, 1024));
-
+    transport->add(new NumberControl<bool>("Play", &arrangement->playing, arrangement->playing, 0, 1, true));
+    transport->add(new NumberControl<bool>("Loop", &arrangement->looping, arrangement->looping, 0, 1, true));
+    transport->add(new NumberControl<int> ("Phrase", &arrangement->current_song_phrase, arrangement->current_song_phrase, 0, 1024, true));
+    
     menu->add(transport);
     
     //Serial.println("added transport bar");

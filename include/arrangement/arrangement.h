@@ -186,7 +186,7 @@ class Arrangement {
                         //Serial.print(F("is_active!"));
 						current_tracks->add(tracks->get(i));
                     }
-                    Serial.println();
+                    //Serial.println();
 				}
 			//}
 
@@ -239,6 +239,10 @@ class Arrangement {
 			for (int i = 0 ; i < current_tracks->size() ; i++) {
 				current_tracks->get(i)->on_phrase(current_song_phrase);
 			}
+		}
+
+		void on_restart() {
+			this->current_song_phrase = -1;
 		}
 
 		/*void save_arrangement(int arrangement_number) {
