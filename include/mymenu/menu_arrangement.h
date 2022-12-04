@@ -21,7 +21,7 @@ class ArrangementEditor : public MenuItem {
         /*ArrangementEditor(char *label, Arrangement *arrangment) : MenuItem(label){
             this->arrangement = arrangement;
         }*/
-        ArrangementEditor(char *label) : MenuItem(label){
+        ArrangementEditor(const char *label) : MenuItem(label){
         }
 
         int view_port_position_start = 0;
