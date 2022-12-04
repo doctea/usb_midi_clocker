@@ -171,22 +171,22 @@ class LooperStatus : public SlotController {
             return NUM_LOOP_SLOTS_PER_PROJECT;
         };
         virtual int get_loaded_slot() override {
-            return project.loaded_loop_number;
+            return project->loaded_loop_number;
         };
         virtual int get_selected_slot() override {
-            return project.selected_loop_number;
+            return project->selected_loop_number;
         };
         virtual bool is_slot_empty(int i) override {
-            return project.is_selected_loop_number_empty(i);
+            return project->is_selected_loop_number_empty(i);
         };
         virtual bool move_to_slot_number(int i) override {
-            return project.select_loop_number(i);
+            return project->select_loop_number(i);
         };
         virtual bool load_slot_number(int i) override {
-            return project.load_loop(i);
+            return project->load_loop(i);
         };
         virtual bool save_to_slot_number(int i) override {
-            return project.save_loop(i);
+            return project->save_loop(i);
         };
 
         virtual int display(Coord pos, bool selected, bool opened) override {

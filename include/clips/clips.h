@@ -43,8 +43,61 @@ class Clip {
 
 };
 
+template<class TargetClass, class DataType>
+class ObjectValueClip : public Clip {
+	public:
+		TargetClass *target_object = nullptr;
+        bool(TargetClass::*setter_func)(DataType);
+        //DataType(TargetClass::*getter_func);
+
+		DataType value = 0;
+
+		ObjectValueClip(TargetClass *target, bool(TargetClass::*setter_func)(DataType), DataType value) {
+			this->target_object = target;
+			this->setter_func = setter_func;
+			this->value = value;
+		}
+
+		virtual char get_name() {
+			return (char)48 + (char)this->value;
+		};
+
+		virtual void setValue(DataType value) {
+			this->value = value;
+		}
+
+		virtual void activate(DataType value) {
+			if (this->target_object==nullptr) 
+				return;
+			Serial.printf("ObjectValueClip#activate(%i)\n", value);
+			(this->target_object->*this->setter_func)(value);
+		}
+
+		virtual void on_phrase(int phrase) override {
+			//Serial.printf(F("SequenceClip clip_id=%i loading sequence_number %i!\n"), clip_id, sequence_number);
+			//project.load_sequence(sequence_number);
+			this->activate(value);
+		}
+		virtual void on_tick(uint32_t tick) override {
+			// process the tick for the loaded sequence 
+		}
+		virtual void on_bar(uint32_t bar) override {
+
+		}
+};
+
+class SequenceClip : public ObjectValueClip<Project, int> {
+	public:
+		SequenceClip(int sequence_number) : ObjectValueClip<Project,int>(project, &Project::load_specific_sequence, sequence_number) {}
+};
+
+class LoopClip : public ObjectValueClip<Project, int> {
+	public:
+		LoopClip(int loop_number) : ObjectValueClip<Project,int>(project, &Project::load_specific_loop, loop_number) {}
+};
+
 // a Clip that contains a sequence/clock information
-class SequenceClip : public Clip {
+/*class SequenceClip : public Clip {
 	public:
 		int sequence_number; // the sequence number to load when this clip played
 
@@ -56,13 +109,6 @@ class SequenceClip : public Clip {
 			return (char)(sequence_number + 48);
 		}
 
-		/*virtual void prepare() {
-			Serial.printf("SequenceClip clip_id=%i loading sequence_number %i!\n", clip_id, sequence_number);
-			project.load_sequence(sequence_number);
-		}
-		virtual void start() {
-			// ? nothing to do here... 
-		}*/
 		virtual void on_phrase(int phrase) override {
 			Serial.printf(F("SequenceClip clip_id=%i loading sequence_number %i!\n"), clip_id, sequence_number);
 			project.load_sequence(sequence_number);
@@ -73,10 +119,10 @@ class SequenceClip : public Clip {
 		virtual void on_bar(uint32_t bar) override {
 
 		}
-};
+};*/
 
 // a Clip that contains a sequence/clock information
-class LoopClip : public Clip {
+/*class LoopClip : public Clip {
 	public:
 		int loop_number; // the sequence number to load when this clip played
 
@@ -98,7 +144,7 @@ class LoopClip : public Clip {
 		virtual void on_bar(uint32_t bar) override {
 
 		}
-};
+};*/
 
 // a Clip that contains automation lanes for one or more Parameters
 class ParameterClip : public Clip {

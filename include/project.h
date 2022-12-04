@@ -165,6 +165,9 @@ class Project {
         bool save_sequence() {
             return save_sequence(selected_sequence_number);
         }
+        bool load_specific_sequence(int selected_sequence_number) {
+            return this->load_sequence(selected_sequence_number);
+        }
 
         bool load_sequence(int selected_sequence_number) {
             Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
@@ -236,6 +239,9 @@ class Project {
                 return this->save_loop(selected_loop_number, &mpk49_loop_track);
             }
 
+            bool load_specific_loop(int selected_loop_number) {
+                return this->load_loop(selected_loop_number);
+            }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
@@ -417,7 +423,7 @@ class Project {
         }
 };
 
-extern Project project;
+extern Project *project;
 
 // for use by the Menu
 void save_project_settings();

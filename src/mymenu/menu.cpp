@@ -63,7 +63,15 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_project_settings);
-ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
+ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>(
+    "Project number", 
+    project, 
+    &Project::setProjectNumber, 
+    &Project::getProjectNumber, 
+    nullptr, 
+    0, 
+    100
+);
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
@@ -127,14 +135,14 @@ void setup_menu() {
     project_multi_recall_options = new ObjectMultiToggleControl("Recall options", true);
     MultiToggleItemClass<Project> *load_matrix = new MultiToggleItemClass<Project> (
         "MIDI Mappings",
-        &project,
+        project,
         &Project::setLoadMatrixMappings,
-        &Project::isLoadMatrixMappings    
+        &Project::isLoadMatrixMappings
     );
     #ifdef ENABLE_CLOCKS
         MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
             "Clock Settings",
-            &project,
+            project,
             &Project::setLoadClockSettings,
             &Project::isLoadClockSettings    
         );
@@ -142,14 +150,14 @@ void setup_menu() {
     #ifdef ENABLE_SEQUENCER
         MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
             "Sequence Settings",
-            &project,
+            project,
             &Project::setLoadSequencerSettings,
             &Project::isLoadSequencerSettings    
         );
     #endif
     MultiToggleItemClass<Project> *load_behaviour_settings = new MultiToggleItemClass<Project> {
         "Behaviour Options",
-        &project,
+        project,
         &Project::setLoadBehaviourOptions,
         &Project::isLoadBehaviourOptions
     };
@@ -169,7 +177,7 @@ void setup_menu() {
     #ifdef ENABLE_SEQUENCER
         MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
             "Sequence",
-            &project,
+            project,
             &Project::set_auto_advance_sequencer,
             &Project::is_auto_advance_sequencer
         );
@@ -178,7 +186,7 @@ void setup_menu() {
     #ifdef ENABLE_LOOPER
         MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
             "Looper",
-            &project,
+            project,
             &Project::set_auto_advance_looper,
             &Project::is_auto_advance_looper
         );

@@ -190,13 +190,13 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 Serial.println(ticks);*/
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
                 //load_state_start(project.selected_sequence_number, &project.current_state);
-                project.load_sequence(); //project.selected_sequence_number);
+                project->load_sequence(); //project.selected_sequence_number);
                 #ifdef ENABLE_APCMINI_DISPLAY
                     apcmini_update_clock_display();
                 #endif
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
                 //save_sequence(project.selected_sequence_number, &project.current_state);
-                project.save_sequence(); //project.selected_sequence_number);
+                project->save_sequence(); //project.selected_sequence_number);
                 #ifdef ENABLE_SEQUENCER
             } else if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
                     byte row = 3 - (inNumber / APCMINI_DISPLAY_WIDTH);
