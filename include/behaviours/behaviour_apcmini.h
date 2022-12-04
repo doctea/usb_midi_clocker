@@ -34,7 +34,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
         virtual const char *get_label() override {
-            return (char*)"APCMini";
+            return "APCMini";
         }
         virtual bool has_input() { return true; }
 

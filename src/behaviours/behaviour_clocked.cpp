@@ -35,6 +35,13 @@ ArrangementTrackBase *ClockedBehaviour::create_arrangement_track() {
     #include "menuitems.h"
     #include "menuitems_selector.h"
 
+    LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option> *delay_ticks_control_available_values = nullptr;
+
+    void add_option_delay_ticks_control(LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option> *list, int32_t value, const char *label) { 
+        String *l = new String(label);
+        list->add(ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option { .value = value, .label = l->c_str() });
+    }
+
     LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
         //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial_flush();
         DeviceBehaviourUltimateBase::make_menu_items();
@@ -61,6 +68,45 @@ ArrangementTrackBase *ClockedBehaviour::create_arrangement_track() {
         #define ENABLE_PAUSE_DURING_DELAY_CONTROL
 
         #ifdef ENABLE_DELAY_TICKS_CONTROL
+
+            // use a global delay_ticks_control list of available values to save (hopefully) code space and RAM
+            if (delay_ticks_control_available_values==nullptr) {
+                delay_ticks_control_available_values = new LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option>();
+                add_option_delay_ticks_control(delay_ticks_control_available_values, 0,                 "None");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/4,            "1/4");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/2,            "1/2");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN,              "1");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN+(PPQN/2),     "1.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*2,            "2");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*2)+(PPQN/2), "2.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*3,            "3");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*3)+(PPQN/2), "3.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*4,            "4");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*4)+(PPQN/2), "4.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*5,            "5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*5)+(PPQN/2), "5.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*6,            "6");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*6)+(PPQN/2), "6.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*7,            "7");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*7)+(PPQN/2), "7.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*8,            "8");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*8)+(PPQN/2), "8.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*9,            "9");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*9)+(PPQN/2), "9.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*10,            "10");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*10)+(PPQN/2), "10.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*11,            "11");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*11)+(PPQN/2), "11.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*12,            "12");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*12)+(PPQN/2), "12.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*13,            "13");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*13)+(PPQN/2), "13.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*14,            "14");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*4)+(PPQN/2), "14.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*15,            "15");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*15)+(PPQN/2), "15.5");
+            }
+
             //Serial.println(F("\tDividedClockedBehaviour creating delay_ticks_control")); Serial_flush();
             ObjectSelectorControl<DividedClockedBehaviour,int32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,int32_t>(
                 "Delay",
@@ -69,41 +115,7 @@ ArrangementTrackBase *ClockedBehaviour::create_arrangement_track() {
                 &DividedClockedBehaviour::get_delay_ticks,
                 nullptr
             );       
-            delay_ticks_control->add_available_value(0,                 "None");
-            delay_ticks_control->add_available_value(PPQN/4,            "1/4");
-            delay_ticks_control->add_available_value(PPQN/2,            "1/2");
-            delay_ticks_control->add_available_value(PPQN,              "1");
-            delay_ticks_control->add_available_value(PPQN+(PPQN/2),     "1.5");
-            delay_ticks_control->add_available_value(PPQN*2,            "2");
-            delay_ticks_control->add_available_value((PPQN*2)+(PPQN/2), "2.5");
-            delay_ticks_control->add_available_value(PPQN*3,            "3");
-            delay_ticks_control->add_available_value((PPQN*3)+(PPQN/2), "3.5");
-            delay_ticks_control->add_available_value(PPQN*4,            "4");
-            delay_ticks_control->add_available_value((PPQN*4)+(PPQN/2), "4.5");
-            delay_ticks_control->add_available_value(PPQN*5,            "5");
-            delay_ticks_control->add_available_value((PPQN*5)+(PPQN/2), "5.5");
-            delay_ticks_control->add_available_value(PPQN*6,            "6");
-            delay_ticks_control->add_available_value((PPQN*6)+(PPQN/2), "6.5");
-            delay_ticks_control->add_available_value(PPQN*7,            "7");
-            delay_ticks_control->add_available_value((PPQN*7)+(PPQN/2), "7.5");
-            delay_ticks_control->add_available_value(PPQN*8,            "8");
-            delay_ticks_control->add_available_value((PPQN*8)+(PPQN/2), "8.5");
-            delay_ticks_control->add_available_value(PPQN*9,            "9");
-            delay_ticks_control->add_available_value((PPQN*9)+(PPQN/2), "9.5");
-            delay_ticks_control->add_available_value(PPQN*10,            "10");
-            delay_ticks_control->add_available_value((PPQN*10)+(PPQN/2), "10.5");
-            delay_ticks_control->add_available_value(PPQN*11,            "11");
-            delay_ticks_control->add_available_value((PPQN*11)+(PPQN/2), "11.5");
-            delay_ticks_control->add_available_value(PPQN*12,            "12");
-            delay_ticks_control->add_available_value((PPQN*12)+(PPQN/2), "12.5");
-            delay_ticks_control->add_available_value(PPQN*13,            "13");
-            delay_ticks_control->add_available_value((PPQN*13)+(PPQN/2), "13.5");
-            delay_ticks_control->add_available_value(PPQN*14,            "14");
-            delay_ticks_control->add_available_value((PPQN*4)+(PPQN/2), "14.5");
-            delay_ticks_control->add_available_value(PPQN*15,            "15");
-            delay_ticks_control->add_available_value((PPQN*15)+(PPQN/2), "15.5");
-            //delay_ticks_control->add_available_value(PPQN*16,            "16");
-            //delay_ticks_control->add_available_value((PPQN*16)+(PPQN/2), "16.5");
+            delay_ticks_control->set_available_values(delay_ticks_control_available_values);
 
             delay_ticks_control->go_back_on_select = true;
         #endif

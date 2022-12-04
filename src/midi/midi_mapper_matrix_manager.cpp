@@ -118,10 +118,10 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         pc_usb_sources[3] = midi_matrix_manager->register_source((const char*)"pc_usb_4");
 
         // then, set the output wrapper pointers to the default wrappers (again, from PC to teensy)
-        midi_matrix_manager->connect("pc_usb_1", (char*)"USB : Bamble : ch 1");
-        midi_matrix_manager->connect("pc_usb_2", (char*)"USB : Bamble : ch 2");
-        midi_matrix_manager->connect("pc_usb_3", (char*)"USB : Bamble : drums");
-        midi_matrix_manager->connect("pc_usb_4", (char*)"USB : Bamble : ch 4");
+        midi_matrix_manager->connect("pc_usb_1", "USB : Bamble : ch 1");
+        midi_matrix_manager->connect("pc_usb_2", "USB : Bamble : ch 2");
+        midi_matrix_manager->connect("pc_usb_3", "USB : Bamble : drums");
+        midi_matrix_manager->connect("pc_usb_4", "USB : Bamble : ch 4");
 
         // other direction -- from Teensy to PC
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 1", 0, 1));

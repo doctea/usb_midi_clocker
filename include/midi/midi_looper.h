@@ -9,6 +9,8 @@
 #include "midi/MidiMappings.h"
 //#include "midi/midi_out_wrapper.h"
 
+#include "midi/midi_helpers.h"
+
 #include "midi/midi_mapper_matrix_types.h"
 //#include "midi/midi_mapper_matrix_manager.h"
 
@@ -44,7 +46,7 @@ struct midi_message {
 struct tracked_note {
     bool playing = false;
     byte velocity = 0;
-    int32_t started_at = -1;
+    //int32_t started_at = -1;
 };
 
 
@@ -76,7 +78,7 @@ class MIDITrack {
         } else if (quantization==-2) {
             ticks_per_quant_level = PPQN * 4;
         } else {
-            Serial.printf("quantization level %i not known - disabling?\n", quantization);
+            Serial.printf(F("quantization level %i not known - disabling?\n"), quantization);
             return time;
         }
 
@@ -96,7 +98,7 @@ class MIDITrack {
         int quantized_time = step % LOOP_LENGTH_TICKS;    // wrap around
         //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
         if (debug)
-            Serial.printf("Quantize level\t%i: quantized time\t%i to\t%i\n", quantization, time, quantized_time);
+            Serial.printf(F("Quantize level\t%i: quantized time\t%i to\t%i\n"), quantization, time, quantized_time);
         return quantized_time;
     }
     int quantize_time(int time, int quantization = -1) {
@@ -186,13 +188,13 @@ class MIDITrack {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
                     .playing = true, 
                     .velocity = midi_event.velocity, 
-                    .started_at = (int32_t)time 
+                    //.started_at = (int32_t)time 
                 };
             } else if (midi_event.message_type==midi::NoteOff) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) {
                     .playing        = false,
-                    .velocity       = 0,
-                    .started_at     = -1
+                    .velocity       = 0
+                    //.started_at     = -1
                 };
             }
             //Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
@@ -214,8 +216,8 @@ class MIDITrack {
             for (int i = 0 ; i < 127 ; i++) {
                 recorded_hanging_notes[i] = (tracked_note) {
                     .playing        = false,
-                    .velocity       = 0,
-                    .started_at     = -1
+                    .velocity       = 0
+                    //.started_at     = -1
                 };
             }
         }
@@ -285,7 +287,7 @@ class MIDITrack {
             time = ticks_to_sequence_step(time);
             for (int i = 0 ; i < 127 ; i++) {
                 int transposed_pitch = i + transpose_amount;
-                if (transposed_pitch<0 || transposed_pitch > 127) {
+                if (!is_valid_note(transposed_pitch)) {
                     if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
                     continue;;
                 } else {
@@ -549,13 +551,13 @@ class MIDITrack {
         // track when a playing note began
         void track_playing_on(uint32_t ticks, byte pitch, byte velocity) {
             track_playing[pitch].playing = true;
-            track_playing[pitch].started_at = ticks;
+            //track_playing[pitch].started_at = ticks;
             track_playing[pitch].velocity = velocity;
         }
         // stop tracking a playing note
         void track_playing_off(uint32_t ticks, byte pitch, byte velocity) {
             track_playing[pitch].playing = false;
-            track_playing[pitch].started_at = -1;
+            //track_playing[pitch].started_at = -1;
             track_playing[pitch].velocity = velocity;
         }
         // check all playing notes and write a note off at current position

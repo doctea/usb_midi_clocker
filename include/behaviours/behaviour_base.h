@@ -146,7 +146,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKe
     virtual bool has_parameters() {
         return this->get_parameters()->size()>0;
     }
-    virtual DoubleParameter* getParameterForLabel(char *label) {
+    virtual DoubleParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
         for (int i = 0 ; i < parameters->size() ; i++) {
             //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
@@ -185,7 +185,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKe
                     if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
                     if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
 
-                    char *input_name = parameter->get_input_name_for_slot(slot);
+                    const char *input_name = parameter->get_input_name_for_slot(slot);
 
                     sprintf(line, "parameter_%s_%i=%s|%3.3f", 
                         parameter->label, 
@@ -222,14 +222,14 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKe
             double amount = value.substring(value.indexOf('|')+1).toFloat();
 
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
-            DoubleParameter *p = this->getParameterForLabel((char*)parameter_name.c_str());
+            DoubleParameter *p = this->getParameterForLabel(parameter_name.c_str());
             //Serial.printf("PARAMETERS\t\t%s: Got value substring to convert to float '%s' => %f\n", p->label, value.substring(value.indexOf('|')+1).c_str(), amount);
 
             if (p!=nullptr) {
                 //Serial.printf(F("PARAMETERS\t\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
                 //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
                 //BaseParameterInput *input = parameter_manager->getInputForName(input_name.c_str()[0]);
-                p->set_slot_input(slot_number, (char*)input_name.c_str());
+                p->set_slot_input(slot_number, input_name.c_str());
                 p->set_slot_amount(slot_number, amount);
                 /*Serial.printf("PARAMETERS\t\t%s: after setting slot %i, values look like name=%c and amount=%f\n", 
                     p->label, 
