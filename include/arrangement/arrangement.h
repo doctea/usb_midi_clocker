@@ -41,6 +41,11 @@ class ArrangementTrackBase {
 	virtual void on_phrase(int phrase) = 0;
 
 	virtual void debug_track() = 0;
+
+
+	virtual int get_num_lanes() = 0;
+	virtual clip_instance_t *get_clip_at_time_lane(int phrase_number, int lane_number) = 0;
+
 };
 
 class ArrangementMultipleTrack : public ArrangementTrackBase {
@@ -82,6 +87,13 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 		int index = find_index_for_position(song_position);
         //Serial.printf("find_index_for_position(%i) got index %i\n", song_position, index);
 		return index < song_structure->size() && song_structure->get(index).position==song_position;
+	}
+
+	virtual int get_num_lanes() {
+		return 1;
+	}
+	virtual clip_instance_t *get_clip_at_time_lane(int phrase_number, int lane_number) {
+		return this->get_clips_at_time(phrase_number)->get(lane_number);
 	}
 
     virtual LinkedList<clip_instance_t*> *get_clips_at_time(int song_position) override {
@@ -242,7 +254,7 @@ class Arrangement {
 		}
 
 		void on_restart() {
-			this->current_song_phrase = -1;
+			this->current_song_phrase = 0; //-1;
 		}
 
 		/*void save_arrangement(int arrangement_number) {

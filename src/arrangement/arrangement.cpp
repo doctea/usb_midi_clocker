@@ -47,7 +47,7 @@ void setup_arrangement() {
     // probably ask the behaviour itself to instantiate the track object
 }
 
-#include "mymenu/menu_arrangement.h"
+#include "mymenu/menu_arrangement_track.h"
 #include "mymenu.h"
 #include "menu.h"
 
@@ -68,6 +68,13 @@ void setup_arrangement_menu(Arrangement *arrangement) {
     
     //Serial.println("added transport bar");
     
-    menu->add(new ArrangementEditor("Arrangement")); //, arrangement));   
+    //menu->add(new ArrangementEditor("Arrangement")); //, arrangement));   
+
+    menu->add(new ArrangementHeader("Arrangement"));
+    for (int i = 0 ; i < arrangement->get_tracks()->size() ; i++) {
+        ArrangementTrackBase* track = arrangement->get_tracks()->get(i);
+        menu->add(new ArrangementTrackEditor(track->label, track));
+    }
+
 }
 
