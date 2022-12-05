@@ -69,7 +69,7 @@ class ObjectValueClip : public Clip {
 		virtual void activate(DataType value) {
 			if (this->target_object==nullptr) 
 				return;
-			Serial.printf("ObjectValueClip#activate(%i)\n", value);
+			Serial.printf(F("ObjectValueClip#activate(%i)\n"), value);
 			(this->target_object->*this->setter_func)(value);
 		}
 

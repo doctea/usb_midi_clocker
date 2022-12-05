@@ -24,8 +24,6 @@ class ArrangementEditor : public MenuItem {
         ArrangementEditor(const char *label) : MenuItem(label){
         }
 
-        int view_port_position_start = 0;
-
         virtual int display(Coord pos, bool selected, bool opened) override {
             //Serial.println("ArrangementEditor#display start");
             pos.y = header(label, pos, selected, opened);
@@ -53,6 +51,9 @@ class ArrangementEditor : public MenuItem {
                 //tft->printf("%.10s: ", track->label);
                 int start_x = tft->getCursorX();
                 int start_y = tft->getCursorY();
+
+                int view_port_position_start = max(0, arrangement->current_song_phrase - view_port_width/2);
+
                 for (int phrase = view_port_position_start ; phrase < view_port_position_start + view_port_width ; phrase++) {
                     //Serial.printf("rendering phrase %i...\n", phrase);
                     LinkedList<clip_instance_t*> *clip_instances = track->get_clips_at_time(phrase);

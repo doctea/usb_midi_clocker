@@ -7,8 +7,7 @@
 
 class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
     public:
-
-        const uint32_t vid = 0x0000, pid = 0x0000;
+        //const uint32_t vid = 0x0000, pid = 0x0000;
         MIDIDeviceBase *device = nullptr;
 
         DeviceBehaviourUSBBase() = default;
@@ -18,12 +17,12 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             return BehaviourType::usb;
         }
 
-        virtual uint32_t get_packed_id() { return (this->vid<<16 | this->pid); }
+        virtual uint32_t get_packed_id() = 0;///{ return (this->vid<<16 | this->pid); }
 
         // interface methods - static
-        virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
+        /*virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
             return vid==this->vid && pid==this->pid;
-        }
+        }*/
         virtual bool matches_identifiers(uint32_t packed_id) {
             return (this->get_packed_id()==packed_id);
         }
