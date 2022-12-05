@@ -45,12 +45,21 @@ class ArrangementHeader : public MenuItem {
 
 };
 
-class ArrangementTrackEditor : public MenuItem {
+class ArrangementTrackEditor : public SubMenuItem {
     public:
         ArrangementTrackBase *track = nullptr;
 
-        ArrangementTrackEditor(const char *label, ArrangementTrackBase * track) : MenuItem(label) {
+        int32_t test_number = 0;
+
+        ArrangementTrackEditor(const char *label, ArrangementTrackBase * track) : SubMenuItem(label) {
             this->track = track;
+            this->always_show = false;
+            //this->allow_takeover = false;
+            this->add(new NumberControl<int32_t>("test", &this->test_number, 0, 0, 32, false));
+        }
+
+        virtual bool allow_takeover() override {
+            return false;
         }
 
         virtual int display(Coord pos, bool selected, bool opened) override {
@@ -89,7 +98,16 @@ class ArrangementTrackEditor : public MenuItem {
             }
             bottom_y = start_y + (tft->getRowHeight() * lanes_count);
 
-            return bottom_y;
+            tft->setCursor(pos.x, bottom_y);
+            tft->printf("selected test = %i\n", this->test_number);
+            bottom_y = tft->getCursorY();
+
+            if (opened)
+                return SubMenuItem::display(Coord(0, bottom_y), selected, opened);
+            else
+                return bottom_y;
+
+            //return bottom_y;
         }
 };
 
