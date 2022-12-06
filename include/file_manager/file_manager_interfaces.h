@@ -10,7 +10,7 @@ class IParseKeyValueReceiver {
 };
 class ISaveKeyValueSource {
     public:
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) = 0;
+        virtual void add_save_lines(LinkedList<String> *lines) = 0;
 };
 
 #endif

@@ -403,9 +403,9 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             DeviceBehaviourUSBBase::sendControlChange(99, 127, 11);
         }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-            DividedClockedBehaviour::save_sequence_add_lines(lines);
+        virtual void add_save_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUltimateBase::add_save_lines(lines);
+            DividedClockedBehaviour::add_save_lines(lines);
             lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
             lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
             lines->add(String(F("density="))        + String(this->getDensity()));

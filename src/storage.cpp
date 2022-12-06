@@ -118,7 +118,7 @@ namespace storage {
     }
     myFile.println(F("; behaviour extensions"));
     LinkedList<String> behaviour_lines = LinkedList<String>();
-    behaviour_manager->save_sequence_add_lines(&behaviour_lines);
+    behaviour_manager->add_save_lines(&behaviour_lines);
     for (int i = 0 ; i < behaviour_lines.size() ; i++) {
       //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
       Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
@@ -183,6 +183,18 @@ namespace storage {
     load_state_current = load_states::LOADING;
     load_state_output = output;
   }*/
+
+  /*
+  #include "file_manager/file_manager_interfaces.h"
+
+  class LoadSequenceWrapper : public IParseKeyValueReceiver {
+    public:
+    virtual bool load_parse_key_value(String key, String value) {
+      k
+
+    };
+  };
+  */
 
   void load_sequence_parse_line(String line, savestate *output) {
     bool debug = false;

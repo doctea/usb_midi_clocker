@@ -89,7 +89,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
         }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+        virtual void add_save_lines(LinkedList<String> *lines) override {
             lines->add(
                 String(F("drone=")) + String(this->drone_enabled ? F("enabled"):F("disabled"))
             );

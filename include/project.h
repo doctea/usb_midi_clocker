@@ -26,7 +26,9 @@ using namespace storage;
     extern MIDITrack drums_loop_track;
 #endif
 
-class Project {
+#include "file_manager/file_manager_interfaces.h"
+
+class Project : public IParseKeyValueReceiver {
     bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];
 
@@ -356,7 +358,7 @@ class Project {
         bool load_project_settings(int project_number) {
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
-            File myFile;
+            //File myFile;
 
             if (isLoadMatrixMappings()) {
                 Serial.printf(F("load_project_settings(%i) resetting matrix!\n"), project_number);
@@ -366,7 +368,12 @@ class Project {
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
             Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
-            myFile = SD.open(filename, FILE_READ);
+
+            if (!load_file(filename, this)) {
+                return false;
+            }
+
+            /*myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);
 
             if (!myFile) {
@@ -385,13 +392,36 @@ class Project {
             Serial.println(F("File closed"));
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
+            */
             current_project_number = project_number;
             Serial.printf(F("Loaded project settings.\n"));
 
             return true;
         }
 
-        void load_project_parse_line(String line) {
+        virtual bool load_parse_key_value(String key, String value) override {
+            if (this->isLoadMatrixMappings() && key.equals(F("midi_output_map"))) {
+                //Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
+                //line = line.remove(0,String(F("midi_output_map=")).length());
+                int split = value.indexOf('|');
+                String source_label = value.substring(0,split);
+                source_label = source_label.replace(F("_output"),F(""));  // translate pre-matrix style naming to matrix-style naming
+                String target_label = value.substring(split+1); //,value.length());
+                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+                return true;
+            } else if (this->isLoadMatrixMappings() && key.equals(F("midi_matrix_map"))) {
+                //line = line.remove(0,String(F("midi_matrix_map=")).length());
+                int split = value.indexOf('|');
+                String source_label = value.substring(0,split);
+                String target_label = value.substring(split+1);
+                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+            } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_key_value(key, value)) {
+                return true;
+            }
+            return false;
+        }
+
+        /*void load_project_parse_line(String line) {
             if (line.charAt(0)==';') 
                 return;  // skip comment lines
 
@@ -420,7 +450,7 @@ class Project {
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
                 Serial.printf(F("processed by behaviour_manager\n"), line.c_str());
             }
-        }
+        }*/
 };
 
 extern Project *project;

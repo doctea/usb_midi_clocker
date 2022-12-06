@@ -173,9 +173,9 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 return parameters;
             }
 
-            virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
-                DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-                DividedClockedBehaviour::save_sequence_add_lines(lines);
+            virtual void add_save_lines(LinkedList<String> *lines) override {   
+                DeviceBehaviourUltimateBase::add_save_lines(lines);
+                DividedClockedBehaviour::add_save_lines(lines);
 
                 lines->add(String(F("pattern_length=")) + String(this->getPatternLength()));
                 lines->add(String(F("pattern_direction=")) + String(this->getDirection()));

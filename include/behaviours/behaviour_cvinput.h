@@ -102,7 +102,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 lines->add(String(F("parameter_source=")) + String(this->source_input->name));
         }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+        virtual void add_save_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_project_add_lines(lines);
             lines->add(String(F("note_length_ticks=")) + String(this->get_note_length()));
         }

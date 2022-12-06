@@ -52,7 +52,7 @@ struct tracked_note {
 };
 
 
-class MIDITrack : public IParseKeyValueReceiver { //}, public ISaveKeyValueSource {
+class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
     LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
 
     tracked_note recorded_hanging_notes[127];
@@ -642,64 +642,49 @@ class MIDITrack : public IParseKeyValueReceiver { //}, public ISaveKeyValueSourc
             this->quantization_value = previous_quant;  // restore original quantization setting
         }
 
+        virtual void add_save_lines(LinkedList<String> *lines) {
+            lines->add(F("; begin loop"));
+            lines->add(F("step_size="+LOOP_LENGTH_STEP_SIZE));
+            lines->add(F("starts_at=0"));
+            lines->add(F("transpose="+transpose_amount));
+            bool last_written = false;
+            int lines_written = 0;
+            for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
+                int size = frames[x]->size();
+                if (size==0) {      // only write lines that have data
+                    last_written = false;
+                    continue;
+                } else if (!last_written || LOOP_LENGTH_STEP_SIZE>1) {
+                    lines->add(F("starts_at="+(x*LOOP_LENGTH_STEP_SIZE)));
+                }
+                String data = "";
+                for(int i = 0 ; i < size ; i++) {
+                    midi_message m = frames[x]->get(i);
+                    char message[10];
+                    sprintf(message, "%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
+                    data += message;
+                }
+                lines->add(F("loop_data=")+data);
+                
+                lines_written++;
+                //f.println();
+            }
+        }
+
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
-            File f;
+            //File f;
             clear_hanging();
             convert_from_bitmap();
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf(F("midi_looper::save_sequence(%i) writing to %s\n"), recording_number, filename);
-            if (SD.exists(filename)) {
-                Serial.printf(F("\t%s exists, deleting first\n"), filename);
-                SD.remove(filename);
-            }
-            f = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
-            if (!f) {    
-                //if (irqs_enabled) __enable_irq();
-                Serial.printf(F("\tError: couldn't open %s for writing\n"), filename);
-                return false;
-            }
-            f.println(F("; begin loop"));
-            f.printf(F("step_size=%i\n"), LOOP_LENGTH_STEP_SIZE);
-            //myFile.printf("id=%i\n",input->id);
-            f.println(F("starts_at=0"));
-            f.printf(F("transpose=%i\n"), transpose_amount);
-            bool last_written = false;
-            int lines_written = 0;
-            for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
-                int size = frames[x]->size();
-                /*if (!last_written) {
-                    myFile.printf("starts_at=%i\n",x);
-                }*/
-                //myFile.printf("%1x", input->sequence_data[i][x]);
-                if (size==0) {      // only write lines that have data
-                    last_written = false;
-                    continue;
-                } else if (!last_written || LOOP_LENGTH_STEP_SIZE>1) {
-                    f.printf(F("starts_at=%i\n"),(x*LOOP_LENGTH_STEP_SIZE));
-                }
-                f.printf(F("loop_data=")); //%2x:", frames[x].size());
-                
-                for(int i = 0 ; i < size ; i++) {
-                    midi_message m = frames[x]->get(i);
-                    f.printf("%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
-                }
-                lines_written++;
-                f.println();
-            }
-            f.println(F("; end loop"));
-            f.close();
-            //if (irqs_enabled) __enable_irq();
-            Serial.printf(F("Finished saving, %i lines written!\n"), lines_written);
 
-            if (lines_written==0) {
-                // TODO:  delete the empty file / update project availability so it displays the slot as empty
-            }
+            save_file(filename, this);
 
             Serial.println(F("Re-drawing bitmap from save..."));
             clear_hanging();
@@ -714,7 +699,6 @@ class MIDITrack : public IParseKeyValueReceiver { //}, public ISaveKeyValueSourc
             int total_frames = 0, total_messages = 0, load_time = 0, loop_length_size = 1;
         };
         load_state_t load_state;
-
         bool load_parse_key_value(String key, String value) {
             if(key.equals(F("starts_at"))) {
                 load_state.load_time = value.toInt() * load_state.loop_length_size;

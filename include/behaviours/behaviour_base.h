@@ -171,7 +171,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKe
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
+    virtual void add_save_lines(LinkedList<String> *lines) {   
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
@@ -195,7 +195,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKe
                         //parameter->connections[slot].parameter_input->name,
                         parameter->connections[slot].amount
                     );
-                    Serial.printf(F("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n"), line);
+                    Serial.printf(F("PARAMETERS\t%s: add_save_lines saving line:\t%s\n"), line);
                     lines->add(String(line));
                 }
             }

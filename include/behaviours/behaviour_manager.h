@@ -309,13 +309,13 @@ class DeviceBehaviourManager {
         }
 
         // ask each behaviour to add option lines to save sequence file
-        void save_sequence_add_lines(LinkedList<String> *lines) {
+        void add_save_lines(LinkedList<String> *lines) {
             //LinkedList<String> lines = LinkedList<String>();
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 lines->add(F("behaviour_start=") + String(device->get_label()));
-                device->save_sequence_add_lines(lines);
+                device->add_save_lines(lines);
                 lines->add(F("behaviour_end=") + String(device->get_label()));
             }
         }
