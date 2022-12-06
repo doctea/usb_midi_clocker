@@ -6,10 +6,12 @@
 
 class IParseKeyValueReceiver {
     public:
+        //FLASHMEM
         virtual bool load_parse_key_value(String key, String value) = 0;
 };
 class ISaveKeyValueSource {
     public:
+        //FLASHMEM 
         virtual void add_save_lines(LinkedList<String> *lines) = 0;
 };
 
