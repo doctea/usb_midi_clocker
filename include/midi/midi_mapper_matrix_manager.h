@@ -61,8 +61,8 @@ class MIDIMatrixManager {
 
     // assign a source_id for the given name
     FLASHMEM source_id_t register_source(const char *handle) {
-        Serial.printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
-        strcpy(sources[NUM_REGISTERED_SOURCES].handle, handle);
+        //Serial.printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
+        strncpy(sources[NUM_REGISTERED_SOURCES].handle, handle, LANGST_HANDEL_ROUT);
         return NUM_REGISTERED_SOURCES++;
     }
     // assign a source_id for the midi track
@@ -231,7 +231,7 @@ class MIDIMatrixManager {
 
     //// stuff for handling targets of midi data
     struct target_entry {
-        char handle[25];
+        char handle[LANGST_HANDEL_ROUT];
         MIDIOutputWrapper *wrapper = nullptr;
     };
 
@@ -249,7 +249,8 @@ class MIDIMatrixManager {
     FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle) {
         return this->register_target(make_midioutputwrapper(handle, target));
     }
-    FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
+    //FLASHMEM error: target_id_t MIDIMatrixManager::register_target(MIDIOutputWrapper*, const char*) causes a section type conflict with source_id_t MIDIMatrixManager::register_source(MIDITrack*, const char*)
+    target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
         strcpy(targets[NUM_REGISTERED_TARGETS].handle, handle);
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
         Serial.printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);

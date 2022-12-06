@@ -1,3 +1,5 @@
+#ifndef FILE_MANAGER_INTERFACES__INCLUDED
+#define FILE_MANAGER_INTERFACES__INCLUDED
 
 #include <Arduino.h>
 #include <LinkedList.h>
@@ -10,3 +12,5 @@ class ISaveKeyValueSource {
     public:
         virtual void save_sequence_add_lines(LinkedList<String> *lines) = 0;
 };
+
+#endif

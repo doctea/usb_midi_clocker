@@ -18,6 +18,8 @@
 
 #include "storage.h"
 
+#include "file_manager/file_manager.h"
+
 //#define DEBUG_LOOPER
 
 #define ticks_to_sequence_step(X)  ((X % LOOP_LENGTH_TICKS) / LOOP_LENGTH_STEP_SIZE)
@@ -50,7 +52,7 @@ struct tracked_note {
 };
 
 
-class MIDITrack {
+class MIDITrack : public IParseKeyValueReceiver { //}, public ISaveKeyValueSource {
     LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
 
     tracked_note recorded_hanging_notes[127];
@@ -708,6 +710,60 @@ class MIDITrack {
             return true;
         }
 
+        struct load_state_t {
+            int total_frames = 0, total_messages = 0, load_time = 0, loop_length_size = 1;
+        };
+        load_state_t load_state;
+
+        bool load_parse_key_value(String key, String value) {
+            if(key.equals(F("starts_at"))) {
+                load_state.load_time = value.toInt() * load_state.loop_length_size;
+                return true;
+            } else if (key.equals(F("step_size"))) {
+                load_state.loop_length_size = value.toInt();
+                return true;
+            } else if (key.equals(F("transpose"))) {
+                transpose_amount = value.toInt();
+                return true;
+            } else if (key.equals(F("loop_data"))) { 
+                load_state.total_frames++;
+                //if (debug) Serial.printf("Read id %i\n", output->id);
+                String line = value;
+                char c_line[(1+sizeof(midi_message)) * MAX_INSTRUCTIONS];// = line.c_str();
+                strncpy(c_line, line.c_str(), (1+sizeof(midi_message)) * MAX_INSTRUCTIONS);
+                midi_message m;
+                int messages_count = 0;
+
+                char *tok;
+                tok = strtok(c_line,",;:");
+                while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
+                    #ifdef DEBUG_LOOP_LOADER
+                        Serial.printf(F("at time %i: for token '%s', sizeof is already %i, "), time, tok, frames[ticks_to_sequence_step(time)].size());
+                    #endif
+                    int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
+                    sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
+                    m.message_type = tmp_message_type;
+                    m.channel = tmp_channel;
+                    m.pitch = tmp_pitch;
+                    m.velocity = tmp_velocity;
+                    #ifdef DEBUG_LOOP_LOADER
+                        Serial.printf(F("read message bytes: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
+                    #endif
+                    if (this->debug) Serial.printf(F("storing event at %i\n"), time); Serial_flush();
+                    this->store_event(load_state.load_time, m);
+                    messages_count++;
+                    tok = strtok(NULL,",;:");
+                }
+                #ifdef DEBUG_LOOP_LOADER
+                    Serial.printf(F("for time\t%i read\t%i messages\n"), time, messages_count);
+                #endif
+                load_state.total_messages += messages_count;
+                load_state.load_time++;
+                return true;
+            }
+            return false;
+        }
+
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
             //bool irqs_enabled = __irq_enabled();
@@ -717,92 +773,18 @@ class MIDITrack {
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
-            f = SD.open(filename, FILE_READ);
-            f.setTimeout(0);
-
-            if (!f) {
-                Serial.printf(F("\tError: Couldn't open %s for reading!\n"), filename); Serial_flush();
-                /*#ifdef ENABLE_SCREEN
-                    menu.set_last_message("Error loading recording!");//, recording_number);
-                    menu.set_message_colour(ST77XX_RED);
-                #endif*/
-                //if (irqs_enabled) __enable_irq();
-                return false;
-            }
 
             clear_all();
 
-            Serial.printf("\tEntering load loop for project %i and recording_number %i..\n", project_number, recording_number);
+            this->load_state.load_time = 0;
+            this->load_state.loop_length_size = 1;
+            this->load_state.total_frames = this->load_state.total_messages = 0;
+            load_file(filename, this);
+
+            Serial.printf(F("\tEntering load loop for project %i and recording_number %i..\n"), project_number, recording_number);
             Serial_flush();
 
-            int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
-
-            int total_frames = 0, total_messages = 0;
-            String line;
-            int time = 0;
-            while (line = f.readStringUntil('\n')) {
-                if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
-                //load_sequence_parse_line(line, output);
-                if (line.startsWith(F("starts_at="))) {
-                    time =      line.remove(0,String(F("starts_at=")).length()).toInt() * loop_length_size;
-                } else if (line.startsWith(F("step_size="))) {
-                    loop_length_size = line.remove(0,String(F("step_size=")).length()).toInt();
-                    //Serial.printf("read loop_length_size %i!\n", loop_length_size);
-                } else if (line.startsWith(F("transpose="))) {
-                    transpose_amount = line.remove(0,String(F("transpose=")).length()).toInt();
-                } else if (line.startsWith(F("loop_data="))) {
-                    //Serial.printf("processing a loop_data line..\n");
-                    total_frames++;
-                    //if (debug) Serial.printf("Read id %i\n", output->id);
-                    line = line.remove(0,String(F("loop_data=")).length());
-                    line = line.remove(line.length()-1,1);
-                    char c_line[(1+sizeof(midi_message)) * MAX_INSTRUCTIONS];// = line.c_str();
-                    strcpy(c_line, line.c_str());
-                    midi_message m;
-                    int messages_count = 0;
-
-                    char *tok;
-                    tok = strtok(c_line,",;:");
-                    while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
-                        #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("at time %i: for token '%s', sizeof is already %i, "), time, tok, frames[ticks_to_sequence_step(time)].size());
-                        #endif
-                        int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
-                        sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
-                        m.message_type = tmp_message_type;
-                        m.channel = tmp_channel;
-                        m.pitch = tmp_pitch;
-                        m.velocity = tmp_velocity;
-                        #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("read message bytes: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
-                        #endif
-                        if (this->debug) Serial.printf(F("storing event at %i\n"), time); Serial_flush();
-                        store_event(time, m);
-                        messages_count++;
-                        tok = strtok(NULL,",;:");
-                    }
-                    #ifdef DEBUG_LOOP_LOADER
-                        Serial.printf(F("for time\t%i read\t%i messages\n"), time, messages_count);
-                    #endif
-                    total_messages += messages_count;
-                    time++;
-                }
-            }
-            #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("Closing file.."));
-            #endif
-            f.close();
-            //if (irqs_enabled) __enable_irq();
-            #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("File closed"));
-            #endif
-
-            //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
-            /*#ifdef ENABLE_SCREEN
-                menu.set_last_message("Loaded recording %i"); //, recording_number);
-                menu.set_message_colour(ST77XX_GREEN);
-            #endif*/
-            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
+            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, load_state.total_frames, load_state.total_messages); Serial_flush();
             
             loaded_recording_number = recording_number;
             clear_hanging();
