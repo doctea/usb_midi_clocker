@@ -200,7 +200,7 @@ namespace storage {
     } else if (line.startsWith(F("size_steps="))) {
       output->size_steps = (uint8_t) line.remove(0,String(F("size_steps=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_steps %i\n"), output->size_steps);
-    } else if (project.isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
+    } else if (project->isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
       if (clock_multiplier_index>NUM_CLOCKS) {
         Serial.println(F("Skipping clock_multiplier entry as exceeds NUM_CLOCKS"));
         return;
@@ -208,7 +208,7 @@ namespace storage {
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String(F("clock_multiplier=")).length()).toInt();
       if (debug) Serial.printf(F("Read a clock_multiplier: %i\n"), output->clock_multiplier[clock_multiplier_index]);
       clock_multiplier_index++;      
-    } else if (project.isLoadClockSettings() && line.startsWith(F("clock_delay="))) {
+    } else if (project->isLoadClockSettings() && line.startsWith(F("clock_delay="))) {
       if (clock_delay_index>NUM_CLOCKS) {
         Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
         return;
@@ -216,7 +216,7 @@ namespace storage {
       output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String(F("clock_delay=")).length()).toInt();      
       if (debug) Serial.printf(F("Read a clock_delay: %i\n"), output->clock_delay[clock_delay_index]);
       clock_delay_index++;
-    } else if (project.isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
+    } else if (project->isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
       if (clock_delay_index>NUM_SEQUENCES) {
         Serial.println(F("Skipping sequence_data entry as exceeds NUM_CLOCKS"));
         return;
@@ -234,7 +234,7 @@ namespace storage {
       }
       if (debug) Serial.println(']');
       sequence_data_index++;
-    } else if (project.isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
+    } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
       //Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
       /*String partial = line.remove(0,String("behaviour_option_").length());
       // todo: something is off with my understanding of how remove works here

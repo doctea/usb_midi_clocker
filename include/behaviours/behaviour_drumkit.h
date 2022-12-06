@@ -20,7 +20,7 @@ class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
         source_id_t source_id_2 = -1;
 
         virtual const char *get_label() override {
-            return (char*)"Drumkit";
+            return "Drumkit";
         }
 
         FLASHMEM 

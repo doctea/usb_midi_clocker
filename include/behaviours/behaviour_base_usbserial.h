@@ -35,7 +35,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         }
 
         virtual const char *get_label() {
-            return (char*)"USBSerialBase";
+            return "USBSerialBase";
         }
 
         virtual int getConnectionBaudRate() {
@@ -92,7 +92,7 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
         }
 
         virtual const char *get_label() {
-            return (char*)"USBSerialMIDIBase";
+            return "USBSerialMIDIBase";
         }
 
         //virtual bool has_input()    { return this->input_interface!=nullptr; }

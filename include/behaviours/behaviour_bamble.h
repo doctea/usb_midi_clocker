@@ -290,6 +290,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
 
         //FLASHMEM // error: virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::add_adhsr_parameters(const char*, int, int)
+        //FLASHMEM
         virtual void add_adhsr_parameters(const char *prefix, int start, int channel) {
             parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Attack"))).c_str(),  this, start++, 11));
             parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Hold"))).c_str(),    this, start++, 11));
@@ -303,14 +304,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         /// these for mappable parameters
         //FLASHMEM 
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-            Serial.printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
+            Debug_printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)
                 return this->parameters;
 
-            Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
+            Debug_println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
             DeviceBehaviourUSBBase::initialise_parameters();
-            Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
+            Debug_println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
             DividedClockedBehaviour::initialise_parameters();
 
             this->add_adhsr_parameters("Env PT 1", 64, 11);

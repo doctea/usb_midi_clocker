@@ -62,7 +62,15 @@ BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_project_settings);
-ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>("Project number", &project, &Project::setProjectNumber, &Project::getProjectNumber, nullptr, 0, 100);
+ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>(
+    "Project number", 
+    project, 
+    &Project::setProjectNumber, 
+    &Project::getProjectNumber, 
+    nullptr, 
+    0, 
+    100
+);
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
@@ -117,7 +125,7 @@ void setup_menu() {
 
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
 
-    menu->add(new SeparatorMenuItem((char*)"Project"));
+    menu->add(new SeparatorMenuItem("Project"));
 
     menu->add(&project_save);       // save project settings button
     menu->add(&project_selector);   // save project selector button
@@ -125,30 +133,30 @@ void setup_menu() {
     // project loading options (whether to load or hold matrix settings, clock, sequence, behaviour options)
     project_multi_recall_options = new ObjectMultiToggleControl("Recall options", true);
     MultiToggleItemClass<Project> *load_matrix = new MultiToggleItemClass<Project> (
-        (char*)"MIDI Mappings",
-        &project,
+        "MIDI Mappings",
+        project,
         &Project::setLoadMatrixMappings,
-        &Project::isLoadMatrixMappings    
+        &Project::isLoadMatrixMappings
     );
     #ifdef ENABLE_CLOCKS
         MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
-            (char*)"Clock Settings",
-            &project,
+            "Clock Settings",
+            project,
             &Project::setLoadClockSettings,
             &Project::isLoadClockSettings    
         );
     #endif
     #ifdef ENABLE_SEQUENCER
         MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
-            (char*)"Sequence Settings",
-            &project,
+            "Sequence Settings",
+            project,
             &Project::setLoadSequencerSettings,
             &Project::isLoadSequencerSettings    
         );
     #endif
     MultiToggleItemClass<Project> *load_behaviour_settings = new MultiToggleItemClass<Project> {
-        (char*)"Behaviour Options",
-        &project,
+        "Behaviour Options",
+        project,
         &Project::setLoadBehaviourOptions,
         &Project::isLoadBehaviourOptions
     };
@@ -167,8 +175,8 @@ void setup_menu() {
     project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
     #ifdef ENABLE_SEQUENCER
         MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
-            (char*)"Sequence",
-            &project,
+            "Sequence",
+            project,
             &Project::set_auto_advance_sequencer,
             &Project::is_auto_advance_sequencer
         );
@@ -176,8 +184,8 @@ void setup_menu() {
     #endif
     #ifdef ENABLE_LOOPER
         MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
-            (char*)"Looper",
-            &project,
+            "Looper",
+            project,
             &Project::set_auto_advance_looper,
             &Project::is_auto_advance_looper
         );
@@ -185,7 +193,7 @@ void setup_menu() {
     #endif
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
-            (char*)"Beatstep",
+            "Beatstep",
             behaviour_beatstep,
             &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
             &DeviceBehaviour_Beatstep::is_auto_advance_pattern
@@ -194,7 +202,7 @@ void setup_menu() {
     menu->add(project_multi_autoadvance);
 
     menu->add_page("MIDI");
-    menu->add(new SeparatorMenuItem((char*)"MIDI"));
+    menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(&midi_matrix_selector);
     
@@ -206,7 +214,7 @@ void setup_menu() {
     #ifdef ENABLE_SEQUENCER
         menu->add_page("Sequencer");
         //menu->add(&project_auto_advance_sequencer);
-        menu->add(new SeparatorMenuItem((char*)"Sequencer"));
+        menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
     #endif
 

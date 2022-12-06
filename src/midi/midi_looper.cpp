@@ -58,7 +58,7 @@ void MIDITrack::stop_all_notes() {
         LooperQuantizeControl   *looper_quantizer_setting = new LooperQuantizeControl("Loop quantisation", this);   
         LooperTransposeControl  *looper_transpose_control = new LooperTransposeControl("Loop transpose", this);
 
-        menuitems->add(new SeparatorMenuItem((char*)"Looper"));
+        menuitems->add(new SeparatorMenuItem("Looper"));
         menuitems->add(looper_status); 
         menuitems->add(looper_quantizer_setting);       // todo: make this part of the LooperStatus object..? (maybe not as it allows interaction)
         //menu->add(&looper_output_selector);

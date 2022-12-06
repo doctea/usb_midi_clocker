@@ -33,7 +33,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
         virtual const char *get_label() override {
-            return (char*)"BeatStep";
+            return "BeatStep";
         }
         virtual bool has_input() { return true; }
 

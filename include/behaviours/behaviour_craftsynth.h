@@ -8,6 +8,7 @@
 #ifdef ENABLE_CRAFTSYNTH_USB
 
 #include "behaviours/behaviour_base_usb.h"
+#include "behaviours/behaviour_clocked.h"
 #include "behaviours/behaviour_modwheelreceiver.h"
 #include "project.h"
 #include "clock.h"
@@ -23,7 +24,7 @@
 // customised parameter control widget for the Spread parameter that shows the equivalent value
 class CraftSynthSpreadParameter : public MIDICCParameter<> {
     public:
-        CraftSynthSpreadParameter (char *label, DeviceBehaviourUltimateBase *target) 
+        CraftSynthSpreadParameter (const char *label, DeviceBehaviourUltimateBase *target) 
             : MIDICCParameter<>(label, target, (byte)20, (byte)1) {
         }
 
@@ -89,7 +90,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
 
         virtual const char *get_label() override {
-            return (char*)"CraftSynth 2.0";
+            return "CraftSynth 2.0";
         }
         virtual bool has_output() { return true; }
 
@@ -142,19 +143,19 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             //parameters->clear();
             // todo: read these from a file
             //this->add_parameters();
-            parameters->add(new MIDICCParameter<>((char*)"Glide",         this,   (byte)5,    (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Distortion",    this,   (byte)12,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Delay Dry/Wet", this,   (byte)13,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Delay Time",    this,   (byte)14,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Delay Feedback",this,   (byte)15,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Osc 1 Wave",    this,   (byte)16,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Osc 2 Wave",    this,   (byte)17,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Osc Mix",       this,   (byte)18,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Glide",         this,   (byte)5,    (byte)1));
+            parameters->add(new MIDICCParameter<>("Distortion",    this,   (byte)12,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Delay Dry/Wet", this,   (byte)13,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Delay Time",    this,   (byte)14,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Delay Feedback",this,   (byte)15,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Osc 1 Wave",    this,   (byte)16,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Osc 2 Wave",    this,   (byte)17,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Osc Mix",       this,   (byte)18,   (byte)1));
             //parameters->add(new MIDICCParameter((char*)"Spread",        this,   (byte)20,   (byte)1));
-            parameters->add(new CraftSynthSpreadParameter((char*)"Spread", this));
-            parameters->add(new MIDICCParameter<>((char*)"Filter Morph",  this,   (byte)33,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Filter Cutoff", this,   (byte)34,   (byte)1));
-            parameters->add(new MIDICCParameter<>((char*)"Filter Reso",   this,   (byte)35,   (byte)1));
+            parameters->add(new CraftSynthSpreadParameter("Spread", this));
+            parameters->add(new MIDICCParameter<>("Filter Morph",  this,   (byte)33,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Filter Cutoff", this,   (byte)34,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Filter Reso",   this,   (byte)35,   (byte)1));
 
             //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 

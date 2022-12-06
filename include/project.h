@@ -4,7 +4,7 @@
 #include "storage.h"
 #include "midi/midi_looper.h"
 
-#include "behaviours/behaviour_subclocker.h"
+//#include "behaviours/behaviour_subclocker.h"
 /*#include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
 #include "behaviours/behaviour_mpk49.h"*/
@@ -165,6 +165,9 @@ class Project {
         bool save_sequence() {
             return save_sequence(selected_sequence_number);
         }
+        bool load_specific_sequence(int selected_sequence_number) {
+            return this->load_sequence(selected_sequence_number);
+        }
 
         bool load_sequence(int selected_sequence_number) {
             Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
@@ -236,6 +239,9 @@ class Project {
                 return this->save_loop(selected_loop_number, &mpk49_loop_track);
             }
 
+            bool load_specific_loop(int selected_loop_number) {
+                return this->load_loop(selected_loop_number);
+            }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
@@ -269,7 +275,7 @@ class Project {
         bool auto_advance_sequencer = false;
         void on_phrase(int phrase) {
             int slot = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
-            //Serial.printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
+            Serial.printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
             if (auto_advance_sequencer) {
                 this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
                 this->load_sequence(this->selected_sequence_number);
@@ -280,7 +286,7 @@ class Project {
                     this->load_loop(this->selected_loop_number);
                 }
             #endif
-            //Serial.printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
+            Serial.printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
         }
         bool is_auto_advance_sequencer() {
             return this->auto_advance_sequencer;
@@ -417,7 +423,7 @@ class Project {
         }
 };
 
-extern Project project;
+extern Project *project;
 
 // for use by the Menu
 void save_project_settings();

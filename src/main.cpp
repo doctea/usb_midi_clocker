@@ -142,7 +142,7 @@ void setup() {
 
 
   tft_print((char*)"..setup project..\n");
-  project.setup_project();
+  project->setup_project();
   Serial.printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_CV_INPUT
@@ -457,7 +457,7 @@ void do_tick(uint32_t in_ticks) {
 
   if (is_bpm_on_phrase(ticks)) {
     if (debug) Serial.println(F("do_tick(): about to project.on_phrase()"));
-    project.on_phrase(BPM_CURRENT_PHRASE);
+    project->on_phrase(BPM_CURRENT_PHRASE);
     #ifdef ENABLE_USB
       behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
     #endif

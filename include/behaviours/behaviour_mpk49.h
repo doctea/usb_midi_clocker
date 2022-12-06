@@ -26,7 +26,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
         virtual const char *get_label() override {
-            return (char*)"MPK49";
+            return "MPK49";
         }
         virtual bool has_input() { return true; }
 

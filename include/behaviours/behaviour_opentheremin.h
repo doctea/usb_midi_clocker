@@ -20,7 +20,7 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
         virtual bool has_output() override  { return false; }
         
         virtual const char *get_label() {
-            return (char*)"OpenTheremin";
+            return "OpenTheremin";
         }
 
         FLASHMEM 

@@ -71,19 +71,19 @@ bool debug_stress_sequencer_load = false;
 
             void process_queue() {
                 if (this->queued_load_selected_sequence) {
-                    project.load_selected_sequence();
+                    project->load_selected_sequence();
                     this->queued_load_selected_sequence = false;
                 }
                 if (this->queued_save_selected_sequence) {
-                    project.save_selected_sequence();
+                    project->save_selected_sequence();
                     this->queued_save_selected_sequence = false;
                 }
                 if (this->queued_load_next_sequence) {
-                    project.load_next_sequence();
+                    project->load_next_sequence();
                     this->queued_load_next_sequence = false;
                 }
                 if (this->queued_load_previous_sequence) {
-                    project.load_previous_sequence();
+                    project->load_previous_sequence();
                     this->queued_load_previous_sequence = false;
                 }
                 if (this->queued_save_screenshot) {
@@ -91,7 +91,7 @@ bool debug_stress_sequencer_load = false;
                     this->queued_save_screenshot = false;
                 }
                 if (this->queued_setprojectnumber>=0) {
-                    project.setProjectNumber(this->queued_setprojectnumber);
+                    project->setProjectNumber(this->queued_setprojectnumber);
                     this->queued_setprojectnumber = -1;
                 }
             }
@@ -200,11 +200,11 @@ bool debug_stress_sequencer_load = false;
                 break;
             case 'j'            :
                 //Serial.println(F("Select previous sequence"));
-                project.select_previous_sequence();
+                project->select_previous_sequence();
                 break;
             case ';'            :
                 //Serial.println(F("Select next sequence"));
-                project.select_next_sequence();
+                project->select_next_sequence();
                 break;
             // debug
             case 'Z'    :

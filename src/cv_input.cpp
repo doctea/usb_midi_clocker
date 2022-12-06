@@ -19,7 +19,7 @@ ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 // initialise the voltage-reading hardware/libraries and the ParameterManager
 FLASHMEM
 void setup_cv_input() {
-    Serial.println((char*)"setup_cv_input...");
+    Serial.println("setup_cv_input...");
     tft_print((char*)"...setup_cv_input...\n");
 
     parameter_manager->init();
