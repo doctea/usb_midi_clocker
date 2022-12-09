@@ -243,11 +243,15 @@ bool debug_stress_sequencer_load = false;
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
 
+        if (key_log_count<=0) return;
+        
         for (int i = 0 ; i < 10 ; i++) {
             if (key_log[key_log_count].key>=0) {
                 process_key(key_log[key_log_count].key, key_log[key_log_count].modifiers);
                 key_log[key_log_count].key = -1;
                 key_log[key_log_count].modifiers = -1;
+                key_log_count--;
+                if (key_log_count<0) break;
             }
         }
         if (irqs_enabled) __enable_irq();
