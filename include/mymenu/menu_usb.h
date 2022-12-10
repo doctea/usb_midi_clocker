@@ -28,6 +28,8 @@
                     }            
                 }
                 #ifdef ENABLE_USBSERIAL
+                    pos.y = tft->getCursorY();
+                    header("Serial-USB devices:", pos, selected, opened);
                     for (int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
                         if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
                             connected++;
@@ -43,7 +45,8 @@
                     else
                         tft->printf("K (Typing disconnected)\n");
                 #endif
-                tft->printf("Free RAM: %u\n", freeRam());
+                tft->println();
+                tft->printf("Free RAM: %u bytes\n", freeRam());
 
                 return tft->getCursorY();
             }
