@@ -43,7 +43,7 @@
             return;
         }
         Serial.printf(F("USBSerial Port %d changed from %08X to %08X (now "), idx, usb_serial_slots[idx].packed_id, packed_id);
-        if (usb_serial_slots[idx].usbdevice)
+        if (usb_serial_slots[idx].usbdevice!=nullptr)
             Serial.printf(F("'%s' '%s')\n"), usb_serial_slots[idx].usbdevice->manufacturer(), usb_serial_slots[idx].usbdevice->product());
         else 
             Serial.println(F("disconnected)"));

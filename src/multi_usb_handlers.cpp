@@ -81,7 +81,7 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
       return;
   }
   Serial.printf(F("USB Port %d changed from %08X to %08X (now "), idx, usb_midi_slots[idx].packed_id, packed_id);
-  if (usb_midi_slots[idx].device)
+  if (usb_midi_slots[idx].device!=nullptr)
     Serial.printf("'%s' '%s')\n", usb_midi_slots[idx].device->manufacturer(), usb_midi_slots[idx].device->product());
   else
     Serial.println(F("disconnected)"));
