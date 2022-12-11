@@ -70,7 +70,10 @@ void pc_usb_midi_handle_continue() {
   }
 }
 void pc_usb_midi_handle_stop() {
+  //Serial.println("pc_usb_midi_handle_stop");
   if (clock_mode==CLOCK_EXTERNAL_USB_HOST) {
+    if (playing==false) 
+      global_on_restart();
     playing = false;
   }
 }
