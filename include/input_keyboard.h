@@ -105,19 +105,25 @@ bool debug_stress_sequencer_load = false;
         byte modifiers = 0;
     };
 
-    volatile keypress_t key_log[10];
-    volatile int key_log_count = -1;
+    keypress_t key_log[10];
+    int key_log_count = -1;
 
     void OnPress(int key) {
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
-        key_log_count++;
-        if (key_log_count>=10) key_log_count = -1;
+        //Serial.printf("OnPress()! storing code %i to queue position %i\n", key, key_log_count);
         key_log[key_log_count].key = key;
         key_log[key_log_count].modifiers = keyboard1.getModifiers();
-        if (irqs_enabled) __enable_irq();
-    }
 
+        key_log_count++;
+        if (key_log_count>=10) 
+            key_log_count = 0;
+
+        //Serial.printf("queue position left at %i\n", key_log_count);
+
+        if (irqs_enabled) 
+            __enable_irq();
+    }
 
     void process_key(int key, int modifiers) {
         if (already_pressing) return;
@@ -243,11 +249,19 @@ bool debug_stress_sequencer_load = false;
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
 
-        for (int i = 0 ; i < 10 ; i++) {
-            if (key_log[key_log_count].key>=0) {
-                process_key(key_log[key_log_count].key, key_log[key_log_count].modifiers);
-                key_log[key_log_count].key = -1;
-                key_log[key_log_count].modifiers = -1;
+        if (key_log_count<=0) 
+            return;
+        
+        //Serial.println("----");
+        for (int i = 0 ; i < key_log_count ; i++) {
+            if (key_log[i].key>=0) {
+                //Serial.printf("Processing queue log at %i: %i\n", i, key_log[i].key);
+                process_key(key_log[i].key, key_log[i].modifiers);
+                key_log[i].key = -1;
+                key_log[i].modifiers = -1;
+                key_log_count--;
+                if (key_log_count<=0) 
+                    break;
             }
         }
         if (irqs_enabled) __enable_irq();

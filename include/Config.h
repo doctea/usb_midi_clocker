@@ -77,7 +77,7 @@
 //#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead
 //#define ENABLE_CRAFTSYNTH   // serial MIDI version
 
-#define ENABLE_DISTING
+#define ENABLE_DISTING midi_out_serial[3]
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
@@ -97,9 +97,6 @@
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
     #error You should define ENABLE_CRAFTSYNTH_USB or ENABLE_CRAFTSYNTH, but not both
 #endif
-
-#define ENABLE_BEATSTEP_DIVISOR
-
 //#define ENABLE_CRAFTSYNTH_CLOCKTOGGLE   // enable menu item to enable/disable clock output to CraftSynth - only really useful for debug i think?
 
 #define ENABLE_BPM

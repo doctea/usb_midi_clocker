@@ -74,25 +74,28 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
     pid = 0x0000FFFF & packed_id;
   }
   if ((uint32_t)((usb_midi_slots[idx].device->idVendor()<<16) | (usb_midi_slots[idx].device->idProduct())) != packed_id) {
-      Serial.printf("packed_id %08X and newly-generated packed_id %08X don't match already?!", 
+      Serial.printf(F("packed_id %08X and newly-generated packed_id %08X don't match already?!"), 
         (usb_midi_slots[idx].device->idVendor()<<16) | (usb_midi_slots[idx].device->idProduct()),
         packed_id 
       );
       return;
   }
-  Serial.printf("USB Port %d changed from %08X to %08X (now ", idx, usb_midi_slots[idx].packed_id, packed_id);
-  Serial.printf("'%s' '%s')\n", usb_midi_slots[idx].device->manufacturer(), usb_midi_slots[idx].device->product());
+  Serial.printf(F("USB Port %d changed from %08X to %08X (now "), idx, usb_midi_slots[idx].packed_id, packed_id);
+  if (usb_midi_slots[idx].device!=nullptr)
+    Serial.printf("'%s' '%s')\n", usb_midi_slots[idx].device->manufacturer(), usb_midi_slots[idx].device->product());
+  else
+    Serial.println(F("disconnected)"));
   usb_midi_slots[idx].packed_id = packed_id;
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
   if (usb_midi_slots[idx].behaviour!=nullptr) {
-    Serial.printf("Disconnecting usb_midi_slot %i behaviour\n", idx);
+    Serial.printf(F("Disconnecting usb_midi_slot %i behaviour\n"), idx);
     usb_midi_slots[idx].behaviour->disconnect_device();
   }
 
   if (packed_id==0) {
     usb_midi_slots[idx].packed_id = 0;
-    Serial.printf("Disconnected device on port %i\n", idx);
+    Serial.printf(F("Disconnected device on port %i\n"), idx);
     return;
   }
 
