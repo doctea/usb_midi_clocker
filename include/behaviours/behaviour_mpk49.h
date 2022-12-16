@@ -18,7 +18,7 @@ void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocit
 void mpk49_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size);
 
-class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
+class DeviceBehaviour_mpk49 : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         MIDITrack *loop_track = nullptr;
 

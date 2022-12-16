@@ -28,7 +28,7 @@ enum BehaviourType {
     usbserialmidi   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
 };
 
-class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget, public IParseKeyValueReceiver, public ISaveKeyValueSource {
+class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     public:
 
     bool debug = false;
