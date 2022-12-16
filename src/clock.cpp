@@ -36,7 +36,7 @@
   int clock_mode = DEFAULT_CLOCK_MODE;
 
   /// use cheapclock clock
-  unsigned long last_ticked_at_micros = micros();
+  uint32_t last_ticked_at_micros = micros();
   FLASHMEM void setup_cheapclock() {
     ticks = 0;
     set_bpm(bpm_current);
