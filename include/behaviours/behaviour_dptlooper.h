@@ -1,5 +1,9 @@
 #include "behaviour_base_serial.h"
 
+#include "Config.h"
+
+#ifdef ENABLE_DPT_LOOPER
+
 class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
     enum loop_mode_t {
         ON_BAR,
@@ -64,3 +68,5 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
 };
 
 extern DeviceBehaviour_DPTLooper *behaviour_dptlooper;
+
+#endif

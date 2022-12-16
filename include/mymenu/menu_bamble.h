@@ -6,11 +6,11 @@
 class BambleTriggerOnBar;
 
 
-class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTriggerOnSelectorControl,int> {
+class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTriggerOnSelectorControl,int8_t> {
     public:
-        int envelope_number = -1;
+        int8_t envelope_number = -1;
         DeviceBehaviour_Bamble *behaviour = nullptr;
-        BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int envelope_number, LinkedList<option> *available_values = nullptr) 
+        BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int8_t envelope_number, LinkedList<option> *available_values = nullptr) 
             : ObjectSelectorControl(label, this, &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn, &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn, nullptr)//, &BambleTriggerOnSelectorControl::setE &DeviceBehaviour_Bamble::get_envelope_trigger_on, nullptr)
         {
             strncpy(this->label, label, MAX_LABEL_LENGTH);
@@ -32,14 +32,14 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
             return this->available_values;
         }
 
-        int getEnvelopeTriggerOn() {
+        int8_t getEnvelopeTriggerOn() {
             return this->behaviour->get_envelope_trigger_on(this->envelope_number);
         }
-        void setEnvelopeTriggerOn(int v) {
+        void setEnvelopeTriggerOn(int8_t v) {
             this->behaviour->set_envelope_trigger_on(this->envelope_number, v);
         }
 
-        virtual void add_available_value(int value, const char *label) override {
+        virtual void add_available_value(int8_t value, const char *label) override {
             //Serial.printf("add_available_values(%i, %s)\n", value, label);
             if (this->available_values==nullptr) {
                 this->setup_available_values();

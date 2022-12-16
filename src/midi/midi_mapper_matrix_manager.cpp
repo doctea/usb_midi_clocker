@@ -70,7 +70,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
     #endif
     #ifdef ENABLE_DISTING
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", midi_out_serial[3], 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
     #endif
 
     /*midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : DPT : ch 1", midi_out_serial[4], 1));

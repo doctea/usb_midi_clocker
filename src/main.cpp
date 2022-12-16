@@ -314,7 +314,7 @@ void loop() {
     */
   }
   //} else {
-  if (ticked || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
+  if ((clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
       // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
     #ifdef ENABLE_SCREEN
       //tft_update(ticks);

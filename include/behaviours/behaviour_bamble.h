@@ -324,7 +324,6 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             //parameters->add(new MIDICCParameter((char*)"Density", this, 114, 10));
             //parameters->add(new MIDICCParameter((char*)"Density", this, 114, 10));
 
-
             return parameters;
         }
 

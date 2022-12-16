@@ -1,3 +1,7 @@
+#include "Config.h"
+
+#ifdef ENABLE_DPT_LOOPER
+
 #include "behaviours/behaviour_dptlooper.h"
 
 DeviceBehaviour_DPTLooper *behaviour_dptlooper = new DeviceBehaviour_DPTLooper();
@@ -31,4 +35,6 @@ DeviceBehaviour_DPTLooper *behaviour_dptlooper = new DeviceBehaviour_DPTLooper()
         this->menuitems->add(bar);
         return this->menuitems;
     }
+#endif
+
 #endif
