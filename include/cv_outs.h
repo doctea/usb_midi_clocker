@@ -1,3 +1,5 @@
+// CV clock outputs
+
 #ifndef CVOUT_INCLUDED
 #define CVOUT_INCLUDED
 

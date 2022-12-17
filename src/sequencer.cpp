@@ -1,3 +1,5 @@
+// this is for the cv gate sequencer, that is controlled by the APCMini
+
 #include "storage.h"
 #include "sequencer.h"
 #include "bpm.h"
@@ -60,19 +62,19 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
         || (v==2 && is_bpm_on_eighth(ticks, offset))
         || (v==3 && is_bpm_on_sixteenth(ticks, offset))
     ) {
-#ifdef DEBUG_SEQUENCER
-      if (offset==0) {
-        Serial.print(F("For tick "));
-        Serial.print(ticks);
-        Serial.print(F(" got step_number "));
-        Serial.print(step);
-        Serial.print(F(", trigger sequence #"));
-        Serial.print(sequence);
-        Serial.print(F(" on step "));
-        Serial.print(step);
-        Serial.println(F("!"));
-      } 
-#endif
+      #ifdef DEBUG_SEQUENCER
+            if (offset==0) {
+              Serial.print(F("For tick "));
+              Serial.print(ticks);
+              Serial.print(F(" got step_number "));
+              Serial.print(step);
+              Serial.print(F(", trigger sequence #"));
+              Serial.print(sequence);
+              Serial.print(F(" on step "));
+              Serial.print(step);
+              Serial.println(F("!"));
+            } 
+      #endif
       return true;
       //digitalWrite(PIN_CLOCK_START+i, HIGH);
     } 
