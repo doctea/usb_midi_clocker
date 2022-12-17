@@ -32,11 +32,13 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         DividedClockedBehaviour::make_menu_items();
 
         SubMenuItemBar *pattern_options = new SubMenuItemBar("Pattern options");
-        pattern_options->add(new ObjectNumberControl<DeviceBehaviour_Beatstep,byte>(
-            "Pattern length",   this, &DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength));
+        pattern_options->add(new ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t>(
+            "Pattern length",   this, &DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength, nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM
+        ));
 
-        ObjectSelectorControl<DeviceBehaviour_Beatstep,byte> *direction = new ObjectSelectorControl<DeviceBehaviour_Beatstep,byte>(
-            "Direction",        this, &DeviceBehaviour_Beatstep::setDirection,      &DeviceBehaviour_Beatstep::getDirection);
+        ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t> *direction = new ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t>(
+            "Direction",        this, &DeviceBehaviour_Beatstep::setDirection,      &DeviceBehaviour_Beatstep::getDirection
+        );
         direction->add_available_value(0, "Fwd");
         direction->add_available_value(1, "Rev");
         direction->add_available_value(2, "Alt");
