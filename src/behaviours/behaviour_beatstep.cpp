@@ -16,6 +16,10 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->receive_note_off(inChannel, inNumber, inVelocity);
 }
 
+void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
+    if (behaviour_beatstep!=nullptr) behaviour_beatstep->handle_sysex(data, length, complete);
+}
+
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
 
@@ -40,6 +44,9 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
         pattern_options->add(direction);
 
         menuitems->add(pattern_options);
+
+        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request something", this, &DeviceBehaviour_Beatstep::testRequest));
+
         /* 
         // this is added to the multi-select control, so we don't need it here too
         #ifdef ENABLE_BEATSTEP_SYSEX

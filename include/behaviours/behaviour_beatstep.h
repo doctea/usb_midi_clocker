@@ -14,10 +14,14 @@
 
 extern MIDIOutputWrapper *beatstep_output;
 
+#define BEATSTEP_GLOBAL 0x50
+#define BEATSTEP_DIRECTION 0x04
+
 //void beatstep_setOutputWrapper(MIDIOutputWrapper *);
 //void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 
 class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
@@ -43,6 +47,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             this->device->setHandleNoteOn(beatstep_handle_note_on);
             this->device->setHandleNoteOff(beatstep_handle_note_off);
+            this->device->setHandleSysEx(beatstep_handle_sysex);
         }
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
@@ -60,6 +65,70 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             if (this->current_note==note) 
                 current_note = -1;
             ClockedBehaviour::receive_note_off(channel, note, 127);
+        }
+
+        FLASHMEM
+        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+            static bool already_initialised = false;
+            if (already_initialised)
+                return this->parameters;
+            DeviceBehaviourUSBBase::initialise_parameters();
+            //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
+            ClockedBehaviour::initialise_parameters();
+
+            // this actually isn't much use as a modulation target since the beatstep restarts pattern when this changes - made instead into a regular menuitem thing
+            /*this->parameters->add((new DataParameter<DeviceBehaviour_Beatstep,byte>(
+                    (const char*)"Pattern length", 
+                    this, 
+                    &DeviceBehaviour_Beatstep::setPatternLength, 
+                    &DeviceBehaviour_Beatstep::getPatternLength
+            ))->initialise_values(1,16)->set_modulatable(false));
+
+            this->parameters->add(new BeatstepDirectionParameter("Direction", this));*/
+
+            already_initialised = true;
+
+            return parameters;
+        }
+
+        // proof of concept of fetching parameter values from beatstep over sysex
+        void testRequest() {
+            Serial.println("testRequest!!");
+            this->request_sysex(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION);
+        }
+
+        void request_sysex(byte pp, byte cc) {
+            const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,pp,cc,0xF7 };
+            Serial.print("Sending Sysex to BeatStep\t[ ");
+            for(int i = 0 ; i < sizeof(data) ; i++) 
+                Serial.printf("%02x ", data[i]);
+            Serial.println("] (request)");
+            this->device->sendSysEx(sizeof(data), data, true);
+        }
+        void set_sysex(byte pp, byte cc, byte vv) {
+            const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
+                                   //0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,0x50,0x04,(byte)(direction), 0xF7
+            Serial.print("Sending Sysex to BeatStep\t[ ");
+            for(int i = 0 ; i < sizeof(data) ; i++) 
+                Serial.printf("%02x ", data[i]);
+            Serial.printf("] (setting %02x,%02x to %02x)\n", pp, cc, vv);
+            this->device->sendSysEx(sizeof(data), data, true);
+        }
+
+        void handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
+            Serial.print("BeatStep replied with Sysex:\t[");
+            for (int i = 0 ; i < length ; i++) {
+                Serial.printf("%02x ", data[i]);
+            }
+            Serial.print("] ");
+            Serial.print(complete? "complete" : "incomplete");
+            Serial.println();
+            #define BROAD_POS 8
+            #define SPEC_POS 9
+            #define VALUE_POS 10
+            if (data[BROAD_POS]==BEATSTEP_GLOBAL && data[SPEC_POS]==BEATSTEP_DIRECTION) {
+                this->direction = data[VALUE_POS];  // dont use setDirection 'cos that will re-send the change
+            }
         }
 
         #ifdef ENABLE_BEATSTEP_SYSEX
@@ -106,6 +175,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     this->device->sendSysEx(sizeof(data), data, true);
                     Debug_printf(F("%s#setPatternLength(%i)\n"), this->get_label(), length);
                 //}
+                //this->set_sysex(BEATSTEP_GLOBAL, 0x06, length);
                 this->pattern_length = length;
             }
             byte getPatternLength() {
@@ -120,6 +190,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x50, 0x04, (byte)(direction), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
+                //this->set_sysex(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, direction);
                 this->direction = direction;
             }
             byte getDirection() {
@@ -148,31 +219,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     return "??";
                 };
             };*/
-
-            FLASHMEM
-            virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-                static bool already_initialised = false;
-                if (already_initialised)
-                    return this->parameters;
-                DeviceBehaviourUSBBase::initialise_parameters();
-                //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
-                ClockedBehaviour::initialise_parameters();
-
-                // this actually isn't much use as a modulation target since the beatstep restarts pattern when this changes - made instead into a regular menuitem thing
-                /*this->parameters->add((new DataParameter<DeviceBehaviour_Beatstep,byte>(
-                        (const char*)"Pattern length", 
-                        this, 
-                        &DeviceBehaviour_Beatstep::setPatternLength, 
-                        &DeviceBehaviour_Beatstep::getPatternLength
-                ))->initialise_values(1,16)->set_modulatable(false));
-
-                this->parameters->add(new BeatstepDirectionParameter("Direction", this));*/
-
-                already_initialised = true;
-
-                return parameters;
-            }
-
             virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
                 DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
                 DividedClockedBehaviour::save_sequence_add_lines(lines);
