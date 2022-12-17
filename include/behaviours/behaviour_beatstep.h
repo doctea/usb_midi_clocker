@@ -12,6 +12,8 @@
 
 #include "multi_usb_handlers.h"
 
+#include "queue.h"
+
 extern MIDIOutputWrapper *beatstep_output;
 
 #define BEATSTEP_PATTERN_LENGTH_MINIMUM 1
@@ -120,18 +122,47 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
 
         // proof of concept of fetching parameter values from beatstep over sysex
-        void testRequest() {
-            Serial.println("testRequest!!");
-            this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION);
+        struct BeatstepSysexRequest {
+            byte pp;
+            byte cc;
+        };
+        Queue<BeatstepSysexRequest,50> sysex_request_queue;
+        bool sysex_request_in_flight = false;
+
+        void loop(uint32_t ticks) override {
+            //if (!sysex_request_queue.isEmpty() && !this->sysex_request_in_flight) {
+            if (!sysex_request_queue.isPaused()) {
+                BeatstepSysexRequest *req = sysex_request_queue.pop();
+                //Serial.printf("loop() dequeued %02x,%02x\n", req->cc, req->pp);
+                this->process_sysex_request(*req);
+            }
+            return DividedClockedBehaviour::loop(ticks);
         }
 
-        void request_sysex_parameter(byte pp, byte cc) {
-            const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,pp,cc,0xF7 };
+        void testRequest() {
+            Serial.println("testRequest!!");
+            this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH);
+            this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION);            
+        }
+
+        /*void send_sysex_pad() {
+            const uint8_t data[] = { 0xF0,0x00,0x00,0x00,0x00,0xF7 };
+            this->device->sendSysEx(sizeof(data), data, true);
+        }*/
+        void process_sysex_request(BeatstepSysexRequest req) {
+            const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,req.pp,req.cc,0xF7 };
             Serial.print("Sending Sysex to BeatStep\t[ ");
             for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
                 Serial.printf("%02x ", data[i]);
             Serial.println("] (request)");
             this->device->sendSysEx(sizeof(data), data, true);
+            //Serial.println("setting sysex_request_in_flight flag");
+            //this->sysex_request_in_flight = true;
+            sysex_request_queue.setPaused(true);
+        }
+        void request_sysex_parameter(byte pp, byte cc) {
+            Serial.printf("queueing request for %02x, %02x\n", pp, cc);
+            this->sysex_request_queue.push(BeatstepSysexRequest {pp, cc});
         }
         void set_sysex_parameter(byte pp, byte cc, byte vv) {
             const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
@@ -159,9 +190,16 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
                 return;
             }
-            if (data[BROAD_POS]==BEATSTEP_GLOBAL && data[SPEC_POS]==BEATSTEP_DIRECTION) {
-                this->direction = data[VALUE_POS];  // dont use setDirection 'cos that will re-send the change
+            if (data[BROAD_POS]==BEATSTEP_GLOBAL) {
+                if (data[SPEC_POS]==BEATSTEP_DIRECTION) {
+                    this->direction = data[VALUE_POS];  // dont use setDirection 'cos that will re-send the change
+                } else if (data[SPEC_POS]==BEATSTEP_PATTERN_LENGTH) {
+                    this->pattern_length = data[VALUE_POS];
+                }
             }
+            //Serial.println("clearing sysex_request_in_flight flag");
+            sysex_request_queue.setPaused(false);
+            //this->sysex_request_in_flight = false;
         }
 
         #ifdef ENABLE_BEATSTEP_SYSEX
