@@ -131,8 +131,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         Queue<BeatstepSysexRequest,50> *sysex_request_queue = new Queue<BeatstepSysexRequest,50>();
         bool sysex_request_in_flight = false;
 
+        // called every main loop - process any queued requests
         void loop(uint32_t ticks) override {
-            //if (!sysex_request_queue.isEmpty() && !this->sysex_request_in_flight) {
             if (sysex_request_queue->isReady() && this->device) {
                 BeatstepSysexRequest *req = sysex_request_queue->pop();
                 //Serial.printf("loop() dequeued %02x,%02x\n", req->cc, req->pp);
@@ -141,12 +141,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             return DividedClockedBehaviour::loop(ticks);
         }
 
+        // snoop on every realtime MIDI message sent to the beatstep, and request the latest values if its a Start message, in case we've changed pattern
         virtual void sendRealTime(uint8_t message) override {
             DividedClockedBehaviour::sendRealTime(message);
             if (message==(uint8_t)(midi::Start))
                 this->testRequest(10);
         }
 
+        // for testing
         void testRequest() {
             testRequest(3);
         }
@@ -156,10 +158,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            
         }
 
-        /*void send_sysex_pad() {
-            const uint8_t data[] = { 0xF0,0x00,0x00,0x00,0x00,0xF7 };
-            this->device->sendSysEx(sizeof(data), data, true);
-        }*/
+        // actually send a dequeued request, and re-pause the queue
         void process_sysex_request(BeatstepSysexRequest req) {
             const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,req.pp,req.cc,0xF7 };
             Serial.print("Sending Sysex to BeatStep\t[ ");
@@ -172,10 +171,12 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
             sysex_request_queue->setPaused(true);
         }
+        // put a new request into the sysex queue
         void request_sysex_parameter(byte pp, byte cc, int delay = 0) {
             Serial.printf("queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
             this->sysex_request_queue->push(BeatstepSysexRequest {pp, cc}, SYSEX_TIMEOUT, delay);
         }
+        // set a beatstep sysex parameter
         void set_sysex_parameter(byte pp, byte cc, byte vv) {
             const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
                                    //0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,0x50,0x04,(byte)(direction), 0xF7
@@ -187,7 +188,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 this->device->sendSysEx(sizeof(data), data, true);
         }
 
-        // handles incoming sysex
+        // handles incoming sysex from beatstep to update internal state - unpause queue if we've received something
         void handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
             Serial.print("BeatStep replied with Sysex:\t[ ");
             for (uint32_t i = 0 ; i < length ; i++) {
@@ -215,10 +216,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             //this->sysex_request_in_flight = false;
         }
 
-        /*void on_restart() override {
-            DividedClockedBehaviour::on_restart();
-            this->testRequest();
-        }*/
         void on_bar(int bar) override {
             DividedClockedBehaviour::on_bar(bar);
             this->testRequest();

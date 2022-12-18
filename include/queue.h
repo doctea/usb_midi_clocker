@@ -14,19 +14,20 @@ class Queue {
     int head = -1;      // read head
     int tail = -1;      // write head
 
+    bool paused = false;    // true if queue should be held
+
     Queue() {};
 
     void push(DataType data, uint32_t timeout = 0, uint32_t delay = 0) {
         tail = ++tail % max_queue_size;
         memcpy(&queue[tail], &data, sizeof(DataType));
 
-        //this->timeout_at[tail] = millis() + delay + timeout;
         this->delay_at[tail] = millis() + delay;    // record the time that we want to request this
         this->timeout[tail] = timeout;              // record the timeout to allow before pushing on
         //Serial.printf("pushed to tail %i\n", tail);
     }
     DataType *pop() {
-        if (this->isEmpty()) 
+        if (this->isEmpty()) // nothing to do 
             return nullptr;
         head = ++head % max_queue_size;
         memcpy(&head_data, &queue[head], sizeof(DataType));
@@ -40,7 +41,6 @@ class Queue {
         return head==tail;
     }
 
-    bool paused = false;
     bool isReady() {
         if (this->isEmpty())            
             // not ready if nothing queued!
