@@ -4,13 +4,15 @@ template<class DataType, int max_queue_size>
 class Queue {
     public:
 
-    DataType head_data;
+    DataType head_data; // the current head data, to be kept in scope
 
-    DataType queue[max_queue_size];
-    uint32_t timeout_at[max_queue_size];
-    uint32_t delay_at[max_queue_size];
-    int head = -1;
-    int tail = -1;
+    DataType queue[max_queue_size];     // queued
+    uint32_t timeout[max_queue_size];   // timeout values per queued item
+    uint32_t delay_at[max_queue_size];  // earliest time to process each queued item
+    uint32_t actual_timeout_at = 0;     // earliest time to timeout from current item
+
+    int head = -1;      // read head
+    int tail = -1;      // write head
 
     Queue() {};
 
@@ -18,9 +20,9 @@ class Queue {
         tail = ++tail % max_queue_size;
         memcpy(&queue[tail], &data, sizeof(DataType));
 
-        // todo: rewrite this timeout/delay thing so that it runs from the time that item becomes head (timeout) and the time that it was added (delay)
-        this->timeout_at[tail] = millis() + delay + timeout;
-        this->delay_at[tail] = millis() + delay;
+        //this->timeout_at[tail] = millis() + delay + timeout;
+        this->delay_at[tail] = millis() + delay;    // record the time that we want to request this
+        this->timeout[tail] = timeout;              // record the timeout to allow before pushing on
         //Serial.printf("pushed to tail %i\n", tail);
     }
     DataType *pop() {
@@ -29,6 +31,7 @@ class Queue {
         head = ++head % max_queue_size;
         memcpy(&head_data, &queue[head], sizeof(DataType));
         //Serial.printf("popped from head %i: %02x,%02x\n", head, head_data.pp, head_data.cc);
+        this->actual_timeout_at = millis() + timeout[head]; // record time that item was popped, so we can timeout if still paused when that happens
 
         return &head_data;
     }
@@ -39,12 +42,15 @@ class Queue {
 
     bool paused = false;
     bool isReady() {
-        if (this->isEmpty())
+        if (this->isEmpty())            
+            // not ready if nothing queued!
             return false;
-        if (delay_at[head]>millis())
+        if (delay_at[head]>millis())    
+            // don't send message if we haven't reached its delay time yet
             return false;
-        if (this->paused && timeout_at[head]!=-1 && timeout_at[head]<=millis()) {
-            Serial.printf("\tqueue timed out (%i vs %i)\n", timeout_at[head], millis());
+        if (this->paused && timeout[head]!=0 && actual_timeout_at<=millis()) {  
+            // break out of paused state if timeout has been reached
+            Serial.printf("\tqueue timed out (%i vs %i)\n", actual_timeout_at, millis());
             this->paused = false;
         }
         return !paused;
