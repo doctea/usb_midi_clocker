@@ -25,6 +25,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
 
     #include "submenuitem_bar.h"
     #include "menuitems_object_selector.h"
+    #include "menuitems_numbers.h"
     //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
     LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
@@ -44,10 +45,18 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         direction->add_available_value(2, "Alt");
         direction->add_available_value(3, "Rnd");
         pattern_options->add(direction);
-
         menuitems->add(pattern_options);
 
-        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request something", this, &DeviceBehaviour_Beatstep::testRequest));
+        NumberControl<int8_t> *swing  = new NumberControl<int8_t>("Swing", &this->swing, 0x32, 0x32, 0x4b);
+        NumberControl<int8_t> *gate   = new NumberControl<int8_t>("Gate length", &this->gate, 0x00, 0x00, 0x63);
+        NumberControl<int8_t> *legato = new NumberControl<int8_t>("Legato", &this->legato, 0x00, 0x00, 0x02);
+        SubMenuItemBar *note_options = new SubMenuItemBar("Note options");
+        note_options->add(swing);
+        note_options->add(gate);
+        note_options->add(legato);
+        menuitems->add(note_options);
+
+        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
 
         /* 
         // this is added to the multi-select control, so we don't need it here too

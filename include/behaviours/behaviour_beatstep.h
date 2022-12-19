@@ -123,13 +123,28 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             return parameters;
         }
 
+        struct sysex_parameter_t {
+            int8_t cc;
+            int8_t pp;
+            int8_t *target_variable = nullptr;
+        };
+        #define NUM_SYSEX_PARAMETERS 6
+        int8_t swing, gate, legato;
+        sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
+            { BEATSTEP_GLOBAL, 0x02, nullptr },    // transpose
+            { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction },
+            { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length },
+            { BEATSTEP_GLOBAL, 0x07, &this->swing },    // swing
+            { BEATSTEP_GLOBAL, 0x08, &this->gate },    // gate length
+            { BEATSTEP_GLOBAL, 0x09, &this->legato }     // legato 0=off, 1=on, 2=reset
+        };
+
         // proof of concept of fetching parameter values from beatstep over sysex
         struct BeatstepSysexRequest {
             byte pp;
             byte cc;
         };
         Queue<BeatstepSysexRequest,50> *sysex_request_queue = new Queue<BeatstepSysexRequest,50>();
-        bool sysex_request_in_flight = false;
 
         // called every main loop - process any queued requests
         void loop(uint32_t ticks) override {
@@ -145,17 +160,20 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         virtual void sendRealTime(uint8_t message) override {
             DividedClockedBehaviour::sendRealTime(message);
             if (message==(uint8_t)(midi::Start))
-                this->testRequest(10);
+                this->request_all_sysex_parameters(10);
         }
 
         // for testing
-        void testRequest() {
-            testRequest(3);
+        void request_all_sysex_parameters() {
+            request_all_sysex_parameters(3);
         }
-        void testRequest(int delay) {
-            Serial.println("testRequest!!");
-            this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, delay);
-            this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            
+        void request_all_sysex_parameters(int delay) {
+            Serial.println("request_all_sysex_parameters!!");
+            /*this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, delay);
+            this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            */
+            for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                this->request_sysex_parameter(sysex_parameters[i].cc, sysex_parameters[i].pp);
+            }
         }
 
         // actually send a dequeued request, and re-pause the queue
@@ -204,13 +222,19 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
                 return;
             }
-            if (data[BROAD_POS]==BEATSTEP_GLOBAL) {
+            for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                if (sysex_parameters[i].cc==data[BROAD_POS] && sysex_parameters[i].pp==data[SPEC_POS]) {
+                    if (sysex_parameters[i].target_variable!=nullptr)
+                        *sysex_parameters[i].target_variable = data[VALUE_POS];
+                }
+            }
+            /*if (data[BROAD_POS]==BEATSTEP_GLOBAL) {
                 if (data[SPEC_POS]==BEATSTEP_DIRECTION) {
                     this->direction = data[VALUE_POS];  // dont use setDirection 'cos that will re-send the change
                 } else if (data[SPEC_POS]==BEATSTEP_PATTERN_LENGTH) {
                     this->pattern_length = data[VALUE_POS];
                 }
-            }
+            }*/
             //Serial.println("clearing sysex_request_in_flight flag");
             sysex_request_queue->setPaused(false);
             //this->sysex_request_in_flight = false;
@@ -218,7 +242,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
         void on_bar(int bar) override {
             DividedClockedBehaviour::on_bar(bar);
-            this->testRequest();
+            this->request_all_sysex_parameters();
         }
 
         #ifdef ENABLE_BEATSTEP_SYSEX
@@ -252,7 +276,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
 
-                this->testRequest(50);
+                this->request_all_sysex_parameters(50);
             }
 
             // pattern length settings
