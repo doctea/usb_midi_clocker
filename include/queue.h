@@ -56,7 +56,7 @@ class Queue {
             return false;
         if (this->paused && timeout[head]!=0 && actual_timeout_at<=millis()) {  
             // break out of paused state if timeout has been reached
-            Serial.printf("\tqueue timed out (%i vs %i)\n", actual_timeout_at, millis());
+            Debug_printf("\tqueue timed out (%i vs %i)\n", actual_timeout_at, millis());
             this->paused = false;
         }
         return !paused;

@@ -232,6 +232,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             // proof of concept of fetching parameter values from beatstep over sysex
 
+            bool debug_sysex = false;
+
             sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
                 { BEATSTEP_GLOBAL, 0x02, nullptr, "Transpose"},    // transpose
                 { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction, "Direction", &DeviceBehaviour_Beatstep::setDirection },
@@ -269,7 +271,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 request_all_sysex_parameters(3);
             }
             void request_all_sysex_parameters(int delay) {
-                Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);
+                if (debug_sysex) Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);
                 /*this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, delay);
                 this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            */
                 for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
@@ -280,10 +282,12 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             // actually send a dequeued request, and re-pause the queue
             void process_sysex_request(BeatstepSysexRequest req) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,req.pp,req.cc,0xF7 };
-                Serial.print("Sending Sysex to BeatStep\t[ ");
-                for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
-                    Serial.printf("%02x ", data[i]);
-                Serial.println("] (request)");
+                if (debug_sysex) {
+                    Serial.print("Sending Sysex to BeatStep\t[ ");
+                    for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
+                        Serial.printf("%02x ", data[i]);
+                    Serial.println("] (request)");
+                }
                 if (this->device) {
                     //this->device->sendSysEx(sizeof(data), data, true);
                     this->device->sendSysEx(sizeof(data), data, true);
@@ -292,34 +296,38 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
             // put a new request into the sysex queue
             void request_sysex_parameter(byte pp, byte cc, int delay = 0) {
-                Serial.printf("Queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
+                if (debug_sysex) Serial.printf("Queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
                 this->sysex_request_queue->push(BeatstepSysexRequest {pp, cc}, SYSEX_TIMEOUT, delay);
             }
             // set a beatstep sysex parameter
             void set_sysex_parameter(byte pp, byte cc, byte vv) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
-                Serial.print("Sending Sysex to BeatStep\t[ ");
-                for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
-                    Serial.printf("%02x ", data[i]);
-                Serial.printf("] (setting %02x,%02x to %02x)\n", pp, cc, vv);
+                if (debug_sysex) {
+                    Serial.print("Sending Sysex to BeatStep\t[ ");
+                    for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
+                        Serial.printf("%02x ", data[i]);
+                    Serial.printf("] (setting %02x,%02x to %02x)\n", pp, cc, vv);
+                }
                 if (this->device)
                     this->device->sendSysEx(sizeof(data), data, true);
             }
 
             // handles incoming sysex from beatstep to update internal state - unpause queue if we've received something
             void handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
-                Serial.print("BeatStep replied with Sysex:\t[ ");
-                for (uint32_t i = 0 ; i < length ; i++) {
-                    Serial.printf("%02x ", data[i]);
+                if (debug_sysex) {
+                    Serial.print("BeatStep replied with Sysex:\t[ ");
+                    for (uint32_t i = 0 ; i < length ; i++) {
+                        Serial.printf("%02x ", data[i]);
+                    }
+                    Serial.print("] ");
+                    Serial.print(complete? "complete" : "incomplete");
+                    Serial.println();
                 }
-                Serial.print("] ");
-                Serial.print(complete? "complete" : "incomplete");
-                Serial.println();
                 #define BROAD_POS 8
                 #define SPEC_POS 9
                 #define VALUE_POS 10
                 if (length < BROAD_POS-1 || !complete) {
-                    Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
+                    if (debug_sysex) Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
                     return;
                 }
                 for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {

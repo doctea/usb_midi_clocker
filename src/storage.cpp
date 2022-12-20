@@ -5,6 +5,8 @@
 
 #include "behaviours/behaviour_manager.h"
 
+#include "menu_sequence_fileviewer.h"
+
 #include "SD.h"
 //#include "SdFat.h"
 #include <SPI.h>
@@ -252,6 +254,8 @@ namespace storage {
     }
   }
 
+  //void update_sequence_filename(String filename);
+
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
     static volatile bool already_loading = false;
     if (already_loading) return false;
@@ -263,6 +267,9 @@ namespace storage {
 
     char filename[255] = "";
     sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
+
+    update_sequence_filename(String(filename));
+
     Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);
