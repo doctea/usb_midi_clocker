@@ -25,6 +25,8 @@ bool debug_stress_sequencer_load = false;
 
     #include "menu.h"
 
+    #define KEYREPEAT      200   // ms to repeat when a key is held
+
     // todo: convert to using raw keycodes, since these fuck up when modifiers are held
     #define KEYD_TAB       9
     #define KEYD_ENTER     10
@@ -54,7 +56,13 @@ bool debug_stress_sequencer_load = false;
 
     Queue<keypress_t, 10> *keyboard_queue = new Queue<keypress_t, 10> ();
 
+    // for avoiding re-entrant interrupts
     volatile bool already_pressing = false;
+
+    // for handling keyrepeat
+    keypress_t currently_held;
+    bool held = false;
+    uint32_t last_retriggered = 0;  
 
     void OnPress(int key) {
         bool irqs_enabled = __irq_enabled();
@@ -62,8 +70,17 @@ bool debug_stress_sequencer_load = false;
 
         keyboard_queue->push({key, keyboard1.getModifiers()});
 
+        currently_held.key = key;
+        currently_held.modifiers = keyboard1.getModifiers();
+        held = true;
+        last_retriggered = millis();
+
         if (irqs_enabled) 
             __enable_irq();
+    }
+
+    void OnRelease(int key) {
+        held = false;
     }
 
     void process_key(int key, int modifiers) {
@@ -114,7 +131,7 @@ bool debug_stress_sequencer_load = false;
                 break;
             case '-':
                 Serial.println(F("------------------------")); break;
-            case 'p'            :
+            case 'p'            : case 'P':
                 Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
                 midi_matrix_manager->stop_all_notes();
                 break;
@@ -207,6 +224,10 @@ bool debug_stress_sequencer_load = false;
             keypress_t *current = keyboard_queue->pop();
             process_key(current->key, current->modifiers);       
         }
+        if (held && millis() - last_retriggered>KEYREPEAT) {
+            keyboard_queue->push(currently_held);
+            last_retriggered = millis();
+        }
         if (irqs_enabled) __enable_irq();
     }
 
@@ -215,6 +236,7 @@ bool debug_stress_sequencer_load = false;
     #endif
     void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
+        keyboard1.attachRelease(OnRelease);
     }
 #endif
 
