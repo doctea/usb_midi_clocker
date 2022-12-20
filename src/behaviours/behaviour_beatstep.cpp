@@ -47,13 +47,43 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         pattern_options->add(direction);
         menuitems->add(pattern_options);
 
-        NumberControl<int8_t> *swing  = new NumberControl<int8_t>("Swing", &this->swing, 0x32, 0x32, 0x4b);
-        NumberControl<int8_t> *gate   = new NumberControl<int8_t>("Gate length", &this->gate, 0x00, 0x00, 0x63);
-        NumberControl<int8_t> *legato = new NumberControl<int8_t>("Legato", &this->legato, 0x00, 0x00, 0x02);
-        SubMenuItemBar *note_options = new SubMenuItemBar("Note options");
+        SubMenuItemBar *note_options = new SubMenuItemBar("Note options");    
+        ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t> *swing = new ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t>(
+            "Swing",
+            this,
+            &DeviceBehaviour_Beatstep::setSwing,
+            &DeviceBehaviour_Beatstep::getSwing, 
+            nullptr,
+            0x32, 
+            0x4b
+        );
+        swing->int_unit = '%';
         note_options->add(swing);
+
+        ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t> *gate   = new ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t>(
+            "Gate length", 
+            this, 
+            &DeviceBehaviour_Beatstep::setGate,
+            &DeviceBehaviour_Beatstep::getGate,
+            nullptr,
+            0x32, 
+            0x63
+        );
+        gate->int_unit = '%';
         note_options->add(gate);
+
+        //NumberControl<int8_t> *legato = new NumberControl<int8_t>("Legato", &this->legato, 0x00, 0x00, 0x02);
+        ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t> *legato = new ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t>(
+            "Legato",
+            this,
+            &DeviceBehaviour_Beatstep::setLegato,
+            &DeviceBehaviour_Beatstep::getLegato
+        );
+        legato->add_available_value(0, "Off");
+        legato->add_available_value(1, "On");
+        legato->add_available_value(2, "Reset");
         note_options->add(legato);
+        
         menuitems->add(note_options);
 
         menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));

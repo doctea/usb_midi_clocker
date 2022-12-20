@@ -23,6 +23,9 @@ extern MIDIOutputWrapper *beatstep_output;
 
 #define BEATSTEP_DIRECTION      0x04
 #define BEATSTEP_PATTERN_LENGTH 0x06
+#define BEATSTEP_SWING          0x07
+#define BEATSTEP_GATE           0x08
+#define BEATSTEP_LEGATO         0x09
 
 #define SYSEX_TIMEOUT   50   // timeout if a request for a sysex parameter doesn't get a response, so that the queue doesn't get stuck
 
@@ -129,14 +132,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             int8_t *target_variable = nullptr;
         };
         #define NUM_SYSEX_PARAMETERS 6
-        int8_t swing, gate, legato;
+
         sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
             { BEATSTEP_GLOBAL, 0x02, nullptr },    // transpose
             { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction },
             { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length },
-            { BEATSTEP_GLOBAL, 0x07, &this->swing },    // swing
-            { BEATSTEP_GLOBAL, 0x08, &this->gate },    // gate length
-            { BEATSTEP_GLOBAL, 0x09, &this->legato }     // legato 0=off, 1=on, 2=reset
+            { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing },    // swing, 0x32 to 0x4b (ie 50-100%)
+            { BEATSTEP_GLOBAL, BEATSTEP_GATE, &this->gate },    // gate length, 0x32 to 0x63
+            { BEATSTEP_GLOBAL, BEATSTEP_LEGATO, &this->legato }     // legato 0=off, 1=on, 2=reset
         };
 
         // proof of concept of fetching parameter values from beatstep over sysex
@@ -301,12 +304,47 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 return this->direction;
             }
 
+            // note swing setting
+            int8_t swing = 0;
+            void setSwing(int8_t swing) {
+                swing = constrain(swing, 0x32, 0x4b);
+                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_SWING, swing);
+                this->swing = swing;
+            }
+            int8_t getSwing() {
+                return swing;
+            }
+
+            // note gate length setting
+            int8_t gate = 0;
+            void setGate(int8_t gate) {
+                gate = constrain(gate, 0, 0x63);
+                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_GATE, gate);
+                this->gate = gate;
+            }
+            int8_t getGate() {
+                return gate;
+            }
+
+            // note legato settings
+            int8_t legato = 0;
+            void setLegato(int8_t legato) {
+                legato = constrain(legato, 0, 2);
+                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_LEGATO, legato);
+                this->legato = legato;
+            }
+            int8_t getLegato() {
+                return legato;
+            }
+
+
             virtual void save_sequence_add_lines(LinkedList<String> *lines) override {   
                 DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
                 DividedClockedBehaviour::save_sequence_add_lines(lines);
 
                 lines->add(String(F("pattern_length=")) + String(this->getPatternLength()));
                 lines->add(String(F("pattern_direction=")) + String(this->getDirection()));
+                //line
             }
             virtual bool load_parse_key_value(String key, String value) override {
                 if (key.equals(F("pattern_length"))) {
