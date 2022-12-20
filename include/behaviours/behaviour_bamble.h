@@ -33,6 +33,59 @@
 
 #include "midi/Drums.h"
 
+class SaveableParameterBase {
+    public:
+    const char *label = nullptr;
+    SaveableParameterBase(const char *label) {
+        this->label = label;
+    }
+    virtual String get_line() { return String("; nop"); }
+    virtual bool parse_key_value(String key, String value) {
+        return false;
+    }
+};
+
+class DeviceBehaviour_Bamble;
+template<class DataType>
+class BambleSaveableParameter : public SaveableParameterBase {
+    public:
+        DeviceBehaviour_Bamble *target;
+        void(DeviceBehaviour_Bamble::*setter_func)(DataType);
+        DataType(DeviceBehaviour_Bamble::*getter_func)();
+
+        BambleSaveableParameter(
+            const char *label, 
+            DeviceBehaviour_Bamble *target, 
+            void(DeviceBehaviour_Bamble::*setter_func)(DataType),
+            DataType(DeviceBehaviour_Bamble::*getter_func)()
+        ) : SaveableParameterBase(label) {
+            this->target = target;
+            this->setter_func = setter_func;
+            this->getter_func = getter_func;
+        }
+
+        virtual String get_line() {
+            return String(this->label) + String("=") + String((this->target->*getter_func)());
+        }
+        virtual bool parse_key_value(String key, String value) {
+            if (key.equals(this->label)) {
+                this->set((DataType)0,value);
+                return true;
+            }
+            return false;
+        }
+        virtual void set(int, String value) {
+            (this->target->*setter_func)(value.toInt());
+        }
+        virtual void set(bool, String value) {
+            (this->target->*setter_func)(value.equals("true") || value.equals("enabled"));
+        }
+        virtual void set(float, String value) {
+            (this->target->*setter_func)(value.toFloat());
+        }
+};
+
+
 /// these for mappable parameters
 #include "parameters/MIDICCParameter.h"
 /*
@@ -402,17 +455,26 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             DeviceBehaviourUSBBase::sendControlChange(99, 127, 11);
         }
 
+        #define NUM_SAVEABLE_PARAMETERS 8
+        SaveableParameterBase *saveable_parameters[8] = {
+            new BambleSaveableParameter<int8_t> ("euclidian_mode", this, &DeviceBehaviour_Bamble::setDemoMode,   &DeviceBehaviour_Bamble::getDemoMode),
+            new BambleSaveableParameter<bool>   ("fills_mode",     this, &DeviceBehaviour_Bamble::setFillsMode,  &DeviceBehaviour_Bamble::getFillsMode),
+            new BambleSaveableParameter<float>  ("density",        this, &DeviceBehaviour_Bamble::setDensity,    &DeviceBehaviour_Bamble::getDensity),
+            new BambleSaveableParameter<int8_t> ("mutate_low",     this, &DeviceBehaviour_Bamble::setMinimumPattern,    &DeviceBehaviour_Bamble::getMinimumPattern),
+            new BambleSaveableParameter<int8_t> ("mutate_high",    this, &DeviceBehaviour_Bamble::setMaximumPattern,    &DeviceBehaviour_Bamble::getMaximumPattern),
+            new BambleSaveableParameter<uint16_t>("mutate_seed_modifier", this,    &DeviceBehaviour_Bamble::setEuclidianSeedModifier,    &DeviceBehaviour_Bamble::getEuclidianSeedModifier), // aka 'Seed Modifier'
+            new BambleSaveableParameter<bool>   ("reset_before_mutate",  this,   &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,    &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate), // aka 'auto-reset'
+            new BambleSaveableParameter<bool>   ("seed_use_phrase", this,   &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase), // aka 'Use Phrase'
+        };
+
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
             DividedClockedBehaviour::save_sequence_add_lines(lines);
-            lines->add(String(F("euclidian_mode=")) + String(this->getDemoMode()));
-            lines->add(String(F("fills_mode="))     + String(this->getFillsMode()));
-            lines->add(String(F("density="))        + String(this->getDensity()));
-            lines->add(String(F("mutate_low="))     + String(this->getMinimumPattern()));
-            lines->add(String(F("mutate_high="))    + String(this->getMaximumPattern()));
-            lines->add(String(F("mutate_seed_modifier=")) + String(this->getEuclidianSeedModifier()));
-            lines->add(String(F("reset_before_mutate=")) + String(this->getEuclidianResetBeforeMutate()?"true":"false"));
-            lines->add(String(F("seed_use_phrase=")) + String(this->getEuclidianSeedUsePhrase()?"true":"false"));
+
+            // save out the 'saveable parameters'
+            for (int i = 0 ; i < NUM_SAVEABLE_PARAMETERS ; i++) {
+                lines->add(saveable_parameters[i]->get_line());
+            }
             const int size = NUM_EUCLIDIAN_PATTERNS;
             for (int i = 0 ; i < size ; i++) {
                 lines->add(
@@ -423,30 +485,12 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         }
 
         virtual bool load_parse_key_value(String key, String value) override {
-            if (key.equals(F("euclidian_mode"))) {
-                this->setDemoMode((byte)    value.toInt());
-                return true;
-            } else if (key.equals(F("fills_mode"))) {
-                this->setFillsMode((bool)   value.toInt());
-                return true;
-            } else if (key.equals(F("density"))) {
-                this->setDensity((float)    value.toFloat());
-                return true;
-            } else if (key.startsWith(F("pattern_enable_"))) {
-                int number = key.replace(F("pattern_enable_"),"").toInt();
-                this->setPatternEnabled(number, value.equals(F("enabled")));
-                return true;
-            } else if (key.startsWith(F("mutate_low"))) {
-                this->setMinimumPattern(value.toInt());
-            } else if (key.startsWith(F("mutate_high"))) {
-                this->setMaximumPattern(value.toInt());
-            } else if (key.startsWith(F("mutate_seed_modifier"))) {
-                this->setEuclidianSeedModifier(value.toInt());
-            } else if (key.startsWith(F("reset_before_mutate"))) {
-                this->setEuclidianResetBeforeMutate(value.equals("true"));
-            } else if (key.startsWith(F("seed_use_phrase"))) {
-                this->setEuclidianSeedUsePhrase(value.equals("true"));
-            } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
+            // check value against the 'saveable parameters'
+            for (int i = 0 ; i < NUM_SAVEABLE_PARAMETERS ; i++) {
+                if (saveable_parameters[i]->parse_key_value(key, value))
+                    return true;
+            }
+            if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
