@@ -89,8 +89,9 @@ namespace storage {
     sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
     Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
     if (SD.exists(filename)) {
-      Serial.printf(F("%s exists, deleting first\n"), filename);
+      Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
       SD.remove(filename);
+      Serial.println("deleted"); Serial.flush();
     }
     myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
     if (!myFile) {    
@@ -98,6 +99,7 @@ namespace storage {
       //if (irqs_enabled) __enable_irq();
       return false;
     }
+    Serial.println("Starting data write.."); Serial.flush();
     myFile.println(F("; begin sequence"));
     myFile.printf(F("id=%i\n"),input->id);
     myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
@@ -116,12 +118,15 @@ namespace storage {
       }
       myFile.println();
     }
-    myFile.println(F("; behaviour extensions"));
+    myFile.println(F("; behaviour extensions")); 
     LinkedList<String> behaviour_lines = LinkedList<String>();
+    Serial.println("calling save_sequence_add_lines..");
     behaviour_manager->save_sequence_add_lines(&behaviour_lines);
+    Serial.println("got behaviour_lines to save.."); Serial.flush();
     for (int i = 0 ; i < behaviour_lines.size() ; i++) {
       //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
       Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
+      Serial.flush();
       myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
     }
     myFile.println(F("; end sequence"));

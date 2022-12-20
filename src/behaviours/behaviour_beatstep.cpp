@@ -20,12 +20,15 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->handle_sysex(data, length, complete);
 }
 
+
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
 
     #include "submenuitem_bar.h"
     #include "menuitems_object_selector.h"
     #include "menuitems_numbers.h"
+    #include "menuitems_object_multitoggle.h"
+
     //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
     LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
@@ -85,6 +88,12 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         note_options->add(legato);
         
         menuitems->add(note_options);
+
+        ObjectMultiToggleControl *pattern_sysex_recall_selector = new ObjectMultiToggleControl("Recall parameters", true);
+        for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++ ) {
+            pattern_sysex_recall_selector->addItem(new BeatstepSysexOptionToggle(this, &sysex_parameters[i]));
+        }
+        menuitems->add(pattern_sysex_recall_selector);
 
         menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
 

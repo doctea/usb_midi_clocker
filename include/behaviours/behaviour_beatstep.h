@@ -16,6 +16,12 @@
 
 extern MIDIOutputWrapper *beatstep_output;
 
+//void beatstep_setOutputWrapper(MIDIOutputWrapper *);
+//void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
+
 #define BEATSTEP_PATTERN_LENGTH_MINIMUM 1
 #define BEATSTEP_PATTERN_LENGTH_MAXIMUM 16
 
@@ -28,12 +34,6 @@ extern MIDIOutputWrapper *beatstep_output;
 #define BEATSTEP_LEGATO         0x09
 
 #define SYSEX_TIMEOUT   50   // timeout if a request for a sysex parameter doesn't get a response, so that the queue doesn't get stuck
-
-//void beatstep_setOutputWrapper(MIDIOutputWrapper *);
-//void beatstep_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
-void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
-void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
-void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 
 class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
@@ -221,22 +221,26 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
 
             struct sysex_parameter_t {
-                int8_t cc;
-                int8_t pp;
+                const int8_t cc;
+                const int8_t pp;
                 int8_t *target_variable = nullptr;
+                const char *label = nullptr;
+                void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = nullptr;
+                bool enable_recall = true;
             };
             #define NUM_SYSEX_PARAMETERS 6
 
+            // proof of concept of fetching parameter values from beatstep over sysex
+
             sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
-                { BEATSTEP_GLOBAL, 0x02, nullptr },    // transpose
-                { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction },
-                { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length },
-                { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing },    // swing, 0x32 to 0x4b (ie 50-100%)
-                { BEATSTEP_GLOBAL, BEATSTEP_GATE, &this->gate },    // gate length, 0x32 to 0x63
-                { BEATSTEP_GLOBAL, BEATSTEP_LEGATO, &this->legato }     // legato 0=off, 1=on, 2=reset
+                { BEATSTEP_GLOBAL, 0x02, nullptr, "Transpose"},    // transpose
+                { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction, "Direction", &DeviceBehaviour_Beatstep::setDirection },
+                { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length, "Steps", &DeviceBehaviour_Beatstep::setPatternLength },
+                { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing, "Swing", &DeviceBehaviour_Beatstep::setSwing },    // swing, 0x32 to 0x4b (ie 50-100%)
+                { BEATSTEP_GLOBAL, BEATSTEP_GATE, &this->gate, "Gate", &DeviceBehaviour_Beatstep::setGate },    // gate length, 0x32 to 0x63
+                { BEATSTEP_GLOBAL, BEATSTEP_LEGATO, &this->legato, "Legato", &DeviceBehaviour_Beatstep::setLegato }     // legato 0=off, 1=on, 2=reset
             };
 
-            // proof of concept of fetching parameter values from beatstep over sysex
             struct BeatstepSysexRequest {
                 byte pp;
                 byte cc;
@@ -342,30 +346,31 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
                 DividedClockedBehaviour::save_sequence_add_lines(lines);
 
-                lines->add(String(F("pattern_length=")) + String(this->getPatternLength()));
-                lines->add(String(F("pattern_direction=")) + String(this->getDirection()));
-                lines->add(String(F("swing=")) + String(this->getSwing()));
-                lines->add(String(F("gate=")) + String(this->getGate()));
-                lines->add(String(F("legato=")) + String(this->getLegato()));
+                for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                    if (!sysex_parameters[i].enable_recall) continue;
+                    if (sysex_parameters[i].target_variable==nullptr) continue;
+                    Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
+
+                    String line =   String(sysex_parameters[i].label) + 
+                                    String("=") + 
+                                    String(*sysex_parameters[i].target_variable);
+                    Serial.printf("Beatstep#save_sequence_add_lines got line: %s\n", line.c_str());
+                    lines->add(line);
+                }
                 //line
             }
             virtual bool load_parse_key_value(String key, String value) override {
-                if (key.equals(F("pattern_length"))) {
-                    this->setPatternLength(value.toInt());
-                    return true;
-                } else if (key.equals(F("pattern_direction"))) {
-                    this->setDirection(value.toInt());
-                    return true;
-                } else if (key.equals(F("swing"))) {
-                    this->setSwing(value.toInt());
-                    return true;
-                } else if (key.equals(F("gate="))) {
-                    this->setGate(value.toInt());
-                    return true;
-                } else if (key.equals(F("legato"))) {
-                    this->setLegato(value.toInt());
-                    return true;
-                } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
+                for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                    if (!sysex_parameters[i].enable_recall) 
+                        continue;
+                    if (key.equals(sysex_parameters[i].label)) {
+                        if (sysex_parameters[i].setter_func==nullptr) 
+                            break;
+                        (this->*sysex_parameters[i].setter_func)(value.toInt()); 
+                        return true;
+                    }
+                }
+                if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
                     return true;
                 } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                     return true;
@@ -384,6 +389,29 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
 
+#include "menuitems_object_multitoggle.h"
+
+class BeatstepSysexOptionToggle : public MultiToggleItemBase {
+    DeviceBehaviour_Beatstep::sysex_parameter_t *target_sysex_parameter = nullptr;
+    DeviceBehaviour_Beatstep *target_object = nullptr;
+
+    public:
+        BeatstepSysexOptionToggle(DeviceBehaviour_Beatstep *target_object, DeviceBehaviour_Beatstep::sysex_parameter_t *pattern) 
+            : MultiToggleItemBase(pattern->label) {
+            this->target_object = target_object;
+            this->target_sysex_parameter = pattern;
+            this->label = pattern->label;
+        }
+        virtual bool do_getter() override {
+            return this->target_sysex_parameter->enable_recall;
+        }
+        virtual void do_setter(bool state) override {
+            target_sysex_parameter->enable_recall = state;
+        }
+};
+
 #endif
+
+
 
 #endif

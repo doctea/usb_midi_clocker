@@ -307,7 +307,7 @@ class Project {
             // determine filename, delete if exists, and open the file up for writing
             char filename[255] = "";
             sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
-            Serial.printf(F("save_sequence(%i) writing to %s\n"), save_to_project_number, filename);
+            Serial.printf(F("save_project_settings(%i) writing to %s\n"), save_to_project_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf(F("%s exists, deleting first\n"), filename);
                 SD.remove(filename);
