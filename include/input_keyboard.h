@@ -25,9 +25,13 @@ bool debug_stress_sequencer_load = false;
 
     #include "menu.h"
 
-    #define KEYD_BACKSPACE 127
+    // todo: convert to using raw keycodes, since these fuck up when modifiers are held
+    #define KEYD_TAB       9
     #define KEYD_ENTER     10
+    #define KEYD_ESC       27
     #define KEYD_HASH      92
+    #define KEYD_BACKSPACE 127
+
     #define MOD_LCTRL      1
     #define MOD_LSHIFT     2
     #define MOD_LALT       4
@@ -80,12 +84,22 @@ bool debug_stress_sequencer_load = false;
                 break; /* ctrl+alt+delete to soft reboot */
             case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
             case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
-            case KEY_ESC        :
+            case KEYD_ESC        :
             case KEYD_LEFT      : 
             case KEYD_BACKSPACE : Serial.println(F("LEFT"));           menu->button_back(); break;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
+            case KEYD_TAB       :
+                // switch menu page
+                if (modifiers & MOD_LSHIFT || modifiers & MOD_RSHIFT) {
+                    // go backwards
+                    menu->select_previous_page();
+                } else {
+                    // go forwards
+                    menu->select_next_page();
+                }
+                break;
             case 'T':
                 debug_stress_sequencer_load = true;
                 break;
