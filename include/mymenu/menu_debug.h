@@ -12,16 +12,19 @@ extern bool debug, debug_stress_sequencer_load;
 FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
 #endif
 void setup_debug_menu() {
+    menu->add_page("Behaviours/USB");
+
     #ifdef ENABLE_USB
         USBDevicesPanel *usbdevices_panel = new USBDevicesPanel();
+        menu->add(usbdevices_panel);
     #endif
 
     BehavioursPanel *behaviours_panel = new BehavioursPanel();
+    menu->add(behaviours_panel);
+
+    ////
 
     menu->add_page("Debug");
-
-    menu->add(usbdevices_panel);
-    menu->add(behaviours_panel);
 
     ActionConfirmItem *reset_control = new ActionConfirmItem("RESET TEENSY?", reset_teensy);
     menu->add(reset_control);

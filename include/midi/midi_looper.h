@@ -651,7 +651,7 @@ class MIDITrack {
 
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
-            Serial.printf(F("midi_looper::save_sequence(%i) writing to %s\n"), recording_number, filename);
+            Serial.printf(F("save_loop(%i) writing to %s\n"), recording_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf(F("\t%s exists, deleting first\n"), filename);
                 SD.remove(filename);

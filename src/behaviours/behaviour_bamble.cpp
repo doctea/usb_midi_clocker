@@ -23,12 +23,12 @@ DeviceBehaviour_Bamble *behaviour_bamble = new DeviceBehaviour_Bamble(); //nullp
 #include "menuitems_numbers.h"
 #include "mymenu/menu_bamble.h"
 
-class PatternToggle : public MultiToggleItemBase {
+class BamblePatternToggle : public MultiToggleItemBase {
     bamble_pattern *target_pattern = nullptr;
     DeviceBehaviour_Bamble *target_object = nullptr;
 
     public:
-        PatternToggle(DeviceBehaviour_Bamble *target_object, bamble_pattern *pattern) 
+        BamblePatternToggle(DeviceBehaviour_Bamble *target_object, bamble_pattern *pattern) 
             : MultiToggleItemBase(pattern->label) {
             this->target_object = target_object;
             this->target_pattern = pattern;
@@ -39,15 +39,12 @@ class PatternToggle : public MultiToggleItemBase {
         }
         virtual void do_setter(bool state) override {
             target_object->setPatternEnabled(this->target_pattern->cc_number - 32, state);
-            //this->target_pattern->current_state = state;
-            //this->target_object->sendControlChange(this->target_pattern->cc_number, state ? 127:0, 10);
         }
 };
 
 
 
 //FLASHMEM //virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
-//FLASHMEM
 LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial_flush();
     DeviceBehaviourUltimateBase::make_menu_items();
@@ -122,12 +119,12 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     // select patterns on/off ////////////////////////////////////////////////////////////////
     ObjectMultiToggleControl *pattern_selector = new ObjectMultiToggleControl("Enabled drum patterns", true);
     for (unsigned int i = 0 ; i < 16/*sizeof(this->patterns) / sizeof(bamble_pattern)*/ ; i++ ) {
-        pattern_selector->addItem(new PatternToggle(this, &patterns[i]));
+        pattern_selector->addItem(new BamblePatternToggle(this, &patterns[i]));
     }
 
     ObjectMultiToggleControl *pattern_selector_2 = new ObjectMultiToggleControl("Enabled melody patterns", true);
     for (unsigned int i = 16 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
-        pattern_selector_2->addItem(new PatternToggle(this, &patterns[i]));
+        pattern_selector_2->addItem(new BamblePatternToggle(this, &patterns[i]));
     }
 
 

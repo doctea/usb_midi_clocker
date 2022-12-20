@@ -43,9 +43,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
 
-    virtual const char *get_label() = 0;/*{
+    virtual const char *get_label() {
         return (const char*)"UltimateBase";
-    }*/
+    }
 
     virtual bool has_input() { return false; }
     virtual bool has_output() { return false; }

@@ -1,3 +1,5 @@
+// cv clock and cv sequencer outputs (controlled by APCMini)
+
 #include <Arduino.h>
 #include "Config.h"
 #include "storage.h"
@@ -61,15 +63,15 @@ void decrease_clock_delay(byte clock_selected, byte amount) {
   current_state.clock_delay[clock_selected] -= amount; // wraps around to 255
   if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
     current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;  
-  //Serial.print(F("Decreased selected clock delay to "));
-  Serial.println(get_clock_delay(clock_selected));
+  Debug_print(F("Decreased selected clock delay to "));
+  Debug_println(get_clock_delay(clock_selected));
 }
 void increase_clock_delay(byte clock_selected, byte amount) {
   current_state.clock_delay[clock_selected] += amount;
   if (current_state.clock_delay[clock_selected]>7)
     current_state.clock_delay[clock_selected] = 0;
-  //Serial.print(F("Increased selected clock delay to "));
-  Serial.println(current_state.clock_delay[clock_selected]);
+  Debug_print(F("Increased selected clock delay to "));
+  Debug_println(current_state.clock_delay[clock_selected]);
 }
 
 bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
@@ -154,46 +156,46 @@ FLASHMEM void setup_cv_output() {
 
   }
 #else
-void update_cv_outs(unsigned long ticks) {
-  #ifdef PIN_CLOCK_RESET
-    if (is_bpm_on_phrase(ticks)) {
-      Serial.printf("On phrase! %i\n", ticks);
-      digitalWrite(PIN_CLOCK_RESET, HIGH);
-    } else if (is_bpm_on_phrase(ticks,duration)) {
-      digitalWrite(PIN_CLOCK_RESET, LOW);
-    }
-  #endif
-      
-  #ifdef ENABLE_SEQUENCER
-    for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
-      bool should_go_high = false;
-      bool should_go_low  = false;
-
-      if (should_trigger_sequence(ticks, i)) {
-        should_go_high = true;
-      } else if (should_trigger_sequence(ticks, i, duration)) {
-        should_go_low = true;
+  void update_cv_outs(unsigned long ticks) {
+    #ifdef PIN_CLOCK_RESET
+      if (is_bpm_on_phrase(ticks)) {
+        Serial.printf("On phrase! %i\n", ticks);
+        digitalWrite(PIN_CLOCK_RESET, HIGH);
+      } else if (is_bpm_on_phrase(ticks,duration)) {
+        digitalWrite(PIN_CLOCK_RESET, LOW);
       }
+    #endif
+        
+    #ifdef ENABLE_SEQUENCER
+      for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
+        bool should_go_high = false;
+        bool should_go_low  = false;
 
-      if (should_go_high)     cv_out_sequence_pin_on(i); //digitalWrite(cv_out_sequence_pin[i], HIGH);
-      else if (should_go_low) cv_out_sequence_pin_off(i); //digitalWrite(cv_out_sequence_pin[i], LOW);
-    }
-  #endif
-  #ifdef ENABLE_CLOCKS
-    for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-      bool should_go_high = false;
-      bool should_go_low  = false;
+        if (should_trigger_sequence(ticks, i)) {
+          should_go_high = true;
+        } else if (should_trigger_sequence(ticks, i, duration)) {
+          should_go_low = true;
+        }
 
-      if (should_trigger_clock(ticks, i)) {
-        should_go_high = true;
-      } else if (should_trigger_clock(ticks, i, duration)) {
-        should_go_low = true;
+        if (should_go_high)     cv_out_sequence_pin_on(i); //digitalWrite(cv_out_sequence_pin[i], HIGH);
+        else if (should_go_low) cv_out_sequence_pin_off(i); //digitalWrite(cv_out_sequence_pin[i], LOW);
       }
+    #endif
+    #ifdef ENABLE_CLOCKS
+      for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+        bool should_go_high = false;
+        bool should_go_low  = false;
 
-      if (should_go_high)     cv_out_clock_pin_on(i); //digitalWrite(cv_out_clock_pin[i], HIGH);
-      else if (should_go_low) cv_out_clock_pin_off(i); //digitalWrite(cv_out_clock_pin[i], LOW);
-    }
-  #endif
-}
+        if (should_trigger_clock(ticks, i)) {
+          should_go_high = true;
+        } else if (should_trigger_clock(ticks, i, duration)) {
+          should_go_low = true;
+        }
+
+        if (should_go_high)     cv_out_clock_pin_on(i); //digitalWrite(cv_out_clock_pin[i], HIGH);
+        else if (should_go_low) cv_out_clock_pin_off(i); //digitalWrite(cv_out_clock_pin[i], LOW);
+      }
+    #endif
+  }
 
 #endif

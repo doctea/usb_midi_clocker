@@ -17,7 +17,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             return BehaviourType::usb;
         }
 
-        virtual uint32_t get_packed_id() = 0;///{ return (this->vid<<16 | this->pid); }
+        virtual uint32_t get_packed_id() { return 0xFFFFFFFF; }//= 0;///{ return (this->vid<<16 | this->pid); }
 
         // interface methods - static
         /*virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
