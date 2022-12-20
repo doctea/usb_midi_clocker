@@ -13,6 +13,8 @@ extern DisplayTranslator_Configured steensy;
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+#include "project.h"
+
 void toggle_autoadvance(bool on = false);
 void toggle_recall(bool on = false);
 
@@ -39,87 +41,22 @@ bool debug_stress_sequencer_load = false;
       
     KeyboardController keyboard1(Usb);
 
-    // track commands received over usb keyboard so that they can be executed inside of main loop(), instead of potentially causing crashes by eg overlapping file accesses
-    class InputKeyboardQueue {
-        public:
-            volatile bool queued_load_selected_sequence = false,
-                    queued_save_selected_sequence = false,
-                    queued_load_next_sequence = false,
-                    queued_load_previous_sequence = false,
-                    queued_save_screenshot = false
-            ;
-            volatile int queued_setprojectnumber = -1;
-
-            void queue_load_selected_sequence() {
-                this->queued_load_selected_sequence = true;
-            }
-            void queue_save_selected_sequence() {
-                this->queued_save_selected_sequence = true;
-            }
-            void queue_load_next_sequence() {
-                this->queued_load_next_sequence = true;
-            }
-            void queue_load_previous_sequence() {
-                this->queued_load_previous_sequence = true;
-            }
-            void queue_save_screenshot() {
-                this->queued_save_screenshot = true;
-            }
-            void queue_setProjectNumber(int number) {
-                this->queued_setprojectnumber = number;
-            }
-
-            void process_queue() {
-                if (this->queued_load_selected_sequence) {
-                    project->load_selected_sequence();
-                    this->queued_load_selected_sequence = false;
-                }
-                if (this->queued_save_selected_sequence) {
-                    project->save_selected_sequence();
-                    this->queued_save_selected_sequence = false;
-                }
-                if (this->queued_load_next_sequence) {
-                    project->load_next_sequence();
-                    this->queued_load_next_sequence = false;
-                }
-                if (this->queued_load_previous_sequence) {
-                    project->load_previous_sequence();
-                    this->queued_load_previous_sequence = false;
-                }
-                if (this->queued_save_screenshot) {
-                    save_screenshot(&steensy.actual);
-                    this->queued_save_screenshot = false;
-                }
-                if (this->queued_setprojectnumber>=0) {
-                    project->setProjectNumber(this->queued_setprojectnumber);
-                    this->queued_setprojectnumber = -1;
-                }
-            }
-    };
-
-    InputKeyboardQueue input_keyboard;
-    volatile bool already_pressing = false;
+    #include "queue.h"
 
     struct keypress_t {
         int key = 0;
         byte modifiers = 0;
     };
 
-    keypress_t key_log[10];
-    int key_log_count = -1;
+    Queue<keypress_t, 10> *keyboard_queue = new Queue<keypress_t, 10> ();
+
+    volatile bool already_pressing = false;
 
     void OnPress(int key) {
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
-        //Serial.printf("OnPress()! storing code %i to queue position %i\n", key, key_log_count);
-        key_log[key_log_count].key = key;
-        key_log[key_log_count].modifiers = keyboard1.getModifiers();
 
-        key_log_count++;
-        if (key_log_count>=10) 
-            key_log_count = 0;
-
-        //Serial.printf("queue position left at %i\n", key_log_count);
+        keyboard_queue->push({key, keyboard1.getModifiers()});
 
         if (irqs_enabled) 
             __enable_irq();
@@ -182,26 +119,28 @@ bool debug_stress_sequencer_load = false;
             // take screenshot
             case ' '            :
                 Serial.println(F("Taking screenshot!"));
-                input_keyboard.queue_save_screenshot();
+                save_screenshot(&steensy.actual);
                 break;
             // load/save/move selected sequence
             case 'L'            : 
                 Serial.println(F("(L)oad selected sequence"));
-                input_keyboard.queue_load_selected_sequence(); 
+                project->load_selected_sequence();
                 Serial.println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
                 Serial.println(F("(S)ave sequencer!"));
-                input_keyboard.queue_save_selected_sequence();
+                project->save_selected_sequence();
                 break;
             case 'J'            :
                 Serial.println(F("==== Loading previous sequence.."));
-                input_keyboard.queue_load_previous_sequence();
+                //input_keyboard.queue_load_previous_sequence();
+                project->load_previous_sequence();
                 Serial.println(F("==== Loaded previous sequence!"));
                 break;
             case ':'            :
                 Serial.println(F("==== Loading next sequence")); Serial_flush();
-                input_keyboard.queue_load_next_sequence();
+                //input_keyboard.queue_load_next_sequence();
+                project->load_next_sequence();
                 Serial.println(F("==== Loaded next sequence!")); Serial_flush();
                 break;
             case 'j'            :
@@ -231,7 +170,8 @@ bool debug_stress_sequencer_load = false;
                     }
                     if (modifiers==0) {
                         Serial.printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
-                        input_keyboard.queue_setProjectNumber(key - adjust);
+                        //input_keyboard.queue_setProjectNumber(key - adjust);
+                        project->setProjectNumber(key - adjust);
                     } else {
                         Serial.printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
                     }
@@ -249,20 +189,9 @@ bool debug_stress_sequencer_load = false;
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
 
-        if (key_log_count<=0) 
-            return;
-        
-        //Serial.println("----");
-        for (int i = 0 ; i < key_log_count ; i++) {
-            if (key_log[i].key>=0) {
-                //Serial.printf("Processing queue log at %i: %i\n", i, key_log[i].key);
-                process_key(key_log[i].key, key_log[i].modifiers);
-                key_log[i].key = -1;
-                key_log[i].modifiers = -1;
-                key_log_count--;
-                if (key_log_count<=0) 
-                    break;
-            }
+        if (keyboard_queue->isReady()) {
+            keypress_t *current = keyboard_queue->pop();
+            process_key(current->key, current->modifiers);       
         }
         if (irqs_enabled) __enable_irq();
     }

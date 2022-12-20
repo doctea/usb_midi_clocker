@@ -394,24 +394,7 @@ void loop() {
 
   // process any events that are waiting from the usb keyboard handler
   process_key_buffer();
-  input_keyboard.process_queue();
 
-  //Serial.println("end of loop!"); Serial_flush();
-
-  //Serial.println(F("."));
-  /*if (!playing && single_step) {
-    do_tick(ticks);
-  }*/
-  /*if (loop_counter%1000==0) Serial.println(F("main loop() - 1000 loops passed"));
-  loop_counter++;*/
-
-  //storage::load_state_update();  // read next bit of file
-
-        //Serial.println("sleeping before end of loop 1000ms: "); Serial_flush();
-        //delay(1000);
-        //Serial.println("exiting sleep before end of loop"); Serial_flush();
-
-  //delay(5);
   #ifdef ENABLE_PROFILER
     main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
     uint32_t accumulator = 0;
