@@ -292,13 +292,12 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
             // put a new request into the sysex queue
             void request_sysex_parameter(byte pp, byte cc, int delay = 0) {
-                Serial.printf("queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
+                Serial.printf("Queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
                 this->sysex_request_queue->push(BeatstepSysexRequest {pp, cc}, SYSEX_TIMEOUT, delay);
             }
             // set a beatstep sysex parameter
             void set_sysex_parameter(byte pp, byte cc, byte vv) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
-                                    //0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,0x50,0x04,(byte)(direction), 0xF7
                 Serial.print("Sending Sysex to BeatStep\t[ ");
                 for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
                     Serial.printf("%02x ", data[i]);
@@ -329,16 +328,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                             *sysex_parameters[i].target_variable = data[VALUE_POS];
                     }
                 }
-                /*if (data[BROAD_POS]==BEATSTEP_GLOBAL) {
-                    if (data[SPEC_POS]==BEATSTEP_DIRECTION) {
-                        this->direction = data[VALUE_POS];  // dont use setDirection 'cos that will re-send the change
-                    } else if (data[SPEC_POS]==BEATSTEP_PATTERN_LENGTH) {
-                        this->pattern_length = data[VALUE_POS];
-                    }
-                }*/
-                //Serial.println("clearing sysex_request_in_flight flag");
+
                 sysex_request_queue->setPaused(false);
-                //this->sysex_request_in_flight = false;
             }
 
 
@@ -349,15 +340,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     if (!sysex_parameters[i].enable_recall) continue;
                     if (sysex_parameters[i].target_variable==nullptr) continue;
-                    Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
+                    //Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
 
                     String line =   String(sysex_parameters[i].label) + 
                                     String("=") + 
                                     String(*sysex_parameters[i].target_variable);
-                    Serial.printf("Beatstep#save_sequence_add_lines got line: %s\n", line.c_str());
+                    //Serial.printf("Beatstep#save_sequence_add_lines got line: %s\n", line.c_str());
                     lines->add(line);
                 }
-                //line
             }
             virtual bool load_parse_key_value(String key, String value) override {
                 for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
