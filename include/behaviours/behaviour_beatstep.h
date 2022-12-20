@@ -349,12 +349,10 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     if (!sysex_parameters[i].enable_recall) continue;
                     if (sysex_parameters[i].target_variable==nullptr) continue;
-                    Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
 
                     String line =   String(sysex_parameters[i].label) + 
                                     String("=") + 
                                     String(*sysex_parameters[i].target_variable);
-                    Serial.printf("Beatstep#save_sequence_add_lines got line: %s\n", line.c_str());
                     lines->add(line);
                 }
                 //line

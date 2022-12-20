@@ -316,13 +316,11 @@ class DeviceBehaviourManager {
             //LinkedList<String> lines = LinkedList<String>();
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {
-                Serial.printf("behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 int lines_before = lines->size();
                 device->save_sequence_add_lines(lines);
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
-                    Serial.printf("\tbehaviour_manager#save_sequence_add_lines calling on behaviour...\n");
                     lines->add(F("behaviour_end=") + String(device->get_label()));
                 }
             }

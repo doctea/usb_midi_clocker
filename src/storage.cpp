@@ -91,7 +91,7 @@ namespace storage {
     if (SD.exists(filename)) {
       Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
       SD.remove(filename);
-      Serial.println("deleted"); Serial.flush();
+      //Serial.println("deleted"); Serial.flush();
     }
     myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
     if (!myFile) {    
@@ -120,12 +120,12 @@ namespace storage {
     }
     myFile.println(F("; behaviour extensions")); 
     LinkedList<String> behaviour_lines = LinkedList<String>();
-    Serial.println("calling save_sequence_add_lines..");
+    //Serial.println("calling save_sequence_add_lines..");
     behaviour_manager->save_sequence_add_lines(&behaviour_lines);
-    Serial.println("got behaviour_lines to save.."); Serial.flush();
+    //Serial.println("got behaviour_lines to save.."); Serial.flush();
     for (int i = 0 ; i < behaviour_lines.size() ; i++) {
       //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
-      Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
+      //Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
       Serial.flush();
       myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
     }
