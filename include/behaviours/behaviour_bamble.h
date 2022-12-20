@@ -193,37 +193,40 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             { 87,   11,   TRIGGER_PITCH_2_CH2   },
             { 95,   11,   TRIGGER_PITCH_2_CH2   }
         };
+        bool is_valid_envelope(int env) {
+            return env>=0 && env < NUM_ENVELOPES;
+        }
         // actually send update
         void send_envelope_trigger_on_value(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             //int channel = env >= 5 ? 11 : 10;
             int v = envelope_trigger_on[env].pattern_number | (LOOP_MASK*envelope_trigger_on[env].loop) | (INVERT_MASK*envelope_trigger_on[env].invert);
             this->sendControlChange((byte)envelope_trigger_on[env].cc, v, envelope_trigger_on[env].channel);
         }
         void set_envelope_trigger_on(int env, int pattern_number) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             this->envelope_trigger_on[env].pattern_number = pattern_number;
             this->send_envelope_trigger_on_value(env);
         }
         int get_envelope_trigger_on(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return 0;
+            if (!is_valid_envelope(env)) return false;
             return this->envelope_trigger_on[env].pattern_number;
         }
         bool is_envelope_trigger_loop(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return false;
+            if (!is_valid_envelope(env)) return false;
             return this->envelope_trigger_on[env].loop;
         }
         void set_envelope_trigger_loop(int env, bool v) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             this->envelope_trigger_on[env].loop = v;
             this->send_envelope_trigger_on_value(env);
         }
         bool is_envelope_trigger_invert(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return false;
+            if (!is_valid_envelope(env)) return false;
             return this->envelope_trigger_on[env].invert;
         }
         void set_envelope_trigger_invert(int env, bool v) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             this->envelope_trigger_on[env].invert = v;
             this->send_envelope_trigger_on_value(env);
         }
@@ -292,7 +295,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         //FLASHMEM // error: virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::add_adhsr_parameters(const char*, int, int)
         //FLASHMEM
         void add_adhsr_parameters(const char *prefix, int start, int channel) {
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Attack"))).c_str(),  this, start++, channel);
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Attack"))).c_str(),  this, start++, channel));
             parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Hold"))).c_str(),    this, start++, channel));
             parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Decay"))).c_str(),   this, start++, channel));
             parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Sustain"))).c_str(), this, start++, channel));
