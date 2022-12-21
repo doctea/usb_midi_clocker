@@ -87,6 +87,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     // called when we change phrase
     virtual void on_phrase(uint32_t phrase) {};
     virtual void on_end_phrase(uint32_t phrase) {};
+    // called the end of a phrase, but before clocks are sent - necessary for eg beatstep to send its 'next pattern' sysex?
+    virtual void on_end_phrase_pre_clock(uint32_t phrase) {};
     virtual void receive_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
     // called when a note_off message is received from the device
     virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);

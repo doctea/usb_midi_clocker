@@ -455,7 +455,9 @@ void do_tick(uint32_t in_ticks) {
     if (is_bpm_on_phrase(ticks+1)) {
       behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
     }
-  }*/
+  }*/ else if (is_bpm_on_phrase(ticks+1)) {
+    behaviour_manager->do_end_phrase_pre_clock(BPM_CURRENT_PHRASE);
+  }
 
   if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
@@ -480,7 +482,7 @@ void do_tick(uint32_t in_ticks) {
   behaviour_manager->do_ticks(in_ticks);
   if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
 
-  // do this after everything else
+  // do this after everything else because of problems with machinegun mode..?
   if (is_bpm_on_bar(ticks+1)) {
     behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
     if (is_bpm_on_phrase(ticks+1)) {

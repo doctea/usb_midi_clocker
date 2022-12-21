@@ -202,6 +202,13 @@ class DeviceBehaviourManager {
             }
         }
 
+        void do_end_phrase_pre_clock(int phrase) {
+            const int size = behaviours->size();
+            for (int i = 0 ; i < size ; i++) {
+                behaviours->get(i)->on_end_phrase_pre_clock(phrase);
+            }
+        }
+
         void do_bar(int bar) {
             const int size = behaviours->size();
             for (int i = 0 ; i < size ; i++) {

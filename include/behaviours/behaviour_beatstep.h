@@ -135,10 +135,9 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             bool is_auto_advance_pattern() {
                 return this->auto_advance_pattern;
             }
-            virtual void on_end_phrase(uint32_t phrase) override {
+            
+            virtual void on_end_phrase_pre_clock(uint32_t phrase) override {
                 if (this->device==nullptr) return;
-
-                DividedClockedBehaviour::on_end_phrase(phrase);
 
                 if (this->auto_advance_pattern) {
                     int phrase_number = (phrase % NUM_PATTERNS);
@@ -146,11 +145,13 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     //this->on_restart(); 
                     this->set_restart_on_bar(true);
                 }
+
+                DividedClockedBehaviour::on_end_phrase_pre_clock(phrase);
             }
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Debug_printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
+                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
