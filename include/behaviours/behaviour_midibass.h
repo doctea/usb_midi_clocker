@@ -12,6 +12,15 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         int8_t machinegun = 0;
         int8_t machinegun_current_note = -1;
 
+        void set_machinegun(int8_t value) {
+            this->machinegun = value;
+            if (!machinegun)
+                kill_machinegun_note();
+        }
+        int8_t get_machinegun() {
+            return this->machinegun;
+        }
+
         virtual bool is_drone() {
             return drone_enabled;
         }
@@ -43,10 +52,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendNoteOff(last_drone_note, 0, drone_channel);
             }
             last_drone_note = -1;
-            if (is_valid_note(machinegun_current_note)) {
-                DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
-                machinegun_current_note = -1;
-            }
+            kill_machinegun_note();
         }
         virtual void send_drone_note() {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
@@ -69,11 +75,9 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             if (machinegun && is_valid_note(note)) { //wrapper->current_transposed_note)) {
                 int div = machinegun;
                 int qt = ticks % PPQN;
-                int vel = 127; //constrain(64+(127/qt), 64, 127);
+                int vel = 127; //constrain(64+(127/qt), 64, 127);   // todo: add some clever velocity stuff here?
                 if ((qt+1) % (PPQN/div) == 0) {
-                    DeviceBehaviourUltimateBase::sendNoteOff(note, 0, drone_channel);
-                    DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
-                    this->machinegun_current_note = -1;
+                    kill_machinegun_note();
                 } else if (qt % (PPQN/div)==0) {
                     DeviceBehaviourUltimateBase::sendNoteOn(note, vel, drone_channel);
                     this->machinegun_current_note = note;
@@ -83,10 +87,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         virtual void on_bar(int bar) override {
             //if (this->debug) Serial.printf(F("begin>=DeviceBehaviour_Neutron#on_bar(%i)\n"), bar);
-            //if (drone && last_drone_note>=0) {
-            //    Serial.printf("\tDeviceBehaviour_Neutron#on_bar is in drone mode with drone note %i!\n", last_drone_note);
-            //    this->send_drone_note();
-            //}
             new_bar = true;
             last_drone_note = -1;
             //Serial.println("end<=DeviceBehaviour_Neutron#on_bar()");
@@ -95,11 +95,17 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             //if (this->debug) Serial.println(F("DeviceBehaviour_Neutron#on_end_bar!"));
             if (drone_enabled && last_drone_note>=0)
                 this->kill_drone_note();
-            if (is_valid_note(machinegun_current_note)) {
-                Serial.printf("on_end_bar(%i)\t machinegun_current_note is %s, killing\n", bar, get_note_name_c(machinegun_current_note));
-                DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
-                machinegun_current_note = -1;
+            if (machinegun>0 && is_valid_note(machinegun_current_note)) {
+                kill_machinegun_note();
             }
+        }
+
+        virtual void kill_machinegun_note() {
+            if (!is_valid_note(machinegun_current_note)) return;
+
+            //Serial.printf("machinegun_current_note is %s, killing\n", get_note_name_c(machinegun_current_note));
+            DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
+            machinegun_current_note = -1;
         }
 
         virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
@@ -121,24 +127,17 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void sendNoteOff(byte pitch, byte velocity, byte channel) override {
             if (drone_enabled) {
                 //
+                if (!is_valid_note(last_drone_note) && machinegun>0 && pitch==machinegun_current_note)
+                    kill_machinegun_note();
             } else
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
         }
 
-        void set_machinegun(int8_t value) {
-            this->machinegun = value;
-        }
-        int8_t get_machinegun() {
-            return this->machinegun;
-        }
+
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            lines->add(
-                String(F("drone=")) + String(this->drone_enabled ? F("enabled"):F("disabled"))
-            );
-            lines->add(
-                String(F("machinegun=")) + String(this->machinegun)
-            );
+            lines->add(String(F("drone=")) + String(this->drone_enabled ? F("enabled"):F("disabled")));
+            lines->add(String(F("machinegun=")) + String(this->machinegun));
             //ClockedBehaviour::save_sequence_add_lines(lines);
         }
         virtual bool load_parse_key_value(String key, String value) override {
@@ -148,6 +147,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 return true;
             } else if (key.equals(F("machinegun"))) {
                 this->set_machinegun(value.toInt());
+                return true;
             }
             return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
         }
