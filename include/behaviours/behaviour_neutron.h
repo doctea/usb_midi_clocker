@@ -44,6 +44,11 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
                 DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }
 
+        virtual void on_tick(uint32_t ticks) override {
+            MIDIBassBehaviour::on_tick(ticks);
+            ClockedBehaviour::on_tick(ticks);
+        }
+
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));

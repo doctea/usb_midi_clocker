@@ -98,11 +98,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         /*** for tracking/setting Bambleweeny options */
 
+        float density = 64;
         int8_t demo_mode = 0;
         bool fills_mode = 0;
-        float density = 64;
         byte minimum_pattern = 0;
         byte maximum_pattern = 16;
+        uint16_t euclidian_seed_modifier = 0;
+        bool euclidian_reset_before_mutate = true;
+        bool euclidian_seed_use_phrase = true;
 
         int8_t getDemoMode() {
             return demo_mode;
@@ -141,9 +144,6 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             return this->maximum_pattern;
         }
 
-        uint16_t euclidian_seed_modifier = 0;
-        bool euclidian_reset_before_mutate = true;
-        bool euclidian_seed_use_phrase = true;
         void setEuclidianSeedModifier(uint16_t v) {
             this->euclidian_seed_modifier = v;
             this->sendControlChange(CC_EUCLIDIAN_SEED_MODIFIER, v >> 8, 10);

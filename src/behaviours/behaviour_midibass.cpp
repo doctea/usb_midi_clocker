@@ -43,6 +43,9 @@
                 nullptr
             );
 
+        NumberControl<int8_t> *machinegun_mode = new NumberControl<int8_t>("Machinegun", &machinegun, machinegun, 0, 4);
+        bar->add(machinegun_mode);
+
         menuitems->add(neutron_harmony);
 
         bar->add(neutron_transpose_control);         

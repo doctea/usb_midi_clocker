@@ -9,6 +9,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         int last_drone_note = -1;   // note that we should drone on
         byte drone_channel = 0;     // channel that we should drone on
 
+        int8_t machinegun = 0;
+
         virtual bool is_drone() {
             return drone_enabled;
         }
@@ -47,6 +49,28 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             if (last_drone_note>=0) {
                 //if (this->debug) Serial.printf(F("\t\tsend_drone_note sending (%i, %i, %i)\n"), last_drone_note, 127, drone_channel);
                 DeviceBehaviourUltimateBase::sendNoteOn(last_drone_note, 127, drone_channel);
+            }
+        }
+
+        virtual void on_tick(uint32_t ticks) override {
+            //MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
+            int note = -1;
+            if (is_valid_note(last_drone_note)) 
+                note = last_drone_note;
+            else {
+                MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
+                if (wrapper!=nullptr && is_valid_note(wrapper->current_transposed_note))
+                    note = wrapper->current_transposed_note;
+            }
+            if (machinegun && is_valid_note(note)) { //wrapper->current_transposed_note)) {
+                int div = machinegun;
+                int qt = ticks % PPQN;
+                int vel = 127; //constrain(64+(127/qt), 64, 127);
+                if ((qt+1) % (PPQN/div) == 0) { //qt==4 || qt==10 || qt==16 || qt==22) {
+                    DeviceBehaviourUltimateBase::sendNoteOff(note, 0, drone_channel);
+                } else if (qt % (PPQN/div)==0) { //qt==5 || qt == 11 || qt == 17) {
+                    DeviceBehaviourUltimateBase::sendNoteOn(note, vel, drone_channel);
+                }
             }
         }
 
