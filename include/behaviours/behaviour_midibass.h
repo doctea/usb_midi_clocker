@@ -10,6 +10,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         byte drone_channel = 0;     // channel that we should drone on
 
         int8_t machinegun = 0;
+        int8_t machinegun_current_note = -1;
 
         virtual bool is_drone() {
             return drone_enabled;
@@ -19,7 +20,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 // turning drone off and there is a note to kill
                 //if (this->debug) Serial.println(F("set_drone setting drone_enabled off - calling kill_drone_note!"));
                 this->kill_drone_note();
-                this->last_drone_note = -1;
             } else if (!this->drone_enabled && value) {
                 // turning drone on
                 // should kill any (non-drone) notes that we have playing... except thats handled by the MIDIOutputWrapper that's wrapped around this behaviour, rather than the output that this is connected to.  
@@ -43,6 +43,10 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendNoteOff(last_drone_note, 0, drone_channel);
             }
             last_drone_note = -1;
+            if (is_valid_note(machinegun_current_note)) {
+                DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
+                machinegun_current_note = -1;
+            }
         }
         virtual void send_drone_note() {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
@@ -66,10 +70,13 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 int div = machinegun;
                 int qt = ticks % PPQN;
                 int vel = 127; //constrain(64+(127/qt), 64, 127);
-                if ((qt+1) % (PPQN/div) == 0) { //qt==4 || qt==10 || qt==16 || qt==22) {
+                if ((qt+1) % (PPQN/div) == 0) {
                     DeviceBehaviourUltimateBase::sendNoteOff(note, 0, drone_channel);
-                } else if (qt % (PPQN/div)==0) { //qt==5 || qt == 11 || qt == 17) {
+                    DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
+                    this->machinegun_current_note = -1;
+                } else if (qt % (PPQN/div)==0) {
                     DeviceBehaviourUltimateBase::sendNoteOn(note, vel, drone_channel);
+                    this->machinegun_current_note = note;
                 }
             }
         }
@@ -88,6 +95,11 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             //if (this->debug) Serial.println(F("DeviceBehaviour_Neutron#on_end_bar!"));
             if (drone_enabled && last_drone_note>=0)
                 this->kill_drone_note();
+            if (is_valid_note(machinegun_current_note)) {
+                Serial.printf("on_end_bar(%i)\t machinegun_current_note is %s, killing\n", bar, get_note_name_c(machinegun_current_note));
+                DeviceBehaviourUltimateBase::sendNoteOff(machinegun_current_note, 0, drone_channel);
+                machinegun_current_note = -1;
+            }
         }
 
         virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
@@ -113,9 +125,19 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
         }
 
+        void set_machinegun(int8_t value) {
+            this->machinegun = value;
+        }
+        int8_t get_machinegun() {
+            return this->machinegun;
+        }
+
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             lines->add(
                 String(F("drone=")) + String(this->drone_enabled ? F("enabled"):F("disabled"))
+            );
+            lines->add(
+                String(F("machinegun=")) + String(this->machinegun)
             );
             //ClockedBehaviour::save_sequence_add_lines(lines);
         }
@@ -124,6 +146,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 this->set_drone(value.equals(F("enabled")));
                 //Serial.printf(F("drone found - setting to %s!\n"), drone_enabled?F("true"):F("false"));
                 return true;
+            } else if (key.equals(F("machinegun"))) {
+                this->set_machinegun(value.toInt());
             }
             return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
         }
