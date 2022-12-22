@@ -13,43 +13,47 @@
         SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" MIDI bass"))).c_str());
 
         //Serial.printf("############# MIDIBassBehaviour::make_menu_items looking up target_id %i!!!\n", this->target_id);
+        // hmmm todo: this doesn't update if the target is changed...? 
         MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
 
-        HarmonyStatus *neutron_harmony = new HarmonyStatus(
-            "Neutron output", 
-            &my_wrapper->last_transposed_note, 
-            &my_wrapper->current_transposed_note, 
-            &this->last_drone_note
-        );
-
-        ObjectNumberControl<MIDIOutputWrapper,int> *neutron_transpose_control = 
-            new ObjectNumberControl<MIDIOutputWrapper,int>(
-                "Octave",
-                my_wrapper, 
-                &MIDIOutputWrapper::setForceOctave, 
-                &MIDIOutputWrapper::getForceOctave, 
-                nullptr,
-                -1,
-                8
+        if (my_wrapper!=nullptr) {
+            HarmonyStatus *harmony = new HarmonyStatus(
+                "Neutron output", 
+                &my_wrapper->last_transposed_note, 
+                &my_wrapper->current_transposed_note, 
+                &this->last_drone_note
             );
+
+            ObjectNumberControl<MIDIOutputWrapper,int> *transpose_control = 
+                new ObjectNumberControl<MIDIOutputWrapper,int>(
+                    "Octave",
+                    my_wrapper, 
+                    &MIDIOutputWrapper::setForceOctave, 
+                    &MIDIOutputWrapper::getForceOctave, 
+                    nullptr,
+                    -1,
+                    8
+                );
+
+            bar->add(transpose_control);         
+
+            menuitems->add(harmony);
         
-        //TODO: see commented-out section in DeviceBehaviour_Neutron
-        ObjectToggleControl<MIDIBassBehaviour> *neutron_drone_bass = 
-            new ObjectToggleControl<MIDIBassBehaviour> (
-                "Drone",
-                this,
-                &MIDIBassBehaviour::set_drone,
-                &MIDIBassBehaviour::is_drone,
-                nullptr
-            );
+            //TODO: see commented-out section in DeviceBehaviour_Neutron
+            ObjectToggleControl<MIDIBassBehaviour> *drone_bass = 
+                new ObjectToggleControl<MIDIBassBehaviour> (
+                    "Drone",
+                    this,
+                    &MIDIBassBehaviour::set_drone,
+                    &MIDIBassBehaviour::is_drone,
+                    nullptr
+                );
+            bar->add(drone_bass);
 
+        }
         NumberControl<int8_t> *machinegun_mode = new NumberControl<int8_t>("Machinegun", &machinegun, machinegun, 0, 4);
-        bar->add(machinegun_mode);
+        bar->add(machinegun_mode);             
 
-        menuitems->add(neutron_harmony);
-
-        bar->add(neutron_transpose_control);         
-        bar->add(neutron_drone_bass);
         menuitems->add(bar);
         return menuitems;
     }
