@@ -79,10 +79,11 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             ClockedBehaviour::receive_note_off(channel, note, 127);
         }
 
+        bool already_initialised = false;
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-            static bool already_initialised = false;
-            if (already_initialised)
+            //static bool already_initialised = false;
+            if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
             DeviceBehaviourUSBBase::initialise_parameters();
             //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));

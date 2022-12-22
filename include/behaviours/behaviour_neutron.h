@@ -49,11 +49,12 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
             ClockedBehaviour::on_tick(ticks);
         }
 
+        bool already_initialised = false;
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
-            static bool already_initialised = false;
-            if (already_initialised)
+            //static bool already_initialised = false;
+            if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
 
             //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
