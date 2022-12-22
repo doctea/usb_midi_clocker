@@ -68,7 +68,7 @@
 // enable transposing beatstep to a particular octave
 #define ENABLE_NEUTRON
 #define ENABLE_BASS_TRANSPOSE MIDI3
-#define DEFAULT_NEUTRON_OCTAVE 2    // set to 1 for 'disabled'
+#define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meanly 'set to -1 for disabled'?
 
 #define ENABLE_DPT_LOOPER MIDI8
 
