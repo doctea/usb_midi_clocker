@@ -65,23 +65,26 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void on_tick(uint32_t ticks) override {
             //MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
             int note = -1;
-            if (is_valid_note(last_drone_note)) 
+            if (is_valid_note(last_drone_note)) {
                 note = last_drone_note;
-            else {
+            } else {
                 MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
                 if (wrapper!=nullptr && is_valid_note(wrapper->current_transposed_note))
                     note = wrapper->current_transposed_note;
+                //if (is_valid_note(this->note))
             }
             if (machinegun && is_valid_note(note)) { //wrapper->current_transposed_note)) {
                 int div = machinegun;
                 int qt = ticks % PPQN;
                 int vel = 127; //constrain(64+(127/qt), 64, 127);   // todo: add some clever velocity stuff here?
                 if ((qt+1) % (PPQN/div) == 0) {
+                    //Serial.printf("\tqt %i means should kill the note %i?\n", qt, note);
                     kill_machinegun_note();
                 } else if (qt % (PPQN/div)==0) {
+                    //Serial.printf("\tqt %i means should start the note %i?\n", qt, note);
                     DeviceBehaviourUltimateBase::sendNoteOn(note, vel, drone_channel);
                     this->machinegun_current_note = note;
-                }
+                } 
             }
         }
 
@@ -110,6 +113,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
             //Serial.printf("DeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i)\n", pitch, velocity, channel, last_drone_note);
+            drone_channel = channel;
+
             if (drone_enabled) {
                 // do drone stuff
                 //if (this->debug) Serial.printf(F("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n"));
