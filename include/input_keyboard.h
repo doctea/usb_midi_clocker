@@ -65,9 +65,11 @@ bool debug_stress_sequencer_load = false;
     uint32_t last_retriggered = 0;  
 
     void OnPress(int key) {
+        if (already_pressing) return;
+        already_pressing = true;
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
-
+        
         // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
         // the main loop has crashed
         switch(key) {
@@ -91,16 +93,20 @@ bool debug_stress_sequencer_load = false;
                 Serial.println(F("---restarted serial---"));
                 break;
             case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                int modifiers = keyboard1.getModifiers();
-                if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
-                    Serial.println("running a loop() manually becaues ctrl+alt+lshift+delete");
-                    loop();
-                    break;
-                }                    
-                if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) 
-                    reset_teensy();  
-                //break; /* ctrl+alt+delete to soft reboot */
+                {
+                    int modifiers = keyboard1.getModifiers();
+                    if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
+                        Serial.println("running a loop() manually because ctrl+alt+lshift+delete");
+                        loop();
+                        break;
+                    }                    
+                    if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) {
+                        reset_teensy();  
+                        break;
+                    }
+                }
             default:
+                Serial.println("received key?");
                 keyboard_queue->push({key, keyboard1.getModifiers()});
 
                 currently_held.key = key;
@@ -110,6 +116,7 @@ bool debug_stress_sequencer_load = false;
                 break;
         }
 
+        already_pressing = false;
         if (irqs_enabled) 
             __enable_irq();
     }
@@ -123,8 +130,7 @@ bool debug_stress_sequencer_load = false;
     }
 
     void process_key(int key, int modifiers) {
-        if (already_pressing) return;
-        already_pressing = true;
+
 
         //int modifiers = keyboard1.getModifiers();
         //bool irqs_enabled = __irq_enabled();
@@ -232,7 +238,6 @@ bool debug_stress_sequencer_load = false;
                 Serial.printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
                 break;
         }
-        already_pressing = false;
         //if (irqs_enabled) __enable_irq();
     }
 
