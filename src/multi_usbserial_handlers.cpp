@@ -95,7 +95,7 @@
 
         Usb.begin();
         Serial.println(F("Usb.begin() returned")); Serial_flush();
-        for (int i = 0 ; i < 5 ; i++) {
+        for (unsigned int i = 0 ; i < 5 ; i++) {
         //digitalWrite(LED_BUILTIN, HIGH);
         Serial.printf(F("%i/5: Waiting 500ms for USB to settle down.."), i+1); Serial_flush();
         tft_print((char*)".");

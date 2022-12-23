@@ -24,7 +24,7 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
             ObjectSelectorControl::setup_available_values();
 
             const int num_patterns = (int)(sizeof(behaviour->patterns) / sizeof(bamble_pattern));
-            for (int i = 0 ; i < num_patterns ; i++) {
+            for (unsigned int i = 0 ; i < num_patterns ; i++) {
                 this->add_available_value(i, behaviour->patterns[i].label);
             }
             this->add_available_value(20, "Off");

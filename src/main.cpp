@@ -398,7 +398,7 @@ void loop() {
   #ifdef ENABLE_PROFILER
     main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
     uint32_t accumulator = 0;
-    for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
+    for (unsigned int i = 0 ; i < NUMBER_AVERAGES ; i++) {
       accumulator += main_loop_length_averages[i];
     }
     average_loop_micros = accumulator / NUMBER_AVERAGES;

@@ -55,11 +55,11 @@ class ClockSourceSelectorControl : public SelectorControl {
             tft->println((char*)"");
         } else {
             int current_value = actual_value_index;
-
-            for (int i = 0 ; i < num_values ; i++) {
-                bool is_current_value_selected = i==current_value;
+            
+            for (unsigned int i = 0 ; i < num_values ; i++) {
+                bool is_current_value_selected = ((int)i)==current_value;
                 int col = is_current_value_selected ? GREEN : C_WHITE;
-                colours(opened && selected_value_index==i, col, BLACK);
+                colours(opened && selected_value_index==(int)i, col, BLACK);
                 tft->printf((char*)"%s\n", (char*)get_label_for_index(i));
             }
             if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually

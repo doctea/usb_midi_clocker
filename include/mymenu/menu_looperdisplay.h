@@ -34,7 +34,7 @@ class LooperDisplay : public MenuItem {
     virtual int get_screen_x_for_tick(int tick) {
         if (!precalculated) {
             static int ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
-            for (int i = 0 ; i < LOOP_LENGTH_TICKS ; i++) {
+            for (unsigned int i = 0 ; i < LOOP_LENGTH_TICKS ; i++) {
                 precalculated_value_screen_x_for_tick[i] = i / ticks_per_pixel;
             }
             precalculated = true;
@@ -48,7 +48,7 @@ class LooperDisplay : public MenuItem {
     virtual int get_tick_for_screen_x(int screen_x) {
         if (!precalculated_tick_for_screen_x) {
             static int ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
-            for (int i = 0 ; i < tft->width() ; i++) {
+            for (unsigned int i = 0 ; i < tft->width() ; i++) {
                 precalculated_value_tick_for_screen_x[i] = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel));
             }
             precalculated_tick_for_screen_x = true;
@@ -82,7 +82,7 @@ class LooperDisplay : public MenuItem {
         /*int ticks_per_pixel = round((float)LOOP_LENGTH / (float)tft->width());
         Serial.printf("ticks_per_pixel = %i / %i = %i\n", tft->width(), LOOP_LENGTH, ticks_per_pixel);
 
-        for (int i = 0 ; i < tft->width() ; i++) {
+        for (unsigned int i = 0 ; i < tft->width() ; i++) {
             //Serial.printf("for real pixel %i: \n", i);
             // for each pixel, process ticks_per_pixel ticks
             for (int pitch = 127 ; pitch > 0 ; pitch--) {

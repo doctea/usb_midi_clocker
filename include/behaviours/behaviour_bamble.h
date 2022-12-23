@@ -376,14 +376,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->setEuclidianResetBeforeMutate(true);  // 24 CC_EUCLIDIAN_RESET_BEFORE_MUTATE
             this->setEuclidianSeedUsePhrase(true);      //  `27` | `CC_EUCLIDIAN_SEED_USE_PHRASE`
 
-            for (int i = 0 ; i < NUM_EUCLIDIAN_PATTERNS ; i++) {
+            for (unsigned int i = 0 ; i < NUM_EUCLIDIAN_PATTERNS ; i++) {
                 this->setPatternEnabled(i, true);
             }
 
             DeviceBehaviourUSBBase::sendControlChange(CC_EUCLIDIAN_MUTATE_DENSITY, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
 
             // send envelope trigger-on values to match initial setup
-            for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+            for (unsigned int i = 0 ; i < NUM_ENVELOPES ; i++) {
                 this->send_envelope_trigger_on_value(i);
             }
 
@@ -417,8 +417,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             lines->add(String(F("mutate_seed_modifier=")) + String(this->getEuclidianSeedModifier()));
             lines->add(String(F("reset_before_mutate=")) + String(this->getEuclidianResetBeforeMutate()?"true":"false"));
             lines->add(String(F("seed_use_phrase=")) + String(this->getEuclidianSeedUsePhrase()?"true":"false"));
-            const int size = NUM_EUCLIDIAN_PATTERNS;
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
+            for (unsigned int i = 0 ; i < size ; i++) {
                 lines->add(
                     String(F("pattern_enable_")) + String(i) + String('=') + 
                     String(this->patterns[i].current_state?F("enabled"):F("disabled"))

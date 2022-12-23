@@ -96,7 +96,7 @@ void redraw_clock_row(byte c) {
     if (behaviour_apcmini->device==nullptr) return;
 
     int start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
-    for (int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+    for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       int io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
       float cm = get_clock_multiplier(c);
       if (is_clock_off(c)) {
@@ -125,7 +125,7 @@ void redraw_sequence_row(byte c) {
   if (behaviour_apcmini->device==nullptr) return;
 
   int start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
-  for (int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+  for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
     int v = read_sequence(c,i);
     if (v) { //should_trigger_sequence(i*PPQN,c)) {
       ATOMIC(apcdisplay_sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
