@@ -108,16 +108,17 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ST7789 oled screen for display
   - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789
   - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu
-- Rotary encoder + two wired buttons for control or USB typing keyboard
+- Rotary encoder + two wired buttons for control and/oor USB typing keyboard
   - and [mymenu](https://github.com/doctea/mymenu) library
 - Akai APCMini for controlling the sequencer and clocks
-- SD card in the onboard Teensy SD card reader for saving projects, sequences and loops
-- DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' below
-  - I was originally using a couple of these https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377 originally -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
-  - But I am now using one of these instead: https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e?_pos=1&_sid=b1dce7a8e&_ss=r (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
-- For CV input: Pimoroni +/- 24v 1015 module https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003 and [parameters](https://github.com/doctea/parameters) library
+- SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots and loops
+- DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, and to protect the Teensy pins from external voltages: see 'Suggested wiring' section below
+  - I am now using one of these: [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e) (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
+  - I was originally using a couple of these [Sparkfun level shifter](https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377) -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
+- For CV input: [Pimoroni +/-24v 1015 module](https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003) and my [parameters](https://github.com/doctea/parameters) library
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
-  - on 2022-11-02, I recommend you use the maybe_fixed_4 branch as this seems like it might be more stable..?
+  - on 2022-12-23, I recommend you use the maybe_fixed_4_stable branch as this seems like it might be more stable..?
+- As of 2022-12-23, using [this LinkedList fork](https://github.com/vortigont/LinkedList) to try and improve stuff
 
 ## Suggested wiring 
 
