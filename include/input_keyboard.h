@@ -68,15 +68,54 @@ bool debug_stress_sequencer_load = false;
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
 
-        keyboard_queue->push({key, keyboard1.getModifiers()});
+        // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
+        // the main loop has crashed
+        switch(key) {
+            /*case KEY_ESC             :  // ESCAPE
+                while(menu->is_opened())
+                    menu->button_back();
+                break;*/
+            case 'D'    :
+                debug = true;
+                break;
+            case 'd'    :
+                debug = false;
+                break;
+            // debug
+            case 'Z'    :
+                Serial.clear();
+                Serial.clearWriteError();
+                Serial.end();
+                Serial.begin(115200);
+                Serial.setTimeout(0);
+                Serial.println(F("---restarted serial---"));
+                break;
+            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
+                int modifiers = keyboard1.getModifiers();
+                if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
+                    Serial.println("running a loop() manually becaues ctrl+alt+lshift+delete");
+                    loop();
+                    break;
+                }                    
+                if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) 
+                    reset_teensy();  
+                //break; /* ctrl+alt+delete to soft reboot */
+            default:
+                keyboard_queue->push({key, keyboard1.getModifiers()});
 
-        currently_held.key = key;
-        currently_held.modifiers = keyboard1.getModifiers();
-        held = true;
-        last_retriggered = millis();
+                currently_held.key = key;
+                currently_held.modifiers = keyboard1.getModifiers();
+                held = true;
+                last_retriggered = millis();
+                break;
+        }
 
         if (irqs_enabled) 
             __enable_irq();
+    }
+
+    void OnRawPress(uint8_t keycode) {
+        Serial.printf("OnRawPress with keycode %i (%c), modifiers %i\n", keycode, keycode, keyboard1.getModifiers());
     }
 
     void OnRelease(int key) {
@@ -95,10 +134,6 @@ bool debug_stress_sequencer_load = false;
                 while(menu->is_opened())
                     menu->button_back();
                 break;*/
-            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT))
-                    reset_teensy();  
-                break; /* ctrl+alt+delete to soft reboot */
             case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
             case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
             case KEYD_ESC        :
@@ -122,12 +157,6 @@ bool debug_stress_sequencer_load = false;
                 break;
             case 't':
                 debug_stress_sequencer_load = false;
-                break;
-            case 'D'    :
-                debug = true;
-                break;
-            case 'd'    :
-                debug = false;
                 break;
             case '-':
                 Serial.println(F("------------------------")); break;
@@ -182,15 +211,6 @@ bool debug_stress_sequencer_load = false;
                 //Serial.println(F("Select next sequence"));
                 project->select_next_sequence();
                 break;
-            // debug
-            case 'Z'    :
-                Serial.clear();
-                Serial.clearWriteError();
-                Serial.end();
-                Serial.begin(115200);
-                Serial.setTimeout(0);
-                Serial.println(F("---restarted serial---"));
-                break;
             // change project number
             case 49 ... 57      :
                 {
@@ -236,6 +256,7 @@ bool debug_stress_sequencer_load = false;
     #endif
     void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
+        keyboard1.attachRawPress(OnRawPress);
         keyboard1.attachRelease(OnRelease);
     }
 #endif
