@@ -473,8 +473,8 @@ class MIDITrack {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)malloc(LOOP_LENGTH_STEPS * 127);
-            memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
+                this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, 127);
+            //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(piano_roll_held, 0, 127);
             memset(this->pitch_contains_notes, 0, 127);
         }

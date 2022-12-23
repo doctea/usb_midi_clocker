@@ -35,7 +35,7 @@ class SlotController : public MenuItem {
             const unsigned int max_slots = this->get_max_slots(); //this->target->*get_max_callback();
             const int loaded_slot = this->get_loaded_slot(); //this->target->*getter_callback();
 
-            int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
+            unsigned int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
             y++;
             #define ROUNDED yes
@@ -44,7 +44,7 @@ class SlotController : public MenuItem {
                                   (ui_selected_number==(int)i) ? ST77XX_YELLOW :   // if selected
                                                                 ST77XX_BLUE;        
 
-                if (i==(int)ui_selected_number) {
+                if (((int)i)==ui_selected_number) {
                     #ifdef ROUNDED
                         static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
                     #else

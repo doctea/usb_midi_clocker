@@ -291,8 +291,8 @@ class MIDIMatrixManager {
         MIDIMatrixManager() {
             //setup_midi_output_wrapper_manager();
             //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
-            sources = (source_entry*)malloc(sizeof(source_entry) * MAX_NUM_SOURCES);
-            memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
+            sources = (source_entry*)calloc(MAX_NUM_SOURCES, sizeof(source_entry));
+            //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

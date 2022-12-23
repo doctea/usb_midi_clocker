@@ -61,7 +61,7 @@ bool debug_stress_sequencer_load = false;
 
     // for handling keyrepeat
     keypress_t currently_held;
-    bool held = false;
+    volatile bool held = false;
     uint32_t last_retriggered = 0;  
 
     void OnPress(int key) {
@@ -106,7 +106,7 @@ bool debug_stress_sequencer_load = false;
                     }
                 }
             default:
-                Serial.println("received key?");
+                //Serial.println("received key?");
                 keyboard_queue->push({key, keyboard1.getModifiers()});
 
                 currently_held.key = key;
@@ -121,9 +121,9 @@ bool debug_stress_sequencer_load = false;
             __enable_irq();
     }
 
-    void OnRawPress(uint8_t keycode) {
+    /*void OnRawPress(uint8_t keycode) {
         Serial.printf("OnRawPress with keycode %i (%c), modifiers %i\n", keycode, keycode, keyboard1.getModifiers());
-    }
+    }*/
 
     void OnRelease(int key) {
         held = false;
@@ -261,7 +261,7 @@ bool debug_stress_sequencer_load = false;
     #endif
     void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
-        keyboard1.attachRawPress(OnRawPress);
+        //keyboard1.attachRawPress(OnRawPress);
         keyboard1.attachRelease(OnRelease);
     }
 #endif
