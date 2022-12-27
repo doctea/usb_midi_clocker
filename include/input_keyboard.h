@@ -131,8 +131,6 @@ bool debug_stress_sequencer_load = false;
     }
 
     void process_key(int key, int modifiers) {
-
-
         //int modifiers = keyboard1.getModifiers();
         //bool irqs_enabled = __irq_enabled();
         //__disable_irq();
