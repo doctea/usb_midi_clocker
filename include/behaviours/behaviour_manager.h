@@ -28,6 +28,13 @@ class DeviceBehaviourManager {
             LinkedList<DeviceBehaviourUSBSerialBase *> *behaviours_usbserial = nullptr;
         #endif
 
+        void setup_saveable_parameters() {
+            for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+                Serial.printf("setup_saveable_parameters for %i: %s\n", i, behaviours->get(i)->get_label());
+                behaviours->get(i)->setup_saveable_parameters();
+            }
+        }
+
         void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
             if (behaviour==nullptr) {
                 Debug_println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();

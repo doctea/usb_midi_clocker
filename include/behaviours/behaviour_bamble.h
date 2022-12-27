@@ -420,9 +420,36 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             new BambleSaveableParameter<bool>   ("seed_use_phrase", this,   &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase), // aka 'Use Phrase'
         };*/
 
+        class SaveableParameterPatternEnabled : public SaveableParameterBase {
+            public:
+                DeviceBehaviour_Bamble *target = nullptr;
+                int index;
+                String prefix = String("pattern_enable_");
+                SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index) : SaveableParameterBase("patterns_enabled") {
+                    this->target = target;
+                    this->index = index;
+                }
+
+                virtual String get_line() { 
+                    return prefix+String(index) +
+                            String(target->patterns[index].current_state?"true":"false");
+                }
+                virtual bool parse_key_value(String key, String value) {
+                    if (key.startsWith(prefix)) {
+                        target->setPatternEnabled(index, value.equals("true") || value.equals("enabled"));
+                        return true;
+                    }
+                    return false;
+                }
+        };
+
         virtual void setup_saveable_parameters() {
+            Serial.println("about to set up bamble's saveable parameters (base)..");
             DeviceBehaviourUltimateBase::setup_saveable_parameters();
+            Serial.println("about to set up bamble's saveable parameters (divided clocked)..");
             DividedClockedBehaviour::setup_saveable_parameters();
+
+            Serial.println("about to set up bamble's saveable parameters (own)..");
 
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("euclidian_mode", this, &this->demo_mode, &DeviceBehaviour_Bamble::setDemoMode,   &DeviceBehaviour_Bamble::getDemoMode));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("fills_mode",     this, &this->fills_mode, &DeviceBehaviour_Bamble::setFillsMode,  &DeviceBehaviour_Bamble::getFillsMode));
@@ -432,11 +459,20 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", this,    &this->euclidian_seed_modifier, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,    &DeviceBehaviour_Bamble::getEuclidianSeedModifier)); // aka 'Seed Modifier'
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("reset_before_mutate",  this,   &this->euclidian_reset_before_mutate, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,    &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate)); // aka 'auto-reset'
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("seed_use_phrase", this,   &this->euclidian_seed_use_phrase, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase)); // aka 'Use Phrase')
+
+            //this->saveable_parameters->add(new SaveableParameterPatternsEnabled<DeviceBehaviour_Bamble, bool>(this);
+            //for (int)
+            Serial.println("about to set up bamble's saveable parameters (patterns)..");
+
+            const int size = NUM_EUCLIDIAN_PATTERNS;
+            for (int i = 0 ; i < size ; i++) {
+                this->saveable_parameters->add(new SaveableParameterPatternEnabled(this, i));
+            }
         }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-            DividedClockedBehaviour::save_sequence_add_lines(lines);
+            //DividedClockedBehaviour::save_sequence_add_lines(lines);
 
             // save out the 'saveable parameters'
             //this->save_sequence_add_lines_saveable_parameters(lines);
@@ -448,19 +484,18 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                     String(this->patterns[i].current_state?F("enabled"):F("disabled"))
                 );
             }
-        }
+        }*/
 
-        virtual bool load_parse_key_value(String key, String value) override {
-            // check value against the 'saveable parameters'
-            if (this->load_parse_key_value_saveable_parameters(key, value)) {
-                return true;
-            } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
+        /*virtual bool load_parse_key_value(String key, String value) override {
+            if (key.startsWith(F("pattern_enable_"))) {
+                int number = key.replace(F("pattern_enable_"),"").toInt();
+                this->setPatternEnabled(number, value.equals(F("enabled")));
                 return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }
             return false;
-        }
+        }*/
 
         #ifdef ENABLE_SCREEN
             // FLASHMEM // virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()

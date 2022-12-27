@@ -171,8 +171,15 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     // saveable parameter handling shit
     LinkedList<SaveableParameterBase*> *saveable_parameters = nullptr;
     virtual void setup_saveable_parameters() {
-        if (this->saveable_parameters!=nullptr)
+        if (this->saveable_parameters==nullptr) {
+            Serial.println("instantiating saveable_parameters list");
             this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
+        }
+        /*if (this->has_parameters()) {
+            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                this->saveable_parameters->add(new SaveableParameterWrapper(parameters->get(i)));
+            }
+        }*/
     }
     virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
         for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
@@ -233,8 +240,11 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
+        if (this->load_parse_key_value_saveable_parameters(key, value)) {
+            return true;
+        }
         // todo: reload parameter mappings...
-        Serial.printf(F("PARAMETERS\tparse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        Serial.printf(F("PARAMETERS\t%s\tparse_sequence_key_value passed '%s' => '%s'...\n"), this->get_label(), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {

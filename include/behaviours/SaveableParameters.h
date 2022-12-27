@@ -47,24 +47,62 @@ class SaveableParameter : public SaveableParameterBase {
             return false;
         }
         // todo: rewrite to use constexpr?
+        void setInt(String value) {
+            if (setter_func!=nullptr)
+                (this->target->*setter_func)(value.toInt());
+            else if (variable!=nullptr)
+                *this->variable = value.toInt();
+        }
+        void setBool(bool value) {
+            if (setter_func!=nullptr)
+                (this->target->*setter_func)(value);
+            else if (variable!=nullptr)
+                *this->variable = value;
+        }
+        void setFloat(float value) {
+            if (setter_func!=nullptr)
+                (this->target->*setter_func)(value);
+            else if (variable!=nullptr)
+                *this->variable = value;
+        }
+
         virtual void set(signed int, String value) {
-            (this->target->*setter_func)(value.toInt());
+            setInt(value);
         }
         virtual void set(unsigned int, String value) {
-            (this->target->*setter_func)(value.toInt());
+            setInt(value);
         }
         virtual void set(signed long, String value) {
-            (this->target->*setter_func)(value.toInt());
+            setInt(value);
         }
         virtual void set(unsigned long, String value) {
-            (this->target->*setter_func)(value.toInt());
+            setInt(value);
         }
         virtual void set(bool, String value) {
-            (this->target->*setter_func)(value.equals("true") || value.equals("enabled"));
+            setBool((value.equals("true") || value.equals("enabled")));
         }
         virtual void set(float, String value) {
-            (this->target->*setter_func)(value.toFloat());
+            this->setFloat(value.toFloat());
         }
 };
+
+/*
+#include "parameters/Parameter.h"
+class SaveableParameterWrapper : public SaveableParameterBase {
+    DoubleParameter *target = nullptr;
+    SaveableParameterWrapper(DoubleParameter *target) : SaveableParameterBase(target->label) {
+        this->target = target;
+    }
+    virtual String get_line() {
+        return String(this->target->label) + String("=") + String(this->target->getCurrentNormalValue());
+    }
+    virtual bool parse_key_value(String key, String value) {
+        if (key.equals(this->target->label)) {
+            this->target->updateValueFromNormal(value.toFloat());
+            //this->target->upd
+        }
+    }
+};
+*/
 
 #endif

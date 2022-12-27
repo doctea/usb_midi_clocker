@@ -49,6 +49,12 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
             ClockedBehaviour::on_tick(ticks);
         }
 
+        virtual void setup_saveable_parameters() override {
+            DeviceBehaviourUltimateBase::setup_saveable_parameters();
+            ClockedBehaviour::setup_saveable_parameters();
+            MIDIBassBehaviour::setup_saveable_parameters();
+        }
+
         bool already_initialised = false;
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
