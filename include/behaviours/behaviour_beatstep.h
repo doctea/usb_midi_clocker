@@ -351,7 +351,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(sysex_parameters[i].label, this, sysex_parameters[i].target_variable, sysex_parameters[i].setter_func, nullptr));
-                }                    
+                }
             }
 
             /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {   
