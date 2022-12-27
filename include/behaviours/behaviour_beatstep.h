@@ -27,6 +27,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 
 #define BEATSTEP_GLOBAL         0x50
 
+#define BEATSTEP_TRANSPOSE      0x02
 #define BEATSTEP_DIRECTION      0x04
 #define BEATSTEP_PATTERN_LENGTH 0x06
 #define BEATSTEP_SWING          0x07
@@ -237,7 +238,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             bool debug_sysex = false;
 
             sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
-                { BEATSTEP_GLOBAL, 0x02, nullptr, "Transpose"},    // transpose
+                { BEATSTEP_GLOBAL, BEATSTEP_TRANSPOSE, nullptr, "Transpose"},    // transpose
                 { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction, "Direction", &DeviceBehaviour_Beatstep::setDirection },
                 { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length, "Steps", &DeviceBehaviour_Beatstep::setPatternLength },
                 { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing, "Swing", &DeviceBehaviour_Beatstep::setSwing },    // swing, 0x32 to 0x4b (ie 50-100%)
