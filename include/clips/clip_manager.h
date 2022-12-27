@@ -28,7 +28,7 @@ class ClipManager {
         // TODO: save clips from disk - maybe move this to be handled by teh tracks
         void save_clips(int arrangement_number) {
             
-            for (int i = 0 ; i < this->clips->size() ; i++) {
+            for (unsigned int i = 0 ; i < this->clips->size() ; i++) {
                 if (this->clips->get(i)->is_dirty()) {
                     Serial.printf(F("TODO: save clip %i to disk in arrangemnet %i\n"), i, arrangement_number);
                     this->clips->get(i)->set_dirty(true);

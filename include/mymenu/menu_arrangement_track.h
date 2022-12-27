@@ -67,7 +67,7 @@ class ArrangementTrackEditor : public SubMenuItem {
             tft->setCursor(pos.x, pos.y);
             colours(selected, track->colour);
             char label[MAX_TRACK_NAME];
-            sprintf(label, "%-10s", track->label);
+            snprintf(label, MAX_TRACK_NAME, "%-10s", track->label);
             label[10] = '\0';
             tft->print(label);
             colours(false, track->colour);
