@@ -89,7 +89,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
     #endif
 
-    #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
+    #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_OUTPUT)
         behaviour_bamble->self_register_midi_matrix_targets(midi_matrix_manager);
     #endif
 
