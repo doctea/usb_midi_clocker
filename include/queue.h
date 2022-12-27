@@ -6,9 +6,13 @@ class Queue {
 
     DataType head_data; // the current head data, to be kept in scope
 
-    DataType queue[max_queue_size];     // queued
+    /*DataType queue[max_queue_size];     // queued
     uint32_t timeout[max_queue_size];   // timeout values per queued item
-    uint32_t delay_at[max_queue_size];  // earliest time to process each queued item
+    uint32_t delay_at[max_queue_size];  // earliest time to process each queued item*/
+    DataType *queue = (DataType*)calloc(max_queue_size, sizeof(DataType));
+    uint32_t *timeout = (uint32_t*)calloc(max_queue_size, sizeof(uint32_t));
+    uint32_t *delay_at = (uint32_t*)calloc(max_queue_size, sizeof(uint32_t));
+
     uint32_t actual_timeout_at = 0;     // earliest time to timeout from current item
 
     int head = -1;      // read head
