@@ -42,7 +42,7 @@ class ArrangementEditor : public MenuItem {
             int bottom_y = pos.y;
 
             LinkedList<ArrangementTrackBase *> *tracks = arrangement->get_tracks();
-            for (int i = 0 ; i < tracks->size() ; i++) {
+            for (unsigned int i = 0 ; i < tracks->size() ; i++) {
                 ArrangementTrackBase *track = tracks->get(i);
                 colours(false, track->colour);
                 char label[MAX_TRACK_NAME];
@@ -60,7 +60,8 @@ class ArrangementEditor : public MenuItem {
                     //Serial.printf("rendering phrase %i...\n", phrase);
                     LinkedList<clip_instance_t*> *clip_instances = track->get_clips_at_time(phrase);
                     
-                    for (int c = 0 ; c < clip_instances->size() ; c++) {
+                    unsigned const int clip_instance_size = clip_instances->size();
+                    for (unsigned int c = 0 ; c < clip_instance_size ; c++) {
                         //Serial.printf("\t\tclip index %i of %i...\n", c, clip_instances->size());
                         tft->setCursor(
                             start_x + ((phrase-view_port_position_start) * tft->characterWidth()), 
