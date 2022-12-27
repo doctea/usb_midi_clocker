@@ -405,7 +405,7 @@ void loop() {
   #ifdef ENABLE_PROFILER
     main_loop_length_averages[count++] = micros() - start_loop_micros_stamp;
     uint32_t accumulator = 0;
-    for (int i = 0 ; i < NUMBER_AVERAGES ; i++) {
+    for (unsigned int i = 0 ; i < NUMBER_AVERAGES ; i++) {
       accumulator += main_loop_length_averages[i];
     }
     average_loop_micros = accumulator / NUMBER_AVERAGES;
@@ -458,17 +458,17 @@ void do_tick(uint32_t in_ticks) {
     if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_bar()"));
     behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
     if (debug) Serial.println(F("do_tick(): just did behaviour_manager->do_bar()"));
-  } else if (is_bpm_on_bar(ticks+1)) {
+  } /*else if (is_bpm_on_bar(ticks+1)) {
     behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
     if (is_bpm_on_phrase(ticks+1)) {
       behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
     }
+  }*/ else if (is_bpm_on_phrase(ticks+1)) {
+    behaviour_manager->do_end_phrase_pre_clock(BPM_CURRENT_PHRASE);
   }
 
-  #ifdef ENABLE_USB
-    if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
-    behaviour_manager->do_pre_clock(in_ticks);
-  #endif
+  if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
+  behaviour_manager->do_pre_clock(in_ticks);
 
   #ifdef ENABLE_DRUM_LOOPER
     drums_loop_track.process_tick(ticks);
@@ -476,11 +476,9 @@ void do_tick(uint32_t in_ticks) {
 
   //send_midi_serial_clocks();
 
-  #ifdef ENABLE_USB
-    if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
-    behaviour_manager->send_clocks();
-    if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
-  #endif
+  if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
+  behaviour_manager->send_clocks();
+  if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
 
   #ifdef ENABLE_CV_OUTPUT
     if (debug) { Serial.println(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
@@ -488,11 +486,17 @@ void do_tick(uint32_t in_ticks) {
     if (debug) { Serial.println(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
   #endif
 
-  #ifdef ENABLE_USB
-    if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
-    behaviour_manager->do_ticks(in_ticks);
-    if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
-  #endif
+  if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
+  behaviour_manager->do_ticks(in_ticks);
+  if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
+
+  // do this after everything else because of problems with machinegun mode..?
+  if (is_bpm_on_bar(ticks+1)) {
+    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    if (is_bpm_on_phrase(ticks+1)) {
+      behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+    }
+  }
 
   /*#ifdef ENABLE_USB2
     if (is_bpm_on_phrase(ticks+1)) {

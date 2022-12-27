@@ -5,6 +5,8 @@
 
 #include "behaviours/behaviour_manager.h"
 
+#include "menu_sequence_fileviewer.h"
+
 #include "SD.h"
 //#include "SdFat.h"
 #include <SPI.h>
@@ -105,13 +107,13 @@ namespace storage {
     myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
     myFile.printf(F("size_sequences=%i\n"),  input->size_sequences);
     myFile.printf(F("size_steps=%i\n"),      input->size_steps);
-    for (int i = 0 ; i < input->size_clocks ; i++) {
+    for (unsigned int i = 0 ; i < input->size_clocks ; i++) {
       myFile.printf(F("clock_multiplier=%i\n"), input->clock_multiplier[i]);
     }
-    for (int i = 0 ; i < input->size_clocks ; i++) {
+    for (unsigned int i = 0 ; i < input->size_clocks ; i++) {
       myFile.printf(F("clock_delay=%i\n"), input->clock_delay[i]);
     }
-    for (int i = 0 ; i < input->size_sequences ; i++) {
+    for (unsigned int i = 0 ; i < input->size_sequences ; i++) {
       myFile.printf(F("sequence_data="));
       for (int x = 0 ; x < input->size_steps ; x++) {
         myFile.printf("%1x", input->sequence_data[i][x]);
@@ -123,7 +125,7 @@ namespace storage {
     //Serial.println("calling save_sequence_add_lines..");
     behaviour_manager->save_sequence_add_lines(&behaviour_lines);
     //Serial.println("got behaviour_lines to save.."); Serial.flush();
-    for (int i = 0 ; i < behaviour_lines.size() ; i++) {
+    for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
       //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
       //Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
       Serial.flush();
@@ -252,6 +254,8 @@ namespace storage {
     }
   }
 
+  //void update_sequence_filename(String filename);
+
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
     static volatile bool already_loading = false;
     if (already_loading) return false;
@@ -263,6 +267,9 @@ namespace storage {
 
     char filename[255] = "";
     sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
+
+    update_sequence_filename(String(filename));
+
     Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
     myFile = SD.open(filename, FILE_READ);
     myFile.setTimeout(0);

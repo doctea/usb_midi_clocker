@@ -38,7 +38,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         virtual bool has_input() { return true; }
 
         DeviceBehaviour_Chocolate () {
-            /*for (int i = 0 ; i < NUM_TRACK_NOTES ; i++) {
+            /*for (unsigned int i = 0 ; i < NUM_TRACK_NOTES ; i++) {
                 note_pressed_at[i] = -1;
                 note_released_at[i] = -1;
                 already_processed[i] = false;

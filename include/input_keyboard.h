@@ -26,6 +26,8 @@ bool debug_stress_sequencer_load = false;
 
     #include "menu.h"
 
+    #define KEYREPEAT      200   // ms to repeat when a key is held
+
     // todo: convert to using raw keycodes, since these fuck up when modifiers are held
     #define KEYD_TAB       9
     #define KEYD_ENTER     10
@@ -55,21 +57,81 @@ bool debug_stress_sequencer_load = false;
 
     Queue<keypress_t, 10> *keyboard_queue = new Queue<keypress_t, 10> ();
 
+    // for avoiding re-entrant interrupts
     volatile bool already_pressing = false;
 
+    // for handling keyrepeat
+    keypress_t currently_held;
+    volatile bool held = false;
+    uint32_t last_retriggered = 0;  
+
     void OnPress(int key) {
+        if (already_pressing) return;
+        already_pressing = true;
         bool irqs_enabled = __irq_enabled();
         __disable_irq();
+        
+        // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
+        // the main loop has crashed
+        switch(key) {
+            /*case KEY_ESC             :  // ESCAPE
+                while(menu->is_opened())
+                    menu->button_back();
+                break;*/
+            case 'D'    :
+                debug = true;
+                break;
+            case 'd'    :
+                debug = false;
+                break;
+            // debug
+            case 'Z'    :
+                Serial.clear();
+                Serial.clearWriteError();
+                Serial.end();
+                Serial.begin(115200);
+                Serial.setTimeout(0);
+                Serial.println(F("---restarted serial---"));
+                break;
+            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
+                {
+                    int modifiers = keyboard1.getModifiers();
+                    if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
+                        Serial.println("running a loop() manually because ctrl+alt+lshift+delete");
+                        loop();
+                        break;
+                    }                    
+                    if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) {
+                        reset_teensy();  
+                        break;
+                    }
+                }
+            default:
+                //Serial.println("received key?");
+                keyboard_queue->push({key, keyboard1.getModifiers()});
 
-        keyboard_queue->push({key, keyboard1.getModifiers()});
+                currently_held.key = key;
+                currently_held.modifiers = keyboard1.getModifiers();
+                held = true;
+                last_retriggered = millis();
+                break;
+        }
 
+        already_pressing = false;
         if (irqs_enabled) 
             __enable_irq();
     }
 
+    /*void OnRawPress(uint8_t keycode) {
+        Serial.printf("OnRawPress with keycode %i (%c), modifiers %i\n", keycode, keycode, keyboard1.getModifiers());
+    }*/
+
+    void OnRelease(int key) {
+        held = false;
+    }
+
     void process_key(int key, int modifiers) {
-        if (already_pressing) return;
-        already_pressing = true;
+
 
         //int modifiers = keyboard1.getModifiers();
         //bool irqs_enabled = __irq_enabled();
@@ -79,10 +141,6 @@ bool debug_stress_sequencer_load = false;
                 while(menu->is_opened())
                     menu->button_back();
                 break;*/
-            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT))
-                    reset_teensy();  
-                break; /* ctrl+alt+delete to soft reboot */
             case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
             case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
             case KEYD_ESC        :
@@ -107,15 +165,9 @@ bool debug_stress_sequencer_load = false;
             case 't':
                 debug_stress_sequencer_load = false;
                 break;
-            case 'D'    :
-                debug = true;
-                break;
-            case 'd'    :
-                debug = false;
-                break;
             case '-':
                 Serial.println(F("------------------------")); break;
-            case 'p'            :
+            case 'p'            : case 'P':
                 Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
                 midi_matrix_manager->stop_all_notes();
                 break;
@@ -166,15 +218,6 @@ bool debug_stress_sequencer_load = false;
                 //Serial.println(F("Select next sequence"));
                 project->select_next_sequence();
                 break;
-            // debug
-            case 'Z'    :
-                Serial.clear();
-                Serial.clearWriteError();
-                Serial.end();
-                Serial.begin(115200);
-                Serial.setTimeout(0);
-                Serial.println(F("---restarted serial---"));
-                break;
             case 'E'    :
                 arrangement->debug_arrangement();
                 break;
@@ -199,7 +242,6 @@ bool debug_stress_sequencer_load = false;
                 Serial.printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
                 break;
         }
-        already_pressing = false;
         //if (irqs_enabled) __enable_irq();
     }
 
@@ -211,6 +253,10 @@ bool debug_stress_sequencer_load = false;
             keypress_t *current = keyboard_queue->pop();
             process_key(current->key, current->modifiers);       
         }
+        if (held && millis() - last_retriggered>KEYREPEAT) {
+            keyboard_queue->push(currently_held);
+            last_retriggered = millis();
+        }
         if (irqs_enabled) __enable_irq();
     }
 
@@ -219,6 +265,8 @@ bool debug_stress_sequencer_load = false;
     #endif
     void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
+        //keyboard1.attachRawPress(OnRawPress);
+        keyboard1.attachRelease(OnRelease);
     }
 #endif
 

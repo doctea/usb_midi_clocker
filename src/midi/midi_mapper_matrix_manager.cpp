@@ -78,7 +78,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : DPT : ch 1", midi_out_serial[6], 1));
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : DPT : ch 1", midi_out_serial[7], 1));*/
     #ifdef ENABLE_DPT_LOOPER
-        midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
+        behaviour_dptlooper->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
     #endif
 
     //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
@@ -89,12 +89,12 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
     #endif
 
-    #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
+    #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_OUTPUT)
         behaviour_bamble->self_register_midi_matrix_targets(midi_matrix_manager);
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : CraftSynth : ch 1", behaviour_craftsynth, 1));
+        behaviour_craftsynth->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : CraftSynth : ch 1", behaviour_craftsynth, 1));
     #endif
     #if defined(ENABLE_CRAFTSYNTH) && !defined(ENABLE_CRAFTSYNTH_USB)
         midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S6 : CraftSynth : ch1", midi_out_serial[5], 1));
@@ -129,7 +129,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 3", 2, 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 4", 3, 1));
 
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Beatstep trans", behaviour_beatstep, 1));
+        behaviour_beatstep->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Beatstep trans", behaviour_beatstep, 1));
     #endif
 
     #ifdef ENABLE_LESTRUM

@@ -123,7 +123,7 @@ class MIDITrack {
         int last_note = -1;
         int current_note = -1;
 
-        int transpose_amount = 0;
+        int8_t transpose_amount = 0;
 
         bool bitmap_enabled = true;
 
@@ -205,7 +205,7 @@ class MIDITrack {
         // get total event count across entire loop
         int count_events() {
             int count = 0;
-            for (int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
+            for (unsigned int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
                 count += frames[i]->size();
             }
             return count;
@@ -213,7 +213,7 @@ class MIDITrack {
 
         // clear any notes that we're recording
         void clear_hanging() {
-            for (int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < 127 ; i++) {
                 recorded_hanging_notes[i] = (tracked_note) {
                     .playing        = false,
                     .velocity       = 0
@@ -244,7 +244,7 @@ class MIDITrack {
                     Serial.printf("\tfor frame\t%u got\t%i messages to play\n", position, number_messages); Serial_flush();
             #endif
 
-            for (int i = 0 ; i < number_messages ; i++) {
+            for (unsigned int i = 0 ; i < number_messages ; i++) {
                 #ifdef DEBUG_LOOPER
                     Serial.printf("\tprocessing message number %i/%i..\n", i, number_messages); Serial_flush();
                 #endif
@@ -285,7 +285,7 @@ class MIDITrack {
         void play_events(unsigned long time) {
             //time = time % LOOP_LENGTH;
             time = ticks_to_sequence_step(time);
-            for (int i = 0 ; i < 127 ; i++) {
+            for (int8_t i = 0 ; i < 127 ; i++) {
                 int transposed_pitch = i + transpose_amount;
                 if (!is_valid_note(transposed_pitch)) {
                     if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
@@ -316,7 +316,7 @@ class MIDITrack {
         void clear_all() {
             stop_all_notes();
             Serial.println(F("clearing recording"));
-            for (int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
+            for (unsigned int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
                 // todo: actually free the recorded memory..?
                 frames[i]->clear();
                 //clear_tick(i);
@@ -330,7 +330,7 @@ class MIDITrack {
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
                 if (this->bitmap_enabled) 
-                    for (int i = 0 ; i < 127 ; i++) {
+                    for (unsigned int i = 0 ; i < 127 ; i++) {
                         (*piano_roll_bitmap)[tick][i] = false;
                     }
                 frames[tick]->clear();
@@ -409,7 +409,7 @@ class MIDITrack {
             Serial.println(F("looper stopped recording"));
             recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
-            for (int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     this->sendNoteOff(i, 0);
                     store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, 0);
@@ -437,14 +437,14 @@ class MIDITrack {
 
         // what's the lowest pitch that we've got a note for?
         int first_pitch() {
-            for (int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < 127 ; i++) {
                 if (pitch_contains_notes[i]) return i;
             }
             return 0;
         }
         // what's the highest pitch that we've got a note for?
         int last_pitch() {
-            for (int i = 127 ; i > 0 ; i--) {
+            for (unsigned int i = 127 ; i > 0 ; i--) {
                 if (pitch_contains_notes[i]) return i;
             }
             return 0;
@@ -458,7 +458,7 @@ class MIDITrack {
         void update_bitmap(uint32_t ticks) {
             if (!this->bitmap_enabled) return;
             
-            for (int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < 127 ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     (*piano_roll_bitmap)[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
                     pitch_contains_notes[i] = true;
@@ -473,8 +473,8 @@ class MIDITrack {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)malloc(LOOP_LENGTH_STEPS * 127);
-            memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
+                this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, 127);
+            //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(piano_roll_held, 0, 127);
             memset(this->pitch_contains_notes, 0, 127);
         }
@@ -491,8 +491,8 @@ class MIDITrack {
             this->wipe_piano_roll_bitmap();
 
             //if(this->debug) { Serial.println(F("building bitmap..")); Serial_flush(); }
-            for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
-                for (int m = 0 ; m < frames[x]->size() ; m++) {
+            for (unsigned int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
+                for (unsigned int m = 0 ; m < frames[x]->size() ; m++) {
                     midi_message message = frames[x]->get(m);
                     if (message.message_type==midi::NoteOn) {
                         /*if (piano_roll_highest < message.pitch)
@@ -567,7 +567,7 @@ class MIDITrack {
             // TODO: i guess the bitmap structure would work for this...?
             // TODO: so for that to work, we'll need to incrementally redraw the bitmap from store_event and clear_tick (and from here, too)
             // TODO: and also i guess from process_tick -- ie if a note is being recorded, we don't yet know when it will end, so we need to update the bitmap on a tick-by-tick basis
-            for (int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < 127 ; i++) {
                 if (piano_roll_bitmap[ticks%LOOP_LENGTH][i])
                     this->store_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
             }
@@ -591,7 +591,7 @@ class MIDITrack {
             int note_on_count = 0, note_off_count = 0;
 
             memset(held_state, false, 127);
-            /*for (int i = 0 ; i < 127; i++) {
+            /*for (unsigned int i = 0 ; i < 127; i++) {
                 held_state[i] = false;
             }*/
 
@@ -629,7 +629,7 @@ class MIDITrack {
                 for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
                     if (frames[t]->size()>0) {
                         Serial.printf(F("frames[%i] now has %i events:\n"), t, frames[t]->size());
-                        for (int i = 0 ; i < frames[t]->size() ; i++) {
+                        for (unsigned int i = 0 ; i < frames[t]->size() ; i++) {
                             Serial.printf(F("\tmessage type = %i, pitch = %i, velocity = %i\n"), frames[t]->get(i).message_type, frames[t]->get(i).pitch, frames[t]->get(i).velocity);
                         }
                     }
@@ -669,8 +669,8 @@ class MIDITrack {
             f.printf(F("transpose=%i\n"), transpose_amount);
             bool last_written = false;
             int lines_written = 0;
-            for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
-                int size = frames[x]->size();
+            for (unsigned int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
+                unsigned int size = frames[x]->size();
                 /*if (!last_written) {
                     myFile.printf("starts_at=%i\n",x);
                 }*/
@@ -683,7 +683,7 @@ class MIDITrack {
                 }
                 f.printf(F("loop_data=")); //%2x:", frames[x].size());
                 
-                for(int i = 0 ; i < size ; i++) {
+                for(unsigned int i = 0 ; i < size ; i++) {
                     midi_message m = frames[x]->get(i);
                     f.printf("%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
                 }

@@ -29,7 +29,7 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_
 };*/
 
 /*void send_midi_serial_clocks() {
-    for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         if (midi_out_serial_clock_enabled[i]) {
             midi_out_serial[i]->sendRealTime(midi::Clock);
         }
@@ -38,13 +38,13 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_
 
 /*void send_midi_serial_stop_start() {
     // send all stops first
-    for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         if (midi_out_serial_clock_enabled[i]) {
             midi_out_serial[i]->sendRealTime(midi::Stop);
         }
     }
     // then send all starts
-    for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         if (midi_out_serial_clock_enabled[i]) {
             midi_out_serial[i]->sendRealTime(midi::Start);
         }
@@ -55,7 +55,7 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_
 void read_midi_serial_devices() {
     #ifdef SINGLE_FRAME_READ
         //int i = 0;
-        for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+        for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
             while (midi_out_serial[i]->read());
         }
     #else

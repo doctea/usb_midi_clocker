@@ -98,11 +98,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         /*** for tracking/setting Bambleweeny options */
 
+        float density = 64;
         int8_t demo_mode = 0;
         bool fills_mode = 0;
-        float density = 64;
         byte minimum_pattern = 0;
         byte maximum_pattern = 16;
+        uint16_t euclidian_seed_modifier = 0;
+        bool euclidian_reset_before_mutate = true;
+        bool euclidian_seed_use_phrase = true;
 
         int8_t getDemoMode() {
             return demo_mode;
@@ -141,9 +144,6 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             return this->maximum_pattern;
         }
 
-        uint16_t euclidian_seed_modifier = 0;
-        bool euclidian_reset_before_mutate = true;
-        bool euclidian_seed_use_phrase = true;
         void setEuclidianSeedModifier(uint16_t v) {
             this->euclidian_seed_modifier = v;
             this->sendControlChange(CC_EUCLIDIAN_SEED_MODIFIER, v >> 8, 10);
@@ -193,37 +193,40 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             { 87,   11,   TRIGGER_PITCH_2_CH2   },
             { 95,   11,   TRIGGER_PITCH_2_CH2   }
         };
+        bool is_valid_envelope(int env) {
+            return env>=0 && env < NUM_ENVELOPES;
+        }
         // actually send update
         void send_envelope_trigger_on_value(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             //int channel = env >= 5 ? 11 : 10;
             int v = envelope_trigger_on[env].pattern_number | (LOOP_MASK*envelope_trigger_on[env].loop) | (INVERT_MASK*envelope_trigger_on[env].invert);
             this->sendControlChange((byte)envelope_trigger_on[env].cc, v, envelope_trigger_on[env].channel);
         }
         void set_envelope_trigger_on(int env, int pattern_number) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             this->envelope_trigger_on[env].pattern_number = pattern_number;
             this->send_envelope_trigger_on_value(env);
         }
         int get_envelope_trigger_on(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return 0;
+            if (!is_valid_envelope(env)) return false;
             return this->envelope_trigger_on[env].pattern_number;
         }
         bool is_envelope_trigger_loop(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return false;
+            if (!is_valid_envelope(env)) return false;
             return this->envelope_trigger_on[env].loop;
         }
         void set_envelope_trigger_loop(int env, bool v) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             this->envelope_trigger_on[env].loop = v;
             this->send_envelope_trigger_on_value(env);
         }
         bool is_envelope_trigger_invert(int env) {
-            if (env<0 || env >= NUM_ENVELOPES) return false;
+            if (!is_valid_envelope(env)) return false;
             return this->envelope_trigger_on[env].invert;
         }
         void set_envelope_trigger_invert(int env, bool v) {
-            if (env<0 || env >= NUM_ENVELOPES) return;
+            if (!is_valid_envelope(env)) return;
             this->envelope_trigger_on[env].invert = v;
             this->send_envelope_trigger_on_value(env);
         }
@@ -291,22 +294,23 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         //FLASHMEM // error: virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::add_adhsr_parameters(const char*, int, int)
         //FLASHMEM
-        virtual void add_adhsr_parameters(const char *prefix, int start, int channel) {
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Attack"))).c_str(),  this, start++, 11));
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Hold"))).c_str(),    this, start++, 11));
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Decay"))).c_str(),   this, start++, 11));
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Sustain"))).c_str(), this, start++, 11));
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Release"))).c_str(), this, start++, 11));
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" HD Vib"))).c_str(),  this, start++, 11));
-            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" SR Vib"))).c_str(),  this, start++, 11));
+        void add_adhsr_parameters(const char *prefix, int start, int channel) {
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Attack"))).c_str(),  this, start++, channel));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Hold"))).c_str(),    this, start++, channel));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Decay"))).c_str(),   this, start++, channel));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Sustain"))).c_str(), this, start++, channel));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" Release"))).c_str(), this, start++, channel));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" HD Vib"))).c_str(),  this, start++, channel));
+            parameters->add(new MIDICCParameter<>((String(prefix) + String(F(" SR Vib"))).c_str(),  this, start++, channel));
         }
 
         /// these for mappable parameters
         //FLASHMEM 
+        bool already_initialised = false;
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
             Debug_printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
-            static bool already_initialised = false;
-            if (already_initialised)
+            //static bool already_initialised = false;
+            if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
 
             Debug_println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
@@ -372,14 +376,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->setEuclidianResetBeforeMutate(true);  // 24 CC_EUCLIDIAN_RESET_BEFORE_MUTATE
             this->setEuclidianSeedUsePhrase(true);      //  `27` | `CC_EUCLIDIAN_SEED_USE_PHRASE`
 
-            for (int i = 0 ; i < NUM_EUCLIDIAN_PATTERNS ; i++) {
+            for (unsigned int i = 0 ; i < NUM_EUCLIDIAN_PATTERNS ; i++) {
                 this->setPatternEnabled(i, true);
             }
 
             DeviceBehaviourUSBBase::sendControlChange(CC_EUCLIDIAN_MUTATE_DENSITY, 0, 10); // CC_EUCLIDIAN_MUTATE_DENSITY	automatically mutate density on/off
 
             // send envelope trigger-on values to match initial setup
-            for (int i = 0 ; i < NUM_ENVELOPES ; i++) {
+            for (unsigned int i = 0 ; i < NUM_ENVELOPES ; i++) {
                 this->send_envelope_trigger_on_value(i);
             }
 
@@ -413,8 +417,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             lines->add(String(F("mutate_seed_modifier=")) + String(this->getEuclidianSeedModifier()));
             lines->add(String(F("reset_before_mutate=")) + String(this->getEuclidianResetBeforeMutate()?"true":"false"));
             lines->add(String(F("seed_use_phrase=")) + String(this->getEuclidianSeedUsePhrase()?"true":"false"));
-            const int size = NUM_EUCLIDIAN_PATTERNS;
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
+            for (unsigned int i = 0 ; i < size ; i++) {
                 lines->add(
                     String(F("pattern_enable_")) + String(i) + String('=') + 
                     String(this->patterns[i].current_state?F("enabled"):F("disabled"))

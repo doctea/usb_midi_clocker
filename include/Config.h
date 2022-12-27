@@ -68,7 +68,7 @@
 // enable transposing beatstep to a particular octave
 #define ENABLE_NEUTRON
 #define ENABLE_BASS_TRANSPOSE MIDI3
-#define DEFAULT_NEUTRON_OCTAVE 2    // set to 1 for 'disabled'
+#define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meanly 'set to -1 for disabled'?
 
 #define ENABLE_DPT_LOOPER MIDI8
 
@@ -84,7 +84,8 @@
     #define ENABLE_BEATSTEP
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     #define ENABLE_BAMBLE
-    //#defined ENABLE_BAMBLE_INPUT    // for collecting input from bambleweeny
+    //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
+    #define ENABLE_BAMBLE_OUTPUT    // for sending on the bamble ch1-4
     #define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER

@@ -42,7 +42,7 @@ bool save_screenshot(ST7789_t3 *screen) {
 
     Serial.println(F("Looking for a free filename..")); Serial_flush();
     // if name exists, create new filename
-    for (int i=0; i<10000; i++) {
+    for (unsigned int i=0; i<10000; i++) {
         name[4] = (i/1000)%10 + '0';    // thousands place
         name[5] = (i/100)%10 + '0';     // hundreds
         name[6] = (i/10)%10 + '0';      // tens

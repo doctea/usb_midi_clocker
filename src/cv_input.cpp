@@ -75,7 +75,7 @@ void setup_parameters() {
         //behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
         //Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial_flush();
     #endif*/
-    for(int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
+    for(unsigned int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
         parameter_manager->addParameters(behaviour_manager->behaviours->get(i)->get_parameters());
     }
 

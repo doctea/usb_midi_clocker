@@ -36,7 +36,7 @@ class Project {
 
     void initialise_sequence_slots() {
         Serial.println(F("initialise_sequence_slots starting.."));
-        for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
+        for (unsigned int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];
             sprintf(filepath, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
@@ -48,7 +48,7 @@ class Project {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
         temp_loop->bitmap_enabled = false;
 
-        for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
+        for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
             char filepath[255];
             sprintf(filepath, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
@@ -328,7 +328,7 @@ class Project {
             //myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
             LinkedList<String> behaviour_lines = LinkedList<String>();
             behaviour_manager->save_project_add_lines(&behaviour_lines);
-            for (int i = 0 ; i < behaviour_lines.size() ; i++) {
+            for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
                 myFile.println(behaviour_lines.get(i));
             }
 

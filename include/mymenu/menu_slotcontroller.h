@@ -32,19 +32,19 @@ class SlotController : public MenuItem {
             header(label, pos, selected, opened);
             int x = pos.x, y = tft->getCursorY(); //.y;
 
-            const int max_slots = this->get_max_slots(); //this->target->*get_max_callback();
+            const unsigned int max_slots = this->get_max_slots(); //this->target->*get_max_callback();
             const int loaded_slot = this->get_loaded_slot(); //this->target->*getter_callback();
 
-            int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
+            unsigned int button_size = 13;   // odd number to avoid triggering https://github.com/PaulStoffregen/ST7735_t3/issues/30
             x = 2;
             y++;
             #define ROUNDED yes
-            for (int i = 0 ; i < max_slots ; i++) {
-                int col = (loaded_slot==i) ? ST77XX_GREEN :    // if currently loaded 
-                             (ui_selected_number==i) ? ST77XX_YELLOW :   // if selected
+            for (unsigned int i = 0 ; i < max_slots ; i++) {
+                uint16_t colour = (loaded_slot==(int)i) ? ST77XX_GREEN :    // if currently loaded 
+                                  (ui_selected_number==(int)i) ? ST77XX_YELLOW :   // if selected
                                                                 ST77XX_BLUE;        
 
-                if (i==ui_selected_number) {
+                if (((int)i)==ui_selected_number) {
                     #ifdef ROUNDED
                         static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
                     #else
@@ -60,18 +60,18 @@ class SlotController : public MenuItem {
                 //if (project.is_selected_sequence_number_empty(i)) {
                 if (this->is_slot_empty(i)) { //this->target->*is_slot_empty_callback(i)) {
                     #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRect(x, y, button_size, button_size, col);
+                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRect(x, y, button_size, button_size, colour);
                     #else  
                         tft.drawRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
                 } else {
                     #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x, y, button_size, button_size, col);
+                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x, y, button_size, button_size, colour);
                     #else  
                         tft.fillRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
                 }
-                if(this->get_selected_slot()==i) {
+                if(this->get_selected_slot()==(int)i) {
                     static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x+(button_size/2), y+(button_size/2), 1+button_size/2, 1+button_size/2, ST77XX_ORANGE);
                 }
                 x += button_size + 2;

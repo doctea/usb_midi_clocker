@@ -19,7 +19,7 @@
                 colours(opened);
                 tft->setTextSize(1);
                 int connected = 0;
-                for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+                for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
                     if (usb_midi_slots[i].packed_id && usb_midi_slots[i].device && usb_midi_slots[i].device->idVendor()>0) {
                         connected++;
                         char buf[100];
@@ -30,7 +30,7 @@
                 #ifdef ENABLE_USBSERIAL
                     pos.y = tft->getCursorY();
                     header("Serial-USB devices:", pos, selected, opened);
-                    for (int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
+                    for (unsigned int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
                         if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
                             connected++;
                             char buf[100];
