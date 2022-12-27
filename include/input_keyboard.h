@@ -13,6 +13,7 @@ extern DisplayTranslator_Configured steensy;
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+#include "arrangement/arrangement.h"
 #include "project.h"
 
 void toggle_autoadvance(bool on = false);
@@ -216,6 +217,9 @@ bool debug_stress_sequencer_load = false;
             case ';'            :
                 //Serial.println(F("Select next sequence"));
                 project->select_next_sequence();
+                break;
+            case 'E'    :
+                arrangement->debug_arrangement();
                 break;
             // change project number
             case 49 ... 57      :

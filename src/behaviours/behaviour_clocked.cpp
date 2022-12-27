@@ -1,5 +1,13 @@
 #include "behaviours/behaviour_clocked.h"
 
+#include "arrangement/arrangement.h"
+
+ArrangementTrackBase *ClockedBehaviour::create_arrangement_track() {
+    ArrangementSingleTrack *track = new ArrangementSingleTrack(this->get_label(), this->colour);
+    return track;
+    //return nullptr;
+}
+
 #ifdef ENABLE_SCREEN
     #include "menu.h"
 

@@ -17,6 +17,7 @@
 
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
+#include "mymenu/menu_arrangement.h"
 
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"

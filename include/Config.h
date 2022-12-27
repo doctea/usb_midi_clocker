@@ -91,7 +91,7 @@
     #define ENABLE_SUBCLOCKER
     #define ENABLE_CRAFTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
-    
+
     #define ENABLE_APCMINI_DISPLAY
 #endif
 

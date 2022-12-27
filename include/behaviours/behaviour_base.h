@@ -294,6 +294,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         virtual LinkedList<MenuItem*> *make_menu_items();
     #endif
     
+    virtual ArrangementTrackBase *create_arrangement_track() {
+        return nullptr;
+    }
+
 };
 
 #endif

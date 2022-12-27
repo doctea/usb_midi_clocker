@@ -68,6 +68,9 @@ void do_tick(uint32_t ticks);
 
 #include "input_keyboard.h"
 
+#include "arrangement/arrangement.h"
+#include "clips/clip_manager.h"
+
 #include "profiler.h"
 
 #ifdef ENABLE_PROFILER
@@ -194,6 +197,10 @@ void setup() {
     Serial.println(F("USBSerial ready.")); Serial_flush();
     Serial.printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
   #endif
+
+  // todo: move this somewhere more sensible
+  setup_clip_manager();
+  setup_arrangement();
 
   Serial.println(F("Arduino ready.")); Serial_flush();
   #ifdef ENABLE_SCREEN
@@ -442,6 +449,7 @@ void do_tick(uint32_t in_ticks) {
 
   if (is_bpm_on_phrase(ticks)) {
     if (debug) Serial.println(F("do_tick(): about to project.on_phrase()"));
+    arrangement->on_phrase(BPM_CURRENT_PHRASE);
     project->on_phrase(BPM_CURRENT_PHRASE);
     #ifdef ENABLE_USB
       behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
