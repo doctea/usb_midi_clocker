@@ -54,7 +54,7 @@ class MIDIMatrixManager {
     struct source_entry {
         char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
     };
-    int sources_count = 0;
+    uint8_t sources_count = 0;
 
     //DMAMEM source_entry sources[MAX_NUM_SOURCES];
     source_entry *sources = nullptr;
@@ -235,7 +235,7 @@ class MIDIMatrixManager {
         MIDIOutputWrapper *wrapper = nullptr;
     };
 
-    int targets_count = 0;
+    uint8_t targets_count = 0;
     target_entry targets[MAX_NUM_TARGETS] = {};
 
     /*target_id_t register_target(DeviceBehaviourUltimateBase *target_behaviour, const char *handle) {
@@ -266,7 +266,7 @@ class MIDIMatrixManager {
 
     target_id_t get_target_id_for_handle(const char *handle) {
         //Serial.printf(F("get_target_id_for_handle(%s)\n"), handle);
-        for (int i = 0; i < NUM_REGISTERED_TARGETS ; i++) {
+        for (unsigned int i = 0 ; i < NUM_REGISTERED_TARGETS ; i++) {
             //Serial.printf(F("\t%i: looking for '%s', comparing '%s'..\n"), i, handle, targets[i].handle);
             if (strcmp(handle, targets[i].handle)==0) {
                 return i;
@@ -291,8 +291,8 @@ class MIDIMatrixManager {
         MIDIMatrixManager() {
             //setup_midi_output_wrapper_manager();
             //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
-            sources = (source_entry*)malloc(sizeof(source_entry) * MAX_NUM_SOURCES);
-            memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
+            sources = (source_entry*)calloc(MAX_NUM_SOURCES, sizeof(source_entry));
+            //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

@@ -266,15 +266,23 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             }
         }
 
+        virtual void setup_saveable_parameters() {
+            DeviceBehaviourUltimateBase::setup_saveable_parameters();
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,uint32_t>("divisor", this, &this->clock_divisor, &DividedClockedBehaviour::set_divisor, &DividedClockedBehaviour::get_divisor));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int32_t>("delay_ticks", this, &this->clock_delay_ticks, &DividedClockedBehaviour::set_delay_ticks, &DividedClockedBehaviour::get_delay_ticks));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int8_t>("pause_on", this, &this->pause_during_delay, &DividedClockedBehaviour::set_pause_during_delay, &DividedClockedBehaviour::get_pause_during_delay));
+        }
+
+
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             ClockedBehaviour::save_sequence_add_lines(lines);
-            lines->add(String(F("divisor=")) + String(this->get_divisor()));
-            lines->add(String(F("delay_ticks=")) + String(this->get_delay_ticks()));
-            lines->add(String(F("pause_on=")) + String(this->get_pause_during_delay()));
+            //lines->add(String(F("divisor=")) + String(this->get_divisor()));
+            //lines->add(String(F("delay_ticks=")) + String(this->get_delay_ticks()));
+            //lines->add(String(F("pause_on=")) + String(this->get_pause_during_delay()));
         }
 
         // ask behaviour to process the key/value pair
-        virtual bool load_parse_key_value(String key, String value) override {
+        /*virtual bool load_parse_key_value(String key, String value) override {
             if (key.equals(F("divisor"))) {
                 this->set_divisor((int) value.toInt());
                 return true;
@@ -289,7 +297,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             }
 
             return false;
-        }
+        }*/
 
         #ifdef ENABLE_SCREEN
             virtual LinkedList<MenuItem*> *make_menu_items() override;

@@ -6,14 +6,17 @@
 #include <MIDI.h>
 #include <USBHost_t36.h>
 
-#include <LinkedList.h>
+#include "LinkedList.h"
 
 #include "midi/midi_mapper_matrix_types.h"
 
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
 
+#include "behaviours/SaveableParameters.h"
+
 #include "file_manager/file_manager_interfaces.h"
+
 
 class MenuItem;
 class ArrangementTrackBase;
@@ -87,6 +90,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     // called when we change phrase
     virtual void on_phrase(uint32_t phrase) {};
     virtual void on_end_phrase(uint32_t phrase) {};
+    // called the end of a phrase, but before clocks are sent - necessary for eg beatstep to send its 'next pattern' sysex?
+    virtual void on_end_phrase_pre_clock(uint32_t phrase) {};
     virtual void receive_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
     // called when a note_off message is received from the device
     virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
@@ -148,7 +153,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
     virtual DoubleParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
-        for (int i = 0 ; i < parameters->size() ; i++) {
+        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
             //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
             if (strcmp(parameters->get(i)->label, label)==0) 
                 return parameters->get(i);
@@ -158,8 +163,27 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     virtual void reset_all_mappings() {
-        for (int i = 0 ; i < this->parameters->size() ; i++) {
+        for (unsigned int i = 0 ; i < this->parameters->size() ; i++) {
             this->parameters->get(i)->reset_mappings();
+        }
+    }
+
+    // saveable parameter handling shit
+    LinkedList<SaveableParameterBase*> *saveable_parameters = nullptr;
+    virtual void setup_saveable_parameters() {
+        if (this->saveable_parameters!=nullptr)
+            this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
+    }
+    virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
+        for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
+            if (saveable_parameters->get(i)->parse_key_value(key, value))
+                return true;
+        }
+        return false;
+    }
+    virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
+        for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
+            lines->add(saveable_parameters->get(i)->get_line());
         }
     }
 
@@ -171,9 +195,14 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
+    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+        this->save_sequence_add_lines_parameters(lines);
+        this->save_sequence_add_lines_saveable_parameters(lines);
+    }
+
+    virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
-        for (int i = 0 ; i < parameters->size () ; i++) {
+        for (unsigned int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
             // todo: save parameter base values 
             if (parameter->is_modulatable()) {

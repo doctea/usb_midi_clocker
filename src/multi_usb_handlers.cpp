@@ -131,13 +131,13 @@ void update_usb_midi_device_connections() {
 
 /*void read_midi_usb_devices() {
   #ifdef SINGLE_FRAME_READ_ALL
-    for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+    for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
       while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
     }
   #else
     #ifdef SINGLE_FRAME_READ_ONCE
       //static int counter;
-      for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+      for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
         //while(usb_midi_device[i]->read());
         if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
           //usb_midi_device[counter%NUM_USB_MIDI_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
@@ -191,7 +191,7 @@ void setup_multi_usb() { // error: void setup_multi_usb() causes a section type 
 
   Usb.begin();
   Serial.println(F("Usb.begin() returned")); Serial_flush();
-  for (int i = 0 ; i < 5 ; i++) {
+  for (unsigned int i = 0 ; i < 5 ; i++) {
     //digitalWrite(LED_BUILTIN, HIGH);
     Serial.printf(F("%i/5: Waiting 500ms for USB to settle down.."), i+1); Serial_flush();
     tft_print((char*)".");

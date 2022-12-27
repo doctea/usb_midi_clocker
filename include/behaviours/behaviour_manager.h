@@ -71,8 +71,8 @@ class DeviceBehaviourManager {
             //__disable_irq();
 
             // loop over the registered behaviours and if the correct one is found, set it up
-            const int size = behaviours_usb->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours_usb->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
                 Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                 usb_midi_slots[idx].packed_id = packed_id;
@@ -97,8 +97,8 @@ class DeviceBehaviourManager {
                 //__disable_irq();
                 Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
-                const int size = behaviours_usbserial->size();
-                for (int i = 0 ; i < size ; i++) {
+                const unsigned int size = behaviours_usbserial->size();
+                for (unsigned int i = 0 ; i < size ; i++) {
                     if (!usb_serial_slots[idx].usbdevice || usb_serial_slots[idx].packed_id!=packed_id) {
                         Serial.printf(F("WARNING: usb serial device at %i went away!\n"), idx);
                         //if (irqs_enabled) __enable_irq();
@@ -127,8 +127,8 @@ class DeviceBehaviourManager {
         #endif
 
         void do_reads() {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 //Serial.printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial_flush();
                 //Serial.printf("\t\t%s\n", behaviours->get(i)->get_label());
                 behaviours->get(i)->read();
@@ -139,7 +139,7 @@ class DeviceBehaviourManager {
         void read_midi_serial_devices() {
             #ifdef SINGLE_FRAME_READ
                 //int i = 0;
-                for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+                for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
                     while (midi_out_serial[i]->read());
                 }
             #else
@@ -155,13 +155,13 @@ class DeviceBehaviourManager {
 
         /*void read_midi_usb_devices() {
         #ifdef SINGLE_FRAME_READ_ALL
-            for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+            for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
             while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
             }
         #else
             #ifdef SINGLE_FRAME_READ_ONCE
             //static int counter;
-            for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+            for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
                 //while(usb_midi_device[i]->read());
                 if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
                 //usb_midi_device[counter%NUM_USB_MIDI_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
@@ -181,8 +181,8 @@ class DeviceBehaviourManager {
         }*/
 
         void send_clocks() {    // replaces behaviours_send_clock
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->send_clock(ticks);
                 //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial_flush();
@@ -190,27 +190,34 @@ class DeviceBehaviourManager {
         }
 
         void do_phrase(int phrase) {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_phrase(phrase);
             }
         }
         void do_end_phrase(int phrase) {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_end_phrase(phrase);
             }
         }
 
+        void do_end_phrase_pre_clock(int phrase) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
+                behaviours->get(i)->on_end_phrase_pre_clock(phrase);
+            }
+        }
+
         void do_bar(int bar) {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_bar(bar);
             }
         }
         void do_end_bar(int bar) {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_end_bar(bar);
             }
         }
@@ -219,8 +226,8 @@ class DeviceBehaviourManager {
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
                 if (behaviour!=nullptr) {
                     //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial_flush();
@@ -231,15 +238,15 @@ class DeviceBehaviourManager {
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_pre_clock(in_ticks);
             }
         }
 
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->on_tick(in_ticks);
                 //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial_flush();
@@ -247,8 +254,8 @@ class DeviceBehaviourManager {
         }
 
         void on_restart() {
-            const int size = behaviours->size();
-            for(int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->on_restart();
                 //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial_flush();
@@ -263,8 +270,8 @@ class DeviceBehaviourManager {
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
-            const int size = this->behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = this->behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
                 if (label.equals(device->get_label()))
                     return device;
@@ -290,19 +297,19 @@ class DeviceBehaviourManager {
                 current_behaviour = nullptr;
                 return true;
             } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
-                Serial.printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
+                //Serial.printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
                 return true;
             }
-            Serial.printf(F("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n"), key.c_str(), value.c_str());
+            //Serial.printf(F("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n"), key.c_str(), value.c_str());
             return false;
         }
 
         // ask each behaviour to add option lines to save project file
         void save_project_add_lines(LinkedList<String> *lines) {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                int lines_before = lines->size();
+                unsigned int lines_before = lines->size();
                 device->save_project_add_lines(lines);
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
@@ -314,11 +321,11 @@ class DeviceBehaviourManager {
         // ask each behaviour to add option lines to save sequence file
         void save_sequence_add_lines(LinkedList<String> *lines) {
             //LinkedList<String> lines = LinkedList<String>();
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 Serial.printf("behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                int lines_before = lines->size();
+                unsigned int lines_before = lines->size();
                 device->save_sequence_add_lines(lines);
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
@@ -329,8 +336,8 @@ class DeviceBehaviourManager {
         }
 
         void reset_all_mappings() {
-            const int size = behaviours->size();
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
                 behaviours->get(i)->reset_all_mappings();
             }
         }

@@ -86,7 +86,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
 
 FLASHMEM void setup_cv_output() {
   #ifdef ENABLE_CLOCKS
-    for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+    for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
       pinMode(cv_out_clock_pin[i], OUTPUT);
     }
     #ifdef PIN_CLOCK_RESET
@@ -95,7 +95,7 @@ FLASHMEM void setup_cv_output() {
   #endif
   #ifdef SEPARATE_SEQUENCER_AND_CLOCKS
     #ifdef ENABLE_SEQUENCER
-      for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
+      for (unsigned int i = 0 ; i < NUM_SEQUENCES ; i++) {
         pinMode(cv_out_sequence_pin[i], OUTPUT);
       }
     #endif
@@ -119,7 +119,7 @@ FLASHMEM void setup_cv_output() {
         }
       #endif
       
-      for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+      for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
         bool should_go_high = false;
         bool should_go_low  = false;
 
@@ -167,7 +167,7 @@ FLASHMEM void setup_cv_output() {
     #endif
         
     #ifdef ENABLE_SEQUENCER
-      for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
+      for (unsigned int i = 0 ; i < NUM_SEQUENCES ; i++) {
         bool should_go_high = false;
         bool should_go_low  = false;
 
@@ -182,7 +182,7 @@ FLASHMEM void setup_cv_output() {
       }
     #endif
     #ifdef ENABLE_CLOCKS
-      for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+      for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
         bool should_go_high = false;
         bool should_go_low  = false;
 

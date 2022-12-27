@@ -6,7 +6,7 @@
 
 FLASHMEM void setup_midi_serial_devices() {
     // todo: move to DeviceBehaviourSerialBase..
-    for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         midi_out_serial[i]->begin(MIDI_CHANNEL_OMNI);
         midi_out_serial[i]->turnThruOff();
     }

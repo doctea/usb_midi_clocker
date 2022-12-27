@@ -79,10 +79,11 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             ClockedBehaviour::receive_note_off(channel, note, 127);
         }
 
+        bool already_initialised = false;
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
-            static bool already_initialised = false;
-            if (already_initialised)
+            //static bool already_initialised = false;
+            if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
             DeviceBehaviourUSBBase::initialise_parameters();
             //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
@@ -135,10 +136,9 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             bool is_auto_advance_pattern() {
                 return this->auto_advance_pattern;
             }
-            virtual void on_end_phrase(uint32_t phrase) override {
+            
+            virtual void on_end_phrase_pre_clock(uint32_t phrase) override {
                 if (this->device==nullptr) return;
-
-                DividedClockedBehaviour::on_end_phrase(phrase);
 
                 if (this->auto_advance_pattern) {
                     int phrase_number = (phrase % NUM_PATTERNS);
@@ -146,11 +146,13 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     //this->on_restart(); 
                     this->set_restart_on_bar(true);
                 }
+
+                DividedClockedBehaviour::on_end_phrase_pre_clock(phrase);
             }
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Debug_printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
+                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
 
                 uint8_t data[] = {
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
@@ -274,7 +276,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 if (debug_sysex) Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);
                 /*this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, delay);
                 this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            */
-                for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     this->request_sysex_parameter(sysex_parameters[i].cc, sysex_parameters[i].pp);
                 }
             }
@@ -330,7 +332,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     if (debug_sysex) Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
                     return;
                 }
-                for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     if (sysex_parameters[i].cc==data[BROAD_POS] && sysex_parameters[i].pp==data[SPEC_POS]) {
                         if (sysex_parameters[i].target_variable!=nullptr)
                             *sysex_parameters[i].target_variable = data[VALUE_POS];
@@ -345,7 +347,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
                 DividedClockedBehaviour::save_sequence_add_lines(lines);
 
-                for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     if (!sysex_parameters[i].enable_recall) continue;
                     if (sysex_parameters[i].target_variable==nullptr) continue;
                     //Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
@@ -358,7 +360,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 }
             }
             virtual bool load_parse_key_value(String key, String value) override {
-                for (int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     if (!sysex_parameters[i].enable_recall) 
                         continue;
                     if (key.equals(sysex_parameters[i].label)) {
