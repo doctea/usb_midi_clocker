@@ -18,7 +18,7 @@ class Clip {
 	public:
 		Clip() {};
 		~Clip() = default;
-		int clip_id = -1;
+		unsigned int clip_id = -1;
 		bool dirty = false;
 
 		virtual char get_name() {
@@ -27,9 +27,9 @@ class Clip {
 
 		//virtual void prepare() = 0;
 		//virtual void start() = 0;
-		virtual void on_phrase(int phrase) = 0;
-		virtual void on_tick(uint32_t tick) = 0;
-		virtual void on_bar(uint32_t bar) = 0;
+		virtual void on_phrase(int phrase) {};
+		virtual void on_tick(uint32_t tick) {};
+		virtual void on_bar(uint32_t bar) {};
 
 		// todo: save/load
 		virtual void save() {}

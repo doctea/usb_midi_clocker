@@ -97,7 +97,7 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 	}
 
     virtual LinkedList<clip_instance_t*> *get_clips_at_time(unsigned int song_position) override {
-		if (cached_song_position!=song_position) {
+		if (cached_song_position!=(int)song_position) {
 			this->clips_at_phrase->clear();
 			unsigned int index = find_index_for_position(song_position);
 			//Serial.printf("get_clips_at_time(%i)\n", song_position); Serial.flush();
