@@ -29,6 +29,8 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 
 #define BEATSTEP_GLOBAL         0x50
 
+// todo: note that the first requested sysex parameter is often missed!  so in this case 'TRANSPOSE' is kinda sacrificial
+#define BEATSTEP_TRANSPOSE      0x02
 #define BEATSTEP_DIRECTION      0x04
 #define BEATSTEP_PATTERN_LENGTH 0x06
 #define BEATSTEP_SWING          0x07
@@ -192,6 +194,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
 
             // note swing setting
+            // todo: make this modulatable parameters, since they dont force a pattern restart when changed
             int8_t swing = 0;
             void setSwing(int8_t swing) {
                 swing = constrain(swing, 0x32, 0x4b);
@@ -203,6 +206,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
 
             // note gate length setting
+            // todo: make this modulatable parameters, since they dont force a pattern restart when changed
             int8_t gate = 0;
             void setGate(int8_t gate) {
                 gate = constrain(gate, 0, 0x63);
@@ -214,6 +218,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             }
 
             // note legato settings
+            // todo: make this modulatable parameters, since they dont force a pattern restart when changed
             int8_t legato = 0;
             void setLegato(int8_t legato) {
                 legato = constrain(legato, 0, 2);
@@ -239,11 +244,11 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             bool debug_sysex = false;
 
             sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
-                { BEATSTEP_GLOBAL, 0x02, nullptr, "Transpose"},    // transpose
+                { BEATSTEP_GLOBAL, BEATSTEP_TRANSPOSE, nullptr, "Transpose"},    // transpose (unused, sacrificial to the gods of missing beatstep data)
                 { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction, "Direction", &DeviceBehaviour_Beatstep::setDirection },
                 { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length, "Steps", &DeviceBehaviour_Beatstep::setPatternLength },
-                { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing, "Swing", &DeviceBehaviour_Beatstep::setSwing },    // swing, 0x32 to 0x4b (ie 50-100%)
-                { BEATSTEP_GLOBAL, BEATSTEP_GATE, &this->gate, "Gate", &DeviceBehaviour_Beatstep::setGate },    // gate length, 0x32 to 0x63
+                { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing, "Swing", &DeviceBehaviour_Beatstep::setSwing },        // swing, 0x32 to 0x4b (ie 50-100%)
+                { BEATSTEP_GLOBAL, BEATSTEP_GATE, &this->gate, "Gate", &DeviceBehaviour_Beatstep::setGate },            // gate length, 0x32 to 0x63
                 { BEATSTEP_GLOBAL, BEATSTEP_LEGATO, &this->legato, "Legato", &DeviceBehaviour_Beatstep::setLegato }     // legato 0=off, 1=on, 2=reset
             };
 
@@ -316,7 +321,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     this->device->sendSysEx(sizeof(data), data, true);
             }
 
-            // handles incoming sysex from beatstep to update internal state - unpause queue if we've received something
+            // handles incoming sysex from beatstep to update internal state - unpauses the queue if we've received something
             void handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
                 if (debug_sysex) {
                     Serial.print("BeatStep replied with Sysex:\t[ ");

@@ -19,7 +19,8 @@
 #define ENABLE_TYPING_KEYBOARD
 
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
-#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
+//#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
+#define use_MIDIDevice_BigBuffer      MIDIDevice
 
 #define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
 #define DEFAULT_SUBCLOCKER_DIVISOR          4
