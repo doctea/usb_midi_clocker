@@ -37,7 +37,10 @@ class SaveableParameter : public SaveableParameterBase {
         }
 
         virtual String get_line() {
-            return String(this->label) + String("=") + String((this->target->*getter_func)());
+            if (this->getter_func!=nullptr)
+                return String(this->label) + String("=") + String((this->target->*getter_func)());
+            else 
+                return String(this->label) + String("=") + String(*this->variable);
         }
         virtual bool parse_key_value(String key, String value) {
             if (key.equals(this->label)) {

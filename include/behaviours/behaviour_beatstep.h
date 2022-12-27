@@ -14,6 +14,8 @@
 
 #include "queue.h"
 
+#include "behaviours/SaveableParameters.h"
+
 extern MIDIOutputWrapper *beatstep_output;
 
 //void beatstep_setOutputWrapper(MIDIOutputWrapper *);
@@ -342,8 +344,17 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 sysex_request_queue->setPaused(false);
             }
 
+            virtual void setup_saveable_parameters() override {
+                if (this->saveable_parameters==nullptr)
+                    DeviceBehaviourUltimateBase::setup_saveable_parameters();
+                DividedClockedBehaviour::setup_saveable_parameters();
 
-            virtual void save_sequence_add_lines(LinkedList<String> *lines) override {   
+                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                    saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(sysex_parameters[i].label, this, sysex_parameters[i].target_variable, sysex_parameters[i].setter_func, nullptr));
+                }                    
+            }
+
+            /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {   
                 DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
                 DividedClockedBehaviour::save_sequence_add_lines(lines);
 
@@ -376,7 +387,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     return true;
                 } 
                 return false;
-            }
+            }*/
 
         #endif
 

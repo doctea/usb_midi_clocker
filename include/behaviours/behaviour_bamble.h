@@ -464,8 +464,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             //for (int)
             Serial.println("about to set up bamble's saveable parameters (patterns)..");
 
-            const int size = NUM_EUCLIDIAN_PATTERNS;
-            for (int i = 0 ; i < size ; i++) {
+            const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
+            for (unsigned int i = 0 ; i < size ; i++) {
                 this->saveable_parameters->add(new SaveableParameterPatternEnabled(this, i));
             }
         }
