@@ -177,7 +177,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (unsigned int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
-            // todo: save parameter base values 
+
+            // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
+            lines->add(String("parameter_base_") + String(parameter->label) + "=" + String(parameter->getCurrentNormalValue()));
+
             if (parameter->is_modulatable()) {
                 #define MAX_SAVELINE 255
                 char line[MAX_SAVELINE];
@@ -203,15 +206,26 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
                 }
             }
         }
+        Serial.println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
-        // todo: reload parameter mappings...
         Serial.printf(F("PARAMETERS\tparse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
+            // reload base value
+            if (key.startsWith("parameter_base_")) {
+                key = key.replace("parameter_base_","");
+                DoubleParameter *p = this->getParameterForLabel(key.c_str());
+                if (p!=nullptr) {
+                    p->updateValueFromNormal(value.toFloat());
+                    return true;
+                }
+                Serial.printf("WARNING: got a parameter_base_%s with value %s, but found no matching Parameter!\n", key.c_str(), value.c_str());
+                return false;
+            }
             // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
             //                                 ^^head ^^_^^param name^_slot=ParameterInputName|Amount
             key = key.replace(prefix, "");
