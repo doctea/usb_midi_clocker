@@ -190,8 +190,11 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
         for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
-            if (saveable_parameters->get(i)->is_save_enabled())
+            Serial.printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
+            if (saveable_parameters->get(i)->is_save_enabled()) {
+                Serial.printf("\t\tis_save_enabled() returned true, getting line!");
                 lines->add(saveable_parameters->get(i)->get_line());
+            }
         }
     }
 
@@ -209,15 +212,20 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
+        Serial.println("save_sequence_add_lines_parameters..");
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (unsigned int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
-            // todo: save parameter base values 
+
+            // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
+            lines->add(String("parameter_base_") + String(parameter->label) + "=" + String(parameter->getCurrentNormalValue()));
+
             if (parameter->is_modulatable()) {
                 #define MAX_SAVELINE 255
                 char line[MAX_SAVELINE];
-                // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
-                // todo: make these mappings part of an extra type of thing rather than associated with sequence?
+                // todo: move handling of this into the Parameter class, or into a third class that can handle saving to different formats..?
+                //          ^^ this could be the SaveableParameter class, used as a wrapper.  would require SaveableParameter to be able to add multiple lines to the save file
+                // todo: make these mappings part of an extra type of thing (like a "preset clip"?), rather than associated with sequence?
                 // todo: move these to be saved with the project instead?
                 for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
                     if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
@@ -238,6 +246,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
                 }
             }
         }
+        Serial.println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
@@ -245,11 +254,21 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         if (this->load_parse_key_value_saveable_parameters(key, value)) {
             return true;
         }
-        // todo: reload parameter mappings...
         Serial.printf(F("PARAMETERS\t%s\tparse_sequence_key_value passed '%s' => '%s'...\n"), this->get_label(), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
+            // reload base value 
+            if (key.startsWith("parameter_base_")) {
+                key = key.replace("parameter_base_","");
+                DoubleParameter *p = this->getParameterForLabel(key.c_str());
+                if (p!=nullptr) {
+                    p->updateValueFromNormal(value.toFloat());
+                    return true;
+                }
+                Serial.printf("WARNING: got a parameter_base_%s with value %s, but found no matching Parameter!\n", key.c_str(), value.c_str());
+                return false;
+            }
             // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
             //                                 ^^head ^^_^^param name^_slot=ParameterInputName|Amount
             key = key.replace(prefix, "");
