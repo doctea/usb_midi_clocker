@@ -162,7 +162,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
         //Serial.printf("about to build msg string...\n");
         snprintf(msg, 255, "Selected %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
         //Serial.printf("about to set_last_message!");
-        msg[tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
+        //msg[tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
         menu_set_last_message(msg,GREEN);
 
         return go_back_on_select;

@@ -61,16 +61,27 @@ class SaveableParameter : public SaveableParameterBase {
         }
 
         virtual bool is_recall_enabled () override {
-            if (this->is_save_enabled_func!=nullptr) 
-                return (this->target->*is_save_enabled_func)();
+            if (this->target!=nullptr && this->is_recall_enabled_func!=nullptr) 
+                return (this->target->*is_recall_enabled_func)();
             return SaveableParameterBase::is_recall_enabled();
+        }
+        virtual bool is_save_enabled () override {
+            if (this->target!=nullptr && this->is_save_enabled_func!=nullptr) 
+                return (this->target->*is_save_enabled_func)();
+            return SaveableParameterBase::is_save_enabled();
         }
 
         virtual String get_line() {
-            if (this->getter_func!=nullptr)
+            if (this->target!=nullptr && this->getter_func!=nullptr) {
+                Serial.printf("%s#get_line has target and getter func..", this->label );
                 return String(this->label) + String("=") + String((this->target->*getter_func)());
-            else 
+            } else if (this->variable!=nullptr) {
+                Serial.printf("%s#get_line has target variable..", this->label);
                 return String(this->label) + String("=") + String(*this->variable);
+            } else {
+                Serial.printf("%s#get_line has neither target nor getter func!", this->label);
+                return String("; ") + String(this->label) + String(" - WARNING: no target nor getter func!");
+            }
         }
         virtual bool parse_key_value(String key, String value) {
             if (key.equals(this->label)) {
