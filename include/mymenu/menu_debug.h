@@ -17,7 +17,7 @@ class DebugPanel : public MenuItem {
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);
             header("Statistics:", pos, selected, opened);
-            tft->printf("Built at %s on %s\n", __TIME__, __DATE__);
+            tft->printf("Built at " __TIME__ " on " __DATE__ "\n");
             tft->printf("Free RAM: %u bytes\n", freeRam());
             tft->printf("Uptime: %02uh %02um %02us\n", millis()/1000/60/60, (millis()/1000/60)%60, (millis()/1000)%60);
             return tft->getCursorY();
