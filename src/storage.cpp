@@ -39,8 +39,8 @@ namespace storage {
   const int chipSelect = BUILTIN_SDCARD;
 
   void make_project_folders(int project_number) {
-    char path[255];
-    sprintf(path, "project%i", project_number);
+    char path[MAX_FILEPATH];
+    snprintf(path, MAX_FILEPATH, "project%i", project_number);
     //Serial.printf(F("Checking exists %s.."), path);
     if (!SD.exists(path)) {
       //Serial.println(F("making!\n"));
@@ -49,7 +49,7 @@ namespace storage {
       //Serial.println(F("exists!\n"));
     }
     
-    sprintf(path, "project%i/sequences", project_number);
+    snprintf(path, MAX_FILEPATH, "project%i/sequences", project_number);
     //Serial.printf("Checking exists %s..", path);
     if (!SD.exists(path)) {
       //Serial.println(F("making!\n"));
@@ -58,7 +58,7 @@ namespace storage {
       //Serial.println(F("exists!\n"));
     }
 
-    sprintf(path, "project%i/loops", project_number);
+    snprintf(path, MAX_FILEPATH, "project%i/loops", project_number);
     //Serial.printf("Checking exists %s..", path);
     if (!SD.exists(path)) {
       //Serial.println(F("making!\n"));
@@ -87,8 +87,8 @@ namespace storage {
     //__disable_irq();
     File myFile;
 
-    char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
+    char filename[MAX_FILEPATH] = "";
+    snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
     Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
     if (SD.exists(filename)) {
       Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
@@ -265,8 +265,8 @@ namespace storage {
     //__disable_irq();
     File myFile;   
 
-    char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
+    char filename[MAX_FILEPATH] = "";
+    snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
 
     update_sequence_filename(String(filename));
 

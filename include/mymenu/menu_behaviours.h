@@ -13,13 +13,14 @@ class BehavioursPanel : public MenuItem {
             colours(opened);
             tft->setTextSize(1);
             //int connected = 0;
-            char buf[100];
+            #define MAX_LENGTH 100
+            char buf[MAX_LENGTH];
             for (unsigned int i = 0 ; i < behaviour_manager->behaviours_usb->size() ; i++) {
                 DeviceBehaviourUSBBase *usb_behaviour = behaviour_manager->behaviours_usb->get(i);
                 if (usb_behaviour->is_connected())
-                    sprintf(buf, "%i %19s %s\n", i, usb_behaviour->device->product(), usb_behaviour->get_indicator());
+                    snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, usb_behaviour->device->product(), usb_behaviour->get_indicator());
                 else
-                    sprintf(buf, "%i %10s, disconnected\n", i, usb_behaviour->get_label());
+                    snprintf(buf, MAX_LENGTH, "%i %10s, disconnected\n", i, usb_behaviour->get_label());
                 tft->printf(buf);
             }
             #ifdef ENABLE_USBSERIAL
@@ -28,9 +29,9 @@ class BehavioursPanel : public MenuItem {
                 for (unsigned int i = 0 ; i < behaviour_manager->behaviours_usbserial->size() ; i++) {
                     DeviceBehaviourUSBSerialBase *usbserial_behaviour = behaviour_manager->behaviours_usbserial->get(i);
                     if (usbserial_behaviour->is_connected())
-                        sprintf(buf, "%i %19s %s\n", i, usbserial_behaviour->get_label(), usbserial_behaviour->get_indicator());
+                        snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, usbserial_behaviour->get_label(), usbserial_behaviour->get_indicator());
                     else
-                        sprintf(buf, "%i %10s %s, disconnected\n", i, usbserial_behaviour->get_label(), usbserial_behaviour->get_indicator());
+                        snprintf(buf, MAX_LENGTH, "%i %10s %s, disconnected\n", i, usbserial_behaviour->get_label(), usbserial_behaviour->get_indicator());
 
                     tft->printf(buf);
                 }
@@ -39,7 +40,7 @@ class BehavioursPanel : public MenuItem {
             header("MIDI DIN Behaviours:", pos, selected, opened);
             for (unsigned int i = 0 ; i < behaviour_manager->behaviours_serial->size() ; i++) {
                 DeviceBehaviourSerialBase *serial_behaviour = behaviour_manager->behaviours_serial->get(i);
-                sprintf(buf, "%i %19s %s\n", i, serial_behaviour->get_label(), serial_behaviour->get_indicator());
+                snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, serial_behaviour->get_label(), serial_behaviour->get_indicator());
                 tft->printf(buf);
             }
                    

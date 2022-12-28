@@ -12,6 +12,8 @@ namespace storage {
   #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
   #define FILEPATH_CALIBRATION_FORMAT       "calibration_voltage_source_%i.txt"
 
+  #define MAX_FILEPATH 255
+
   //#include <SD.h>
   //#include <SdFat.h>
 

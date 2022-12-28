@@ -23,7 +23,7 @@
                     if (usb_midi_slots[i].packed_id && usb_midi_slots[i].device && usb_midi_slots[i].device->idVendor()>0) {
                         connected++;
                         char buf[100];
-                        sprintf(buf, "%i %19s\n", i, usb_midi_slots[i].device->product());
+                        snprintf(buf, 100, "%i %19s\n", i, usb_midi_slots[i].device->product());
                         tft->printf(buf);
                     }            
                 }
@@ -34,7 +34,7 @@
                         if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
                             connected++;
                             char buf[100];
-                            sprintf(buf, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
+                            snprintf(buf, 100, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
                             tft->printf(buf);
                         }
                     }
