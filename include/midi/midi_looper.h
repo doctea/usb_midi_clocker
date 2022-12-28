@@ -649,8 +649,8 @@ class MIDITrack {
             clear_hanging();
             convert_from_bitmap();
 
-            char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf(F("save_loop(%i) writing to %s\n"), recording_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf(F("\t%s exists, deleting first\n"), filename);
@@ -714,8 +714,8 @@ class MIDITrack {
             //__disable_irq();
             File f;
 
-            char filename[255] = "";
-            sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
             f = SD.open(filename, FILE_READ);
             f.setTimeout(0);

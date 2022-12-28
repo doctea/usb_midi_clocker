@@ -226,7 +226,7 @@ void setup() {
   Serial.println(F("Finished setup()!"));
   Serial.printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 
-  sprintf(menu->last_message, "...started up, %u bytes free...", freeRam());
+  snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
 }
 
 //long loop_counter = 0;

@@ -430,11 +430,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                     this->index = index;
                 }
 
-                virtual String get_line() { 
-                    return prefix+String(index) +
+                virtual String get_line() override { 
+                    return prefix+String(index) + String("=") + 
                             String(target->patterns[index].current_state?"true":"false");
                 }
-                virtual bool parse_key_value(String key, String value) {
+                virtual bool parse_key_value(String key, String value) override {
                     if (key.startsWith(prefix)) {
                         target->setPatternEnabled(index, value.equals("true") || value.equals("enabled"));
                         return true;
