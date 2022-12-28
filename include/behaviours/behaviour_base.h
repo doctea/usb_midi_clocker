@@ -57,7 +57,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         static bool done = false;
         static char indicator_text[5];
         if (!done) {
-            sprintf(indicator_text,"%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
+            snprintf(indicator_text, MENU_C_MAX, "%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
         }
         return indicator_text;
     }
@@ -214,7 +214,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             DoubleParameter *parameter = parameters->get(i);
             // todo: save parameter base values 
             if (parameter->is_modulatable()) {
-                char line[100];
+                #define MAX_SAVELINE 255
+                char line[MAX_SAVELINE];
                 // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
                 // todo: make these mappings part of an extra type of thing rather than associated with sequence?
                 // todo: move these to be saved with the project instead?
@@ -224,7 +225,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
                     const char *input_name = parameter->get_input_name_for_slot(slot);
 
-                    sprintf(line, "parameter_%s_%i=%s|%3.3f", 
+                    snprintf(line, MAX_SAVELINE, "parameter_%s_%i=%s|%3.3f", 
                         parameter->label, 
                         slot, 
                         input_name,

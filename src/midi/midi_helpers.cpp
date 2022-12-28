@@ -26,7 +26,7 @@ const char *get_note_name_c(int pitch) {
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
   };
   static char note_name[4];
-  sprintf(note_name, "%s%i", note_names[chromatic_degree], octave);
+  snprintf(note_name, 4, "%s%i", note_names[chromatic_degree], octave);
   return note_name;
 }
 

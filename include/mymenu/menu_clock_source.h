@@ -73,7 +73,7 @@ class ClockSourceSelectorControl : public SelectorControl {
 
         char msg[MENU_MESSAGE_MAX];
         //Serial.printf("about to build msg string...\n");
-        sprintf(msg, "Set clock to %i: %s", selected_value_index, get_label_for_index(selected_value_index));
+        snprintf(msg, MENU_MESSAGE_MAX, "Set clock to %i: %s", selected_value_index, get_label_for_index(selected_value_index));
         msg[tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
         menu_set_last_message(msg, GREEN);
 
