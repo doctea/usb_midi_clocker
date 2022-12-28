@@ -183,14 +183,15 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
     virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
         for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
-            if (saveable_parameters->get(i)->parse_key_value(key, value))
+            if (saveable_parameters->get(i)->is_recall_enabled() && saveable_parameters->get(i)->parse_key_value(key, value))
                 return true;
         }
         return false;
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
         for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
-            lines->add(saveable_parameters->get(i)->get_line());
+            if (saveable_parameters->get(i)->is_save_enabled())
+                lines->add(saveable_parameters->get(i)->get_line());
         }
     }
 
