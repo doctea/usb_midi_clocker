@@ -6,11 +6,26 @@
 class SaveableParameterBase {
     public:
     const char *label = nullptr;
-    SaveableParameterBase(const char *label) {
+    SaveableParameterBase(const char *label, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) {
         this->label = label;
+        this->variable_recall_enabled = variable_recall_enabled;
+        this->variable_save_enabled = variable_save_enabled;
     }
     virtual String get_line() { return String("; nop"); }
     virtual bool parse_key_value(String key, String value) {
+        return false;
+    }
+
+    bool *variable_recall_enabled = nullptr;
+    bool *variable_save_enabled = nullptr;
+    virtual bool is_recall_enabled() { 
+        if (variable_recall_enabled==nullptr || (*variable_recall_enabled)) 
+            return true; 
+        return false;
+    }
+    virtual bool is_save_enabled() { 
+        if (variable_save_enabled==nullptr || (*variable_save_enabled)) 
+            return true; 
         return false;
     }
 };
@@ -23,17 +38,32 @@ class SaveableParameter : public SaveableParameterBase {
         void(TargetClass::*setter_func)(DataType);
         DataType(TargetClass::*getter_func)();
 
+        bool(TargetClass::*is_recall_enabled_func)();
+        bool(TargetClass::*is_save_enabled_func)();
+
         SaveableParameter(
             const char *label, 
             TargetClass *target, 
             DataType *variable,
-            void(TargetClass::*setter_func)(DataType),
-            DataType(TargetClass::*getter_func)()
-        ) : SaveableParameterBase(label) {
+            bool *variable_recall_enabled = nullptr,
+            bool *variable_save_enabled = nullptr,
+            void(TargetClass::*setter_func)(DataType) = nullptr,
+            DataType(TargetClass::*getter_func)() = nullptr,
+            bool(TargetClass::*is_recall_enabled_func)() = nullptr,
+            bool(TargetClass::*is_save_enabled_func)() = nullptr
+        ) : SaveableParameterBase(label, variable_recall_enabled, variable_save_enabled) {
             this->target = target;
             this->variable = variable;
             this->setter_func = setter_func;
             this->getter_func = getter_func;
+            this->is_recall_enabled_func = is_recall_enabled_func;
+            this->is_save_enabled_func = is_save_enabled_func;
+        }
+
+        virtual bool is_recall_enabled () override {
+            if (this->is_save_enabled_func!=nullptr) 
+                return (this->target->*is_save_enabled_func)();
+            return SaveableParameterBase::is_recall_enabled();
         }
 
         virtual String get_line() {

@@ -271,9 +271,9 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
             Serial.println("DividedClockedBehaviour::setup_saveable_parameters");
             Serial.printf("saveable_parameters is @%p\n", this->saveable_parameters);
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,uint32_t>("divisor", this, &this->clock_divisor, &DividedClockedBehaviour::set_divisor, &DividedClockedBehaviour::get_divisor));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int32_t>("delay_ticks", this, &this->clock_delay_ticks, &DividedClockedBehaviour::set_delay_ticks, &DividedClockedBehaviour::get_delay_ticks));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int8_t>("pause_on", this, &this->pause_during_delay, &DividedClockedBehaviour::set_pause_during_delay, &DividedClockedBehaviour::get_pause_during_delay));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,uint32_t>("divisor", this, &this->clock_divisor, nullptr, nullptr, &DividedClockedBehaviour::set_divisor, &DividedClockedBehaviour::get_divisor));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int32_t>("delay_ticks", this, &this->clock_delay_ticks, nullptr, nullptr, &DividedClockedBehaviour::set_delay_ticks, &DividedClockedBehaviour::get_delay_ticks));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int8_t>("pause_on", this, &this->pause_during_delay, nullptr, nullptr, &DividedClockedBehaviour::set_pause_during_delay, &DividedClockedBehaviour::get_pause_during_delay));
         }
 
 
