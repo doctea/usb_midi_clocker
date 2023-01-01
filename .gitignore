@@ -3,7 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
-
 *.backup
 *.orig
 *.rej
@@ -17,3 +16,4 @@ circuits/*
 USBHost_t36
 media/screenshots
 sd_card_files
+wip/*
