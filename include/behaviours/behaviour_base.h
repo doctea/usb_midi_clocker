@@ -54,7 +54,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         static bool done = false;
         static char indicator_text[5];
         if (!done) {
-            snprintf(indicator_text, MENU_C_MAX, "%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
+            snprintf(indicator_text, 5, "%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
         }
         return indicator_text;
     }
