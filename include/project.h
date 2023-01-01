@@ -49,7 +49,7 @@ class Project {
         temp_loop->bitmap_enabled = false;
 
         for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
-            char filepath[255];
+            char filepath[MAX_FILEPATH];
             snprintf(filepath, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
