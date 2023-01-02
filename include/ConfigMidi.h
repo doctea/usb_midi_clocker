@@ -22,4 +22,6 @@
 #define ENABLE_BASS                 MIDI3   // bass output on MIDI3
 //#endif
 
+#define ENABLE_DISTING midi_out_serial[3]
+
 #endif
