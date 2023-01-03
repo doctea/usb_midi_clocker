@@ -20,7 +20,7 @@ ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 FLASHMEM
 void setup_cv_input() {
     Serial.println("setup_cv_input...");
-    tft_print((char*)"...setup_cv_input...\n");
+    tft_print("...setup_cv_input...\n");
 
     parameter_manager->init();
 
@@ -30,7 +30,7 @@ void setup_cv_input() {
 
     parameter_manager->auto_init_devices();
 
-    tft_print((char*)"..done setup_cv_input\n");
+    tft_print("..done setup_cv_input\n");
 }
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
@@ -39,7 +39,7 @@ void setup_parameters() {
     //parameter_manager = new ParameterManager();
     // add the available parameters to a list used globally and later passed to each selector menuitem
     Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
-    tft_print((char*)"..setup_parameters...");
+    tft_print("..setup_parameters...");
 
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
@@ -81,7 +81,7 @@ void setup_parameters() {
 
     parameter_manager->setDefaultParameterConnections();
 
-    tft_print((char*)"\n");
+    tft_print("\n");
 }
 
 // set up the menus to provide control over the Parameters and ParameterInputs
