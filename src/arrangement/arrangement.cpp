@@ -33,6 +33,9 @@ void setup_arrangement() {
     ArrangementTrackBase *loop_arrangement = arrangement->addTrack(new ArrangementSingleTrack("Looper"));
     for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
         loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
+        //loop_arrangement->insert_clip_instance(i*3, clip_manager->add_clip(new LoopClip(i)));
+        loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
+        loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
     }
 
     // loop over each behaviour, add an ArrangementTrack as appropriate...
