@@ -16,9 +16,7 @@
 class LooperRecStatus : public MenuItem {   
     public:
         MIDITrack *loop_track = nullptr;
-        LooperRecStatus(const char *label, MIDITrack *loop_track) : MenuItem(label) {
-            this->loop_track = loop_track;
-        };
+        LooperRecStatus(const char *label, MIDITrack *loop_track) : MenuItem(label), loop_track(loop_track) {};
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);

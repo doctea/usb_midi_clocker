@@ -7,24 +7,26 @@
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
 //#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
+#ifndef COMMIT_HASH
+    #define COMMIT_HASH "[Unknown]"
+#endif
+
 //// CV input options
 #define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
-#define LOAD_CALIBRATION_ON_BOOT
-#define ENABLE_CV_INPUT_PITCH
-//#define ENABLE_STORAGE
+#define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card
+#define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
 
-// enable USB typing keyboard as a control method
+// enable a USB typing keyboard as a control method (see include/input_keyboard.h)
 #define ENABLE_TYPING_KEYBOARD
 
+// choose which MIDIDevice object from the USBHost_t36 library to use; seems to work completely fine using just the plain MIDIDevice, and saves a ton of flash memory too
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
 #define use_MIDIDevice_BigBuffer      MIDIDevice
 
-#define DEFAULT_CLOCK_MODE CLOCK_INTERNAL
-#define DEFAULT_SUBCLOCKER_DIVISOR          4
-#define DEFAULT_SUBCLOCKER_DELAY_TICKS      0   // don't send clock to the subclocker device until this many ticks have elapsed
+#define DEFAULT_CLOCK_MODE  CLOCK_INTERNAL      
 
 #ifndef ENABLE_SCREEN
     #define ENABLE_SCREEN       // tft
@@ -56,29 +58,25 @@
     #define ENABLE_OPENTHEREMIN
 #endif
 
-#define ENABLE_USB
-#define ENABLE_CV_OUTPUT
+#define ENABLE_USB          // USB host behaviours
+#define ENABLE_CV_OUTPUT    // clock and sequencer outputs
 
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
 #define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
 
-// enable MIDI looping for drumkit
+// enable MIDI looping for drumkit - experimental
 //#define ENABLE_DRUM_LOOPER
 
-// enable transposing beatstep to a particular octave
+// enable Neutron behaviour
 #define ENABLE_NEUTRON
-#define ENABLE_BASS_TRANSPOSE MIDI3
-#define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meanly 'set to -1 for disabled'?
+#define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
 
-#define ENABLE_DPT_LOOPER MIDI8
+#define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
 
 // serial MIDI devices
-//#define ENABLE_LESTRUM    // these are defined in ConfigMidi.h instead
-//#define ENABLE_DRUMKIT    // these are defined in ConfigMidi.h instead
-//#define ENABLE_CRAFTSYNTH   // serial MIDI version
+// these are now defined in ConfigMidi.h instead
 
-#define ENABLE_DISTING midi_out_serial[3]
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI

@@ -85,7 +85,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
 
-    #ifdef ENABLE_BASS_TRANSPOSE
+    #ifdef DEFAULT_NEUTRON_OCTAVE
         midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
     #endif
 

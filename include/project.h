@@ -37,8 +37,8 @@ class Project {
     void initialise_sequence_slots() {
         Serial.println(F("initialise_sequence_slots starting.."));
         for (unsigned int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
-            char filepath[255];
-            sprintf(filepath, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
+            char filepath[MAX_FILEPATH];
+            snprintf(filepath, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
             Serial.printf(F("\tsequence_slot_has_file[i] = %i for %s\n"), sequence_slot_has_file[i], filepath);
         }
@@ -49,8 +49,8 @@ class Project {
         temp_loop->bitmap_enabled = false;
 
         for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
-            char filepath[255];
-            sprintf(filepath, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
+            char filepath[MAX_FILEPATH];
+            snprintf(filepath, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
@@ -305,8 +305,8 @@ class Project {
             File myFile;
 
             // determine filename, delete if exists, and open the file up for writing
-            char filename[255] = "";
-            sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
             Serial.printf(F("save_project_settings(%i) writing to %s\n"), save_to_project_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf(F("%s exists, deleting first\n"), filename);
@@ -363,8 +363,8 @@ class Project {
                 midi_matrix_manager->reset_matrix(); 
             }
 
-            char filename[255] = "";
-            sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
             Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
             myFile = SD.open(filename, FILE_READ);
             myFile.setTimeout(0);

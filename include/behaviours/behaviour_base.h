@@ -54,7 +54,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         static bool done = false;
         static char indicator_text[5];
         if (!done) {
-            sprintf(indicator_text,"%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
+            snprintf(indicator_text, 5, "%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
         }
         return indicator_text;
     }
@@ -177,9 +177,13 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (unsigned int i = 0 ; i < parameters->size () ; i++) {
             DoubleParameter *parameter = parameters->get(i);
-            // todo: save parameter base values 
+
+            // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
+            lines->add(String("parameter_base_") + String(parameter->label) + "=" + String(parameter->getCurrentNormalValue()));
+
             if (parameter->is_modulatable()) {
-                char line[100];
+                #define MAX_SAVELINE 255
+                char line[MAX_SAVELINE];
                 // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
                 // todo: make these mappings part of an extra type of thing rather than associated with sequence?
                 // todo: move these to be saved with the project instead?
@@ -189,7 +193,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
                     const char *input_name = parameter->get_input_name_for_slot(slot);
 
-                    sprintf(line, "parameter_%s_%i=%s|%3.3f", 
+                    snprintf(line, MAX_SAVELINE, "parameter_%s_%i=%s|%3.3f", 
                         parameter->label, 
                         slot, 
                         input_name,
@@ -202,15 +206,27 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
                 }
             }
         }
+        Serial.println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
-        // todo: reload parameter mappings...
-        Serial.printf(F("PARAMETERS\tparse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        Serial.printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
+        const char *prefix_base = "parameter_base_";
         if (this->has_parameters() && key.startsWith(prefix)) {
+            // reload base value
+            if (key.startsWith(prefix_base)) {
+                key = key.replace(prefix_base,"");
+                DoubleParameter *p = this->getParameterForLabel(key.c_str());
+                if (p!=nullptr) {
+                    p->updateValueFromNormal(value.toFloat());
+                    return true;
+                }
+                Serial.printf("WARNING: got a %s%s with value %s, but found no matching Parameter!\n", prefix_base, key.c_str(), value.c_str());
+                return false;
+            }
             // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
             //                                 ^^head ^^_^^param name^_slot=ParameterInputName|Amount
             key = key.replace(prefix, "");

@@ -121,6 +121,9 @@ void setup() {
     setup_menu();
   #endif
 
+  tft_print("Built at " __TIME__ " on " __DATE__ "\n");
+  tft_print("Git info: " COMMIT_HASH "\n");
+
   #ifdef ENABLE_TYPING_KEYBOARD
     tft_print((char*)"Setting up typing keyboard..\n");
     setup_typing_keyboard();
@@ -224,7 +227,7 @@ void setup() {
   Serial.println(F("Finished setup()!"));
   Serial.printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 
-  sprintf(menu->last_message, "...started up, %u bytes free...", freeRam());
+  snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
 }
 
 //long loop_counter = 0;

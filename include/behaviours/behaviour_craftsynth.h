@@ -32,7 +32,7 @@ class CraftSynthSpreadParameter : public MIDICCParameter<> {
             static char fmt[MENU_C_MAX] = "              ";
             switch (value) {
                 case 0 ... 63:
-                    sprintf(fmt, "%-3i", value); break;
+                    snprintf(fmt, MENU_C_MAX, "%-3i", value); break;
                 case 64 ... 70:
                     return "Maj";
                 case 71 ... 77:
