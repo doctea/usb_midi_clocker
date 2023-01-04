@@ -12,8 +12,7 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
         DeviceBehaviour_Bamble *behaviour = nullptr;
         BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int8_t envelope_number, LinkedList<option> *available_values = nullptr) 
             : ObjectSelectorControl(label, this, &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn, &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn, nullptr)
-            , behaviour(behaviour), envelope_number(envelope_number)
-        {
+            , behaviour(behaviour), envelope_number(envelope_number) {
             this->go_back_on_select = true;
         }
 
