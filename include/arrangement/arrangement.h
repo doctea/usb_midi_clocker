@@ -69,16 +69,19 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
             .clip_id = clip->clip_id,
 			.clip = clip
 		};
+		unsigned int index = this->find_index_for_position(song_position);
 		int index = this->find_index_for_position(song_position);
 		Serial.printf("insert_clip_instance(%i): inserting at index %i\n", song_position, index);
 		song_structure->add(index, instance);
-		Serial.printf("insert_clip_instance(%i): inserted at index %i\n", song_position, index);
+		/*Serial.printf("insert_clip_instance(%i): inserted at index %i\n", song_position, index);
 		Serial.println("spacer");
-		Serial.printf("song_structure is size %i, index is %i\n", this->song_structure->size(), index);
+		Serial.printf("song_structure is size %i, index is %i\n", this->song_structure->size(), index);*/
 		return index;
 	}
 
-	int find_index_for_position(unsigned int song_position) {
+	unsigned int find_index_for_position(unsigned int song_position) {
+		if (song_structure->size()==0)
+			return 0;
 		// todo: optimise to search forwards/backwards based on requested position's relation to known current position
 		for (unsigned int i = 0 ; i < song_structure->size() ; i++) {
 			if (song_structure->get(i).position >= song_position)
@@ -163,10 +166,20 @@ class ArrangementSingleTrack : public ArrangementMultipleTrack {
         this->colour = colour;
     }
 
+	virtual void remove_clips_at_position(unsigned int song_position) {
+		unsigned int index = this->find_index_for_position(song_position);
+		while (this->song_structure->get(index).position==song_position) {
+			Serial.printf("remove_clips_at_position(%i) removing index %i\n", song_position, index);
+			this->song_structure->remove(index);
+			if (index>=this->song_structure->size()) 
+				break;
+		}
+	}
+
 	virtual int replace_clip_instance(int song_position, Clip *clip) {
 		// todo: use LinkedList 'set' instead to overwrite existing data instead of forcing relinking of list
+		this->remove_clips_at_position(song_position);
 		int index = ArrangementMultipleTrack::insert_clip_instance(song_position, clip);
-		song_structure->remove(index+1);
 		return index; 
 	}
 	virtual int insert_clip_instance(unsigned int song_position, Clip *clip) override {

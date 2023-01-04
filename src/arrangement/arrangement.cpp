@@ -36,15 +36,10 @@ void setup_arrangement() {
     ArrangementMultipleTrack *loop_arrangement = (ArrangementMultipleTrack *)arrangement->addTrack(new ArrangementSingleTrack("Looper"));
     int x = 0;
     for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
-        int position = random(0,16);
-        Serial.printf("setup_arrangement insert_clip_sequence for a loopclip %i/%i at position %i\n", i+1, NUM_LOOP_SLOTS_PER_PROJECT, position);
-        Serial.printf("\tcurrent size is %i\n", loop_arrangement->song_structure->size());
-        Clip *c = new LoopClip(x);
-        Serial.println("created clip");
-        clip_manager->add_clip(c);
-        Serial.println("added clip");
-        int pos = loop_arrangement->insert_clip_instance(position, c);
-        Serial.printf("inserted clip at %i\n", pos);
+        loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
+        loop_arrangement->insert_clip_instance(i*3, clip_manager->add_clip(new LoopClip(i)));
+        loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
+        loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
     }
     Serial.println("added all looper clips"); Serial_flush();
 
