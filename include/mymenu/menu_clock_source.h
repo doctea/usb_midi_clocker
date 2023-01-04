@@ -13,9 +13,8 @@ class ClockSourceSelectorControl : public SelectorControl {
 
     public:
 
-    ClockSourceSelectorControl(const char *label, int initial_value) : SelectorControl(label, initial_value) {
-        actual_value_index = initial_value;
-    };
+    ClockSourceSelectorControl(const char *label, int initial_value) 
+        : SelectorControl(label, initial_value), actual_value_index(initial_value) {};
 
     virtual const char* get_label_for_index(int index) {
         if (index==CLOCK_INTERNAL)
