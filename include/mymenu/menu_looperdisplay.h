@@ -16,9 +16,7 @@ class LooperDisplay : public MenuItem {
 
     //GFXcanvas16 *canvas;
 
-    LooperDisplay(const char *label, MIDITrack *loop_track) : MenuItem(label) {
-        this->loop_track = loop_track;
-    }
+    LooperDisplay(const char *label, MIDITrack *loop_track) : MenuItem(label), loop_track(loop_track) {}
 
     /*float ticks_per_pixel = 1.0;
     virtual void on_add() override {
