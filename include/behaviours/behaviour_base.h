@@ -175,6 +175,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             Serial.println("instantiating saveable_parameters list");
             this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
         }
+        // todo: add all the modulatable parameters via a wrapped class
         /*if (this->has_parameters()) {
             for (unsigned int i = 0 ; i < parameters->size() ; i++) {
                 this->saveable_parameters->add(new SaveableParameterWrapper(parameters->get(i)));
@@ -214,7 +215,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
         Serial.println("save_sequence_add_lines_parameters..");
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
-        for (unsigned int i = 0 ; i < parameters->size () ; i++) {
+        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
             DoubleParameter *parameter = parameters->get(i);
 
             // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)

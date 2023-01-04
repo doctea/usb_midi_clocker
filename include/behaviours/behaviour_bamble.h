@@ -424,14 +424,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             public:
                 DeviceBehaviour_Bamble *target = nullptr;
                 int index;
-                String prefix = String("pattern_enable_");
-                SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index) : SaveableParameterBase("patterns_enabled") {
-                    this->target = target;
-                    this->index = index;
-                }
+                const String prefix = String("pattern_enable_");
+                SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index) 
+                    : SaveableParameterBase("patterns_enabled"), 
+                    target(target), 
+                    index(index) {}
 
                 virtual String get_line() override { 
-                    return prefix+String(index) + String("=") + 
+                    return prefix+String(index) + String('=') + 
                             String(target->patterns[index].current_state?"true":"false");
                 }
                 virtual bool parse_key_value(String key, String value) override {
@@ -444,12 +444,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         };
 
         virtual void setup_saveable_parameters() {
-            Serial.println("about to set up bamble's saveable parameters (base)..");
             DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            Serial.println("about to set up bamble's saveable parameters (divided clocked)..");
             DividedClockedBehaviour::setup_saveable_parameters();
-
-            Serial.println("about to set up bamble's saveable parameters (own)..");
 
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("euclidian_mode", this, &this->demo_mode, nullptr, nullptr, &DeviceBehaviour_Bamble::setDemoMode,   &DeviceBehaviour_Bamble::getDemoMode));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("fills_mode",     this, &this->fills_mode, nullptr, nullptr, &DeviceBehaviour_Bamble::setFillsMode,  &DeviceBehaviour_Bamble::getFillsMode));
@@ -459,10 +455,6 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", this,    &this->euclidian_seed_modifier, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,    &DeviceBehaviour_Bamble::getEuclidianSeedModifier)); // aka 'Seed Modifier'
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("reset_before_mutate",  this,   &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,    &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate)); // aka 'auto-reset'
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("seed_use_phrase", this,   &this->euclidian_seed_use_phrase, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase)); // aka 'Use Phrase')
-
-            //this->saveable_parameters->add(new SaveableParameterPatternsEnabled<DeviceBehaviour_Bamble, bool>(this);
-            //for (int)
-            Serial.println("about to set up bamble's saveable parameters (patterns)..");
 
             const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
             for (unsigned int i = 0 ; i < size ; i++) {
