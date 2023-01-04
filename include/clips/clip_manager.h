@@ -49,6 +49,7 @@ class ClipManager {
             Serial.printf(F("add_clip adding clip at index %i with id %i\n"), clips->size()-1, clip->clip_id);
 
             this->clips->add(clip);
+            
             return clip;
         }
 

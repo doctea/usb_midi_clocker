@@ -23,27 +23,42 @@ Arrangement *arrangement = nullptr;
 FLASHMEM
 void setup_arrangement() {
     //Serial.println("setup_arrangement...");
+    Serial.println("========== adding sequence clips");
     arrangement = new Arrangement();
     ArrangementTrackBase *sequencer_track = arrangement->addTrack(new ArrangementSingleTrack("Sequence"));
 	for (unsigned int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
-        //Serial.printf("setup_arrangement for a sequence %i\n", i);
+        Serial.printf("setup_arrangement insert_clip_instance for a sequence %i\n", i);
 		sequencer_track->insert_clip_instance(i, clip_manager->add_clip(new SequenceClip(7-i))); //new SequenceClip(7-i)); //clip_manager->get_clip_for_id(7-i));
 	}
+    Serial.println("added sequence clips");
 
-    ArrangementTrackBase *loop_arrangement = arrangement->addTrack(new ArrangementSingleTrack("Looper"));
+    Serial.println("========== adding loop clips");
+    ArrangementMultipleTrack *loop_arrangement = (ArrangementMultipleTrack *)arrangement->addTrack(new ArrangementSingleTrack("Looper"));
+    int x = 0;
     for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
-        loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
+        int position = random(0,16);
+        Serial.printf("setup_arrangement insert_clip_sequence for a loopclip %i/%i at position %i\n", i+1, NUM_LOOP_SLOTS_PER_PROJECT, position);
+        Serial.printf("\tcurrent size is %i\n", loop_arrangement->song_structure->size());
+        Clip *c = new LoopClip(x);
+        Serial.println("created clip");
+        clip_manager->add_clip(c);
+        Serial.println("added clip");
+        int pos = loop_arrangement->insert_clip_instance(position, c);
+        Serial.printf("inserted clip at %i\n", pos);
     }
+    Serial.println("added all looper clips"); Serial_flush();
 
     // loop over each behaviour, add an ArrangementTrack as appropriate...
+    Serial.println("========== adding behaviour tracks");
     const unsigned int behaviours_size = behaviour_manager->behaviours->size();
     for (unsigned int i = 0 ; i < behaviours_size ; i++) {
         ArrangementTrackBase *behaviour_track = behaviour_manager->behaviours->get(i)->create_arrangement_track();
         if (behaviour_track!=nullptr)
             arrangement->addTrack(behaviour_track);
     }
+    Serial.println("added behaviour tracks");
 
-    setup_arrangement_menu(arrangement);  
+    setup_arrangement_menu(arrangement);
     
     // probably ask the behaviour itself to instantiate the track object
 }
@@ -67,7 +82,7 @@ void setup_arrangement_menu(Arrangement *arrangement) {
     
     menu->add(transport);
     
-    //Serial.println("added transport bar");
+    Serial.println("added transport bar");
     
     //menu->add(new ArrangementEditor("Arrangement")); //, arrangement));   
 
@@ -77,6 +92,8 @@ void setup_arrangement_menu(Arrangement *arrangement) {
         ArrangementTrackBase* track = arrangement->get_tracks()->get(i);
         menu->add(new ArrangementTrackEditor(track->label, track));
     }
+
+    Serial.println("finished setup_arrangement_menu");
 
 }
 

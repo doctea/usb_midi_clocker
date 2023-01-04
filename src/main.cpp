@@ -202,7 +202,9 @@ void setup() {
   #endif
 
   // todo: move this somewhere more sensible
+  tft_print((char*)"\n..setup clip manager..");
   setup_clip_manager();
+  tft_print((char*)"\n..setup arrangement..");
   setup_arrangement();
 
   Serial.println(F("Arduino ready.")); Serial_flush();

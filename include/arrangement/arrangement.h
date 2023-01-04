@@ -70,7 +70,11 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 			.clip = clip
 		};
 		int index = this->find_index_for_position(song_position);
+		Serial.printf("insert_clip_instance(%i): inserting at index %i\n", song_position, index);
 		song_structure->add(index, instance);
+		Serial.printf("insert_clip_instance(%i): inserted at index %i\n", song_position, index);
+		Serial.println("spacer");
+		Serial.printf("song_structure is size %i, index is %i\n", this->song_structure->size(), index);
 		return index;
 	}
 
