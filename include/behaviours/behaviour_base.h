@@ -276,7 +276,6 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             key = key.replace(prefix, "");
 
             // todo: checking that key has _ in it (ie that it is a modulation setting save)
-            // todo: loading of parameter base values
 
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();
