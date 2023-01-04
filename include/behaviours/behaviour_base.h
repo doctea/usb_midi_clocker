@@ -211,19 +211,20 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
-        Serial.printf(F("PARAMETERS\tparse_sequence_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        Serial.printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
+        const char *prefix_base = "parameter_base_";
         if (this->has_parameters() && key.startsWith(prefix)) {
             // reload base value
-            if (key.startsWith("parameter_base_")) {
-                key = key.replace("parameter_base_","");
+            if (key.startsWith(prefix_base)) {
+                key = key.replace(prefix_base,"");
                 DoubleParameter *p = this->getParameterForLabel(key.c_str());
                 if (p!=nullptr) {
                     p->updateValueFromNormal(value.toFloat());
                     return true;
                 }
-                Serial.printf("WARNING: got a parameter_base_%s with value %s, but found no matching Parameter!\n", key.c_str(), value.c_str());
+                Serial.printf("WARNING: got a %s%s with value %s, but found no matching Parameter!\n", prefix_base, key.c_str(), value.c_str());
                 return false;
             }
             // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
