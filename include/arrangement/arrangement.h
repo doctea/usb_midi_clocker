@@ -175,10 +175,12 @@ class ArrangementSingleTrack : public ArrangementMultipleTrack {
 		}
 	}
 
-	virtual unsigned int replace_clip_instance(int song_position, Clip *clip) {
+	virtual unsigned int replace_clip_instance(unsigned int song_position, Clip *clip) {
 		// todo: use LinkedList 'set' instead to overwrite existing data instead of forcing relinking of list
 		this->remove_clips_at_position(song_position);
-		int index = ArrangementMultipleTrack::insert_clip_instance(song_position, clip);
+		unsigned int index = ArrangementMultipleTrack::insert_clip_instance(song_position, clip);
+		//if (song_structure->size()>=index)
+		//	song_structure->remove(index+1);
 		return index; 
 	}
 	virtual unsigned int insert_clip_instance(unsigned int song_position, Clip *clip) override {
