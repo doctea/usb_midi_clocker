@@ -30,7 +30,7 @@ class ArrangementTrackBase {
     ~ArrangementTrackBase() = default;
 
 	// insert a clip at specified song postion; return the index
-	virtual int insert_clip_instance(unsigned int song_position, Clip *clip) = 0;
+	virtual unsigned int insert_clip_instance(unsigned int song_position, Clip *clip) = 0;
 	//virtual void replace_clip_instance(int song_position, Clip *clip);
 	virtual LinkedList<clip_instance_t*> *get_clips_at_time(unsigned int song_position) = 0;
 
@@ -63,15 +63,14 @@ class ArrangementMultipleTrack : public ArrangementTrackBase {
 	~ArrangementMultipleTrack() = default;
 
 	// 	insert a clip_instance_t at the correct song position
-	virtual int insert_clip_instance(unsigned int song_position, Clip *clip) override {
+	virtual unsigned int insert_clip_instance(unsigned int song_position, Clip *clip) override {
 		clip_instance_t instance = {
 			.position = song_position,
             .clip_id = clip->clip_id,
 			.clip = clip
 		};
 		unsigned int index = this->find_index_for_position(song_position);
-		int index = this->find_index_for_position(song_position);
-		Serial.printf("insert_clip_instance(%i): inserting at index %i\n", song_position, index);
+		//Serial.printf("insert_clip_instance(%i): inserting at index %i\n", song_position, index);
 		song_structure->add(index, instance);
 		/*Serial.printf("insert_clip_instance(%i): inserted at index %i\n", song_position, index);
 		Serial.println("spacer");
@@ -176,13 +175,13 @@ class ArrangementSingleTrack : public ArrangementMultipleTrack {
 		}
 	}
 
-	virtual int replace_clip_instance(int song_position, Clip *clip) {
+	virtual unsigned int replace_clip_instance(int song_position, Clip *clip) {
 		// todo: use LinkedList 'set' instead to overwrite existing data instead of forcing relinking of list
 		this->remove_clips_at_position(song_position);
 		int index = ArrangementMultipleTrack::insert_clip_instance(song_position, clip);
 		return index; 
 	}
-	virtual int insert_clip_instance(unsigned int song_position, Clip *clip) override {
+	virtual unsigned int insert_clip_instance(unsigned int song_position, Clip *clip) override {
 		return this->replace_clip_instance(song_position, clip);
 	}
 };
