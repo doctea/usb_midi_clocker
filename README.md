@@ -132,6 +132,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - GDB debug mode doesn't work
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Think it may be be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
+- Sometimes crashes the first time that one of the Parameter submenus is opened... but works after its rebooted..
 
 ## Known issues (may be solved)
 
