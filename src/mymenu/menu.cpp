@@ -61,16 +61,7 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-ActionConfirmItem project_save = ActionConfirmItem("Save settings", &save_project_settings);
-ObjectNumberControl<Project,int> project_selector = ObjectNumberControl<Project,int>(
-    "Project number", 
-    project, 
-    &Project::setProjectNumber, 
-    &Project::getProjectNumber, 
-    nullptr, 
-    0, 
-    100
-);
+
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
@@ -131,8 +122,19 @@ void setup_menu() {
 
     menu->add(new SeparatorMenuItem("Project"));
 
-    menu->add(&project_save);       // save project settings button
-    menu->add(&project_selector);   // save project selector button
+    ActionConfirmItem *project_save = new ActionConfirmItem("Save settings", &save_project_settings);
+    ObjectNumberControl<Project,int> *project_selector = new ObjectNumberControl<Project,int>(
+        "Project number", 
+        project, 
+        &Project::setProjectNumber, 
+        &Project::getProjectNumber, 
+        nullptr, 
+        0, 
+        100
+    );
+
+    menu->add(project_save);       // save project settings button
+    menu->add(project_selector);   // save project selector button
 
     // project loading options (whether to load or hold matrix settings, clock, sequence, behaviour options)
     project_multi_recall_options = new ObjectMultiToggleControl("Recall options", true);
