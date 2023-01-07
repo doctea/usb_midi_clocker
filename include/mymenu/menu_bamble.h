@@ -16,7 +16,7 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
             this->go_back_on_select = true;
         }
 
-        LinkedList<option> *setup_available_values() override {
+        virtual LinkedList<option> *setup_available_values() override {
             ObjectSelectorControl::setup_available_values();
 
             const int num_patterns = (int)(sizeof(behaviour->patterns) / sizeof(bamble_pattern));
