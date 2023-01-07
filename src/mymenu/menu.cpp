@@ -132,7 +132,6 @@ void setup_menu() {
         0, 
         100
     );
-    Serial.printf("#### ObjectNumberControl created, project is @%p\n", project);
 
     menu->add(project_save);       // save project settings button
     menu->add(project_selector);   // save project selector button
