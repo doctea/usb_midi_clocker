@@ -135,6 +135,9 @@ namespace storage {
     myFile.close();
     //if (irqs_enabled) __enable_irq();
     Serial.println(F("Finished saving."));
+
+    update_sequence_filename(String(filename));
+
     return true;
   }
 
