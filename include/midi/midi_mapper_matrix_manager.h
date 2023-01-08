@@ -95,11 +95,15 @@ class MIDIMatrixManager {
         return source_to_targets[source_id][target_id];
     }
 
-    void toggle_connect(source_id_t source_id, target_id_t target_id) {
-        if (is_connected(source_id, target_id))
+    // toggle a connection - return false if connection is now broken, true if it is now made
+    bool toggle_connect(source_id_t source_id, target_id_t target_id) {
+        if (is_connected(source_id, target_id)) {
             this->disconnect(source_id, target_id);
-        else
+            return false;
+        } else {
             this->connect(source_id, target_id);
+            return true;
+        }
     }
     
     // connect source to target)
