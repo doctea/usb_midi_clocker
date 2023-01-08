@@ -9,7 +9,9 @@
 class FileViewerMenuItem;
 
 extern FileViewerMenuItem *sequence_fileviewer;
+extern FileViewerMenuItem *project_fileviewer;
 
 void update_sequence_filename(String filename);
+void update_project_filename(String filename);
 
 #endif
