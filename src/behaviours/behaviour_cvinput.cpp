@@ -12,6 +12,22 @@
     #include "mymenu_items/ParameterInputMenuItems.h"
 
     extern ParameterManager *parameter_manager;
+ 
+    void DeviceBehaviour_CVInput::set_selected_parameter_input(BaseParameterInput *input) {
+        if (input==nullptr)
+            Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
+
+        Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);
+
+        if (this->parameter_input_selector!=nullptr && input!=nullptr) {
+            Serial.println("set_selected_parameter_input() updating the control..");
+            this->parameter_input_selector->update_source(input);
+        }
+        this->source_input = input;
+
+        //else
+        //Serial.printf("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n", this->get_label(), input->name);               
+    }
 
     FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
@@ -26,7 +42,8 @@
                 LinkedList<BaseParameterInput*> *available_parameter_inputs,
         */
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
-        ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
+        //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
+        this->parameter_input_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
                 "Select Parameter Input",
                 this,

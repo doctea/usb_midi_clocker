@@ -1,3 +1,6 @@
+#ifndef BEHAVIOUR_CVINPUT__INCLUDED
+#define BEHAVIOUR_CVINPUT__INCLUDED
+
 #include "Config.h"
 
 #include "bpm.h"
@@ -9,6 +12,12 @@
 
 #include "ParameterManager.h"
 extern ParameterManager *parameter_manager;
+
+#ifdef ENABLE_SCREEN
+    //class DeviceBehaviour_CVInput;
+    template<class TargetClass>
+    class ParameterInputSelectorControl;
+#endif
 
 class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
     public:
@@ -24,19 +33,23 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         int32_t note_length_ticks = PPQN;
 
         #ifdef ENABLE_SCREEN
+            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector;
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
-        virtual void set_selected_parameter_input(BaseParameterInput *input) {
+        virtual void set_selected_parameter_input(BaseParameterInput *input); /*{
             Serial.printf(F("set_selected_parameter_input(%c)\n"), input->name);
             // TODO: make this tolerant of other ParameterInput types
             //this->source_input = (VoltageParameterInput*)input;
+            if (parameter_input_selector!=nullptr) {
+                parameter_input_selector->update_source(input);
+            }
             this->source_input = input;
             if (input==nullptr)
                 Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
             //else
             //Serial.printf("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n", this->get_label(), input->name);               
-        }
+        }*/
         virtual void set_note_length(int32_t length_ticks) {
             this->note_length_ticks = length_ticks;
         }
@@ -113,7 +126,13 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 this->set_note_length((int) value.toInt());
                 return true;
             } else if (key.equals(F("parameter_source"))) {
-                this->source_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
+                //this->source_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
+                BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
+                if (source!=nullptr)
+                    this->set_selected_parameter_input(source);
+                else
+                    Serial.printf("WARNING: couldn't find an input for the name '%s'", value.c_str());
+                return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }
@@ -124,3 +143,5 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 };
 
 extern DeviceBehaviour_CVInput *behaviour_cvinput;
+
+#endif
