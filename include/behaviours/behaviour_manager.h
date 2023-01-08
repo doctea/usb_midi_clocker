@@ -273,14 +273,18 @@ class DeviceBehaviourManager {
             const unsigned int size = this->behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
+                //Serial.printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
                 if (label.equals(device->get_label()))
                     return device;
             }
+            Serial.printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
             return nullptr;
         }
 
         bool load_parse_line(String line) {
-            line = line.replace("\n","");
+            line = line.replace('\n',"");
+            line = line.replace('\r',"");
+            Serial.printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str());
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
             return this->load_parse_key_value(key, value);
@@ -300,7 +304,9 @@ class DeviceBehaviourManager {
                 //Serial.printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
                 return true;
             }
-            //Serial.printf(F("behaviour_manager processing %s => %s, but not a behaviour (or unhandled key)\n"), key.c_str(), value.c_str());
+            Serial.printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
+            if (current_behaviour==nullptr) Serial.printf("and not a behaviour ");
+            Serial.println();
             return false;
         }
 
