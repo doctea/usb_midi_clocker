@@ -10,7 +10,7 @@
 #include "midi/midi_looper.h"
 #include "midi/midi_helpers.h"
 
-#define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 30
+#define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
 class MIDITrack;
 
