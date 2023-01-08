@@ -14,6 +14,8 @@
 
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
+#include "menu_sequence_fileviewer.h"
+
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
 
@@ -349,6 +351,9 @@ class Project {
             myFile.println(F("; end project"));
             myFile.close();
             Serial.println(F("Finished saving."));
+
+            update_project_filename(filename);
+
             //if (irqs_enabled) __enable_irq();
             return true;
         }
@@ -388,6 +393,8 @@ class Project {
             current_project_number = project_number;
             Serial.printf(F("Loaded project settings.\n"));
 
+            update_project_filename(filename);
+
             return true;
         }
 
@@ -397,6 +404,7 @@ class Project {
 
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
+            line = line.replace('\n',"");
 
             if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
                 // legacy save format, pre-matrix
@@ -418,7 +426,7 @@ class Project {
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
-                Serial.printf(F("processed by behaviour_manager\n"), line.c_str());
+                Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str());
             }
         }
 };

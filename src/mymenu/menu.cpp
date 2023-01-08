@@ -91,6 +91,7 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
 
 #include "menuitems_fileviewer.h"
 extern FileViewerMenuItem *sequence_fileviewer;
+extern FileViewerMenuItem *project_fileviewer;
 
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
@@ -206,6 +207,9 @@ void setup_menu() {
         ));
     #endif
     menu->add(project_multi_autoadvance);
+
+    project_fileviewer = new FileViewerMenuItem("Project");
+    menu->add(project_fileviewer);
 
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
