@@ -23,7 +23,7 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
             for (unsigned int i = 0 ; i < num_patterns ; i++) {
                 this->add_available_value(i, behaviour->patterns[i].label);
             }
-            this->add_available_value(20, "Off");
+            this->add_available_value(20, label_off);
 
             return this->available_values;
         }

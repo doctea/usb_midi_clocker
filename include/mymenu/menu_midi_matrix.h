@@ -67,8 +67,18 @@ class MidiMatrixSelectorControl : public SelectorControl {
             actual_value_index = new_value;
             selected_value_index = actual_value_index;
         } else {
-            // target selected for this source
-            midi_matrix_manager->toggle_connect(selected_source_index, new_value);
+            // toggle selected for this source + target combo
+            char msg[MENU_MESSAGE_MAX];
+            if (midi_matrix_manager->toggle_connect(selected_source_index, new_value)) {
+                //Serial.printf("about to build msg string...\n");
+                //snprintf(msg, MENU_MESSAGE_MAX, "Connected %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
+                //snprintf(msg, MENU_MESSAGE_MAX, "Connected %10s to %10s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
+                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s <-> %-5.18s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
+            } else {
+                //snprintf(msg, MENU_MESSAGE_MAX, "Disconnected %10s from %10s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
+                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s </> %-5.18s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
+            }
+            menu_set_last_message(msg, GREEN);
         }
     }
     virtual int getter () override {
@@ -158,20 +168,19 @@ class MidiMatrixSelectorControl : public SelectorControl {
         //Serial.printf("that is available_values[%i] of %i\n", selected_value_index, available_values[selected_value_index]);
         this->setter(selected_value_index);
 
-        char msg[255];
+        /*char msg[MENU_MESSAGE_MAX];
         //Serial.printf("about to build msg string...\n");
-        snprintf(msg, 255, "Selected %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
+        snprintf(msg, MENU_MESSAGE_MAX, "Selected %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
         //Serial.printf("about to set_last_message!");
-        //msg[tft->get_c_max()] = '\0'; // limit the string so we don't overflow set_last_message
-        menu_set_last_message(msg,GREEN);
-
+        //msg[MENU_MESSAGE_MAX-1] = '\0'; // limit the string so we don't overflow set_last_message
+        menu_set_last_message(msg, GREEN);*/
         return go_back_on_select;
     }
 
     virtual bool button_back() override {
         if (selected_source_index >= 0) {
-            Serial.println("Backing out from selecting target");
-            menu_set_last_message((const char*)"Back out", GREEN);
+            //Serial.println("Backing out from selecting target");
+            //menu_set_last_message((const char*)"Back out", GREEN);
             selected_source_index = -1;
             return true;    // don't exit to top menu
         }
