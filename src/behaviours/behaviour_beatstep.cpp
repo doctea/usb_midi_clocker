@@ -29,6 +29,8 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     #include "menuitems_numbers.h"
     #include "menuitems_object_multitoggle.h"
 
+    #include "mymenu/menu_beatstep_sequence.h"
+
     //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
     LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
@@ -96,6 +98,15 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         menuitems->add(pattern_sysex_recall_selector);
 
         menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
+
+        //menuitems->add(new NumberControl<bool>("Query pattern?", &query_pattern, query_pattern, 0, 1, true));
+        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Retrieve pattern", this, &DeviceBehaviour_Beatstep::request_sequence_from_beatstep) );
+        ObjectNumberControl<DeviceBehaviour_Beatstep,int> *rotate_control = new ObjectNumberControl<DeviceBehaviour_Beatstep,int>("Rotation", this, &DeviceBehaviour_Beatstep::setSequenceRotation, &DeviceBehaviour_Beatstep::getSequenceRotation, nullptr, 0, 15, true, true);
+        rotate_control->wrap = true;
+        menuitems->add(rotate_control);
+        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Push pattern", this, &DeviceBehaviour_Beatstep::push_sequence_to_beatstep) );
+
+        menuitems->add(new BeatstepSequenceDisplay("Sequence", this));
 
         /* 
         // this is added to the multi-select control, so we don't need it here too

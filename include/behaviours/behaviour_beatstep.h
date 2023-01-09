@@ -26,6 +26,8 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 #define BEATSTEP_PATTERN_LENGTH_MAXIMUM 16
 
 #define BEATSTEP_GLOBAL         0x50
+#define BEATSTEP_STEP_NOTE      0x52
+#define BEATSTEP_STEP_STATE     0x53
 
 // todo: note that the first requested sysex parameter is often missed!  so in this case 'TRANSPOSE' is kinda sacrificial
 #define BEATSTEP_TRANSPOSE      0x02
@@ -42,7 +44,9 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
     
     public:
         #define NUM_PATTERNS 16
-        bool auto_advance_pattern = false;   // todo: make configurable!
+        bool auto_advance_pattern = false; 
+
+        bool query_pattern = false;
 
         int last_note = -1, current_note = -1;
         //int last_transposed_note = -1, current_transposed_note = -1;
@@ -131,6 +135,106 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
         #ifdef ENABLE_BEATSTEP_SYSEX
             // thank you to https://www.untergeek.de/2014/11/taming-arturias-beatstep-sysex-codes-for-programming-via-ipad/ for this info
+
+            // pattern stuff
+            struct StepData {
+                bool state = false;
+                int8_t value = -1;
+            };
+
+            class BeatstepPattern {
+                #define NUM_BEATSTEP_STEPS 16
+                StepData *step = nullptr;
+                int rotation = 0;
+                public:
+                    DeviceBehaviour_Beatstep *target = nullptr;
+                    BeatstepPattern(DeviceBehaviour_Beatstep *target) {
+                        this->target = target;
+                        step = (StepData*)calloc(NUM_BEATSTEP_STEPS, sizeof(StepData));
+                        for(int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
+                            step[i] = { .state = false, .value = -1 };
+                        }
+                    }
+                    int get_rotated_index(int i) {
+                        return (i + rotation) % NUM_BEATSTEP_STEPS;
+                    }
+                    void send_to_beatstep() {
+                        Serial.printf("----send_to_beatstep with rotation %i----\n", rotation);
+                        for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
+                            Serial.printf(
+                                "send_to_beatstep: %i\t(rotated to %i)\tis %s\t(pitch %s)\n", 
+                                i, 
+                                get_rotated_index(i), 
+                                get_state_at_step(i)?"ON":"OFF", 
+                                get_note_name_c(get_pitch_at_step(i))
+                            );
+                            target->set_sysex_parameter(BEATSTEP_STEP_NOTE, i, get_pitch_at_step(i));
+                            //target->set_sysex_parameter(BEATSTEP_STEP_STATE, i, get_state_at_step(i) ? 0x7F : 0);
+                        }
+                        for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
+                            //Serial.printf("send_to_beatstep: %i\t(rotated to %i)\tis %s\t(pitch %s)\n", i, get_rotated_index(i), get_state_at_step(i)?"ON":"OFF", get_note_name_c(get_pitch_at_step(i)));
+                            //target->set_sysex_parameter(BEATSTEP_STEP_NOTE, i, get_pitch_at_step(i));
+                            target->set_sysex_parameter(BEATSTEP_STEP_STATE, i, get_state_at_step(i) ? 1 : 0);
+                        }
+                        
+                    }
+                    void request_from_beatstep () {
+                        for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
+                            int delay = NUM_BEATSTEP_STEPS;
+                            target->request_sysex_parameter(BEATSTEP_STEP_NOTE, i, delay);
+                            target->request_sysex_parameter(BEATSTEP_STEP_STATE, i);
+                        }
+                    }
+                    void process_received_sysex(int8_t parameter_number, int8_t step_number, int8_t value) {
+                        if (parameter_number==BEATSTEP_STEP_NOTE) {
+                            //MIDI note of step
+                            //this->set_value_at_step(step_number, value);
+                            this->step[step_number].value = value;
+                        } else if (parameter_number==BEATSTEP_STEP_STATE) {
+                            //this->set_state_at_step(step_number, value);
+                            this->step[step_number].state = value;
+                        }
+                    }
+                    void rotate(int rotate_value) {
+                        this->rotation = rotate_value;
+                    }
+                    int get_rotation() {
+                        return this->rotation;
+                    }
+                    StepData get_step_actual(int i) {
+                        return (this->step[i]);
+                    }
+                    int8_t get_pitch_at_step(int i) {
+                        return this->get_step_actual(get_rotated_index(i)).value;
+                    }
+                    bool get_state_at_step(int i) {
+                        return this->get_step_actual(get_rotated_index(i)).state;
+                    }
+
+                    void set_value_at_step(int i, int8_t value) {
+                        //this->step[get_rotated_index(i) % NUM_BEATSTEP_STEPS].value = value;
+                        this->step[get_rotated_index(i)].value = value;
+                    }
+                    void set_state_at_step(int i, bool state) {
+                        this->step[get_rotated_index(i)].state = state;
+                    }
+            };
+
+            BeatstepPattern *sequence = new BeatstepPattern(this);
+
+            void request_sequence_from_beatstep() {
+                this->sequence->request_from_beatstep();
+            }
+            void push_sequence_to_beatstep() {
+                this->sequence->send_to_beatstep();
+            }
+            void setSequenceRotation(int r) {
+                this->sequence->rotate(r);
+            }
+            int getSequenceRotation() {
+                return this->sequence->get_rotation();
+            }
+            
             // stuff for advancing pattern
             void set_auto_advance_pattern(bool auto_advance_pattern) {
                 this->auto_advance_pattern = auto_advance_pattern;
@@ -284,6 +388,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     this->request_sysex_parameter(sysex_parameters[i].cc, sysex_parameters[i].pp);
                 }
+                if (this->query_pattern)
+                    this->sequence->request_from_beatstep();
             }
 
             // actually send a dequeued request, and re-pause the queue
@@ -337,10 +443,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     if (debug_sysex) Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
                     return;
                 }
-                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    if (sysex_parameters[i].cc==data[BROAD_POS] && sysex_parameters[i].pp==data[SPEC_POS]) {
-                        if (sysex_parameters[i].target_variable!=nullptr)
-                            *sysex_parameters[i].target_variable = data[VALUE_POS];
+                if (data[BROAD_POS]==0x52 || data[BROAD_POS]==0x53) {
+                    this->sequence->process_received_sysex(data[BROAD_POS], data[SPEC_POS], data[VALUE_POS]);
+                } else {
+                    for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
+                        if (sysex_parameters[i].cc==data[BROAD_POS] && sysex_parameters[i].pp==data[SPEC_POS]) {
+                            if (sysex_parameters[i].target_variable!=nullptr)
+                                *sysex_parameters[i].target_variable = data[VALUE_POS];
+                        }
                     }
                 }
 
