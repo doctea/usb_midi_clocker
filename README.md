@@ -163,13 +163,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### TODO/Future 
 
-
-- stutter/machinegun mode? (eg play 32nd stabs instead of drone)
 - Write up controls/instructions/etc
 - Come up with a cooler name
 - Update docs to reflect all features
-- Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
-  - Control over the envelopes AHDSR + modulation
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - eg Euclidian sequencer
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
@@ -193,11 +189,12 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Give better control over Beatstep via sysex if possible?
   - ~~auto-advance pattern mode~~
   - ie, ~~change speed..?~~
-  - note length
-  - legato
-  - shuffle
-- Better way to define custom behaviour in order to add new USB MIDI devices
-  - Partially done, can be improved further
+  - ~~note length~~
+  - ~~legato~~
+  - ~~shuffle~~
+  - option to rotate sequence to change the downbeat - read in all the current pad values, ie rotate and write them back out
+- ~~Better way to define custom behaviour in order to add new USB MIDI devices~#
+  - ~~Partially done, can be improved further~~
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
   - tricks like 'half-time beatstep for last bar of phrase'
@@ -224,7 +221,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Improve quantizer (take note length into consideration)
   - Optimise memory usage with more efficient data structure
 - MIDI control over [r_e_c_u_r](https://github.com/cyberboy666/r_e_c_u_r)
-- TODO: usbserial and for Arduino Unos without needing to use USB Midi Klik 
+- TODO: usbserial for Arduino Unos without needing to use USB Midi Klik 
   - todo: see whether we need to use device unique id rather than pid+vid to ensure correct detection of mltiple devices
   - or for things that don't even talk MIDI, like eg my [veboard](https://github.com/doctea/veboard) project, or even direct Panasonic MX serial control
   - todo: implement a proof-of-concept non-MIDI usb serial device
@@ -291,6 +288,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
  - ~~toggle on/off, tracks the first/lowest note played in a phrase/bar and retrigger it on the start of every bar..~~
 - ~~CraftSynth has Parameters, can assign modulation to them~~
 - ~~eg remap APCMini faders to Bamble options~~
+- stutter/machinegun mode? (eg play 32nd stabs instead of drone)
+- Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?
+  - Control over the envelopes AHDSR + modulation
 
 ---
 
