@@ -139,7 +139,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             // pattern stuff
             struct StepData {
                 bool state = false;
-                int8_t value = -1;
+                int8_t pitch = -1;
             };
 
             class BeatstepPattern {
@@ -188,8 +188,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     void process_received_sysex(int8_t parameter_number, int8_t step_number, int8_t value) {
                         if (parameter_number==BEATSTEP_STEP_NOTE) {
                             //MIDI note of step
-                            //this->set_value_at_step(step_number, value);
-                            this->step[step_number].value = value;
+                            //this->set_pitch_at_step(step_number, value);
+                            this->step[step_number].pitch = value;
                         } else if (parameter_number==BEATSTEP_STEP_STATE) {
                             //this->set_state_at_step(step_number, value);
                             this->step[step_number].state = value;
@@ -205,15 +205,15 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         return (this->step[i]);
                     }
                     int8_t get_pitch_at_step(int i) {
-                        return this->get_step_actual(get_rotated_index(i)).value;
+                        return this->get_step_actual(get_rotated_index(i)).pitch;
                     }
                     bool get_state_at_step(int i) {
                         return this->get_step_actual(get_rotated_index(i)).state;
                     }
 
-                    void set_value_at_step(int i, int8_t value) {
+                    void set_pitch_at_step(int i, int8_t pitch) {
                         //this->step[get_rotated_index(i) % NUM_BEATSTEP_STEPS].value = value;
-                        this->step[get_rotated_index(i)].value = value;
+                        this->step[get_rotated_index(i)].pitch = pitch;
                     }
                     void set_state_at_step(int i, bool state) {
                         this->step[get_rotated_index(i)].state = state;
