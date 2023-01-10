@@ -168,12 +168,12 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                                 get_state_at_step(i)?"ON":"OFF", 
                                 get_note_name_c(get_pitch_at_step(i))
                             );
-                            target->set_sysex_parameter(BEATSTEP_STEP_NOTE, i, get_pitch_at_step(i));
+                            target->set_sysex_parameter(BEATSTEP_STEP_PITCH, i, get_pitch_at_step(i));
                             //target->set_sysex_parameter(BEATSTEP_STEP_STATE, i, get_state_at_step(i) ? 0x7F : 0);
                         }
                         for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
                             //Serial.printf("send_to_beatstep: %i\t(rotated to %i)\tis %s\t(pitch %s)\n", i, get_rotated_index(i), get_state_at_step(i)?"ON":"OFF", get_note_name_c(get_pitch_at_step(i)));
-                            //target->set_sysex_parameter(BEATSTEP_STEP_NOTE, i, get_pitch_at_step(i));
+                            //target->set_sysex_parameter(BEATSTEP_STEP_PITCH, i, get_pitch_at_step(i));
                             target->set_sysex_parameter(BEATSTEP_STEP_STATE, i, get_state_at_step(i) ? 1 : 0);
                         }
                         
@@ -181,12 +181,12 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     void request_from_beatstep () {
                         for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
                             int delay = NUM_BEATSTEP_STEPS;
-                            target->request_sysex_parameter(BEATSTEP_STEP_NOTE, i, delay);
+                            target->request_sysex_parameter(BEATSTEP_STEP_PITCH, i, delay);
                             target->request_sysex_parameter(BEATSTEP_STEP_STATE, i);
                         }
                     }
                     void process_received_sysex(int8_t parameter_number, int8_t step_number, int8_t value) {
-                        if (parameter_number==BEATSTEP_STEP_NOTE) {
+                        if (parameter_number==BEATSTEP_STEP_PITCH) {
                             //MIDI note of step
                             //this->set_pitch_at_step(step_number, value);
                             this->step[step_number].pitch = value;
