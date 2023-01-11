@@ -100,6 +100,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
 
         //menuitems->add(new NumberControl<bool>("Query pattern?", &query_pattern, query_pattern, 0, 1, true));
+        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Clear pattern", this, &DeviceBehaviour_Beatstep::clear_beatstep) );
         menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Retrieve pattern", this, &DeviceBehaviour_Beatstep::request_sequence_from_beatstep) );
         ObjectNumberControl<DeviceBehaviour_Beatstep,int> *rotate_control = new ObjectNumberControl<DeviceBehaviour_Beatstep,int>("Rotation", this, &DeviceBehaviour_Beatstep::setSequenceRotation, &DeviceBehaviour_Beatstep::getSequenceRotation, nullptr, 0, 15, true, true);
         rotate_control->wrap = true;

@@ -26,7 +26,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 #define BEATSTEP_PATTERN_LENGTH_MAXIMUM 16
 
 #define BEATSTEP_GLOBAL         0x50
-#define BEATSTEP_STEP_NOTE      0x52
+#define BEATSTEP_STEP_PITCH     0x52
 #define BEATSTEP_STEP_STATE     0x53
 
 // todo: note that the first requested sysex parameter is often missed!  so in this case 'TRANSPOSE' is kinda sacrificial
@@ -152,7 +152,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         this->target = target;
                         step = (StepData*)calloc(NUM_BEATSTEP_STEPS, sizeof(StepData));
                         for(int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
-                            step[i] = { .state = false, .value = -1 };
+                            step[i] = { .state = false, .pitch = -1 };
                         }
                     }
                     int get_rotated_index(int i) {
@@ -169,15 +169,17 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                                 get_note_name_c(get_pitch_at_step(i))
                             );
                             target->set_sysex_parameter(BEATSTEP_STEP_PITCH, i, get_pitch_at_step(i));
+                            //delay(10);
                             //target->set_sysex_parameter(BEATSTEP_STEP_STATE, i, get_state_at_step(i) ? 0x7F : 0);
                         }
                         for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
                             //Serial.printf("send_to_beatstep: %i\t(rotated to %i)\tis %s\t(pitch %s)\n", i, get_rotated_index(i), get_state_at_step(i)?"ON":"OFF", get_note_name_c(get_pitch_at_step(i)));
                             //target->set_sysex_parameter(BEATSTEP_STEP_PITCH, i, get_pitch_at_step(i));
+                            //delay(10);
                             target->set_sysex_parameter(BEATSTEP_STEP_STATE, i, get_state_at_step(i) ? 1 : 0);
-                        }
-                        
+                        }   
                     }
+
                     void request_from_beatstep () {
                         for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
                             int delay = NUM_BEATSTEP_STEPS;
@@ -186,6 +188,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         }
                     }
                     void process_received_sysex(int8_t parameter_number, int8_t step_number, int8_t value) {
+                        step_number = get_rotated_index(step_number);
                         if (parameter_number==BEATSTEP_STEP_PITCH) {
                             //MIDI note of step
                             //this->set_pitch_at_step(step_number, value);
@@ -222,6 +225,15 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             BeatstepPattern *sequence = new BeatstepPattern(this);
 
+            void clear_beatstep() {
+                for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
+                    //int delay = NUM_BEATSTEP_STEPS;
+                    set_sysex_parameter(BEATSTEP_STEP_PITCH, i, 0);
+                    delay(10);
+                    set_sysex_parameter(BEATSTEP_STEP_STATE, i, 0);
+                    delay(10);
+                }
+            }
             void request_sequence_from_beatstep() {
                 this->sequence->request_from_beatstep();
             }
@@ -343,7 +355,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             // proof of concept of fetching parameter values from beatstep over sysex
 
-            bool debug_sysex = false;
+            bool debug_sysex = true;
 
             sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
                 { BEATSTEP_GLOBAL, BEATSTEP_TRANSPOSE, nullptr, "Transpose"},    // transpose (unused, sacrificial to the gods of missing beatstep data)
@@ -358,7 +370,13 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 byte pp;
                 byte cc;
             };
+            struct BeatstepSysexSetRequest {
+                byte pp;
+                byte cc;
+                byte vv;
+            };
             Queue<BeatstepSysexRequest,50> *sysex_request_queue = new Queue<BeatstepSysexRequest,50>();
+            Queue<BeatstepSysexSetRequest,50> *sysex_send_queue = new Queue<BeatstepSysexSetRequest,50>();
 
             // called every main loop - process any queued requests
             void loop(uint32_t ticks) override {
@@ -366,6 +384,11 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     BeatstepSysexRequest *req = sysex_request_queue->pop();
                     //Serial.printf("loop() dequeued %02x,%02x\n", req->cc, req->pp);
                     this->process_sysex_request(*req);
+                }
+                if (sysex_send_queue->isReady() && this->device) {
+                    BeatstepSysexSetRequest *req = sysex_send_queue->pop();
+                    Serial.println("sysex_send_queue dequeued an item");
+                    this->process_set_sysex_parameter(*req);
                 }
                 return DividedClockedBehaviour::loop(ticks);
             }
@@ -382,7 +405,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 request_all_sysex_parameters(3);
             }
             void request_all_sysex_parameters(int delay) {
-                if (debug_sysex) Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);
+                //if (debug_sysex) Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);
                 /*this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, delay);
                 this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            */
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
@@ -392,11 +415,23 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     this->sequence->request_from_beatstep();
             }
 
+            // put a new request into the sysex queue
+            void request_sysex_parameter(byte pp, byte cc, int delay = 0) {
+                //if (debug_sysex) Serial.printf("Queueing get request for %02x, %02x with %ims delay\n", pp, cc, delay);
+                this->sysex_request_queue->push(BeatstepSysexRequest {pp, cc}, SYSEX_TIMEOUT, delay);
+            }
+            // queues set request
+            void set_sysex_parameter(byte pp, byte cc, byte vv, int delay = 2
+             ) {
+                if (debug_sysex) Serial.printf("Queueing set request for %02x, %02x, %02x, with %ims delay\n", pp, cc, vv, delay);
+                sysex_send_queue->push(BeatstepSysexSetRequest { pp, cc, vv }, 0, delay);
+            }
+
             // actually send a dequeued request, and re-pause the queue
             void process_sysex_request(BeatstepSysexRequest req) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,req.pp,req.cc,0xF7 };
                 if (debug_sysex) {
-                    Serial.print("Sending Sysex to BeatStep\t[ ");
+                    Serial.print("Sending get Sysex to BeatStep\t[ ");
                     for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
                         Serial.printf("%02x ", data[i]);
                     Serial.println("] (request)");
@@ -407,16 +442,15 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 }
                 sysex_request_queue->setPaused(true);
             }
-            // put a new request into the sysex queue
-            void request_sysex_parameter(byte pp, byte cc, int delay = 0) {
-                if (debug_sysex) Serial.printf("Queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
-                this->sysex_request_queue->push(BeatstepSysexRequest {pp, cc}, SYSEX_TIMEOUT, delay);
+            // actually set a beatstep sysex parameter
+            void process_set_sysex_parameter(BeatstepSysexSetRequest req) {
+                this->process_set_sysex_parameter(req.pp, req.cc, req.vv);
             }
-            // set a beatstep sysex parameter
-            void set_sysex_parameter(byte pp, byte cc, byte vv) {
+            // actually set a beatstep sysex parameter
+            void process_set_sysex_parameter(byte pp, byte cc, byte vv) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
                 if (debug_sysex) {
-                    Serial.print("Sending Sysex to BeatStep\t[ ");
+                    Serial.print("Sending set Sysex to BeatStep\t[ ");
                     for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
                         Serial.printf("%02x ", data[i]);
                     Serial.printf("] (setting %02x,%02x to %02x)\n", pp, cc, vv);

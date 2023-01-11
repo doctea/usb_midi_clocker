@@ -12,6 +12,7 @@ class Queue {
     uint32_t *delay_at = nullptr;       // earliest time to process each queued item
 
     uint32_t actual_timeout_at = 0;     // earliest time to timeout from current item
+    uint32_t actual_delay_at = 0;
 
     int head = -1;      // read head
     int tail = -1;      // write head
@@ -31,7 +32,8 @@ class Queue {
         tail %= max_queue_size;
         memcpy(&queue[tail], &data, sizeof(DataType));
 
-        this->delay_at[tail] = millis() + delay;    // record the time that we want to request this
+        //this->delay_at[tail] = millis() + delay;    // record the time that we want to request this
+        this->delay_at[tail] = delay;
         this->timeout[tail] = timeout;              // record the timeout to allow before pushing on
         //Serial.printf("pushed to tail %i\n", tail);
     }
@@ -44,6 +46,7 @@ class Queue {
         memcpy(&head_data, &queue[head], sizeof(DataType));
         //Serial.printf("popped from head %i: %02x,%02x\n", head, head_data.pp, head_data.cc);
         this->actual_timeout_at = millis() + timeout[head]; // record time that item was popped, so we can timeout if still paused when that happens
+        this->actual_delay_at = millis() + delay_at[head];
         // todo: set the paused flag here based on whether a timeout was requested, rather than requiring the calling code to handle this?
 
         return &head_data;
@@ -58,7 +61,8 @@ class Queue {
         if (this->isEmpty())            
             // not ready if nothing queued!
             return false;
-        if (delay_at[head]>millis())    
+        //if (delay_at[head]>millis())    
+        if (this->actual_delay_at > millis())
             // don't send message if we haven't reached its delay time yet
             return false;
         if (this->paused && timeout[head]!=0 && actual_timeout_at<=millis()) {  
