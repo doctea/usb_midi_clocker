@@ -228,10 +228,10 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             void clear_beatstep() {
                 for (int i = 0 ; i < NUM_BEATSTEP_STEPS ; i++) {
                     //int delay = NUM_BEATSTEP_STEPS;
-                    set_sysex_parameter(BEATSTEP_STEP_PITCH, i, 0);
-                    delay(10);
-                    set_sysex_parameter(BEATSTEP_STEP_STATE, i, 0);
-                    delay(10);
+                    set_sysex_parameter(BEATSTEP_STEP_PITCH, i, 0, 10);
+                    //delay(10);
+                    set_sysex_parameter(BEATSTEP_STEP_STATE, i, 0, 10);
+                    //delay(10);
                 }
             }
             void request_sequence_from_beatstep() {
@@ -376,7 +376,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 byte vv;
             };
             Queue<BeatstepSysexRequest,50> *sysex_request_queue = new Queue<BeatstepSysexRequest,50>();
-            Queue<BeatstepSysexSetRequest,50> *sysex_send_queue = new Queue<BeatstepSysexSetRequest,50>();
+            Queue<BeatstepSysexSetRequest,50> *sysex_send_queue = new Queue<BeatstepSysexSetRequest,50>(QueueModes::QUEUE_DELAY_RELATIVE);
 
             // called every main loop - process any queued requests
             void loop(uint32_t ticks) override {
