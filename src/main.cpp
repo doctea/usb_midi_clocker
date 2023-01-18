@@ -70,6 +70,8 @@ void do_tick(uint32_t ticks);
 
 #include "profiler.h"
 
+#include "__version.h"
+
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
   uint32_t *main_loop_length_averages; //[NUMBER_AVERAGES];
@@ -119,7 +121,7 @@ void setup() {
   #endif
 
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");
-  tft_print("Git info: " COMMIT_HASH "\n");
+  tft_print("Git info: " COMMIT_INFO "\n");
 
   #ifdef ENABLE_TYPING_KEYBOARD
     tft_print((char*)"Setting up typing keyboard..\n");
