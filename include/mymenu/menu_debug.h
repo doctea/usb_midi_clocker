@@ -20,7 +20,7 @@ class DebugPanel : public MenuItem {
             tft->println("Built at " __TIME__ " on " __DATE__);
             tft->printf("Free RAM: %u bytes\n", freeRam());
             tft->printf("Uptime: %02uh %02um %02us\n", millis()/1000/60/60, (millis()/1000/60)%60, (millis()/1000)%60);
-            tft->println("Git info: " COMMIT_HASH);
+            tft->println("Git info: " COMMIT_INFO);
             return tft->getCursorY();
         }
 };
