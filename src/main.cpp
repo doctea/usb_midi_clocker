@@ -70,6 +70,8 @@ void do_tick(uint32_t ticks);
 
 #include "profiler.h"
 
+#include "__version.h"
+
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
   uint32_t *main_loop_length_averages; //[NUMBER_AVERAGES];

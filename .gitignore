@@ -18,3 +18,4 @@ media/screenshots
 sd_card_files
 wip/*
 hexes/*
+include/__version.h
