@@ -7,8 +7,8 @@
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
 //#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
-#ifndef COMMIT_HASH
-    #define COMMIT_HASH "[Unknown]"
+#ifndef COMMIT_INFO
+    #define COMMIT_INFO "[Unknown]"
 #endif
 
 //// CV input options

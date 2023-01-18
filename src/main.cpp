@@ -119,7 +119,7 @@ void setup() {
   #endif
 
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");
-  tft_print("Git info: " COMMIT_HASH "\n");
+  tft_print("Git info: " COMMIT_INFO "\n");
 
   #ifdef ENABLE_TYPING_KEYBOARD
     tft_print((char*)"Setting up typing keyboard..\n");
