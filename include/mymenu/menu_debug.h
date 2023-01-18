@@ -6,6 +6,8 @@
 #include "menuitems_numbers.h"
 #include "submenuitem_bar.h"
 
+#include "__version.h"
+
 extern bool debug, debug_stress_sequencer_load;
 
 class DebugPanel : public MenuItem {
@@ -18,9 +20,9 @@ class DebugPanel : public MenuItem {
             tft->setCursor(pos.x,pos.y);
             header("Statistics:", pos, selected, opened);
             tft->println("Built at " __TIME__ " on " __DATE__);
+            tft->println("Git info: " COMMIT_INFO);
             tft->printf("Free RAM: %u bytes\n", freeRam());
             tft->printf("Uptime: %02uh %02um %02us\n", millis()/1000/60/60, (millis()/1000/60)%60, (millis()/1000)%60);
-            tft->println("Git info: " COMMIT_HASH);
             return tft->getCursorY();
         }
 };
