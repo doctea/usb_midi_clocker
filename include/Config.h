@@ -7,10 +7,6 @@
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
 //#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
-#ifndef COMMIT_INFO
-    #define COMMIT_INFO "[Unknown]"
-#endif
-
 //// CV input options
 #define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
