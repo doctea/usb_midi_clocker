@@ -14,7 +14,7 @@
 
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
-#include "menu_sequence_fileviewer.h"
+#include "mymenu/menu_fileviewers.h"
 
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
