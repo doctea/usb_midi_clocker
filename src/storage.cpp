@@ -89,15 +89,15 @@ namespace storage {
 
     char filename[MAX_FILEPATH] = "";
     snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-    Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
+    //Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
     if (SD.exists(filename)) {
-      Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
+      //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
       SD.remove(filename);
       //Serial.println("deleted"); Serial.flush();
     }
     myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
     if (!myFile) {    
-      Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+      //Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
       //if (irqs_enabled) __enable_irq();
       return false;
     }
@@ -128,13 +128,13 @@ namespace storage {
     for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
       //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
       //Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
-      Serial.flush();
+      //Serial.flush();
       myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
     }
     myFile.println(F("; end sequence"));
     myFile.close();
     //if (irqs_enabled) __enable_irq();
-    Serial.println(F("Finished saving."));
+    //Serial.println(F("Finished saving."));
 
     update_sequence_filename(String(filename));
 
@@ -272,6 +272,8 @@ namespace storage {
     static volatile bool already_loading = false;
     if (already_loading) return false;
     already_loading = true;
+
+    messages_log_add(String("Loading sequence ") + String(preset_number));
 
     //bool irqs_enabled = __irq_enabled();
     //__disable_irq();

@@ -277,14 +277,14 @@ class DeviceBehaviourManager {
                 if (label.equals(device->get_label()))
                     return device;
             }
-            Serial.printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
+            //Serial.printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
             return nullptr;
         }
 
         bool load_parse_line(String line) {
             line = line.replace('\n',"");
             line = line.replace('\r',"");
-            Serial.printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str());
+            //Serial.printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str());
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
             return this->load_parse_key_value(key, value);
@@ -304,9 +304,9 @@ class DeviceBehaviourManager {
                 //Serial.printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
                 return true;
             }
-            Serial.printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
+            /*Serial.printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
             if (current_behaviour==nullptr) Serial.printf("and not a behaviour ");
-            Serial.println();
+            Serial.println();*/
             return false;
         }
 
@@ -329,12 +329,13 @@ class DeviceBehaviourManager {
             //LinkedList<String> lines = LinkedList<String>();
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                Serial.printf("behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
+                //Serial.printf("behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
                 device->save_sequence_add_lines(lines);
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
+                    //Serial.printf("\tbehaviour_manager#save_sequence_add_lines calling on behaviour...\n");
                     lines->add(F("behaviour_end=") + String(device->get_label()));
                 }
             }
