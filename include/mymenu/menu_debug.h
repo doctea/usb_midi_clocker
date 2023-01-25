@@ -58,4 +58,6 @@ void setup_debug_menu() {
     menu->add(bar);
 
     menu->add(new DebugPanel());
+
+    menu->add(new ListViewerMenuItem("Message history", messages_log));
 }

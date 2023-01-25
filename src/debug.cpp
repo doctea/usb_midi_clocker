@@ -2,6 +2,8 @@
 
 #include "debug.h"
 
+LinkedList<String> *messages_log = new LinkedList<String>();
+
 #if defined(__arm__) && defined(CORE_TEENSY)
   extern unsigned long _heap_start;
   extern unsigned long _heap_end;
