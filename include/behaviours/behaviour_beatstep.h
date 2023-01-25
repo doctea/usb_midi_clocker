@@ -140,7 +140,24 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             bool is_auto_advance_pattern() {
                 return this->auto_advance_pattern;
             }
+
+            bool auto_fetch = false;
+            bool shouldAutoFetch() {
+                return this->getAutoFetch();
+            }
+            bool getAutoFetch() {
+                return this->auto_fetch;
+            }
+            void setAutoFetch(bool state = true) {
+                this->auto_fetch = true;
+            }
             
+            void on_bar(int bar) override {
+                DividedClockedBehaviour::on_bar(bar);
+                if (this->shouldAutoFetch())
+                    this->request_all_sysex_parameters();
+            }
+
             virtual void on_end_phrase_pre_clock(uint32_t phrase) override {
                 if (this->device==nullptr) return;
 
@@ -164,11 +181,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 this->device->sendSysEx(sizeof(data), data, true);
 
                 //this->request_all_sysex_parameters(50);
-            }
-
-            void on_bar(int bar) override {
-                DividedClockedBehaviour::on_bar(bar);
-                this->request_all_sysex_parameters();
             }
 
             // pattern length settings
@@ -271,13 +283,13 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             // snoop on every realtime MIDI message sent to the beatstep, and request the latest values if its a Start message, in case we've changed pattern
             virtual void sendRealTime(uint8_t message) override {
                 DividedClockedBehaviour::sendRealTime(message);
-                if (message==(uint8_t)(midi::Start))
+                if (this->shouldAutoFetch() && message==(uint8_t)(midi::Start))
                     this->request_all_sysex_parameters(10);
             }
 
             // for testing
             void request_all_sysex_parameters() {
-                request_all_sysex_parameters(3);
+                this->request_all_sysex_parameters(3);
             }
             void request_all_sysex_parameters(int delay) {
                 if (debug_sysex) Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);

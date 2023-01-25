@@ -117,6 +117,8 @@ void setup_menu() {
     Serial.println(F("Created Menu object"));
     Serial_flush();
 
+    menu->set_messages_log(messages_log);
+
     menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
     menu->add(&posbar);     // bpm and position indicator
 

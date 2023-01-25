@@ -219,8 +219,11 @@ class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public Ar
                 DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
             }*/
             if (is_bpm_on_bar(real_ticks)) { //}, clock_delay_ticks)) {
+                //if (this->should_auto_restart_on_change())    // force resync restart on every bar, however, no good if target device (eg beatstep) pattern is longer than a bar
+                //    this->set_restart_on_bar();
                 //if (this->debug) Serial.printf(F("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i confirmed yes for is_bpm_on_bar, called ClockedBehaviour::on_bar\n"), this->get_label(), real_ticks, clock_delay_ticks);
                 ClockedBehaviour::on_bar(BPM_CURRENT_BAR_OF_PHRASE);
+                // todo: should we handle calling on_phrase here?  maybe thats where we should force re-sync?
             }
 
             if (/*ticks==0 || */ticks % clock_divisor == 0) {
