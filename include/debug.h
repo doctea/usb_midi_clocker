@@ -1,6 +1,8 @@
 #ifndef DEBUG__INCLUDED
 #define DEBUG__INCLUDED
 
+#include <Arduino.h>
+
 int freeRam();
 void debug_free_ram();
 
@@ -24,5 +26,8 @@ void reset_teensy();
         #define Debug_print(X)      {}
     #endif
 #endif
+
+#include "LinkedList.h"
+extern LinkedList<String> *messages_log;
 
 #endif

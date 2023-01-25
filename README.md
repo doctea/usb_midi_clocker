@@ -132,11 +132,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - GDB debug mode doesn't work
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
-- Sometimes crashes the first time that one of the Parameter submenus is opened... but works after its rebooted..
 - USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..
 
 ## Known issues (may be solved)
 
+- Believe solved now (actual fix needed in parameters library, due to on_add not being called/uninitialised pointer to tft) Sometimes crashes the first time that one of the Parameter submenus is opened... but works after its rebooted..
 - Although it has been known run for many hours solidly, been getting some occasional crashes lately (especially while working on the looper code, though unsure if this is related).  Might be because of bugs in my attempt to patch the problem with the USBHost_t36 USB MIDI clock problem...
 - ~~MIDI loop output to USB devices behaves very strangely... missed notes, stuck notes, glitching.... but it works more reliably if host is connected to the debug serial output?!  Think maybe a problem in the underlying USBHost_t36 code?~~
   - notes work fine though if sending clock is disabled?!

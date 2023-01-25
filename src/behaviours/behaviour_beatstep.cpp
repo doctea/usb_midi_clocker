@@ -95,6 +95,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         }
         menuitems->add(pattern_sysex_recall_selector);
 
+        menuitems->add(new ObjectToggleControl<DeviceBehaviour_Beatstep>("Auto-fetch", this, &DeviceBehaviour_Beatstep::setAutoFetch, &DeviceBehaviour_Beatstep::getAutoFetch));
         menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
 
         /* 
