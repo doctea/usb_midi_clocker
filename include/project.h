@@ -363,6 +363,8 @@ class Project {
             //__disable_irq();
             File myFile;
 
+            messages_log_add(String("Loading project ") + String(project_number));
+
             if (isLoadMatrixMappings()) {
                 Serial.printf(F("load_project_settings(%i) resetting matrix!\n"), project_number);
                 midi_matrix_manager->reset_matrix(); 
@@ -415,6 +417,7 @@ class Project {
                 source_label = source_label.replace(F("_output"),F(""));  // translate pre-matrix style naming to matrix-style naming
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+                return;
             } else if (this->isLoadMatrixMappings() && line.startsWith(F("midi_matrix_map="))) {
                 // midi matrix version
                 Serial.printf(F("----\nLoading midi_matrix_map line '%s'\n"), line.c_str());
@@ -423,11 +426,14 @@ class Project {
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+                return;
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
                 Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str());
+                return;
             }
+            messages_log_add(String("Unknown Project line '") + line + String("'"));
         }
 };
 
