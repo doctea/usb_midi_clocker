@@ -442,14 +442,19 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
                 return true;
             } else if (key.startsWith(F("mutate_low"))) {
                 this->setMinimumPattern(value.toInt());
+                return true;
             } else if (key.startsWith(F("mutate_high"))) {
                 this->setMaximumPattern(value.toInt());
+                return true;
             } else if (key.startsWith(F("mutate_seed_modifier"))) {
                 this->setEuclidianSeedModifier(value.toInt());
+                return true;
             } else if (key.startsWith(F("reset_before_mutate"))) {
                 this->setEuclidianResetBeforeMutate(value.equals("true"));
+                return true;
             } else if (key.startsWith(F("seed_use_phrase"))) {
                 this->setEuclidianSeedUsePhrase(value.equals("true"));
+                return true;
             } else if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
                 return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
