@@ -245,7 +245,26 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - expose internal settings (like bpm, clock delays...?) as Parameters, so that can have modulation mapped to them too...
 - Reassignable ParameterInputs, that can be set to take their values from an incoming MIDI stream
   - Register them with the midi_matrix_mapper_manager so that when it receives a CC value change, it updates the ParameterInput current_value
-  
+- Beatstep features
+  - 'offline editing' features, since going realtime fucks up sync too badly
+  - like being able to load + save sequences, rotate sequences
+- CraftSynth
+  - machinegun mode didn't work when i previously tried to add it to CraftSynth - why?
+  - CraftSynth is USB while Neutron is MIDISerial, maybe something in that?
+- BitBox features:
+  - sequence triggering pads via midi
+  - play pads from APC Mini?
+  - clocked control
+  - record commands
+- Bambleweeny
+  - add the other envelope controls
+  - make the UI nicer
+- global 'enable recall' panels to freeze certain parameters
+- 'stick on sequence' buttons
+  - A+B bounce sequences
+  - stick count 
+  - non-linear sequence progression
+
 ## Done
 
 - ~~Panic / all notes off action~~
@@ -273,7 +292,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~MIDI DIN or TRS input + output~~ now using Deftaudio 8x8 interface board so get 8 MIDI DIN-ins and 8 MIDI DIN-outs!
 - ~~TFT display~~ (working now using the Adafruit ST7789_t3 library and [mymenu](https://github.com/doctea/mymenu))
 - ~~Encoder for controlling options and parameters~~
-- ~~Configurable per-device MIDI clock divisions/multiplier~~
+- ~~Configurable per-device MIDI clock divisions~~
   - ~~Done for Subclocker and saves with Project settings~~ ~~-- maybe it should save with pattern instead though - could then ? ~~
   - ~~add it for devices it might be useful for, eg CraftSynth~~
 - ~~Save and recall MIDI device+channel routings~~
