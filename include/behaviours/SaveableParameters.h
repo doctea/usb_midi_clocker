@@ -72,13 +72,13 @@ class SaveableParameter : public SaveableParameterBase {
 
         virtual String get_line() {
             if (this->target!=nullptr && this->getter_func!=nullptr) {
-                Serial.printf("%s#get_line has target and getter func..", this->label );
+                //Serial.printf("%s#get_line has target and getter func..", this->label );
                 return String(this->label) + String('=') + String((this->target->*getter_func)());
             } else if (this->variable!=nullptr) {
-                Serial.printf("%s#get_line has target variable..", this->label);
+                //Serial.printf("%s#get_line has target variable..", this->label);
                 return String(this->label) + String('=') + String(*this->variable);
             } else {
-                Serial.printf("%s#get_line has neither target nor getter func!", this->label);
+                //Serial.printf("%s#get_line has neither target nor getter func!", this->label);
                 return String("; ") + String(this->label) + String(" - WARNING: no target nor getter func!");
             }
         }
