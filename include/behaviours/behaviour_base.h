@@ -314,7 +314,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         LinkedList<MenuItem*> *menuitems = nullptr;
         //FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
-        virtual ObjectMultiToggleControl *create_saveable_parameters_recall_selector();
+        virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
     #endif
     
 };

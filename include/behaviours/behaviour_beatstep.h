@@ -369,6 +369,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(
                         sysex_parameters[i].label,
+                        "Sysex",
                         this,
                         sysex_parameters[i].target_variable, 
                         nullptr,

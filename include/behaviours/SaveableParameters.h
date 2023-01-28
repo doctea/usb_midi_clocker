@@ -6,8 +6,11 @@
 class SaveableParameterBase {
     public:
     const char *label = nullptr;
-    SaveableParameterBase(const char *label, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) :
+    const char *category_name = nullptr;
+
+    SaveableParameterBase(const char *label, const char *category_name, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) :
         label(label), 
+        category_name(category_name),
         variable_recall_enabled(variable_recall_enabled ? variable_recall_enabled : &recall_enabled), 
         variable_save_enabled(variable_save_enabled ? variable_save_enabled : &save_enabled) {}
         
@@ -61,6 +64,7 @@ class SaveableParameter : public SaveableParameterBase {
 
         SaveableParameter(
             const char *label, 
+            const char *category_name,
             TargetClass *target, 
             DataType *variable,
             bool *variable_recall_enabled = nullptr,
@@ -71,7 +75,7 @@ class SaveableParameter : public SaveableParameterBase {
             bool(TargetClass::*is_save_enabled_func)() = nullptr,
             void(TargetClass::*set_recall_enabled_func)(bool state) = nullptr,
             void(TargetClass::*set_save_enabled_func)(bool state) = nullptr
-        ) : SaveableParameterBase(label, variable_recall_enabled, variable_save_enabled), 
+        ) : SaveableParameterBase(label, category_name, variable_recall_enabled, variable_save_enabled), 
             target(target), 
             variable(variable), 
             setter_func(setter_func), 
@@ -175,8 +179,16 @@ class SaveableParameter : public SaveableParameterBase {
     class SaveableParameterOptionToggle : public MultiToggleItemClass<SaveableParameterBase> {
         SaveableParameterBase *target = nullptr;
         public:
-            SaveableParameterOptionToggle(SaveableParameterBase *target) : MultiToggleItemClass(target->label, target, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled)
+            SaveableParameterOptionToggle(SaveableParameterBase *target) : MultiToggleItemClass(niceify(target->label), target, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled)
             {}
+
+        const char *niceify(const char *label) {
+            String s = String(label).replace('_', ' ');
+            //s[0] = String(s.charAt(0)).toUpperCase().charAt(0);
+            s[0] = toupper(s[0]);
+            String *st = new String(s);
+            return st->c_str();
+        }
     };
 #endif
 

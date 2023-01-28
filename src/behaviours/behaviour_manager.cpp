@@ -174,7 +174,7 @@ void setup_behaviour_manager() {
             }
 
             if (behaviour->saveable_parameters!=nullptr && behaviour->saveable_parameters->size()>0) {
-                menu->add(behaviour->create_saveable_parameters_recall_selector());
+                menu->add(behaviour->create_saveable_parameters_recall_selector(), group_colour);
             }
 
     }

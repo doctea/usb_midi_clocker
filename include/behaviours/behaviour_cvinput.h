@@ -123,7 +123,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual void setup_saveable_parameters() override {
             if (this->saveable_parameters==nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("note_length_ticks", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
         }
 
         // ask behaviour to process the key/value pair
