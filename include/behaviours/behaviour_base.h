@@ -172,7 +172,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     LinkedList<SaveableParameterBase*> *saveable_parameters = nullptr;
     virtual void setup_saveable_parameters() {
         if (this->saveable_parameters==nullptr) {
-            Serial.println("instantiating saveable_parameters list");
+            Debug_println("instantiating saveable_parameters list");
             this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
         }
         // todo: add all the modulatable parameters via a wrapped class
@@ -191,9 +191,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
         for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
-            Serial.printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
+            Debug_printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
             if (saveable_parameters->get(i)->is_save_enabled()) {
-                Serial.printf("\t\tis_save_enabled() returned true, getting line!");
+                Debug_printf("\t\tis_save_enabled() returned true, getting line!");
                 lines->add(saveable_parameters->get(i)->get_line());
             }
         }
@@ -213,7 +213,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
-        Serial.println("save_sequence_add_lines_parameters..");
+        Debug_println("save_sequence_add_lines_parameters..");
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
         for (unsigned int i = 0 ; i < parameters->size() ; i++) {
             DoubleParameter *parameter = parameters->get(i);
@@ -242,7 +242,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
                         //parameter->connections[slot].parameter_input->name,
                         parameter->connections[slot].amount
                     );
-                    Serial.printf(F("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n"), line);
+                    Debug_printf(F("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n"), line);
                     lines->add(String(line));
                 }
             }
@@ -255,7 +255,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         if (this->load_parse_key_value_saveable_parameters(key, value)) {
             return true;
         }
-        Serial.printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
         const char *prefix_base = "parameter_base_";
@@ -314,6 +314,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         LinkedList<MenuItem*> *menuitems = nullptr;
         //FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
+        virtual ObjectMultiToggleControl *create_saveable_parameters_recall_selector();
     #endif
     
 };

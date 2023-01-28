@@ -162,11 +162,13 @@ void setup() {
     #endif
   #endif
 
-  Serial.println(F("...starting behaviour_manager#make_menu_items..."));
-  behaviour_manager->create_all_behaviour_menu_items(menu);
-  Serial.println(F("...finished behaviour_manager#make_menu_items..."));
-
   behaviour_manager->setup_saveable_parameters();
+
+  #ifdef ENABLE_SCREEN
+    Serial.println(F("...starting behaviour_manager#make_menu_items..."));
+    behaviour_manager->create_all_behaviour_menu_items(menu);
+    Serial.println(F("...finished behaviour_manager#make_menu_items..."));
+  #endif
 
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");

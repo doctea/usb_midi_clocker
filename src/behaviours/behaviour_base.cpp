@@ -28,3 +28,19 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
 void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend) {
     midi_matrix_manager->processPitchBend(this->source_id, bend);
 }
+
+#ifdef ENABLE_SCREEN
+    ObjectMultiToggleControl *DeviceBehaviourUltimateBase::create_saveable_parameters_recall_selector() {
+        if (this->saveable_parameters==nullptr || this->saveable_parameters->size()==0)
+            return nullptr;
+        //Serial.printf("About to create ObjectMultiToggleControl..\n");
+        ObjectMultiToggleControl *saveable_parameter_recall_selector = new ObjectMultiToggleControl("Recall parameters", true);
+        //Serial.printf("created ObjectMultiToggleControl.\n");
+        //Serial.printf("saveable_parameters is @%p\n", this->saveable_parameters);
+        for (unsigned int i = 0 ; i < this->saveable_parameters->size() ; i++) {           
+            Serial.printf("creating SaveableParameterOptionToggle for item %i\n", i); Serial_flush();
+            saveable_parameter_recall_selector->addItem(new SaveableParameterOptionToggle(saveable_parameters->get(i)));
+        }
+        return saveable_parameter_recall_selector;
+    }
+#endif
