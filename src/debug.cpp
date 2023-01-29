@@ -6,8 +6,9 @@ LinkedList<String> *messages_log = new LinkedList<String>();
 
 void messages_log_add(String msg) {
   messages_log->add(msg);
-  if (messages_log->size() >= MAX_MESSAGES_LOG)
-    messages_log->remove(0);
+  if (messages_log->size() >= MAX_MESSAGES_LOG) {
+    messages_log->unlink(0);
+  }
 }
 
 #if defined(__arm__) && defined(CORE_TEENSY)
