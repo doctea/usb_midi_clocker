@@ -150,12 +150,17 @@ void setup_behaviour_manager() {
                 new SeparatorMenuItem(behaviour->get_label()),
                 behaviour->colour
             );
+            const char *last_category = nullptr;
             for (unsigned int i = 0 ; i < saveables->size() ; i++) {
                 SaveableParameterBase *p = saveables->get(i);
+                if (last_category!=p->category_name) {
+                    menu->add(new SeparatorMenuItem(p->category_name), behaviour->colour);
+                }
                 menu->add(
                     new ObjectToggleControl<SaveableParameterBase>(p->niceify(), p, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled),
                     behaviour->colour
                 );
+                last_category = p->category_name;
             }
         }
     }
