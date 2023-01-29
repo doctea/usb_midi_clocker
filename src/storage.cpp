@@ -101,7 +101,7 @@ namespace storage {
       //if (irqs_enabled) __enable_irq();
       return false;
     }
-    Serial.println("Starting data write.."); Serial.flush();
+    Serial.println("Starting data write.."); Serial_flush();
     myFile.println(F("; begin sequence"));
     myFile.printf(F("id=%i\n"),input->id);
     myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
