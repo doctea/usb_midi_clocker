@@ -17,6 +17,7 @@ class BehavioursPanel : public MenuItem {
             char buf[MAX_LENGTH];
             for (unsigned int i = 0 ; i < behaviour_manager->behaviours_usb->size() ; i++) {
                 DeviceBehaviourUSBBase *usb_behaviour = behaviour_manager->behaviours_usb->get(i);
+                tft->setTextColor(usb_behaviour->colour, BLACK);
                 if (usb_behaviour->is_connected())
                     snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, usb_behaviour->device->product(), usb_behaviour->get_indicator());
                 else
@@ -28,6 +29,7 @@ class BehavioursPanel : public MenuItem {
                 header("Serial-USB Behaviours:", pos, selected, opened);
                 for (unsigned int i = 0 ; i < behaviour_manager->behaviours_usbserial->size() ; i++) {
                     DeviceBehaviourUSBSerialBase *usbserial_behaviour = behaviour_manager->behaviours_usbserial->get(i);
+                    tft->setTextColor(usbserial_behaviour->colour, BLACK);
                     if (usbserial_behaviour->is_connected())
                         snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, usbserial_behaviour->get_label(), usbserial_behaviour->get_indicator());
                     else
@@ -40,6 +42,7 @@ class BehavioursPanel : public MenuItem {
             header("MIDI DIN Behaviours:", pos, selected, opened);
             for (unsigned int i = 0 ; i < behaviour_manager->behaviours_serial->size() ; i++) {
                 DeviceBehaviourSerialBase *serial_behaviour = behaviour_manager->behaviours_serial->get(i);
+                tft->setTextColor(serial_behaviour->colour, BLACK);
                 snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, serial_behaviour->get_label(), serial_behaviour->get_indicator());
                 tft->printf(buf);
             }

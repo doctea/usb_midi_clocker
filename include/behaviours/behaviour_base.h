@@ -168,6 +168,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
     }
 
+    virtual bool has_saveable_parameters() {
+        return this->saveable_parameters!=nullptr && this->saveable_parameters->size()>0;
+    }
+
     // saveable parameter handling shit
     LinkedList<SaveableParameterBase*> *saveable_parameters = nullptr;
     virtual void setup_saveable_parameters() {
@@ -314,6 +318,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         LinkedList<MenuItem*> *menuitems = nullptr;
         //FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
+        FLASHMEM
         virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
     #endif
     

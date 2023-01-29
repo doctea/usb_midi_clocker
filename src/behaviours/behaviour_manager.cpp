@@ -138,6 +138,31 @@ void setup_behaviour_manager() {
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             this->create_single_behaviour_menu_items(menu, behaviours->get(i));
         }
+
+        // create a page for holding recall/save options from every behaviour
+        menu->add_page("Recall parameters");
+        for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+            DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+            LinkedList<SaveableParameterBase*> *saveables = behaviour->saveable_parameters;
+            if(saveables==nullptr || saveables->size()==0) 
+                continue;
+            menu->add(
+                new SeparatorMenuItem(behaviour->get_label()),
+                behaviour->colour
+            );
+            const char *last_category = nullptr;
+            for (unsigned int i = 0 ; i < saveables->size() ; i++) {
+                SaveableParameterBase *p = saveables->get(i);
+                if (last_category!=p->category_name) {
+                    menu->add(new SeparatorMenuItem(p->category_name), behaviour->colour);
+                }
+                menu->add(
+                    new ObjectToggleControl<SaveableParameterBase>(p->niceify(), p, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled),
+                    behaviour->colour
+                );
+                last_category = p->category_name;
+            }
+        }
     }
 
     //FLASHMEM 
@@ -146,17 +171,14 @@ void setup_behaviour_manager() {
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
             uint16_t group_colour = C_WHITE;
-            if (menuitems->size()>0 || behaviour->has_parameters()) {
+            if (menuitems->size()>0 || behaviour->has_parameters() || behaviour->has_saveable_parameters()) {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
                 menu->add_page(behaviour->get_label(), group_colour);
 
                 // add a separator bar
-                //String s = String((char*)(behaviour->get_label())) + String(" >>>");
-                //SeparatorMenuItem *separator = new SeparatorMenuItem((char*)s.c_str());
-                SeparatorMenuItem *separator = new SeparatorMenuItem((char*)behaviour->get_label());
-                separator->set_default_colours(group_colour, BLACK);
-                menu->add(separator);
+                SeparatorMenuItem *separator = new SeparatorMenuItem(behaviour->get_label());
+                menu->add(separator, group_colour);
             }
 
             if (menuitems->size()>0) {
@@ -164,6 +186,7 @@ void setup_behaviour_manager() {
                 menu->add(menuitems, group_colour);
             }
 
+            // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
             if (behaviour->has_parameters()) {
                 parameter_manager->addParameterSubMenuItems(
                     menu, 
@@ -173,8 +196,12 @@ void setup_behaviour_manager() {
                 );
             }
 
-            if (behaviour->saveable_parameters!=nullptr && behaviour->saveable_parameters->size()>0) {
-                menu->add(behaviour->create_saveable_parameters_recall_selector(), group_colour);
+            // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
+            if (behaviour->has_saveable_parameters()) {
+                menu->add(
+                    behaviour->create_saveable_parameters_recall_selector(), 
+                    group_colour
+                );
             }
 
     }

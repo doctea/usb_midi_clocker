@@ -122,7 +122,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
                 const bool is_current_value_selected = source_id==current_value;
                 const int col = is_current_value_selected ? GREEN : C_WHITE;
                 colours(opened && selected_value_index==source_id, col, BLACK);
-                tft->printf((char*)"%15s : ", (char*)get_label_for_index(source_id));
+                tft->printf("%15s : ", (char*)get_label_for_index(source_id));
 
                 for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                     colours(BLACK, this->get_colour_for_target_id(target_id));
@@ -137,7 +137,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
             }
         } else {        // show list of targets
             tft->setTextColor(BLACK,GREEN);
-            tft->printf((const char*)"%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
+            tft->printf("%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
             for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                 //bool is_current_value_selected = target_id==current_value;
                 const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
