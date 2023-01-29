@@ -7,6 +7,24 @@ class SaveableParameterBase {
     public:
     const char *label = nullptr;
     const char *category_name = nullptr;
+    const char *nice_label = nullptr;
+
+    const char *niceify(const char *label = nullptr) {
+        if (this->nice_label==nullptr) {
+            if (label==nullptr)
+                label = this->label;
+            String s = String(label).replace('_', ' ');
+            //s[0] = String(s.charAt(0)).toUpperCase().charAt(0);
+            s[0] = toupper(s[0]);
+            String *st = new String(s);
+            if (st->equals(label)) {
+                this->nice_label = label;
+                delete st;
+            } else
+                this->nice_label = st->c_str();
+        }
+        return this->nice_label;
+    }
 
     SaveableParameterBase(const char *label, const char *category_name, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) :
         label(label), 
@@ -179,16 +197,8 @@ class SaveableParameter : public SaveableParameterBase {
     class SaveableParameterOptionToggle : public MultiToggleItemClass<SaveableParameterBase> {
         SaveableParameterBase *target = nullptr;
         public:
-            SaveableParameterOptionToggle(SaveableParameterBase *target) : MultiToggleItemClass(niceify(target->label), target, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled)
+            SaveableParameterOptionToggle(SaveableParameterBase *target) : MultiToggleItemClass(target->niceify(), target, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled)
             {}
-
-        const char *niceify(const char *label) {
-            String s = String(label).replace('_', ' ');
-            //s[0] = String(s.charAt(0)).toUpperCase().charAt(0);
-            s[0] = toupper(s[0]);
-            String *st = new String(s);
-            return st->c_str();
-        }
     };
 #endif
 

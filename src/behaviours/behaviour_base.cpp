@@ -30,8 +30,9 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
 }
 
 #ifdef ENABLE_SCREEN
+    FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviourUltimateBase::create_saveable_parameters_recall_selector() {
-        if (this->saveable_parameters==nullptr || this->saveable_parameters->size()==0)
+        if (!this->has_saveable_parameters()) //==nullptr || this->saveable_parameters->size()==0)
             return nullptr;
         //ObjectMultiToggleControl *saveable_parameter_recall_selector = new ObjectMultiToggleControl("Recall parameters", true);
         const char *category = nullptr;
