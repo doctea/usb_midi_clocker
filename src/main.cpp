@@ -231,7 +231,7 @@ void setup() {
 
 //long loop_counter = 0;
 
-bool debug = false;
+bool debug_flag = false;
 
 // -----------------------------------------------------------------------------
 // 
@@ -259,7 +259,7 @@ void loop() {
     uint32_t start_loop_micros_stamp = micros();
   //#endif
   //bool debug = true;
-  if (debug) { Serial.println(F("start of loop!")); Serial_flush(); }
+  if (debug_flag) { Serial.println(F("start of loop!")); Serial_flush(); }
 
   #ifdef DEBUG_LED
     static int loop_counter;
@@ -272,9 +272,9 @@ void loop() {
     }
   #endif
 
-  if (debug) { Serial.println(F("about to Usb.Task()")); Serial_flush(); }
+  if (debug_flag) { Serial.println(F("about to Usb.Task()")); Serial_flush(); }
   Usb.Task();
-  if (debug) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
+  if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
   bool ticked = false;
@@ -292,13 +292,13 @@ void loop() {
         Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
       #endif
     }
-    if (debug) { Serial.println(F("about to do_tick")); Serial_flush(); }
+    if (debug_flag) { Serial.println(F("about to do_tick")); Serial_flush(); }
     do_tick(ticks);
-    if (debug) { Serial.println(F("just did do_tick")); Serial_flush(); }
+    if (debug_flag) { Serial.println(F("just did do_tick")); Serial_flush(); }
 
-    if (debug) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
+    if (debug_flag) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
     menu->update_ticks(ticks);
-    if (debug) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
+    if (debug_flag) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
 
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();
@@ -326,10 +326,10 @@ void loop() {
       menu->update_inputs();
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
-        if (debug) { Serial.println(F("about to menu->display")); Serial_flush(); }
-        if (debug) menu->debug = true;
+        if (debug_flag) { Serial.println(F("about to menu->display")); Serial_flush(); }
+        if (debug_flag) menu->debug = true;
         menu->display(); //update(ticks);
-        if (debug) { Serial.println(F("just did menu->display")); Serial_flush(); }
+        if (debug_flag) { Serial.println(F("just did menu->display")); Serial_flush(); }
         //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
         screen_was_drawn = true;
@@ -340,15 +340,15 @@ void loop() {
     #ifdef ENABLE_CV_INPUT
       static unsigned long time_of_last_param_update = 0;
       if (!screen_was_drawn && millis() - time_of_last_param_update > TIME_BETWEEN_CV_INPUT_UPDATES) {
-        if(debug) parameter_manager->debug = true;
-        if(debug) Serial.println(F("about to do parameter_manager->update_voltage_sources()..")); Serial_flush();
+        if(debug_flag) parameter_manager->debug = true;
+        if(debug_flag) Serial.println(F("about to do parameter_manager->update_voltage_sources()..")); Serial_flush();
         parameter_manager->update_voltage_sources();
         //if(debug) Serial.println("just did parameter_manager->update_voltage_sources().."); Serial_flush();
         //if(debug) Serial.println("about to do parameter_manager->update_inputs().."); Serial_flush();
         parameter_manager->update_inputs();
         //if(debug) Serial.println("about to do parameter_manager->update_mixers().."); Serial_flush();
         parameter_manager->update_mixers();
-        if(debug) Serial.println(F("just did parameter_manager->update_inputs()..")); Serial_flush();
+        if(debug_flag) Serial.println(F("just did parameter_manager->update_inputs()..")); Serial_flush();
         time_of_last_param_update = millis();
       }
     #endif
@@ -357,13 +357,13 @@ void loop() {
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
-  if (debug) Serial.println(F("about to behaviour_manager->do_reads().."));
+  if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
   behaviour_manager->do_reads();
-  if (debug) Serial.println(F("just did behaviour_manager->do_reads()"));
+  if (debug_flag) Serial.println(F("just did behaviour_manager->do_reads()"));
 
-  if (debug) Serial.println(F("about to behaviour_manager->do_loops().."));
+  if (debug_flag) Serial.println(F("about to behaviour_manager->do_loops().."));
   behaviour_manager->do_loops();
-  if (debug) Serial.println(F("just did behaviour_manager->do_loops()"));
+  if (debug_flag) Serial.println(F("just did behaviour_manager->do_loops()"));
 
   #ifdef ENABLE_USB
     update_usb_midi_device_connections();
@@ -390,7 +390,7 @@ void loop() {
   #else
     average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
-  if(debug) { Serial.println(F("reached end of loop()!")); Serial_flush(); }
+  if(debug_flag) { Serial.println(F("reached end of loop()!")); Serial_flush(); }
 }
 
 // called inside interrupt

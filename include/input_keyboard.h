@@ -43,7 +43,7 @@ bool debug_stress_sequencer_load = false;
     #define MOD_RALT       64
 
     extern USBHost Usb;
-    extern bool debug;
+    extern bool debug_flag;
       
     KeyboardController keyboard1(Usb);
 
@@ -78,10 +78,10 @@ bool debug_stress_sequencer_load = false;
                     menu->button_back();
                 break;*/
             case 'D'    :
-                debug = true;
+                debug_flag = true;
                 break;
             case 'd'    :
-                debug = false;
+                debug_flag = false;
                 break;
             // debug
             case 'Z'    :
