@@ -6,27 +6,46 @@
 class SaveableParameterBase {
     public:
     const char *label = nullptr;
-    SaveableParameterBase(const char *label, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) :
+    const char *category_name = nullptr;
+
+    SaveableParameterBase(const char *label, const char *category_name, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) :
         label(label), 
-        variable_recall_enabled(variable_recall_enabled), 
-        variable_save_enabled(variable_save_enabled) {}
+        category_name(category_name),
+        variable_recall_enabled(variable_recall_enabled ? variable_recall_enabled : &recall_enabled), 
+        variable_save_enabled(variable_save_enabled ? variable_save_enabled : &save_enabled) {}
         
     virtual String get_line() { return String("; nop"); }
     virtual bool parse_key_value(String key, String value) {
         return false;
     }
 
+    bool recall_enabled = true; // for use when no pointer to variable or function is passed in
+    bool save_enabled = true;   // for use when no pointer to variable or function is passed in
+
     bool *variable_recall_enabled = nullptr;
     bool *variable_save_enabled = nullptr;
     virtual bool is_recall_enabled() { 
         if (variable_recall_enabled==nullptr || (*variable_recall_enabled)) 
             return true; 
-        return false;
+        return recall_enabled;
+        //return false;
     }
     virtual bool is_save_enabled() { 
         if (variable_save_enabled==nullptr || (*variable_save_enabled)) 
             return true; 
-        return false;
+        //return false;
+        return save_enabled;
+    }
+
+    virtual void set_recall_enabled(bool value) {
+        if (variable_recall_enabled==nullptr)
+            return;
+        *this->variable_recall_enabled = value;
+    }
+    virtual void set_save_enabled(bool value) {
+        if (variable_save_enabled==nullptr)
+            return;
+        *this->variable_save_enabled = true;
     }
 };
 
@@ -40,9 +59,12 @@ class SaveableParameter : public SaveableParameterBase {
         DataType(TargetClass::*getter_func)()  = nullptr;
         bool(TargetClass::*is_recall_enabled_func)() = nullptr;
         bool(TargetClass::*is_save_enabled_func)() = nullptr;
+        void(TargetClass::*set_recall_enabled_func)(bool state) = nullptr;
+        void(TargetClass::*set_save_enabled_func)(bool state) = nullptr;
 
         SaveableParameter(
             const char *label, 
+            const char *category_name,
             TargetClass *target, 
             DataType *variable,
             bool *variable_recall_enabled = nullptr,
@@ -50,14 +72,25 @@ class SaveableParameter : public SaveableParameterBase {
             void(TargetClass::*setter_func)(DataType) = nullptr,
             DataType(TargetClass::*getter_func)() = nullptr,
             bool(TargetClass::*is_recall_enabled_func)() = nullptr,
-            bool(TargetClass::*is_save_enabled_func)() = nullptr
-        ) : SaveableParameterBase(label, variable_recall_enabled, variable_save_enabled), 
+            bool(TargetClass::*is_save_enabled_func)() = nullptr,
+            void(TargetClass::*set_recall_enabled_func)(bool state) = nullptr,
+            void(TargetClass::*set_save_enabled_func)(bool state) = nullptr
+        ) : SaveableParameterBase(label, category_name, variable_recall_enabled, variable_save_enabled), 
             target(target), 
             variable(variable), 
             setter_func(setter_func), 
             getter_func(getter_func), 
             is_recall_enabled_func(is_recall_enabled_func), 
-            is_save_enabled_func(is_save_enabled_func) {}
+            is_save_enabled_func(is_save_enabled_func),
+            set_recall_enabled_func(set_recall_enabled_func),
+            set_save_enabled_func(set_save_enabled_func) {
+                if (variable_recall_enabled==nullptr)
+                    variable_recall_enabled = &this->recall_enabled;
+                if (variable_save_enabled==nullptr) {
+                    variable_save_enabled = &this->save_enabled;
+                }
+
+        }
 
         virtual bool is_recall_enabled () override {
             if (this->target!=nullptr && this->is_recall_enabled_func!=nullptr) 
@@ -69,6 +102,19 @@ class SaveableParameter : public SaveableParameterBase {
                 return (this->target->*is_save_enabled_func)();
             return SaveableParameterBase::is_save_enabled();
         }
+        virtual void set_recall_enabled(bool state) override {
+            if (this->target!=nullptr && this->set_recall_enabled_func!=nullptr)
+                (this->target->*set_recall_enabled_func)(state);
+            else
+                SaveableParameterBase::set_recall_enabled(state);
+        }
+        virtual void set_save_enabled(bool state) override {
+            if (this->target!=nullptr && this->set_save_enabled_func!=nullptr)
+                (this->target->*set_save_enabled_func)(state);
+            else
+                SaveableParameterBase::set_save_enabled(state);
+        }
+
 
         virtual String get_line() {
             if (this->target!=nullptr && this->getter_func!=nullptr) {
@@ -127,6 +173,24 @@ class SaveableParameter : public SaveableParameterBase {
             this->setFloat(value.toFloat());
         }
 };
+
+#ifdef ENABLE_SCREEN
+    #include "menuitems_object_multitoggle.h"
+    class SaveableParameterOptionToggle : public MultiToggleItemClass<SaveableParameterBase> {
+        SaveableParameterBase *target = nullptr;
+        public:
+            SaveableParameterOptionToggle(SaveableParameterBase *target) : MultiToggleItemClass(niceify(target->label), target, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled)
+            {}
+
+        const char *niceify(const char *label) {
+            String s = String(label).replace('_', ' ');
+            //s[0] = String(s.charAt(0)).toUpperCase().charAt(0);
+            s[0] = toupper(s[0]);
+            String *st = new String(s);
+            return st->c_str();
+        }
+    };
+#endif
 
 /*
 #include "parameters/Parameter.h"

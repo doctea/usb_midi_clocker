@@ -142,7 +142,7 @@ void setup_behaviour_manager() {
 
     //FLASHMEM 
     inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
-            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
+            Debug_printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
             uint16_t group_colour = C_WHITE;
@@ -160,7 +160,7 @@ void setup_behaviour_manager() {
             }
 
             if (menuitems->size()>0) {
-                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
+                Debug_printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
                 menu->add(menuitems, group_colour);
             }
 
@@ -171,6 +171,10 @@ void setup_behaviour_manager() {
                     behaviour->get_parameters(),
                     group_colour
                 );
+            }
+
+            if (behaviour->saveable_parameters!=nullptr && behaviour->saveable_parameters->size()>0) {
+                menu->add(behaviour->create_saveable_parameters_recall_selector(), group_colour);
             }
 
     }

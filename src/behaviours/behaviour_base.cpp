@@ -28,3 +28,32 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
 void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend) {
     midi_matrix_manager->processPitchBend(this->source_id, bend);
 }
+
+#ifdef ENABLE_SCREEN
+    LinkedList<MenuItem *> *DeviceBehaviourUltimateBase::create_saveable_parameters_recall_selector() {
+        if (this->saveable_parameters==nullptr || this->saveable_parameters->size()==0)
+            return nullptr;
+        //ObjectMultiToggleControl *saveable_parameter_recall_selector = new ObjectMultiToggleControl("Recall parameters", true);
+        const char *category = nullptr;
+        const char *last_category = nullptr;
+        ObjectMultiToggleControl *saveable_parameter_recall_selector = nullptr;
+        LinkedList<MenuItem *> *items = new LinkedList<MenuItem*>();
+
+        for (unsigned int i = 0 ; i < this->saveable_parameters->size() ; i++) {
+            SaveableParameterBase *p = this->saveable_parameters->get(i);
+            category = p->category_name;
+
+            if (last_category==nullptr || strcmp(category, last_category)!=0) {
+                if (saveable_parameter_recall_selector!=nullptr)
+                    items->add(saveable_parameter_recall_selector);
+                saveable_parameter_recall_selector = new ObjectMultiToggleControl((String("Recall parameters: ") + String(p->category_name)).c_str(), true);
+            }
+
+            Serial.printf("creating SaveableParameterOptionToggle for item %i\n", i); Serial_flush();
+            saveable_parameter_recall_selector->addItem(new SaveableParameterOptionToggle(saveable_parameters->get(i)));
+            last_category = category;
+        }
+        items->add(saveable_parameter_recall_selector);
+        return items;
+    }
+#endif
