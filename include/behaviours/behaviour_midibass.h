@@ -138,9 +138,17 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
         }
 
+        virtual void setup_saveable_parameters() override {
+            if (this->saveable_parameters==nullptr)
+                DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
+            MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
+            this->saveable_parameters->add(new SaveableParameter<MIDIOutputWrapper, int>("octave", "MIDI Bass", my_wrapper, nullptr, nullptr, nullptr, &MIDIOutputWrapper::setForceOctave, &MIDIOutputWrapper::getForceOctave));
+            this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, bool>("drone", "MIDI Bass", this, &this->drone_enabled, nullptr, nullptr, &MIDIBassBehaviour::set_drone, &MIDIBassBehaviour::is_drone));
+            this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, int8_t>("machinegun", "MIDI Bass", this, &this->machinegun, nullptr, nullptr, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun));
+        }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             lines->add(String(F("drone=")) + String(this->drone_enabled ? F("enabled"):F("disabled")));
             lines->add(String(F("machinegun=")) + String(this->machinegun));
             //ClockedBehaviour::save_sequence_add_lines(lines);
@@ -155,7 +163,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 return true;
             }
             return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
-        }
+        }*/
 
         #ifdef ENABLE_SCREEN
             LinkedList<MenuItem *> *make_menu_items() override;

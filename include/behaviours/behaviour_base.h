@@ -13,7 +13,10 @@
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
 
+#include "behaviours/SaveableParameters.h"
+
 #include "file_manager/file_manager_interfaces.h"
+
 
 class MenuItem;
 class ArrangementTrackBase;
@@ -165,6 +168,37 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
     }
 
+    // saveable parameter handling shit
+    LinkedList<SaveableParameterBase*> *saveable_parameters = nullptr;
+    virtual void setup_saveable_parameters() {
+        if (this->saveable_parameters==nullptr) {
+            Serial.println("instantiating saveable_parameters list");
+            this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
+        }
+        // todo: add all the modulatable parameters via a wrapped class
+        /*if (this->has_parameters()) {
+            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                this->saveable_parameters->add(new SaveableParameterWrapper(parameters->get(i)));
+            }
+        }*/
+    }
+    virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
+        for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
+            if (saveable_parameters->get(i)->is_recall_enabled() && saveable_parameters->get(i)->parse_key_value(key, value))
+                return true;
+        }
+        return false;
+    }
+    virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
+        for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
+            Serial.printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
+            if (saveable_parameters->get(i)->is_save_enabled()) {
+                Serial.printf("\t\tis_save_enabled() returned true, getting line!");
+                lines->add(saveable_parameters->get(i)->get_line());
+            }
+        }
+    }
+
     virtual void save_project_add_lines(LinkedList<String> *lines) {
 
     }
@@ -173,9 +207,15 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {   
+    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+        this->save_sequence_add_lines_parameters(lines);
+        this->save_sequence_add_lines_saveable_parameters(lines);
+    }
+
+    virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
+        Serial.println("save_sequence_add_lines_parameters..");
         LinkedList<DoubleParameter*> *parameters = this->get_parameters();
-        for (unsigned int i = 0 ; i < parameters->size () ; i++) {
+        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
             DoubleParameter *parameter = parameters->get(i);
 
             // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
@@ -184,8 +224,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             if (parameter->is_modulatable()) {
                 #define MAX_SAVELINE 255
                 char line[MAX_SAVELINE];
-                // todo: move handling of this into Parameter, or into a third class that can handle saving to different formats..?
-                // todo: make these mappings part of an extra type of thing rather than associated with sequence?
+                // todo: move handling of this into the Parameter class, or into a third class that can handle saving to different formats..?
+                //          ^^ this could be the SaveableParameter class, used as a wrapper.  would require SaveableParameter to be able to add multiple lines to the save file
+                // todo: make these mappings part of an extra type of thing (like a "preset clip"?), rather than associated with sequence?
                 // todo: move these to be saved with the project instead?
                 for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
                     if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
@@ -211,6 +252,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
+        if (this->load_parse_key_value_saveable_parameters(key, value)) {
+            return true;
+        }
         Serial.printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
@@ -232,7 +276,6 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             key = key.replace(prefix, "");
 
             // todo: checking that key has _ in it (ie that it is a modulation setting save)
-            // todo: loading of parameter base values
 
             String parameter_name = key.substring(0, key.indexOf('_'));
             int slot_number = key.substring(key.indexOf('_')+1).toInt();

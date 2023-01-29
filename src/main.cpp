@@ -169,6 +169,8 @@ void setup() {
   behaviour_manager->create_all_behaviour_menu_items(menu);
   Serial.println(F("...finished behaviour_manager#make_menu_items..."));
 
+  behaviour_manager->setup_saveable_parameters();
+
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
     init_sequence();

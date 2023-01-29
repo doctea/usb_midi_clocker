@@ -13,7 +13,7 @@ class ModwheelReceiver : public virtual DeviceBehaviourUltimateBase {
         FLASHMEM
         virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
            this->modwheel_proxy = new MIDICCProxyParameter<>(
-                (char*)"Modwheel",      
+                "Modwheel",      
                 this,   
                 (byte)midi::ModulationWheel,
                 (byte)midi_matrix_manager->getDefaultChannelForTargetId(this->target_id)

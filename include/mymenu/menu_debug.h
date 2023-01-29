@@ -17,12 +17,15 @@ class DebugPanel : public MenuItem {
         }
 
         virtual int display(Coord pos, bool selected, bool opened) override {
+            unsigned long time = millis()/1000;
             tft->setCursor(pos.x,pos.y);
             header("Statistics:", pos, selected, opened);
             tft->println("Built at " __TIME__ " on " __DATE__);
             tft->println("Git info: " COMMIT_INFO);
             tft->printf("Free RAM: %u bytes\n", freeRam());
-            tft->printf("Uptime: %02uh %02um %02us\n", millis()/1000/60/60, (millis()/1000/60)%60, (millis()/1000)%60);
+            tft->printf("Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
+            tft->print("Serial: ");
+            tft->print(Serial?"connected\n":"not connected\n");
             return tft->getCursorY();
         }
 };

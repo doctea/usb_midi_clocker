@@ -110,22 +110,25 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         // todo: do we like, want a 'save_global_add_lines' sorta thing for global configs?  or should this be project config?
-        virtual void save_project_add_lines(LinkedList<String> *lines) override {               
+        virtual void save_project_add_lines(LinkedList<String> *lines) override {
             if (this->source_input!=nullptr)
                 lines->add(String(F("parameter_source=")) + String(this->source_input->name));
         }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUltimateBase::save_project_add_lines(lines);
+        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
             lines->add(String(F("note_length_ticks=")) + String(this->get_note_length()));
+        }*/
+
+        virtual void setup_saveable_parameters() override {
+            if (this->saveable_parameters==nullptr)
+                DeviceBehaviourUltimateBase::setup_saveable_parameters();
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("note_length_ticks", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
         }
 
         // ask behaviour to process the key/value pair
         virtual bool load_parse_key_value(String key, String value) override {
-            if (key.equals(F("note_length_ticks"))) {
-                this->set_note_length((int) value.toInt());
-                return true;
-            } else if (key.equals(F("parameter_source"))) {
+            if (key.equals(F("parameter_source"))) {
                 //this->source_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
                 BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
                 if (source!=nullptr)
