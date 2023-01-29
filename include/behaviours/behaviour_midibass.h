@@ -1,3 +1,6 @@
+#ifndef BEHAVIOUR_MIDIBASS__INCLUDED
+#define BEHAVIOUR_MIDIBASS__INCLUDED
+
 #include "behaviour_base.h"
 #include "midi/midi_mapper_matrix_manager.h"
 
@@ -171,3 +174,5 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
 
 };
+
+#endif
