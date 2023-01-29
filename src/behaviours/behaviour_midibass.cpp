@@ -16,9 +16,12 @@
         // hmmm todo: this doesn't update if the target is changed...? 
         MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
 
+        char output_label[40];
+        snprintf(output_label, 40, "%s output", this->get_label());
+
         if (my_wrapper!=nullptr) {
             HarmonyStatus *harmony = new HarmonyStatus(
-                "Neutron output", 
+                output_label, 
                 &my_wrapper->last_transposed_note, 
                 &my_wrapper->current_transposed_note, 
                 &this->last_drone_note
