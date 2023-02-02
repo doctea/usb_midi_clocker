@@ -18,6 +18,9 @@
 
 #include "storage.h"
 
+#include "smfwriter.h"
+#include "midireader.h"
+
 //#define DEBUG_LOOPER
 
 #define ticks_to_sequence_step(X)  ((X % LOOP_LENGTH_TICKS) / LOOP_LENGTH_STEP_SIZE)
@@ -640,8 +643,39 @@ class MIDITrack {
             this->quantization_value = previous_quant;  // restore original quantization setting
         }
 
-        /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
+            return this->save_loop_mid(project_number, recording_number);
+        }
+
+        bool save_loop_mid(int project_number, int recording_number) {
+            SmfWriter writer;
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT ".mid", project_number, recording_number);
+            if (SD.exists(filename))
+                SD.remove(filename);
+            writer.setFilename(filename);
+            writer.writeHeader();
+
+            long last = 0;
+            for (unsigned int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
+                unsigned int size = frames[x]->size();
+                for(unsigned int i = 0 ; i < size ; i++) {
+                    midi_message m = frames[x]->get(i);
+                    //f.printf("%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
+                    if (m.message_type==midi::NoteOn)
+                        writer.addNoteOnEvent(x - last, m.channel, m.pitch, m.velocity);
+                    else if (m.message_type==midi::NoteOff)
+                        writer.addNoteOffEvent(x - last, m.channel, m.pitch);
+                    last = x;
+                }
+            }
+            writer.flush();
+
+            return true;
+        }
+
+        /* save+load stuff to filesystem - linkedlist-of-message format */
+        bool save_loop_txt(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
@@ -708,8 +742,56 @@ class MIDITrack {
             return true;
         }
 
-        // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
+            return load_loop_mid(project_number, recording_number);
+        }
+
+        bool load_loop_mid(int project_number, int recording_number) {
+            Serial.println("load_loop_mid");
+
+            clear_all();
+
+            midireader reader;
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT ".mid", project_number, recording_number);
+            Serial.printf("loading from %s\n", filename);
+            if (!reader.open(filename)) {
+                Serial.printf("reader.open(%s) returned false\n", filename);
+                return false;
+            }
+            //double microsPerTick = reader.get_microseconds_per_tick();
+
+            reader.setTrackNumber(0);
+            //int i = 0;
+            smfmidimessage *message;
+            long totalTicks = 0;
+            while ((message = reader.read()) != nullptr) {
+                Serial.printf("got a message with type %2x..\n", message->getMessageType());
+                totalTicks += message->delta_ticks;
+                if(message->getMessageType()==(smfmessagetype::smftype_channelvoicemessage)) {
+                    smfchannelvoicemessage *channelvoicemessage = (smfchannelvoicemessage *)message;
+                    midi_message m = {
+                            .message_type = channelvoicemessage->status,
+                            .pitch = channelvoicemessage->data1,
+                            .velocity = channelvoicemessage->data2,
+                            .channel = channelvoicemessage->getChannel()
+                    };
+                    store_event(totalTicks, m);
+                } else {
+                    Serial.println("\t but dont know what to do with it?!");
+                }
+            }
+
+            loaded_recording_number = recording_number;
+            clear_hanging();
+
+            this->draw_piano_roll_bitmap_from_save();
+
+            return true;
+        }
+
+        // load file on disk into loop - linked-list-of-messages format
+        bool load_loop_txt(int project_number, int recording_number) {
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File f;
