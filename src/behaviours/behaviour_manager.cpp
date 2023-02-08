@@ -16,6 +16,7 @@
 
 #include "behaviours/behaviour_cvinput.h"
 #include "behaviours/behaviour_dptlooper.h"
+#include "behaviours/behaviour_midimuso.h"
 
 #include "behaviours/behaviour_opentheremin.h"
 
@@ -125,6 +126,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_DPT_LOOPER
         behaviour_manager->registerBehaviour(behaviour_dptlooper);
         behaviour_dptlooper->connect_device_output(&ENABLE_DPT_LOOPER);
+    #endif
+
+    #ifdef ENABLE_MIDIMUSO
+        behaviour_manager->registerBehaviour(behaviour_midimuso);
+        behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
     #endif
     
     Serial.println(F("Exiting setup_behaviour_manager()"));

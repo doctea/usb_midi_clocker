@@ -70,6 +70,8 @@
 
 #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
 
+//#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
+
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
 
@@ -81,7 +83,7 @@
     #define ENABLE_BAMBLE
     //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
     #define ENABLE_BAMBLE_OUTPUT    // for sending on the bamble ch1-4
-    #define ENABLE_MPK49
+    //#define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
     #define ENABLE_CRAFTSYNTH_USB
