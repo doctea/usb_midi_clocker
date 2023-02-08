@@ -94,6 +94,13 @@ void setup() {
     //tft_print("Connected serial!\n");
     Serial.println(F("Connected serial!")); Serial_flush();
   #endif
+  if (CrashReport) {
+    while (!Serial);
+    Serial.println("CRASHREPORT!");
+    Serial.print(CrashReport);
+    while(Serial.available()==0);
+    Serial.clear();
+  }
 
   /*while (1) {
     Serial.printf(".");
