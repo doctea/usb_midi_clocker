@@ -62,7 +62,7 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
         }
 
         #ifdef ENABLE_SCREEN
-            LinkedList<MenuItem*> *make_menu_items();
+            LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 
 };
