@@ -36,13 +36,13 @@ MIDIMatrixManager* MIDIMatrixManager::getInstance() {
 }
 
 source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle) {
-    if (loop_track==nullptr) return;
+    if (loop_track==nullptr) return -1;
     strcpy(sources[sources_count].handle, handle);
     loop_track->source_id = sources_count;
     return sources_count++;
 }
 source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
-    if (device==nullptr) return;
+    if (device==nullptr) return -1;
     strcpy(sources[sources_count].handle, handle);
     device->source_id = sources_count;
     return sources_count++;
