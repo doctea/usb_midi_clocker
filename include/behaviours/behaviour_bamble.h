@@ -424,15 +424,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             public:
                 DeviceBehaviour_Bamble *target = nullptr;
                 int index;
-                const String prefix = String("pattern_enable_");
+                const String prefix = String("pattern_enable_") + String(index);
                 SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index) 
                     : SaveableParameterBase(target->patterns[index].label, index < 16 ? "Patterns 1" : "Patterns 2"), 
                     target(target), 
                     index(index) {}
 
                 virtual String get_line() override { 
-                    return prefix+String(index) + String('=') + 
-                            String(target->patterns[index].current_state?"true":"false");
+                    return prefix + String('=') + String(target->patterns[index].current_state?"true":"false");
                 }
                 virtual bool parse_key_value(String key, String value) override {
                     if (key.startsWith(prefix)) {

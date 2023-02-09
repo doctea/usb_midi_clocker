@@ -263,7 +263,7 @@ namespace storage {
       behaviour_manager->load_parse_key_value(key, value);*/
       return;
     }
-    messages_log_add(String("Unknown line '") + line + String("'"));
+    messages_log_add(String("Ignoring line '") + line + String("'"));
   }
 
   //void update_sequence_filename(String filename);
