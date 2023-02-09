@@ -247,7 +247,12 @@ class DeviceBehaviourManager {
         void do_pre_clock(unsigned long in_ticks) {
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
+                Debug_printf("About to on_pre_clock() for behaviour #%i at %p...\n", i, behaviours->get(i));
+                if (behaviours->get(i)!=nullptr) 
+                    Debug_printf("\t\t(named %s)\n", behaviours->get(i)->get_label()); 
+                Serial_flush();
                 behaviours->get(i)->on_pre_clock(in_ticks);
+                Debug_printf("finished on_pre_clock() for behaviour #%i...\n", i); Serial_flush();
             }
         }
 

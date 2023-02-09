@@ -36,20 +36,24 @@ MIDIMatrixManager* MIDIMatrixManager::getInstance() {
 }
 
 source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle) {
+    if (loop_track==nullptr) return;
     strcpy(sources[sources_count].handle, handle);
     loop_track->source_id = sources_count;
     return sources_count++;
 }
 source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
+    if (device==nullptr) return;
     strcpy(sources[sources_count].handle, handle);
     device->source_id = sources_count;
     return sources_count++;
 }
 
 void MIDIMatrixManager::connect(MIDITrack *track, DeviceBehaviourUltimateBase *device) {
+    if (track==nullptr || device==nullptr) return;
     this->connect(track->source_id, device->target_id);
 }
 void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char *handle) {
+    if (device==nullptr || handle==nullptr) return;
     this->connect(device->source_id, this->get_target_id_for_handle(handle)); //this->get_target_id_for_handle->target_id);
 }
 

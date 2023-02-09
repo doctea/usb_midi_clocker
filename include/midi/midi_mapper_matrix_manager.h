@@ -92,6 +92,8 @@ class MIDIMatrixManager {
     }
     // is this source id connected to target id
     bool is_connected(source_id_t source_id, target_id_t target_id) {
+        if (source_id<0 || target_id<0)
+            return false;
         return source_to_targets[source_id][target_id];
     }
 
@@ -110,22 +112,27 @@ class MIDIMatrixManager {
     void connect(MIDITrack *source_track, DeviceBehaviourUltimateBase *target_behaviour);
     void connect(DeviceBehaviourUltimateBase *source_behaviour, const char *target_handle);
     void connect(const char *source_handle, const char *target_handle) {
+        if (source_handle==nullptr || target_handle==nullptr) return;
         this->connect(
             this->get_source_id_for_handle(source_handle),
             this->get_target_id_for_handle(target_handle)
         );
     }
     void connect(source_id_t source_id, target_id_t target_id) {
+        if (source_id<0 || target_id<0)
+            return;
         source_to_targets[source_id][target_id] = true;
     }
 
     void disconnect(const char *source_handle, const char *target_handle) {
+        if (source_handle==nullptr || target_handle==nullptr) return;
         this->disconnect(
             this->get_source_id_for_handle(source_handle),
             this->get_target_id_for_handle(target_handle)
         );
     }
     void disconnect(source_id_t source_id, target_id_t target_id) {
+        if (source_id==-1 || target_id==-1) return;
         if (is_connected(source_id, target_id)) {
             if (targets[target_id].wrapper!=nullptr) 
                 targets[target_id].wrapper->stop_all_notes();
@@ -167,6 +174,7 @@ class MIDIMatrixManager {
         }
     }
     void processControlChange(source_id_t source_id, byte cc, byte value, byte channel = 0) {
+        if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 /*Serial.printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
@@ -181,6 +189,7 @@ class MIDIMatrixManager {
         }
     }
     void processPitchBend(source_id_t source_id, int bend, byte channel = 0) {
+        if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 /*Serial.printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
@@ -203,7 +212,7 @@ class MIDIMatrixManager {
         }
     }
     void stop_all_notes_for_target(target_id_t target_id, bool force = false) {
-        if (target_id >= NUM_REGISTERED_TARGETS) return;
+        if (target_id==-1 || target_id >= NUM_REGISTERED_TARGETS) return;
         Serial.printf("stop_all_notes on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial_flush();
         targets[target_id].wrapper->stop_all_notes(force);
     }
@@ -219,9 +228,11 @@ class MIDIMatrixManager {
     }
 
     const char *get_label_for_source_id(source_id_t source_id) {
+        if (source_id==-1) return nullptr;
         return this->sources[source_id].handle;
     }
     const char *get_label_for_target_id(target_id_t target_id) {
+        if (target_id==-1) return nullptr;
         if(this->targets[target_id].wrapper!=nullptr) 
             return this->targets[target_id].wrapper->label;
         return (const char*)F("[error - unknown]");

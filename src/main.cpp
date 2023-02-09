@@ -402,7 +402,7 @@ void loop() {
 
 // called inside interrupt
 void do_tick(uint32_t in_ticks) {
-  bool debug = false;
+  bool debug = debug_flag;
   /*#ifdef DEBUG_TICKS
       unsigned int delta = millis()-last_ticked_at_micros;
 
