@@ -9,6 +9,8 @@
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_chocolate.h"
 
+#include "behaviours/behaviour_xiao.h"
+
 #include "behaviours/behaviour_bitbox.h"
 #include "behaviours/behaviour_neutron.h"
 #include "behaviours/behaviour_lestrum.h"
@@ -62,6 +64,11 @@ void setup_behaviour_manager() {
             behaviour_mpk49->loop_track = &mpk49_loop_track;
         #endif
         behaviour_manager->registerBehaviour(behaviour_mpk49);
+    #endif
+
+    #ifdef ENABLE_XIAO
+        behaviour_xiao = new DeviceBehaviour_XIAO();
+        behaviour_manager->registerBehaviour(behaviour_xiao);
     #endif
 
     #ifdef ENABLE_SUBCLOCKER

@@ -5,7 +5,7 @@
 
 #include "bpm.h"
 
-#include "midi/midi_helpers.h"
+#include "midi_helpers.h"
 
 #include "behaviour_base.h"
 #include "parameter_inputs/VoltageParameterInput.h"

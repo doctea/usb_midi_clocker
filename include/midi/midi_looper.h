@@ -9,7 +9,7 @@
 #include "midi/MidiMappings.h"
 //#include "midi/midi_out_wrapper.h"
 
-#include "midi/midi_helpers.h"
+#include "midi_helpers.h"
 
 #include "midi/midi_mapper_matrix_types.h"
 //#include "midi/midi_mapper_matrix_manager.h"

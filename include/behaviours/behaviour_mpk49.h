@@ -11,6 +11,8 @@
 
 #include "midi/midi_looper.h"
 
+#ifdef ENABLE_MPK49
+
 extern MIDIOutputWrapper *mpk49_output;
 
 void mpk49_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
@@ -89,5 +91,7 @@ class DeviceBehaviour_mpk49 : public DeviceBehaviourUSBBase, public ClockedBehav
 };
 
 extern DeviceBehaviour_mpk49 *behaviour_mpk49;
+
+#endif
 
 #endif

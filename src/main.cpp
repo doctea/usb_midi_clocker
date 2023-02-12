@@ -284,21 +284,9 @@ void loop() {
   if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
-  bool ticked = false;
-  if (clock_mode==CLOCK_EXTERNAL_USB_HOST && /*playing && */check_and_unset_pc_usb_midi_clock_ticked())
-    ticked = true;
-  else if (clock_mode==CLOCK_INTERNAL && playing && micros()-last_ticked_at_micros >= micros_per_tick)
-    ticked = true;
-  else if (clock_mode==CLOCK_NONE)
-    ticked = false;
+  bool ticked = update_clock_ticks();
   
   if ( playing && ticked ) {
-    if (micros()-last_ticked_at_micros > micros_per_tick+1000) { //((unsigned long)micros_per_tick)+1) {
-      //Serial.printf("WARNING: tick took %ius, more than micros_per_tick of %ius!\n", micros()-last_ticked_at_micros, (unsigned long)micros_per_tick);
-      #ifdef DEBUG
-        Serial.printf("WARNING: tick %u took %uus, more than 1ms longer than required micros_per_tick, which is %fus\n", ticks, micros()-last_ticked_at_micros, micros_per_tick);
-      #endif
-    }
     if (debug_flag) { Serial.println(F("about to do_tick")); Serial_flush(); }
     do_tick(ticks);
     if (debug_flag) { Serial.println(F("just did do_tick")); Serial_flush(); }
@@ -309,22 +297,11 @@ void loop() {
 
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();
-    ticks++;
-
-    /*  // but thing maths works out better if this is called here?
-    if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
-      //in_ticks = ticks = 0;
-      on_restart();
-      //ATOMIC(
-        //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-      //)
-      restart_on_next_bar = false;
-    }
-    */
+    //ticks++;  // todo: see if this is right or problematic that we now tick before do_ticks...?
   }
-  //} else {
+  
   if ((clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
-      // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
+    // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
     #ifdef ENABLE_SCREEN
       //tft_update(ticks);
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial_flush();
@@ -359,7 +336,6 @@ void loop() {
         time_of_last_param_update = millis();
       }
     #endif
-
   }
 
   //read_midi_serial_devices();

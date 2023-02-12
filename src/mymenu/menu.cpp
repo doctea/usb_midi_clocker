@@ -88,10 +88,11 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 
 MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
 
-
-#include "menuitems_fileviewer.h"
-extern FileViewerMenuItem *sequence_fileviewer;
-extern FileViewerMenuItem *project_fileviewer;
+#ifdef ENABLE_SD
+    #include "menuitems_fileviewer.h"
+    extern FileViewerMenuItem *sequence_fileviewer;
+    extern FileViewerMenuItem *project_fileviewer;
+#endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
@@ -210,8 +211,10 @@ void setup_menu() {
     #endif
     menu->add(project_multi_autoadvance);
 
-    project_fileviewer = new FileViewerMenuItem("Project");
-    menu->add(project_fileviewer);
+    #ifdef ENABLE_SD
+        project_fileviewer = new FileViewerMenuItem("Project");
+        menu->add(project_fileviewer);
+    #endif
 
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
@@ -229,8 +232,10 @@ void setup_menu() {
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
 
-        sequence_fileviewer = new FileViewerMenuItem("Sequence");
-        menu->add(sequence_fileviewer);
+        #ifdef ENABLE_SD
+            sequence_fileviewer = new FileViewerMenuItem("Sequence");
+            menu->add(sequence_fileviewer);
+        #endif
     #endif
 
     // looper stuff
