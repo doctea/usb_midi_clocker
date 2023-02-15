@@ -77,9 +77,16 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             // do anything we need to do after we've just connected a new serial midi device..?
         }
 
+        // some serial devices may crash if we don't read from their serial devices, apparently?
+        virtual void read() override {
+            if (!is_connected() || this->usbdevice==nullptr) return;
+            //Serial.println("DeviceBehaviourUSBSerialBase#read() about to read()..");
+            while(this->usbdevice->read()); 
+            //Serial.println("DeviceBehaviourUSBSerialBase#read() came out of read()..");
+        };
 };
 
-// USB device that presents as Serial, but supports MIDI (for eg plain Arduino, Hairless-MIDI-alike)
+// USB device that presents as Serial, but supports MIDI (for eg plain Arduino, Hairless-MIDI-alike, OpenTheremin v4 with MIDI code)
 class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerialBase {
     public:
         midi::MidiInterface<USBSerialWrapper> *midi_interface = nullptr;

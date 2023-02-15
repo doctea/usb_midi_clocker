@@ -10,6 +10,7 @@
 #include "behaviours/behaviour_chocolate.h"
 
 #include "behaviours/behaviour_xiao.h"
+#include "behaviours/behaviour_xiaoserial.h"
 
 #include "behaviours/behaviour_bitbox.h"
 #include "behaviours/behaviour_neutron.h"
@@ -69,6 +70,9 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_XIAO
         behaviour_xiao = new DeviceBehaviour_XIAO();
         behaviour_manager->registerBehaviour(behaviour_xiao);
+        #if defined(ENABLE_XIAO) && defined(ENABLE_XIAOSERIAL) && defined(ENABLE_USBSERIAL)
+            behaviour_manager->registerBehaviour(behaviour_xiaoserial);
+        #endif
     #endif
 
     #ifdef ENABLE_SUBCLOCKER

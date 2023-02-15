@@ -20,6 +20,9 @@
 class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
+    using DeviceBehaviourUltimateBase::receive_note_on;
+    using DeviceBehaviourUltimateBase::receive_note_off;
+    using ClockedBehaviour::on_tick;
     
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
@@ -29,7 +32,8 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
         virtual const char *get_label() override {
             return "XIAO";
         }
-        virtual bool has_output() { return true; }
+        virtual bool has_output() { return false; }
+        virtual bool has_input() { return true; }
 
         /*virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
