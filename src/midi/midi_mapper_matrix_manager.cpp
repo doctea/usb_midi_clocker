@@ -17,6 +17,8 @@
 #include "behaviours/behaviour_drumkit.h"
 #include "behaviours/behaviour_dptlooper.h"
 
+#include "behaviours/behaviour_xiao.h"
+
 #include "behaviours/behaviour_cvinput.h"
 
 #include "behaviours/behaviour_opentheremin.h"
@@ -175,6 +177,12 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->connect("loop_track_drums", "USB : Bamble : drums");
         drums_loop_track.set_quantization_value(0);
         //drums_loop_track.debug = true;
+    #endif
+
+    #ifdef ENABLE_XIAO
+        behaviour_xiao->source_id     = midi_matrix_manager->register_source("XIAO ch10");
+        behaviour_xiao->source_id_2   = midi_matrix_manager->register_source("XIAO ch1");
+        midi_matrix_manager->connect("XIAO ch10", "USB : Bamble : drums");
     #endif
 
     #ifdef ENABLE_CV_INPUT_PITCH

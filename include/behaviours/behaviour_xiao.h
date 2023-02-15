@@ -17,6 +17,10 @@
 
 //#include "parameters/MIDICCParameter.h"
 
+void xiao_control_change(byte number, byte value, byte channel);
+void xiao_note_on(byte pitch, byte value, byte channel);
+void xiao_note_off(byte pitch, byte value, byte channel);
+
 class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
@@ -32,16 +36,21 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
         virtual const char *get_label() override {
             return "XIAO";
         }
-        virtual bool has_output() { return false; }
+        virtual bool has_output() { return true; }
         virtual bool has_input() { return true; }
 
-        /*virtual void setup_callbacks() override {
+        source_id_t source_id_2 = -1;
+
+        virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
-            //this->device->setHandleControlChange(craftsynth_control_change);
-            //this->device->setHandleNoteOn(craftsynth_note_on);
-            //this->device->setHandleNoteOff(craftsynth_note_off);
-            Serial.println(F("DeviceBehaviour_CraftSynth#setup_callbacks()")); Serial_flush();
-        };*/
+            this->device->setHandleControlChange(xiao_control_change);
+            this->device->setHandleNoteOn(xiao_note_on);
+            this->device->setHandleNoteOff(xiao_note_off);
+            Serial.println(F("DeviceBehaviour_XIAO#setup_callbacks()")); Serial_flush();
+        };
+
+        virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override;
+        virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override;
 
         /*virtual void init() override {
             Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial_flush();
