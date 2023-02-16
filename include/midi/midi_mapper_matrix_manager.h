@@ -147,11 +147,11 @@ class MIDIMatrixManager {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n"), source_id, pitch, velocity, channel);
+        if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial.printf("\t%i: %s should send to %s\n", target_id, sources[source_id].handle, targets[target_id].handle);
+                if (this->debug) Serial.printf(F("\t%s\tshould send to\t%s\t(%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
@@ -163,11 +163,12 @@ class MIDIMatrixManager {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i, pitch=%i, velocity=%i, channel=%i)\n"), source_id, pitch, velocity, channel);
+        if (this->debug) 
+            Serial.printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial.printf(F("\t%i: %s should send to %s\n"), target_id, sources[source_id].handle, targets[target_id].handle);
+                if (this->debug) Serial.printf(F("\t%s\tshould send to\t%s\t(%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
