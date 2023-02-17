@@ -7,3 +7,6 @@
 *.patch
 lib/
 build/
+*.orig
+*.rej
+token.backup
