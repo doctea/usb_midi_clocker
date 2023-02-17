@@ -26,15 +26,17 @@ void setup_serial_midi_input() {
 
   if (TRUE_MIDI_SERIAL || (digitalRead(PIN_A0) && !digitalRead(PIN_A1))) {
     Serial.begin(31250);
-    digitalWrite(PIN_CLOCK_1, HIGH);
-    digitalWrite(PIN_CLOCK_2, HIGH);
-    digitalWrite(PIN_CLOCK_3, HIGH);
-    digitalWrite(PIN_CLOCK_4, HIGH);
-    delay(1000);
-    digitalWrite(PIN_CLOCK_1, LOW);
-    digitalWrite(PIN_CLOCK_2, LOW);
-    digitalWrite(PIN_CLOCK_3, LOW);
-    digitalWrite(PIN_CLOCK_4, LOW);
+    #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
+      digitalWrite(PIN_CLOCK_1, HIGH);
+      digitalWrite(PIN_CLOCK_2, HIGH);
+      digitalWrite(PIN_CLOCK_3, HIGH);
+      digitalWrite(PIN_CLOCK_4, HIGH);
+      delay(1000);
+      digitalWrite(PIN_CLOCK_1, LOW);
+      digitalWrite(PIN_CLOCK_2, LOW);
+      digitalWrite(PIN_CLOCK_3, LOW);
+      digitalWrite(PIN_CLOCK_4, LOW);
+    #endif
   } else {
     Serial.begin(BAUDRATE_HAIRLESS);
     /*while (!Serial);
@@ -44,12 +46,6 @@ void setup_serial_midi_input() {
   delay(1000);
   digitalWrite(LED_BUILTIN, LOW);
 
-
-  /*#ifdef TRUE_MIDI_SERIAL
-    Serial.begin(32150);
-  #else
-    Serial.begin(BAUDRATE_HAIRLESS);
-  #endif*/
 }
 
 void loop_serial_midi() {

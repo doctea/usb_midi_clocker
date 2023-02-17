@@ -74,40 +74,42 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset = 0) {
 #endif
 
 void update_cv_outs(unsigned long ticks) {
-  // start bar (every fourth quarter note)
-  for (int i = 0 ; i < NUM_CLOCKS ; i++) {
-    bool should_go_high = false;
-    bool should_go_low  = false;
+  #if defined(ENABLE_SEQUENCER) || defined(ENABLE_CLOCKS)
 
-    if (
-      #ifdef ENABLE_SEQUENCER
-            should_trigger_sequence(ticks, i)
-      #endif
-      #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
-            ||
-      #endif
-      #ifdef ENABLE_CLOCKS
-            should_trigger_clock(ticks, i)
-      #endif
-    ) {
-        should_go_high = true;
-    } else if (
-      #ifdef ENABLE_SEQUENCER
-            should_trigger_sequence(ticks, i, duration)
-      #endif
-      #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
-            ||
-      #endif
-      #ifdef ENABLE_CLOCKS
-            should_trigger_clock(ticks, i, duration)
-      #endif
-    ) {
-      should_go_low = true;
+    // start bar (every fourth quarter note)
+    for (int i = 0 ; i < NUM_CLOCKS ; i++) {
+      bool should_go_high = false;
+      bool should_go_low  = false;
+
+      if (
+        #ifdef ENABLE_SEQUENCER
+              should_trigger_sequence(ticks, i)
+        #endif
+        #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+              ||
+        #endif
+        #ifdef ENABLE_CLOCKS
+              should_trigger_clock(ticks, i)
+        #endif
+      ) {
+          should_go_high = true;
+      } else if (
+        #ifdef ENABLE_SEQUENCER
+              should_trigger_sequence(ticks, i, duration)
+        #endif
+        #if defined(ENABLE_SEQUENCER) && defined(ENABLE_CLOCKS)
+              ||
+        #endif
+        #ifdef ENABLE_CLOCKS
+              should_trigger_clock(ticks, i, duration)
+        #endif
+      ) {
+        should_go_low = true;
+      }
+
+      if (should_go_high) digitalWrite(PIN_CLOCK_START+i, HIGH);
+      else if (should_go_low)  digitalWrite(PIN_CLOCK_START+i, LOW);
+          
     }
-
-    if (should_go_high) digitalWrite(PIN_CLOCK_START+i, HIGH);
-    else if (should_go_low)  digitalWrite(PIN_CLOCK_START+i, LOW);
-        
-  }
-
+  #endif
 }
