@@ -41,23 +41,40 @@ int duration = 2;
 
 void setup()
 {
-  /*Serial.begin(115200);
-  while (!Serial);*/
-  pinMode(PIN_CLOCK_1, OUTPUT);
-  pinMode(PIN_CLOCK_2, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  if (!TRUE_MIDI_SERIAL) {
+    Serial.begin(115200);
+    #ifdef WAIT_FOR_SERIAL
+      while (!Serial) {
+        digitalWrite(LED_BUILTIN, 1);
+        delay(500);
+        digitalWrite(LED_BUILTIN, 0);
+      };
+    #endif
+  }
 
-  pinMode(PIN_CLOCK_3, OUTPUT);
-  pinMode(PIN_CLOCK_4, OUTPUT);
+  if (!TRUE_MIDI_SERIAL) {
+    Serial.println(F("BOOTED!")); Serial.flush();
+  }
+
+  #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
+    pinMode(PIN_CLOCK_1, OUTPUT);
+    pinMode(PIN_CLOCK_2, OUTPUT);
+    pinMode(PIN_CLOCK_3, OUTPUT);
+    pinMode(PIN_CLOCK_4, OUTPUT);
+  #endif
 
   setup_serial_midi_input();
 
   #ifdef ENABLE_USB_HOST
     setup_multi_usb();
+    delay( 1000 );
+    if (!TRUE_MIDI_SERIAL) {
+      Serial.println(F("Arduino finished USB setup."));
+    }
   #endif
   delay( 1000 );
   
-  Serial.println(F("Arduino ready."));
-
   #ifdef ENABLE_SEQUENCER
     init_sequence();
   #endif
@@ -69,7 +86,8 @@ void setup()
     setup_cheapclock();
   #endif
 
-  Serial.println(F("Arduino ready."));
+  if (!TRUE_MIDI_SERIAL) 
+    Serial.println(F("Arduino finished setup()."));
 }
 
 //long loop_counter = 0;
@@ -79,23 +97,31 @@ void setup()
 // -----------------------------------------------------------------------------
 void loop()
 {
+  //Serial.println(F("started loop()")); Serial.flush();
   //static long loop_count = 0;
-  if ((millis()/1000)%2==0) 
+  if ((millis()%2000)<1000) 
     digitalWrite(LED_BUILTIN, HIGH);
   else
     digitalWrite(LED_BUILTIN, LOW);
-  //if (loop_counter%100==0) Serial.println(F("1g  00th loop()"));
-  #ifdef ENABLE_USE_HOST
+  //return;
+  //if (loop_counter%100==0) Serial.println(F("100th loop()"));
+  #ifdef ENABLE_USB_HOST
+    //Serial.println("about to usb.task()"); Serial.flush();
     ATOMIC(
       Usb.Task();
     )
+    //Serial.println("just did usb.task()"); Serial.flush();
   #endif
 
+  //Serial.println(F("about to loop_serial_midi()")); Serial.flush();
   loop_serial_midi();
+  //Serial.println(F("just did loop_serial_midi()")); Serial.flush();
 
   #ifdef ENABLE_USB_HOST
     #ifdef ENABLE_BEATSTEP
-        beatstep_loop();
+      //Serial.println(F("about to beatstep_loop()")); Serial.flush();
+      beatstep_loop();
+      //Serial.println(F("just did beatstep_loop()")); Serial.flush();
     #endif
 
     #ifdef ENABLE_APCMINI
@@ -108,6 +134,7 @@ void loop()
   #endif
 
   #ifndef USE_UCLOCK
+    //Serial.println(F("Starting clock ticks..."));
     bool should_tick = false;
     if (clock_mode==CLOCK_EXTERNAL_USB_HOST && check_and_unset_usb_midi_clock_ticked())
       should_tick = playing && true;
@@ -115,6 +142,24 @@ void loop()
       should_tick = playing && millis()-t1 > ms_per_tick;
 
     if ( should_tick ) {
+      /*Serial.print(F("ticked "));
+      Serial.print(ticks);
+      Serial.println();
+      Serial.flush();*/
+      #if defined(ENABLE_USB_HOST) && defined(ENABLE_BEATSTEP)
+        #ifdef TEST_START_EVERY_FOUR_BEATS
+          if (ticks==0 || ticks % PPQN == 0 ) {
+            if (!TRUE_MIDI_SERIAL) {
+              Serial.println(F("about to beatstep_on_restart..")); Serial.flush();
+            }
+            beatstep_on_restart();
+          }
+        #endif
+        if(!TRUE_MIDI_SERIAL && is_bpm_on_bar(ticks)) {
+          Serial.println(F("Tick on bar!"));
+        }
+      #endif
+      //Serial.println(F("about to do_ticks()"));
       do_tick(ticks);
       ticks++;
       t1 = millis();

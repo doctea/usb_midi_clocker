@@ -14,16 +14,16 @@ void setupmidi(uint8_t idx)
   uint16_t vid = MidiTransports[idx]->idVendor();
   uint16_t pid = MidiTransports[idx]->idProduct();
   char buf[16];
-  sprintf(buf, "%d:%04X,%04X - ",  idx, vid, pid);
+  snprintf(buf, 16, "%d:%04X,%04X - ",  idx, vid, pid);
   Serial.print(buf);
 
   #ifdef ENABLE_BEATSTEP
     if ( vid == 0x1c75 && pid == 0x0206 ) {         //is Arturia BeatStep?
       ixBeatStep = idx;
-      Serial.print(F("BeatStep connected..."));
+      if (!TRUE_MIDI_SERIAL) Serial.print(F("BeatStep connected..."));
       midi_beatstep = Midi[idx];
       beatstep_init();
-      Serial.println(F("completed Beatstep init"));
+      if (!TRUE_MIDI_SERIAL) Serial.println(F("completed Beatstep init"));
       return;
     } 
   #endif
@@ -46,19 +46,21 @@ void setupmidi(uint8_t idx)
     }
   #endif
 
-  Serial.print(F("Detected unknown (or disabled) device vid="));
-  Serial.print(vid);
-  Serial.print(F(", pid="));
-  Serial.println(pid);
+  if (!TRUE_MIDI_SERIAL) {
+    Serial.print(F("Detected unknown (or disabled) device vid="));
+    Serial.print(vid);
+    Serial.print(F(", pid="));
+    Serial.println(pid);
+  }
 }
 
 // call this when global clock should be reset
 void on_restart() {
   restart_on_next_bar = false;
 
-  Serial.println(F("on_restart()==>"));
+  if (!TRUE_MIDI_SERIAL) Serial.println(F("on_restart()==>"));
   
-  Serial.println(F("reset ticks"));
+  if (!TRUE_MIDI_SERIAL) Serial.println(F("reset ticks"));
   // TODO: cheapclock version
   #ifdef USE_UCLOCK
     uClock.setTempo(bpm_current); // todo: probably not needed?
@@ -70,9 +72,9 @@ void on_restart() {
   #endif
   
   #ifdef ENABLE_BEATSTEP
-    Serial.print(F("restart beatstep..."));
+    if (!TRUE_MIDI_SERIAL) Serial.print(F("restart beatstep..."));
     beatstep_on_restart();
-    Serial.println(F("restarted"));
+    if (!TRUE_MIDI_SERIAL) Serial.println(F("restarted"));
   #endif
   #ifdef ENABLE_BAMBLE
     Serial.print(F("restart bamble..."));
@@ -85,7 +87,7 @@ void on_restart() {
     Serial.println(F("restarted"));
     redraw_immediately = true;
   #endif
-  Serial.println(F("<==on_restart()"));
+  if (!TRUE_MIDI_SERIAL) Serial.println(F("<==on_restart()"));
 }
 
 

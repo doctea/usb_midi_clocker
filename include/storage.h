@@ -7,7 +7,7 @@
 #define SAVE_ID_uint8_t_V0 0xD0
 #define SAVE_ID_uint8_t_V1 0xD1
 
-typedef struct savestate {
+struct savestate {
   uint8_t id = SAVE_ID_uint8_t_V1;
   uint8_t size_clocks    = NUM_CLOCKS;
   uint8_t size_sequences = NUM_SEQUENCES;

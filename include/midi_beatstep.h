@@ -19,9 +19,9 @@ inline void beatstep_loop() {
 
 void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
   if (inNumber==54 && inValue==127) {
-    Serial.println(F("BEATSTEP START PRESSED!"));
+    if (!TRUE_MIDI_SERIAL) Serial.println(F("BEATSTEP START PRESSED!"));
     beatstep_started = false;
-  } else {
+  } else if (!TRUE_MIDI_SERIAL) {
     Serial.print(F("Received Beatstep CC "));
     Serial.print(inNumber);
     Serial.print(F(" with value "));
@@ -31,12 +31,12 @@ void beatstep_control_change (byte inChannel, byte inNumber, byte inValue) {
 }
 
 void beatstep_handle_start() {
-  Serial.println(F("beatstep_handle_start()"));
+  if (!TRUE_MIDI_SERIAL) Serial.println(F("beatstep_handle_start()"));
   //ATOMIC(
     midi_beatstep->sendStart();
   //)
   beatstep_started = true;
-  Serial.println(F("beatstep_handle_start() finished"));
+  if (!TRUE_MIDI_SERIAL) Serial.println(F("beatstep_handle_start() finished"));
 }
 
 void beatstep_on_tick(volatile uint32_t ticks) {
@@ -50,13 +50,13 @@ void beatstep_on_tick(volatile uint32_t ticks) {
     //Serial.println("about to test bpm on bar..");
     //Serial.flush();
     if (is_bpm_on_bar(ticks) && !beatstep_started) {
-      Serial.println(F("First beat of bar and BEATSTEP not started -- starting!"));
+      if (!TRUE_MIDI_SERIAL) Serial.println(F("First beat of bar and BEATSTEP not started -- starting!"));
       //Serial.println("First beat of bar and BEATSTEP not started -- starting!");
       //Serial.flush();
       //ATOMIC(
         midi_beatstep->sendStart();
       //);
-      Serial.println("sent start");
+      if (!TRUE_MIDI_SERIAL) Serial.println("sent start");
       //Serial.flush();
       beatstep_started = true;
     }
@@ -78,17 +78,17 @@ void beatstep_on_tick(volatile uint32_t ticks) {
 // called inside interrupt
 void beatstep_on_restart() {
   if (midi_beatstep) {
-    Serial.println(F("beatstep_on_restart()"));
+    if (!TRUE_MIDI_SERIAL) Serial.println(F("beatstep_on_restart()"));
     //ATOMIC(
       midi_beatstep->sendStop();
       midi_beatstep->sendStart();
     //)
-    Serial.println(F("beatstep_on_restart done"));
+    if (!TRUE_MIDI_SERIAL) Serial.println(F("beatstep_on_restart done"));
   }
 }
 
 void beatstep_init() {
-    Serial.println(F("beatstep_init()"));
+    if (!TRUE_MIDI_SERIAL) Serial.println(F("beatstep_init()"));
     ATOMIC(
       beatstep_started = false;
     )
@@ -96,7 +96,7 @@ void beatstep_init() {
     midi_beatstep->turnThruOff();
     midi_beatstep->setHandleControlChange(beatstep_control_change);
     midi_beatstep->setHandleStart(beatstep_handle_start);    
-    Serial.println(F("beatstep_init() finished"));
+    if (!TRUE_MIDI_SERIAL) Serial.println(F("beatstep_init() finished"));
     //)
 }
 
