@@ -4,8 +4,8 @@
 #define DEFAULT_CLOCK_MODE  CLOCK_INTERNAL
 //#define DEFAULT_CLOCK_MODE  CLOCK_EXTERNAL_USB_HOST
 
-//#define WAIT_FOR_SERIAL // define this if you want arduino to stop at the top of setup() and wait for a serial monitor connection before it will work
-//#define TEST_START_EVERY_FOUR_BEATS // define this if you want to send a START to the beatstep every 4 beats (useful while testing its working..)
+//#define WAIT_FOR_SERIAL                 // define this if you want arduino to stop at the top of setup() and wait for a serial monitor connection before continuing
+//#define TEST_START_EVERY_FOUR_BEATS     // define this if you want to send a STOP/START to the beatstep every 4 beats (useful while testing if its working..)
 
 // midi settings
 //#define TRUE_MIDI_SERIAL true   // use true MIDI baud rate, for when eg uno controller has been flashed with usbmidiklik, or (untested) when using a real MIDI connection on the Arduino RX pins?
