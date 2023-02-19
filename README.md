@@ -106,10 +106,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Teensy 4.1
   - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs)
 - ST7789 oled screen for display
-  - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789
-  - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu
+  - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789 (not used for a while, likely have some issues)
+  - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current version much prefers this)
 - Rotary encoder + two wired buttons for control and/oor USB typing keyboard
   - and [mymenu](https://github.com/doctea/mymenu) library
+- [midihelpers](https://github.com/doctea/midihelpers) library
 - Akai APCMini for controlling the sequencer and clocks
 - SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots and loops
 - DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, and to protect the Teensy pins from external voltages: see 'Suggested wiring' section below
