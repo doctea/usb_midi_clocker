@@ -212,7 +212,7 @@ void setup() {
   Serial.println(F("Arduino ready.")); Serial_flush();
   #ifdef ENABLE_SCREEN
     tft_print((char*)"Ready!"); 
-    tft_clear();
+    //tft_clear();
 
     Serial.println(F("About to init menu..")); Serial_flush();
     menu->start();
