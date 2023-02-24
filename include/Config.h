@@ -7,11 +7,18 @@
 //#define USBHOST_PRINT_DEBUG   // not sure if this will actually work here? may need to be put into the build options
 //#define GDB_DEBUG             // to enable TeensyDebug (don't need to set this if building using the 'debug' build profile)
 
+// NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
+
 //// CV input options
 #define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
-#define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card
+#ifndef ENABLE_CALIBRATION_STORAGE
+    #define ENABLE_CALIBRATION_STORAGE          // enable save/recall of calibration data to SD card file
+#endif
+#ifndef LOAD_CALIBRATION_ON_BOOT
+    #define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card on boot
+#endif
 #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
 
 // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
