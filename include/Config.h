@@ -159,3 +159,6 @@
     #endif
 #endif
 
+
+
+#define DoubleParameter FloatParameter
