@@ -18,6 +18,8 @@
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
 
+#include "submenuitem_bar.h"
+
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
 #include "behaviours/behaviour_mpk49.h"
@@ -136,6 +138,13 @@ void setup_menu() {
         0, 
         100
     );
+
+    // add start/stop/continue bar
+    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport");
+    project_startstop->add(new ActionItem("Start",    clock_start));
+    project_startstop->add(new ActionItem("Stop",     clock_stop));
+    project_startstop->add(new ActionItem("Continue", clock_continue));
+    menu->add(project_startstop);
 
     menu->add(project_save);       // save project settings button
     menu->add(project_selector);   // save project selector button
