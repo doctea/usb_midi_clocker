@@ -96,7 +96,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 if (!playing)
                     global_on_restart();
                 
-                playing = !playing;    
+                //playing = !playing;
+                clock_set_playing(!playing);
 
             #ifdef ENABLE_LOOPER
                 } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {

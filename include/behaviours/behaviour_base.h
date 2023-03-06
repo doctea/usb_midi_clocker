@@ -139,19 +139,19 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual void actualSendPitchBend(int16_t bend, uint8_t channel) {}
 
     // parameter handling shit
-    LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
-    virtual LinkedList<DoubleParameter*> *get_parameters () {
+    LinkedList<FloatParameter*> *parameters = new LinkedList<FloatParameter*>();
+    virtual LinkedList<FloatParameter*> *get_parameters () {
         if (parameters==nullptr || parameters->size()==0)
             this->initialise_parameters();
         return parameters;
     }
-    virtual LinkedList<DoubleParameter*> *initialise_parameters() {
+    virtual LinkedList<FloatParameter*> *initialise_parameters() {
         return parameters;
     }
     virtual bool has_parameters() {
         return this->get_parameters()->size()>0;
     }
-    virtual DoubleParameter* getParameterForLabel(const char *label) {
+    virtual FloatParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
         for (unsigned int i = 0 ; i < parameters->size() ; i++) {
             //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
@@ -218,9 +218,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
         Debug_println("save_sequence_add_lines_parameters..");
-        LinkedList<DoubleParameter*> *parameters = this->get_parameters();
+        LinkedList<FloatParameter*> *parameters = this->get_parameters();
         for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-            DoubleParameter *parameter = parameters->get(i);
+            FloatParameter *parameter = parameters->get(i);
 
             // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
             lines->add(String("parameter_base_") + String(parameter->label) + "=" + String(parameter->getCurrentNormalValue()));
@@ -267,7 +267,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             // reload base value
             if (key.startsWith(prefix_base)) {
                 key = key.replace(prefix_base,"");
-                DoubleParameter *p = this->getParameterForLabel(key.c_str());
+                FloatParameter *p = this->getParameterForLabel(key.c_str());
                 if (p!=nullptr) {
                     p->updateValueFromNormal(value.toFloat());
                     return true;
@@ -287,7 +287,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             double amount = value.substring(value.indexOf('|')+1).toFloat();
 
             //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
-            DoubleParameter *p = this->getParameterForLabel(parameter_name.c_str());
+            FloatParameter *p = this->getParameterForLabel(parameter_name.c_str());
             //Serial.printf("PARAMETERS\t\t%s: Got value substring to convert to float '%s' => %f\n", p->label, value.substring(value.indexOf('|')+1).c_str(), amount);
 
             if (p!=nullptr) {

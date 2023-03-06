@@ -77,7 +77,7 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
             DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }
 
-        FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        FLASHMEM virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)

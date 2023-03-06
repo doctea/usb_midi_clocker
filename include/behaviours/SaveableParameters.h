@@ -205,8 +205,8 @@ class SaveableParameter : public SaveableParameterBase {
 /*
 #include "parameters/Parameter.h"
 class SaveableParameterWrapper : public SaveableParameterBase {
-    DoubleParameter *target = nullptr;
-    SaveableParameterWrapper(DoubleParameter *target) : SaveableParameterBase(target->label) {
+    FloatParameter *target = nullptr;
+    SaveableParameterWrapper(FloatParameter *target) : SaveableParameterBase(target->label) {
         this->target = target;
     }
     virtual String get_line() {

@@ -61,7 +61,7 @@ void setup_parameters() {
     // todo: move this to the behaviour initialising!
     /*#ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println(F("setup_parameters() about to do get_parameters on behaviour_craftsynth..")); Serial_flush();
-        LinkedList<DoubleParameter*> *params = behaviour_craftsynth->get_parameters();
+        LinkedList<FloatParameter*> *params = behaviour_craftsynth->get_parameters();
         Serial.println(F("setup_parameters() just did get_parameters on behaviour_craftsynth.. about to addParameters()")); Serial_flush();
         parameter_manager->addParameters(params);
         Serial.println(F("setup_parameters() just did parameter_manager->addParameters(params)")); Serial_flush();

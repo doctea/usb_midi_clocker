@@ -78,7 +78,8 @@ class DeviceBehaviour_mpk49 : public DeviceBehaviourUSBBase, public ClockedBehav
         virtual void handle_mmc_start() {
             if (loop_track!=nullptr) {
                 loop_track->start_playing();
-                playing = true;
+                //playing = true;
+                clock_start();
             }
         }
         virtual void handle_mmc_stop() {

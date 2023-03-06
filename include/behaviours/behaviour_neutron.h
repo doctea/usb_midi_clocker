@@ -57,7 +57,7 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
 
         bool already_initialised = false;
         FLASHMEM
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)

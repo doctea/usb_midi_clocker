@@ -85,7 +85,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
         bool already_initialised = false;
         FLASHMEM
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
