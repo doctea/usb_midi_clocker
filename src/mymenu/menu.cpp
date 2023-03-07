@@ -144,6 +144,7 @@ void setup_menu() {
     project_startstop->add(new ActionItem("Start",    clock_start));
     project_startstop->add(new ActionItem("Stop",     clock_stop));
     project_startstop->add(new ActionItem("Continue", clock_continue));
+    project_startstop->add(new ActionFeedbackItem("Restart", set_restart_on_next_bar_on, is_restart_on_next_bar, "Restarting..", "Restart"));
     menu->add(project_startstop);
 
     menu->add(project_save);       // save project settings button

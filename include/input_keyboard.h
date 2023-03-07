@@ -178,7 +178,7 @@ bool debug_stress_sequencer_load = false;
                 break;
             case 'r'            : 
                 Serial.println(F("Setting (r)estart_on_next_bar"));
-                restart_on_next_bar = true; 
+                set_restart_on_next_bar(true); 
                 break;
             // take screenshot
             case ' '            :

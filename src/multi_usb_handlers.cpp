@@ -160,7 +160,7 @@ void update_usb_midi_device_connections() {
 
 // call this when global clock should be reset
 void global_on_restart() {
-  restart_on_next_bar = false;
+  set_restart_on_next_bar(false);
 
   Serial.println(F("on_restart()==>"));
 

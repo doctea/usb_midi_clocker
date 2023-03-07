@@ -118,7 +118,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     apcdisplay_sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
                     //)  // turn on the 'going to restart on next bar' flashing indicator
                 #endif
-                restart_on_next_bar = true;
+                set_restart_on_next_bar(true);
             #ifdef ENABLE_CLOCKS
                 } else if (inNumber==APCMINI_BUTTON_UP) {
                     // move clock selection up

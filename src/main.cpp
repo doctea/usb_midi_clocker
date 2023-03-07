@@ -394,14 +394,15 @@ void do_tick(uint32_t in_ticks) {
   ticks = in_ticks;
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
-  if (restart_on_next_bar && is_bpm_on_bar(ticks)) {
+  if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
     if (debug) Serial.println(F("do_tick(): about to global_on_restart"));
     //in_ticks = ticks = 0;
     global_on_restart();
     //ATOMIC(
       //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
     //)
-    restart_on_next_bar = false;
+    //restart_on_next_bar = false;
+    set_restart_on_next_bar(false);
   }
 
   if (is_bpm_on_phrase(ticks)) {
