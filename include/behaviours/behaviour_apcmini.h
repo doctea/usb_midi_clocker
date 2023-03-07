@@ -207,7 +207,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     Serial.print(row);
                     Serial.print(F(" and column "));*/
                     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
-                    Serial.println(col);
+                    //Serial.println(col);
                     sequencer_press(row, col, apcmini_shift_held);
                     #ifdef ENABLE_APCMINI_DISPLAY
                         redraw_sequence_row(row);
