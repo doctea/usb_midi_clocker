@@ -55,7 +55,7 @@ class LooperRecStatus : public MenuItem {
         }
 };
 
-class LooperQuantizeControl : public SelectorControl {
+class LooperQuantizeControl : public SelectorControl<int> {
     MIDITrack *loop_track = nullptr;
 
     // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?

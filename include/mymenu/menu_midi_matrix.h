@@ -8,7 +8,7 @@
 
 #include "menuitems.h"
 
-class MidiMatrixSelectorControl : public SelectorControl {
+class MidiMatrixSelectorControl : public SelectorControl<int> {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
