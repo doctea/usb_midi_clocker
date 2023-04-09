@@ -218,37 +218,12 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
         Debug_println("save_sequence_add_lines_parameters..");
-        LinkedList<FloatParameter*> *parameters = this->get_parameters();
-        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-            FloatParameter *parameter = parameters->get(i);
+        if (this->has_parameters()) {
+            LinkedList<FloatParameter*> *parameters = this->get_parameters();
+            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                FloatParameter *parameter = parameters->get(i);
 
-            // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
-            lines->add(String("parameter_base_") + String(parameter->label) + "=" + String(parameter->getCurrentNormalValue()));
-
-            if (parameter->is_modulatable()) {
-                #define MAX_SAVELINE 255
-                char line[MAX_SAVELINE];
-                // todo: move handling of this into the Parameter class, or into a third class that can handle saving to different formats..?
-                //          ^^ this could be the SaveableParameter class, used as a wrapper.  would require SaveableParameter to be able to add multiple lines to the save file
-                // todo: make these mappings part of an extra type of thing (like a "preset clip"?), rather than associated with sequence?
-                // todo: move these to be saved with the project instead?
-                for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
-                    if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
-                    if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
-
-                    const char *input_name = parameter->get_input_name_for_slot(slot);
-
-                    snprintf(line, MAX_SAVELINE, "parameter_%s_%i=%s|%3.3f", 
-                        parameter->label, 
-                        slot, 
-                        input_name,
-                        //'A'+slot, //TODO: implement proper saving of mapping! /*parameter->get_connection_slot_name(slot), */
-                        //parameter->connections[slot].parameter_input->name,
-                        parameter->connections[slot].amount
-                    );
-                    Debug_printf(F("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n"), line);
-                    lines->add(String(line));
-                }
+                parameter->save_sequence_add_lines(lines);
             }
         }
         Serial.println("finished save_sequence_add_lines_parameters.");
@@ -262,53 +237,11 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
         const char *prefix = "parameter_";
-        const char *prefix_base = "parameter_base_";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            // reload base value
-            if (key.startsWith(prefix_base)) {
-                key = key.replace(prefix_base,"");
-                FloatParameter *p = this->getParameterForLabel(key.c_str());
-                if (p!=nullptr) {
-                    p->updateValueFromNormal(value.toFloat());
+            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                if (parameters->get(i)->load_parse_key_value(key, value)) 
                     return true;
-                }
-                Serial.printf("WARNING: got a %s%s with value %s, but found no matching Parameter!\n", prefix_base, key.c_str(), value.c_str());
-                return false;
             }
-            // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
-            //                                 ^^head ^^_^^param name^_slot=ParameterInputName|Amount
-            key = key.replace(prefix, "");
-
-            // todo: checking that key has _ in it (ie that it is a modulation setting save)
-
-            String parameter_name = key.substring(0, key.indexOf('_'));
-            int slot_number = key.substring(key.indexOf('_')+1).toInt();
-            String input_name = value.substring(0, value.indexOf('|'));
-            double amount = value.substring(value.indexOf('|')+1).toFloat();
-
-            //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
-            FloatParameter *p = this->getParameterForLabel(parameter_name.c_str());
-            //Serial.printf("PARAMETERS\t\t%s: Got value substring to convert to float '%s' => %f\n", p->label, value.substring(value.indexOf('|')+1).c_str(), amount);
-
-            if (p!=nullptr) {
-                //Serial.printf(F("PARAMETERS\t\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
-                //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
-                //BaseParameterInput *input = parameter_manager->getInputForName(input_name.c_str()[0]);
-                p->set_slot_input(slot_number, input_name.c_str());
-                p->set_slot_amount(slot_number, amount);
-                /*Serial.printf("PARAMETERS\t\t%s: after setting slot %i, values look like name=%c and amount=%f\n", 
-                    p->label, 
-                    slot_number, 
-                    p->get_input_name_for_slot(slot_number),
-                    p->get_amount_for_slot(slot_number)
-                );*/
-                return true;
-            } else {
-                Serial.printf(F("PARAMETERS\tWARNING: Couldn't find a Parameter for name %s\n"), parameter_name.c_str());
-                return false;
-            }
-            //Serial.printf(F("\t slot_number %i and amount %f but no parameter found for %s in %s\n"), slot_number, amount, parameter_name.c_str(), this->get_label());
-            return true;
         }
         ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a parameter!\n"));
         return false;
