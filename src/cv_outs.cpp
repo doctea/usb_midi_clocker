@@ -27,10 +27,10 @@ float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
 #define CLOCK_MULTIPLIER_OFF        64.0  // if clock multipler is set to this value, then actually turn it off completely
 
 void cv_out_clock_pin_off(byte i) {
-  digitalWrite(cv_out_clock_pin[i], LOW);
+  digitalWrite(cv_out_clock_pin[i], LOW);   // TODO: MCP23017 version of this
 }
 void cv_out_clock_pin_on(byte i) {
-  digitalWrite(cv_out_clock_pin[i], HIGH);
+  digitalWrite(cv_out_clock_pin[i], HIGH);  // TODO: MCP23017 version of this
 }
 
 /*  get / manipulate clock multipliers */

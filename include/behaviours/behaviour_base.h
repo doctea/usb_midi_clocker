@@ -12,6 +12,7 @@
 
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
+#include "ParameterManager.h"
 
 #include "behaviours/SaveableParameters.h"
 
@@ -236,12 +237,17 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
         Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
+
+        // todo: can optimise this for most cases by remembering the last-found parameter and starting our search there instead
+        //              eg something like parameter_manager->fast_load_parse_key_value(this->parameters, key, value)
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+            /*for (unsigned int i = 0 ; i < parameters->size() ; i++) {
                 if (parameters->get(i)->load_parse_key_value(key, value)) 
                     return true;
-            }
+            }*/
+            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))
+                return true;
         }
         ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a parameter!\n"));
         return false;

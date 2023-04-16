@@ -40,7 +40,7 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();
         #ifdef ENABLE_LOOPER
-            behaviour_apcmini->loop_track = &mpk49_loop_track;
+            behaviour_apcmini->loop_track = &midi_loop_track;
         #endif
         behaviour_manager->registerBehaviour(behaviour_apcmini);
     #endif

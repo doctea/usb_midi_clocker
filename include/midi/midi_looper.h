@@ -483,7 +483,7 @@ class MIDITrack {
         void draw_piano_roll_bitmap_from_save() {
             if (!this->bitmap_enabled) return;
 
-            //if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial_flush(); }
+            if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial_flush(); }
             piano_roll_highest = 0;
             piano_roll_lowest = 127;
 
@@ -509,7 +509,7 @@ class MIDITrack {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
-            //if(this->debug) { Serial.println(F("bitmap built..")); Serial_flush(); }
+            if(this->debug) { Serial.println(F("bitmap built..")); Serial_flush(); }
 
             /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {

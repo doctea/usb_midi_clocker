@@ -20,6 +20,7 @@ void xiao_note_off(byte channel, byte pitch, byte value) {
 }
 
 void DeviceBehaviour_XIAO::receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
+    //Serial.printf("DeviceBehaviour_XIAO::receive_note_on(channel=%i, note=%i, velocity=%i)\n", channel, note, velocity);
     if (channel==10)
         midi_matrix_manager->processNoteOn(this->source_id, note, velocity); //, channel);
     else

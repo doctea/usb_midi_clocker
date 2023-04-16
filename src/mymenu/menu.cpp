@@ -251,7 +251,7 @@ void setup_menu() {
     // looper stuff
     #ifdef ENABLE_LOOPER
         menu->add_page("Looper");
-        menu->add(mpk49_loop_track.make_menu_items());
+        menu->add(midi_loop_track.make_menu_items());
         #ifdef ENABLE_DRUM_LOOPER
             menu->add(&drum_looper_status);
             menu->add(&drum_loop_quantizer_setting);

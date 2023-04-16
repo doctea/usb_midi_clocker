@@ -162,8 +162,8 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
 
     // instantiate the loop tracks and point them at their default output wrappers
     #ifdef ENABLE_LOOPER
-        midi_matrix_manager->register_source(&mpk49_loop_track, "loop_track_1");
-        midi_matrix_manager->register_target(&mpk49_loop_track, "loop_track_1");
+        midi_matrix_manager->register_source(&midi_loop_track, "loop_track_1");
+        midi_matrix_manager->register_target(&midi_loop_track, "loop_track_1");
         midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch3");
         #ifdef ENABLE_MPK49
             midi_matrix_manager->connect(behaviour_mpk49,           "loop_track_1");

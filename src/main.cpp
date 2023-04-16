@@ -429,6 +429,10 @@ void do_tick(uint32_t in_ticks) {
   if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
+  #ifdef ENABLE_LOOPER
+    midi_loop_track.process_tick(ticks);
+  #endif
+
   #ifdef ENABLE_DRUM_LOOPER
     drums_loop_track.process_tick(ticks);
   #endif

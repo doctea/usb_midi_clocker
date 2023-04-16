@@ -22,7 +22,7 @@
 using namespace storage;
 
 #ifdef ENABLE_LOOPER
-    extern MIDITrack mpk49_loop_track;
+    extern MIDITrack midi_loop_track;
 #endif
 #ifdef ENABLE_DRUM_LOOPER
     extern MIDITrack drums_loop_track;
@@ -229,16 +229,16 @@ class Project {
         #ifdef ENABLE_LOOPER
             // load and save sequences / clock settings etc
             bool load_loop(int selected_loop_number) {
-                return load_loop(selected_loop_number, &mpk49_loop_track);
+                return load_loop(selected_loop_number, &midi_loop_track);
             }
             bool load_loop() {
-                return load_loop(this->selected_loop_number, &mpk49_loop_track);
+                return load_loop(this->selected_loop_number, &midi_loop_track);
             }
             bool save_loop() {
-                return save_loop(this->selected_loop_number, &mpk49_loop_track);
+                return save_loop(this->selected_loop_number, &midi_loop_track);
             }
             bool save_loop(int selected_loop_number) {
-                return this->save_loop(selected_loop_number, &mpk49_loop_track);
+                return this->save_loop(selected_loop_number, &midi_loop_track);
             }
 
             bool load_specific_loop(int selected_loop_number) {

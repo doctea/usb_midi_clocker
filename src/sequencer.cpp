@@ -20,10 +20,10 @@ FLASHMEM void init_sequence() {
 }
 
 void cv_out_sequence_pin_off(byte i) {
-  digitalWrite(cv_out_sequence_pin[i], LOW);
+  digitalWrite(cv_out_sequence_pin[i], LOW);  // TODO: MCP23017 version of this
 }
 void cv_out_sequence_pin_on(byte i) {
-  digitalWrite(cv_out_sequence_pin[i], HIGH);
+  digitalWrite(cv_out_sequence_pin[i], HIGH); // TODO: MCP23017 version of this
 }
 
 byte read_sequence(byte row, byte col) {
