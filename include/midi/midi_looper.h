@@ -183,6 +183,9 @@ class MIDITrack {
             time = quantize_time(time);
             time = ticks_to_sequence_step(time);
             if (this->debug) Serial.printf(F("Recording event at\t%i\n"), time);
+            int event_duplicate = is_event_duplicate(midi_event, time);
+            if (event_duplicate)
+                frames[time]->remove(event_duplicate);
             frames[time]->add(midi_event);
             if (midi_event.message_type==midi::NoteOn) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) { 
@@ -200,6 +203,22 @@ class MIDITrack {
             //Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
             pitch_contains_notes[midi_event.pitch] = true;
             if (this->debug) Serial.printf(F("sizeof frames at %i is now %i\n"), time, frames[time]->size());
+        }
+
+        unsigned int is_event_duplicate(midi_message midi_event, unsigned long time) {
+            for (unsigned int i = 0 ; i < frames[time]->size() ; i++) {
+                if(event_matches(midi_event,frames[time]->get(i)))
+                    return i;
+            }
+            return 0;
+        }
+        bool event_matches(midi_message ev1, midi_message ev2) {
+            return (
+                ev1.message_type==ev2.message_type && 
+                ev1.channel==ev2.channel &&
+                ev1.pitch==ev2.pitch //&&
+                //ev1.velocity==ev1.velocity
+            );
         }
 
         // get total event count across entire loop
