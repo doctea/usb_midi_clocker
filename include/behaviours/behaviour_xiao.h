@@ -31,7 +31,12 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x2E8A, pid = 0x000A;
-        virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
+        uint16_t vid2 = 0xBEEF, pid2 = 0x1337;
+        virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
+        virtual uint32_t get_packed_id2() override { return (this->vid2<<16 | this->pid2); }
+        virtual bool matches_identifiers(uint32_t packed_id) {
+            return packed_id==get_packed_id() || packed_id==get_packed_id2();
+        }
 
         virtual const char *get_label() override {
             return "XIAO";

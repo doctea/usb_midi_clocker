@@ -14,7 +14,12 @@ void handle_theremin_pitch_bend(byte channel, int bend);*/
 class DeviceBehaviour_XiaoSerial : public DeviceBehaviourUSBSerialBase {
     public:
         uint16_t vid = 0x2E8A, pid = 0x000A;
-        virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
+        uint16_t vid2 = 0xBEEF, pid2 = 0x1337;
+        virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
+        virtual uint32_t get_packed_id2() override { return (this->vid2<<16 | this->pid2); }
+        virtual bool matches_identifiers(uint32_t packed_id) {
+            return packed_id==get_packed_id() || packed_id==get_packed_id2();
+        }
 
         //virtual bool has_input() override   { return true; }
         //virtual bool has_output() override  { return false; }
