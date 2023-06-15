@@ -1,5 +1,5 @@
-#ifndef BEHAVIOUR_XIAO__INCLUDED
-#define BEHAVIOUR_XIAO__INCLUDED
+#ifndef BEHAVIOUR_MIDILIGHTS__INCLUDED
+#define BEHAVIOUR_MIDILIGHTS__INCLUDED
 
 #include <Arduino.h>
 
@@ -23,7 +23,7 @@ void xiao_control_change(byte number, byte value, byte channel);
 void xiao_note_on(byte pitch, byte value, byte channel);
 void xiao_note_off(byte pitch, byte value, byte channel);
 
-class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
+class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     using DeviceBehaviourUltimateBase::receive_note_on;
@@ -32,16 +32,11 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
     
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
-        uint16_t vid = 0x2E8A, pid = 0x000A;
-        uint16_t vid2 = 0xBEEF, pid2 = 0x1337;
+        uint16_t vid = 0x117E, pid = 0x1337;
         virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
-        virtual uint32_t get_packed_id2() { return (this->vid2<<16 | this->pid2); }
-        virtual bool matches_identifiers(uint32_t packed_id) override {
-            return packed_id==get_packed_id() || packed_id==get_packed_id2();
-        }
 
         virtual const char *get_label() override {
-            return "XIAO";
+            return "MIDILights";
         }
         virtual bool has_output() { return true; }
         virtual bool has_input() { return true; }
@@ -50,14 +45,14 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
-            this->device->setHandleControlChange(xiao_control_change);
+            /*this->device->setHandleControlChange(xiao_control_change);
             this->device->setHandleNoteOn(xiao_note_on);
-            this->device->setHandleNoteOff(xiao_note_off);
-            Serial.println(F("DeviceBehaviour_XIAO#setup_callbacks()")); Serial_flush();
+            this->device->setHandleNoteOff(xiao_note_off);*/
+            Serial.println(F("DeviceBehaviour_MIDILights#setup_callbacks()")); Serial_flush();
         };
 
-        virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override;
-        virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override;
+        //virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override;
+        //virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override;
 
         /*virtual void init() override {
             Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial_flush();
@@ -123,7 +118,7 @@ class DeviceBehaviour_XIAO : public DeviceBehaviourUSBBase, public ClockedBehavi
 };
 
 //void craftsynth_setOutputWrapper(MIDIOutputWrapper *);
-extern DeviceBehaviour_XIAO *behaviour_xiao;
+extern DeviceBehaviour_MIDILights *behaviour_midilights;
 
 #endif
 #endif

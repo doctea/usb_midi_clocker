@@ -1,0 +1,42 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../my_libraries/mymenu"
+		},
+		{
+			"path": "../my_libraries/parameters"
+		},
+		{
+			"path": "../my_libraries/midihelpers"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"array": "cpp",
+			"deque": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"vector": "cpp",
+			"initializer_list": "cpp",
+			"functional": "cpp",
+			"istream": "cpp",
+			"limits": "cpp",
+			"type_traits": "cpp",
+			"typeinfo": "cpp",
+			"*.tcc": "cpp",
+			"ostream": "cpp",
+			"atomic": "cpp",
+			"chrono": "cpp",
+			"fstream": "cpp",
+			"mutex": "cpp",
+			"sstream": "cpp",
+			"streambuf": "cpp",
+			"system_error": "cpp",
+			"tuple": "cpp",
+			"iosfwd": "cpp"
+		}
+	}
+}

@@ -97,6 +97,7 @@
     #define ENABLE_CHOCOLATEFEET_USB
     
     #define ENABLE_XIAO
+    #define ENABLE_MIDILIGHTS
 
     #define ENABLE_APCMINI_DISPLAY
 #endif

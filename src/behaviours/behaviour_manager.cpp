@@ -12,6 +12,8 @@
 #include "behaviours/behaviour_xiao.h"
 #include "behaviours/behaviour_xiaoserial.h"
 
+#include "behaviours/behaviour_midilights.h"
+
 #include "behaviours/behaviour_bitbox.h"
 #include "behaviours/behaviour_neutron.h"
 #include "behaviours/behaviour_lestrum.h"
@@ -73,6 +75,11 @@ void setup_behaviour_manager() {
         #if defined(ENABLE_XIAO) && defined(ENABLE_XIAOSERIAL) && defined(ENABLE_USBSERIAL)
             behaviour_manager->registerBehaviour(behaviour_xiaoserial);
         #endif
+    #endif
+
+    #ifdef ENABLE_MIDILIGHTS
+        behaviour_midilights = new DeviceBehaviour_MIDILights();
+        behaviour_manager->registerBehaviour(behaviour_midilights);
     #endif
 
     #ifdef ENABLE_SUBCLOCKER
