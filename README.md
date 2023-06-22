@@ -81,7 +81,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ### Behaviours
 
 - behaviour_apcmini: for Akai APCMini as sequencer/clock sequencer
-- behaviour_bamble: sends clock and sets up some parameters for [drum2musocv](https://github.com/doctea/drum2musocv]
+- behaviour_bamble: sends clock and sets up some parameters for [drum2musocv](https://github.com/doctea/drum2musocv)
 - behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
 - behaviour_bitbox: send clock to 1010 Music Bitbox mk2, also notes, over midi DIN
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
