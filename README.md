@@ -121,7 +121,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - on 2022-12-23, I recommend you use the maybe_fixed_4_stable branch as this seems like it might be more stable..?
 - As of 2022-12-23, using [this LinkedList fork](https://github.com/vortigont/LinkedList) to try and improve stuff
 
-## Suggested wiring 
+## Eurorack modules / PCB / gerbers
+
+- Experimental KiCad files + gerbers at [https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware) - not yet tested, waiting for them to come back from jlcpcb!
+
+## Suggested wiring - breadboard
 
 - Careful with this, consider it untested for now -- this is how I have mine connected up.  If you follow this then double-check that it actually makes sense when looking at the datasheets+pin diagrams for the actual Teensy and level-shifter boards before you power it on and risk frying pins on your Teensy!  I accept no responsibility if this breaks anything!
 
