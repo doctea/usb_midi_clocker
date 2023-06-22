@@ -9,7 +9,7 @@
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_chocolate.h"
 
-#include "behaviours/behaviour_xiao.h"
+#include "behaviours/behaviour_microlidian.h"
 #include "behaviours/behaviour_xiaoserial.h"
 
 #include "behaviours/behaviour_midilights.h"
@@ -69,10 +69,10 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_mpk49);
     #endif
 
-    #ifdef ENABLE_XIAO
-        behaviour_xiao = new DeviceBehaviour_XIAO();
-        behaviour_manager->registerBehaviour(behaviour_xiao);
-        #if defined(ENABLE_XIAO) && defined(ENABLE_XIAOSERIAL) && defined(ENABLE_USBSERIAL)
+    #ifdef ENABLE_MICROLIDIAN
+        behaviour_microlidian = new DeviceBehaviour_Microlidian();
+        behaviour_manager->registerBehaviour(behaviour_microlidian);
+        #if defined(ENABLE_MICROLIDIAN) && defined(ENABLE_XIAOSERIAL) && defined(ENABLE_USBSERIAL)
             behaviour_manager->registerBehaviour(behaviour_xiaoserial);
         #endif
     #endif

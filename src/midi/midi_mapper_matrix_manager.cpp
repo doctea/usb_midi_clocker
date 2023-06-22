@@ -17,7 +17,7 @@
 #include "behaviours/behaviour_drumkit.h"
 #include "behaviours/behaviour_dptlooper.h"
 
-#include "behaviours/behaviour_xiao.h"
+#include "behaviours/behaviour_microlidian.h"
 
 #include "behaviours/behaviour_cvinput.h"
 
@@ -179,10 +179,10 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         //drums_loop_track.debug = true;
     #endif
 
-    #ifdef ENABLE_XIAO
-        behaviour_xiao->source_id     = midi_matrix_manager->register_source("XIAO ch10");
-        behaviour_xiao->source_id_2   = midi_matrix_manager->register_source("XIAO ch1");
-        midi_matrix_manager->connect("XIAO ch10", "USB : Bamble : drums");
+    #ifdef ENABLE_MICROLIDIAN
+        behaviour_microlidian->source_id     = midi_matrix_manager->register_source("ulidian ch10");
+        behaviour_microlidian->source_id_2   = midi_matrix_manager->register_source("ulidian ch1");
+        midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
     #endif
 
     #ifdef ENABLE_CV_INPUT_PITCH

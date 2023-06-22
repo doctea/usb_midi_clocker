@@ -96,7 +96,7 @@
     #define ENABLE_CRAFTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
     
-    #define ENABLE_XIAO
+    #define ENABLE_MICROLIDIAN
     #define ENABLE_MIDILIGHTS
 
     #define ENABLE_APCMINI_DISPLAY

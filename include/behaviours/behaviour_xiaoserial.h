@@ -1,6 +1,6 @@
 #include "Config.h"
 
-#if defined(ENABLE_XIAO) && defined(ENABLE_XIAOSERIAL) && defined(ENABLE_USBSERIAL)
+#if defined(ENABLE_MICROLIDIAN) && defined(ENABLE_XIAOSERIAL) && defined(ENABLE_USBSERIAL)
 
 #include <Arduino.h>
 #include "USBHost_t36.h"

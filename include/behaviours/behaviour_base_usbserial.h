@@ -48,7 +48,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         virtual void connect_device(USBSerialWrapper *usbdevice) {
             Serial.printf(F("DeviceBehaviour_USBSerialBase#connect_device for %s connecting %p\n"), this->get_label(), usbdevice);
 
-            if (this->usbdevice!=nullptr && this->usbdevice != usbdevice) {
+            if (this->usbdevice != nullptr && this->usbdevice != usbdevice) {
                 Serial.printf(F("\tit is already connected to a different usbdevice! disconnecting first.."));
                 this->disconnect_device();
             }

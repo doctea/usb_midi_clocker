@@ -7,7 +7,7 @@
 
 // microlidian !
 
-#ifdef ENABLE_XIAO
+#ifdef ENABLE_MICROLIDIAN
 
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
@@ -19,9 +19,9 @@
 
 //#include "parameters/MIDICCParameter.h"
 
-void xiao_control_change(byte number, byte value, byte channel);
-void xiao_note_on(byte pitch, byte value, byte channel);
-void xiao_note_off(byte pitch, byte value, byte channel);
+/*void midilights_control_change(byte number, byte value, byte channel);
+void midilights_note_on(byte pitch, byte value, byte channel);
+void midilights_note_off(byte pitch, byte value, byte channel);*/
 
 class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
@@ -45,9 +45,9 @@ class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public Clocked
 
         virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
-            /*this->device->setHandleControlChange(xiao_control_change);
-            this->device->setHandleNoteOn(xiao_note_on);
-            this->device->setHandleNoteOff(xiao_note_off);*/
+            /*this->device->setHandleControlChange(midilights_control_change);
+            this->device->setHandleNoteOn(midilights_note_on);
+            this->device->setHandleNoteOff(midilights_note_off);*/
             Serial.println(F("DeviceBehaviour_MIDILights#setup_callbacks()")); Serial_flush();
         };
 
