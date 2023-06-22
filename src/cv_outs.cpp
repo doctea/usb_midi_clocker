@@ -84,10 +84,14 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
     );
 }
 
+void setup_cv_pin(unsigned int raw_pin_number, int mode = OUTPUT) {
+  pinMode(raw_pin_number, mode);
+}
+
 FLASHMEM void setup_cv_output() {
   #ifdef ENABLE_CLOCKS
     for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
-      pinMode(cv_out_clock_pin[i], OUTPUT);
+      setup_cv_pin(cv_out_clock_pin[i], OUTPUT);
     }
     #ifdef PIN_CLOCK_RESET
       pinMode(PIN_CLOCK_RESET, OUTPUT);
@@ -96,7 +100,7 @@ FLASHMEM void setup_cv_output() {
   #ifdef SEPARATE_SEQUENCER_AND_CLOCKS
     #ifdef ENABLE_SEQUENCER
       for (unsigned int i = 0 ; i < NUM_SEQUENCES ; i++) {
-        pinMode(cv_out_sequence_pin[i], OUTPUT);
+        setup_cv_pin(cv_out_sequence_pin[i], OUTPUT);
       }
     #endif
   #endif
