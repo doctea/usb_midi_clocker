@@ -26,13 +26,13 @@ void xiao_note_off(byte pitch, byte value, byte channel);
 class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
-    using DeviceBehaviourUltimateBase::receive_note_on;
-    using DeviceBehaviourUltimateBase::receive_note_off;
+    /*using DeviceBehaviourUltimateBase::receive_note_on;
+    using DeviceBehaviourUltimateBase::receive_note_off;*/
     using ClockedBehaviour::on_tick;
     
     public:
         //uint16_t vid = 0x09e8, pid = 0x0028;
-        uint16_t vid = 0x117E, pid = 0x1337;
+        uint16_t vid = 0x1337, pid = 0x117E;
         virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
 
         virtual const char *get_label() override {
