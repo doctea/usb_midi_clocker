@@ -81,9 +81,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ### Behaviours
 
 - behaviour_apcmini: for Akai APCMini as sequencer/clock sequencer
-- behaviour_bamble: sends clock and sets up some parameters for drum2musocv
+- behaviour_bamble: sends clock and sets up some parameters for [drum2musocv](https://github.com/doctea/drum2musocv]
 - behaviour_beatstep: for Arturia Beatstep to sync clock and send MIDI notes through to other devices
-- behaviour_bitbox: clock to 1010 Music Bitbox mk2, also notes, over midi DIN
+- behaviour_bitbox: send clock to 1010 Music Bitbox mk2, also notes, over midi DIN
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
 - behaviour_clocked: base classes for handling midi clock delay and divison
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0, also CC parameters that can be modulated from CV input
@@ -91,6 +91,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_dptlooper: send clock and bar/phrase starts for [DPTLooper](https://github.com/doctea/dptlooper) [experimental/WIP]
 - behaviour_keystep: sends clock and receives notes
 - behaviour_lestrum: input from LeStrum on both channels
+- behaviour_microlidian: send clock to [Microlidian](https://github.com/doctea/Microlidian) device
+- behaviour_microlidian: send clock to [MIDILights](https://github.com/doctea/midilights) device
 - behaviour_mpk49: input from Akai MK49, including control over looper
 - behaviour_neutron: bass drone, octave-forcing, and clock sent to Neutron over MIDI DIN
 - behaviour_midibass: base classes for octave-locking and droning 
