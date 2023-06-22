@@ -5,6 +5,8 @@
 #include "bpm.h"
 #include "project.h"
 
+#include "interfaces/interfaces.h"
+
 //#define byte uint8_t
 
 FLASHMEM void init_sequence() {
@@ -20,10 +22,12 @@ FLASHMEM void init_sequence() {
 }
 
 void cv_out_sequence_pin_off(byte i) {
-  digitalWrite(cv_out_sequence_pin[i], LOW);  // TODO: MCP23017 version of this
+  //raw_write_pin(cv_out_sequence_pin[i], LOW);  // TODO: MCP23017 version of this
+  set_sequence_gate(i, LOW);
 }
 void cv_out_sequence_pin_on(byte i) {
-  digitalWrite(cv_out_sequence_pin[i], HIGH); // TODO: MCP23017 version of this
+  //raw_write_pin(cv_out_sequence_pin[i], HIGH); // TODO: MCP23017 version of this
+  set_sequence_gate(i, HIGH);
 }
 
 byte read_sequence(byte row, byte col) {

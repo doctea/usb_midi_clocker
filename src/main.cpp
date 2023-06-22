@@ -55,6 +55,7 @@ void do_tick(uint32_t ticks);
 #ifdef ENABLE_SEQUENCER
   #include "sequencer.h"
 #endif
+#include "interfaces/interfaces.h"
 #include "cv_outs.h"
 
 #ifdef ENABLE_USB
@@ -136,10 +137,11 @@ void setup() {
   #endif
 
   #ifdef ENABLE_CV_OUTPUT
-    tft_print((char*)"Setting up CV..\n");
-    setup_cv_output();
+    tft_print((char*)"Setting up CV gates..\n");
+    //setup_cv_output();
+    setup_gate_manager();
   #endif
-  Serial.printf(F("after setup_cv_output(), free RAM is %u\n"), freeRam());
+  Serial.printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 
   delay( 100 );
 

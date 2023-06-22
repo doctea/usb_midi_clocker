@@ -36,7 +36,8 @@
 			"streambuf": "cpp",
 			"system_error": "cpp",
 			"tuple": "cpp",
-			"iosfwd": "cpp"
+			"iosfwd": "cpp",
+			"interfaces": "cpp"
 		}
 	}
 }

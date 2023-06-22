@@ -6,6 +6,7 @@
 #include "cv_outs.h"
 #include "sequencer.h"
 #include "project.h"
+#include "interfaces/interfaces.h"
 
 //extern storage::savestate current_state;
 
@@ -27,10 +28,12 @@ float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
 #define CLOCK_MULTIPLIER_OFF        64.0  // if clock multipler is set to this value, then actually turn it off completely
 
 void cv_out_clock_pin_off(byte i) {
-  digitalWrite(cv_out_clock_pin[i], LOW);   // TODO: MCP23017 version of this
+  //raw_write_pin(cv_out_clock_pin[i], LOW);   // TODO: MCP23017 version of this
+  set_clock_gate(i, LOW);
 }
 void cv_out_clock_pin_on(byte i) {
-  digitalWrite(cv_out_clock_pin[i], HIGH);  // TODO: MCP23017 version of this
+  //raw_write_pin(cv_out_clock_pin[i], HIGH);  // TODO: MCP23017 version of this
+  set_clock_gate(i, HIGH);
 }
 
 /*  get / manipulate clock multipliers */
@@ -84,14 +87,10 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
     );
 }
 
-void setup_cv_pin(unsigned int raw_pin_number, int mode = OUTPUT) {
-  pinMode(raw_pin_number, mode);
-}
-
-FLASHMEM void setup_cv_output() {
+/*FLASHMEM void setup_cv_output() {
   #ifdef ENABLE_CLOCKS
     for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
-      setup_cv_pin(cv_out_clock_pin[i], OUTPUT);
+      raw_setup_cv_pin(cv_out_clock_pin[i], OUTPUT);
     }
     #ifdef PIN_CLOCK_RESET
       pinMode(PIN_CLOCK_RESET, OUTPUT);
@@ -100,11 +99,11 @@ FLASHMEM void setup_cv_output() {
   #ifdef SEPARATE_SEQUENCER_AND_CLOCKS
     #ifdef ENABLE_SEQUENCER
       for (unsigned int i = 0 ; i < NUM_SEQUENCES ; i++) {
-        setup_cv_pin(cv_out_sequence_pin[i], OUTPUT);
+        raw_setup_cv_pin(cv_out_sequence_pin[i], OUTPUT);
       }
     #endif
   #endif
-}
+}*/
 
 #ifdef ENABLE_SEQUENCER
 #include "sequencer.h"
@@ -117,9 +116,9 @@ FLASHMEM void setup_cv_output() {
       #ifdef PIN_CLOCK_RESET
         if (is_bpm_on_phrase(ticks)) {
           Serial.printf("On phrase! %i\n", ticks);
-          digitalWrite(PIN_CLOCK_RESET, HIGH);
+          cv_out_clock_pin_on(PIN_CLOCK_RESET);
         } else if (is_bpm_on_phrase(ticks,duration)) {
-          digitalWrite(PIN_CLOCK_RESET, LOW);
+          cv_out_clock_pin_off(PIN_CLOCK_RESET);
         }
       #endif
       
@@ -153,8 +152,8 @@ FLASHMEM void setup_cv_output() {
           should_go_low = true;
         }
 
-        if (should_go_high)       digitalWrite(cv_out_clock_pin[i], HIGH);
-        else if (should_go_low)   digitalWrite(cv_out_clock_pin[i], LOW);
+        if (should_go_high)       cv_out_clock_pin_on(i);
+        else if (should_go_low)   cv_out_clock_pin_off(i);
       }
     #endif
 
@@ -164,9 +163,9 @@ FLASHMEM void setup_cv_output() {
     #ifdef PIN_CLOCK_RESET
       if (is_bpm_on_phrase(ticks)) {
         Serial.printf("On phrase! %i\n", ticks);
-        digitalWrite(PIN_CLOCK_RESET, HIGH);
+        cv_out_clock_pin_on(PIN_CLOCK_RESET);
       } else if (is_bpm_on_phrase(ticks,duration)) {
-        digitalWrite(PIN_CLOCK_RESET, LOW);
+        cv_out_clock_pin_off(PIN_CLOCK_RESET);
       }
     #endif
         
@@ -181,8 +180,8 @@ FLASHMEM void setup_cv_output() {
           should_go_low = true;
         }
 
-        if (should_go_high)     cv_out_sequence_pin_on(i); //digitalWrite(cv_out_sequence_pin[i], HIGH);
-        else if (should_go_low) cv_out_sequence_pin_off(i); //digitalWrite(cv_out_sequence_pin[i], LOW);
+        if (should_go_high)     cv_out_sequence_pin_on(i);
+        else if (should_go_low) cv_out_sequence_pin_off(i);
       }
     #endif
     #ifdef ENABLE_CLOCKS
@@ -196,8 +195,8 @@ FLASHMEM void setup_cv_output() {
           should_go_low = true;
         }
 
-        if (should_go_high)     cv_out_clock_pin_on(i); //digitalWrite(cv_out_clock_pin[i], HIGH);
-        else if (should_go_low) cv_out_clock_pin_off(i); //digitalWrite(cv_out_clock_pin[i], LOW);
+        if (should_go_high)     cv_out_clock_pin_on(i);
+        else if (should_go_low) cv_out_clock_pin_off(i);
       }
     #endif
   }

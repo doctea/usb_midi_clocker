@@ -192,11 +192,9 @@ void setup_multi_usb() { // error: void setup_multi_usb() causes a section type 
   Usb.begin();
   Serial.println(F("Usb.begin() returned")); Serial_flush();
   for (unsigned int i = 0 ; i < 5 ; i++) {
-    //digitalWrite(LED_BUILTIN, HIGH);
     Serial.printf(F("%i/5: Waiting 500ms for USB to settle down.."), i+1); Serial_flush();
     tft_print(".");
     delay(500);
-    //digitalWrite(LED_BUILTIN, LOW);
   }
   tft_print("done.\n");
   Serial.println(F("setup_multi_usb() finishing.")); Serial_flush();

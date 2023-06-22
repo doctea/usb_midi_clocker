@@ -196,9 +196,9 @@ namespace storage {
 
   void load_sequence_parse_line(String line, savestate *output) {
     bool debug = false;
-    if (line.charAt(0)==';') 
+    if (line.charAt(0)==';') {
       return;  // skip comment lines
-    else if (line.startsWith(F("id="))) {
+    } else if (line.startsWith(F("id="))) {
       output->id = (uint8_t) line.remove(0,String(F("id=")).length()).toInt();
       if (debug) Serial.printf(F("Read id %i\n"), output->id);
       return;
