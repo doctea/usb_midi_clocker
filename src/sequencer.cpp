@@ -63,8 +63,8 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
   byte v = read_sequence(sequence, step);
   if (v) {
     if (is_bpm_on_beat(ticks, offset) 
-        || (v==2 && is_bpm_on_eighth(ticks, offset))
-        || (v==3 && is_bpm_on_sixteenth(ticks, offset))
+        || (v==2 && is_bpm_on_eighth(ticks, offset))      // ratchetting
+        || (v==3 && is_bpm_on_sixteenth(ticks, offset))   // ratchetting
     ) {
       #ifdef DEBUG_SEQUENCER
             if (offset==0) {

@@ -17,6 +17,29 @@ class BankInterface {
     virtual void update() = 0;
 };
 
+class VirtualBankInterface : public BankInterface {
+    public:
+        BankInterface *underlying = nullptr;
+        int gate_offset = 0;
+
+        VirtualBankInterface(BankInterface *iface, int gate_offset, int num_gates) {
+            this->underlying = iface;
+            this->gate_offset = gate_offset;
+            this->num_gates = num_gates;
+        }
+
+        virtual void set_gate(int gate_number, bool state) override {
+            //this->dirty = true;
+            if (gate_number >= num_gates) {
+                //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
+                return;            
+            }   
+            //digitalWrite(pin_numbers[gate_number], state);
+            underlying->set_gate(gate_number+gate_offset, state);
+        }
+        virtual void update() override {}
+};
+
 class DigitalPinBankInterface : public BankInterface {
     public:
         int num_gates = 8;
