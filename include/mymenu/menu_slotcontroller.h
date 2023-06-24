@@ -40,39 +40,39 @@ class SlotController : public MenuItem {
             y++;
             #define ROUNDED yes
             for (unsigned int i = 0 ; i < max_slots ; i++) {
-                uint16_t colour = (loaded_slot==(int)i) ? ST77XX_GREEN :    // if currently loaded 
-                                  (ui_selected_number==(int)i) ? ST77XX_YELLOW :   // if selected
-                                                                ST77XX_BLUE;        
+                uint16_t colour = (loaded_slot==(int)i) ? GREEN :    // if currently loaded 
+                                  (ui_selected_number==(int)i) ? YELLOW :   // if selected
+                                                                BLUE;        
 
                 if (((int)i)==ui_selected_number) {
                     #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_WHITE);
+                        tft->drawRoundRect(x-1, y-1, button_size+2, button_size+2, 1, C_WHITE);
                     #else
-                        tft.drawRect(x-1, y-1, button_size+2, button_size+2, ST77XX_WHITE);
+                        tft->drawRect(x-1, y-1, button_size+2, button_size+2, ST77XX_WHITE);
                     #endif
                 } else {
                     #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, ST77XX_BLACK);
+                        tft->fillRoundRect(x-1, y-1, button_size+2, button_size+2, 1, BLACK);
                     #else  
-                        tft.fillRect(x-1, y-1, button_size+2, button_size+2, ST77XX_BLACK);
+                        tft->fillRect(x-1, y-1, button_size+2, button_size+2, ST77XX_BLACK);
                     #endif
                 }
                 //if (project.is_selected_sequence_number_empty(i)) {
                 if (this->is_slot_empty(i)) { //this->target->*is_slot_empty_callback(i)) {
                     #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->drawRect(x, y, button_size, button_size, colour);
+                        tft->drawRect(x, y, button_size, button_size, colour);
                     #else  
-                        tft.drawRoundRect(x, y, button_size, button_size, 3, col);
+                        tft->drawRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
                 } else {
                     #ifdef ROUNDED
-                        static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x, y, button_size, button_size, colour);
+                        tft->fillRect(x, y, button_size, button_size, colour);
                     #else  
                         tft.fillRoundRect(x, y, button_size, button_size, 3, col);
                     #endif
                 }
                 if(this->get_selected_slot()==(int)i) {
-                    static_cast<DisplayTranslator_STeensy*>(tft)->tft->fillRect(x+(button_size/2), y+(button_size/2), 1+button_size/2, 1+button_size/2, ST77XX_ORANGE);
+                    tft->fillRect(x+(button_size/2), y+(button_size/2), 1+button_size/2, 1+button_size/2, ORANGE);
                 }
                 x += button_size + 2;
             }
@@ -111,12 +111,12 @@ class SlotController : public MenuItem {
                 //loaded_sequence_number = ui_selected_number;
                 char msg[tft->get_c_max()] = "";
                 snprintf(msg, max_length, "Loaded %i", this->get_loaded_slot()); //this->target->*getter_callback());
-                menu->set_message_colour(ST77XX_GREEN);
+                menu->set_message_colour(GREEN);
                 menu->set_last_message(msg);
             } else {
                 char msg[tft->get_c_max()] = "";
                 snprintf(msg, max_length, "Error loading %i", ui_selected_number);
-                menu->set_message_colour(ST77XX_RED);
+                menu->set_message_colour(RED);
                 menu->set_last_message(msg);
             }
 
@@ -135,12 +135,12 @@ class SlotController : public MenuItem {
                 //loaded_sequence_number = ui_selected_number;
                 char msg[tft->get_c_max()] = "";
                 snprintf(msg, max_length, "Saved %i", this->get_loaded_slot()); //->target->*getter_callback()); //project.loaded_sequence_number);
-                menu->set_message_colour(ST77XX_GREEN);
+                menu->set_message_colour(GREEN);
                 menu->set_last_message(msg);
             } else {
                 char msg[tft->get_c_max()] = "";
                 snprintf(msg, max_length, "Error saving %i", ui_selected_number);
-                menu->set_message_colour(ST77XX_RED);
+                menu->set_message_colour(RED);
                 menu->set_last_message(msg);
             }
 

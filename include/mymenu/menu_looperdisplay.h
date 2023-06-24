@@ -109,10 +109,6 @@ class LooperDisplay : public MenuItem {
         int last_pitch = loop_track->last_pitch();
         uint8_t range = last_pitch - first_pitch;
 
-        // we're going to use direct access to the underlying Adafruit library here
-        const DisplayTranslator_STeensy *tft2 = (DisplayTranslator_STeensy*)tft;
-        ST7789_t3 *actual = tft2->tft;
-
         // draw a vertical line showing the cursor position, if we're playing, recording or overwriting
         if (this->loop_track->isPlaying() || this->loop_track->isOverwriting() || this->loop_track->isRecording()) {
             uint16_t indicatorcolour = 0xAAAA;
@@ -125,7 +121,7 @@ class LooperDisplay : public MenuItem {
             else if (this->loop_track->isPlaying()) 
                 indicatorcolour = GREEN;
             const int current_screen_x = ticks%LOOP_LENGTH_TICKS / ticks_per_pixel;
-            actual->drawFastVLine(current_screen_x, base_row, range, indicatorcolour);
+            tft->drawFastVLine(current_screen_x, base_row, range, indicatorcolour);
         }
 
         // only draw over a range between the lowest and highest notes
@@ -168,12 +164,12 @@ class LooperDisplay : public MenuItem {
                     if (ticks%LOOP_LENGTH_TICKS==tick_for_screen_X || ((int)(ticks+ticks_per_pixel))%LOOP_LENGTH_TICKS==tick_for_screen_X)
                         colour = YELLOW;
 
-                    actual->drawFastHLine(screen_x, draw_at_y, 2, colour);
+                    tft->drawFastHLine(screen_x, draw_at_y, 2, colour);
                 }
             }
             if (this->loop_track->track_playing[pitch].velocity>0) {
                 // draw a little indicator displaying what notes are currently held, with brightness indicating velocity
-                actual->drawFastHLine(0, draw_at_y, 2, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
+                tft->drawFastHLine(0, draw_at_y, 2, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
             } else {
                 //tft->drawLine(0, pos.y+(127-pitch), 2, pos.y+(127-pitch), BLACK); // + (this->loop_track->track_playing[pitch].velocity<<8));
             }
