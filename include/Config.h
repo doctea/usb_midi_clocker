@@ -34,12 +34,14 @@
 #ifndef ENABLE_SCREEN
     #define ENABLE_SCREEN       // tft
 #endif
-#ifdef ENABLE_SCREEN
-    #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
-    #ifndef TFT_ST7789_T3
-        #define TFT_ST7789_T3
-        #define TFT_ST7789_T3_BIG
+#ifdef ENABLE_SCREEN 
+    #ifdef TFT_ST7789_T3
+        //#define TFT_ST7789_T3_BIG
+        #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
+    #elif defined(TFT_ILI9341)
+        #define DisplayTranslator_Configured DisplayTranslator_ILI9341
     #endif
+
     #define MENU_MS_BETWEEN_REDRAW  75
 #endif
 
@@ -49,9 +51,15 @@
 
 #ifdef ENABLE_SCREEN
     #define ENCODER_STEP_DIVISOR    4
-    #define PIN_BUTTON_A    4   // pin to receive encoder button
-    #define PIN_BUTTON_B    5   // pin to receive back button
-    #define PIN_BUTTON_C    26  // pin to receive right-hand / save button
+    #ifdef PROTOTYPE
+        #define PIN_BUTTON_A    4   // pin to receive encoder button
+        #define PIN_BUTTON_B    5   // pin to receive back button
+        #define PIN_BUTTON_C    26  // pin to receive right-hand / save button
+    #elif defined(PCB)
+        #define PIN_BUTTON_A    4   // pin to receive encoder button
+        #define PIN_BUTTON_B    6   // pin to receive back button
+        #define PIN_BUTTON_C    5   // pin to receive select button
+    #endif
     #define ENCODER_KNOB_L  2   // pin to receive left-encoder pulses
     #define ENCODER_KNOB_R  3   // pin to receive right-encoder pulses
 #endif
@@ -75,13 +83,16 @@
 #define ENABLE_NEUTRON
 #define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
 
-#define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+#ifdef PROTOTYPE
+    #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+#elif defined(PCB)
+    #define ENABLE_DPT_LOOPER   MIDI4   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+#endif
 
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
-
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
@@ -114,49 +125,49 @@
 #define SEPARATE_SEQUENCER_AND_CLOCKS   // define this if we have 8 distinct cv outputs available
                                         // first set of four become clock, second set of four for sequencer
                                         // if not defined then the four sequencer outputs are overlaid over the clock outputs
-
 #ifdef ENABLE_CLOCKS
-    #define NUM_CLOCKS 4              // 4 clocks (+ 1 reset if PIN_CLOCK_RESET is also set)
-    //#define NUM_CLOCKS 7            // 7 clocks + 1 reset
+    #ifdef PROTOTYPE
+        #define NUM_CLOCKS 4              // 4 clocks (+ 1 reset if PIN_CLOCK_RESET is also set)
+        //#define NUM_CLOCKS 7            // 7 clocks + 1 reset
 
-    #define PIN_CLOCK_START  30
-    #define PIN_CLOCK_1   30
-    #define PIN_CLOCK_2   31
-    #define PIN_CLOCK_3   32
-    #define PIN_CLOCK_4   33
-    #if NUM_CLOCKS > 4
-    #define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
-    #endif
-    #if NUM_CLOCKS > 5
-    #define PIN_CLOCK_6   37
-    #endif
-    #if NUM_CLOCKS > 6
-    #define PIN_CLOCK_7   38
-    #endif
-    #if NUM_CLOCKS > 7
-    #define PIN_CLOCK_8   39
-    #endif
+        #define PIN_CLOCK_START  30
+        #define PIN_CLOCK_1   30
+        #define PIN_CLOCK_2   31
+        #define PIN_CLOCK_3   32
+        #define PIN_CLOCK_4   33
+        #if NUM_CLOCKS > 4
+            #define PIN_CLOCK_5   36  // carefully avoiding TX8+RX8, as those are needed for the 8th MIDI in/outs
+        #endif
+        #if NUM_CLOCKS > 5
+            #define PIN_CLOCK_6   37
+        #endif
+        #if NUM_CLOCKS > 6
+            #define PIN_CLOCK_7   38
+        #endif
+        #if NUM_CLOCKS > 7
+            #define PIN_CLOCK_8   39
+        #endif
 
-    //#define PIN_CLOCK_RESET 40
+        //#define PIN_CLOCK_RESET 40
+    #elif defined(PCB)
+        #define NUM_CLOCKS 4
+        // don't need to define pins because that's all handled by the MCP23s17, hopefully
+    #endif
 #endif
 
 #ifdef ENABLE_SEQUENCER
     #define NUM_SEQUENCES 4
     #define NUM_STEPS 8
-    #ifdef SEPARATE_SEQUENCER_AND_CLOCKS   
-        // new 'reversed' pin ordering
-        #define PIN_SEQUENCE_1 39
-        #define PIN_SEQUENCE_2 38
-        #define PIN_SEQUENCE_3 37
-        #define PIN_SEQUENCE_4 36
-        
-        /*
-        // original ordering
-        #define PIN_SEQUENCE_1 36
-        #define PIN_SEQUENCE_2 37
-        #define PIN_SEQUENCE_3 38
-        #define PIN_SEQUENCE_4 39
-        */
+    #ifdef PROTOTYPE
+        #ifdef SEPARATE_SEQUENCER_AND_CLOCKS   
+            // new 'reversed' pin ordering
+            #define PIN_SEQUENCE_1 39
+            #define PIN_SEQUENCE_2 38
+            #define PIN_SEQUENCE_3 37
+            #define PIN_SEQUENCE_4 36
+        #elif defined(PCB)
+            // shouldn't need to define pins as should all be handled by teh MCP23s17
+        #endif
     #endif
 #endif
 

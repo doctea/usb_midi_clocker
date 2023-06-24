@@ -10,9 +10,11 @@
 #define SEQUENCER_MAX_VALUE 3
 
 //#ifdef ENABLE_SEQUENCER
+#if defined(PROTOTYPE)
 const byte cv_out_sequence_pin[NUM_SEQUENCES] = {
   PIN_SEQUENCE_1, PIN_SEQUENCE_2, PIN_SEQUENCE_3, PIN_SEQUENCE_4
 };
+#endif
 //#endif
 
 inline int beat_number_from_ticks(signed long ticks) {  // TODO: move this into midihelpers + make it a macro?

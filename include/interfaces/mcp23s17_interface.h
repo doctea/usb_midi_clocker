@@ -1,7 +1,7 @@
+#ifdef ENABLE_MCP23S17
+
 #include "interfaces.h"
-
 #include "MCP23S17.h"   //RobTillaart/MCP23S17
-
 #include "SPI.h"
 
 #define MCP23S17_SPI_CS1_PIN    38
@@ -10,7 +10,6 @@
 #define MCP23S17_SPI_MOSI       26
 #define MCP23S17_SPI_SCK        27*/
 
-
 class MCP23S17BankInterface : public BankInterface {
     public:
         int num_gates = 16;
@@ -18,6 +17,7 @@ class MCP23S17BankInterface : public BankInterface {
 
         MCP23S17BankInterface() {
             mcp = new MCP23S17(MCP23S17_SPI_CS1_PIN, &SPI1);
+            mcp->begin();
             for(int i = 0 ; i < num_gates ; i++) {
                 if (!mcp->pinMode(i, OUTPUT)) {
                     Serial.printf("MCP23s17BankInterface: Error setting pinMode %i\n", i);
@@ -37,3 +37,5 @@ class MCP23S17BankInterface : public BankInterface {
 
         }
 };
+
+#endif
