@@ -1,6 +1,8 @@
 #ifndef DEBUG__INCLUDED
 #define DEBUG__INCLUDED
 
+//#define ENABLE_DEBUG_SERIAL
+
 #include <Arduino.h>
 
 int freeRam();
