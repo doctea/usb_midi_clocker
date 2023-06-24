@@ -17,6 +17,7 @@ class BankInterface {
     virtual void update() = 0;
 };
 
+// use one underlying BankInterface partitioned into two (or more)
 class VirtualBankInterface : public BankInterface {
     public:
         BankInterface *underlying = nullptr;
@@ -28,6 +29,7 @@ class VirtualBankInterface : public BankInterface {
             this->num_gates = num_gates;
         }
 
+        // todo: untested
         virtual void set_gate(int gate_number, bool state) override {
             //this->dirty = true;
             if (gate_number >= num_gates) {
@@ -40,6 +42,7 @@ class VirtualBankInterface : public BankInterface {
         virtual void update() override {}
 };
 
+// standard Arduino pinMode/digitalWrite
 class DigitalPinBankInterface : public BankInterface {
     public:
         int num_gates = 8;
@@ -78,7 +81,7 @@ class GateManager {
     public:
     int num_banks = 0;
 
-    // TODO: handle more than 2 banks...
+    // TODO: handle more than 2 banks... currently expects two, BANK_CLOCK and BANK_SEQ
     BankInterface *banks[2] = { nullptr, nullptr };
 
     GateManager() {
@@ -123,8 +126,8 @@ extern GateManager *gate_manager;
 
 void setup_gate_manager();
 
-#define BANK_CLOCK 0
-#define BANK_SEQ 1
+#define BANK_CLOCK  0
+#define BANK_SEQ    1
 
 // convenience function for setting clock gate states
 void set_clock_gate(int gate_number, bool state);

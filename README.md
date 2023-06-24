@@ -1,4 +1,4 @@
-- This branch (main) is for a Teensy 4.1 using the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/)
+- This branch is for a Teensy 4.1 using the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/) or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
 - The [Arduino branch](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) is lacking most of the features, but works on an Arduino Uno with a USB Host Shield, CV outputs, and an Akai APCMini over USB.  (The Teensy version supports connecting a Uno running the Arduino version as a USB MIDI device to add extra clock outputs - use [USBMidiKliK](https://github.com/TheKikGen/USBMidiKliK) to turn the Arduino into a native USB MIDI device and configure it with pid=0x1337, vid=0x1337).
 - This project should be considered work-in-progress/beta -- don't trust it for anything mission-critical!  Although it has been known to run for ~~12~~ 63 hour stretches without crashing, it undoubtedly has bugs and crashes (seem particularly common when the USB connection is a bit dodgy)
 
@@ -106,18 +106,19 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ## Requirements
 
 - Teensy 4.1
-  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs)
-- ST7789 oled screen for display
+  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
+- ST7789 or (untested) ILI9341 oled screen for display
   - small screen option https://shop.pimoroni.com/products/adafruit-1-14-240x135-color-tft-display-microsd-card-breakout-st7789 (not used for a while, likely have some issues)
-  - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current version much prefers this)
-- Rotary encoder + two wired buttons for control and/oor USB typing keyboard
+  - larger screen option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current prototype version much prefers this)
+  - larger ILI9341 screen option (untested!) https://www.aliexpress.com/item/1005003005413104.html 'Module With Touch' version for PCB
+- Rotary encoder + two wired buttons for control and/or USB typing keyboard
   - and [mymenu](https://github.com/doctea/mymenu) library
 - [midihelpers](https://github.com/doctea/midihelpers) library
 - Akai APCMini for controlling the sequencer and clocks
 - SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots and loops
-- DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, and to protect the Teensy pins from external voltages: see 'Suggested wiring' section below
-  - I am now using one of these: [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e) (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
-  - I was originally using a couple of these [Sparkfun level shifter](https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377) -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
+- DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, or the (untested) Eurorack module that does this, to protect the Teensy pins from external voltages: see 'Suggested wiring' section below
+  - I am currently using one of these in prototype: [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e) (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
+  - I was previously using a couple of these [Sparkfun level shifter](https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377) -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
 - For CV input: [Pimoroni +/-24v 1015 module](https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003) and my [parameters](https://github.com/doctea/parameters) library
 - Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
   - on 2022-12-23, I recommend you use the maybe_fixed_4_stable branch as this seems like it might be more stable..?
@@ -125,9 +126,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Eurorack modules / PCB / gerbers
 
-- Experimental KiCad files + gerbers at [https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware) - not yet tested, waiting for them to come back from jlcpcb!
+- Experimental KiCad files + gerbers for PCB version at [https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware) - not yet tested, waiting for them to come back from jlcpcb!
 
-## Suggested wiring - breadboard
+## Suggested wiring - breadboard prototype
 
 - Careful with this, consider it untested for now -- this is how I have mine connected up.  If you follow this then double-check that it actually makes sense when looking at the datasheets+pin diagrams for the actual Teensy and level-shifter boards before you power it on and risk frying pins on your Teensy!  I accept no responsibility if this breaks anything!
 
@@ -167,20 +168,25 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - see also `include/ConfigMidi.h` for a few more switches
 - `src/midi_mapper_matrix_manager.cpp` is where a lot of midi device input/output mappings are initialised and defaults assigned - tweak stuff here to match your available devices
 - `src/behaviour_manager.cpp` is where devices are set up and configured, so this may need tweaking to match your hardware too
+- `src/interfaces/interfaces.cpp` is where gate output/MCP23s17 gates are configured
 - `src/menu.cpp` is where the display and menu system are initialised and menu items configured, so you may need to tweak stuff here too to match what other features you have enabled
 
 ### TODO/Future 
 
 - Write up controls/instructions/etc
-- Come up with a cooler name
+- Come up with a cooler name (maybe Nexus6 as that's what i've put on the pcb panel?)
 - Update docs to reflect all features
 - Merge functionality with [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)
   - eg Euclidian sequencer
+  - Am actually doing this in a separate module now, [Microlidian](https://github.com/doctea/Microlidian)
+    - Move the Euclidian sequencer stuff from Microlidian into a library so that it could be used here as well
   - Or at least add some controls via the APCMini sliders, eg over the envelopes
 - Improve stability of clock by getting it working in uClock/interrupts mode without crashes
 - Sync from external clock input (CV)
+  - in theory, can do this now using the support in [midihelpers library](https://github.com/doctea/midihelpers)
 - ~~More outputs~~ - done, now works with 4 clock outs and 4 separate sequencer track outs
-  - add 2 more for use as resets
+  - ~~add 2 more for use as resets~~
+  - add reset/further divisions support via the MCP23s17 gate support on PCB
 - Better sequencer
   - better how?
   - configurable chaining of sequences ie 'song mode'?
@@ -193,7 +199,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Variable loop length
   - Variable repeats
   - more efficient memory/cpu usage
-- Port menu etc to use ili9340 screen + touchscreen
+- Port menu etc to use ili9340 screen + touchscreen -- **done**, needs testing
 - Give better control over Beatstep via sysex if possible?
   - ~~auto-advance pattern mode~~
   - ie, ~~change speed..?~~
