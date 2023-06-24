@@ -38,7 +38,11 @@
 #include "profiler.h"
 
 //DisplayTranslator *tft;
-DisplayTranslator_STeensy_Big *tft;
+#ifdef TFT_ST7789_T3_BIG
+    DisplayTranslator_STeensy_Big *tft;
+#elif defined(TFT_ILI9341)
+    DisplayTranslator_ILI9341 *tft;
+#endif
 Menu *menu; // = Menu();
 
 #ifdef ENCODER_KNOB_L
@@ -100,16 +104,16 @@ MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
 
-//DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
-//DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
-DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
+//DisplayTranslator_STeensy display_translator = DisplayTranslator_STeensy();
+//DisplayTranslator_STeensy_Big display_translator = DisplayTranslator_STeensy_Big();
+DisplayTranslator_Configured display_translator = DisplayTranslator_Configured();
 
 #ifndef GDB_DEBUG
 FLASHMEM 
 #endif
 void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
-    tft = &steensy; //DisplayTranslator_STeensy();
+    tft = &display_translator; //DisplayTranslator_STeensy();
     //delay(50);
     //Serial.println(F("Finished  constructor"));
     Serial_flush();
