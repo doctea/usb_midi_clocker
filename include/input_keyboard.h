@@ -5,7 +5,7 @@
 
 #include "storage.h"
 
-extern DisplayTranslator_Configured steensy;
+extern DisplayTranslator_Configured display_translator;
 
 #include "screenshot.h"
 
@@ -183,7 +183,7 @@ bool debug_stress_sequencer_load = false;
             // take screenshot
             case ' '            :
                 Serial.println(F("Taking screenshot!"));
-                save_screenshot(&steensy.actual);
+                save_screenshot(&display_translator);
                 break;
             // load/save/move selected sequence
             case 'L'            : 
