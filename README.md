@@ -173,6 +173,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### TODO/Future 
 
+- Quantise all melodic outputs to a chosen scale
 - Write up controls/instructions/etc
 - Come up with a cooler name (maybe Nexus6 as that's what i've put on the pcb panel?)
 - Update docs to reflect all features
