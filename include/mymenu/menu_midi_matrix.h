@@ -101,14 +101,14 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
         pos.y = header(label, pos, selected, opened);
         //tft->setTextSize(2);
 
-        if (selected_source_index == -1) {
+        /*if (opened && selected_source_index == -1) {
             tft->setCursor(pos.x + (18*6), pos.y - 8);
             for(int i = 0 ; i < midi_matrix_manager->targets_count ; i++) {
                 colours(selected, this->get_colour_for_target_id(i), BLACK);
                 tft->printf("%1x", i);
             }
             tft->println();
-        }
+        }*/
 
         //num_values = NUM_AVAILABLE_OUTPUTS;
         num_values = this->get_num_available();
@@ -117,45 +117,123 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
 
         int current_value = actual_value_index; //this->getter();
 
-        if (selected_source_index==-1) { // show list of sources
+        /*if (opened) {
+            if (selected_source_index==-1) { // show list of sources
+                for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+                    const bool is_current_value_selected = source_id==current_value;
+                    const int col = is_current_value_selected ? GREEN : C_WHITE;
+                    colours(opened && selected_value_index==source_id, col, BLACK);
+                    tft->printf("%15s : ", (char*)get_label_for_index(source_id));
+
+                    for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+                        colours(BLACK, this->get_colour_for_target_id(target_id));
+                        if (midi_matrix_manager->is_connected(source_id, target_id)) {
+                            //tft->printf((char*)"%15s, ", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
+                            tft->printf("%1x", target_id);
+                        } else {
+                            tft->printf(" ");
+                        }
+                    }
+                    tft->println();
+                }
+            } else {        // show list of targets
+                tft->setTextColor(BLACK,GREEN);
+                tft->printf("%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
+                for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+                    //bool is_current_value_selected = target_id==current_value;
+                    const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
+
+                    const uint16_t col = this->get_colour_for_target_id(target_id);
+                    colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
+                    const char indicator = is_current_value_connected ? '*' : ' ';
+                    tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
+
+                    tft->printf("  %3s:%3s", 
+                        (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->current_note),
+                        (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->last_note)
+                    );
+                    tft->println();
+                }
+            }
+        } else {*/
+            int source_position[midi_matrix_manager->sources_count];
+            int target_position[midi_matrix_manager->targets_count];
+
             for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
                 const bool is_current_value_selected = source_id==current_value;
                 const int col = is_current_value_selected ? GREEN : C_WHITE;
-                colours(opened && selected_value_index==source_id, col, BLACK);
-                tft->printf("%15s : ", (char*)get_label_for_index(source_id));
-
-                for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
-                    colours(BLACK, this->get_colour_for_target_id(target_id));
-                    if (midi_matrix_manager->is_connected(source_id, target_id)) {
-                        //tft->printf((char*)"%15s, ", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
-                        tft->printf("%1x", target_id);
-                    } else {
-                        tft->printf(" ");
-                    }
-                }
+                colours(opened && selected_source_index==-1 && selected_value_index==source_id, col, BLACK);
+                tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id));
                 tft->println();
+                source_position[source_id] = tft->getCursorY() - (tft->getRowHeight()/2);
             }
-        } else {        // show list of targets
-            tft->setTextColor(BLACK,GREEN);
-            tft->printf("%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
+
+            tft->setCursor(0, pos.y);
+
+            int y = pos.y;
             for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                 //bool is_current_value_selected = target_id==current_value;
                 const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
+                const source_id_t relevant_source_id = selected_source_index>=0 ? selected_source_index : selected_value_index;
+
                 /*int col = (is_current_value_connected && is_current_value_selected) ? PURPLE :
                             is_current_value_connected ? GREEN :
                             C_WHITE;*/
                 const uint16_t col = this->get_colour_for_target_id(target_id);
-                colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
-                const char indicator = is_current_value_connected ? '*' : ' ';
-                tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
+                const uint16_t usecol = !opened 
+                                        || midi_matrix_manager->is_connected(relevant_source_id, target_id) 
+                                        //|| (selected_source_index>=0 && target_id==selected_value_index))
+                                    ? col : tft->halfbright_565(col);
 
-                tft->printf("  %3s:%3s", 
+                colours(opened && selected_value_index==target_id && selected_source_index>=0, (selected_source_index>=0 && target_id==selected_value_index) ? col : usecol, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
+                //const char indicator = is_current_value_connected ? '*' : ' ';
+                tft->setCursor((tft->width()/2), y);
+                //tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
+                tft->printf("%-19.19s", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
+
+                // todo: restore the ability to show the current/last notes
+                /*tft->printf("  %3s:%3s", 
                     (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->current_note),
                     (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->last_note)
-                );
+                );*/
+
+                target_position[target_id] = (tft->getCursorY()) + (tft->getRowHeight()/2); // + tft->getRowHeight()) + (tft->getRowHeight()/2);
+                
                 tft->println();
+               
+                for (source_id_t i = 0 ; i < midi_matrix_manager->sources_count ; i++) {
+                    if (midi_matrix_manager->is_connected(i, target_id)) {
+                        //TODO: use correct logic to avoid drawing fullbright colours for all sources connected to this target..
+                        tft->drawLine(
+                            tft->characterWidth() * 13,
+                            source_position[i], 
+                            tft->characterWidth() * 14,
+                            source_position[i],  
+                            usecol
+                        );
+                        tft->drawLine(
+                            ///*3 + */(tft->width()/3), 
+                            tft->characterWidth() * 14,
+                            source_position[i], 
+                            (tft->width()/2)-(tft->characterWidth()*2), 
+                            target_position[target_id], 
+                            usecol
+                        );
+                        tft->drawLine(
+                            (tft->width()/2)-(tft->characterWidth()*2), 
+                            target_position[target_id],
+                            (tft->width()/2)-(tft->characterWidth()*1), 
+                            target_position[target_id],
+                            usecol
+                        );
+                        // TODO: some kinda logic to ensure that we always stay within the source_position and target_position rows
+                        source_position[i]+=2;   // move the cursor 2 line downs to provide a little bit of disambiguation
+                        target_position[target_id]+=2;
+                    }
+                }
+                y = tft->getCursorY();
             }
-        }
+        //}
 
         if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually
             tft->println((char*)"");
