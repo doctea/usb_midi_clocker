@@ -53,6 +53,7 @@ class MIDIMatrixManager {
     /* stuff for handling sources of midi data */
     struct source_entry {
         char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
+        byte connection_count = 0;
     };
     uint8_t sources_count = 0;
 
@@ -84,6 +85,7 @@ class MIDIMatrixManager {
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
+        // todo: could optimise by checking connected_to_source_count() and connected_to_target_count()
         for (source_id_t source_id = 0 ; source_id < NUM_REGISTERED_SOURCES ; source_id++) {
             for (target_id_t target_id  = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
                 disconnect(source_id, target_id);
@@ -121,6 +123,11 @@ class MIDIMatrixManager {
     void connect(source_id_t source_id, target_id_t target_id) {
         if (source_id<0 || target_id<0)
             return;
+        if (!source_to_targets[source_id][target_id]) {
+            // increment count if not already connected
+            sources[source_id].connection_count++;
+            targets[target_id].connection_count++;
+        }
         source_to_targets[source_id][target_id] = true;
     }
 
@@ -136,8 +143,18 @@ class MIDIMatrixManager {
         if (is_connected(source_id, target_id)) {
             if (targets[target_id].wrapper!=nullptr) 
                 targets[target_id].wrapper->stop_all_notes();
+            // decrement counts, only if connected
+            sources[source_id].connection_count--;
+            targets[target_id].connection_count--;
         }
         source_to_targets[source_id][target_id] = false;
+    }
+
+    byte connected_to_source_count(source_id_t source_id) {
+        return sources[source_id].connection_count;
+    }
+    byte connected_to_target_count(target_id_t target_id) {
+        return targets[target_id].connection_count;
     }
 
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
@@ -248,6 +265,7 @@ class MIDIMatrixManager {
     //// stuff for handling targets of midi data
     struct target_entry {
         char handle[25];
+        byte connection_count = 0;
         MIDIOutputWrapper *wrapper = nullptr;
     };
 

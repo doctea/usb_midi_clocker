@@ -11,11 +11,14 @@
 
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
+#include "midi/midi_cc_source.h"
 //#include "behaviours/behaviour_modwheelreceiver.h"
 #include "project.h"
 #include "clock.h"
 
 #include "multi_usb_handlers.h"
+
+#include <Drums.h>
 
 //#include "parameters/MIDICCParameter.h"
 
@@ -23,7 +26,7 @@ void microlidian_control_change(byte number, byte value, byte channel);
 void microlidian_note_on(byte pitch, byte value, byte channel);
 void microlidian_note_off(byte pitch, byte value, byte channel);
 
-class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
+class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public ClockedBehaviour, public MIDI_CC_Source { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     using DeviceBehaviourUltimateBase::receive_note_on;
@@ -31,6 +34,15 @@ class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public Clocke
     using ClockedBehaviour::on_tick;
     
     public:
+
+        DeviceBehaviour_Microlidian() : ClockedBehaviour() {
+            this->addParameterInput("Env1", (byte)1 /*MUSO_CC_CV_1*/, (byte)1);
+            this->addParameterInput("Env2", (byte)7 /*MUSO_CC_CV_2*/, (byte)1);
+            this->addParameterInput("Env3", (byte)11 /*MUSO_CC_CV_3*/, (byte)1);
+            this->addParameterInput("Env4", (byte)71 /*MUSO_CC_CV_4*/, (byte)1);
+            this->addParameterInput("Env5", (byte)74 /*MUSO_CC_CV_5*/, (byte)1);
+        }
+
         //uint16_t vid = 0x09e8, pid = 0x0028;
         uint16_t vid = 0x2E8A, pid = 0x000A;        // Seeed xiao RP2040 IDs
         uint16_t vid2 = 0x1337, pid2 = 0xBEEF;      // Microlidian custom IDs
@@ -58,6 +70,11 @@ class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public Clocke
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override;
         virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override;
+
+        virtual void receive_control_change (uint8_t channel, uint8_t number, uint8_t value) override {
+            this->update_parameter_inputs_cc(number, value, channel);
+        }
+
 
         /*virtual void init() override {
             Serial.println("DeviceBehaviour_CraftSynth#init()"); Serial_flush();
