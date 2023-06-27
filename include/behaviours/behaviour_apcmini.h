@@ -239,18 +239,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             }
         }
 
-        // called from loop, already inside ATOMIC, so don't use ATOMIC here
         virtual void receive_control_change (uint8_t channel, uint8_t number, uint8_t value) override {
-            //ATOMIC(
-                /*Serial.print(F("APCMINI CC ch"));
-                Serial.print(inChannel);
-                Serial.print(F("\tnum "));
-                Serial.print(inNumber);
-                Serial.print(F("\tvalue: "));
-                Serial.println(inValue);*/
-            //)
-            //debug_free_ram();
-
             #ifdef ENABLE_BPM
                 if (number==APCMINI_FADER_MASTER) {   // 56 == "master" fader set bpm 
                     if (clock_mode==CLOCK_INTERNAL)
