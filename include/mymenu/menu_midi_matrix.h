@@ -170,23 +170,34 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
 
             tft->setCursor(0, pos.y);
 
+            bool opened_source = opened && selected_source_index==-1;
+            bool opened_target = opened && selected_source_index>=0;
+            const source_id_t relevant_source_id = opened_source ? selected_value_index : selected_source_index;
+
             int y = pos.y;
             for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
                 //bool is_current_value_selected = target_id==current_value;
-                const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
-                const source_id_t relevant_source_id = selected_source_index>=0 ? selected_source_index : selected_value_index;
+                //const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
 
                 /*int col = (is_current_value_connected && is_current_value_selected) ? PURPLE :
                             is_current_value_connected ? GREEN :
                             C_WHITE;*/
-                const uint16_t col = this->get_colour_for_target_id(target_id);
-                const uint16_t usecol = !opened 
+                const uint16_t target_colour = this->get_colour_for_target_id(target_id);
+                const uint16_t half_target_colour = tft->halfbright_565(target_colour);
+                const bool opened_and_current_target_is_connected = (opened_source || opened_target) && midi_matrix_manager->is_connected(relevant_source_id, target_id);
+                /*const uint16_t usecol = !opened 
                                         || midi_matrix_manager->is_connected(relevant_source_id, target_id) 
                                         //|| (selected_source_index>=0 && target_id==selected_value_index))
-                                    ? col : tft->halfbright_565(col);
+                                    ? target_colour : tft->halfbright_565(target_colour);*/
 
-                colours(opened && selected_value_index==target_id && selected_source_index>=0, (selected_source_index>=0 && target_id==selected_value_index) ? col : usecol, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
-                //const char indicator = is_current_value_connected ? '*' : ' ';
+                bool opened_and_selected_target_is_current = opened_target && selected_value_index==target_id;
+
+                colours(
+                    opened_and_selected_target_is_current,
+                    !opened || opened_and_current_target_is_connected ? target_colour : half_target_colour, 
+                    BLACK
+                ); 
+                
                 tft->setCursor((tft->width()/2), y);
                 //tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
                 tft->printf("%-19.19s", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
@@ -202,6 +213,7 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
                 tft->println();
                
                 for (source_id_t i = 0 ; i < midi_matrix_manager->sources_count ; i++) {
+                    const uint16_t line_colour = !opened || (opened && relevant_source_id == i) ? target_colour : half_target_colour;
                     if (midi_matrix_manager->is_connected(i, target_id)) {
                         //TODO: use correct logic to avoid drawing fullbright colours for all sources connected to this target..
                         tft->drawLine(
@@ -209,7 +221,7 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
                             source_position[i], 
                             tft->characterWidth() * 14,
                             source_position[i],  
-                            usecol
+                            line_colour
                         );
                         tft->drawLine(
                             ///*3 + */(tft->width()/3), 
@@ -217,14 +229,14 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
                             source_position[i], 
                             (tft->width()/2)-(tft->characterWidth()*2), 
                             target_position[target_id], 
-                            usecol
+                            line_colour
                         );
                         tft->drawLine(
                             (tft->width()/2)-(tft->characterWidth()*2), 
                             target_position[target_id],
                             (tft->width()/2)-(tft->characterWidth()*1), 
                             target_position[target_id],
-                            usecol
+                            line_colour
                         );
                         // TODO: some kinda logic to ensure that we always stay within the source_position and target_position rows
                         source_position[i]+=2;   // move the cursor 2 line downs to provide a little bit of disambiguation
