@@ -2,6 +2,7 @@
 #define DEBUG__INCLUDED
 
 //#define ENABLE_DEBUG_SERIAL
+//#define SERIAL_FLUSH_REALLY
 
 #include <Arduino.h>
 

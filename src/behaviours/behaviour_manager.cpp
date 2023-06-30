@@ -130,7 +130,7 @@ void setup_behaviour_manager() {
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
-    #ifdef ENABLE_CV_INPUT_PITCH
+    #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
         Serial.println(F("about to register behaviour_cvinput...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_cvinput);
         Serial.println(F("Finished registering")); Serial_flush();
@@ -159,14 +159,31 @@ void setup_behaviour_manager() {
     #include "menuitems.h"
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
+        return; // WTF TODO fix crash ?
+
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-            this->create_single_behaviour_menu_items(menu, behaviours->get(i));
+            DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+            Serial.printf("about to create_single_behaviour_menu_items() for behaviour %i/%i\n", i+1, behaviours->size());
+            if (behaviour==nullptr) {
+                Serial.println("\tgot a nullptr behaviour!");
+                continue;
+            } else {
+                Serial.printf("\tdoing for %s\n", behaviour->get_label());
+            }
+            this->create_single_behaviour_menu_items(menu, behaviour);
         }
 
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+            Serial.printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+            if (behaviour==nullptr) {
+                Serial.println("\tgot a nullptr behaviour!");
+                continue;
+            } else {
+                Serial.printf("\tdoing for %s\n", behaviour->get_label());
+            }
             LinkedList<SaveableParameterBase*> *saveables = behaviour->saveable_parameters;
             if(saveables==nullptr || saveables->size()==0) 
                 continue;
@@ -191,7 +208,7 @@ void setup_behaviour_manager() {
 
     //FLASHMEM 
     inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
-            Debug_printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
+            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
             uint16_t group_colour = C_WHITE;
@@ -206,7 +223,7 @@ void setup_behaviour_manager() {
             }
 
             if (menuitems->size()>0) {
-                Debug_printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
+                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
                 menu->add(menuitems, group_colour);
             }
 

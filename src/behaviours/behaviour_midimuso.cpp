@@ -1,10 +1,11 @@
 #include "behaviours/behaviour_midimuso.h"
 
-#include "menuitems_object.h"
-
 #ifdef ENABLE_SCREEN
     #include "mymenu.h"
     #include "submenuitem_bar.h"
+
+    #include "menuitems_object.h"
+
     //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
     LinkedList<MenuItem*> *DeviceBehaviour_MIDIMuso::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();

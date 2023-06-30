@@ -114,6 +114,7 @@ FLASHMEM
 void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
     tft = &display_translator; //DisplayTranslator_STeensy();
+
     //delay(50);
     //Serial.println(F("Finished  constructor"));
     Serial_flush();
@@ -122,6 +123,8 @@ void setup_menu() {
     menu = new Menu(tft);
     Serial.println(F("Created Menu object"));
     Serial_flush();
+
+    menu->setup_display();
 
     menu->set_messages_log(messages_log);
 

@@ -37,7 +37,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     bool debug = false;
 
-    uint16_t colour = C_WHITE;
+    #ifdef ENABLE_SCREEN
+        uint16_t colour = C_WHITE;
+    #endif
 
     source_id_t source_id = -1;
     target_id_t target_id = -1;

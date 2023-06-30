@@ -10,16 +10,20 @@
 // NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
 
 //// CV input options
-#define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
+//#define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
-#ifndef ENABLE_CALIBRATION_STORAGE
-    #define ENABLE_CALIBRATION_STORAGE          // enable save/recall of calibration data to SD card file
+#ifdef ENABLE_SD
+    #ifndef ENABLE_CALIBRATION_STORAGE
+        #define ENABLE_CALIBRATION_STORAGE          // enable save/recall of calibration data to SD card file
+    #endif
+    #ifndef LOAD_CALIBRATION_ON_BOOT
+        #define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card on boot
+    #endif
 #endif
-#ifndef LOAD_CALIBRATION_ON_BOOT
-    #define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card on boot
+#ifdef ENABLE_CV_INPUT
+    #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
 #endif
-#define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
 
 // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
 #define ENABLE_TYPING_KEYBOARD
@@ -31,9 +35,9 @@
 
 #define DEFAULT_CLOCK_MODE  CLOCK_INTERNAL      
 
-#ifndef ENABLE_SCREEN
+/*#ifndef ENABLE_SCREEN
     #define ENABLE_SCREEN       // tft
-#endif
+#endif*/
 #ifdef ENABLE_SCREEN 
     #ifdef TFT_ST7789_T3
         //#define TFT_ST7789_T3_BIG
@@ -46,7 +50,8 @@
 #endif
 
 #ifndef ENABLE_SCREEN
-    #define tft_print(X) Serial.println(X)
+    //#define tft_print(X) Serial.println(X)
+    //void tft_print(const char *text);
 #endif
 
 #ifdef ENABLE_SCREEN

@@ -26,9 +26,10 @@
 #endif
 #include "project.h"
 
-#ifdef ENABLE_CV_INPUT
+//#ifdef ENABLE_CV_INPUT
   #include "cv_input.h"
-#endif
+//#endif
+#include "ParameterManager.h"
 
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
@@ -102,12 +103,13 @@ void setup() {
     while(Serial.available()==0);
     Serial.clear();
   }
+  delay(1);
 
   /*while (1) {
     Serial.printf(".");
   }*/
 
-  Serial.printf(F("At start of setup(), free RAM is %u\n"), freeRam());
+  Serial.printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
@@ -162,13 +164,13 @@ void setup() {
   #ifdef ENABLE_CV_INPUT
     setup_cv_input();
     Serial.printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
-    setup_parameters();
-    Serial.printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
-    #ifdef ENABLE_SCREEN
-      menu->add_page("Parameter Inputs");
-      setup_parameter_menu();
-      Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
-    #endif
+  #endif
+  setup_parameters();
+  Serial.printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
+  #ifdef ENABLE_SCREEN
+    menu->add_page("Parameter Inputs");
+    setup_parameter_menu();
+    Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
   behaviour_manager->setup_saveable_parameters();
@@ -235,7 +237,9 @@ void setup() {
   Serial.println(F("Finished setup()!"));
   Serial.printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 
-  snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
+  #ifdef ENABLE_SCREEN
+    snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
+  #endif
 }
 
 //long loop_counter = 0;
@@ -293,9 +297,11 @@ void loop() {
     do_tick(ticks);
     if (debug_flag) { Serial.println(F("just did do_tick")); Serial_flush(); }
 
-    if (debug_flag) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
-    menu->update_ticks(ticks);
-    if (debug_flag) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
+    #ifdef ENABLE_SCREEN
+      if (debug_flag) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
+      menu->update_ticks(ticks);
+      if (debug_flag) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
+    #endif
 
     //last_ticked_at_micros = micros();
     last_ticked_at_micros = micros();

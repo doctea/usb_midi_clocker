@@ -1,9 +1,11 @@
 #include "Config.h"
+#ifdef ENABLE_CV_INPUT_PITCH
 
 #include "behaviours/behaviour_cvinput.h"
 
+#include "bpm.h"
+
 #ifdef ENABLE_SCREEN
-    #include "bpm.h"
     #include "menu.h"
     #include "menuitems.h"
     #include "menuitems_object.h"
@@ -94,4 +96,5 @@
     }
 #endif
 
-DeviceBehaviour_CVInput *behaviour_cvinput = new DeviceBehaviour_CVInput(); //(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>>*)nullptr, &ENABLE_BITBOX);
+    DeviceBehaviour_CVInput *behaviour_cvinput = new DeviceBehaviour_CVInput(); //(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>>*)nullptr, &ENABLE_BITBOX);
+#endif

@@ -1,4 +1,4 @@
-#ifdef ENABLE_MCP23S17
+#ifdef ENABLE_GATES_MCP23S17
 
 #include "interfaces.h"
 #include "MCP23S17.h"   //RobTillaart/MCP23S17

@@ -185,7 +185,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
     #endif
 
-    #ifdef ENABLE_CV_INPUT_PITCH
+    #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
         midi_matrix_manager->register_source(behaviour_cvinput, "CV input");
     #endif
 

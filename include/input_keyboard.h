@@ -5,25 +5,25 @@
 
 #include "storage.h"
 
-extern DisplayTranslator_Configured display_translator;
-
-#include "screenshot.h"
-
-#include "mymenu.h"
-
-#include "midi/midi_mapper_matrix_manager.h"
+#ifdef ENABLE_SCREEN
+    extern DisplayTranslator_Configured display_translator;
+    void toggle_autoadvance(bool on = false);
+    void toggle_recall(bool on = false);
+    #include "screenshot.h"
+    #include "mymenu.h"
+    #include "midi/midi_mapper_matrix_manager.h"
+#endif
 
 #include "project.h"
-
-void toggle_autoadvance(bool on = false);
-void toggle_recall(bool on = false);
 
 bool debug_stress_sequencer_load = false;
 
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
-    #include "menu.h"
+    #ifdef ENABLE_SCREEN
+        #include "menu.h"
+    #endif
 
     #define KEYREPEAT      200   // ms to repeat when a key is held
 
@@ -138,6 +138,7 @@ bool debug_stress_sequencer_load = false;
                 while(menu->is_opened())
                     menu->button_back();
                 break;*/
+            #ifdef ENABLE_SCREEN
             case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
             case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
             case KEYD_ESC        :
@@ -156,6 +157,7 @@ bool debug_stress_sequencer_load = false;
                     menu->select_next_page();
                 }
                 break;
+            #endif
             case 'T':
                 debug_stress_sequencer_load = true;
                 break;
@@ -164,10 +166,11 @@ bool debug_stress_sequencer_load = false;
                 break;
             case '-':
                 Serial.println(F("------------------------")); break;
-            case 'p'            : case 'P':
+            case 'p': case 'P':
                 Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
                 midi_matrix_manager->stop_all_notes();
                 break;
+            #ifdef ENABLE_SCREEN
             case 'A': case 'a':
                 Serial.println(F("Toggling (a)uto-advances"));
                 toggle_autoadvance(key=='A');
@@ -176,15 +179,18 @@ bool debug_stress_sequencer_load = false;
                 Serial.println(F("Toggling Re(q)all"));
                 toggle_recall(key=='Q');
                 break;
+            #endif
             case 'r'            : 
                 Serial.println(F("Setting (r)estart_on_next_bar"));
                 set_restart_on_next_bar(true); 
                 break;
             // take screenshot
+            #if defined(ENABLE_SCREEN) && defined(ENABLE_SD)
             case ' '            :
                 Serial.println(F("Taking screenshot!"));
                 save_screenshot(&display_translator);
                 break;
+            #endif
             // load/save/move selected sequence
             case 'L'            : 
                 Serial.println(F("(L)oad selected sequence"));

@@ -302,6 +302,7 @@ class Project {
             return this->save_project_settings(current_project_number);
         }
         bool save_project_settings(int save_to_project_number) {
+            #ifdef ENABLE_SD
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File myFile;
@@ -355,10 +356,12 @@ class Project {
             update_project_filename(filename);
 
             //if (irqs_enabled) __enable_irq();
+            #endif
             return true;
         }
 
         bool load_project_settings(int project_number) {
+            #ifdef ENABLE_SD
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File myFile;
@@ -396,6 +399,7 @@ class Project {
             Serial.printf(F("Loaded project settings.\n"));
 
             update_project_filename(filename);
+            #endif
 
             return true;
         }
