@@ -116,6 +116,9 @@ FLASHMEM
 void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
     tft = &display_translator; //DisplayTranslator_STeensy();
+    #ifdef TFT_BODMER
+        tft->init();
+    #endif
 
     //delay(50);
     //Serial.println(F("Finished  constructor"));
