@@ -42,6 +42,8 @@
     DisplayTranslator_STeensy_Big *tft;
 #elif defined(TFT_ILI9341)
     DisplayTranslator_ILI9341 *tft;
+#elif defined(TFT_BODMER)
+    DisplayTranslator_Bodmer *tft;
 #endif
 Menu *menu; // = Menu();
 
@@ -124,7 +126,7 @@ void setup_menu() {
     Serial.println(F("Created Menu object"));
     Serial_flush();
 
-    menu->setup_display();
+    //menu->setup_display();
 
     menu->set_messages_log(messages_log);
 

@@ -44,6 +44,8 @@
         #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
     #elif defined(TFT_ILI9341)
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341
+    #elif defined (TFT_BODMER)
+        #define DisplayTranslator_Configured DisplayTranslator_Bodmer
     #endif
 
     #define MENU_MS_BETWEEN_REDRAW  75

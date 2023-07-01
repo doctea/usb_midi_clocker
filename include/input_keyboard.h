@@ -6,7 +6,6 @@
 #include "storage.h"
 
 #ifdef ENABLE_SCREEN
-    extern DisplayTranslator_Configured display_translator;
     void toggle_autoadvance(bool on = false);
     void toggle_recall(bool on = false);
     #include "screenshot.h"

@@ -37,7 +37,8 @@
 			"system_error": "cpp",
 			"tuple": "cpp",
 			"iosfwd": "cpp",
-			"interfaces": "cpp"
+			"interfaces": "cpp",
+			"ili9341_fonts.h": "c"
 		}
 	}
 }
