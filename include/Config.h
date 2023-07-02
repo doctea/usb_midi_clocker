@@ -46,6 +46,8 @@
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341
     #elif defined (TFT_BODMER)
         #define DisplayTranslator_Configured DisplayTranslator_Bodmer
+    #elif defined (TFT_ILI9341_TGX)
+        #define DisplayTranslator_Configured DisplayTranslator_ILI9341_TGX
     #endif
 
     #define MENU_MS_BETWEEN_REDRAW  75
@@ -59,16 +61,20 @@
 #ifdef ENABLE_SCREEN
     #define ENCODER_STEP_DIVISOR    4
     #ifdef PROTOTYPE
+        #define ENCODER_KNOB_L  2   // pin to receive left-encoder pulses
+        #define ENCODER_KNOB_R  3   // pin to receive right-encoder pulses
+
         #define PIN_BUTTON_A    4   // pin to receive encoder button
         #define PIN_BUTTON_B    5   // pin to receive back button
         #define PIN_BUTTON_C    26  // pin to receive right-hand / save button
     #elif defined(PCB)
+        #define ENCODER_KNOB_L  3   // pin to receive left-encoder pulses
+        #define ENCODER_KNOB_R  2   // pin to receive right-encoder pulses
+
         #define PIN_BUTTON_A    4   // pin to receive encoder button
-        #define PIN_BUTTON_B    6   // pin to receive back button
-        #define PIN_BUTTON_C    5   // pin to receive select button
+        #define PIN_BUTTON_B    5   // pin to receive back button
+        #define PIN_BUTTON_C    6   // pin to receive select button
     #endif
-    #define ENCODER_KNOB_L  2   // pin to receive left-encoder pulses
-    #define ENCODER_KNOB_R  3   // pin to receive right-encoder pulses
 #endif
 
 #define ENABLE_USBSERIAL    // enable USB devices that present as serial interfaces
