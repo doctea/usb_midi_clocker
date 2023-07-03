@@ -44,6 +44,8 @@
     DisplayTranslator_ILI9341 *tft;
 #elif defined(TFT_BODMER)
     DisplayTranslator_Bodmer *tft;
+#elif defined(TFT_ILI9341_TGX)
+    DisplayTranslator_ILI9341_TGX *tft;
 #endif
 Menu *menu; // = Menu();
 
