@@ -42,8 +42,8 @@
     #ifdef TFT_ST7789_T3
         //#define TFT_ST7789_T3_BIG
         #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
-    #elif defined(TFT_ILI9341)
-        #define DisplayTranslator_Configured DisplayTranslator_ILI9341
+    #elif defined(TFT_ILI9341_T3N)
+        #define DisplayTranslator_Configured DisplayTranslator_ILI9341_T3N
     #elif defined (TFT_BODMER)
         #define DisplayTranslator_Configured DisplayTranslator_Bodmer
     #elif defined (TFT_ILI9341_TGX)

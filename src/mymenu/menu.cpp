@@ -40,8 +40,8 @@
 //DisplayTranslator *tft;
 #ifdef TFT_ST7789_T3_BIG
     DisplayTranslator_STeensy_Big *tft;
-#elif defined(TFT_ILI9341)
-    DisplayTranslator_ILI9341 *tft;
+#elif defined(TFT_ILI9341_T3N)
+    DisplayTranslator_ILI9341_T3N *tft;
 #elif defined(TFT_BODMER)
     DisplayTranslator_Bodmer *tft;
 #elif defined(TFT_ILI9341_TGX)
