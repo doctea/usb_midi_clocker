@@ -159,7 +159,7 @@ void setup_behaviour_manager() {
     #include "menuitems.h"
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
-        return; // WTF TODO fix crash ?
+        //return; // WTF TODO fix crash ?
 
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
