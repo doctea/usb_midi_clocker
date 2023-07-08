@@ -11,9 +11,11 @@
     #include "screenshot.h"
     #include "mymenu.h"
     #include "midi/midi_mapper_matrix_manager.h"
+    extern DisplayTranslator_Configured *display_translator;
 #endif
 
 #include "project.h"
+
 
 bool debug_stress_sequencer_load = false;
 
@@ -187,7 +189,7 @@ bool debug_stress_sequencer_load = false;
             #if defined(ENABLE_SCREEN) && defined(ENABLE_SD)
             case ' '            :
                 Serial.println(F("Taking screenshot!"));
-                save_screenshot(&display_translator);
+                save_screenshot(display_translator);
                 break;
             #endif
             // load/save/move selected sequence

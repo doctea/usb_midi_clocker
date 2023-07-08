@@ -3,6 +3,8 @@
 #include "cv_outs.h"
 #include "sequencer.h"
 
+#include "SPI.h"
+
 GateManager *gate_manager = new GateManager();
 
 #ifdef ENABLE_GATES_GPIO
@@ -14,9 +16,14 @@ GateManager *gate_manager = new GateManager();
     #include "interfaces/mcp23s17_interface.h"
 
     void setup_gate_manager() {
+        Serial.println("setup_gate_manager..");
         MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface();
+        Serial.println("\tdid mcp_interface");
         gate_manager->add_bank_interface(BANK_CLOCK, new VirtualBankInterface(mcp_interface, 0, 8));
+        Serial.println("\tadded virtual bank interface 1");
         gate_manager->add_bank_interface(BANK_SEQ,   new VirtualBankInterface(mcp_interface, 8, 8));
+        Serial.println("\tadded virtual bank interface 2");
+        Serial.println("returning from setup_gate_manager().");
     }
 #else
     void setup_gate_manager() {
