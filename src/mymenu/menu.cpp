@@ -71,13 +71,23 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-
+//uint16_t *framebuffers[2];
+//bool buffer_number = 0;
+/*
+void swap_framebuffer() {
+    //buffer_number = !buffer_number;
+    //tft->tft->setFrameBuffer(framebuffers[buffer_number]);
+    tft->framebuffer_ready = true;
+    //tft->ready_for_frame = 
+}
+*/
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
 ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 
 #ifdef ENABLE_SEQUENCER
+    #include "mymenu/menu_gatedisplay.h"
     SequencerStatus sequencer_status =      SequencerStatus("Pattern");
 #endif
 
@@ -255,6 +265,8 @@ void setup_menu() {
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
+
+        menu->add(new GatesDisplay("Gates"));
 
         #ifdef ENABLE_SD
             sequence_fileviewer = new FileViewerMenuItem("Sequence");

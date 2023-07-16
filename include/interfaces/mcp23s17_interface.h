@@ -14,6 +14,7 @@ class MCP23S17BankInterface : public BankInterface {
     public:
         int num_gates = 16;
         MCP23S17 *mcp = nullptr;
+        bool *current_states = nullptr;
 
         MCP23S17BankInterface() {
             Serial.println("MCP23S17BankInterface() constructor");
@@ -23,6 +24,8 @@ class MCP23S17BankInterface : public BankInterface {
             SPI1.setSCK(27);
             SPI1.begin();
             //SPI1.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
+
+            this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
             mcp = new MCP23S17(38, 0, &SPI1);
             Serial.println("\tconstructed!... calling begin()");
@@ -48,7 +51,17 @@ class MCP23S17BankInterface : public BankInterface {
                 return;            
             }
             mcp->digitalWrite(gate_number, state);
+            this->current_states[gate_number] = state;
+
+            // for debug, output inversed gates on shifted up gate numbers
+            if (gate_number<4) {
+                mcp->digitalWrite(gate_number+4, !state);
+                this->current_states[gate_number+4] = !state;
+            }
             //Serial.printf("!!! last error from mcp for gate %2i: %x\n", gate_number, mcp->lastError());
+        }
+        virtual bool check_gate(int gate_number) override {
+            return this->current_states[gate_number];
         }
         virtual void update() override {
 

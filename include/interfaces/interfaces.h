@@ -15,6 +15,7 @@ class BankInterface {
 
     virtual void set_gate(int gate, bool state) = 0;
     virtual void update() = 0;
+    virtual bool check_gate(int gate_number) = 0;
 };
 
 // use one underlying BankInterface partitioned into two (or more)
@@ -39,6 +40,14 @@ class VirtualBankInterface : public BankInterface {
             //digitalWrite(pin_numbers[gate_number], state);
             underlying->set_gate(gate_number+gate_offset, state);
         }
+        virtual bool check_gate(int gate_number) override {
+            if (gate_number >= num_gates) {
+                //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
+                return false;
+            }   
+            //digitalWrite(pin_numbers[gate_number], state);
+            return underlying->check_gate(gate_number+gate_offset);
+        }
         virtual void update() override {}
 };
 
@@ -46,6 +55,9 @@ class VirtualBankInterface : public BankInterface {
 class DigitalPinBankInterface : public BankInterface {
     public:
         int num_gates = 8;
+
+        bool *current_states = nullptr;
+
         //uint8_t raw_pin_numbers[num_gates];
         //int raw_pin_number = -1;
         /*DigitalPinBankInterface(int raw_pin_number) {
@@ -61,6 +73,7 @@ class DigitalPinBankInterface : public BankInterface {
                 this->pin_numbers[i] = pin_numbers[i];
                 pinMode(pin_numbers[i], OUTPUT);
             }
+            this->current_states = (bool*)calloc(num_gates, sizeof(bool));
         }
 
         virtual void set_gate(int gate_number, bool state) override {
@@ -70,6 +83,10 @@ class DigitalPinBankInterface : public BankInterface {
                 return;            
             }   
             digitalWrite(pin_numbers[gate_number], state);
+            this->current_states[gate_number] = state;
+        }
+        virtual bool check_gate(int gate_number) override {
+            return this->current_states[gate_number];
         }
 
         virtual void update() override {
@@ -113,6 +130,10 @@ class GateManager {
         }*/
 
         this->banks[bank]->set_gate(gate, state);
+    }
+
+    bool check_gate(int bank, int gate) {
+        return this->banks[bank]->check_gate(gate);
     }
 
     void update() {

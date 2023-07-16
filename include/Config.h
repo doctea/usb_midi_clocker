@@ -42,15 +42,17 @@
     #ifdef TFT_ST7789_T3
         //#define TFT_ST7789_T3_BIG
         #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
+        #define MENU_MS_BETWEEN_REDRAW  75
     #elif defined(TFT_ILI9341_T3N)
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341_T3N
+        #define MENU_MS_BETWEEN_REDRAW  20
     #elif defined (TFT_BODMER)
         #define DisplayTranslator_Configured DisplayTranslator_Bodmer
+        #define MENU_MS_BETWEEN_REDRAW  75
     #elif defined (TFT_ILI9341_TGX)
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341_TGX
     #endif
 
-    #define MENU_MS_BETWEEN_REDRAW  75
 #endif
 
 #ifndef ENABLE_SCREEN
