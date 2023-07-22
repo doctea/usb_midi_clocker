@@ -24,10 +24,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
     public:
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
             // initialise the CCs that this device can translate into ParameterInputs
-            this->addParameterInput("Fade1", (byte)48, (byte)1);
-            this->addParameterInput("Fade2", (byte)49, (byte)1);
-            this->addParameterInput("Fade3", (byte)50, (byte)1);
-            this->addParameterInput("Fade4", (byte)51, (byte)1);
+            this->addParameterInput("Fade1", "APCMini", (byte)48, (byte)1);
+            this->addParameterInput("Fade2", "APCMini", (byte)49, (byte)1);
+            this->addParameterInput("Fade3", "APCMini", (byte)50, (byte)1);
+            this->addParameterInput("Fade4", "APCMini", (byte)51, (byte)1);
         }
 
         uint16_t vid = 0x09e8, pid = 0x0028;

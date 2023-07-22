@@ -169,7 +169,7 @@ void setup() {
   setup_parameters();
   Serial.printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
   #ifdef ENABLE_SCREEN
-    menu->add_page("Parameter Inputs");
+    //menu->add_page("Parameter Inputs");
     setup_parameter_menu();
     Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif

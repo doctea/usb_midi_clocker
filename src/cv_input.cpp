@@ -48,9 +48,9 @@ void setup_parameters() {
     // todo: improve this bit, maybe name the voltage sources?
     #ifdef ENABLE_CV_INPUT
         //tft_print("...adding VoltageParameterInputs for CV source!\n");
-        VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", parameter_manager->voltage_sources->get(0));
-        VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", parameter_manager->voltage_sources->get(1));
-        VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", parameter_manager->voltage_sources->get(2));
+        VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(0));
+        VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(1));
+        VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(2));
 
         //vpi3->input_type = UNIPOLAR;
         // todo: set up 1v/oct inputs to map to MIDI source_ids...
@@ -122,6 +122,7 @@ FLASHMEM void setup_parameter_menu() {
     #endif*/
 
     //parameter_manager->addAllVoltageSourceMenuItems(menu);
+    menu->add_page("Input calibration");
     parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu);
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);

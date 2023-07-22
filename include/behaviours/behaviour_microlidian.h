@@ -36,11 +36,11 @@ class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public Clocke
     public:
 
         DeviceBehaviour_Microlidian() : ClockedBehaviour() {
-            this->addParameterInput("Env1", (byte)1 /*MUSO_CC_CV_1*/, (byte)1);
-            this->addParameterInput("Env2", (byte)7 /*MUSO_CC_CV_2*/, (byte)1);
-            this->addParameterInput("Env3", (byte)11 /*MUSO_CC_CV_3*/, (byte)1);
-            this->addParameterInput("Env4", (byte)71 /*MUSO_CC_CV_4*/, (byte)1);
-            this->addParameterInput("Env5", (byte)74 /*MUSO_CC_CV_5*/, (byte)1);
+            this->addParameterInput("Env1", "Microlidian", (byte)1 /*MUSO_CC_CV_1*/, (byte)1);
+            this->addParameterInput("Env2", "Microlidian", (byte)7 /*MUSO_CC_CV_2*/, (byte)1);
+            this->addParameterInput("Env3", "Microlidian", (byte)11 /*MUSO_CC_CV_3*/, (byte)1);
+            this->addParameterInput("Env4", "Microlidian", (byte)71 /*MUSO_CC_CV_4*/, (byte)1);
+            this->addParameterInput("Env5", "Microlidian", (byte)74 /*MUSO_CC_CV_5*/, (byte)1);
         }
 
         //uint16_t vid = 0x09e8, pid = 0x0028;
