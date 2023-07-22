@@ -18,16 +18,42 @@ class BankInterface {
     virtual bool check_gate(int gate_number) = 0;
 };
 
+class VirtualRemapBankInterface : public BankInterface {
+    public:
+        BankInterface *underlying = nullptr;
+        int *remap_pins = nullptr;
+        int pin_count = 0;
+
+        VirtualRemapBankInterface(BankInterface *iface, int *remap_pins, int pin_count) {
+            this->pin_count = pin_count;
+            this->remap_pins = (int*)calloc(pin_count, sizeof(int));
+            for (int i = 0 ; i < pin_count ; i++) {
+                this->remap_pins[i] = remap_pins[i];
+            }
+            this->underlying = iface;
+        }
+
+        virtual void set_gate(int gate_number, bool state) override {
+            this->underlying->set_gate(this->remap_pins[gate_number], state);
+        }
+        virtual bool check_gate(int gate_number) override {
+            return this->underlying->check_gate(this->remap_pins[gate_number]);
+        }
+        virtual void update() override {}
+};
+
 // use one underlying BankInterface partitioned into two (or more)
 class VirtualBankInterface : public BankInterface {
     public:
         BankInterface *underlying = nullptr;
         int gate_offset = 0;
+        bool reverse = false;   // reverse the order of the gate-output mapping
 
-        VirtualBankInterface(BankInterface *iface, int gate_offset, int num_gates) {
+        VirtualBankInterface(BankInterface *iface, int gate_offset, int num_gates, bool reverse = false) {
             this->underlying = iface;
             this->gate_offset = gate_offset;
             this->num_gates = num_gates;
+            this->reverse = reverse;
         }
 
         // todo: untested
@@ -36,7 +62,9 @@ class VirtualBankInterface : public BankInterface {
             if (gate_number >= num_gates) {
                 //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
                 return;            
-            }   
+            }
+            if (reverse)
+                gate_number = (num_gates-1) - gate_number;
             //digitalWrite(pin_numbers[gate_number], state);
             underlying->set_gate(gate_number+gate_offset, state);
         }
@@ -45,6 +73,8 @@ class VirtualBankInterface : public BankInterface {
                 //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
                 return false;
             }   
+            if (reverse)
+                gate_number = (num_gates-1) - gate_number;
             //digitalWrite(pin_numbers[gate_number], state);
             return underlying->check_gate(gate_number+gate_offset);
         }
@@ -82,17 +112,20 @@ class DigitalPinBankInterface : public BankInterface {
                 //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
                 return;            
             }   
-            digitalWrite(pin_numbers[gate_number], state);
+            digitalWrite(pin_numbers[gate_number%num_gates], state);
             this->current_states[gate_number] = state;
         }
         virtual bool check_gate(int gate_number) override {
-            return this->current_states[gate_number];
+            return this->current_states[gate_number%num_gates];
         }
 
         virtual void update() override {
             //dirty = false;
         };
 };
+
+class Menu;
+class MenuItem;
 
 class GateManager {
     public:
@@ -141,11 +174,18 @@ class GateManager {
             this->banks[bank]->update();
         }
     }
+
+    #ifdef ENABLE_SCREEN
+        LinkedList<MenuItem*> *create_controls(Menu *menu);
+    #endif
 };
 
 extern GateManager *gate_manager;
 
 void setup_gate_manager();
+#ifdef ENABLE_SCREEN
+    void setup_gate_manager_menus();
+#endif
 
 #define BANK_CLOCK  0
 #define BANK_SEQ    1

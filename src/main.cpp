@@ -142,6 +142,7 @@ void setup() {
     tft_print((char*)"Setting up CV gates..\n");
     //setup_cv_output();
     setup_gate_manager();
+    setup_gate_manager_menus();
   #endif
   Serial.printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 

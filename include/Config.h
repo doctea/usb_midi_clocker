@@ -167,6 +167,7 @@
     #elif defined(PCB)
         #define NUM_CLOCKS 4
         // don't need to define pins because that's all handled by the MCP23s17, hopefully
+        #define PIN_CLOCK_RESET 4   // 5th output used as phrase reset
     #endif
 #endif
 

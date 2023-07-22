@@ -22,8 +22,9 @@ class MCP23S17BankInterface : public BankInterface {
             SPI1.setMISO(39);
             SPI1.setMOSI(26);
             SPI1.setSCK(27);
+            //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
+            SPI1.setClockDivider(SPI_CLOCK_DIV4);
             SPI1.begin();
-            //SPI1.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE0));
 
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
@@ -40,6 +41,14 @@ class MCP23S17BankInterface : public BankInterface {
                 }
                 set_gate(i, false);
             }
+
+            for (int x = 0 ; x < 5 ; x++) {
+                for (int c = 0 ; c < num_gates ; c++) {
+                    set_gate(c, x % 2);
+                    delay(100);
+                }
+            }
+
             Serial.println("finished constructor");
             Serial.printf("!!! last error from mcp = %x\n", mcp->lastError());
         }
@@ -54,10 +63,15 @@ class MCP23S17BankInterface : public BankInterface {
             this->current_states[gate_number] = state;
 
             // for debug, output inversed gates on shifted up gate numbers
-            if (gate_number<4) {
+            /*if (gate_number<4) {
                 mcp->digitalWrite(gate_number+4, !state);
                 this->current_states[gate_number+4] = !state;
-            }
+            }*/
+
+            /*for (int i = 0 ; i < 100 ; i++) {
+                mcp->digitalWrite(gate_number, state);
+                //if (gate_number<4) mcp->digitalWrite(gate_number+4, !state);
+            }*/
             //Serial.printf("!!! last error from mcp for gate %2i: %x\n", gate_number, mcp->lastError());
         }
         virtual bool check_gate(int gate_number) override {

@@ -266,7 +266,8 @@ void setup_menu() {
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
 
-        menu->add(new GatesDisplay("Gates"));
+        //menu->add(new GatesDisplay("Gates"));
+        //gate_manager->create_controls(menu);         // do this later, after gate manager has had a chance to be set up...
 
         #ifdef ENABLE_SD
             sequence_fileviewer = new FileViewerMenuItem("Sequence");

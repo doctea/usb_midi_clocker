@@ -1,3 +1,5 @@
+#ifndef GATEDISPLAY__INCLUDED
+#define GATEDISPLAY__INCLUDED
 #include "Config.h"
 
 #if defined(ENABLE_SEQUENCER)
@@ -7,10 +9,11 @@
 #include "mymenu.h"
 #include "menu.h"
 
+extern GateManager *gate_manager;
+
 class GatesDisplay : public MenuItem {
     public:
     
-
     //GFXcanvas16 *canvas;
 
     GatesDisplay(const char *label) : MenuItem(label) {}
@@ -43,6 +46,7 @@ class GatesDisplay : public MenuItem {
 
 };
 
+#endif
 
 #endif
 

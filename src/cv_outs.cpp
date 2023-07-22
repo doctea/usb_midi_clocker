@@ -142,7 +142,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   void update_cv_outs(unsigned long ticks) {
     #ifdef PIN_CLOCK_RESET
       if (is_bpm_on_phrase(ticks)) {
-        Serial.printf("On phrase! %i\n", ticks);
+        //Serial.printf("On phrase! %i\n", ticks);
         cv_out_clock_pin_on(PIN_CLOCK_RESET);
       } else if (is_bpm_on_phrase(ticks,duration)) {
         cv_out_clock_pin_off(PIN_CLOCK_RESET);
@@ -164,6 +164,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
         else if (should_go_low) cv_out_sequence_pin_off(i);
       }
     #endif
+    
     #ifdef ENABLE_CLOCKS
       for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
         bool should_go_high = false;
