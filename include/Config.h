@@ -10,7 +10,11 @@
 // NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
 
 //// CV input options
-//#define ENABLE_CV_INPUT 0x49                // specify the i2c address of the input board
+#ifdef PCB
+    #define ENABLE_CV_INPUT 0x48                // specify the i2c address of the input board
+#else
+    #define ENABLE_CV_INPUT 0x49
+#endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 #ifdef ENABLE_SD
@@ -43,16 +47,15 @@
         //#define TFT_ST7789_T3_BIG
         #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
         #define MENU_MS_BETWEEN_REDRAW  75
-    #elif defined(TFT_ILI9341_T3N)
-        #define DisplayTranslator_Configured DisplayTranslator_ILI9341_T3N
-        #define MENU_MS_BETWEEN_REDRAW  20
     #elif defined (TFT_BODMER)
         #define DisplayTranslator_Configured DisplayTranslator_Bodmer
         #define MENU_MS_BETWEEN_REDRAW  75
+    #elif defined(TFT_ILI9341_T3N)
+        #define DisplayTranslator_Configured DisplayTranslator_ILI9341_T3N
+        #define MENU_MS_BETWEEN_REDRAW  20
     #elif defined (TFT_ILI9341_TGX)
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341_TGX
     #endif
-
 #endif
 
 #ifndef ENABLE_SCREEN
@@ -113,9 +116,9 @@
     #define ENABLE_APCMINI
     #define ENABLE_BEATSTEP
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
-    #define ENABLE_BAMBLE
+    //#define ENABLE_BAMBLE
     //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
-    #define ENABLE_BAMBLE_OUTPUT    // for sending on the bamble ch1-4
+    //#define ENABLE_BAMBLE_OUTPUT    // for sending on the bamble ch1-4
     //#define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER

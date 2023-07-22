@@ -42,10 +42,11 @@ class MCP23S17BankInterface : public BankInterface {
                 set_gate(i, false);
             }
 
+            // do a debug loop around the outputs
             for (int x = 0 ; x < 5 ; x++) {
                 for (int c = 0 ; c < num_gates ; c++) {
                     set_gate(c, x % 2);
-                    delay(100);
+                    delay(10);
                 }
             }
 

@@ -71,14 +71,14 @@ namespace storage {
   FLASHMEM void setup_storage() {
     SD.begin(chipSelect);
 
-    if (!SD.exists("sequences")) {
+    /*if (!SD.exists("sequences")) {
       Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));
       SD.mkdir("sequences");
     }
     if (!SD.exists("loops")) {
       Serial.println(F("Folder 'loops' doesn't exist on SD, creating!"));
       SD.mkdir("loops");
-    }
+    }*/
   }
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {

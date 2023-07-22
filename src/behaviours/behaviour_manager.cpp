@@ -209,6 +209,7 @@ void setup_behaviour_manager() {
     //FLASHMEM 
     inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
             Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
+            debug_free_ram();
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
             uint16_t group_colour = C_WHITE;

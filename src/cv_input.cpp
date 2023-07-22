@@ -27,6 +27,7 @@ void setup_cv_input() {
     parameter_manager->init();
 
     #ifdef ENABLE_CV_INPUT
+        tft_print("...adding ADCPimoroni24v !!!\n");
         parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, 5.0)); //, 5.0)); //, 2, MAX_INPUT_VOLTAGE_24V));
     #endif
 
@@ -41,11 +42,12 @@ void setup_parameters() {
     //parameter_manager = new ParameterManager();
     // add the available parameters to a list used globally and later passed to each selector menuitem
     Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
-    tft_print("..setup_parameters...");
+    //tft_print("..setup_parameters...");
 
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
     #ifdef ENABLE_CV_INPUT
+        //tft_print("...adding VoltageParameterInputs for CV source!\n");
         VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", parameter_manager->voltage_sources->get(0));
         VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", parameter_manager->voltage_sources->get(1));
         VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", parameter_manager->voltage_sources->get(2));
@@ -79,6 +81,7 @@ void setup_parameters() {
         //behaviour_craftsynth->getParameterForLabel((char*)F("Distortion"))->set_slot_2_amount(1.0); //connect_input(vpi3, 1.0);
         //Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial_flush();
     #endif*/
+
     Serial.println("starting allParameters...");
     for(unsigned int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
         Serial.printf("\tdoing addParameters for behaviour %i/%i\n", i+1, behaviour_manager->behaviours->size());
