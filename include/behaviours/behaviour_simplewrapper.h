@@ -5,6 +5,7 @@
 #include "behaviour_base_usb.h"
 
 class Behaviour_USBSimpleClockedWrapper : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+    using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     using ClockedBehaviour::on_tick;
     using ClockedBehaviour::on_phrase;
     using ClockedBehaviour::on_bar;

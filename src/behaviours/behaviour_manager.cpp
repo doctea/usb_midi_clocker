@@ -23,6 +23,8 @@
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso.h"
 
+#include "behaviours/behaviour_bedge.h"
+
 #include "behaviours/behaviour_opentheremin.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
@@ -153,7 +155,12 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_BEHRINGER_EDGE
-        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("BEdge", 0x1397, 0x125A));
+        #ifdef ENABLE_BEHRINGER_EDGE_DEDICATED
+            behaviour_bedge = new DeviceBehaviour_Bedge();
+            behaviour_manager->registerBehaviour(behaviour_bedge);
+        #else
+            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("BEdge", 0x1397, 0x125A));
+        #endif
     #endif
     
     Serial.println(F("Exiting setup_behaviour_manager()"));
