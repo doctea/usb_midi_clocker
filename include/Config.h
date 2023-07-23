@@ -114,11 +114,13 @@
 
 #ifdef ENABLE_USB
     #define ENABLE_APCMINI
+    #define ENABLE_APCMINI_DISPLAY
+
     #define ENABLE_BEATSTEP
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     //#define ENABLE_BAMBLE
     //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
-    //#define ENABLE_BAMBLE_OUTPUT    // for sending on the bamble ch1-4
+    //#define ENABLE_BAMBLE_OUTPUT  // for sending on the bamble ch1-4
     //#define ENABLE_MPK49
     #define ENABLE_KEYSTEP
     #define ENABLE_SUBCLOCKER
@@ -128,7 +130,7 @@
     #define ENABLE_MICROLIDIAN
     #define ENABLE_MIDILIGHTS
 
-    #define ENABLE_APCMINI_DISPLAY
+    #define ENABLE_BEHRINGER_EDGE
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
@@ -145,6 +147,7 @@
                                         // if not defined then the four sequencer outputs are overlaid over the clock outputs
 #ifdef ENABLE_CLOCKS
     #ifdef PROTOTYPE
+        // prototype uses GPIO pins for the gate outs, so define which pins to use 
         #define NUM_CLOCKS 4              // 4 clocks (+ 1 reset if PIN_CLOCK_RESET is also set)
         //#define NUM_CLOCKS 7            // 7 clocks + 1 reset
 
@@ -168,8 +171,8 @@
 
         //#define PIN_CLOCK_RESET 40
     #elif defined(PCB)
+        // PCB + expander uses SPI MCP23s17 for output, don't need to define pins because that's all handled by the MCP23s17, hopefully
         #define NUM_CLOCKS 4
-        // don't need to define pins because that's all handled by the MCP23s17, hopefully
         #define PIN_CLOCK_RESET 4   // 5th output used as phrase reset
     #endif
 #endif
@@ -184,9 +187,9 @@
             #define PIN_SEQUENCE_2 38
             #define PIN_SEQUENCE_3 37
             #define PIN_SEQUENCE_4 36
-        #elif defined(PCB)
-            // shouldn't need to define pins as should all be handled by teh MCP23s17
         #endif
+    #elif defined(PCB)
+            // shouldn't need to define pins as should all be handled by teh MCP23s17
     #endif
 #endif
 

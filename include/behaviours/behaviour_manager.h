@@ -6,6 +6,8 @@
 #include "behaviours/behaviour_base_serial.h"
 #include "behaviours/behaviour_base_usbserial.h"
 
+#include "behaviours/behaviour_simplewrapper.h"
+
 #include "multi_usb_handlers.h"
 
 #include "mymenu.h"

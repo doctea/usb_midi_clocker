@@ -16,6 +16,8 @@ GateManager *gate_manager = new GateManager();
 #elif defined(ENABLE_GATES_MCP23S17)
     #include "interfaces/mcp23s17_interface.h"
 
+    //#define DUPLICATE_CLOCKS
+
     void setup_gate_manager() {
         Serial.println("setup_gate_manager..");
         MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface();
@@ -64,6 +66,12 @@ GateManager *gate_manager = new GateManager();
 void set_clock_gate(int gate_number, bool state) {
     gate_manager->send_gate(BANK_CLOCK, gate_number, state);
     //set_sequence_gate(gate_number, state);
+    #ifdef DUPLICATE_CLOCKS
+        // duplicate clocks onto the (currently unused) sequencer outputs
+        if (gate_number>=0 && gate_number<4) {
+            gate_manager->send_gate(BANK_SEQ, gate_number+4, state);
+        }
+    #endif
 }
 void set_sequence_gate(int gate_number, bool state) {
     gate_manager->send_gate(BANK_SEQ, gate_number, state);

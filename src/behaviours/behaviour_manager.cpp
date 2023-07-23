@@ -85,6 +85,7 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_SUBCLOCKER
         behaviour_subclocker = new DeviceBehaviour_Subclocker();
         behaviour_manager->registerBehaviour(behaviour_subclocker);
+        //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("SimpleSubclocker", 0x1337, 0x1337));
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
@@ -149,6 +150,10 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_MIDIMUSO
         behaviour_manager->registerBehaviour(behaviour_midimuso);
         behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
+    #endif
+
+    #ifdef ENABLE_BEHRINGER_EDGE
+        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("BEdge", 0x1397, 0x125A));
     #endif
     
     Serial.println(F("Exiting setup_behaviour_manager()"));
