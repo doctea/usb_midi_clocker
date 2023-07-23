@@ -53,8 +53,6 @@
     #elif defined(TFT_ILI9341_T3N)
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341_T3N
         #define MENU_MS_BETWEEN_REDRAW  20
-    #elif defined (TFT_ILI9341_TGX)
-        #define DisplayTranslator_Configured DisplayTranslator_ILI9341_TGX
     #endif
 #endif
 
