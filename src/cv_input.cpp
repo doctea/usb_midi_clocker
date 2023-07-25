@@ -27,8 +27,12 @@ void setup_cv_input() {
     parameter_manager->init();
 
     #ifdef ENABLE_CV_INPUT
-        tft_print("...adding ADCPimoroni24v !!!\n");
-        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, 5.0)); //, 5.0)); //, 2, MAX_INPUT_VOLTAGE_24V));
+        tft_print("...adding ADCPimoroni24v #1!!!\n");
+        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, 5.0));
+    #endif
+    #ifdef ENABLE_CV_INPUT_2
+        tft_print("...adding ADCPimoroni24v #2!!!\n");
+        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT_2, 5.0));
     #endif
 
     parameter_manager->auto_init_devices();
@@ -47,7 +51,7 @@ void setup_parameters() {
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
     #ifdef ENABLE_CV_INPUT
-        //tft_print("...adding VoltageParameterInputs for CV source!\n");
+        tft_print("...adding VoltageParameterInputs for CV source!\n");
         VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(0));
         VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(1));
         VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(2));
@@ -59,6 +63,22 @@ void setup_parameters() {
         parameter_manager->addInput(vpi1);
         parameter_manager->addInput(vpi2);
         parameter_manager->addInput(vpi3);
+    #endif
+
+    #ifdef ENABLE_CV_INPUT_2
+        tft_print("...adding VoltageParameterInputs for CV source #2!\n");
+        Serial.printf("voltage_sources has %i entries - about to try and add 3,4,5!\n", parameter_manager->voltage_sources->size());
+        VoltageParameterInput *vpi4 = new VoltageParameterInput((char*)"D", "ADC2", parameter_manager->voltage_sources->get(3));
+        VoltageParameterInput *vpi5 = new VoltageParameterInput((char*)"E", "ADC2", parameter_manager->voltage_sources->get(4));
+        VoltageParameterInput *vpi6 = new VoltageParameterInput((char*)"F", "ADC2", parameter_manager->voltage_sources->get(5));
+
+        //vpi3->input_type = UNIPOLAR;
+        // todo: set up 1v/oct inputs to map to MIDI source_ids...
+
+        // tell the parameter manager about them
+        parameter_manager->addInput(vpi4);
+        parameter_manager->addInput(vpi5);
+        parameter_manager->addInput(vpi6);
     #endif
 
     // get the available target parameters

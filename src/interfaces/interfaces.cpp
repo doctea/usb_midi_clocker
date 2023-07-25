@@ -106,8 +106,8 @@ void set_sequence_gate(int gate_number, bool state) {
     };
 
     #include "mymenu/menu_gatedisplay.h"
-    LinkedList<MenuItem*> *GateManager::create_controls(Menu *menu) {
-        menu->select_page(2);
+    void *GateManager::create_controls(Menu *menu) {
+        menu->select_page(2);   // since we do this later in the process, move back to the second page ('Sequencer') to add these items
 
         menu->add(new GatesDisplay("Gates"));
 

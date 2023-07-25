@@ -16,6 +16,11 @@ class BankInterface {
     virtual void set_gate(int gate, bool state) = 0;
     virtual void update() = 0;
     virtual bool check_gate(int gate_number) = 0;
+    virtual void stop_all_gates() {
+        for (int i = 0 ; i < num_gates ; i++) {
+            this->set_gate(i, false);
+        }
+    }
 };
 
 class VirtualRemapBankInterface : public BankInterface {
@@ -143,6 +148,7 @@ class GateManager {
             messages_log_add(String("ERROR: attempted to add too many banks!"));
 
         banks[bank] = iface;
+        iface->stop_all_gates();
         num_banks++;    // TODO: handle more than 2 banks...!!
     }
 
@@ -175,8 +181,16 @@ class GateManager {
         }
     }
 
+    // panic turn off all gates
+    void stop_all_gates() {
+        Serial.println("stop all gates!");
+        for (int b = 0 ; b < num_banks ; b++) {
+            this->banks[b]->stop_all_gates();
+        }
+    }
+
     #ifdef ENABLE_SCREEN
-        LinkedList<MenuItem*> *create_controls(Menu *menu);
+        void *create_controls(Menu *menu);
     #endif
 };
 

@@ -50,7 +50,7 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
                 saveable_parameter_recall_selector = new ObjectMultiToggleControl((String("Recall parameters: ") + String(p->category_name)).c_str(), true);
             }
 
-            Serial.printf("creating SaveableParameterOptionToggle for item %i\n", i); Serial_flush();
+            //Serial.printf("creating SaveableParameterOptionToggle for item %i\n", i); Serial_flush();
             saveable_parameter_recall_selector->addItem(new SaveableParameterOptionToggle(saveable_parameters->get(i)));
             last_category = category;
         }

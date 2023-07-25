@@ -16,6 +16,7 @@
 
 #include "project.h"
 
+#include "interfaces/interfaces.h"
 
 bool debug_stress_sequencer_load = false;
 
@@ -170,6 +171,7 @@ bool debug_stress_sequencer_load = false;
             case 'p': case 'P':
                 Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
                 midi_matrix_manager->stop_all_notes();
+                gate_manager->stop_all_gates();
                 break;
             #ifdef ENABLE_SCREEN
             case 'A': case 'a':

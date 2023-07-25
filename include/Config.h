@@ -12,10 +12,11 @@
 //// CV input options
 #ifdef PCB
     #define ENABLE_CV_INPUT 0x48                // specify the i2c address of the input board
+    #define ENABLE_CV_INPUT_2 0x49
 #else
     #define ENABLE_CV_INPUT 0x49
 #endif
-#define TIME_BETWEEN_CV_INPUT_UPDATES 25    
+#define TIME_BETWEEN_CV_INPUT_UPDATES 5 //25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
