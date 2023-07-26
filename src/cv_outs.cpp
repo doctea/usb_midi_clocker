@@ -93,7 +93,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   void update_cv_outs(unsigned long ticks) {
     #if defined(ENABLE_SEQUENCER) || defined(ENABLE_CLOCKS)
 
-      #ifdef PIN_CLOCK_RESET
+      #ifdef PIN_CLOCK_RESET_PHRASE
         if (is_bpm_on_phrase(ticks)) {
           Serial.printf("On phrase! %i\n", ticks);
           cv_out_clock_pin_on(PIN_CLOCK_RESET);
@@ -140,12 +140,36 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   }
 #else
   void update_cv_outs(unsigned long ticks) {
-    #ifdef PIN_CLOCK_RESET
+    #ifdef PIN_CLOCK_RESET_PHRASE
       if (is_bpm_on_phrase(ticks)) {
         //Serial.printf("On phrase! %i\n", ticks);
-        cv_out_clock_pin_on(PIN_CLOCK_RESET);
+        cv_out_clock_pin_on(PIN_CLOCK_RESET_PHRASE);
       } else if (is_bpm_on_phrase(ticks,duration)) {
-        cv_out_clock_pin_off(PIN_CLOCK_RESET);
+        cv_out_clock_pin_off(PIN_CLOCK_RESET_PHRASE);
+      }
+    #endif
+    #ifdef PIN_CLOCK_RESET_HALF_PHRASE
+      if (is_bpm_on_half_phrase(ticks)) {
+        //Serial.printf("On phrase! %i\n", ticks);
+        cv_out_clock_pin_on(PIN_CLOCK_RESET_HALF_PHRASE);
+      } else if (is_bpm_on_half_phrase(ticks,duration)) {
+        cv_out_clock_pin_off(PIN_CLOCK_RESET_HALF_PHRASE);
+      }
+    #endif
+    #ifdef PIN_CLOCK_RESET_BAR
+      if (is_bpm_on_bar(ticks)) {
+        //Serial.printf("On phrase! %i\n", ticks);
+        cv_out_clock_pin_on(PIN_CLOCK_RESET_BAR);
+      } else if (is_bpm_on_bar(ticks,duration)) {
+        cv_out_clock_pin_off(PIN_CLOCK_RESET_BAR);
+      }
+    #endif
+    #ifdef PIN_CLOCK_RESET_BEAT
+      if (is_bpm_on_beat(ticks)) {
+        //Serial.printf("On phrase! %i\n", ticks);
+        cv_out_clock_pin_on(PIN_CLOCK_RESET_BEAT);
+      } else if (is_bpm_on_beat(ticks,duration)) {
+        cv_out_clock_pin_off(PIN_CLOCK_RESET_BEAT);
       }
     #endif
         
