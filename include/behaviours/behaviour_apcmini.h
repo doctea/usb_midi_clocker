@@ -20,6 +20,8 @@
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
 
+#define TIME_BETWEEN_APC_REFRESH_MS 50
+
 class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
     public:
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
@@ -75,7 +77,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     //Serial.println("about to call apcmini_update_position_display()"); Serial_flush();
                     apcmini_update_position_display(ticks);
                 
-                    if (redraw_immediately || millis() - last_updated_display > 50) {
+                    if (redraw_immediately || millis() - last_updated_display > TIME_BETWEEN_APC_REFRESH_MS) {
                         //Serial.println(F("redraw_immediately is set!"));
                         //Serial.println("about to call apcmini_update_clock_display()"); Serial_flush();
                         apcmini_update_clock_display();
