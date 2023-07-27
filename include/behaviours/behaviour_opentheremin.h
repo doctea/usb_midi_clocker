@@ -30,6 +30,11 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
             this->midi_interface->setHandleNoteOff(handle_theremin_note_off);
             this->midi_interface->setHandlePitchBend(handle_theremin_pitch_bend);
         }
+
+        void init() override {
+            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+            usbdevice->setTimeout(0);
+        }
 };
 
 extern DeviceBehaviour_OpenTheremin *behaviour_opentheremin;

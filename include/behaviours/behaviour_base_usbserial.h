@@ -55,8 +55,9 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
 
             this->usbdevice = usbdevice;
 
-            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
-            usbdevice->setTimeout(0);
+            // do this in subdevices now, since it seems to cause some problems?
+            //usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+            //usbdevice->setTimeout(0);
 
             this->init();
             this->setup_callbacks();
@@ -81,7 +82,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         virtual void read() override {
             if (!is_connected() || this->usbdevice==nullptr) return;
             //Serial.println("DeviceBehaviourUSBSerialBase#read() about to read()..");
-            while(this->usbdevice->read()); 
+            while(this->usbdevice->available() && this->usbdevice->read()); 
             //Serial.println("DeviceBehaviourUSBSerialBase#read() came out of read()..");
         };
 };
