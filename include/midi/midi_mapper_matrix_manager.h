@@ -319,6 +319,15 @@ class MIDIMatrixManager {
         return nullptr;
     }
 
+    // look up the serial midi number for a given uart device
+    serial_midi_number_t get_serial_midi_number_for_device(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
+        for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+            if (device==midi_out_serial[i])
+                return i;
+        }
+        return -1;
+    }
+
     private:
         // stuff for making singleton
         static MIDIMatrixManager* inst_;

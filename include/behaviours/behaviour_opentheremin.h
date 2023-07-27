@@ -10,7 +10,7 @@ void handle_theremin_control_change(byte channel, byte cc_number, byte value);
 void handle_theremin_note_on(byte channel, byte cc_number, byte value);
 void handle_theremin_note_off(byte channel, byte cc_number, byte value);
 void handle_theremin_pitch_bend(byte channel, int bend);
-DeviceBehaviourUSBSerialBase
+
 class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
     public:
         uint16_t vid = 0x1a86, pid = 0x7523;            // 1a867523

@@ -107,6 +107,7 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
         //virtual bool has_output()   { return this->output_interface!=nullptr; }
 
         virtual void init() override {
+            
             if (this->usbdevice==nullptr) {
                 Serial.printf(F("DeviceBehaviourUSBSerialMIDIBase#init() in %s failed - usbdevice is nullptr!\n"), this->get_label());
                 return;
@@ -116,6 +117,9 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
                 Serial.printf(F("DeviceBehaviourUSBSerialMIDIBase#init() in %s already has a midi_interface - disconnecting it!\n"), this->get_label());
                 this->disconnect_device();
             }
+
+            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+            usbdevice->setTimeout(0);
 
             this->midi_interface = new midi::MidiInterface<USBSerialWrapper>(*this->usbdevice);
         }

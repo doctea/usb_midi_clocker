@@ -56,11 +56,12 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual bool has_input() { return false; }
     virtual bool has_output() { return false; }
     // input/output indicator
+    bool indicator_done = false;
+    char indicator_text[5];
     virtual const char *get_indicator() {
-        static bool done = false;
-        static char indicator_text[5];
-        if (!done) {
+        if (!indicator_done) {
             snprintf(indicator_text, 5, "%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
+            indicator_done = true;
         }
         return indicator_text;
     }
