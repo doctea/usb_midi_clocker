@@ -10,6 +10,8 @@
 #define MCP23S17_SPI_MOSI       26
 #define MCP23S17_SPI_SCK        27*/
 
+// todo: how to set up an *INPUT* bank...?
+
 class MCP23S17BankInterface : public BankInterface {
     public:
         int num_gates = 16;
@@ -29,6 +31,7 @@ class MCP23S17BankInterface : public BankInterface {
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
             mcp = new MCP23S17(38, 0, &SPI1);
+            //mcp->setSPIspeed(20000000);
             Serial.println("\tconstructed!... calling begin()");
             if (!mcp->begin()) {
                 Serial.println("\tbegin() return false!");
@@ -82,5 +85,69 @@ class MCP23S17BankInterface : public BankInterface {
 
         }
 };
+
+
+// experimental -- actually seems to be working on a code level, but the hardware behaves strangely..
+// todo: make an interface that can support mixed ins/outs 
+class MCP23S17InputBankInterface : public BankInterface {
+    public:
+        int num_gates = 16;
+        MCP23S17 *mcp = nullptr;
+        bool *current_states = nullptr;
+
+        MCP23S17InputBankInterface() {
+            Serial.println("MCP23S17InputBankInterface() constructor");
+            SPI1.setCS(38);
+            SPI1.setMISO(39);
+            SPI1.setMOSI(26);
+            SPI1.setSCK(27);
+            //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
+            SPI1.setClockDivider(SPI_CLOCK_DIV4);
+            SPI1.begin();
+
+            this->current_states = (bool*)calloc(num_gates, sizeof(bool));
+
+            mcp = new MCP23S17(38, 0, &SPI1);
+            Serial.println("\tconstructed!... calling begin()");
+            if (!mcp->begin()) {
+                Serial.println("\tbegin() return false!");
+            }
+            Serial.println("\tdid begin()!");
+            for(int i = 0 ; i < num_gates ; i++) {
+                Serial.printf("\tSetting up pin %i!..\n", i);
+                if (mcp->pinMode(i, OUTPUT))
+                    mcp->digitalWrite(i, false);
+                //mcp->setPullup(i, false);
+                if (!mcp->pinMode(i, INPUT)) {
+                    Serial.printf("\tMCP23s17BankInterface: Error setting pinMode %i\n", i);
+                }
+
+                //set_gate(i, false);
+            }
+
+            // do a debug loop around the outputs
+            /*for (int x = 0 ; x < 5 ; x++) {
+                for (int c = 0 ; c < num_gates ; c++) {
+                    set_gate(c, x % 2);
+                    delay(10);
+                }
+            }*/
+
+            Serial.println("finished constructor");
+            Serial.printf("!!! last error from mcp = %x\n", mcp->lastError());
+        }
+
+        virtual void set_gate(int gate_number, bool state) override {
+            return; // input only
+        }
+        virtual bool check_gate(int gate_number) override {
+            //return this->current_states[gate_number];
+            return mcp->digitalRead(gate_number);
+        }
+        virtual void update() override {
+
+        }
+};
+
 
 #endif

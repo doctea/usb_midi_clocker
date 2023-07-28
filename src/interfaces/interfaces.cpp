@@ -7,6 +7,7 @@
 
 GateManager *gate_manager = new GateManager();
 
+//#define TEST_MCP23s17_INPUT // for testing gate input mode; which seems to work on a code level, except the hardware seems to let us down
 
 #ifdef ENABLE_GATES_GPIO
     void setup_gate_manager() {
@@ -20,7 +21,11 @@ GateManager *gate_manager = new GateManager();
 
     void setup_gate_manager() {
         Serial.println("setup_gate_manager..");
-        MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface();
+        #ifdef TEST_MCP23s17_INPUT
+            MCP23S17InputBankInterface *mcp_interface = new MCP23S17InputBankInterface();
+        #else
+            MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface();
+        #endif
         Serial.println("\tdid mcp_interface");
         byte num_gates = 8;
         /*  // for some reason, these are all coming out funny on the current pcb revision, so here is the empirical mappings to use

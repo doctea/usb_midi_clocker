@@ -92,21 +92,23 @@ class VirtualBankInterface : public BankInterface {
         virtual void update() override {}
 };
 
-// standard Arduino pinMode/digitalWrite
+// standard Arduino GPIO pinMode/digitalWrite
+// note INPUT mode is completely untested!
 class DigitalPinBankInterface : public BankInterface {
     public:
         int num_gates = 8;
-
         bool *current_states = nullptr;
+        byte mode = OUTPUT;
 
         uint8_t *pin_numbers = nullptr;
-        DigitalPinBankInterface(const byte *pin_numbers, int num_pins) {
+        DigitalPinBankInterface(const byte *pin_numbers, int num_pins, byte mode = OUTPUT) {
             this->pin_numbers = (uint8_t*)calloc(num_pins, sizeof(uint8_t));
+            this->mode = mode;
             num_gates = num_pins;
             //memcpy(this->pin_numbers, pin_numbers, sizeof(uint8_t)*num_pins);
             for (int i = 0 ; i < num_pins ; i++) {
                 this->pin_numbers[i] = pin_numbers[i];
-                pinMode(pin_numbers[i], OUTPUT);
+                pinMode(pin_numbers[i], mode);
             }
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
         }
@@ -116,12 +118,17 @@ class DigitalPinBankInterface : public BankInterface {
             if (gate_number >= num_gates) {
                 //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
                 return;            
-            }   
+            }
+            if (mode!=OUTPUT)
+                return;
             digitalWrite(pin_numbers[gate_number%num_gates], state);
             this->current_states[gate_number] = state;
         }
         virtual bool check_gate(int gate_number) override {
-            return this->current_states[gate_number%num_gates];
+            if (mode==OUTPUT)
+                return this->current_states[gate_number%num_gates];
+            else
+                return digitalRead(gate_number);
         }
 
         virtual void update() override {
