@@ -60,7 +60,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         void on_tick(unsigned long ticks) override {
             // check if playing note duration has passed regardless of whether source_input is set, so that notes will still finish even if disconncted
             if (is_playing && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
-                if (this->debug) Serial.printf(F("Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n"), current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
+                if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n"), current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
                 this->last_note = current_note;
                 is_playing = false;
                 this->receive_note_off(1, this->current_note, 0);
@@ -77,8 +77,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
                 // has pitch become invalid?  is so and if note playing, stop note
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {
-                    if (this->debug) Serial.printf(F("Stopping note\t%i because playing and new_note isn't valid\n"), new_note);
-                    this->receive_note_off(1, this->current_note, 0);
+                    if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because playing and new_note isn't valid\n"), new_note);
+                    this->receive_note_off(0, this->current_note, 0);
                     this->is_playing = false;
                     this->current_note = 255;
                     this->last_note = this->current_note;
@@ -92,17 +92,17 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 } else if (is_valid_note(new_note) && new_note!=this->current_note) {
                     // note has changed from valid to a different valid
                     if (is_playing) {
-                        if (this->debug) Serial.printf(F("Stopping note\t%i because of new_note\t%i\n"), this->current_note, new_note);
-                        this->receive_note_off(1, this->current_note, 0);
+                        if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because of new_note\t%i\n"), this->current_note, new_note);
+                        this->receive_note_off(0, this->current_note, 0);
                         this->last_note = current_note;
                         this->current_note = 255;
                         this->is_playing = false;
                     }
                     if (this->get_note_length()>0) {
-                        if (this->debug) Serial.printf(F("Starting note %i\tat\t%u\n"), new_note, ticks);
+                        if (this->debug) Serial.printf(F("CVInput: Starting note %i\tat\t%u\n"), new_note, ticks);
                         this->current_note = new_note;
                         this->note_started_at_tick = ticks;
-                        this->receive_note_on(1, this->current_note, 127);
+                        this->receive_note_on(0, this->current_note, 127);
                         this->is_playing = true;
                     }
                 }
@@ -134,7 +134,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 if (source!=nullptr)
                     this->set_selected_parameter_input(source);
                 else
-                    Serial.printf("WARNING: couldn't find an input for the name '%s'", value.c_str());
+                    messages_log_add(String("WARNING: Behaviour_CVInput couldn't find an input for the name '" + value + "'"));
                 return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;

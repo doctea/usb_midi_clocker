@@ -144,7 +144,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - GDB debug mode doesn't work - might just simply be because we don't have enough RAM to do this now?
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
-- USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..
+- ~~USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..~~ <- hmm, fixed this by making CVInput behaviour send message to midi_matrix_manager on channel 0 instead of channel 1..?  but not sure why this would be, since the channel looked correct in DeviceBehaviourUSBBase#sendNoteOn() !
 - The 'delay' menu item for ClockedBehaviours gets set to an incorrect value when opened?
 
 ## Known issues (may be solved)

@@ -121,7 +121,7 @@ class MIDIMatrixManager {
         );
     }
     void connect(source_id_t source_id, target_id_t target_id) {
-        if (source_id<0 || target_id<0)
+        if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
             return;
         if (!source_to_targets[source_id][target_id]) {
             // increment count if not already connected
@@ -139,7 +139,7 @@ class MIDIMatrixManager {
         );
     }
     void disconnect(source_id_t source_id, target_id_t target_id) {
-        if (source_id==-1 || target_id==-1) return;
+        if (source_id==-1 || target_id==-1 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS) return;
         if (is_connected(source_id, target_id)) {
             if (targets[target_id].wrapper!=nullptr) 
                 targets[target_id].wrapper->stop_all_notes();
@@ -151,9 +151,13 @@ class MIDIMatrixManager {
     }
 
     byte connected_to_source_count(source_id_t source_id) {
+        if (source_id==-1 || source_id >= NUM_REGISTERED_SOURCES) return 0;
+
         return sources[source_id].connection_count;
     }
     byte connected_to_target_count(target_id_t target_id) {
+        if (target_id==-1 || target_id >= NUM_REGISTERED_SOURCES) return 0;
+
         return targets[target_id].connection_count;
     }
 
@@ -180,8 +184,7 @@ class MIDIMatrixManager {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) 
-            Serial.printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+        if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
