@@ -27,6 +27,31 @@ class DeviceBehaviour_Bedge : public DeviceBehaviourUSBBase, public ClockedBehav
             return "BEdge";
         }
         virtual bool has_output() { return true; }
+
+
+        /*            
+            virtual void on_restart() override {
+                Serial.println("behringer edge on_restart!");
+
+                //if (is_connected()) {
+                //    DeviceBehaviourUSBBase::device->sendSongPosition(0);
+                //} else {
+                //    Serial.println("\tisn't connected?");
+                }
+                //virtual void on_restart() override {
+                    //if (!is_connected()) return;
+
+                if (this->clock_enabled) {
+                    this->sendRealTime(midi::Stop);
+                    if (is_connected())
+                        DeviceBehaviourUSBBase::device->sendSongPosition(0);
+                    this->sendRealTime(midi::Start);
+                    //this->sendRealTime(midi::Continue);
+                    //this->sendNow();
+                    //this->started = true;
+                }
+            //}
+        }*/
 };
 
 //void craftsynth_setOutputWrapper(MIDIOutputWrapper *);

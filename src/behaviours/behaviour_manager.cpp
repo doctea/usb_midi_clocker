@@ -159,7 +159,7 @@ void setup_behaviour_manager() {
             behaviour_bedge = new DeviceBehaviour_Bedge();
             behaviour_manager->registerBehaviour(behaviour_bedge);
         #else
-            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("BEdge", 0x1397, 0x125A));
+            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("BEdge", 0x1397, 0x125A));
         #endif
     #endif
     
