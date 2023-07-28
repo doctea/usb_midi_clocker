@@ -185,7 +185,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - eg Euclidian sequencer
   - Am actually doing this in a separate module now, [Microlidian](https://github.com/doctea/Microlidian)
     - Move the Euclidian sequencer stuff from Microlidian into a library so that it could be used here as well
-  - Or at least add some controls via the APCMini sliders, eg over the envelopes
+  - ~~Or at least add some controls via the APCMini sliders, eg over the envelopes~~
 - Improve stability of clock by getting it working in uClock/interrupts mode without crashes
 - Sync from external clock input (CV)
   - proof of concept implemented using the support in [midihelpers library](https://github.com/doctea/midihelpers), no reset functionality yet though
@@ -217,6 +217,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
   - tricks like 'half-time beatstep for last bar of phrase'
+    - DividedClockBehaviours already do this?
+  - Faster-than-BPM multipliers..?
 - Full configuration of MIDI device+channel routing
 - Output MIDI notes from the clock/trigger sequencer - so eg, assign kick to sequencer track#1, snare to sequencer track#2, output appropriate note on/offs on channel 10
 - CC modulation
@@ -284,6 +286,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - A+B bounce sequences
   - stick count 
   - non-linear sequence progression
+- gate inputs via the mcp23s17, if the hardware is working to support that
+  - take midi clock and reset from CV
 
 ## Done
 
