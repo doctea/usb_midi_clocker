@@ -1,3 +1,5 @@
+// Gate output interfaces
+
 #ifndef GATE_MANAGER__INCLUDED
 #define GATE_MANAGER__INCLUDED
 
@@ -190,7 +192,7 @@ class GateManager {
     }
 
     #ifdef ENABLE_SCREEN
-        void *create_controls(Menu *menu);
+        void create_controls(Menu *menu);
     #endif
 };
 

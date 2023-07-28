@@ -19,18 +19,8 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual bool has_input()  { return this->input_device!=nullptr; }
         virtual bool has_output() { return this->output_device!=nullptr; }
-        char indicator_text[10];
-        virtual const char *get_indicator() override {
-            if (!indicator_done) {
-                String s = String(
-                    (has_input()? "I="+String(this->input_midi_number+1):"   ") + " " +
-                    (has_output()?"O="+String(this->output_midi_number+1):"   ")
-                );
-                strncpy(this->indicator_text, s.c_str(), 10);
-                indicator_done = true;
-            }
-            return this->indicator_text;
-        }
+        //char indicator_text[5];
+        virtual const char *get_indicator() override;
 
         /*DeviceBehaviourSerialBase (
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
@@ -58,6 +48,8 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             this->output_device = device;
             this->connected_flag = true;
             this->output_midi_number = midi_matrix_manager->get_serial_midi_number_for_device(device);
+
+            this->indicator_done = false;
             this->init();
         }
         //FLASHMEM
@@ -71,6 +63,8 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             this->input_device = device;
             this->connected_flag = true;
             this->input_midi_number = midi_matrix_manager->get_serial_midi_number_for_device(device);
+            
+            this->indicator_done = false;
             //Serial.printf(F("about to call setup_callbacks on %s..\n"), this->get_label()); Serial_flush();
             this->setup_callbacks();
             //Serial.printf(F("about to call init on %s..\n"), this->get_label()); Serial_flush();

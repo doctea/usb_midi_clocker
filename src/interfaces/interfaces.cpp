@@ -11,7 +11,7 @@ GateManager *gate_manager = new GateManager();
 #ifdef ENABLE_GATES_GPIO
     void setup_gate_manager() {
         gate_manager->add_bank_interface(BANK_CLOCK,    new DigitalPinBankInterface(cv_out_clock_pin,       NUM_CLOCKS));
-        gate_manager->add_bank_interface(BANK_SEQ,      new DigitalPinBankInterface(cv_out_sequence_pin,    4));
+        gate_manager->add_bank_interface(BANK_SEQ,      new DigitalPinBankInterface(cv_out_sequence_pin,    NUM_SEQUENCES));
     }
 #elif defined(ENABLE_GATES_MCP23S17)
     #include "interfaces/mcp23s17_interface.h"
@@ -23,7 +23,7 @@ GateManager *gate_manager = new GateManager();
         MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface();
         Serial.println("\tdid mcp_interface");
         byte num_gates = 8;
-        /*  // for some reason, these are all coming out funny on the pcb, so her eis the empirical mappings to use
+        /*  // for some reason, these are all coming out funny on the current pcb revision, so here is the empirical mappings to use
             0 -> 0 -> 7
             1 -> 1 -> 6
             2 -> 7 -> 0
@@ -32,7 +32,7 @@ GateManager *gate_manager = new GateManager();
             5 -> 6 -> 1
             6 -> 4 -> 3
             7 -> 2 -> 5
-
+            // and now reordered so as to be useful for remapping
             2 -> 7 -> 0
             5 -> 6 -> 1
             3 -> 5 -> 2
@@ -106,7 +106,7 @@ void set_sequence_gate(int gate_number, bool state) {
     };
 
     #include "mymenu/menu_gatedisplay.h"
-    void *GateManager::create_controls(Menu *menu) {
+    void GateManager::create_controls(Menu *menu) {
         menu->select_page(2);   // since we do this later in the process, move back to the second page ('Sequencer') to add these items
 
         menu->add(new GatesDisplay("Gates"));
@@ -122,6 +122,5 @@ void set_sequence_gate(int gate_number, bool state) {
             }
             menu->add(gate_toggles);
         }
-
     }
 #endif

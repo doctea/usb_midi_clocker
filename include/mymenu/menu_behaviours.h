@@ -39,14 +39,13 @@ class BehavioursPanel : public MenuItem {
                 }
             #endif          
             pos.y = tft->getCursorY();
-            header("MIDI DIN Behaviours:", pos, selected, opened);
+            header("MIDI DIN Behaviours:    i O", pos, selected, opened);
             for (unsigned int i = 0 ; i < behaviour_manager->behaviours_serial->size() ; i++) {
                 DeviceBehaviourSerialBase *serial_behaviour = behaviour_manager->behaviours_serial->get(i);
                 tft->setTextColor(serial_behaviour->colour, BLACK);
-                snprintf(buf, MAX_LENGTH, "%i %19s %s\n", i, serial_behaviour->get_label(), serial_behaviour->get_indicator());
+                snprintf(buf, MAX_LENGTH, "%i %19s   %s\n", i, serial_behaviour->get_label(), serial_behaviour->get_indicator());
                 tft->printf(buf);
             }
-                   
 
             /*for (unsigned int i = 0 ; i < (NUM_USB_MIDI_DEVICES - connected) ; i++) { // blank unused rows
                 tft->printf("%21s\n","");
