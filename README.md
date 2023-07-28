@@ -287,8 +287,13 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - stick count 
   - non-linear sequence progression
 - gate inputs via the mcp23s17, if the hardware is working to support that
-  - test code support in MCP23S17InputBankInterface+TEST_MCP23s17_INPUT flag, but hardware seems to let us down by reading high whenever something is connected..?
-  - take midi clock and reset from CV
+  - has test code support in MCP23S17InputBankInterface+TEST_MCP23s17_INPUT flag, but hardware seems to let us down by reading high whenever something is connected..?
+  - take midi clock and reset from gate inputs
+- CV Input behaviour:
+  - support multiple inputs, so it can play chords, with note allocation
+  - add scale-quantisation
+  - play chords from scale with from root note
+  - choose chord type to play from another CV input
 
 ## Done
 

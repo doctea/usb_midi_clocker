@@ -25,6 +25,10 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return "Pitch CV Input";
         }
 
+        virtual int getType() {
+            return BehaviourType::virt;
+        }
+
         BaseParameterInput *source_input = nullptr;
 
         bool is_playing = false;

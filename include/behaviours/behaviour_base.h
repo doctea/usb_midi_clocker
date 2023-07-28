@@ -26,10 +26,11 @@ using namespace midi;
 
 enum BehaviourType {
     undefined,
-    usb,        // a USB MIDI device that identifies as a USB MIDI device
-    serial,     // a MIDI device connected over a hardware serial port
+    usb,             // a USB MIDI device that identifies as a USB MIDI device
+    serial,          // a MIDI device connected over a hardware serial port
     usbserial,       // a USB device that connects over serial, but doesn't support MIDI
-    usbserialmidi   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
+    usbserialmidi,   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
+    virt             // a 'virtual' device type that exists only in code (eg CV Input)
 };
 
 class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
