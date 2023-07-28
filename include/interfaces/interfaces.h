@@ -9,6 +9,10 @@
 
 #include "debug.h"
 
+#define BANK_CLOCK  0
+#define BANK_SEQ    1
+#define NUM_GATE_BANKS 2    // clock and seq
+
 class BankInterface {
     public:
 
@@ -95,12 +99,6 @@ class DigitalPinBankInterface : public BankInterface {
 
         bool *current_states = nullptr;
 
-        //uint8_t raw_pin_numbers[num_gates];
-        //int raw_pin_number = -1;
-        /*DigitalPinBankInterface(int raw_pin_number) {
-            this->raw_pin_number = raw_pin_number;
-            pinMode(raw_pin_number, OUTPUT);
-        }*/
         uint8_t *pin_numbers = nullptr;
         DigitalPinBankInterface(const byte *pin_numbers, int num_pins) {
             this->pin_numbers = (uint8_t*)calloc(num_pins, sizeof(uint8_t));
@@ -139,14 +137,14 @@ class GateManager {
     int num_banks = 0;
 
     // TODO: handle more than 2 banks... currently expects two, BANK_CLOCK and BANK_SEQ
-    BankInterface *banks[2] = { nullptr, nullptr };
+    BankInterface *banks[NUM_GATE_BANKS] = { nullptr, nullptr };
 
     GateManager() {
     }
 
     void add_bank_interface(int bank, BankInterface *iface) {
         //banks[bank].add(iface);
-        if (num_banks>=2)
+        if (num_banks>=NUM_GATE_BANKS)
             messages_log_add(String("ERROR: attempted to add too many banks!"));
 
         banks[bank] = iface;
@@ -203,8 +201,6 @@ void setup_gate_manager();
     void setup_gate_manager_menus();
 #endif
 
-#define BANK_CLOCK  0
-#define BANK_SEQ    1
 
 // convenience function for setting clock gate states
 void set_clock_gate(int gate_number, bool state);
