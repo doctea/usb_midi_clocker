@@ -18,7 +18,7 @@ void setup_midi_mapper_matrix_manager();
 #define NUM_REGISTERED_TARGETS targets_count
 #define NUM_REGISTERED_SOURCES sources_count
 
-#define LANGST_HANDEL_ROUT 20   // longest possible name of a target handle / get roo to do it <3
+#define LANGST_HANDEL_ROUT 25   // longest possible name of a target handle / get roo to do it <3
 
 #include "midi/midi_mapper_matrix_types.h"
 

@@ -26,17 +26,34 @@ extern bool debug_flag;
         else
             Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);*/
 
-        if (this->parameter_input_selector!=nullptr/* && input!=nullptr*/) {
+        if (this->pitch_parameter_selector!=nullptr/* && input!=nullptr*/) {
             //Serial.println(F("set_selected_parameter_input() updating the control.."));
-            this->parameter_input_selector->update_source(input);
-        } else {
-            debug_flag = true;
-        }
+            this->pitch_parameter_selector->update_source(input);
+        } 
         this->source_input = input;
 
         if (is_valid_note(this->current_note)) {
             trigger_off_for_pitch_because_changed(this->current_note);
         }
+        //Serial.println(F("finished in set_selected_paramter_input"));
+        //else
+        //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
+    }
+    void DeviceBehaviour_CVInput::set_selected_velocity_input(BaseParameterInput *input) {
+        /*if (input==nullptr)
+            Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
+        else
+            Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);*/
+
+        if (this->velocity_parameter_selector!=nullptr/* && input!=nullptr*/) {
+            //Serial.println(F("set_selected_parameter_input() updating the control.."));
+            this->velocity_parameter_selector->update_source(input);
+        } 
+        this->velocity_input = input;
+
+        /*if (is_valid_note(this->current_note)) {
+            trigger_off_for_pitch_because_changed(this->current_note);
+        }*/
         //Serial.println(F("finished in set_selected_paramter_input"));
         //else
         //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
@@ -55,8 +72,8 @@ extern bool debug_flag;
                 LinkedList<BaseParameterInput*> *available_parameter_inputs,
         */
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
-        //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
-        this->parameter_input_selector 
+        //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector 
+        this->pitch_parameter_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
                 "1v/oct Input",
                 this,
@@ -64,7 +81,17 @@ extern bool debug_flag;
                 parameter_manager->get_available_pitch_inputs(),
                 this->source_input
         );
-        menuitems->add(parameter_input_selector);
+        menuitems->add(pitch_parameter_selector);
+
+        this->velocity_parameter_selector 
+            = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
+                "Velocity Input",
+                this,
+                &DeviceBehaviour_CVInput::set_selected_velocity_input,
+                parameter_manager->available_inputs,
+                this->source_input
+        );
+        menuitems->add(velocity_parameter_selector);
 
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
         HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 

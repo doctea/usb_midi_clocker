@@ -32,6 +32,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         BaseParameterInput *source_input = nullptr;
+        BaseParameterInput *velocity_input = nullptr;
 
         bool is_playing = false;
         int last_note = -1, current_note = -1;
@@ -68,6 +69,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         virtual void set_selected_parameter_input(BaseParameterInput *input); 
+        virtual void set_selected_velocity_input(BaseParameterInput *input); 
         
         virtual void set_note_length(int32_t length_ticks) {
             this->note_length_ticks = length_ticks;
@@ -77,40 +79,16 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         #ifdef ENABLE_SCREEN
-            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector;
+            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
+            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
-        // using these (instead of receive_note_on/off directly from the processing function below) has problems with note offs not being received, weirdly
-        // so just do it raw for now
-        /*virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127) {
-            if (this->is_quantise())
-                pitch = quantise_pitch(pitch, this->scale_root, this->scale);
-            this->current_note = pitch;
-            this->is_playing = true;
-
-            this->receive_note_on(channel, pitch, velocity);
-        }
-        virtual void trigger_off_for_pitch(int8_t pitch, byte velocity = 0) {
-            if (this->is_quantise()) {
-                int8_t new_pitch = quantise_pitch(pitch, this->scale_root, this->scale);
-                if (this->debug) if (new_pitch!=pitch)
-                    Serial.printf("\tquantised pitch %i to to %i (current_note is %i)\n", pitch, new_pitch, current_note);
-                pitch = new_pitch;
-            }
-            if (this->current_note==pitch) {
-                this->last_note = pitch;
-                this->is_playing = false;
-            }
-            this->receive_note_off(channel, pitch, velocity);
-            this->current_note = -1; //255;
-        }*/
-
         virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
             // don't reset current_note so that we don't retrigger the same note again immediately
-            this->last_note = pitch;
-            is_playing = false;
             this->receive_note_off(channel, this->current_note, 0);
+            is_playing = false;
+            this->last_note = pitch;
         }
         virtual void trigger_off_for_pitch_because_changed(int8_t pitch, byte velocity = 0) {
             this->receive_note_off(channel, pitch, 0);
@@ -164,8 +142,14 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                         trigger_off_for_pitch_because_changed(this->current_note);
                     }
                     if (this->get_note_length()>0) {
+                        int velocity = 127;
+                        if (this->velocity_input!=nullptr) {
+                            velocity = constrain(127.0*(float)this->velocity_input->get_normal_value(), 0, 127);
+                            if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value());
+                        }
+
                         if (this->debug) Serial.printf(F("CVInput: Starting note %i\tat\t%u\n"), new_note, ticks);
-                        trigger_on_for_pitch(new_note);
+                        trigger_on_for_pitch(new_note, velocity);
                     }
                 }
             }
