@@ -35,10 +35,12 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         int last_note = -1, current_note = -1;
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
-
+ 
         byte channel = 0;
-        byte get_channel() { return channel; }
-        void set_channel(byte channel) { this->channel = channel; }
+        #ifdef CVINPUT_CONFIGURABLE_CHANNEL
+            byte get_channel() { return channel; }
+            void set_channel(byte channel) { this->channel = channel; }
+        #endif
 
         #ifdef ENABLE_SCREEN
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector;
@@ -66,6 +68,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         //void on_tick(unsigned long ticks) override {
+        // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
         void on_pre_clock(unsigned long ticks) override {
             // check if playing note duration has passed regardless of whether source_input is set, so that notes will still finish even if disconncted
             if (is_playing && this->get_note_length()>0 && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {

@@ -82,7 +82,7 @@
         Serial.println(F("about to add values..")); Serial_flush();
         length_ticks_control->add_available_value(0,                 "None");
         length_ticks_control->add_available_value(PPQN/PPQN,         "-");
-        length_ticks_control->add_available_value(PPQN/4,            "1/32");
+        length_ticks_control->add_available_value(PPQN/4,            "1/16");
         length_ticks_control->add_available_value(PPQN/3,            "1/12");
         length_ticks_control->add_available_value(PPQN/2,            "1/8");
         length_ticks_control->add_available_value(PPQN,              "1/4");
@@ -91,9 +91,11 @@
         Serial.println(F("about to add to menuitems list..")); Serial_flush();
         menuitems->add(length_ticks_control);
 
-        menuitems->add(new ObjectNumberControl<DeviceBehaviour_CVInput,byte>("Channel", this, &DeviceBehaviour_CVInput::set_channel, &DeviceBehaviour_CVInput::get_channel));
+        #ifdef CVINPUT_CONFIGURABLE_CHANNEL
+            menuitems->add(new ObjectNumberControl<DeviceBehaviour_CVInput,byte>("Channel", this, &DeviceBehaviour_CVInput::set_channel, &DeviceBehaviour_CVInput::get_channel));
+        #endif
 
-        menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
+        //menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
         Serial.println(F("returning..")); Serial_flush();
         return menuitems;

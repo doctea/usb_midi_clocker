@@ -445,9 +445,9 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
-  //#ifdef ENABLE_LOOPER
-  //  midi_loop_track.process_tick(ticks);
-  //#endif
+  #ifdef ENABLE_LOOPER
+    midi_loop_track.process_tick(ticks);
+  #endif
 
   #ifdef ENABLE_DRUM_LOOPER
     drums_loop_track.process_tick(ticks);
@@ -468,10 +468,6 @@ void do_tick(uint32_t in_ticks) {
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
   behaviour_manager->do_ticks(in_ticks);
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
-
-  #ifdef ENABLE_LOOPER
-    midi_loop_track.process_tick(ticks);
-  #endif
 
   // do this after everything else because of problems with machinegun mode..?
   if (is_bpm_on_bar(ticks+1)) {

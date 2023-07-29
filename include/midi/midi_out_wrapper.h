@@ -95,7 +95,7 @@ class MIDIOutputWrapper {
             current_transposed_note = pitch;
 
             if (channel==0) {
-                Serial.printf("(swapping channel %i for default_channel %i)\n", channel, default_channel);
+                if (this->debug) Serial.printf(F("(swapping channel %i for default_channel %i)\n"), channel, default_channel);
                 channel = default_channel;
             }
 
@@ -123,7 +123,7 @@ class MIDIOutputWrapper {
                 current_transposed_note = -1;
 
             if (channel==0) {
-                Serial.printf("(swapping channel %i for default_channel %i)\n", channel, default_channel);
+                if (this->debug) Serial.printf(F("(swapping channel %i for default_channel %i)\n"), channel, default_channel);
                 channel = default_channel;
             }
 
@@ -245,7 +245,7 @@ class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
         }
 
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
-            Serial.printf("MIDIOutputWrapper_MIDIUSB\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->product(), velocity, channel);
+            if (this->debug) Serial.printf("MIDIOutputWrapper_MIDIUSB\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->product(), velocity, channel);
             output->sendNoteOn(pitch, velocity, channel);
         }
 
@@ -291,7 +291,7 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
         //virtual ~MIDIOutputWrapper_Behaviour();
 
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
-            Serial.printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
+            if (this->debug) Serial.printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
             output->sendNoteOn(pitch, velocity, channel);
         }
 
