@@ -8,6 +8,8 @@
 #include "scales.h"
 #include "mymenu/menuitems_scale.h"
 
+extern bool debug_flag;
+
 #ifdef ENABLE_SCREEN
     #include "menu.h"
     #include "menuitems.h"
@@ -19,19 +21,25 @@
     extern ParameterManager *parameter_manager;
  
     void DeviceBehaviour_CVInput::set_selected_parameter_input(BaseParameterInput *input) {
-        if (input==nullptr)
+        /*if (input==nullptr)
             Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
+        else
+            Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);*/
 
-        Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);
-
-        if (this->parameter_input_selector!=nullptr && input!=nullptr) {
-            Serial.println("set_selected_parameter_input() updating the control..");
+        if (this->parameter_input_selector!=nullptr/* && input!=nullptr*/) {
+            //Serial.println(F("set_selected_parameter_input() updating the control.."));
             this->parameter_input_selector->update_source(input);
+        } else {
+            debug_flag = true;
         }
         this->source_input = input;
 
+        if (is_valid_note(this->current_note)) {
+            trigger_off_for_pitch_because_changed(this->current_note);
+        }
+        //Serial.println(F("finished in set_selected_paramter_input"));
         //else
-        //Serial.printf("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n", this->get_label(), input->name);               
+        //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
     }
 
     FLASHMEM
@@ -50,7 +58,7 @@
         //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector 
         this->parameter_input_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
-                "Select Parameter Input",
+                "1v/oct Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
                 parameter_manager->get_available_pitch_inputs(),

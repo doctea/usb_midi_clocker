@@ -106,15 +106,32 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             this->current_note = -1; //255;
         }*/
 
+        virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
+            // don't reset current_note so that we don't retrigger the same note again immediately
+            this->last_note = pitch;
+            is_playing = false;
+            this->receive_note_off(channel, this->current_note, 0);
+        }
+        virtual void trigger_off_for_pitch_because_changed(int8_t pitch, byte velocity = 0) {
+            this->receive_note_off(channel, pitch, 0);
+            this->is_playing = false;
+            this->last_note = this->current_note;
+            this->current_note = 255;
+        }
+        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127) {
+            this->current_note = pitch;
+            this->note_started_at_tick = ticks;
+            this->receive_note_on(channel, this->current_note, velocity);
+            this->is_playing = true;
+        }
+
         //void on_tick(unsigned long ticks) override {
         // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
         void on_pre_clock(unsigned long ticks) override {
             // check if playing note duration has passed regardless of whether source_input is set, so that notes will still finish even if disconncted
             if (is_playing && this->get_note_length()>0 && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
                 if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n"), current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
-                this->last_note = current_note;
-                is_playing = false;
-                this->receive_note_off(channel, this->current_note, 0);
+                trigger_off_for_pitch_because_length(current_note);
                 //this->current_note = -1; // dont clear current_note, so that we don't retrigger it again
             }
 
@@ -131,10 +148,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 // has pitch become invalid?  is so and if note playing, stop note
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {
                     if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because playing and new_note isn't valid\n"), new_note);
-                    this->receive_note_off(channel, this->current_note, 0);
-                    this->is_playing = false;
-                    this->current_note = 255;
-                    this->last_note = this->current_note;
+                    trigger_off_for_pitch_because_changed(this->current_note);
+
                 /*} else if (is_playing && is_valid_note(new_note) && new_note==this->current_note) {
                     if (this->debug) Serial.printf("Stopping note\t%i because playing and new_note=current_note=%i\n", current_note, new_note);
                     this->receive_note_off(1, this->current_note, 0);
@@ -146,17 +161,11 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                     // note has changed from valid to a different valid
                     if (is_playing) {
                         if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because of new_note\t%i\n"), this->current_note, new_note);
-                        this->receive_note_off(channel, this->current_note, 0);
-                        this->last_note = current_note;
-                        this->current_note = 255;
-                        this->is_playing = false;
+                        trigger_off_for_pitch_because_changed(this->current_note);
                     }
                     if (this->get_note_length()>0) {
                         if (this->debug) Serial.printf(F("CVInput: Starting note %i\tat\t%u\n"), new_note, ticks);
-                        this->current_note = new_note;
-                        this->note_started_at_tick = ticks;
-                        this->receive_note_on(channel, this->current_note, 127);
-                        this->is_playing = true;
+                        trigger_on_for_pitch(new_note);
                     }
                 }
             }
@@ -168,10 +177,10 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 lines->add(String(F("parameter_source=")) + String(this->source_input->name));
         }
 
-        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
+        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-            lines->add(String(F("note_length_ticks=")) + String(this->get_note_length()));
-        }*/
+            lines->add(String(F("scale=")) + String(this->get_scale()));
+        }
 
         virtual void setup_saveable_parameters() override {
             if (this->saveable_parameters==nullptr)
@@ -190,6 +199,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                     this->set_selected_parameter_input(source);
                 else
                     messages_log_add(String("WARNING: Behaviour_CVInput couldn't find an input for the name '" + value + "'"));
+                return true;
+            } else if (key.equals(F("scale"))) {
+                this->set_scale((SCALE)value.toInt());
                 return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
