@@ -3,11 +3,18 @@
 
 #include <Arduino.h>
 
+#include "scales.h"
+
 class SaveableParameterBase {
     public:
     const char *label = nullptr;
     const char *category_name = nullptr;
     const char *nice_label = nullptr;
+
+    const char *true_label = "true";
+    const char *enable_label = "enabled";
+    const char *warning_label = " - WARNING: no target nor getter func!";
+    const char *nop_label = "; nop";
 
     const char *niceify(const char *label = nullptr) {
         if (this->nice_label==nullptr) {
@@ -32,7 +39,7 @@ class SaveableParameterBase {
         variable_recall_enabled(variable_recall_enabled ? variable_recall_enabled : &recall_enabled), 
         variable_save_enabled(variable_save_enabled ? variable_save_enabled : &save_enabled) {}
         
-    virtual String get_line() { return String("; nop"); }
+    virtual String get_line() { return String(nop_label); }
     virtual bool parse_key_value(String key, String value) {
         return false;
     }
@@ -143,7 +150,7 @@ class SaveableParameter : public SaveableParameterBase {
                 return String(this->label) + String('=') + String(*this->variable);
             } else {
                 //Serial.printf("%s#get_line has neither target nor getter func!", this->label);
-                return String("; ") + String(this->label) + String(" - WARNING: no target nor getter func!");
+                return String("; ") + String(this->label) + warning_label;
             }
         }
         virtual bool parse_key_value(String key, String value) {
@@ -160,6 +167,12 @@ class SaveableParameter : public SaveableParameterBase {
             else if (variable!=nullptr)
                 *this->variable = value.toInt();
         }
+        /*void setInt(int value) {
+            if (setter_func!=nullptr)
+                (this->target->*setter_func)(value);
+            else if (variable!=nullptr)
+                *this->variable = value;
+        }*/
         void setBool(bool value) {
             if (setter_func!=nullptr)
                 (this->target->*setter_func)(value);
@@ -185,11 +198,14 @@ class SaveableParameter : public SaveableParameterBase {
             setInt(value);
         }
         virtual void set(bool, String value) {
-            setBool((value.equals("true") || value.equals("enabled")));
+            setBool((value.equals(true_label) || value.equals(enable_label)));
         }
         virtual void set(float, String value) {
             this->setFloat(value.toFloat());
         }
+        /*virtual void set(SCALE, String value) {
+            setInt(value);
+        }*/
 };
 
 #ifdef ENABLE_SCREEN

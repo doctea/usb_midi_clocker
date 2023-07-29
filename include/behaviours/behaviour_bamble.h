@@ -4,6 +4,9 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_BAMBLE
+
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_clocked.h"
 #include "project.h"
@@ -514,4 +517,5 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
 extern DeviceBehaviour_Bamble *behaviour_bamble;
 
+#endif
 #endif

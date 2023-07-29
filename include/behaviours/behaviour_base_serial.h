@@ -69,9 +69,10 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             this->setup_callbacks();
             //Serial.printf(F("about to call init on %s..\n"), this->get_label()); Serial_flush();
             this->init();
-
         }
+        
         // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
+        FLASHMEM
         virtual void disconnect_device() {
             //if (this->device==nullptr) return;
             if (!is_connected()) return;

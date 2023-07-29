@@ -57,7 +57,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
         virtual bool has_input() { return true; }
 
-        FLASHMEM 
+        //FLASHMEM 
         virtual void setup_callbacks() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
 
@@ -84,7 +84,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
 
         bool already_initialised = false;
-        FLASHMEM
+        //FLASHMEM
         virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)
@@ -419,7 +419,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         #endif
 
         #ifdef ENABLE_SCREEN
-            //FLASHMEM
+            FLASHMEM
             LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 

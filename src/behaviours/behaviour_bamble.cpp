@@ -1,5 +1,7 @@
 #include "behaviours/behaviour_bamble.h"
 
+#ifdef ENABLE_BAMBLE
+
 DeviceBehaviour_Bamble *behaviour_bamble = new DeviceBehaviour_Bamble(); //nullptr;
 
 #ifdef ENABLE_BAMBLE_INPUT
@@ -184,5 +186,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
 
     return menuitems;
 }
+
+#endif
 
 #endif

@@ -123,11 +123,13 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         pc_usb_sources[2] = midi_matrix_manager->register_source((const char*)"pc_usb_3");
         pc_usb_sources[3] = midi_matrix_manager->register_source((const char*)"pc_usb_4");
 
-        // then, set the output wrapper pointers to the default wrappers (again, from PC to teensy)
-        midi_matrix_manager->connect("pc_usb_1", "USB : Bamble : ch 1");
-        midi_matrix_manager->connect("pc_usb_2", "USB : Bamble : ch 2");
-        midi_matrix_manager->connect("pc_usb_3", "USB : Bamble : drums");
-        midi_matrix_manager->connect("pc_usb_4", "USB : Bamble : ch 4");
+        #ifdef ENABLE_BAMBLE
+            // then, set the output wrapper pointers to the default wrappers (again, from PC to teensy)
+            midi_matrix_manager->connect("pc_usb_1", "USB : Bamble : ch 1");
+            midi_matrix_manager->connect("pc_usb_2", "USB : Bamble : ch 2");
+            midi_matrix_manager->connect("pc_usb_3", "USB : Bamble : drums");
+            midi_matrix_manager->connect("pc_usb_4", "USB : Bamble : ch 4");
+        #endif
 
         // other direction -- from Teensy to PC
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 1", 0, 1));
@@ -135,14 +137,18 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 3", 2, 1));
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 4", 3, 1));
 
-        behaviour_beatstep->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Beatstep trans", behaviour_beatstep, 1));
+        #ifdef ENABLE_BEATSTEP
+            behaviour_beatstep->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Beatstep trans", behaviour_beatstep, 1));
+        #endif
     #endif
 
     #ifdef ENABLE_LESTRUM
         behaviour_lestrum->source_id     = midi_matrix_manager->register_source("lestrum_arp");
         behaviour_lestrum->source_id_2   = midi_matrix_manager->register_source("lestrum_pads");
-        midi_matrix_manager->connect("lestrum_arp",         "USB : Bamble : ch 1");
-        midi_matrix_manager->connect("lestrum_pads",        "USB : Bamble : ch 2");
+        #ifdef ENABLE_BAMBLE
+            midi_matrix_manager->connect("lestrum_arp",         "USB : Bamble : ch 1");
+            midi_matrix_manager->connect("lestrum_pads",        "USB : Bamble : ch 2");
+        #endif
     #endif
 
     #ifdef ENABLE_MPK49
@@ -182,7 +188,9 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_MICROLIDIAN
         behaviour_microlidian->source_id     = midi_matrix_manager->register_source("ulidian ch10");
         behaviour_microlidian->source_id_2   = midi_matrix_manager->register_source("ulidian ch1");
-        midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
+        #ifdef ENABLE_BAMBLE
+            midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
+        #endif
     #endif
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)

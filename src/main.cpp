@@ -80,6 +80,13 @@ void do_tick(uint32_t ticks);
   int count = 0;
 #endif
 
+//#define DEBUG_MAIN_LOOP
+#ifdef DEBUG_MAIN_LOOP
+  #define DEBUG_MAIN_PRINTLN(X) Serial.printf(X)
+#else
+  #define DEBUG_MAIN_PRINTLN(X) {}
+#endif
+
 #ifndef GDB_DEBUG
 FLASHMEM 
 #endif
@@ -144,34 +151,34 @@ void setup() {
     setup_gate_manager();
     setup_gate_manager_menus();
   #endif
-  Serial.printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
+  Debug_printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 
   delay( 100 );
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
   Serial.println(F("Serial ready."));   
-  Serial.printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
+  Debug_printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
 
   tft_print((char*)"..storage..\n");
   storage::setup_storage();
-  Serial.printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
+  Debug_printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
 
 
   tft_print((char*)"..setup project..\n");
   project->setup_project();
-  Serial.printf(F("after setup_project(), free RAM is %u\n"), freeRam());
+  Debug_printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_CV_INPUT
     setup_cv_input();
-    Serial.printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
   #endif
   setup_parameters();
-  Serial.printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
+  Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
   #ifdef ENABLE_SCREEN
     //menu->add_page("Parameter Inputs");
     setup_parameter_menu();
-    Serial.printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
   behaviour_manager->setup_saveable_parameters();
@@ -185,7 +192,7 @@ void setup() {
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
     init_sequence();
-    Serial.printf(F("after init_sequence(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after init_sequence(), free RAM is %u\n"), freeRam());
   #endif
 
   #ifdef USE_UCLOCK
@@ -198,20 +205,20 @@ void setup() {
 
   tft_print((char*)"..PC USB..\n");
   setup_pc_usb();
-  Serial.printf(F("after setup_pc_usb(), free RAM is %u\n"), freeRam());
+  Debug_printf(F("after setup_pc_usb(), free RAM is %u\n"), freeRam());
   
   #ifdef ENABLE_USB
     tft_print((char*)"..USB..");
     setup_multi_usb();
     Serial.println(F("USB ready.")); Serial_flush();
-    Serial.printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
 
   #ifdef ENABLE_USBSERIAL
     tft_print((char*)"..USBSerial..");
     setup_multi_usbserial();
     Serial.println(F("USBSerial ready.")); Serial_flush();
-    Serial.printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
   #endif
 
   Serial.println(F("Arduino ready.")); Serial_flush();
@@ -221,11 +228,11 @@ void setup() {
 
     Serial.println(F("About to init menu..")); Serial_flush();
     menu->start();
-    Serial.printf(F("after menu->start(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after menu->start(), free RAM is %u\n"), freeRam());
     //tft_start();
 
     setup_debug_menu();
-    Serial.printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
+    Debug_printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
 
     menu->select_page(0);
   #endif
@@ -404,7 +411,7 @@ void do_tick(uint32_t in_ticks) {
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
-    if (debug) Serial.println(F("do_tick(): about to global_on_restart"));
+    DEBUG_MAIN_PRINTLN(F("do_tick(): about to global_on_restart"));
     //in_ticks = ticks = 0;
     global_on_restart();
     //ATOMIC(
@@ -415,7 +422,7 @@ void do_tick(uint32_t in_ticks) {
   }
 
   if (is_bpm_on_phrase(ticks)) {
-    if (debug) Serial.println(F("do_tick(): about to project.on_phrase()"));
+    DEBUG_MAIN_PRINTLN(F("do_tick(): about to project.on_phrase()"));
     project->on_phrase(BPM_CURRENT_PHRASE);
     #ifdef ENABLE_USB
       behaviour_manager->do_phrase(BPM_CURRENT_PHRASE);   //TODO: which of these is actually doing the work??
@@ -423,9 +430,9 @@ void do_tick(uint32_t in_ticks) {
   }
   if (is_bpm_on_bar(ticks)) {
     //project.on_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_bar()"));
+    DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_bar()"));
     behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (debug) Serial.println(F("do_tick(): just did behaviour_manager->do_bar()"));
+    DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_bar()"));
   } /*else if (is_bpm_on_bar(ticks+1)) {
     behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
     if (is_bpm_on_phrase(ticks+1)) {
@@ -435,7 +442,7 @@ void do_tick(uint32_t in_ticks) {
     behaviour_manager->do_end_phrase_pre_clock(BPM_CURRENT_PHRASE);
   }
 
-  if (debug) Serial.println(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
+  DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
   #ifdef ENABLE_LOOPER
@@ -448,19 +455,19 @@ void do_tick(uint32_t in_ticks) {
 
   //send_midi_serial_clocks();
 
-  if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
+  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
   behaviour_manager->send_clocks();
-  if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
 
   #ifdef ENABLE_CV_OUTPUT
-    if (debug) { Serial.println(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
+    if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
     update_cv_outs(in_ticks);
-    if (debug) { Serial.println(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
+    if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
   #endif
 
-  if (debug) { Serial.println(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
+  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
   behaviour_manager->do_ticks(in_ticks);
-  if (debug) { Serial.println(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
+  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
 
   // do this after everything else because of problems with machinegun mode..?
   if (is_bpm_on_bar(ticks+1)) {

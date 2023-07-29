@@ -259,7 +259,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     #ifdef ENABLE_SCREEN
         LinkedList<MenuItem*> *menuitems = nullptr;
-        //FLASHMEM
+        FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
         FLASHMEM
         virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
