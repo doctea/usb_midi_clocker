@@ -31,13 +31,14 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return BehaviourType::virt;
         }
 
-        BaseParameterInput *source_input = nullptr;
+        BaseParameterInput *pitch_input = nullptr;
         BaseParameterInput *velocity_input = nullptr;
 
         bool is_playing = false;
         int last_note = -1, current_note = -1;
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
+        int32_t trigger_on_ticks = 0;   // 0 = on change
  
         byte channel = 0;
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
@@ -77,6 +78,12 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual int32_t get_note_length () {
             return this->note_length_ticks;
         }
+        virtual void set_trigger_on_ticks(int32_t length_ticks) {
+            this->trigger_on_ticks = length_ticks;
+        }
+        virtual int32_t get_trigger_on_ticks () {
+            return this->trigger_on_ticks;
+        }
 
         #ifdef ENABLE_SCREEN
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
@@ -106,7 +113,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         //void on_tick(unsigned long ticks) override {
         // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
         void on_pre_clock(unsigned long ticks) override {
-            // check if playing note duration has passed regardless of whether source_input is set, so that notes will still finish even if disconncted
+            // check if playing note duration has passed regardless of whether pitch_input is set, so that notes will still finish even if disconncted
             if (is_playing && this->get_note_length()>0 && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
                 if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because playing and elapsed is (%u-%u=%u)\n"), current_note, note_started_at_tick, ticks, abs((long)this->note_started_at_tick-(long)ticks));
                 trigger_off_for_pitch_because_length(current_note);
@@ -114,11 +121,14 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             }
 
             // if source input is connected, we wanna check for values
-            if (this->source_input!=nullptr) {
+            if (this->pitch_input!=nullptr) {
                 // TODO: make this tolerant of other types of ParameterInput!
-                if (!this->source_input->supports_pitch()) return;
+                if (!this->pitch_input->supports_pitch()) return;
                 
-                VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->source_input;
+                if (!(get_trigger_on_ticks()==0 || ticks % get_trigger_on_ticks()==0))
+                    return;
+
+                VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->pitch_input;
                 int new_note = voltage_source_input->get_voltage_pitch();
                 if (this->is_quantise())
                     new_note = quantise_pitch(new_note, this->scale_root, this->scale);
@@ -135,7 +145,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                     is_playing = false;
                     // dont clear current_note, so that we don't retrigger it again
                 */
-                } else if (is_valid_note(new_note) && new_note!=this->current_note) {
+                } else if (is_valid_note(new_note) && (new_note!=this->current_note || this->get_trigger_on_ticks()>0)) {
                     // note has changed from valid to a different valid
                     if (is_playing) {
                         if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because of new_note\t%i\n"), this->current_note, new_note);
@@ -157,13 +167,15 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         // todo: do we like, want a 'save_global_add_lines' sorta thing for global configs?  or should this be project config?
         virtual void save_project_add_lines(LinkedList<String> *lines) override {
-            if (this->source_input!=nullptr)
-                lines->add(String(F("parameter_source=")) + String(this->source_input->name));
+            if (this->pitch_input!=nullptr)
+                lines->add(String(F("pitch_source=")) + String(this->pitch_input->name));
+            if (this->velocity_input!=nullptr)
+                lines->add(String(F("velocity_source=")) + String(this->velocity_input->name));
         }
 
         virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-            lines->add(String(F("scale=")) + String(this->get_scale()));
+            lines->add(String(F("scale=")) + String(this->get_scale()));    // add this here because SCALE won't cast to Int implicitly TODO: solve this
         }
 
         virtual void setup_saveable_parameters() override {
@@ -171,20 +183,29 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int>("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("trigger_on", "CV", this, &this->trigger_on_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_on_ticks, &DeviceBehaviour_CVInput::get_trigger_on_ticks));
             //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,SCALE>("scale_number", "CV", this, &this->scale, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale));
         }
 
         // ask behaviour to process the key/value pair
         virtual bool load_parse_key_value(String key, String value) override {
-            if (key.equals(F("parameter_source"))) {
-                //this->source_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
+            if (key.equals(F("pitch_source"))) {
+                //this->pitch_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
                 BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
                 if (source!=nullptr)
                     this->set_selected_parameter_input(source);
                 else
                     messages_log_add(String("WARNING: Behaviour_CVInput couldn't find an input for the name '" + value + "'"));
                 return true;
-            } else if (key.equals(F("scale"))) {
+            } else if (key.equals(F("velocity_source"))) {
+                //this->pitch_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
+                BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
+                if (source!=nullptr)
+                    this->set_selected_velocity_input(source);
+                else
+                    messages_log_add(String("WARNING: Behaviour_CVInput couldn't find an input for the name '" + value + "'"));
+                return true;
+            } else if (key.equals(F("scale"))) {           // do this here because SCALE won't cast to Int implicitly TODO: solve this
                 this->set_scale((SCALE)value.toInt());
                 return true;
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {

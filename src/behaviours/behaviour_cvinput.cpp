@@ -30,7 +30,7 @@ extern bool debug_flag;
             //Serial.println(F("set_selected_parameter_input() updating the control.."));
             this->pitch_parameter_selector->update_source(input);
         } 
-        this->source_input = input;
+        this->pitch_input = input;
 
         if (is_valid_note(this->current_note)) {
             trigger_off_for_pitch_because_changed(this->current_note);
@@ -79,7 +79,7 @@ extern bool debug_flag;
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
                 parameter_manager->get_available_pitch_inputs(),
-                this->source_input
+                this->pitch_input
         );
         menuitems->add(pitch_parameter_selector);
 
@@ -89,7 +89,7 @@ extern bool debug_flag;
                 this,
                 &DeviceBehaviour_CVInput::set_selected_velocity_input,
                 parameter_manager->available_inputs,
-                this->source_input
+                this->pitch_input
         );
         menuitems->add(velocity_parameter_selector);
 
@@ -120,14 +120,33 @@ extern bool debug_flag;
         Serial.println(F("about to add values..")); Serial_flush();
         length_ticks_control->add_available_value(0,                 "None");
         length_ticks_control->add_available_value(PPQN/PPQN,         "-");
-        length_ticks_control->add_available_value(PPQN/4,            "1/16");
+        length_ticks_control->add_available_value(PPQN/4,            "16th note");
         length_ticks_control->add_available_value(PPQN/3,            "1/12");
-        length_ticks_control->add_available_value(PPQN/2,            "1/8");
-        length_ticks_control->add_available_value(PPQN,              "1/4");
-        length_ticks_control->add_available_value(PPQN*2,            "1/2");
-        length_ticks_control->add_available_value(PPQN*4,            "1");
+        length_ticks_control->add_available_value(PPQN/2,            "8th note");
+        length_ticks_control->add_available_value(PPQN,              "Beat");
+        length_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
+        length_ticks_control->add_available_value(PPQN*4,            "Bar");
         Serial.println(F("about to add to menuitems list..")); Serial_flush();
         menuitems->add(length_ticks_control);
+
+        Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
+        ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *trigger_ticks_control 
+            = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
+                "Trigger on",
+                this,
+                &DeviceBehaviour_CVInput::set_trigger_on_ticks,
+                &DeviceBehaviour_CVInput::get_trigger_on_ticks
+        );
+        trigger_ticks_control->add_available_value(0,                 "Changed");
+        //trigger_ticks_control->add_available_value(PPQN/PPQN,         "-");
+        trigger_ticks_control->add_available_value(PPQN/4,            "16th note");
+        trigger_ticks_control->add_available_value(PPQN/3,            "1/12");
+        trigger_ticks_control->add_available_value(PPQN/2,            "8th note");
+        trigger_ticks_control->add_available_value(PPQN,              "Beat");
+        trigger_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
+        trigger_ticks_control->add_available_value(PPQN*4,            "Bar");
+        Serial.println(F("about to add to menuitems list..")); Serial_flush();
+        menuitems->add(trigger_ticks_control);
 
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
             menuitems->add(new ObjectNumberControl<DeviceBehaviour_CVInput,byte>("Channel", this, &DeviceBehaviour_CVInput::set_channel, &DeviceBehaviour_CVInput::get_channel));
