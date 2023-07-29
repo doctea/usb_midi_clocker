@@ -5,6 +5,9 @@
 
 #include "bpm.h"
 
+#include "scales.h"
+#include "mymenu/menuitems_scale.h"
+
 #ifdef ENABLE_SCREEN
     #include "menu.h"
     #include "menuitems.h"
@@ -96,6 +99,19 @@
         #endif
 
         //menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
+
+        menuitems->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise to scale", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
+        menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>(
+            "Scale", 
+            this,
+            &DeviceBehaviour_CVInput::set_scale,
+            &DeviceBehaviour_CVInput::get_scale,
+            &DeviceBehaviour_CVInput::set_scale_root,
+            &DeviceBehaviour_CVInput::get_scale_root,
+            false
+        ));
+
+        menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
         Serial.println(F("returning..")); Serial_flush();
         return menuitems;

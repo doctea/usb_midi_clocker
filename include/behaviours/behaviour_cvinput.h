@@ -7,6 +7,8 @@
 
 #include "midi_helpers.h"
 
+#include "scales.h"
+
 #include "behaviour_base.h"
 #include "parameter_inputs/VoltageParameterInput.h"
 
@@ -42,30 +44,67 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             void set_channel(byte channel) { this->channel = channel; }
         #endif
 
-        #ifdef ENABLE_SCREEN
-            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector;
-            LinkedList<MenuItem *> *make_menu_items() override;
-        #endif
+        bool quantise = false;
+        SCALE scale = SCALE::MAJOR;
+        int scale_root = SCALE_ROOT_C;
 
-        virtual void set_selected_parameter_input(BaseParameterInput *input); /*{
-            Serial.printf(F("set_selected_parameter_input(%c)\n"), input->name);
-            // TODO: make this tolerant of other ParameterInput types
-            //this->source_input = (VoltageParameterInput*)input;
-            if (parameter_input_selector!=nullptr) {
-                parameter_input_selector->update_source(input);
-            }
-            this->source_input = input;
-            if (input==nullptr)
-                Serial.printf(F("nullptr passed to set_selected_parameter_input(BaseParameterInput *input)\n"));
-            //else
-            //Serial.printf("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n", this->get_label(), input->name);               
-        }*/
+        void set_scale(SCALE scale) {
+            this->scale = scale;
+        }
+        SCALE get_scale() {
+            return this->scale;
+        }
+        void set_scale_root(int scale_root) {
+            this->scale_root = scale_root;
+        }
+        int get_scale_root() {
+            return this->scale_root;
+        }
+        void set_quantise(bool quantise) {
+            this->quantise = quantise;
+        }
+        bool is_quantise() {
+            return this->quantise;
+        }
+
+        virtual void set_selected_parameter_input(BaseParameterInput *input); 
+        
         virtual void set_note_length(int32_t length_ticks) {
             this->note_length_ticks = length_ticks;
         }
         virtual int32_t get_note_length () {
             return this->note_length_ticks;
         }
+
+        #ifdef ENABLE_SCREEN
+            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *parameter_input_selector;
+            LinkedList<MenuItem *> *make_menu_items() override;
+        #endif
+
+        // using these (instead of receive_note_on/off directly from the processing function below) has problems with note offs not being received, weirdly
+        // so just do it raw for now
+        /*virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127) {
+            if (this->is_quantise())
+                pitch = quantise_pitch(pitch, this->scale_root, this->scale);
+            this->current_note = pitch;
+            this->is_playing = true;
+
+            this->receive_note_on(channel, pitch, velocity);
+        }
+        virtual void trigger_off_for_pitch(int8_t pitch, byte velocity = 0) {
+            if (this->is_quantise()) {
+                int8_t new_pitch = quantise_pitch(pitch, this->scale_root, this->scale);
+                if (this->debug) if (new_pitch!=pitch)
+                    Serial.printf("\tquantised pitch %i to to %i (current_note is %i)\n", pitch, new_pitch, current_note);
+                pitch = new_pitch;
+            }
+            if (this->current_note==pitch) {
+                this->last_note = pitch;
+                this->is_playing = false;
+            }
+            this->receive_note_off(channel, pitch, velocity);
+            this->current_note = -1; //255;
+        }*/
 
         //void on_tick(unsigned long ticks) override {
         // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
@@ -86,6 +125,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 
                 VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->source_input;
                 int new_note = voltage_source_input->get_voltage_pitch();
+                if (this->is_quantise())
+                    new_note = quantise_pitch(new_note, this->scale_root, this->scale);
 
                 // has pitch become invalid?  is so and if note playing, stop note
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {
@@ -136,6 +177,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (this->saveable_parameters==nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int>("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
+            //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,SCALE>("scale_number", "CV", this, &this->scale, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale));
         }
 
         // ask behaviour to process the key/value pair
