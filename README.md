@@ -291,8 +291,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - take midi clock and reset from gate inputs
 - CV Input behaviour:
   - support multiple inputs, so it can play chords, with note allocation
-  - add scale-quantisation
-  - play chords from scale with from root note
+  - ~~add scale-quantisation~~
+  - velocity from second selectable input (needs testing with device that supports velocity!)
+  - play chords from scale from root note
   - choose chord type to play from another CV input
 
 ## Done
