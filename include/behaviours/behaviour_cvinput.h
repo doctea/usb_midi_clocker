@@ -36,6 +36,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         bool is_playing = false;
         int last_note = -1, current_note = -1;
+        CHORD last_chord = CHORD::NONE, current_chord = CHORD::NONE, selected_chord_number = CHORD::NONE;
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
         int32_t trigger_on_ticks = 0;   // 0 = on change
@@ -46,27 +47,44 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             void set_channel(byte channel) { this->channel = channel; }
         #endif
 
-        bool quantise = false;
+        bool quantise = false, play_chords = false;
         SCALE scale = SCALE::MAJOR;
         int scale_root = SCALE_ROOT_C;
 
         void set_scale(SCALE scale) {
+            trigger_off_for_pitch_because_changed(this->current_note);
             this->scale = scale;
         }
         SCALE get_scale() {
             return this->scale;
         }
         void set_scale_root(int scale_root) {
+            trigger_off_for_pitch_because_changed(this->current_note);
             this->scale_root = scale_root;
         }
         int get_scale_root() {
             return this->scale_root;
         }
         void set_quantise(bool quantise) {
+            trigger_off_for_pitch_because_changed(this->current_note);
             this->quantise = quantise;
         }
         bool is_quantise() {
             return this->quantise;
+        }
+        void set_play_chords(bool play_chords) {
+            //trigger_off_for_pitch_because_changed(this->current_note);
+            this->play_chords = play_chords;
+        }
+        bool is_play_chords() {
+            return this->play_chords;
+        }
+
+        void set_selected_chord(CHORD chord) {
+            this->selected_chord_number = chord;
+        }
+        CHORD get_selected_chord() {
+            return this->selected_chord_number;
         }
 
         virtual void set_selected_parameter_input(BaseParameterInput *input); 
@@ -85,28 +103,67 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return this->trigger_on_ticks;
         }
 
+        //int8_t chord_held_notes[127];
+
         #ifdef ENABLE_SCREEN
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
+        void stop_chord(int8_t pitch, CHORD chord_number = CHORD::TRIAD, byte velocity = 0) {
+            if (debug) Serial.printf("\t--- Stopping chord for %i (%s)\n", pitch, get_note_name_c(pitch));
+            int8_t n = -1;
+            last_chord = this->current_chord;
+            for (int i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale)) >= 0 ; i++) {
+                if (debug) Serial.printf("Stopping note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
+                receive_note_off(channel, n, velocity);
+            }
+        }
+        void play_chord(int8_t pitch, CHORD chord_number = CHORD::TRIAD, byte velocity = 127) {
+            if (debug) Serial.printf("\t--- playing chord for %i (%s)\n", pitch, get_note_name_c(pitch));
+            int8_t n = -1;
+            this->last_chord = chord_number;
+            for (int i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale)) >= 0 ; i++) {
+                if (debug) Serial.printf("Playing note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
+                receive_note_on(channel, n, velocity);
+            }
+            /*int i = 0;
+            int8_t n = quantise_pitch_chord_note(pitch, CHORD::TRIAD, i++, this->scale_root, this->scale);
+            while(n>=0) {
+                receive_note_on(channel, n, velocity);
+                n = quantise_pitch_chord_note(pitch, CHORD::TRIAD, i++, this->scale_root, this->scale);
+            }*/
+
+            Serial.println("---");
+        }
+
         virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
             // don't reset current_note so that we don't retrigger the same note again immediately
-            this->receive_note_off(channel, this->current_note, 0);
+            if (!is_quantise()) 
+                this->receive_note_off(channel, this->current_note, 0);
+            else 
+                this->stop_chord(this->current_note, this->last_chord);
+
             is_playing = false;
             this->last_note = pitch;
         }
         virtual void trigger_off_for_pitch_because_changed(int8_t pitch, byte velocity = 0) {
-            this->receive_note_off(channel, pitch, 0);
+            if (!is_quantise())
+                this->receive_note_off(channel, pitch, 0);
+            else 
+                this->stop_chord(pitch, this->last_chord);
             this->is_playing = false;
             this->last_note = this->current_note;
             this->current_note = 255;
         }
-        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127) {
+        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD chord_number = CHORD::TRIAD) {
             this->current_note = pitch;
             this->note_started_at_tick = ticks;
-            this->receive_note_on(channel, this->current_note, velocity);
+            if (!is_quantise() || chord_number==CHORD::NONE)
+                this->receive_note_on(channel, this->current_note, velocity);
+            else
+                this->play_chord(pitch, chord_number);
             this->is_playing = true;
         }
 
@@ -137,14 +194,6 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 if (is_playing && !is_valid_note(new_note) && is_valid_note(this->current_note)) {
                     if (this->debug) Serial.printf(F("CVInput: Stopping note\t%i because playing and new_note isn't valid\n"), new_note);
                     trigger_off_for_pitch_because_changed(this->current_note);
-
-                /*} else if (is_playing && is_valid_note(new_note) && new_note==this->current_note) {
-                    if (this->debug) Serial.printf("Stopping note\t%i because playing and new_note=current_note=%i\n", current_note, new_note);
-                    this->receive_note_off(1, this->current_note, 0);
-                    this->last_note = current_note;
-                    is_playing = false;
-                    // dont clear current_note, so that we don't retrigger it again
-                */
                 } else if (is_valid_note(new_note) && (new_note!=this->current_note || this->get_trigger_on_ticks()>0)) {
                     // note has changed from valid to a different valid
                     if (is_playing) {
@@ -159,7 +208,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                         }
 
                         if (this->debug) Serial.printf(F("CVInput: Starting note %i\tat\t%u\n"), new_note, ticks);
-                        trigger_on_for_pitch(new_note, velocity);
+                        trigger_on_for_pitch(new_note, velocity, selected_chord_number);
                     }
                 }
             }
