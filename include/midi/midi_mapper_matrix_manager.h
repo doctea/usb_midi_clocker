@@ -172,7 +172,7 @@ class MIDIMatrixManager {
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial.printf(F("\t%s\tshould send to\t%s\t(%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial.printf(F("\t%s\tshould send to\t%s\t(source_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
@@ -188,7 +188,7 @@ class MIDIMatrixManager {
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial.printf(F("\t%s\tshould send to\t%s\t(%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial.printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }

@@ -91,6 +91,10 @@
         Serial.println(F("about to add to menuitems list..")); Serial_flush();
         menuitems->add(length_ticks_control);
 
+        menuitems->add(new ObjectNumberControl<DeviceBehaviour_CVInput,byte>("Channel", this, &DeviceBehaviour_CVInput::set_channel, &DeviceBehaviour_CVInput::get_channel));
+
+        menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
+
         Serial.println(F("returning..")); Serial_flush();
         return menuitems;
     }

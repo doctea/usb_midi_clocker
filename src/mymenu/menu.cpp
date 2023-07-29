@@ -252,6 +252,7 @@ void setup_menu() {
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(&midi_matrix_selector);
+    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
     behaviour_manager->create_all_behaviour_menu_items(menu);

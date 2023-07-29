@@ -5,6 +5,8 @@
 
 // called when a receive_note_on message is received from the device; default behaviour is to pass it on to the midi_matrix_manager to route it
 void DeviceBehaviourUltimateBase::receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
+    if (this->debug)
+        Serial.printf("%s#receive_note_on(channel=%i,\tnote=%i,\tvelocity=%i) (source_id=%i)\n", this->get_label(), channel, note, velocity, this->source_id);
     midi_matrix_manager->processNoteOn(this->source_id, note, velocity); //, channel);
 }
 

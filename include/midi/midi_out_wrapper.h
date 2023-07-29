@@ -94,7 +94,10 @@ class MIDIOutputWrapper {
 
             current_transposed_note = pitch;
 
-            if (channel==0) channel = default_channel;
+            if (channel==0) {
+                Serial.printf("(swapping channel %i for default_channel %i)\n", channel, default_channel);
+                channel = default_channel;
+            }
 
             this->actual_sendNoteOn(pitch, velocity, channel);
         }
@@ -119,7 +122,10 @@ class MIDIOutputWrapper {
             if (this->current_transposed_note==pitch)
                 current_transposed_note = -1;
 
-            if (channel==0) channel = default_channel;
+            if (channel==0) {
+                Serial.printf("(swapping channel %i for default_channel %i)\n", channel, default_channel);
+                channel = default_channel;
+            }
 
             this->actual_sendNoteOff(pitch, velocity, channel);
 
@@ -239,6 +245,7 @@ class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
         }
 
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
+            Serial.printf("MIDIOutputWrapper_MIDIUSB\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->product(), velocity, channel);
             output->sendNoteOn(pitch, velocity, channel);
         }
 
@@ -284,6 +291,7 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
         //virtual ~MIDIOutputWrapper_Behaviour();
 
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
+            Serial.printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
             output->sendNoteOn(pitch, velocity, channel);
         }
 
