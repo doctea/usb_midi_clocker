@@ -73,6 +73,7 @@ extern bool debug_flag;
         */
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
         //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector 
+        SubMenuItemBar *b = new SubMenuItemBar("Inputs");
         this->pitch_parameter_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
                 "1v/oct Input",
@@ -81,7 +82,7 @@ extern bool debug_flag;
                 parameter_manager->get_available_pitch_inputs(),
                 this->pitch_input
         );
-        menuitems->add(pitch_parameter_selector);
+        b->add(pitch_parameter_selector);
 
         this->velocity_parameter_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
@@ -91,7 +92,8 @@ extern bool debug_flag;
                 parameter_manager->available_inputs,
                 this->pitch_input
         );
-        menuitems->add(velocity_parameter_selector);
+        b->add(velocity_parameter_selector);
+        menuitems->add(b);
 
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
         HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
@@ -108,7 +110,7 @@ extern bool debug_flag;
                 &DeviceBehaviour_CVInput::get_note_length
             );
         menuitems->add(length_ticks_control);*/
-
+        b = new SubMenuItemBar("Trigger/durations");
         Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *length_ticks_control 
             = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
@@ -128,7 +130,7 @@ extern bool debug_flag;
         length_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
         length_ticks_control->add_available_value(PPQN*4,            "Bar");
         Serial.println(F("about to add to menuitems list..")); Serial_flush();
-        menuitems->add(length_ticks_control);
+        b->add(length_ticks_control);
 
         Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *trigger_ticks_control 
@@ -148,7 +150,9 @@ extern bool debug_flag;
         trigger_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
         trigger_ticks_control->add_available_value(PPQN*4,            "Bar");
         Serial.println(F("about to add to menuitems list..")); Serial_flush();
-        menuitems->add(trigger_ticks_control);
+        b->add(trigger_ticks_control);
+
+        menuitems->add(b);
 
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
             menuitems->add(new ObjectNumberControl<DeviceBehaviour_CVInput,byte>("Channel", this, &DeviceBehaviour_CVInput::set_channel, &DeviceBehaviour_CVInput::get_channel));
@@ -156,16 +160,19 @@ extern bool debug_flag;
 
         //menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-        menuitems->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise to scale", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
-        menuitems->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+        menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, false));
 
-        ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord selection", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord);
+        b = new SubMenuItemBar("Quantise / chords");
+        b->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
+        b->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+
+        ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord);
         for (int i = 0 ; i < NUMBER_CHORDS ; i++) {
             selected_chord_control->add_available_value(i, chords[i].label);
         }
-        menuitems->add(selected_chord_control);
+        b->add(selected_chord_control);
 
-        menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, false));
+        menuitems->add(b);
 
         menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
