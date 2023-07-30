@@ -189,6 +189,9 @@ extern bool debug_flag;
 
         menuitems->add(b);
 
+        menuitems->add(new ChordMenuItem("Current chord",   &this->current_chord_data));
+        menuitems->add(new ChordMenuItem("Last chord",      &this->last_chord_data));
+
         menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
         Serial.println(F("returning..")); Serial_flush();
