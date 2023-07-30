@@ -117,7 +117,9 @@ extern bool debug_flag;
                 "Note length",
                 this,
                 &DeviceBehaviour_CVInput::set_note_length,
-                &DeviceBehaviour_CVInput::get_note_length
+                &DeviceBehaviour_CVInput::get_note_length,
+                nullptr,
+                true
         );
         Serial.println(F("about to add values..")); Serial_flush();
         length_ticks_control->add_available_value(0,                 "None");
@@ -138,7 +140,9 @@ extern bool debug_flag;
                 "Trigger each",
                 this,
                 &DeviceBehaviour_CVInput::set_trigger_on_ticks,
-                &DeviceBehaviour_CVInput::get_trigger_on_ticks
+                &DeviceBehaviour_CVInput::get_trigger_on_ticks,
+                nullptr,
+                true
         );
         trigger_ticks_control->add_available_value(0,                 "Change");
         //trigger_ticks_control->add_available_value(PPQN/PPQN,         "-");
@@ -160,14 +164,25 @@ extern bool debug_flag;
 
         //menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-        menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, false));
+        //menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, false));
+        menuitems->add(
+            new ObjectScaleMenuItemBar<DeviceBehaviour_CVInput>(
+                "Scale / Key", 
+                this, 
+                &DeviceBehaviour_CVInput::set_scale, 
+                &DeviceBehaviour_CVInput::get_scale, 
+                &DeviceBehaviour_CVInput::set_scale_root, 
+                &DeviceBehaviour_CVInput::get_scale_root
+                //, false
+            )
+        );
 
         b = new SubMenuItemBar("Quantise / chords");
         b->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
         b->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
 
-        ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord);
-        for (int i = 0 ; i < NUMBER_CHORDS ; i++) {
+        ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord, nullptr, true);
+        for (size_t i = 0 ; i < NUMBER_CHORDS ; i++) {
             selected_chord_control->add_available_value(i, chords[i].label);
         }
         b->add(selected_chord_control);

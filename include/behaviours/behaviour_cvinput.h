@@ -113,7 +113,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return this->quantise;
         }
         void set_play_chords(bool play_chords) {
-            //trigger_off_for_pitch_because_changed(this->current_note);
+            trigger_off_for_pitch_because_changed(this->current_note);
             this->play_chords = play_chords;
         }
         bool is_play_chords() {
@@ -121,6 +121,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
 
         void set_selected_chord(CHORD::Type chord) {
+            //Serial.printf("%s#set_selected_chord(%i)\n", this->get_label(), chord);
             this->selected_chord_number = chord;
         }
         CHORD::Type get_selected_chord() {
@@ -174,8 +175,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 receive_note_on(channel, n, velocity);
                 n = quantise_pitch_chord_note(pitch, CHORD::TRIAD, i++, this->scale_root, this->scale);
             }*/
-
-            Serial.println("---");
+            if (debug) Serial.println("---");
         }
 
         virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
@@ -315,7 +315,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             DeviceBehaviourUltimateBase::initialise_parameters();
 
             parameters->add(new ChordTypeParameter<>("Chord Type", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
-            
+
             //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
             return parameters;
