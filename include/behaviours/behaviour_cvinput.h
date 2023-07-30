@@ -156,8 +156,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (debug) Serial.printf("\t--- Stopping chord for %i (%s)\n", pitch, get_note_name_c(pitch));
             int8_t n = -1;
             last_chord = this->current_chord;
-            for (int i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale)) >= 0 ; i++) {
-                if (debug) Serial.printf("Stopping note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
+            for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->debug)) >= 0 ; i++) {
+                //if (debug) Serial.printf("Stopping note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
                 receive_note_off(channel, n, velocity);
             }
         }
@@ -165,8 +165,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (debug) Serial.printf("\t--- playing chord for %i (%s)\n", pitch, get_note_name_c(pitch));
             int8_t n = -1;
             this->last_chord = chord_number;
-            for (int i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale)) >= 0 ; i++) {
-                if (debug) Serial.printf("Playing note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
+            for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->debug)) >= 0 ; i++) {
+                //if (debug) Serial.printf("Playing note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
                 receive_note_on(channel, n, velocity);
             }
             /*int i = 0;
@@ -200,7 +200,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD) {
             this->current_note = pitch;
             this->note_started_at_tick = ticks;
-            if (!is_quantise() || chord_number==CHORD::NONE)
+            if (!is_quantise() || !is_play_chords() || this->selected_chord_number==CHORD::NONE)
                 this->receive_note_on(channel, this->current_note, velocity);
             else
                 this->play_chord(pitch, chord_number);
