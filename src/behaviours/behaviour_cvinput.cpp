@@ -159,11 +159,10 @@ extern bool debug_flag;
         menuitems->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise to scale", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
         menuitems->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
 
-        ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD>("Chord selection", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord);
-        selected_chord_control->add_available_value(CHORD::TRIAD, chords[CHORD::TRIAD].label);
-        selected_chord_control->add_available_value(CHORD::SUS2, chords[CHORD::SUS2].label);
-        selected_chord_control->add_available_value(CHORD::SUS4, chords[CHORD::SUS4].label);
-        selected_chord_control->add_available_value(CHORD::SEVENTH, chords[CHORD::SEVENTH].label);
+        ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord selection", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord);
+        for (int i = 0 ; i < NUMBER_CHORDS ; i++) {
+            selected_chord_control->add_available_value(i, chords[i].label);
+        }
         menuitems->add(selected_chord_control);
 
         menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, false));

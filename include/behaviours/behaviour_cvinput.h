@@ -21,6 +21,46 @@ extern ParameterManager *parameter_manager;
     class ParameterInputSelectorControl;
 #endif
 
+class DeviceBehaviour_CVInput;
+
+template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
+class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
+    public:
+        ChordTypeParameter(const char *label, TargetClass *target, void(TargetClass::*setter_func)(DataType), DataType(TargetClass::*getter_func)()) : DataParameter<TargetClass, DataType>(label, target, setter_func, getter_func) {}
+
+        virtual DataType normalToData(float value) override {
+            /*if (this->debug && value>=0.0) {
+                Serial.printf(F("%s#"), this->label);
+                Serial.printf(F("normalToData(%f) "), value);
+                Serial.printf(F(", range is %i to %i "), this->minimumDataValue, this->maximumDataValue);
+            }*/
+            value = this->constrainNormal(value);
+            //DataType data = this->minimumDataValue + (value * (float)(this->maximumDataValue - this->minimumDataValue));
+            DataType data = value * (float)NUMBER_CHORDS;
+            if (this->debug && value>=0.0f) Serial.printf(" => %i\n", data);
+            return data;
+        }
+        virtual float dataToNormal(DataType value) override {
+            //if (this->debug) Serial.printf(F("dataToNormal(%i) "), value);
+            //float normal = (float)(value - minimumDataValue) / (float)(maximumDataValue - minimumDataValue);
+            //if (this->debug) Serial.printf(F(" => %f\n"), normal);
+            float normal = value / (float)NUMBER_CHORDS;
+            return normal;
+            // eg   min = 0, max = 100, actual = 50 ->          ( 50 - 0 ) / (100-0)            = 0.5
+            //      min = 0, max = 100, actual = 75 ->          ( 75 - 0 ) / (100-0)            = 0.75
+            //      min = -100, max = 100, actual = 0 ->        (0 - -100) / (100--100)         = 0.5
+            //      min = -100, max = 100, actual = -100 - >    (-100 - -100) / (100 - -100)    = 0
+        }
+
+        virtual const char* parseFormattedDataType(DataType value) {
+            static char fmt[MENU_C_MAX] = "              ";
+            snprintf(fmt, MENU_C_MAX, chords[value].label);
+            return fmt;
+            //return "??";
+        };
+};
+
+
 class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
     public:
         virtual const char *get_label() override {
@@ -36,7 +76,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         bool is_playing = false;
         int last_note = -1, current_note = -1;
-        CHORD last_chord = CHORD::NONE, current_chord = CHORD::NONE, selected_chord_number = CHORD::NONE;
+        CHORD::Type last_chord = CHORD::NONE, current_chord = CHORD::NONE, selected_chord_number = CHORD::NONE;
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
         int32_t trigger_on_ticks = 0;   // 0 = on change
@@ -80,10 +120,10 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return this->play_chords;
         }
 
-        void set_selected_chord(CHORD chord) {
+        void set_selected_chord(CHORD::Type chord) {
             this->selected_chord_number = chord;
         }
-        CHORD get_selected_chord() {
+        CHORD::Type get_selected_chord() {
             return this->selected_chord_number;
         }
 
@@ -111,7 +151,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
-        void stop_chord(int8_t pitch, CHORD chord_number = CHORD::TRIAD, byte velocity = 0) {
+        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, byte velocity = 0) {
             if (debug) Serial.printf("\t--- Stopping chord for %i (%s)\n", pitch, get_note_name_c(pitch));
             int8_t n = -1;
             last_chord = this->current_chord;
@@ -120,7 +160,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 receive_note_off(channel, n, velocity);
             }
         }
-        void play_chord(int8_t pitch, CHORD chord_number = CHORD::TRIAD, byte velocity = 127) {
+        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, byte velocity = 127) {
             if (debug) Serial.printf("\t--- playing chord for %i (%s)\n", pitch, get_note_name_c(pitch));
             int8_t n = -1;
             this->last_chord = chord_number;
@@ -157,7 +197,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             this->last_note = this->current_note;
             this->current_note = 255;
         }
-        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD chord_number = CHORD::TRIAD) {
+        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD) {
             this->current_note = pitch;
             this->note_started_at_tick = ticks;
             if (!is_quantise() || chord_number==CHORD::NONE)
@@ -262,6 +302,23 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             }
 
             return false;
+        }
+
+
+        //FLASHMEM 
+        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+            //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
+            static bool already_initialised = false;
+            if (already_initialised)
+                return this->parameters;
+
+            DeviceBehaviourUltimateBase::initialise_parameters();
+
+            parameters->add(new ChordTypeParameter<>("Chord Type", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
+            
+            //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
+
+            return parameters;
         }
 
 };

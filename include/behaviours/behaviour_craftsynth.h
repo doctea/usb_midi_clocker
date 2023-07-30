@@ -28,7 +28,7 @@ class CraftSynthSpreadParameter : public MIDICCParameter<> {
             : MIDICCParameter<>(label, target, (byte)20, (byte)1) {
         }
 
-        virtual const char* parseFormattedDataType(byte value) {
+        virtual const char* parseFormattedDataType(byte value) override {
             static char fmt[MENU_C_MAX] = "              ";
             switch (value) {
                 case 0 ... 63:
