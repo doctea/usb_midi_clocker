@@ -198,7 +198,7 @@ class SaveableParameter : public SaveableParameterBase {
             setInt(value);
         }
         virtual void set(bool, String value) {
-            setBool((value.equals(true_label) || value.equals(enable_label)));
+            setBool((value.equals(true_label) || value.equals(enable_label) || value.equals("1")));
         }
         virtual void set(float, String value) {
             this->setFloat(value.toFloat());
@@ -207,6 +207,36 @@ class SaveableParameter : public SaveableParameterBase {
             setInt(value);
         }*/
 };
+
+/*
+// this untested, since wrote it then realised that SaveableParameters are only currently used by Sequences, not Projects
+template<class TargetClass, class DataType=BaseParameterInput>
+class ParameterInputSaveableParameter : public SaveableParameter<TargetClass,DataType> {
+    public:    
+        virtual String get_line() {
+            DataType *source = nullptr;
+            if (this->target!=nullptr && this->getter_func!=nullptr) {
+                //Serial.printf("%s#get_line has target and getter func..", this->label );
+                source = (this->target->*getter_func)();
+            } else if (this->variable!=nullptr) {
+                //Serial.printf("%s#get_line has target variable..", this->label);
+                source = this->variable;
+            } else {
+                //Serial.printf("%s#get_line has neither target nor getter func!", this->label);
+                return String("; ") + String(this->label) + warning_label;
+            }
+            return String(this->label) + String('=') + (source!=nullptr?source->name:"none");
+        }
+        virtual bool parse_key_value(String key, String value) {
+            if (key.equals(this->label)) {
+                //this->set((DataType)0,value);
+                DataType *source = parameter_manager->getInputForName((char*)value.c_str());
+                return true;
+            }
+            return false;
+        }
+};
+*/
 
 #ifdef ENABLE_SCREEN
     #include "menuitems_object_multitoggle.h"

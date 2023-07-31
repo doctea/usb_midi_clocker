@@ -75,7 +75,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         BaseParameterInput *velocity_input = nullptr;
 
         bool is_playing = false;
-        int last_note = -1, current_note = -1;
+        int last_note = -1, current_note = -1, current_raw_note = -1;
         CHORD::Type last_chord = CHORD::NONE, current_chord = CHORD::NONE, selected_chord_number = CHORD::NONE;
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
@@ -232,6 +232,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
                 VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->pitch_input;
                 int new_note = voltage_source_input->get_voltage_pitch();
+                this->current_raw_note = new_note;
                 if (this->is_quantise())
                     new_note = quantise_pitch(new_note, this->scale_root, this->scale);
 
@@ -275,29 +276,51 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual void setup_saveable_parameters() override {
             if (this->saveable_parameters==nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int>("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>("trigger_on", "CV", this, &this->trigger_on_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_on_ticks, &DeviceBehaviour_CVInput::get_trigger_on_ticks));
+
+            // key centre + scale
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int>    
+                ("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
+            // scale number (key) is handled in load_parse_key_value/save_sequence_add_lines because SCALE type breaks SaveableParameter
             //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,SCALE>("scale_number", "CV", this, &this->scale, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale));
+
+            // note duration and triggers
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
+                ("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
+                ("trigger_each", "CV", this, &this->trigger_on_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_on_ticks, &DeviceBehaviour_CVInput::get_trigger_on_ticks));
+
+            // quantisation settings
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   
+                ("quantise_enable", "CV", this, &this->quantise, nullptr, nullptr, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   
+                ("play_chords", "CV", this, &this->play_chords, nullptr, nullptr, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,CHORD::Type>
+                ("Chord", "CV", this, &this->selected_chord_number, nullptr, nullptr, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
+
         }
 
         // ask behaviour to process the key/value pair
         virtual bool load_parse_key_value(String key, String value) override {
+            static const String warning_message = String("WARNING: Behaviour_CVInput couldn't find an input for the name '");
             if (key.equals(F("pitch_source"))) {
                 //this->pitch_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
                 BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
                 if (source!=nullptr)
                     this->set_selected_parameter_input(source);
-                else
-                    messages_log_add(String("WARNING: Behaviour_CVInput couldn't find an input for the name '" + value + "'"));
+                else {
+                    this->set_selected_parameter_input(nullptr);
+                    messages_log_add(warning_message + value + "'");
+                }
                 return true;
             } else if (key.equals(F("velocity_source"))) {
                 //this->pitch_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
                 BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
                 if (source!=nullptr)
                     this->set_selected_velocity_input(source);
-                else
-                    messages_log_add(String("WARNING: Behaviour_CVInput couldn't find an input for the name '" + value + "'"));
+                else {
+                    this->set_selected_velocity_input(nullptr);
+                    messages_log_add(warning_message + value + "'");
+                }
                 return true;
             } else if (key.equals(F("scale"))) {           // do this here because SCALE won't cast to Int implicitly TODO: solve this
                 this->set_scale((SCALE)value.toInt());

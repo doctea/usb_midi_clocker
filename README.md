@@ -145,7 +145,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
 - ~~USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..~~ <- hmm, fixed this by making CVInput behaviour send message to midi_matrix_manager on channel 0 instead of channel 1..?  but not sure why this would be, since the channel looked correct in DeviceBehaviourUSBBase#sendNoteOn() !
-- The 'delay' menu item for ClockedBehaviours gets set to an incorrect value when opened?
+- Crash on trying to screenshot on ili9341
 
 ## Known issues (may be solved)
 
@@ -292,7 +292,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - CV Input behaviour:
   - support multiple inputs, so it can play chords, with note allocation
   - ~~add scale-quantisation~~
-  - velocity from second selectable input (needs testing with device that supports velocity!)
+  - ~~velocity from second selectable input~~ (needs testing with device that supports velocity to make sure its working!)
   - ~~play chords from scale from root note~~
   - ~~choose chord type to play from another CV input~~
 
@@ -342,6 +342,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - stutter/machinegun mode? (eg play 32nd stabs instead of drone)
 - ~~Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?~~
   - ~~Control over the envelopes AHDSR + modulation~~
+- ~~The 'delay' menu item for ClockedBehaviours gets set to an incorrect value when opened?~~
 
 ---
 
