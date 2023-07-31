@@ -295,6 +295,10 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~velocity from second selectable input~~ (needs testing with device that supports velocity to make sure its working!)
   - ~~play chords from scale from root note~~
   - ~~choose chord type to play from another CV input~~
+  - Arpeggiator 
+  - Inversions
+  - Move quantising/chord generation stuff into a more general 'MIDI filter' behaviour type that can be chained with other behaviours?
+  - Port quantising/chord options to Microlidian
 
 ## Done
 
