@@ -26,10 +26,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
     public:
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
             // initialise the CCs that this device can translate into ParameterInputs
-            this->addParameterInput("Fade1", "APCMini", (byte)48, (byte)1);
-            this->addParameterInput("Fade2", "APCMini", (byte)49, (byte)1);
-            this->addParameterInput("Fade3", "APCMini", (byte)50, (byte)1);
-            this->addParameterInput("Fade4", "APCMini", (byte)51, (byte)1);
+            this->addParameterInput("Fade1", "APCMini", (byte)APCMINI_FADER_CC_1, (byte)1);
+            this->addParameterInput("Fade2", "APCMini", (byte)APCMINI_FADER_CC_2, (byte)1);
+            this->addParameterInput("Fade3", "APCMini", (byte)APCMINI_FADER_CC_3, (byte)1);
+            this->addParameterInput("Fade4", "APCMini", (byte)APCMINI_FADER_CC_4, (byte)1);
         }
 
         uint16_t vid = 0x09e8, pid = 0x0028;
@@ -243,7 +243,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
 
         virtual void receive_control_change (uint8_t channel, uint8_t number, uint8_t value) override {
             #ifdef ENABLE_BPM
-                if (number==APCMINI_FADER_MASTER) {   // 56 == "master" fader set bpm 
+                if (number==APCMINI_FADER_CC_MASTER) {   // 56 == "master" fader set bpm 
                     if (clock_mode==CLOCK_INTERNAL)
                         set_bpm(map(value, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
                 }

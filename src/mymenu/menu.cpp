@@ -13,6 +13,8 @@
 #include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
 
+#include "menuitems_pinned.h"
+
 #include "menuitems_object_multitoggle.h"
 
 #include "mymenu/menu_usb.h"
