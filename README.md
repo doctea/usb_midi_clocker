@@ -52,11 +52,13 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - APCMini shortcuts to 'send restarts' to synced devices to get everything in sync
 - CV trigger outputs for clock divisions and sequencer tracks
   - on Teensy's digital pins, via level shifter (see wiring diagram/schematic below)
+  - or via MCP23s17 over SPI on custom PCB
   - 4 tracks of an 8-beat sequencer, configurable on-the-fly via APCMini
     - trigger once per beat, twice per beat, 4 times per beat, 0 times per beat
   - 4 clock division outputs, configurable on-the-fly via APCMini
     - 32nds, 16ths, 8ths, 4ths, whole note, half bar, bar, 2-bar, phrase, every two phrases
     - offset up to +/-7 beats from start of phrase
+   - extra dedicated reset outputs on PCB
 - Save sequences, clock settings and device matrix routings to SD card
   - Multiple (effectively unlimited?) projects
   - 8 save slots for sequencer+clock settings per project
@@ -76,9 +78,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - playhead vertical line indicating playing / overwriting / recording / recording+overwriting
   - momentary overwrite mode that cuts notes
 - CV to MIDI CC 
-  - Allow CV input to be mapped to CC outputs
-  - Only CraftSynth currently has Parameters
-  - Working 1V/oct input that can be routed to MIDI outputs; some latency though
+  - Allow CV input to be mapped to modulate CC outputs or internal parameters
+  - ~~Only CraftSynth currently has Parameters~~
+  - Working 1V/oct input that can be routed to MIDI outputs; ~~some latency though~~
+  - Quantise pitches to selectable scale
+  - Outputs selectable/modulatable chords and inversions
 
 ### Behaviours
 
