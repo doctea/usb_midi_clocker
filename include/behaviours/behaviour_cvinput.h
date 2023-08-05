@@ -82,6 +82,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
         int32_t trigger_on_ticks = 0;   // 0 = on change
+        int8_t inversion = 0;
 
         #ifdef DEBUG_VELOCITY
             int8_t velocity = 127;
@@ -128,6 +129,13 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         bool is_play_chords() {
             return this->play_chords;
         }
+        int8_t get_inversion() {
+            return inversion;
+        }
+        void set_inversion(int8_t inversion) {
+            trigger_off_for_pitch_because_changed(this->current_note);
+            this->inversion = inversion;
+        }
 
         void set_selected_chord(CHORD::Type chord) {
             //Serial.printf("%s#set_selected_chord(%i)\n", this->get_label(), chord);
@@ -161,26 +169,28 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
-        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, byte velocity = 0) {
+        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 0) {
             if (debug) Serial.printf("\t--- Stopping chord for %i (%s)\n", pitch, get_note_name_c(pitch));
+
             int8_t n = -1;
+            //for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->current_chord_data->inversion, this->debug)) >= 0 ; i++) {
+            for (size_t i = 0 ; i < PITCHES_PER_CHORD && ((n = this->current_chord_data.pitches[i]) >= 0) ; i++) {
+                if (debug) Serial.printf("\t\tStopping note [%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
+                receive_note_off(channel, n, velocity);
+            }
+            
             last_chord = this->current_chord;
             this->last_chord_data = current_chord_data;
             this->current_chord_data.clear();
-
-            for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->debug)) >= 0 ; i++) {
-                //if (debug) Serial.printf("Stopping note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
-                receive_note_off(channel, n, velocity);
-            }
         }
-        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, byte velocity = 127) {
+        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 127) {
             if (debug) Serial.printf("\t--- playing chord for %i (%s)\n", pitch, get_note_name_c(pitch));
             int8_t n = -1;
             this->current_chord_data.clear();
-            this->current_chord_data.set(chord_number, pitch);
+            this->current_chord_data.set(chord_number, pitch, inversion);
             //this->last_chord = current_chord;
             current_chord = chord_number;
-            for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->debug)) >= 0 ; i++) {
+            for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->get_scale_root(), this->get_scale(), this->get_inversion(), this->debug)) >= 0 ; i++) {
                 this->current_chord_data.set_pitch(i, n);
                 //if (debug) Serial.printf("Playing note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
                 receive_note_on(channel, n, velocity);
@@ -193,7 +203,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (!is_quantise()) 
                 this->receive_note_off(channel, this->current_note, 0);
             else 
-                this->stop_chord(this->current_note, this->current_chord);
+                this->stop_chord(this->current_note, this->current_chord, this->inversion, velocity);
 
             is_playing = false;
             this->last_note = pitch;
@@ -202,13 +212,13 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (!is_quantise())
                 this->receive_note_off(channel, this->current_note, 0);
             else 
-                this->stop_chord(pitch, this->current_chord);
+                this->stop_chord(pitch, this->current_chord, this->inversion, velocity);
 
             this->is_playing = false;
             this->last_note = this->current_note;
             this->current_note = 255;
         }
-        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD) {
+        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
             this->current_note = pitch;
             this->note_started_at_tick = ticks;
             #ifdef DEBUG_VELOCITY
@@ -217,7 +227,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (!is_quantise() || !is_play_chords() || this->selected_chord_number==CHORD::NONE)
                 this->receive_note_on(channel, this->current_note, velocity);
             else
-                this->play_chord(pitch, chord_number);
+                this->play_chord(pitch, chord_number, inversion, velocity);
             this->is_playing = true;
         }
 
@@ -263,7 +273,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                         }
 
                         if (this->debug) Serial.printf(F("CVInput: Starting note %i\tat\t%u\n"), new_note, ticks);
-                        trigger_on_for_pitch(new_note, velocity, selected_chord_number);
+                        trigger_on_for_pitch(new_note, velocity, selected_chord_number, this->inversion);
                     }
                 }
             }
@@ -305,6 +315,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 ("play_chords", "CV", this, &this->play_chords, nullptr, nullptr, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,CHORD::Type>
                 ("Chord", "CV", this, &this->selected_chord_number, nullptr, nullptr, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int8_t>
+                ("inversion", "CV", this, &this->inversion, nullptr, nullptr, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion));
 
         }
 
@@ -352,6 +364,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             DeviceBehaviourUltimateBase::initialise_parameters();
 
             parameters->add(new ChordTypeParameter<>("Chord Type", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
+            parameters->add(new DataParameter<DeviceBehaviour_CVInput,int8_t>("Inversion", this, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion, 0, MAXIMUM_INVERSIONS));
 
             //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 

@@ -191,6 +191,8 @@ extern bool debug_flag;
         for (size_t i = 0 ; i < NUMBER_CHORDS ; i++) {
             selected_chord_control->add_available_value(i, chords[i].label);
         }
+
+        b->add(new ObjectNumberControl<DeviceBehaviour_CVInput,int8_t>("Inversion", this, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion, nullptr, 0, 4, true));
         b->add(selected_chord_control);
 
         menuitems->add(b);
