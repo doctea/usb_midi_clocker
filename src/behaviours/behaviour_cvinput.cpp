@@ -61,7 +61,7 @@ extern bool debug_flag;
 
     FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
-        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();
+        //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
         /*
@@ -71,7 +71,7 @@ extern bool debug_flag;
                 BaseParameterInput *initial_parameter_input,
                 LinkedList<BaseParameterInput*> *available_parameter_inputs,
         */
-        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
+        //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
         //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector 
         SubMenuItemBar *b = new SubMenuItemBar("Inputs");
         this->pitch_parameter_selector 
@@ -100,7 +100,7 @@ extern bool debug_flag;
             menuitems->add(velocity_control);
         #endif
 
-        Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
+        //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
         HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
             &this->last_note, 
             &this->current_note,
@@ -117,7 +117,7 @@ extern bool debug_flag;
             );
         menuitems->add(length_ticks_control);*/
         b = new SubMenuItemBar("Trigger/durations");
-        Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
+        //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *length_ticks_control 
             = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
                 "Note length",
@@ -127,7 +127,7 @@ extern bool debug_flag;
                 nullptr,
                 true
         );
-        Serial.println(F("about to add values..")); Serial_flush();
+        //Serial.println(F("about to add values..")); Serial_flush();
         length_ticks_control->add_available_value(0,                 "None");
         length_ticks_control->add_available_value(PPQN/PPQN,         "-");
         length_ticks_control->add_available_value(PPQN/8,            "32nd note");
@@ -137,10 +137,10 @@ extern bool debug_flag;
         length_ticks_control->add_available_value(PPQN,              "Beat");
         length_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
         length_ticks_control->add_available_value(PPQN*4,            "Bar");
-        Serial.println(F("about to add to menuitems list..")); Serial_flush();
+        //Serial.println(F("about to add to menuitems list..")); Serial_flush();
         b->add(length_ticks_control);
 
-        Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
+        //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *trigger_ticks_control 
             = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
                 "Trigger each",
@@ -159,7 +159,7 @@ extern bool debug_flag;
         trigger_ticks_control->add_available_value(PPQN,              "Beat");
         trigger_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
         trigger_ticks_control->add_available_value(PPQN*4,            "Bar");
-        Serial.println(F("about to add to menuitems list..")); Serial_flush();
+        //Serial.println(F("about to add to menuitems list..")); Serial_flush();
         b->add(trigger_ticks_control);
 
         menuitems->add(b);
@@ -200,7 +200,7 @@ extern bool debug_flag;
 
         menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-        Serial.println(F("returning..")); Serial_flush();
+        //Serial.println(F("returning..")); Serial_flush();
         return menuitems;
     }
 #endif
