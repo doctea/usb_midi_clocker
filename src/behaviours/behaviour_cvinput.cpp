@@ -95,6 +95,11 @@ extern bool debug_flag;
         b->add(velocity_parameter_selector);
         menuitems->add(b);
 
+        #ifdef DEBUG_VELOCITY
+            DirectNumberControl<int8_t> *velocity_control = new DirectNumberControl<int8_t>("Velocity", &this->velocity, 127, 0, 127);
+            menuitems->add(velocity_control);
+        #endif
+
         Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
         HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
             &this->last_note, 

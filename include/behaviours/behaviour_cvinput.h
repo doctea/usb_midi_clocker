@@ -1,6 +1,8 @@
 #ifndef BEHAVIOUR_CVINPUT__INCLUDED
 #define BEHAVIOUR_CVINPUT__INCLUDED
 
+//#define DEBUG_VELOCITY    // enable velocity control so we can tell what's going on
+
 #include "Config.h"
 
 #include "bpm.h"
@@ -80,6 +82,10 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
         int32_t trigger_on_ticks = 0;   // 0 = on change
+
+        #ifdef DEBUG_VELOCITY
+            int8_t velocity = 127;
+        #endif
 
         chord_instance_t current_chord_data;
         chord_instance_t last_chord_data;
@@ -205,6 +211,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD) {
             this->current_note = pitch;
             this->note_started_at_tick = ticks;
+            #ifdef DEBUG_VELOCITY
+                this->velocity = velocity;
+            #endif
             if (!is_quantise() || !is_play_chords() || this->selected_chord_number==CHORD::NONE)
                 this->receive_note_on(channel, this->current_note, velocity);
             else
