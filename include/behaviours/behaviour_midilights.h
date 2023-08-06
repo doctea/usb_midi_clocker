@@ -38,8 +38,8 @@ class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public Clocked
         virtual const char *get_label() override {
             return "MIDILights";
         }
-        virtual bool has_output() { return true; }
-        virtual bool has_input() { return true; }
+        virtual bool has_output() { return false; }
+        virtual bool has_input()  { return false; }
 
         source_id_t source_id_2 = -1;
 

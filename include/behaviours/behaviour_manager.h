@@ -26,6 +26,7 @@ class DeviceBehaviourManager {
         // registered behaviours separated by type, so that we can treat them differently for connection and listing purposes
         LinkedList<DeviceBehaviourUSBBase *> *behaviours_usb = nullptr;
         LinkedList<DeviceBehaviourSerialBase *> *behaviours_serial = nullptr;
+        LinkedList<DeviceBehaviourUltimateBase *> *behaviours_virtual = nullptr;
         #ifdef ENABLE_USBSERIAL
             LinkedList<DeviceBehaviourUSBSerialBase *> *behaviours_usbserial = nullptr;
         #endif
@@ -72,6 +73,7 @@ class DeviceBehaviourManager {
                 return;
             }
             Debug_printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
+            this->behaviours_virtual->add(behaviour);
             this->behaviours->add(behaviour);
         }
 
@@ -370,6 +372,7 @@ class DeviceBehaviourManager {
         DeviceBehaviourManager() {
             this->behaviours_usb = new LinkedList<DeviceBehaviourUSBBase*>();
             this->behaviours_serial = new LinkedList<DeviceBehaviourSerialBase*>();
+            this->behaviours_virtual = new LinkedList<DeviceBehaviourUltimateBase*>();
             #ifdef ENABLE_USBSERIAL
                 this->behaviours_usbserial = new LinkedList<DeviceBehaviourUSBSerialBase*>();
             #endif

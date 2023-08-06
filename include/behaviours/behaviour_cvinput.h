@@ -65,8 +65,11 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return "Pitch CV Input";
         }
 
-        virtual int getType() {
+        virtual int getType() override {
             return BehaviourType::virt;
+        }
+        virtual bool has_input() override {
+            return true;
         }
 
         BaseParameterInput *pitch_input = nullptr;
