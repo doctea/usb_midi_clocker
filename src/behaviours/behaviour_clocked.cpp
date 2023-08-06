@@ -139,7 +139,7 @@ void ClockedBehaviour::on_restart() {
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*13,            "13");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*13)+(PPQN/2), "13.5");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*14,            "14");
-                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*4)+(PPQN/2), "14.5");
+                add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*14)+(PPQN/2), "14.5");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN*15,            "15");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,(PPQN*15)+(PPQN/2), "15.5");
             }
