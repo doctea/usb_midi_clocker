@@ -79,6 +79,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         unsigned long note_started_at_tick = 0;
         int32_t note_length_ticks = PPQN;
         int32_t trigger_on_ticks = 0;   // 0 = on change
+        int32_t trigger_delay_ticks = 0;
         int8_t inversion = 0;
 
         #ifdef DEBUG_VELOCITY
@@ -159,6 +160,12 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         }
         virtual int32_t get_trigger_on_ticks () {
             return this->trigger_on_ticks;
+        }
+        virtual void set_trigger_delay_ticks(int32_t delay_ticks) {
+            this->trigger_delay_ticks = delay_ticks;
+        }
+        virtual int32_t get_trigger_delay_ticks () {
+            return this->trigger_delay_ticks;
         }
 
         //int8_t chord_held_notes[127];
@@ -268,7 +275,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 // TODO: make this tolerant of other types of ParameterInput!
                 if (!this->pitch_input->supports_pitch()) return;
                 
-                if (!(get_trigger_on_ticks()==0 || ticks % get_trigger_on_ticks()==0))
+                if (!(get_trigger_on_ticks()==0 || (ticks-trigger_delay_ticks) % get_trigger_on_ticks()==0))
                     return;
 
                 VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->pitch_input;
@@ -329,6 +336,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 ("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
                 ("trigger_each", "CV", this, &this->trigger_on_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_on_ticks, &DeviceBehaviour_CVInput::get_trigger_on_ticks));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
+                ("trigger_delay_ticks", "CV", this, &this->trigger_delay_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_delay_ticks, &DeviceBehaviour_CVInput::get_trigger_delay_ticks));
+
 
             // quantisation settings
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   

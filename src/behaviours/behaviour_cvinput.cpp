@@ -73,7 +73,7 @@ extern bool debug_flag;
         */
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up ParameterInputSelectorControl")); Serial_flush();
         //ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector 
-        SubMenuItemBar *b = new SubMenuItemBar("Inputs");
+        SubMenuItemBar *bar = new SubMenuItemBar("Inputs");
         this->pitch_parameter_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
                 "1v/oct Input",
@@ -82,7 +82,7 @@ extern bool debug_flag;
                 parameter_manager->get_available_pitch_inputs(),
                 this->pitch_input
         );
-        b->add(pitch_parameter_selector);
+        bar->add(pitch_parameter_selector);
 
         this->velocity_parameter_selector 
             = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
@@ -92,8 +92,8 @@ extern bool debug_flag;
                 parameter_manager->available_inputs,
                 this->pitch_input
         );
-        b->add(velocity_parameter_selector);
-        menuitems->add(b);
+        bar->add(velocity_parameter_selector);
+        menuitems->add(bar);
 
         #ifdef DEBUG_VELOCITY
             DirectNumberControl<int8_t> *velocity_control = new DirectNumberControl<int8_t>("Velocity", &this->velocity, 127, 0, 127);
@@ -116,7 +116,7 @@ extern bool debug_flag;
                 &DeviceBehaviour_CVInput::get_note_length
             );
         menuitems->add(length_ticks_control);*/
-        b = new SubMenuItemBar("Trigger/durations");
+        bar = new SubMenuItemBar("Trigger/durations");
         //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *length_ticks_control 
             = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
@@ -130,15 +130,15 @@ extern bool debug_flag;
         //Serial.println(F("about to add values..")); Serial_flush();
         length_ticks_control->add_available_value(0,                 "None");
         length_ticks_control->add_available_value(PPQN/PPQN,         "-");
-        length_ticks_control->add_available_value(PPQN/8,            "32nd note");
-        length_ticks_control->add_available_value(PPQN/4,            "16th note");
-        length_ticks_control->add_available_value(PPQN/3,            "1/12");
-        length_ticks_control->add_available_value(PPQN/2,            "8th note");
+        length_ticks_control->add_available_value(PPQN/8,            "32nd");
+        length_ticks_control->add_available_value(PPQN/4,            "16th");
+        length_ticks_control->add_available_value(PPQN/3,            "12th");
+        length_ticks_control->add_available_value(PPQN/2,            "8th");
         length_ticks_control->add_available_value(PPQN,              "Beat");
-        length_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
+        length_ticks_control->add_available_value(PPQN*2,            "2xBeat");
         length_ticks_control->add_available_value(PPQN*4,            "Bar");
         //Serial.println(F("about to add to menuitems list..")); Serial_flush();
-        b->add(length_ticks_control);
+        bar->add(length_ticks_control);
 
         //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *trigger_ticks_control 
@@ -152,17 +152,38 @@ extern bool debug_flag;
         );
         trigger_ticks_control->add_available_value(0,                 "Change");
         //trigger_ticks_control->add_available_value(PPQN/PPQN,         "-");
-        trigger_ticks_control->add_available_value(PPQN/8,            "32nd note");
-        trigger_ticks_control->add_available_value(PPQN/4,            "16th note");
-        trigger_ticks_control->add_available_value(PPQN/3,            "1/12");
-        trigger_ticks_control->add_available_value(PPQN/2,            "8th note");
+        trigger_ticks_control->add_available_value(PPQN/8,            "32nd");
+        trigger_ticks_control->add_available_value(PPQN/4,            "16th");
+        trigger_ticks_control->add_available_value(PPQN/3,            "12th");
+        trigger_ticks_control->add_available_value(PPQN/2,            "8th");
         trigger_ticks_control->add_available_value(PPQN,              "Beat");
-        trigger_ticks_control->add_available_value(PPQN*2,            "1/2 bar");
+        trigger_ticks_control->add_available_value(PPQN*2,            "2xBeat");
         trigger_ticks_control->add_available_value(PPQN*4,            "Bar");
         //Serial.println(F("about to add to menuitems list..")); Serial_flush();
-        b->add(trigger_ticks_control);
+        bar->add(trigger_ticks_control);
 
-        menuitems->add(b);
+        ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t> *trigger_delay_ticks_control 
+            = new ObjectSelectorControl<DeviceBehaviour_CVInput,int32_t>(
+                "Delay",
+                this,
+                &DeviceBehaviour_CVInput::set_trigger_delay_ticks,
+                &DeviceBehaviour_CVInput::get_trigger_delay_ticks,
+                nullptr,
+                true
+        );
+        //trigger_ticks_control->add_available_value(0,                 "Change");
+        //trigger_ticks_control->add_available_value(PPQN/PPQN,         "-");
+        trigger_delay_ticks_control->add_available_value(0,                 "None");
+        trigger_delay_ticks_control->add_available_value(PPQN/8,            "32nd");
+        trigger_delay_ticks_control->add_available_value(PPQN/4,            "16th");
+        trigger_delay_ticks_control->add_available_value(PPQN/3,            "12th");
+        trigger_delay_ticks_control->add_available_value(PPQN/2,            "8th");
+        trigger_delay_ticks_control->add_available_value(PPQN,              "Beat");
+        trigger_delay_ticks_control->add_available_value(PPQN*2,            "2xBeat");
+        //trigger_ticks_control->add_available_value(PPQN*4,            "Bar");
+        bar->add(trigger_delay_ticks_control);
+
+        menuitems->add(bar);
 
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
             menuitems->add(new ObjectNumberControl<DeviceBehaviour_CVInput,byte>("Channel", this, &DeviceBehaviour_CVInput::set_channel, &DeviceBehaviour_CVInput::get_channel));
@@ -183,19 +204,19 @@ extern bool debug_flag;
             )
         );
 
-        b = new SubMenuItemBar("Quantise / chords");
-        b->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
-        b->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+        bar = new SubMenuItemBar("Quantise / chords");
+        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
+        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
 
         ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord, nullptr, true);
         for (size_t i = 0 ; i < NUMBER_CHORDS ; i++) {
             selected_chord_control->add_available_value(i, chords[i].label);
         }
 
-        b->add(new ObjectNumberControl<DeviceBehaviour_CVInput,int8_t>("Inversion", this, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion, nullptr, 0, 4, true));
-        b->add(selected_chord_control);
+        bar->add(new ObjectNumberControl<DeviceBehaviour_CVInput,int8_t>("Inversion", this, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion, nullptr, 0, 4, true));
+        bar->add(selected_chord_control);
 
-        menuitems->add(b);
+        menuitems->add(bar);
 
         menuitems->add(new ChordMenuItem("Current chord",   &this->current_chord_data));
         menuitems->add(new ChordMenuItem("Last chord",      &this->last_chord_data));
