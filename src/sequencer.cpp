@@ -5,6 +5,8 @@
 #include "bpm.h"
 #include "project.h"
 
+#include "interfaces/interfaces.h"
+
 //#define byte uint8_t
 
 FLASHMEM void init_sequence() {
@@ -20,10 +22,12 @@ FLASHMEM void init_sequence() {
 }
 
 void cv_out_sequence_pin_off(byte i) {
-  digitalWrite(cv_out_sequence_pin[i], LOW);
+  //raw_write_pin(cv_out_sequence_pin[i], LOW);  // TODO: MCP23017 version of this
+  set_sequence_gate(i, LOW);
 }
 void cv_out_sequence_pin_on(byte i) {
-  digitalWrite(cv_out_sequence_pin[i], HIGH);
+  //raw_write_pin(cv_out_sequence_pin[i], HIGH); // TODO: MCP23017 version of this
+  set_sequence_gate(i, HIGH);
 }
 
 byte read_sequence(byte row, byte col) {
@@ -59,8 +63,8 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
   byte v = read_sequence(sequence, step);
   if (v) {
     if (is_bpm_on_beat(ticks, offset) 
-        || (v==2 && is_bpm_on_eighth(ticks, offset))
-        || (v==3 && is_bpm_on_sixteenth(ticks, offset))
+        || (v==2 && is_bpm_on_eighth(ticks, offset))      // ratchetting
+        || (v==3 && is_bpm_on_sixteenth(ticks, offset))   // ratchetting
     ) {
       #ifdef DEBUG_SEQUENCER
             if (offset==0) {

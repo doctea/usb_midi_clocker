@@ -22,7 +22,9 @@
 //      [DONE] quantizing (time)
 //      quantizing (scale)
 
-MIDITrack mpk49_loop_track;// = MIDITrack(); // = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
+#ifdef ENABLE_LOOPER
+    MIDITrack midi_loop_track;// = MIDITrack(); // = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
+#endif
 
 #ifdef ENABLE_DRUM_LOOPER
     MIDITrack drums_loop_track = MIDITrack(); //&midi_drums_output); //midi_bamble);

@@ -48,15 +48,16 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         virtual void connect_device(USBSerialWrapper *usbdevice) {
             Serial.printf(F("DeviceBehaviour_USBSerialBase#connect_device for %s connecting %p\n"), this->get_label(), usbdevice);
 
-            if (this->usbdevice!=nullptr && this->usbdevice != usbdevice) {
+            if (this->usbdevice != nullptr && this->usbdevice != usbdevice) {
                 Serial.printf(F("\tit is already connected to a different usbdevice! disconnecting first.."));
                 this->disconnect_device();
             }
 
             this->usbdevice = usbdevice;
 
-            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
-            usbdevice->setTimeout(0);
+            // do this in subdevices now, since it seems to cause some problems?
+            //usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+            //usbdevice->setTimeout(0);
 
             this->init();
             this->setup_callbacks();
@@ -77,9 +78,16 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             // do anything we need to do after we've just connected a new serial midi device..?
         }
 
+        // some serial devices may crash if we don't read from their serial devices, apparently?
+        virtual void read() override {
+            if (!is_connected() || this->usbdevice==nullptr) return;
+            //Serial.println("DeviceBehaviourUSBSerialBase#read() about to read()..");
+            while(this->usbdevice->available() && this->usbdevice->read()); 
+            //Serial.println("DeviceBehaviourUSBSerialBase#read() came out of read()..");
+        };
 };
 
-// USB device that presents as Serial, but supports MIDI (for eg plain Arduino, Hairless-MIDI-alike)
+// USB device that presents as Serial, but supports MIDI (for eg plain Arduino, Hairless-MIDI-alike, OpenTheremin v4 with MIDI code)
 class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerialBase {
     public:
         midi::MidiInterface<USBSerialWrapper> *midi_interface = nullptr;
@@ -99,6 +107,7 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
         //virtual bool has_output()   { return this->output_interface!=nullptr; }
 
         virtual void init() override {
+            
             if (this->usbdevice==nullptr) {
                 Serial.printf(F("DeviceBehaviourUSBSerialMIDIBase#init() in %s failed - usbdevice is nullptr!\n"), this->get_label());
                 return;
@@ -108,6 +117,9 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
                 Serial.printf(F("DeviceBehaviourUSBSerialMIDIBase#init() in %s already has a midi_interface - disconnecting it!\n"), this->get_label());
                 this->disconnect_device();
             }
+
+            usbdevice->begin(this->getConnectionBaudRate(), this->getConnectionFormat());
+            usbdevice->setTimeout(0);
 
             this->midi_interface = new midi::MidiInterface<USBSerialWrapper>(*this->usbdevice);
         }

@@ -69,13 +69,13 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
             #ifdef ENABLE_LOOPER
                 if (note==CHOC_NOTE_TOGGLEPLAY) {
-                    mpk49_loop_track.toggle_playing();
+                    midi_loop_track.toggle_playing();
                 } else if (note==CHOC_NOTE_TOGGLEREC) {
-                    mpk49_loop_track.toggle_recording();
+                    midi_loop_track.toggle_recording();
                 } else if (note==CHOC_NOTE_RECORD_MOM) {
-                    mpk49_loop_track.start_recording();
+                    midi_loop_track.start_recording();
                 } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
-                    mpk49_loop_track.start_overwriting();
+                    midi_loop_track.start_overwriting();
                 }
             #endif
 
@@ -103,9 +103,9 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
 
             #ifdef ENABLE_LOOPER
                 if (note==CHOC_NOTE_RECORD_MOM) {
-                    mpk49_loop_track.stop_recording();
+                    midi_loop_track.stop_recording();
                 } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
-                    mpk49_loop_track.stop_overwriting();
+                    midi_loop_track.stop_overwriting();
                 }
             #endif
 

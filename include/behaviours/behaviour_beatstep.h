@@ -57,7 +57,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
         virtual bool has_input() { return true; }
 
-        FLASHMEM 
+        //FLASHMEM 
         virtual void setup_callbacks() override {
             if (!DeviceBehaviourUSBBase::is_connected()) return;
 
@@ -84,8 +84,8 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
 
         bool already_initialised = false;
-        FLASHMEM
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        //FLASHMEM
+        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
@@ -247,7 +247,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 int8_t *target_variable = nullptr;
                 const char *label = nullptr;
                 void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = nullptr;
-                bool enable_recall = true;
+                //bool enable_recall = true;
             };
             #define NUM_SYSEX_PARAMETERS 6
 
@@ -369,10 +369,13 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
                     saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(
                         sysex_parameters[i].label,
+                        "Sysex",
                         this,
                         sysex_parameters[i].target_variable, 
-                        &sysex_parameters[i].enable_recall, 
-                        &sysex_parameters[i].enable_recall, 
+                        nullptr,
+                        nullptr,
+                        /*&sysex_parameters[i].enable_recall, 
+                        &sysex_parameters[i].enable_recall, */
                         sysex_parameters[i].setter_func
                     ));
                 }                    
@@ -416,7 +419,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         #endif
 
         #ifdef ENABLE_SCREEN
-            //FLASHMEM
+            FLASHMEM
             LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 
@@ -424,9 +427,9 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
 
-#include "menuitems_object_multitoggle.h"
+//#include "menuitems_object_multitoggle.h"
 
-class BeatstepSysexOptionToggle : public MultiToggleItemBase {
+/*class BeatstepSysexOptionToggle : public MultiToggleItemBase {
     DeviceBehaviour_Beatstep::sysex_parameter_t *target_sysex_parameter = nullptr;
     DeviceBehaviour_Beatstep *target_object = nullptr;
 
@@ -443,7 +446,7 @@ class BeatstepSysexOptionToggle : public MultiToggleItemBase {
         virtual void do_setter(bool state) override {
             target_sysex_parameter->enable_recall = state;
         }
-};
+};*/
 
 #endif
 

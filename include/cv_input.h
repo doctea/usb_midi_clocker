@@ -2,20 +2,25 @@
 
 #include "Config.h"
 
-#include "menu.h"
+#ifdef ENABLE_SCREEN
+    #include "menu.h"
+#endif
 #include "parameters/Parameter.h"
 #include "parameters/FunctionParameter.h"
 #include <LinkedList.h>
-
-#include "parameter_inputs/VoltageParameterInput.h"
 
 #include "parameters/MIDICCParameter.h"
 
 #include "Wire.h"
 
-#include "voltage_sources/ADS24vVoltageSource.h"
+#ifdef ENABLE_CV_INPUT
+    #include "parameter_inputs/VoltageParameterInput.h"
+    #include "voltage_sources/ADS24vVoltageSource.h"
+#endif
 
-#include "mymenu_items/ParameterMenuItems.h"
+#ifdef ENABLE_SCREEN
+    #include "mymenu_items/ParameterMenuItems.h"
+#endif
 
 #include "ParameterManager.h"
 
@@ -25,6 +30,8 @@ FLASHMEM
 void setup_cv_input();
 FLASHMEM
 void setup_parameters();
+#ifdef ENABLE_SCREEN
 void setup_parameter_menu();
+#endif
 
 extern ParameterManager *parameter_manager;

@@ -190,34 +190,22 @@ class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public Ar
 
             int32_t period_length = this->get_period_length();
             uint32_t tick_of_period = (ticks%period_length); //*BARS_PER_PHRASE));
-            //real_ticks = (ticks%(PPQN*BEATS_PER_BAR*BARS_PER_PHRASE)) - clock_delay_ticks;
-            //real_ticks++;
+
             real_ticks = (int32_t)tick_of_period - clock_delay_ticks;
-            //if (this->waiting && real_ticks<0) { //(real_ticks) < clock_delay_ticks) {
             if (this->waiting && ((int32_t)tick_of_period) < clock_delay_ticks) { //(real_ticks) < clock_delay_ticks) {
-                ////if (this->debug) 
                 //if (this->debug) Serial.printf(F("DividedClockBehaviour with global ticks %i, not sending because waiting %i && (tick_of_period %i < clock_delay_ticks of %i\n"), ticks, waiting, tick_of_period, clock_delay_ticks);
                 //Serial.printf("%s#sendClock() not sending due to tick %% clock_divisor test failed", this->get_label());
                 return;
             }
             if (waiting) {
                 //if (this->debug) Serial.printf(F("%s: DividedClockBehaviour with real_ticks %i and clock_delay_ticks %i was waiting\n"), this->get_label(), real_ticks, clock_delay_ticks);
-                //this->on_restart(); = true;
                 this->started = true;
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStart();
                 this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
                 //if (this->debug) Serial.printf(F("%s:\tunsetting waiting!\n"), this->get_label());
                 waiting = false;
             }
-            /*if (real_ticks++ < clock_delay_ticks && clock_delay_ticks>0) {
-                Serial.printf("DividedClockBehaviour with tick %i, not sending because real_ticks %i haven't reached clock_delay_ticks of %i\n", ticks, real_ticks, clock_delay_ticks);
-                return;
-            }*/
-            //this->real_ticks++; // = ticks;
 
-            /*if (is_bpm_on_phrase(real_ticks - clock_delay_ticks)) {
-                DeviceBehaviourUSBBase::on_phrase(BPM_CURRENT_PHRASE);
-            }*/
             if (is_bpm_on_bar(real_ticks)) { //}, clock_delay_ticks)) {
                 //if (this->should_auto_restart_on_change())    // force resync restart on every bar, however, no good if target device (eg beatstep) pattern is longer than a bar
                 //    this->set_restart_on_bar();
@@ -226,7 +214,7 @@ class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public Ar
                 // todo: should we handle calling on_phrase here?  maybe thats where we should force re-sync?
             }
 
-            if (/*ticks==0 || */ticks % clock_divisor == 0) {
+            if (ticks % clock_divisor == 0) {
                 //if (this->debug) Serial.print("\\");
                 ClockedBehaviour::send_clock(ticks - clock_delay_ticks);
             } else {
@@ -237,8 +225,6 @@ class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public Ar
         // actually, we do want to respond to on_bar, because that's when we actually need to start the delay from!
         virtual void on_bar(int bar_number) override {
             // don't do anything - handle the delayed clocks in send_clock
-            //if (is_bpm_on_bar(real_ticks - clock_delay_ticks))
-            //if (this->should_pause_during_delay_bar_number(bar_number) && this->get_delay_ticks()>0)
             if (this->get_delay_ticks()>0 && this->should_pause_during_bar_number(bar_number)) {
                 this->sendRealTime((uint8_t)(midi::Stop));
                 if (this->stop_notes_when_paused && this->target_id!=-1) {
@@ -258,10 +244,7 @@ class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public Ar
             //if (this->debug) Serial.printf(F("%s: on_restart() in DividedClockedBehaviour\n"), this->get_label());
             if (this->is_connected() && this->clock_enabled) {
                 this->sendRealTime((uint8_t)(midi::Stop)); //sendStop();
-                //this->sendRealTime((uint8_t)(midi::Start)); //sendStart();
-                //this->sendNow();
                 
-                //this->real_ticks = this->clock_delay_ticks * -1;
                 if (this->get_delay_ticks()>0) {
                     this->waiting = true;
                     this->started = false;
@@ -280,36 +263,11 @@ class DividedClockedBehaviour : public ClockedBehaviour { //}, virtual public Ar
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
             Serial.println("DividedClockedBehaviour::setup_saveable_parameters");
             Serial.printf("saveable_parameters is @%p\n", this->saveable_parameters);
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,uint32_t>("divisor", this, &this->clock_divisor, nullptr, nullptr, &DividedClockedBehaviour::set_divisor, &DividedClockedBehaviour::get_divisor));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int32_t>("delay_ticks", this, &this->clock_delay_ticks, nullptr, nullptr, &DividedClockedBehaviour::set_delay_ticks, &DividedClockedBehaviour::get_delay_ticks));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int8_t>("pause_on", this, &this->pause_during_delay, nullptr, nullptr, &DividedClockedBehaviour::set_pause_during_delay, &DividedClockedBehaviour::get_pause_during_delay));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,uint32_t>("divisor", "Clocked", this, &this->clock_divisor, nullptr, nullptr, &DividedClockedBehaviour::set_divisor, &DividedClockedBehaviour::get_divisor));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int32_t>("delay_ticks", "Clocked", this, &this->clock_delay_ticks, nullptr, nullptr, &DividedClockedBehaviour::set_delay_ticks, &DividedClockedBehaviour::get_delay_ticks));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,bool>("auto_restart_on_change", "Clocked", this, &this->auto_restart_on_change, nullptr, nullptr, &DividedClockedBehaviour::set_auto_restart_on_change, &DividedClockedBehaviour::should_auto_restart_on_change));
+            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int8_t>("pause_on", "Clocked", this, &this->pause_during_delay, nullptr, nullptr, &DividedClockedBehaviour::set_pause_during_delay, &DividedClockedBehaviour::get_pause_during_delay));
         }
-
-
-        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            ClockedBehaviour::save_sequence_add_lines(lines);
-            //lines->add(String(F("divisor=")) + String(this->get_divisor()));
-            //lines->add(String(F("delay_ticks=")) + String(this->get_delay_ticks()));
-            //lines->add(String(F("pause_on=")) + String(this->get_pause_during_delay()));
-        }*/
-
-        // ask behaviour to process the key/value pair
-        /*virtual bool load_parse_key_value(String key, String value) override {
-            if (key.equals(F("divisor"))) {
-                this->set_divisor((int) value.toInt());
-                return true;
-            } else if (key.equals(F("delay_ticks"))) {
-                this->set_delay_ticks((int) value.toInt());
-                return true;
-            } else if (key.equals(F("pause_on"))) {
-                this->set_pause_during_delay((byte)value.toInt());
-                return true;
-            } else if (ClockedBehaviour::load_parse_key_value(key, value)) {
-                return true;
-            }
-
-            return false;
-        }*/
 
         #ifdef ENABLE_SCREEN
             virtual LinkedList<MenuItem*> *make_menu_items() override;

@@ -154,6 +154,11 @@ void redraw_sequence_row(byte c) {
         apcdisplay_sendNoteOff(x, APCMINI_OFF, 1, true);
       )
     }
+    // clear the 'selected clock row' indicator lights
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF);
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_SOLO, APCMINI_OFF);
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_REC_ARM, APCMINI_OFF);
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_MUTE, APCMINI_OFF);
     //delay(1000);
     Serial.println(F("Leaving APC display"));
     // 

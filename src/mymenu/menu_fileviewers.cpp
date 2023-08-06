@@ -1,3 +1,5 @@
+#ifdef ENABLE_SD
+
 #include <Arduino.h>
 
 #include "menu.h"
@@ -22,3 +24,5 @@ void update_project_filename(String filename) {
         project_fileviewer->readFile();
     }
 }
+
+#endif

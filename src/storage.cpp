@@ -71,17 +71,18 @@ namespace storage {
   FLASHMEM void setup_storage() {
     SD.begin(chipSelect);
 
-    if (!SD.exists("sequences")) {
+    /*if (!SD.exists("sequences")) {
       Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));
       SD.mkdir("sequences");
     }
     if (!SD.exists("loops")) {
       Serial.println(F("Folder 'loops' doesn't exist on SD, creating!"));
       SD.mkdir("loops");
-    }
+    }*/
   }
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
+    #ifdef ENABLE_SD
     //Serial.println("save_sequence not implemented on teensy");
     //bool irqs_enabled = __irq_enabled();
     //__disable_irq();
@@ -101,7 +102,7 @@ namespace storage {
       //if (irqs_enabled) __enable_irq();
       return false;
     }
-    Serial.println("Starting data write.."); Serial.flush();
+    Serial.println("Starting data write.."); Serial_flush();
     myFile.println(F("; begin sequence"));
     myFile.printf(F("id=%i\n"),input->id);
     myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
@@ -137,6 +138,7 @@ namespace storage {
     //Serial.println(F("Finished saving."));
 
     update_sequence_filename(String(filename));
+    #endif
 
     return true;
   }
@@ -196,9 +198,9 @@ namespace storage {
 
   void load_sequence_parse_line(String line, savestate *output) {
     bool debug = false;
-    if (line.charAt(0)==';') 
+    if (line.charAt(0)==';') {
       return;  // skip comment lines
-    else if (line.startsWith(F("id="))) {
+    } else if (line.startsWith(F("id="))) {
       output->id = (uint8_t) line.remove(0,String(F("id=")).length()).toInt();
       if (debug) Serial.printf(F("Read id %i\n"), output->id);
       return;
@@ -263,12 +265,13 @@ namespace storage {
       behaviour_manager->load_parse_key_value(key, value);*/
       return;
     }
-    messages_log_add(String("Unknown line '") + line + String("'"));
+    messages_log_add(String("Ignoring line '") + line + String("'"));
   }
 
   //void update_sequence_filename(String filename);
 
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
+    #ifdef ENABLE_SD
     static volatile bool already_loading = false;
     if (already_loading) return false;
     already_loading = true;
@@ -316,6 +319,7 @@ namespace storage {
 
     Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
     already_loading = false;
+    #endif
     return true;
   }
 

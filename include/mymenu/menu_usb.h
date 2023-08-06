@@ -23,7 +23,7 @@
                     if (usb_midi_slots[i].packed_id && usb_midi_slots[i].device && usb_midi_slots[i].device->idVendor()>0) {
                         connected++;
                         char buf[100];
-                        snprintf(buf, 100, "%i %19s\n", i, usb_midi_slots[i].device->product());
+                        snprintf(buf, 100, "%i %19s %04X:%04X\n", i, usb_midi_slots[i].device->product(), usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct());
                         tft->printf(buf);
                     }            
                 }
