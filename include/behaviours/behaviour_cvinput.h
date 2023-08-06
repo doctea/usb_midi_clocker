@@ -28,14 +28,10 @@ class DeviceBehaviour_CVInput;
 template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
 class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
     public:
-        ChordTypeParameter(const char *label, TargetClass *target, void(TargetClass::*setter_func)(DataType), DataType(TargetClass::*getter_func)()) : DataParameter<TargetClass, DataType>(label, target, setter_func, getter_func) {}
+        ChordTypeParameter(const char *label, TargetClass *target, void(TargetClass::*setter_func)(DataType), DataType(TargetClass::*getter_func)()) 
+        : DataParameter<TargetClass, DataType>(label, target, setter_func, getter_func, 0, NUMBER_CHORDS-1) {}
 
-        virtual DataType normalToData(float value) override {
-            /*if (this->debug && value>=0.0) {
-                Serial.printf(F("%s#"), this->label);
-                Serial.printf(F("normalToData(%f) "), value);
-                Serial.printf(F(", range is %i to %i "), this->minimumDataValue, this->maximumDataValue);
-            }*/
+        /*virtual DataType normalToData(float value) override {
             value = this->constrainNormal(value);
             //DataType data = this->minimumDataValue + (value * (float)(this->maximumDataValue - this->minimumDataValue));
             DataType data = value * (float)NUMBER_CHORDS;
@@ -52,7 +48,7 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
             //      min = 0, max = 100, actual = 75 ->          ( 75 - 0 ) / (100-0)            = 0.75
             //      min = -100, max = 100, actual = 0 ->        (0 - -100) / (100--100)         = 0.5
             //      min = -100, max = 100, actual = -100 - >    (-100 - -100) / (100 - -100)    = 0
-        }
+        }*/
 
         virtual const char* parseFormattedDataType(DataType value) {
             static char fmt[MENU_C_MAX] = "              ";
@@ -77,6 +73,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         BaseParameterInput *velocity_input = nullptr;
 
         bool is_playing = false;
+        bool is_playing_chord = false;
         int last_note = -1, current_note = -1, current_raw_note = -1;
         CHORD::Type last_chord = CHORD::NONE, current_chord = CHORD::NONE, selected_chord_number = CHORD::NONE;
         unsigned long note_started_at_tick = 0;
@@ -102,14 +99,14 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         int scale_root = SCALE_ROOT_C;
 
         void set_scale(SCALE scale) {
-            trigger_off_for_pitch_because_changed(this->current_note);
+            //trigger_off_for_pitch_because_changed(this->current_note);
             this->scale = scale;
         }
         SCALE get_scale() {
             return this->scale;
         }
         void set_scale_root(int scale_root) {
-            trigger_off_for_pitch_because_changed(this->current_note);
+            //trigger_off_for_pitch_because_changed(this->current_note);
             this->scale_root = scale_root;
         }
         int get_scale_root() {
@@ -129,16 +126,19 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         bool is_play_chords() {
             return this->play_chords;
         }
+
         int8_t get_inversion() {
             return inversion;
         }
         void set_inversion(int8_t inversion) {
-            trigger_off_for_pitch_because_changed(this->current_note);
+            //trigger_off_for_pitch_because_changed(this->current_note);
+            /*if (this->inversion!=inversion)
+                Serial.printf("%s#set_inversion(%i) (was previously %i)\n", this->get_label(), inversion, this->inversion);*/
             this->inversion = inversion;
         }
-
         void set_selected_chord(CHORD::Type chord) {
-            //Serial.printf("%s#set_selected_chord(%i)\n", this->get_label(), chord);
+            /*if (this->selected_chord_number!=chord)
+                Serial.printf("%s#set_selected_chord(%i) aka %s\n", this->get_label(), chord, chords[chord].label);*/
             this->selected_chord_number = chord;
         }
         CHORD::Type get_selected_chord() {
@@ -169,56 +169,78 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
+        void stop_chord(chord_instance_t chord) {
+            this->stop_chord(chord.chord_root, chord.chord_type, chord.inversion, chord.velocity);
+        }
+
         void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 0) {
-            if (debug) Serial.printf("\t--- Stopping chord for %i (%s)\n", pitch, get_note_name_c(pitch));
+            if (debug) Serial.printf("\t---\nstop_chord: Stopping chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
 
             int8_t n = -1;
             //for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->current_chord_data->inversion, this->debug)) >= 0 ; i++) {
-            for (size_t i = 0 ; i < PITCHES_PER_CHORD && ((n = this->current_chord_data.pitches[i]) >= 0) ; i++) {
-                if (debug) Serial.printf("\t\tStopping note [%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
-                receive_note_off(channel, n, velocity);
+            for (size_t i = 0 ; i < PITCHES_PER_CHORD /*&& ((n = this->current_chord_data.pitches[i]) >= 0)*/ ; i++) {
+                int n = this->current_chord_data.pitches[i];
+                if (debug) Serial.printf("\t\tStopping note\t[%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
+                if (is_valid_note(n))
+                    receive_note_off(channel, n, velocity);
             }
             
             last_chord = this->current_chord;
             this->last_chord_data = current_chord_data;
+            this->is_playing = false;
+            this->is_playing_chord = false;
             this->current_chord_data.clear();
+            if (debug) Serial.println("---");
         }
         void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 127) {
-            if (debug) Serial.printf("\t--- playing chord for %i (%s)\n", pitch, get_note_name_c(pitch));
+            if (debug) Serial.printf("\t--- play_chord: playing chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
+            if (is_playing_chord)
+                this->stop_chord(this->current_chord_data);
             int8_t n = -1;
             this->current_chord_data.clear();
-            this->current_chord_data.set(chord_number, pitch, inversion);
+            this->current_chord_data.set(chord_number, pitch, inversion, velocity);
             //this->last_chord = current_chord;
             current_chord = chord_number;
-            for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->get_scale_root(), this->get_scale(), this->get_inversion(), this->debug)) >= 0 ; i++) {
+            is_playing_chord = true;
+
+            int8_t previously_played_note = -1; // avoid duplicating notes, like what happens sometimes when playing inverted +octaved chords..!
+            for (size_t i = 0 ; i < PITCHES_PER_CHORD && ((n = quantise_pitch_chord_note(pitch, chord_number, i, this->get_scale_root(), this->get_scale(), inversion, this->debug)) >= 0) ; i++) {
                 this->current_chord_data.set_pitch(i, n);
-                //if (debug) Serial.printf("Playing note %i: %i\t(%s)\n", i, n, get_note_name_c(n));
-                receive_note_on(channel, n, velocity);
+                if (debug) Serial.printf("\t\tPlaying note\t[%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
+                if (n!=previously_played_note) {
+                    receive_note_on(channel, n, velocity);
+                } else {
+                    if (debug) Serial.printf("\t\tSkipping note\t[%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
+                }
+                previously_played_note = n;
             }
             if (debug) Serial.println("---");
         }
 
         virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
             // don't reset current_note so that we don't retrigger the same note again immediately
-            if (!is_quantise()) 
+            if (is_playing_chord) //is_quantise()) 
+                this->stop_chord(this->current_chord_data);
+            else
                 this->receive_note_off(channel, this->current_note, 0);
-            else 
-                this->stop_chord(this->current_note, this->current_chord, this->inversion, velocity);
 
             is_playing = false;
             this->last_note = pitch;
         }
         virtual void trigger_off_for_pitch_because_changed(int8_t pitch, byte velocity = 0) {
-            if (!is_quantise())
+            if (is_playing_chord) //is_quantise())
+                this->stop_chord(this->current_chord_data);
+            else
                 this->receive_note_off(channel, this->current_note, 0);
-            else 
-                this->stop_chord(pitch, this->current_chord, this->inversion, velocity);
 
             this->is_playing = false;
             this->last_note = this->current_note;
             this->current_note = 255;
         }
         virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
+            if (this->is_playing)
+                this->stop_chord(this->current_chord_data);
+
             this->current_note = pitch;
             this->note_started_at_tick = ticks;
             #ifdef DEBUG_VELOCITY
