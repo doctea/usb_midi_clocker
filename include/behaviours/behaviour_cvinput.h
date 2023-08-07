@@ -186,10 +186,10 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 0) {
             if (debug) Serial.printf("\t---\nstop_chord: Stopping chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
 
-            int8_t n = -1;
+            //int8_t n = -1;
             //for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->current_chord_data->inversion, this->debug)) >= 0 ; i++) {
             for (size_t i = 0 ; i < PITCHES_PER_CHORD /*&& ((n = this->current_chord_data.pitches[i]) >= 0)*/ ; i++) {
-                int n = this->current_chord_data.pitches[i];
+                int8_t n = this->current_chord_data.pitches[i];
                 if (debug) Serial.printf("\t\tStopping note\t[%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
                 if (is_valid_note(n))
                     receive_note_off(channel, n, velocity);
