@@ -1,3 +1,4 @@
+#pragma once
 //#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
@@ -100,10 +101,15 @@
 #define ENABLE_NEUTRON
 #define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
 
-#ifdef PROTOTYPE
-    #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
-#elif defined(PCB)
-    #define ENABLE_DPT_LOOPER   MIDI4   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+#define ENABLE_DPT_LOOPER
+#ifdef ENABLE_DPT_LOOPER
+    #ifdef PROTOTYPE
+        #undef ENABLE_DPT_LOOPER
+        #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+    #elif defined(PCB)
+        #undef ENABLE_DPT_LOOPER
+        #define ENABLE_DPT_LOOPER   MIDI4   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+    #endif
 #endif
 
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
@@ -122,12 +128,14 @@
     //#define ENABLE_BAMBLE_OUTPUT  // for sending on the bamble ch1-4
     //#define ENABLE_MPK49
     #define ENABLE_KEYSTEP
-    #define ENABLE_SUBCLOCKER
+    //#define ENABLE_SUBCLOCKER
+    //#define ENABLE_SUBCLOCKER_DEDICATED
     #define ENABLE_CRAFTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
     
     #define ENABLE_MICROLIDIAN
     #define ENABLE_MIDILIGHTS
+    //#define ENABLE_MIDILIGHTS_DEDICATED
 
     #define ENABLE_BEHRINGER_EDGE
     //#define ENABLE_BEHRINGER_EDGE_DEDICATED

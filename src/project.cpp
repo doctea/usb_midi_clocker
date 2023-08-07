@@ -7,3 +7,4 @@ Project *project = new Project();
 void save_project_settings() {
     project->save_project_settings();
 }
+

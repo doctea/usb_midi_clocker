@@ -1,6 +1,6 @@
-#include "behaviours/behaviour_bamble.h"
-
 #ifdef ENABLE_BAMBLE
+
+#include "behaviours/behaviour_bamble.h"
 
 DeviceBehaviour_Bamble *behaviour_bamble = new DeviceBehaviour_Bamble(); //nullptr;
 

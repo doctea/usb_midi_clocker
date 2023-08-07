@@ -1,3 +1,4 @@
+#ifdef ENABLE_MIDILIGHTS_DEDICATED
 // MIDILights running on XIAO RP2040
 
 #include "Config.h"
@@ -53,4 +54,5 @@ void craftsynth_setOutputWrapper(MIDIOutputWrapper *wrapper) {
   craftsynth_output = wrapper;    
 }*/
 
+#endif
 #endif

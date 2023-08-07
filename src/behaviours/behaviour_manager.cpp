@@ -80,14 +80,19 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_MIDILIGHTS
-        behaviour_midilights = new DeviceBehaviour_MIDILights();
-        behaviour_manager->registerBehaviour(behaviour_midilights);
+        #ifdef ENABLE_MIDILIGHTS_DEDICATED
+            behaviour_midilights = new DeviceBehaviour_MIDILights();
+            behaviour_manager->registerBehaviour(behaviour_midilights);
+        #else
+            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("MIDILights", 0x1337, 0x117e));
+        #endif
     #endif
 
-    #ifdef ENABLE_SUBCLOCKER
+    #ifdef ENABLE_SUBCLOCKER_DEDICATED
         behaviour_subclocker = new DeviceBehaviour_Subclocker();
         behaviour_manager->registerBehaviour(behaviour_subclocker);
-        //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("SimpleSubclocker", 0x1337, 0x1337));
+    #elif ENABLE_SUBCLOCKER
+        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("Subclocker", 0x1337, 0x1337));
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB

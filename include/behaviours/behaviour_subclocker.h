@@ -1,3 +1,5 @@
+#ifdef ENABLE_SUBCLOCKER_DEDICATED
+
 #ifndef BEHAVIOUR_SUBCLOCKER__INCLUDED
 #define BEHAVIOUR_SUBCLOCKER__INCLUDED
 
@@ -29,5 +31,7 @@ class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public Divided
 };
 
 extern DeviceBehaviour_Subclocker *behaviour_subclocker;
+
+#endif
 
 #endif

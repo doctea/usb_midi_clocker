@@ -1,3 +1,5 @@
+#ifdef ENABLE_MIDILIGHTS_DEDICATED
+
 #ifndef BEHAVIOUR_MIDILIGHTS__INCLUDED
 #define BEHAVIOUR_MIDILIGHTS__INCLUDED
 
@@ -121,4 +123,6 @@ class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public Clocked
 extern DeviceBehaviour_MIDILights *behaviour_midilights;
 
 #endif
+#endif
+
 #endif
