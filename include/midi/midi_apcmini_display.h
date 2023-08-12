@@ -30,6 +30,9 @@ const byte colour_intensity[] = {
   APCMINI_GREEN,
   APCMINI_YELLOW,
   APCMINI_RED,
+  APCMINI_GREEN_BLINK,
+  APCMINI_YELLOW_BLINK,
+  APCMINI_RED_BLINK
 };
 inline byte get_colour(byte lev);
 

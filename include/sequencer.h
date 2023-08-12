@@ -7,7 +7,7 @@
 
 #define NUM_STEPS     8
 
-#define SEQUENCER_MAX_VALUE 3
+#define SEQUENCER_MAX_VALUE 5
 
 //#ifdef ENABLE_SEQUENCER
 #if defined(PROTOTYPE)
