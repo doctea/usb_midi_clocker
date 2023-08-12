@@ -82,6 +82,7 @@ class MIDIMatrixManager {
     }
 
     bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
+    bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
@@ -109,6 +110,14 @@ class MIDIMatrixManager {
             return true;
         }
     }
+
+    // don't allow source X to connect to target Y -- eg to avoid loopbacks
+    void disallow(source_id_t source_id, target_id_t target_id) {
+        disallow_map[source_id][target_id] = true;
+    }
+    bool is_allowed(source_id_t source_id, target_id_t target_id) {
+        return !disallow_map[source_id][target_id];
+    }
     
     // connect source to target)
     void connect(MIDITrack *source_track, DeviceBehaviourUltimateBase *target_behaviour);
@@ -122,6 +131,8 @@ class MIDIMatrixManager {
     }
     void connect(source_id_t source_id, target_id_t target_id) {
         if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
+            return;
+        if (!is_allowed(source_id, target_id))
             return;
         if (!source_to_targets[source_id][target_id]) {
             // increment count if not already connected
@@ -267,7 +278,7 @@ class MIDIMatrixManager {
 
     //// stuff for handling targets of midi data
     struct target_entry {
-        char handle[25];
+        char handle[LANGST_HANDEL_ROUT];
         byte connection_count = 0;
         MIDIOutputWrapper *wrapper = nullptr;
     };
@@ -339,6 +350,7 @@ class MIDIMatrixManager {
             //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
             sources = (source_entry*)calloc(MAX_NUM_SOURCES, sizeof(source_entry));
             //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
+            memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

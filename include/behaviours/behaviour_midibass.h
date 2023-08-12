@@ -151,23 +151,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, int8_t>("machinegun", "MIDI Bass", this, &this->machinegun, nullptr, nullptr, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun));
         }
 
-        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            lines->add(String(F("drone=")) + String(this->drone_enabled ? F("enabled"):F("disabled")));
-            lines->add(String(F("machinegun=")) + String(this->machinegun));
-            //ClockedBehaviour::save_sequence_add_lines(lines);
-        }
-        virtual bool load_parse_key_value(String key, String value) override {
-            if (key.equals(F("drone"))) {
-                this->set_drone(value.equals(F("enabled")));
-                //Serial.printf(F("drone found - setting to %s!\n"), drone_enabled?F("true"):F("false"));
-                return true;
-            } else if (key.equals(F("machinegun"))) {
-                this->set_machinegun(value.toInt());
-                return true;
-            }
-            return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
-        }*/
-
         #ifdef ENABLE_SCREEN
             LinkedList<MenuItem *> *make_menu_items() override;
         #endif
