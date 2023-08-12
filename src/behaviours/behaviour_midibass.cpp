@@ -61,17 +61,19 @@
 
         menuitems->add(bar);
 
-        menuitems->add(new MIDIOutputWrapperDebugMenuItem(
-            "Incoming?",
-            my_wrapper
-            //midi_matrix_manager->get_source
-        ));
+        #ifdef DEBUG_MIDIBASS
+            menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+                "Incoming?",
+                my_wrapper
+                //midi_matrix_manager->get_source
+            ));
 
-        menuitems->add(new MIDIOutputWrapperDebugMenuItem(
-            "Outgoing?",
-            //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
-            test_wrapper
-        ));
+            menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+                "Outgoing?",
+                //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
+                test_wrapper
+            ));
+        #endif
 
         menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
