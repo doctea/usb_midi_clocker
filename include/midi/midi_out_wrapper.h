@@ -13,6 +13,8 @@
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
+//#define DEBUG_MIDI_WRAPPER
+
 class MIDITrack;
 
 // generic wrapper around a MIDI output object
@@ -27,13 +29,15 @@ class MIDITrack;
 // TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
 //          ^^ think this is better handled by the midi matrix manager..?
 
-struct message_history_t {
-    uint32_t ticks;
-    byte type;
-    byte channel;
-    byte pitch;
-    byte velocity;
-};
+#ifdef DEBUG_MIDI_WRAPPER
+    struct message_history_t {
+        uint32_t ticks;
+        byte type;
+        byte channel;
+        byte pitch;
+        byte velocity;
+    };
+#endif
 
 class MIDIOutputWrapper {
     /*midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
@@ -54,9 +58,11 @@ class MIDIOutputWrapper {
         int last_note = -1, current_note = -1;
         int last_transposed_note = -1, current_transposed_note = -1;
 
-        message_history_t *message_history = nullptr;
-        const byte message_history_size = 10;
-        byte next_message_history_index = 0;
+        #ifdef DEBUG_MIDI_WRAPPER
+            message_history_t *message_history = nullptr;
+            const byte message_history_size = 10;
+            byte next_message_history_index = 0;
+        #endif
 
         MIDIOutputWrapper(const char *label, byte channel = 1) {
             strcpy(this->label, label);
@@ -76,35 +82,37 @@ class MIDIOutputWrapper {
         }
         MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);*/
 
-        virtual void set_log_message_mode(bool status) {
-            if (this->message_history!=nullptr) {
-                free(this->message_history);
-                this->message_history = nullptr;
-            } else {
-                this->message_history = (message_history_t*)calloc(sizeof(message_history_t), message_history_size);
+        #ifdef DEBUG_MIDI_WRAPPER
+            virtual void set_log_message_mode(bool status) {
+                if (this->message_history!=nullptr) {
+                    free(this->message_history);
+                    this->message_history = nullptr;
+                } else {
+                    this->message_history = (message_history_t*)calloc(sizeof(message_history_t), message_history_size);
+                }
             }
-        }
 
-        virtual void log_message(byte type, byte pitch, byte velocity, byte channel) {
-            if (this->debug) Serial.printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
+            virtual void log_message(byte type, byte pitch, byte velocity, byte channel) {
+                if (this->debug) Serial.printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
 
-            if (this->message_history!=nullptr) {
-                this->message_history[next_message_history_index].ticks = ticks;
-                this->message_history[next_message_history_index].type = type;
-                this->message_history[next_message_history_index].pitch = pitch;
-                this->message_history[next_message_history_index].velocity = velocity;
-                this->message_history[next_message_history_index].channel = channel;
-                next_message_history_index++;
-                if (next_message_history_index>=message_history_size)
-                    next_message_history_index = 0;
+                if (this->message_history!=nullptr) {
+                    this->message_history[next_message_history_index].ticks = ticks;
+                    this->message_history[next_message_history_index].type = type;
+                    this->message_history[next_message_history_index].pitch = pitch;
+                    this->message_history[next_message_history_index].velocity = velocity;
+                    this->message_history[next_message_history_index].channel = channel;
+                    next_message_history_index++;
+                    if (next_message_history_index>=message_history_size)
+                        next_message_history_index = 0;
+                }
             }
-        }
-        virtual void log_message_on(byte pitch, byte velocity, byte channel) {
-            log_message(midi::NoteOn, pitch, velocity, channel);
-        }
-        virtual void log_message_off(byte pitch, byte velocity, byte channel) {
-            log_message(midi::NoteOff, pitch, velocity, channel);
-        }
+            virtual void log_message_on(byte pitch, byte velocity, byte channel) {
+                log_message(midi::NoteOn, pitch, velocity, channel);
+            }
+            virtual void log_message_off(byte pitch, byte velocity, byte channel) {
+                log_message(midi::NoteOff, pitch, velocity, channel);
+            }
+        #endif
 
         // remap pitch if force octave is on, TODO: other tranposition modes
         virtual int recalculate_pitch(byte note) {
@@ -145,7 +153,9 @@ class MIDIOutputWrapper {
                 channel = default_channel;
             }
 
-            this->log_message_on(pitch, velocity, channel);
+            #ifdef DEBUG_MIDI_WRAPPER
+                this->log_message_on(pitch, velocity, channel);
+            #endif
             this->actual_sendNoteOn(pitch, velocity, channel);
         }
 
@@ -174,7 +184,9 @@ class MIDIOutputWrapper {
                 channel = default_channel;
             }
 
-            this->log_message_off(pitch, velocity, channel);
+            #ifdef DEBUG_MIDI_WRAPPER
+                this->log_message_off(pitch, velocity, channel);
+            #endif
             this->actual_sendNoteOff(pitch, velocity, channel);
 
             this->last_transposed_note = pitch;

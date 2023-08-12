@@ -217,12 +217,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         behaviour_midibassproxy->debug = wrapper->debug = true; // debug switch for machinegun not working?!
     #endif
     midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);
-    /*#ifdef ENABLE_NEUTRON
-        behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
-    #endif*/
-    #ifdef DEFAULT_NEUTRON_OCTAVE
-        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
-    #endif
+
 
     Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
     //while(1);
