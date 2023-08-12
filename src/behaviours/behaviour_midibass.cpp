@@ -7,6 +7,8 @@
     #include "menuitems_object.h"
     #include "submenuitem_bar.h"
 
+    #include "mymenu/menu_midioutputwrapper.h"
+
     FLASHMEM
     LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
@@ -58,6 +60,21 @@
         bar->add(machinegun_mode);             
 
         menuitems->add(bar);
+
+        menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+            "Incoming?",
+            my_wrapper
+            //midi_matrix_manager->get_source
+        ));
+
+        menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+            "Outgoing?",
+            //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
+            test_wrapper
+        ));
+
+        menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
+
         return menuitems;
     }
 #endif

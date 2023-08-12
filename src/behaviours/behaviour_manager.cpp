@@ -27,6 +27,8 @@
 
 #include "behaviours/behaviour_opentheremin.h"
 
+#include "behaviours/behaviour_midibassproxy.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -158,6 +160,9 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_midimuso);
         behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
     #endif
+
+    behaviour_midibassproxy = new MIDIBassBehaviourProxy();
+    behaviour_manager->registerBehaviour(behaviour_midibassproxy);
 
     #ifdef ENABLE_BEHRINGER_EDGE
         #ifdef ENABLE_BEHRINGER_EDGE_DEDICATED

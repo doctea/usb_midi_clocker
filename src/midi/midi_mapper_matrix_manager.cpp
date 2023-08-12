@@ -22,6 +22,7 @@
 #include "behaviours/behaviour_cvinput.h"
 
 #include "behaviours/behaviour_opentheremin.h"
+#include "behaviours/behaviour_midibassproxy.h"
 
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
@@ -72,9 +73,16 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
     #endif
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
+    /*#ifdef ENABLE_MAM
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : unused : ch4", midi_out_serial[2], 4));
+    #endif*/
     #ifdef ENABLE_NEUTRON
         behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
     #endif
+    #ifdef DEFAULT_NEUTRON_OCTAVE
+        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+    #endif
+
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
     #endif
@@ -91,9 +99,6 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
     //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
 
-    #ifdef DEFAULT_NEUTRON_OCTAVE
-        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
-    #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_OUTPUT)
         behaviour_bamble->self_register_midi_matrix_targets(midi_matrix_manager);
@@ -202,6 +207,19 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
 
     #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)
         midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");
+    #endif
+
+    midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
+    MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
+    behaviour_midibassproxy->test_wrapper = midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1");
+    behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
+    //behaviour_midibassproxy->debug = wrapper->debug = true; // debug switch for machinegun not working?!
+    midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);
+    /*#ifdef ENABLE_NEUTRON
+        behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
+    #endif*/
+    #ifdef DEFAULT_NEUTRON_OCTAVE
+        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
     #endif
 
     Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();

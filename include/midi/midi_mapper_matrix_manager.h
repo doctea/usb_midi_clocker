@@ -190,7 +190,10 @@ class MIDIMatrixManager {
         }
     }
     void processNoteOff(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
-        if (!is_valid_note(pitch)) return;
+        if (!is_valid_note(pitch)) {
+            if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
+            return;
+        }
         if (source_id<0) {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
