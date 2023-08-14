@@ -253,6 +253,7 @@ void setup_menu() {
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
+    menu->add(new ObjectActionConfirmItem<MIDIMatrixManager>("{HARD PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes_force));
     menu->add(&midi_matrix_selector);
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     

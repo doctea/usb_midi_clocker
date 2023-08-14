@@ -76,9 +76,9 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
       case 4:
         if (!is_bpm_on_beat(ticks, offset) && is_bpm_on_eighth(ticks, offset)) return true; break;
       case 5:
-      //  if (!is_bpm_on_beat(ticks, offset) && is_bpm_on_eighth(ticks, offset)) return true; break;
-      //case 6:
         if (!is_bpm_on_beat(ticks, offset) && !is_bpm_on_eighth(ticks, offset) && is_bpm_on_sixteenth(ticks, offset)) return true; break;
+      /*case 6:
+        if (!is_bpm_on_beat(ticks, offset) && !is_bpm_on_eighth(ticks, offset) && ) return true; break;       */
       default:
         return false;
       #ifdef DEBUG_SEQUENCER

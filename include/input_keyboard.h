@@ -170,7 +170,10 @@ bool debug_stress_sequencer_load = false;
                 Serial.println(F("------------------------")); break;
             case 'p': case 'P':
                 Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
-                midi_matrix_manager->stop_all_notes();
+                if (key=='P')   // hard panic
+                    midi_matrix_manager->stop_all_notes_force();
+                else
+                    midi_matrix_manager->stop_all_notes();
                 gate_manager->stop_all_gates();
                 break;
             #ifdef ENABLE_SCREEN
