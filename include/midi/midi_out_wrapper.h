@@ -50,6 +50,8 @@ class MIDIOutputWrapper {
     public:
         bool debug = false;
 
+        bool always_force_stop_all = false;
+
         byte default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
@@ -217,6 +219,8 @@ class MIDIOutputWrapper {
         }
 
         virtual void stop_all_notes(bool force = false) {
+            if (this->always_force_stop_all) 
+                force = true;
             //this->debug = true;
             if (this->debug) Serial.printf(F("stop_all_notes in %s...\n"), label);
             if (is_valid_note(this->current_note)) {
@@ -224,19 +228,17 @@ class MIDIOutputWrapper {
                 this->actual_sendNoteOff(this->current_transposed_note,0,default_channel);
             }
             sendControlChange(midi::AllNotesOff, 127);
-            for (int pitch = 0 ; pitch < 127 ; pitch++) {
-                //int pitch = recalculate_pitch(i);
-
-                if (is_note_playing(pitch)) {
-                    //if (this->debug) 
+                for (int pitch = 0 ; pitch < 127 ; pitch++) {
+                    //int pitch = recalculate_pitch(i);
+                    //if (is_note_playing(pitch)) {
+                        //if (this->debug) 
                     if (this->debug) Serial.printf("\tGot %i notes of pitch %i to stop on channel %i\t (force_octave is %i)..\n", playing_notes[pitch], pitch, default_channel, force_octave);
-                    if(force) {
+                    if(force /*|| is_note_playing(pitch)*/) {
                         if (this->debug) Serial.printf("\t\tforce, so actually sending...\n");
                         sendNoteOff(pitch, 0, default_channel);
                     }
                     playing_notes[pitch] = 0;
                 }
-            }
         }
 
         virtual void setForceOctave(int octave) {
@@ -297,9 +299,9 @@ class MIDIOutputWrapper_MIDISerial : public MIDIOutputWrapper {
             output->sendNoteOff(pitch, velocity, channel);
         }
 
-        virtual void actual_sendControlChange(byte pitch, byte velocity, byte channel) override {
+        virtual void actual_sendControlChange(byte cc_number, byte value, byte channel) override {
             if (channel==0) channel = default_channel;
-            output->sendControlChange(pitch, velocity, channel);
+            output->sendControlChange(cc_number, value, channel);
         }
 
         virtual void actual_sendPitchBend(int bend, byte channel) override {
