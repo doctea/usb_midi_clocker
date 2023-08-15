@@ -449,6 +449,15 @@ void do_tick(uint32_t in_ticks) {
     midi_loop_track.process_tick(ticks);
   #endif
 
+  // drone / machinegun works when do_end_bar here !
+  // do this after everything else because of problems with machinegun mode..?
+  if (is_bpm_on_bar(ticks+1)) {
+    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
+    if (is_bpm_on_phrase(ticks+1)) {
+      behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+    }
+  }
+
   #ifdef ENABLE_DRUM_LOOPER
     drums_loop_track.process_tick(ticks);
   #endif
@@ -458,6 +467,8 @@ void do_tick(uint32_t in_ticks) {
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
   behaviour_manager->send_clocks();
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+
+  // done doesn't end properly for usb behaviours if do_end_bar here!
 
   #ifdef ENABLE_CV_OUTPUT
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
@@ -469,13 +480,15 @@ void do_tick(uint32_t in_ticks) {
   behaviour_manager->do_ticks(in_ticks);
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
 
+  /*
+  // done doesn't end properly for usb behaviours if do_end_bar here!
   // do this after everything else because of problems with machinegun mode..?
   if (is_bpm_on_bar(ticks+1)) {
     behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
     if (is_bpm_on_phrase(ticks+1)) {
       behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
     }
-  }
+  }*/
 
   /*#ifdef ENABLE_USB2
     if (is_bpm_on_phrase(ticks+1)) {

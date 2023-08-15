@@ -13,7 +13,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         byte drone_channel = 0;     // channel that we should drone on
 
         int8_t machinegun = 0;
-        int8_t machinegun_current_note = -1;
+        int8_t machinegun_current_note = NOTE_OFF;
 
         MIDIOutputWrapper *test_wrapper = nullptr;
 
@@ -58,7 +58,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 if (this->debug) Serial.printf(F("\t\t<<<< after kill_drone_note(%i, %i, %i)\n"), last_drone_note, 0, drone_channel);
             }
             last_drone_note = NOTE_OFF;
-            //kill_machinegun_note();
+            if (machinegun>0)
+                kill_machinegun_note();
         }
         virtual void send_drone_note() {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
@@ -71,7 +72,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         //virtual void on_tick(uint32_t ticks) override {
         virtual void on_pre_clock(uint32_t ticks) override {
             //MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-            int note = -1;
+            int note = NOTE_OFF;
             if (is_valid_note(last_drone_note)) {
                 //if (this->debug) Serial.printf("%s#on_tick(%i) with last_drone_note %s\n", this->get_label(), ticks%24, get_note_name_c(last_drone_note));
                 note = last_drone_note;
@@ -117,8 +118,9 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 if (debug) Serial.printf("%s#on_end_bar(%i) doing kill_drone_note() for\t %i\n", this->get_label(), bar, last_drone_note);
                 this->kill_drone_note();
                 //this->kill_drone_note();
-                this->kill_machinegun_note();
-                this->test_wrapper->stop_all_notes();
+                //this->kill_machinegun_note();
+                //if (this->test_wrapper!=nullptr)
+                //    this->test_wrapper->stop_all_notes();
             }
             if (machinegun > 0 && is_valid_note(this->machinegun_current_note)) {
                 if (debug) Serial.printf("%s#on_end_bar(%i) doing kill_machinegun_note() for\t %i\n", this->get_label(), bar, machinegun_current_note);
