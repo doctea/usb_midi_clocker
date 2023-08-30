@@ -4,6 +4,9 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_APCMINI
+
 #include "behaviours/behaviour_base_usb.h"
 #include "midi/midi_apcmini.h"
 #include "project.h"
@@ -275,4 +278,5 @@ void apcmini_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue
 void apcmini_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
+#endif
 #endif

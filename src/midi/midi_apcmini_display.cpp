@@ -1,4 +1,6 @@
 #include "Config.h"
+#if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
+
 //#include "behaviours/behaviour_apcmini->device.h"
 #include "midi/midi_apcmini_display.h"
 
@@ -183,4 +185,5 @@ void redraw_sequence_row(byte c) {
     )
     //Serial.println(F("returning from apcmini_update_clock_display()"));
   }
+#endif
 #endif
