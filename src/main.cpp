@@ -140,10 +140,6 @@ void setup() {
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");
   tft_print("Git info: " COMMIT_INFO "\n");
 
-  #ifdef ENABLE_TYPING_KEYBOARD
-    tft_print((char*)"Setting up typing keyboard..\n");
-    setup_typing_keyboard();
-  #endif
 
   #ifdef ENABLE_CV_OUTPUT
     tft_print((char*)"Setting up CV gates..\n");
@@ -212,6 +208,11 @@ void setup() {
     setup_multi_usb();
     Serial.println(F("USB ready.")); Serial_flush();
     Debug_printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
+  #endif
+
+  #ifdef ENABLE_TYPING_KEYBOARD
+    tft_print((char*)"Setting up typing keyboard..\n");
+    setup_typing_keyboard();
   #endif
 
   #ifdef ENABLE_USBSERIAL

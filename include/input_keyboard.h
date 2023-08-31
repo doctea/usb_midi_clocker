@@ -48,6 +48,9 @@ bool debug_stress_sequencer_load = false;
     extern bool debug_flag;
       
     KeyboardController keyboard1(Usb);
+    // need these with more recent versions of the USBHost_t36 library, otherwise keyboard doesn't get detected!
+    USBHIDParser hid1(Usb);
+    USBHIDParser hid2(Usb);
 
     #include "queue.h"
 
@@ -129,6 +132,10 @@ bool debug_stress_sequencer_load = false;
 
     void OnRelease(int key) {
         held = false;
+    }
+
+    void OnRawPress(uint8_t keycode) {
+        Serial.printf("OnRawPress: %02x\n", keycode);
     }
 
     void process_key(int key, int modifiers) {
