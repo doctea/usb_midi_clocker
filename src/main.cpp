@@ -66,6 +66,8 @@ void do_tick(uint32_t ticks);
   #include "multi_usbserial_handlers.h"
 #endif
 
+#include "ParameterManager.h"
+
 #include "behaviours/behaviour_manager.h"
 
 #include "input_keyboard.h"
@@ -340,18 +342,8 @@ void loop() {
 
     #ifdef ENABLE_CV_INPUT
       static unsigned long time_of_last_param_update = 0;
-      if (!screen_was_drawn && millis() - time_of_last_param_update > TIME_BETWEEN_CV_INPUT_UPDATES) {
-        if(debug_flag) parameter_manager->debug = true;
-        if(debug_flag) Serial.println(F("about to do parameter_manager->update_voltage_sources()..")); Serial_flush();
-        parameter_manager->update_voltage_sources();
-        //if(debug) Serial.println("just did parameter_manager->update_voltage_sources().."); Serial_flush();
-        //if(debug) Serial.println("about to do parameter_manager->update_inputs().."); Serial_flush();
-        parameter_manager->update_inputs();
-        //if(debug) Serial.println("about to do parameter_manager->update_mixers().."); Serial_flush();
-        parameter_manager->update_mixers();
-        if(debug_flag) Serial.println(F("just did parameter_manager->update_inputs()..")); Serial_flush();
-        time_of_last_param_update = millis();
-      }
+      if (!screen_was_drawn)
+        parameter_manager->throttled_update_cv_input(false, TIME_BETWEEN_CV_INPUT_UPDATES);
     #endif
   }
 
