@@ -58,6 +58,9 @@ void setup_debug_menu() {
 
     ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Render times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
     bar->add(debug_times_control);
+    ObjectToggleControl<Menu> *profiler_control = new ObjectToggleControl<Menu>("Profiler", menu, &Menu::setProfileEnable, &Menu::isProfileEnable, nullptr);
+    bar->add(profiler_control);
+
     bar->add(new NumberControl<bool>("Extra", (bool*)&debug_flag, debug_flag, false, true));
     bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug_flag, false, true));
     menu->add(bar);
