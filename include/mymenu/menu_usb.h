@@ -15,7 +15,7 @@
 
             virtual int display(Coord pos, bool selected, bool opened) override {
                 tft->setCursor(pos.x,pos.y);
-                header("USB devices:", pos, selected, opened);
+                header("MIDI-USB devices:", pos, selected, opened);
                 colours(opened);
                 tft->setTextSize(1);
                 int connected = 0;
