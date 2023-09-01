@@ -134,9 +134,9 @@ bool debug_stress_sequencer_load = false;
         held = false;
     }
 
-    void OnRawPress(uint8_t keycode) {
+    /*void OnRawPress(uint8_t keycode) {
         Serial.printf("OnRawPress: %02x\n", keycode);
-    }
+    }*/
 
     void process_key(int key, int modifiers) {
         //int modifiers = keyboard1.getModifiers();
