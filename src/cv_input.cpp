@@ -16,6 +16,8 @@
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_craftsynth.h"
 
+#include "behaviours/behaviour_manager.h"
+
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
 // initialise the voltage-reading hardware/libraries and the ParameterManager
@@ -51,7 +53,7 @@ void setup_parameters() {
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
     #ifdef ENABLE_CV_INPUT
-        tft_print("...adding VoltageParameterInputs for CV source!\n");
+        tft_print("...adding VoltageParameterInputs for ADC1 CV source!\n");
         VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(0));
         VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(1));
         VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(2));
@@ -66,7 +68,7 @@ void setup_parameters() {
     #endif
 
     #ifdef ENABLE_CV_INPUT_2
-        tft_print("...adding VoltageParameterInputs for CV source #2!\n");
+        tft_print("...adding VoltageParameterInputs for ADC2 CV source!\n");
         Serial.printf("voltage_sources has %i entries - about to try and add 3,4,5!\n", parameter_manager->voltage_sources->size());
         VoltageParameterInput *vpi4 = new VoltageParameterInput((char*)"D", "ADC2", parameter_manager->voltage_sources->get(3));
         VoltageParameterInput *vpi5 = new VoltageParameterInput((char*)"E", "ADC2", parameter_manager->voltage_sources->get(4));
@@ -102,22 +104,21 @@ void setup_parameters() {
         //Serial.println(F("=========== FINISHED SETTING DEFAULT PARAMETER MAPS")); Serial_flush();
     #endif*/
 
-    Serial.println("starting allParameters...");
+    //Serial.println("starting allParameters...");
     for(unsigned int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
-        Serial.printf("\tdoing addParameters for behaviour %i/%i\n", i+1, behaviour_manager->behaviours->size());
+        //Serial.printf("\tdoing addParameters for behaviour %i/%i\n", i+1, behaviour_manager->behaviours->size());
         if (behaviour_manager->behaviours->get(i)==nullptr) {
-            Serial.printf("\tbehaviour %i is nullptr!!\n", i);
+            //Serial.printf("\tbehaviour %i is nullptr!!\n", i);
             continue;
         } else {
-            Serial.printf("\tbehaviour %s\n", behaviour_manager->behaviours->get(i)->get_label());
+            //Serial.printf("\tbehaviour %s\n", behaviour_manager->behaviours->get(i)->get_label());
         }
         parameter_manager->addParameters(behaviour_manager->behaviours->get(i)->get_parameters());
     }
-    Serial.println("finished allParameters.");
+    //Serial.println("finished allParameters.");
 
-    Serial.println("about to parameter_manager->setDefaultParameterConnections()..");
+    //Serial.println("about to parameter_manager->setDefaultParameterConnections()..");
     parameter_manager->setDefaultParameterConnections();
-
 
     tft_print("done.\n");
 }
