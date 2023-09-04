@@ -19,6 +19,10 @@
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 5 //25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
+#ifdef ENABLE_CV_INPUT
+    #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
+#endif
+
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
         #define ENABLE_CALIBRATION_STORAGE          // enable save/recall of calibration data to SD card file
@@ -26,9 +30,6 @@
     #ifndef LOAD_CALIBRATION_ON_BOOT
         #define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card on boot
     #endif
-#endif
-#ifdef ENABLE_CV_INPUT
-    #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
 #endif
 
 // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
@@ -101,7 +102,7 @@
 #define ENABLE_NEUTRON
 #define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
 
-#define ENABLE_DPT_LOOPER
+//#define ENABLE_DPT_LOOPER
 #ifdef ENABLE_DPT_LOOPER
     #ifdef PROTOTYPE
         #undef ENABLE_DPT_LOOPER
@@ -206,6 +207,8 @@
     #endif
 #endif
 
-
+// turn off IRQs while checking changed USB devices 
+// seems to prevent crashes on reconnection, but causes pipes to freeze up, it seems
+#define IRQ_PROTECT_USB_CHANGES
 
 //#define FloatParameter FloatParameter
