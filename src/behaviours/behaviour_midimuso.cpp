@@ -1,3 +1,7 @@
+#include "Config.h"
+
+#ifdef ENABLE_MIDIMUSO
+
 #include "behaviours/behaviour_midimuso.h"
 
 #ifdef ENABLE_SCREEN
@@ -18,3 +22,5 @@
 #endif
 
 DeviceBehaviour_MIDIMuso *behaviour_midimuso = new DeviceBehaviour_MIDIMuso();
+
+#endif

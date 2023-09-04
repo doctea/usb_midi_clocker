@@ -341,7 +341,6 @@ void loop() {
     #endif
 
     #ifdef ENABLE_CV_INPUT
-      static unsigned long time_of_last_param_update = 0;
       if (!screen_was_drawn)
         parameter_manager->throttled_update_cv_input(false, TIME_BETWEEN_CV_INPUT_UPDATES);
     #endif

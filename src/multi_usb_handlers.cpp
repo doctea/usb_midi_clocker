@@ -112,6 +112,11 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
 
 void update_usb_midi_device_connections() {
   for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
+    #ifdef IRQ_PROTECT_USB_CHANGES
+      bool irqs_enabled = __irq_enabled();
+      __disable_irq();
+    #endif
+
     uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
     //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
     if (usb_midi_slots[port].packed_id != packed_id) {
@@ -123,6 +128,9 @@ void update_usb_midi_device_connections() {
       setup_usb_midi_device(port, packed_id);
       Serial.println(F("-----"));
     }
+    #ifdef IRQ_PROTECT_USB_CHANGES
+      if (irqs_enabled) __enable_irq();
+    #endif
   }
 }
 

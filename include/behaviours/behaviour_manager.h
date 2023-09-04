@@ -77,35 +77,42 @@ class DeviceBehaviourManager {
             this->behaviours->add(behaviour);
         }
 
-        bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
-            //bool irqs_enabled = __irq_enabled();
-            //__disable_irq();
+        #ifdef ENABLE_USB
+            bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
+                #ifdef IRQ_PROTECT_USB_CHANGES
+                    bool irqs_enabled = __irq_enabled();
+                    __disable_irq();
+                #endif
 
-            // loop over the registered behaviours and if the correct one is found, set it up
-            const unsigned int size = behaviours_usb->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
-                DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
-                Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
-                usb_midi_slots[idx].packed_id = packed_id;
-                if (behaviour->matches_identifiers(packed_id)) {
-                    Debug_printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
-                    behaviour->connect_device(usb_midi_slots[idx].device);
-                    usb_midi_slots[idx].behaviour = behaviour;
-                    //if (irqs_enabled) __enable_irq();
-                    return true;
+                // loop over the registered behaviours and if the correct one is found, set it up
+                const unsigned int size = behaviours_usb->size();
+                for (unsigned int i = 0 ; i < size ; i++) {
+                    DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
+                    Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
+                    usb_midi_slots[idx].packed_id = packed_id;
+                    if (behaviour->matches_identifiers(packed_id)) {
+                        Debug_printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
+                        behaviour->connect_device(usb_midi_slots[idx].device);
+                        usb_midi_slots[idx].behaviour = behaviour;
+                        //if (irqs_enabled) __enable_irq();
+                        return true;
+                    }
                 }
-            }
-            Debug_printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
-            //if (irqs_enabled) __enable_irq();
+                Debug_printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
+                #ifdef IRQ_PROTECT_USB_CHANGES
+                    if (irqs_enabled) __enable_irq();
+                #endif
 
-            return false;
-        }
+                return false;
+            }
+        #endif
 
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
-                // for some reason, doing this irq enable/disable stuff here causes prog to lock up before menu display, but ONLY if serial monitor ISN'T connected?!
-                //bool irqs_enabled = __irq_enabled();
-                //__disable_irq();
+                #ifdef IRQ_PROTECT_USB_CHANGES
+                    bool irqs_enabled = __irq_enabled();
+                    __disable_irq();
+                #endif
                 Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const unsigned int size = behaviours_usbserial->size();
@@ -131,7 +138,9 @@ class DeviceBehaviourManager {
                         return true;
                     }
                 }
-                //if (irqs_enabled) __enable_irq();
+                #ifdef IRQ_PROTECT_USB_CHANGES
+                    if (irqs_enabled) __enable_irq();
+                #endif
                 Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial_flush();
                 return false;
             }
@@ -370,7 +379,9 @@ class DeviceBehaviourManager {
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {
-            this->behaviours_usb = new LinkedList<DeviceBehaviourUSBBase*>();
+            #ifdef ENABLE_USB
+                this->behaviours_usb = new LinkedList<DeviceBehaviourUSBBase*>();
+            #endif
             this->behaviours_serial = new LinkedList<DeviceBehaviourSerialBase*>();
             this->behaviours_virtual = new LinkedList<DeviceBehaviourUltimateBase*>();
             #ifdef ENABLE_USBSERIAL
