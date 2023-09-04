@@ -45,6 +45,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     source_id_t source_id = -1;
     target_id_t target_id = -1;
 
+    int force_octave = -1;
+    int last_transposed_note = -1, current_transposed_note = -1;
+
     //MIDIOutputWrapper *wrapper = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
@@ -105,14 +108,36 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual void init() {};
 
+    // remap pitch if force octave is on, TODO: other tranposition modes
+    virtual int recalculate_pitch(byte note) {
+        if (this->force_octave>=0) {
+            // send incoming notes from beatstep back out to neutron on serial3, but transposed down
+            uint8_t note2 = note % 12;
+            note2 += (force_octave*12); //24;
+            if(this->debug) {
+                Serial.printf("\trecalculate_pitch on %i => %i\n", note, note2);
+            }
+            note = note2;
+            return note2;
+        }
+        return note;
+    }
+
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
+        // TODO: this is where ForceOctave check should go..?
+        note = this->recalculate_pitch(note);
+        this->current_transposed_note = note;
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
+        // TODO: this is where ForceOctave check should go..?
+        note = this->recalculate_pitch(note);
+        if (this->current_transposed_note==note)
+            this->current_transposed_note = NOTE_OFF;
         this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
@@ -264,7 +289,27 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         FLASHMEM
         virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
     #endif
-    
+
+
+    virtual void setForceOctave(int octave) {
+        if (this->debug) Serial.printf("MIDIBassBehaviour#setForceOctave(%i)!", octave); Serial_flush();
+        /*if (octave!=this->force_octave) {
+            this->stop_all_notes();
+            //midi_matrix_manager->stop_all_notes(source_id);
+            this->force_octave = octave;
+        }*/
+        if (octave!=this->force_octave) {
+            midi_matrix_manager->stop_all_notes_for_source(this->source_id);
+            midi_matrix_manager->stop_all_notes_for_target(this->target_id);
+
+            this->force_octave = octave;
+        }
+    }
+    virtual int getForceOctave() {
+        //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial_flush();
+        return this->force_octave;
+    }
+
 };
 
 #endif

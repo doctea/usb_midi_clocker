@@ -79,9 +79,9 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #endif*/
     #ifdef ENABLE_NEUTRON
         behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
-    #endif
-    #ifdef DEFAULT_NEUTRON_OCTAVE
-        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+        #ifdef DEFAULT_NEUTRON_OCTAVE
+            behaviour_neutron->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+        #endif
     #endif
 
     #ifdef ENABLE_DISTING

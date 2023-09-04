@@ -40,7 +40,6 @@ class MIDITrack;
 #endif
 
 class MIDIOutputWrapper {
-    int force_octave = -1;
 
     public:
         bool debug = false;
@@ -53,7 +52,7 @@ class MIDIOutputWrapper {
         byte playing_notes[127];
 
         int last_note = -1, current_note = -1;
-        int last_transposed_note = -1, current_transposed_note = -1;
+        //int last_transposed_note = -1, current_transposed_note = -1;
 
         #ifdef DEBUG_MIDI_WRAPPER
             message_history_t *message_history = nullptr;
@@ -100,39 +99,27 @@ class MIDIOutputWrapper {
             }
         #endif
 
-        // remap pitch if force octave is on, TODO: other tranposition modes
-        virtual int recalculate_pitch(byte note) {
-            if (this->force_octave>=0) {
-                // send incoming notes from beatstep back out to neutron on serial3, but transposed down
-                uint8_t note2 = note % 12;
-                note2 += (force_octave*12); //24;
-                if(this->debug) {
-                    Serial.printf("\trecalculate_pitch on %i => %i\n", note, note2);
-                }
-                note = note2;
-                return note2;
-            }
-            return note;
-        }
+
 
         //virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
         //virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
 
         virtual void sendNoteOn(byte in_pitch, byte velocity, byte channel) {
+            if (!is_valid_note(in_pitch)) return;
+
             current_note = in_pitch;
-            int pitch = recalculate_pitch(in_pitch);
-            if (!is_valid_note(pitch)) return;
+            //int pitch = recalculate_pitch(in_pitch);
 
-            if (this->debug) Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), pitch, velocity, channel, label); Serial_flush();
+            if (this->debug) Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush();
 
-            if (playing_notes[pitch]<8) {
+            if (playing_notes[current_note]<8) {
                 //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
-                playing_notes[pitch]++;
+                playing_notes[current_note]++;
             } else {
                 //if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
             }
 
-            current_transposed_note = pitch;
+            //current_transposed_note = current_note;
 
             if (channel==0) {
                 if (this->debug) Serial.printf(F("\t(swapping channel %i for default_channel %i)\n"), channel, default_channel);
@@ -140,30 +127,32 @@ class MIDIOutputWrapper {
             }
 
             #ifdef DEBUG_MIDI_WRAPPER
-                this->log_message_on(pitch, velocity, channel);
+                this->log_message_on(current_note, velocity, channel);
             #endif
-            this->actual_sendNoteOn(pitch, velocity, channel);
+            this->actual_sendNoteOn(current_note, velocity, channel);
         }
 
         virtual void sendNoteOff(byte in_pitch, byte velocity, byte channel) {
+            if (!is_valid_note(in_pitch)) return;
+
             this->last_note = in_pitch;
             if (this->current_note==in_pitch) 
                 current_note = -1;
 
-            int pitch = recalculate_pitch(in_pitch);
+            //int pitch = recalculate_pitch(in_pitch);
 
-            if (this->debug) Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\t(force_octave is %i)\tcurrent count is\t%i\n", pitch, velocity, channel, force_octave, playing_notes[pitch]);
+            if (this->debug) 
+                Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", pitch, velocity, channel, playing_notes[pitch]);
 
-            if (!is_valid_note(pitch)) return;
-            if (playing_notes[pitch]>0) playing_notes[pitch]--;
-            if (playing_notes[pitch]!=0) {
-                if (this->debug) Serial.printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", pitch, playing_notes[pitch]);
+            if (playing_notes[in_pitch]>0) playing_notes[in_pitch]--;
+            if (playing_notes[in_pitch]!=0) {
+                if (this->debug) Serial.printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", in_pitch, playing_notes[in_pitch]);
                 return;
             }
 
-            this->last_transposed_note = pitch;
-            if (this->current_transposed_note==pitch)
-                current_transposed_note = -1;
+            //this->last_transposed_note = in_pitch;
+            //if (this->current_transposed_note==in_pitch)
+            //    current_transposed_note = -1;
 
             if (channel==0) {
                 if (this->debug) Serial.printf(F("\t(swapping channel %2i for default_channel %2i)\n"), channel, default_channel);
@@ -173,16 +162,16 @@ class MIDIOutputWrapper {
             #ifdef DEBUG_MIDI_WRAPPER
                 this->log_message_off(pitch, velocity, channel);
             #endif
-            this->actual_sendNoteOff(pitch, velocity, channel);
+            this->actual_sendNoteOff(in_pitch, velocity, channel);
 
-            this->last_transposed_note = pitch;
-            if (this->current_transposed_note==pitch)
-                current_transposed_note = -1;
+            //this->last_transposed_note = in_pitch;
+            //if (this->current_transposed_note==in_pitch)
+            //    current_transposed_note = -1;
         }
 
-        virtual void sendControlChange(byte pitch, byte velocity, byte channel = 0) {
-            if (channel == 0 ) channel = this->default_channel;
-            this->actual_sendControlChange(pitch, velocity, channel);
+        virtual void sendControlChange(byte cc_number, byte velocity, byte channel = 0) {
+            if (channel == 0) channel = this->default_channel;
+            this->actual_sendControlChange(cc_number, velocity, channel);
         };
 
         virtual void sendPitchBend(int bend, byte channel = 0) {
@@ -209,33 +198,20 @@ class MIDIOutputWrapper {
             if (this->debug) Serial.printf(F("stop_all_notes in %s...\n"), label);
             if (is_valid_note(this->current_note)) {
                 this->actual_sendNoteOff(this->current_note,0,default_channel);
-                this->actual_sendNoteOff(this->current_transposed_note,0,default_channel);
+                //this->actual_sendNoteOff(this->current_transposed_note,0,default_channel);
             }
             sendControlChange(midi::AllNotesOff, 127);
-                for (int pitch = 0 ; pitch < 127 ; pitch++) {
-                    //int pitch = recalculate_pitch(i);
-                    //if (is_note_playing(pitch)) {
-                        //if (this->debug) 
-                    if (this->debug) Serial.printf("\tGot %i notes of pitch %i to stop on channel %i\t (force_octave is %i)..\n", playing_notes[pitch], pitch, default_channel, force_octave);
-                    if(force /*|| is_note_playing(pitch)*/) {
-                        if (this->debug) Serial.printf("\t\tforce, so actually sending...\n");
-                        sendNoteOff(pitch, 0, default_channel);
-                    }
-                    playing_notes[pitch] = 0;
+            for (int pitch = 0 ; pitch < 127 ; pitch++) {
+                //int pitch = recalculate_pitch(i);
+                //if (is_note_playing(pitch)) {
+                    //if (this->debug) 
+                if (this->debug) Serial.printf("\tGot %i notes of pitch %i to stop on channel %i\t\n", playing_notes[pitch], pitch, default_channel);
+                if(force /*|| is_note_playing(pitch)*/) {
+                    if (this->debug) Serial.printf("\t\tforce, so actually sending...\n");
+                    sendNoteOff(pitch, 0, default_channel);
                 }
-        }
-
-        virtual void setForceOctave(int octave) {
-            if (this->debug) Serial.printf("Beatstep_Behaviour#setForceOctave(%i)!", octave); Serial_flush();
-            if (octave!=this->force_octave) {
-                this->stop_all_notes();
-                //midi_matrix_manager->stop_all_notes(source_id);
-                this->force_octave = octave;
+                playing_notes[pitch] = 0;
             }
-        }
-        virtual int getForceOctave() {
-            //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial_flush();
-            return this->force_octave;
         }
 };
 

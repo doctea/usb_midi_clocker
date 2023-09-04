@@ -24,17 +24,17 @@
         if (my_wrapper!=nullptr) {
             HarmonyStatus *harmony = new HarmonyStatus(
                 output_label, 
-                &my_wrapper->last_transposed_note, 
-                &my_wrapper->current_transposed_note, 
+                &this->last_transposed_note, 
+                &this->current_transposed_note, 
                 &this->last_drone_note
             );
 
-            ObjectNumberControl<MIDIOutputWrapper,int> *transpose_control = 
-                new ObjectNumberControl<MIDIOutputWrapper,int>(
+            ObjectNumberControl<MIDIBassBehaviour,int> *transpose_control = 
+                new ObjectNumberControl<MIDIBassBehaviour,int>(
                     "Octave",
-                    my_wrapper, 
-                    &MIDIOutputWrapper::setForceOctave, 
-                    &MIDIOutputWrapper::getForceOctave, 
+                    this, 
+                    &MIDIBassBehaviour::setForceOctave, 
+                    &MIDIBassBehaviour::getForceOctave, 
                     nullptr,
                     -1,
                     8
