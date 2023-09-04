@@ -40,11 +40,6 @@ class MIDITrack;
 #endif
 
 class MIDIOutputWrapper {
-    /*midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_serialmidi = nullptr;
-    MIDIDeviceBase *output_usb = nullptr;
-    MIDIDeviceBase **output_usb_pointer = nullptr;  // for late binding usb
-    MIDITrack *output_looper = nullptr;*/
-
     int force_octave = -1;
 
     public:
@@ -72,17 +67,6 @@ class MIDIOutputWrapper {
             memset(playing_notes, 0, sizeof(playing_notes));
         }
         virtual ~MIDIOutputWrapper();
-        //virtual ~MIDIOutputWrapper();
-        /*MIDIOutputWrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *in_output_serialmidi, byte channel = 1) : MIDIOutputWrapper(label, channel) {
-            output_serialmidi = in_output_serialmidi;
-        }
-        MIDIOutputWrapper(const char *label, MIDIDeviceBase *in_output_usb, byte channel = 1) : MIDIOutputWrapper(label, channel) {
-            output_usb = in_output_usb;
-        }
-        MIDIOutputWrapper(const char *label, MIDIDeviceBase **in_output_usb, byte channel = 1) : MIDIOutputWrapper(label, channel) {
-            output_usb_pointer = in_output_usb;
-        }
-        MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel = 1);*/
 
         #ifdef DEBUG_MIDI_WRAPPER
             virtual void set_log_message_mode(bool status) {
@@ -365,7 +349,6 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
         MIDIOutputWrapper_Behaviour(const char *label, DeviceBehaviourUltimateBase *output, byte channel = 1) : MIDIOutputWrapper(label, channel) {
             this->output = output;
         }
-        //virtual ~MIDIOutputWrapper_Behaviour();
 
         virtual void actual_sendNoteOn(byte pitch, byte velocity, byte channel) override {
             if (this->debug) Serial.printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
@@ -390,7 +373,5 @@ MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, 
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, byte channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel = 1);
-
-//MIDIOutputWrapper::~MIDIOutputWrapper() {}
 
 #endif
