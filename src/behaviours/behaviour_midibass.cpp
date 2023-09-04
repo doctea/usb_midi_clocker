@@ -29,12 +29,12 @@
                 &this->last_drone_note
             );
 
-            ObjectNumberControl<MIDIBassBehaviour,int> *transpose_control = 
-                new ObjectNumberControl<MIDIBassBehaviour,int>(
+            ObjectNumberControl<DeviceBehaviourUltimateBase,int> *transpose_control = 
+                new ObjectNumberControl<DeviceBehaviourUltimateBase,int>(
                     "Octave",
                     this, 
-                    &MIDIBassBehaviour::setForceOctave, 
-                    &MIDIBassBehaviour::getForceOctave, 
+                    &DeviceBehaviourUltimateBase::setForceOctave, 
+                    &DeviceBehaviourUltimateBase::getForceOctave, 
                     nullptr,
                     -1,
                     8

@@ -18,7 +18,6 @@
 
 #include "file_manager/file_manager_interfaces.h"
 
-
 class MenuItem;
 class ArrangementTrackBase;
 
@@ -291,20 +290,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     #endif
 
 
-    virtual void setForceOctave(int octave) {
-        if (this->debug) Serial.printf("MIDIBassBehaviour#setForceOctave(%i)!", octave); Serial_flush();
-        /*if (octave!=this->force_octave) {
-            this->stop_all_notes();
-            //midi_matrix_manager->stop_all_notes(source_id);
-            this->force_octave = octave;
-        }*/
-        if (octave!=this->force_octave) {
-            midi_matrix_manager->stop_all_notes_for_source(this->source_id);
-            midi_matrix_manager->stop_all_notes_for_target(this->target_id);
-
-            this->force_octave = octave;
-        }
-    }
+    virtual void setForceOctave(int octave);
     virtual int getForceOctave() {
         //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial_flush();
         return this->force_octave;

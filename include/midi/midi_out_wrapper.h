@@ -142,7 +142,7 @@ class MIDIOutputWrapper {
             //int pitch = recalculate_pitch(in_pitch);
 
             if (this->debug) 
-                Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", pitch, velocity, channel, playing_notes[pitch]);
+                Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", in_pitch, velocity, channel, playing_notes[in_pitch]);
 
             if (playing_notes[in_pitch]>0) playing_notes[in_pitch]--;
             if (playing_notes[in_pitch]!=0) {
@@ -186,7 +186,7 @@ class MIDIOutputWrapper {
         virtual void actual_sendPitchBend(int pitch, byte channel) {};
 
         virtual inline bool is_note_playing(int pitch) {
-            pitch = recalculate_pitch(pitch);
+            //pitch = recalculate_pitch(pitch);
             if (!is_valid_note(pitch)) return false;
             return playing_notes[pitch]>0;
         }

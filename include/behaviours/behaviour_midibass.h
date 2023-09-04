@@ -79,8 +79,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 note = last_drone_note;
             } else {
                 MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-                if (wrapper!=nullptr && is_valid_note(wrapper->current_transposed_note))
-                    note = wrapper->current_transposed_note;
+                if (wrapper!=nullptr && is_valid_note(current_transposed_note))
+                    note = current_transposed_note;
                 //if (this->debug) Serial.printf("%s#on_tick(%i) with current_transposed_note %s\n", this->get_label(), ticks%24, get_note_name_c(note));
                 //if (is_valid_note(this->note))
             }
@@ -170,7 +170,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
             MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-            this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, int>("octave", "MIDI Bass", this, nullptr, nullptr, nullptr, &MIDIBassBehaviour::setForceOctave, &MIDIBassBehaviour::getForceOctave));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int>("octave", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setForceOctave, &DeviceBehaviourUltimateBase::getForceOctave));
             this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, bool>("drone", "MIDI Bass", this, &this->drone_enabled, nullptr, nullptr, &MIDIBassBehaviour::set_drone, &MIDIBassBehaviour::is_drone));
             this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, int8_t>("machinegun", "MIDI Bass", this, &this->machinegun, nullptr, nullptr, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun));
         }
