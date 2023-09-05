@@ -28,7 +28,8 @@
                 &this->current_transposed_note, 
                 &this->last_drone_note
             );
-
+            menuitems->add(harmony);
+        
             ObjectNumberControl<DeviceBehaviourUltimateBase,int> *transpose_control = 
                 new ObjectNumberControl<DeviceBehaviourUltimateBase,int>(
                     "Octave",
@@ -39,11 +40,8 @@
                     -1,
                     8
                 );
-
             bar->add(transpose_control);         
 
-            menuitems->add(harmony);
-        
             //TODO: see commented-out section in DeviceBehaviour_Neutron
             ObjectToggleControl<MIDIBassBehaviour> *drone_bass = 
                 new ObjectToggleControl<MIDIBassBehaviour> (
@@ -54,9 +52,8 @@
                     nullptr
                 );
             bar->add(drone_bass);
-
         }
-        NumberControl<int8_t> *machinegun_mode = new NumberControl<int8_t>("Machinegun", &machinegun, machinegun, 0, 4);
+        ObjectNumberControl<int8_t> *machinegun_mode = new ObjectNumberControl<MIDIBassBehaviour,int8_t>("Machinegun", this, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun, this->machinegun, 0, 4);
         bar->add(machinegun_mode);             
 
         menuitems->add(bar);
