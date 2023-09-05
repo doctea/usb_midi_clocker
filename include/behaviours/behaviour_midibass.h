@@ -78,11 +78,12 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 //if (this->debug) Serial.printf("%s#on_tick(%i) with last_drone_note %s\n", this->get_label(), ticks%24, get_note_name_c(last_drone_note));
                 note = last_drone_note;
             } else {
-                MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-                if (wrapper!=nullptr && is_valid_note(current_transposed_note))
-                    note = current_transposed_note;
+                //MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
+                //if (wrapper!=nullptr && is_valid_note(current_transposed_note))
+                //    note = current_transposed_note;
                 //if (this->debug) Serial.printf("%s#on_tick(%i) with current_transposed_note %s\n", this->get_label(), ticks%24, get_note_name_c(note));
                 //if (is_valid_note(this->note))
+                note = current_transposed_note;
             }
             if (machinegun && is_valid_note(note)) { //wrapper->current_transposed_note)) {
                 //if (this->debug) Serial.printf("%s#on_tick(%i) with machinegun %i and note %s\n", this->get_label(), ticks%24, machinegun, get_note_name_c(note));
