@@ -14,8 +14,8 @@
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" MIDI bass"))).c_str());
 
-        char output_label[40];
-        snprintf(output_label, 40, "%s output", this->get_label());
+        char output_label[MENU_C_MAX];
+        snprintf(output_label, MENU_C_MAX, "%s output", this->get_label());
 
         // todo: move this and transpose_control into base Behaviour...?
         HarmonyStatus *harmony = new HarmonyStatus(
@@ -50,7 +50,7 @@
         bar->add(drone_bass);
 
         ObjectNumberControl<int8_t> *machinegun_mode = new ObjectNumberControl<MIDIBassBehaviour,int8_t>("Machinegun", this, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun, this->machinegun, 0, 4);
-        bar->add(machinegun_mode);             
+        bar->add(machinegun_mode);
 
         menuitems->add(bar);
 
