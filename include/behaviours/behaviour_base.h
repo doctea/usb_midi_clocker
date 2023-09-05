@@ -291,11 +291,15 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     int8_t lowest_note_mode  = NOTE_MODE::IGNORE;
     int8_t highest_note_mode = NOTE_MODE::IGNORE;
     int8_t lowest_note = 0;
-    int8_t highest_note = 127;
+    int8_t highest_note = MIDI_MAX_NOTE;
 
     virtual void setLowestNote(int8_t note) {
+        // don't allow highest note to be set higher than highest note
+        if (note > this->getHighestNote())
+            note = this->getHighestNote();
         if (!is_valid_note(note)) 
-            note = 0;
+            note = MIDI_MIN_NOTE;
+        // if the currently playing note doesn't fit within the new bounds, kill it
         if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < note)
             this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->lowest_note = note;
@@ -311,8 +315,12 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     virtual void setHighestNote(int8_t note) {
+        // don't allow highest note to be set lower than lowest note
+        if (note < this->getLowestNote())
+            note = this->getLowestNote();
         if (!is_valid_note(note)) 
-            note = 127;
+            note = MIDI_MAX_NOTE;
+        // if the currently playing note doesn't fit within the new bounds, kill it
         if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > note)
             this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->highest_note = note;
