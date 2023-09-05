@@ -84,15 +84,16 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
             if (DEFAULT_NEUTRON_OCTAVE>=0) {
                 behaviour_neutron->setLowestNote(DEFAULT_NEUTRON_OCTAVE * 12);
                 behaviour_neutron->setHighestNote((1+DEFAULT_NEUTRON_OCTAVE) * 12);
-                behaviour_neutron->setLowestNoteMode(DeviceBehaviourUltimateBase::NOTE_MODE::TRANSPOSE);
-                behaviour_neutron->setHighestNoteMode(DeviceBehaviourUltimateBase::NOTE_MODE::TRANSPOSE);
+                behaviour_neutron->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+                behaviour_neutron->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+            }
         #endif
     #endif
 
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
     #endif
-
+            
     /*midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : DPT : ch 1", midi_out_serial[4], 1));
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : DPT : ch 1", midi_out_serial[5], 1));
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : DPT : ch 1", midi_out_serial[6], 1));

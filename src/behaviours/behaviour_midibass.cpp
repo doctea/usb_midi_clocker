@@ -39,35 +39,35 @@
                 8
             );
         bar->add(transpose_control);*/
-        SubMenuItemBar *transposition_bar = new SubMenuItemBar('Transpose');
-        ObjectScaleNoteMenuItem lowest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
-            'Lowest Note',
+        SubMenuItemBar *transposition_bar = new SubMenuItemBar("Transpose");
+        ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t> *lowest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
+            "Lowest Note",
             this,
             &DeviceBehaviourUltimateBase::setLowestNote,
             &DeviceBehaviourUltimateBase::getLowestNote,
             nullptr,
-            0,
-            127,
+            (int8_t)0,
+            (int8_t)127,
             true,
             true
         );
         transposition_bar->add(lowest_note_control);
 
-        ObjectScaleNoteMenuItem highest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
-            'Highest Note',
+        ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t> *highest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
+            "Highest Note",
             this,
             &DeviceBehaviourUltimateBase::setHighestNote,
             &DeviceBehaviourUltimateBase::getHighestNote,
             nullptr,
-            0,
-            127,
+            (int8_t)0,
+            (int8_t)127,
             true,
             true
         );
         transposition_bar->add(highest_note_control);
 
-        ObjectSelectorControl *lowest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
-            'Lowest Note Mode',
+        ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t> *lowest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
+            "Low Mode",
             this,
             &DeviceBehaviourUltimateBase::setLowestNoteMode,
             &DeviceBehaviourUltimateBase::getLowestNoteMode,
@@ -78,8 +78,8 @@
         lowest_note_mode_control->add_available_value(NOTE_MODE::TRANSPOSE, "Transpose");
         transposition_bar->add(lowest_note_mode_control);
 
-        ObjectSelectorControl *highest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
-            'Highest Note Mode',
+        ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t> *highest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
+            "High Mode",
             this,
             &DeviceBehaviourUltimateBase::setHighestNoteMode,
             &DeviceBehaviourUltimateBase::getHighestNoteMode,
@@ -102,7 +102,15 @@
             );
         bar->add(drone_bass);
 
-        ObjectNumberControl<int8_t> *machinegun_mode = new ObjectNumberControl<MIDIBassBehaviour,int8_t>("Machinegun", this, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun, this->machinegun, 0, 4);
+        ObjectNumberControl<MIDIBassBehaviour,int8_t> *machinegun_mode = new ObjectNumberControl<MIDIBassBehaviour,int8_t>(
+            "Machinegun", 
+            this, 
+            &MIDIBassBehaviour::set_machinegun, 
+            &MIDIBassBehaviour::get_machinegun, 
+            nullptr,
+            (int8_t)0, 
+            (int8_t)4
+        );
         bar->add(machinegun_mode);
 
         menuitems->add(bar);
