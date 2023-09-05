@@ -44,7 +44,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     source_id_t source_id = -1;
     target_id_t target_id = -1;
 
-    int force_octave = -1;
+    //int force_octave = -1;
     int last_transposed_note = -1, current_transposed_note = -1;
 
     //MIDIOutputWrapper *wrapper = nullptr;
@@ -106,24 +106,6 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual void receive_pitch_bend(uint8_t inChannel, int bend);
 
     virtual void init() {};
-
-    // remap pitch if force octave is on, TODO: other tranposition modes
-    // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
-    // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
-    //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
-    virtual int recalculate_pitch(byte note) {
-        if (this->force_octave>=0) {
-            // send incoming notes from beatstep back out to neutron on serial3, but transposed down
-            uint8_t note2 = note % 12;
-            note2 += (force_octave*12); //24;
-            if(this->debug) {
-                Serial.printf("\trecalculate_pitch on %i => %i\n", note, note2);
-            }
-            note = note2;
-            return note2;
-        }
-        return note;
-    }
 
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
@@ -293,12 +275,95 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     #endif
 
 
-    virtual void setForceOctave(int octave);
+    /*virtual void setForceOctave(int octave);
     virtual int getForceOctave() {
         //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial_flush();
         return this->force_octave;
+    }*/
+
+    enum NOTE_MODE {
+        IGNORE, TRANSPOSE;
+    };
+
+    int8_t lowest_note_mode  = NOTE_MODE::IGNORE;
+    int8_t highest_note_mode = NOTE_MODE::IGNORE;
+    int8_t lowest_note = 0;
+    int8_t highest_note = 127;
+
+    virtual void setLowestNote(int note) {
+        if (!is_valid_note(note)) 
+            note = 0;
+        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < note)
+            this->sendNoteOff(this->current_transposed_note);
+        this->lowest_note = note;
+    }
+    virtual int8_t getLowestNote() {
+        return this->lowest_note;
+    }
+    virtual int8_t getLowestNoteMode() {
+        return lowest_note_mode;
+    }
+    virtual void setLowestNoteMode(int8_t mode) {
+        this->lowest_note_mode = mode;
     }
 
+    virtual void setHighestNote(int note) {
+        if (!is_valid_note(note)) 
+            note = 127;
+        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > note)
+            this->sendNoteOff(this->current_transposed_note);
+        this->highest_note = note;
+    }
+    virtual int8_t getHighestNote() {
+        return this->highest_note;
+    }
+    virtual int8_t getHighestNoteMode() {
+        return this->highest_note_mode;
+    }
+    virtual void setHighestNoteMode(int8_t mode) {
+        this->highest_note_mode = mode;
+    }
+
+    // remap pitch if force octave is on, TODO: other tranposition modes
+    // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
+    // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
+    //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
+    virtual int recalculate_pitch(byte note) {
+        /*if (this->force_octave >= 0) {
+            // send incoming notes from beatstep back out to neutron on serial3, but transposed down
+            uint8_t note2 = note % 12;
+            note2 += (force_octave*12); //24;
+            if(this->debug) {
+                Serial.printf("\trecalculate_pitch on %i => %i\n", note, note2);
+            }
+            note = note2;
+            return note2;
+        }*/
+        if (!is_valid_note(note)) return NOTE_OFF;
+
+        if (note < getLowestNote()) {
+            if (getLowestNoteMode()==NOTE_MODE::IGNORE) {
+                return NOTE_OFF;
+            } else if (getLowestNoteMode()==NOTE_MODE::TRANSPOSE) {
+                int8_t octave = note / 12;
+                int8_t lowest_octave = getLowestNote() / 12;
+                int8_t chromatic_pitch = note % 12;
+                return (lowest_octave*12) + chromatic_pitch;
+            }
+        } else if (note > getHighestNote()) {
+            if (getHighestNoteMode()==NOTE_MODE::IGNORE) {
+                return NOTE_OFF;
+            } else if (getHighestNoteMode()==NOTE_MODE::TRANSPOSE) {
+                int8_t octave = note / 12;
+                int8_t highest_octave = getHighestNote() / 12;
+                int8_t chromatic_pitch = note % 12;
+                return (highest_octave*12) + chromatic_pitch;
+            }
+        }
+        return note;
+    }
+
+    
 };
 
 #endif

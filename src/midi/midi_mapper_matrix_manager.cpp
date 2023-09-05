@@ -80,7 +80,12 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_NEUTRON
         behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
         #ifdef DEFAULT_NEUTRON_OCTAVE
-            behaviour_neutron->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+            //behaviour_neutron->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+            if (DEFAULT_NEUTRON_OCTAVE>=0) {
+                behaviour_neutron->setLowestNote(DEFAULT_NEUTRON_OCTAVE * 12);
+                behaviour_neutron->setHighestNote((1+DEFAULT_NEUTRON_OCTAVE) * 12);
+                behaviour_neutron->setLowestNoteMode(DeviceBehaviourUltimateBase::NOTE_MODE::TRANSPOSE);
+                behaviour_neutron->setHighestNoteMode(DeviceBehaviourUltimateBase::NOTE_MODE::TRANSPOSE);
         #endif
     #endif
 

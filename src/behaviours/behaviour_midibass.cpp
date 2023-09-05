@@ -26,7 +26,7 @@
         );
         menuitems->add(harmony);
     
-        ObjectNumberControl<DeviceBehaviourUltimateBase,int> *transpose_control = 
+        /*ObjectNumberControl<DeviceBehaviourUltimateBase,int> *transpose_control = 
             new ObjectNumberControl<DeviceBehaviourUltimateBase,int>(
                 "Octave",
                 this, 
@@ -36,7 +36,58 @@
                 -1,
                 8
             );
-        bar->add(transpose_control);
+        bar->add(transpose_control);*/
+        SubMenuItemBar *transposition_bar = new SubMenuItemBar('Transpose');
+        ObjectScaleNoteMenuItem lowest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
+            'Lowest Note',
+            this,
+            &DeviceBehaviourUltimateBase::setLowestNote,
+            &DeviceBehaviourUltimateBase::getLowestNote,
+            nullptr,
+            0,
+            127,
+            true,
+            true
+        );
+        transposition_bar->add(lowest_note_control);
+
+        ObjectScaleNoteMenuItem highest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
+            'Highest Note',
+            this,
+            &DeviceBehaviourUltimateBase::setHighestNote,
+            &DeviceBehaviourUltimateBase::getHighestNote,
+            nullptr,
+            0,
+            127,
+            true,
+            true
+        );
+        transposition_bar->add(highest_note_control);
+
+        ObjectSelectorControl *lowest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
+            'Lowest Note Mode',
+            this,
+            &DeviceBehaviourUltimateBase::setLowestNoteMode,
+            &DeviceBehaviourUltimateBase::getLowestNoteMode,
+            nullptr,
+            true
+        );
+        lowest_note_mode_control->add_available_value(NOTE_MODE::IGNORE, "Ignore");
+        lowest_note_mode_control->add_available_value(NOTE_MODE::TRANSPOSE, "Transpose");
+        transposition_bar->add(lowest_note_mode_control);
+
+        ObjectSelectorControl *highest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
+            'Highest Note Mode',
+            this,
+            &DeviceBehaviourUltimateBase::setHighestNoteMode,
+            &DeviceBehaviourUltimateBase::getHighestNoteMode,
+            nullptr,
+            true
+        );
+        highest_note_mode_control->set_available_values(lowest_note_mode_control->available_values);
+        transposition_bar->add(highest_note_mode_control);
+
+        menuitems->add(transposition_bar);
 
         //TODO: see commented-out section in DeviceBehaviour_Neutron
         ObjectToggleControl<MIDIBassBehaviour> *drone_bass = 
