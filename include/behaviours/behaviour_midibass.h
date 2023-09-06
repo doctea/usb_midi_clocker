@@ -15,8 +15,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         int8_t machinegun = 0;
         int8_t machinegun_current_note = NOTE_OFF;
 
-        MIDIOutputWrapper *test_wrapper = nullptr;
-
         void set_machinegun(int8_t value) {
             this->machinegun = value;
             if (!machinegun)
@@ -172,10 +170,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
             //MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
             //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int>("octave", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setForceOctave, &DeviceBehaviourUltimateBase::getForceOctave));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNote, &DeviceBehaviourUltimateBase::getHighestNote));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note_mode", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note_mode", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNoteMode, &DeviceBehaviourUltimateBase::getHighestNoteMode));
             this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, bool>("drone", "MIDI Bass", this, &this->drone_enabled, nullptr, nullptr, &MIDIBassBehaviour::set_drone, &MIDIBassBehaviour::is_drone));
             this->saveable_parameters->add(new SaveableParameter<MIDIBassBehaviour, int8_t>("machinegun", "MIDI Bass", this, &this->machinegun, nullptr, nullptr, &MIDIBassBehaviour::set_machinegun, &MIDIBassBehaviour::get_machinegun));
         }

@@ -13,11 +13,12 @@
 #include "parameters/MIDICCParameter.h"
 
 class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour, public ModwheelReceiver {
+    //using DeviceBehaviourSerialBase::sendControlChange; 
     using DeviceBehaviourSerialBase::has_input;
-    //using DeviceBehaviourSerialBase::sendControlChange;
-    using ClockedBehaviour::has_output;
-
+    using DeviceBehaviourSerialBase::has_output;
+    //using ClockedBehaviour::has_output;
     //using MIDIBassBehaviour::on_bar;
+    
     public:
         virtual const char *get_label() override {
             return (char*)"Neutron";

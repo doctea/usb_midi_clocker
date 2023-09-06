@@ -94,18 +94,14 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
     #endif
             
-    /*midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : DPT : ch 1", midi_out_serial[4], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : DPT : ch 1", midi_out_serial[5], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : DPT : ch 1", midi_out_serial[6], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : DPT : ch 1", midi_out_serial[7], 1));*/
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : MIDIOUT : ch 1", midi_out_serial[4], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : MIDIOUT : ch 1", midi_out_serial[5], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : MIDIOUT : ch 1", midi_out_serial[6], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : MIDIOUT : ch 1", midi_out_serial[7], 1));
+
     #ifdef ENABLE_DPT_LOOPER
         behaviour_dptlooper->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
     #endif
-
-    //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
-    //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
-    //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
-
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_OUTPUT)
         behaviour_bamble->self_register_midi_matrix_targets(midi_matrix_manager);
