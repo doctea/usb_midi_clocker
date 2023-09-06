@@ -8,10 +8,17 @@
 #include "behaviours/behaviour_clocked.h"
 #include "bpm.h"
 
-class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public ClockedBehaviour {
+class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public DividedClockedBehaviour {
     public:
         virtual const char *get_label() override {
             return (const char*)"BitBox";
+        }
+
+        virtual bool receives_midi_notes() override {
+            return false;
+        }
+        virtual bool transmits_midi_notes() override {
+            return false;
         }
 };
 

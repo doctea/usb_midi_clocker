@@ -55,7 +55,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         virtual const char *get_label() override {
             return "BeatStep";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         //FLASHMEM 
         virtual void setup_callbacks() override {

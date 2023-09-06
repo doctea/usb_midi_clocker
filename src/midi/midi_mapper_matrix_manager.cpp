@@ -214,7 +214,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
 
     midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
     MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
-    behaviour_midibassproxy->test_wrapper = midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1");
+    //behaviour_midibassproxy->test_wrapper = midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1");
     behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
     midi_matrix_manager->connect("Bass Proxy", "S2 : unused : ch 1");
     midi_matrix_manager->connect("beatstep", "Bass Proxy");

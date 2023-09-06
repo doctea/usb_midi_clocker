@@ -91,8 +91,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         using DeviceBehaviourUltimateBase::receive_note_off;
         using DeviceBehaviourUltimateBase::debug;
 
-        virtual bool has_output() { return true; }
-        //virtual bool has_input() { return true; }
+        virtual bool transmits_midi_notes() { return true; }
+        //virtual bool receives_midi_notes() { return true; }
 
         uint16_t vid = 0x2886, pid = 0x800B;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }

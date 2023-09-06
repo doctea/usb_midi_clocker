@@ -12,6 +12,8 @@ class Behaviour_USBSimpleClockedWrapper : public DeviceBehaviourUSBBase, public 
     //using ClockedBehaviour::on_restart;
     //using ClockedBehaviour::send_clock;
 
+    bool can_transmit_midi_notes = false, can_receive_midi_notes = false;
+
     public:
     uint16_t vid, pid;
     char label[32] = "Generic";
@@ -20,14 +22,16 @@ class Behaviour_USBSimpleClockedWrapper : public DeviceBehaviourUSBBase, public 
         return label;
     }
 
-    bool has_output() override {
-        return true;
+    bool transmits_midi_notes() override {
+        return this->can_transmit_midi_notes;
     }
 
-    Behaviour_USBSimpleClockedWrapper(const char *label, uint16_t vid, uint16_t pid) : ClockedBehaviour() {
+    Behaviour_USBSimpleClockedWrapper(const char *label, uint16_t vid, uint16_t pid, bool receives_midi_notes = false, bool transmits_midi_notes = false) : ClockedBehaviour() {
         this->pid = pid;
         this->vid = vid;
         strncpy(this->label, label, 32);
+        this->can_transmit_midi_notes = transmits_midi_notes;
+        this->can_receive_midi_notes = receives_midi_notes;
     }
 
     virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
@@ -50,7 +54,7 @@ class Behaviour_USBSimpleDividedClockedWrapper : public DeviceBehaviourUSBBase, 
         return label;
     }
 
-    /*bool has_output() override {
+    /*bool transmits_midi_notes() override {
         return true;
     }*/
 

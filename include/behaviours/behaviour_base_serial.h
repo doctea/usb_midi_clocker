@@ -17,8 +17,8 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         DeviceBehaviourSerialBase() = default;
         virtual ~DeviceBehaviourSerialBase() = default;
 
-        virtual bool has_input()  { return this->input_device!=nullptr; }
-        virtual bool has_output() { return this->output_device!=nullptr; }
+        virtual bool receives_midi_notes()  { return this->input_device!=nullptr; }
+        virtual bool transmits_midi_notes() { return this->output_device!=nullptr; }
         //char indicator_text[5];
         virtual const char *get_indicator() override;
 

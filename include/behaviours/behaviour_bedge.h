@@ -26,7 +26,7 @@ class DeviceBehaviour_Bedge : public DeviceBehaviourUSBBase, public ClockedBehav
         virtual const char *get_label() override {
             return "BEdge";
         }
-        virtual bool has_output() { return true; }
+        virtual bool transmits_midi_notes() { return true; }
 
 
         /*            

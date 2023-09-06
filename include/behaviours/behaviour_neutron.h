@@ -14,9 +14,9 @@
 
 class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour, public ModwheelReceiver {
     //using DeviceBehaviourSerialBase::sendControlChange; 
-    using DeviceBehaviourSerialBase::has_input;
-    using DeviceBehaviourSerialBase::has_output;
-    //using ClockedBehaviour::has_output;
+    using DeviceBehaviourSerialBase::receives_midi_notes;
+    using DeviceBehaviourSerialBase::transmits_midi_notes;
+    //using ClockedBehaviour::transmits_midi_notes;
     //using MIDIBassBehaviour::on_bar;
     
     public:

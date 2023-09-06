@@ -14,22 +14,22 @@
             //this->menuitems->add(new SeparatorMenuItem((char*)this->get_label(), C_WHITE));
             //this->menuitems->add(new MenuItem((char*)this->get_label()));
             
-            if (this->has_output()) {
+            if (this->transmits_midi_notes()) {
                 char output_label[MENU_C_MAX];
                 snprintf(output_label, MENU_C_MAX, "%s output", this->get_label());
 
                 // todo: move this and transpose_control into base Behaviour...?
-                HarmonyStatus *harmony = new HarmonyStatus(
+                output_harmony_status = new HarmonyStatus(
                     output_label, 
                     &this->last_transposed_note, 
-                    &this->current_transposed_note, 
-                    &this->last_drone_note
+                    &this->current_transposed_note
+                    /*,  &this->last_drone_note*/
                 );
-                menuitems->add(harmony);
+                menuitems->add(output_harmony_status);
             
                 SubMenuItemBar *transposition_bar = new SubMenuItemBar("Transpose");
                 ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t> *lowest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
-                    "Lowest Note",
+                    "Lowest",
                     this,
                     &DeviceBehaviourUltimateBase::setLowestNote,
                     &DeviceBehaviourUltimateBase::getLowestNote,
@@ -42,7 +42,7 @@
                 transposition_bar->add(lowest_note_control);
 
                 ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t> *highest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
-                    "Highest Note",
+                    "Highest",
                     this,
                     &DeviceBehaviourUltimateBase::setHighestNote,
                     &DeviceBehaviourUltimateBase::getHighestNote,

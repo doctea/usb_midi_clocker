@@ -92,7 +92,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual const char *get_label() override {
             return "CraftSynth 2.0";
         }
-        virtual bool has_output() { return true; }
+        virtual bool transmits_midi_notes() { return true; }
 
         /*virtual void setup_callbacks() override {
             //behaviour_apcmini = this;

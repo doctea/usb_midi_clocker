@@ -41,7 +41,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         virtual const char *get_label() override {
             return "APCMini";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         bool apcmini_shift_held = false;
 

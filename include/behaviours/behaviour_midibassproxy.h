@@ -6,6 +6,9 @@
 class MIDIBassBehaviourProxy : virtual public MIDIBassBehaviour {
     public:
 
+    bool transmits_midi_notes() override { return true; };
+    bool receives_midi_notes()  override { return true; };
+
     MIDIBassBehaviourProxy() : DeviceBehaviourUltimateBase() {
         this->drone_channel = 1;
     }

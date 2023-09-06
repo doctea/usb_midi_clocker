@@ -103,8 +103,8 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
             return "USBSerialMIDIBase";
         }
 
-        //virtual bool has_input()    { return this->input_interface!=nullptr; }
-        //virtual bool has_output()   { return this->output_interface!=nullptr; }
+        //virtual bool receives_midi_notes()    { return this->input_interface!=nullptr; }
+        //virtual bool transmits_midi_notes()   { return this->output_interface!=nullptr; }
 
         virtual void init() override {
             

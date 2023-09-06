@@ -68,7 +68,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         virtual int getType() override {
             return BehaviourType::virt;
         }
-        virtual bool has_input() override {
+        virtual bool receives_midi_notes() override {
             return true;
         }
 

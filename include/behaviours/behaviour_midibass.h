@@ -67,6 +67,12 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             }
         }
 
+        virtual void killCurrentNote() override {
+            this->kill_drone_note();
+            this->kill_machinegun_note();
+            DeviceBehaviourUltimateBase::killCurrentNote();
+        }
+
         // midibassproxy drone works, but machinegun doesn't, if we use on_tick here
         //virtual void on_tick(uint32_t ticks) override {
         virtual void on_pre_clock(uint32_t ticks) override {    // both drone and machinegun seem to work if we do on_pre_clock here?

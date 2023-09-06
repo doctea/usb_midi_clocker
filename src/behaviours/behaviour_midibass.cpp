@@ -13,6 +13,10 @@
     LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
+        // harmony status control is created by parent class, add drone output to it
+        if (this->output_harmony_status!=nullptr)
+            this->output_harmony_status->other_value = &this->last_drone_note;
+
         SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" Note limits"))).c_str());
 
         //TODO: see commented-out section in DeviceBehaviour_Neutron
