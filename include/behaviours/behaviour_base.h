@@ -200,6 +200,14 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             Debug_println("instantiating saveable_parameters list");
             this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
         }
+
+        if(this->has_output()) {
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNote, &DeviceBehaviourUltimateBase::getHighestNote));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNoteMode, &DeviceBehaviourUltimateBase::getHighestNoteMode));
+        }
+
         // todo: add all the modulatable parameters via a wrapped class
         /*if (this->has_parameters()) {
             for (unsigned int i = 0 ; i < parameters->size() ; i++) {
