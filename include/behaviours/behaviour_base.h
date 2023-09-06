@@ -311,6 +311,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         return lowest_note_mode;
     }
     virtual void setLowestNoteMode(int8_t mode) {
+        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < this->getLowestNote())
+            this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->lowest_note_mode = mode;
     }
 
@@ -332,6 +334,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         return this->highest_note_mode;
     }
     virtual void setHighestNoteMode(int8_t mode) {
+        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > this->getHighestNote())
+            this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->highest_note_mode = mode;
     }
 
