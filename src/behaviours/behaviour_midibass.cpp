@@ -7,8 +7,6 @@
     #include "menuitems_object.h"
     #include "submenuitem_bar.h"
 
-    #include "mymenu/menuitems_scale.h"
-
     //#include "mymenu/menu_midioutputwrapper.h"
 
     FLASHMEM
