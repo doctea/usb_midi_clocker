@@ -15,6 +15,8 @@
     LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
+        SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" Note limits"))).c_str());
+
         //TODO: see commented-out section in DeviceBehaviour_Neutron
         ObjectToggleControl<MIDIBassBehaviour> *drone_bass = 
             new ObjectToggleControl<MIDIBassBehaviour> (

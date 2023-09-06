@@ -13,8 +13,6 @@
         }
 
         if (this->has_output()) {
-            SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" Note limits"))).c_str());
-
             char output_label[MENU_C_MAX];
             snprintf(output_label, MENU_C_MAX, "%s output", this->get_label());
 
