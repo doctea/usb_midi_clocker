@@ -72,7 +72,11 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
     #endif
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : unused : ch 1", midi_out_serial[1], 1)); // for MB33
+    #ifdef ENABLE_MAMMB33
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : MAM MB33 : ch 1", &ENABLE_MAMMB33, 1)); // for MB33
+    #else 
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : MIDIOUT : ch 1", midi_out_serial[1], 1)); // for MB33
+    #endif
     //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")->always_force_stop_all = true; // mb33 doesn't seem to wanna respect stop all notes message?
     /*#ifdef ENABLE_MAM
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : unused : ch4", midi_out_serial[2], 4));
@@ -88,6 +92,8 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
                 behaviour_neutron->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
             }
         #endif
+        behaviour_neutron->debug = true;
+        //behaviour_neutron->test_wrapper = midi_matrix_manager->get_target_for_id(behaviour_neutron->target_id);
     #endif
 
     #ifdef ENABLE_DISTING
@@ -212,16 +218,24 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");
     #endif
 
+    // set up 'Bass Proxy' behaviour
     midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
     MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
-    //behaviour_midibassproxy->test_wrapper = midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1");
     behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
-    midi_matrix_manager->connect("Bass Proxy", "S2 : unused : ch 1");
-    midi_matrix_manager->connect("beatstep", "Bass Proxy");
+
+    // connect default mappings
+    #ifdef ENABLE_MAMMB33
+        midi_matrix_manager->connect("Bass Proxy", "S2 : MAM MB33 : ch 1");
+    #else
+        midi_matrix_manager->connect("Bass Proxy", "S2 : unused : ch 1");
+    #endif
+    #ifdef ENABLE_BEATSTEP
+        midi_matrix_manager->connect("beatstep", "Bass Proxy");
+    #endif
     #ifdef DEBUG_MIDIBASS
         behaviour_midibassproxy->debug = wrapper->debug = true; // debug switch for machinegun not working?!
     #endif
-    midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);
+    midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);  // don't allow it to connect to itself
 
 
     Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();

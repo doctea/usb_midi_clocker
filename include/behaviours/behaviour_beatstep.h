@@ -47,7 +47,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         bool auto_advance_pattern = false;   // todo: make configurable!
 
         int last_note = -1, current_note = -1;
-        //int last_transposed_note = -1, current_transposed_note = -1;
 
         uint16_t vid = 0x1c75, pid = 0x0206;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }

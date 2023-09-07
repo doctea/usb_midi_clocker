@@ -2,12 +2,17 @@
 
 #include "behaviours/behaviour_midibass.h"
 
+#define DEBUG_MIDIBASS
+
 #ifdef ENABLE_SCREEN
     #include "menu.h"
     #include "menuitems_object.h"
     #include "submenuitem_bar.h"
 
-    //#include "mymenu/menu_midioutputwrapper.h"
+    #ifdef DEBUG_MIDIBASS
+        #include "mymenu/menu_midioutputwrapper.h"
+        #include "midi/midi_mapper_matrix_manager.h"
+    #endif
 
     FLASHMEM
     LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
@@ -44,16 +49,17 @@
         menuitems->add(bar);
 
         #ifdef DEBUG_MIDIBASS
-            menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+            /*menuitems->add(new MIDIOutputWrapperDebugMenuItem(
                 "Incoming?",
-                my_wrapper
+                //midi_matrix_manager->get_target_for_id(this->target_id)
                 //midi_matrix_manager->get_source
-            ));
+            ));*/
 
             menuitems->add(new MIDIOutputWrapperDebugMenuItem(
                 "Outgoing?",
                 //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
-                test_wrapper
+                //test_wrapper
+                midi_matrix_manager->get_target_for_id(this->target_id)
             ));
         #endif
 

@@ -13,7 +13,7 @@
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
-//#define DEBUG_MIDI_WRAPPER
+#define DEBUG_MIDI_WRAPPER
 
 class MIDITrack;
 
@@ -160,7 +160,7 @@ class MIDIOutputWrapper {
             }
 
             #ifdef DEBUG_MIDI_WRAPPER
-                this->log_message_off(pitch, velocity, channel);
+                this->log_message_off(in_pitch, velocity, channel);
             #endif
             this->actual_sendNoteOff(in_pitch, velocity, channel);
 

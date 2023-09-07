@@ -13,8 +13,29 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
                 target->set_log_message_mode(true);
         }
 
+        bool prompting = false;
+        virtual bool action_opened() override {
+            prompting = true;
+        }
+        virtual bool button_back() override {
+            return false;
+        }
+        virtual bool button_select() override {
+            if (prompting) {
+                memset(target->message_history, 0, sizeof(message_history_t)*target->message_history_size);
+                prompting = false;
+                return false;
+            }
+            return true;
+        }
+
         virtual int display(Coord pos, bool selected, bool opened) override {
-            pos.y = header(label, pos, selected, opened);
+            if (prompting) {
+                tft->println("press again to clear!");
+                pos.y = tft->getCursorY();
+            } else {
+                pos.y = header(label, pos, selected, opened);
+            }
             if (target==nullptr) {
                 tft->println("Error: No target wrapper set!");
                 return tft->getCursorY();

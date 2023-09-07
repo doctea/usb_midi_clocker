@@ -50,7 +50,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     //int force_octave = -1;
     int last_transposed_note = -1, current_transposed_note = -1;
-
+    int current_channel = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
@@ -114,7 +114,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual void killCurrentNote() {
         if (is_valid_note(current_transposed_note)) {
-            this->actualSendNoteOff(current_transposed_note, 0, 0); //velocity, channel);
+            this->actualSendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
             current_transposed_note = NOTE_OFF;
         }
     }
@@ -125,6 +125,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         note = this->recalculate_pitch(note);
         if (!is_valid_note(note)) return;
         this->current_transposed_note = note;
+        this->current_channel = channel;
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
@@ -318,6 +319,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             note = MIDI_MIN_NOTE;
         // if the currently playing note doesn't fit within the new bounds, kill it
         //if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < note)
+        //if (note > getLowestNote()) // if new lower-note-limit is higher than existing lower-note-limit, force kill of note
+        // TODO: hmmm so, restricting this kill command as in the above two commented-out lines results in stuck notes on Neutron -- weird, why?
             this->killCurrentNote();
             //this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->lowest_note = note;
@@ -343,8 +346,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             note = MIDI_MAX_NOTE;
         // if the currently playing note doesn't fit within the new bounds, kill it
         //if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > note)
+        //if (note < getHighestNote()) // if new higher-note-limit is lower than existing higher-note-limit, force kill of note
+        // TODO: hmmm so, restricting this kill command as in the above two commented-out lines results in stuck notes on Neutron -- weird, why?
             this->killCurrentNote();
-            //this->sendNoteOff(this->current_transposed_note, 0, 0);
+            //this->sendNoteOff(this->current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel);
         this->highest_note = note;
     }
     virtual int8_t getHighestNote() {
@@ -390,7 +395,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
                 int8_t note2 = note;
                 note = (lowest_octave*12) + chromatic_pitch;*/
                 int8_t note2 = note;
-                while (note < getLowestNote()) {
+                while (is_valid_note(note) && note < getLowestNote()) {
                     note += 12;
                 }
                 if (this->debug) Serial.printf("\ttransposed from %i (%s) up to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
@@ -407,7 +412,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
                 int8_t note2 = note;
                 note = ((highest_octave-1)*12) + chromatic_pitch;*/
                 int8_t note2 = note;
-                while (note > getHighestNote()) {
+                while (is_valid_note(note) && note > getHighestNote()) {
                     note -= 12;
                 }
                 if (this->debug) Serial.printf("\ttransposed from %i (%s) down to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));

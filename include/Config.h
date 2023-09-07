@@ -113,7 +113,7 @@
     #endif
 #endif
 
-#define ENABLE_MAM      MIDI4
+#define ENABLE_MAMMB33      MIDI2
 
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
 

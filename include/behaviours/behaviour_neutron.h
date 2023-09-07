@@ -18,6 +18,10 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
     using DeviceBehaviourSerialBase::transmits_midi_notes;
     //using ClockedBehaviour::transmits_midi_notes;
     //using MIDIBassBehaviour::on_bar;
+
+    using MIDIBassBehaviour::sendNoteOff;
+    using MIDIBassBehaviour::sendNoteOn;
+    using MIDIBassBehaviour::killCurrentNote;
     
     public:
         virtual const char *get_label() override {
