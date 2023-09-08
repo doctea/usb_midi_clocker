@@ -13,7 +13,7 @@
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
-#define DEBUG_MIDI_WRAPPER
+//#define DEBUG_MIDI_WRAPPER
 
 class MIDITrack;
 

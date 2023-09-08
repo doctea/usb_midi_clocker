@@ -2,7 +2,7 @@
 
 #include "behaviours/behaviour_midibass.h"
 
-#define DEBUG_MIDIBASS
+//#define DEBUG_MIDIBASS
 
 #ifdef ENABLE_SCREEN
     #include "menu.h"
