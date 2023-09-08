@@ -5,6 +5,8 @@
 
 #include "storage.h"
 
+#include <util/atomic.h>
+
 #ifdef ENABLE_SCREEN
     void toggle_autoadvance(bool on = false);
     void toggle_recall(bool on = false);
@@ -72,58 +74,55 @@ bool debug_stress_sequencer_load = false;
     void OnPress(int key) {
         if (already_pressing) return;
         already_pressing = true;
-        bool irqs_enabled = __irq_enabled();
-        __disable_irq();
-        
-        // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
-        // the main loop has crashed
-        switch(key) {
-            /*case KEY_ESC             :  // ESCAPE
-                while(menu->is_opened())
-                    menu->button_back();
-                break;*/
-            case 'D'    :
-                debug_flag = true;
-                break;
-            case 'd'    :
-                debug_flag = false;
-                break;
-            // debug
-            case 'Z'    :
-                Serial.clear();
-                Serial.clearWriteError();
-                Serial.end();
-                Serial.begin(115200);
-                Serial.setTimeout(0);
-                Serial.println(F("---restarted serial---"));
-                break;
-            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                {
-                    int modifiers = keyboard1.getModifiers();
-                    if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
-                        Serial.println("running a loop() manually because ctrl+alt+lshift+delete");
-                        loop();
-                        break;
-                    }                    
-                    if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) {
-                        reset_teensy();  
-                        break;
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
+            // the main loop has crashed
+            switch(key) {
+                /*case KEY_ESC             :  // ESCAPE
+                    while(menu->is_opened())
+                        menu->button_back();
+                    break;*/
+                case 'D'    :
+                    debug_flag = true;
+                    break;
+                case 'd'    :
+                    debug_flag = false;
+                    break;
+                // debug
+                case 'Z'    :
+                    Serial.clear();
+                    Serial.clearWriteError();
+                    Serial.end();
+                    Serial.begin(115200);
+                    Serial.setTimeout(0);
+                    Serial.println(F("---restarted serial---"));
+                    break;
+                case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
+                    {
+                        int modifiers = keyboard1.getModifiers();
+                        if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
+                            Serial.println("running a loop() manually because ctrl+alt+lshift+delete");
+                            loop();
+                            break;
+                        }                    
+                        if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) {
+                            reset_teensy();  
+                            break;
+                        }
                     }
-                }
-            default:
-                //Serial.println("received key?");
-                keyboard_queue->push({key, keyboard1.getModifiers()});
+                default:
+                    //Serial.println("received key?");
+                    keyboard_queue->push({key, keyboard1.getModifiers()});
 
-                currently_held.key = key;
-                currently_held.modifiers = keyboard1.getModifiers();
-                held = true;
-                last_retriggered = millis();
-                break;
+                    currently_held.key = key;
+                    currently_held.modifiers = keyboard1.getModifiers();
+                    held = true;
+                    last_retriggered = millis();
+                    break;
+            }
+
+            already_pressing = false;
         }
-
-        already_pressing = false;
-        if (irqs_enabled) 
-            __enable_irq();
     }
 
     /*void OnRawPress(uint8_t keycode) {
@@ -259,18 +258,16 @@ bool debug_stress_sequencer_load = false;
     }
 
     void process_key_buffer() {
-        bool irqs_enabled = __irq_enabled();
-        __disable_irq();
-
-        if (keyboard_queue->isReady()) {
-            keypress_t *current = keyboard_queue->pop();
-            process_key(current->key, current->modifiers);       
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            if (keyboard_queue->isReady()) {
+                keypress_t *current = keyboard_queue->pop();
+                process_key(current->key, current->modifiers);       
+            }
+            if (held && millis() - last_retriggered>KEYREPEAT) {
+                keyboard_queue->push(currently_held);
+                last_retriggered = millis();
+            }
         }
-        if (held && millis() - last_retriggered>KEYREPEAT) {
-            keyboard_queue->push(currently_held);
-            last_retriggered = millis();
-        }
-        if (irqs_enabled) __enable_irq();
     }
 
     #ifndef GDB_DEBUG
