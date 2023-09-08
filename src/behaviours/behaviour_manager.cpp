@@ -86,7 +86,8 @@ void setup_behaviour_manager() {
             behaviour_midilights = new DeviceBehaviour_MIDILights();
             behaviour_manager->registerBehaviour(behaviour_midilights);
         #else
-            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("MIDILights", 0x1337, 0x117e));
+            //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper<>("MIDILights", 0x1337, 0x117e));
+            behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("MIDILights", 0x1337, 0x117e));
         #endif
     #endif
 
@@ -94,7 +95,7 @@ void setup_behaviour_manager() {
         behaviour_subclocker = new DeviceBehaviour_Subclocker();
         behaviour_manager->registerBehaviour(behaviour_subclocker);
     #elif ENABLE_SUBCLOCKER
-        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("Subclocker", 0x1337, 0x1337));
+        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper<>("Subclocker", 0x1337, 0x1337));
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
@@ -112,7 +113,8 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
-        behaviour_manager->registerBehaviour(behaviour_bitbox);
+        //behaviour_manager->registerBehaviour(behaviour_bitbox);
+        behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox"));
         Serial.println(F("connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
         Serial.println(F("Finished registering")); Serial_flush();
@@ -169,7 +171,7 @@ void setup_behaviour_manager() {
             behaviour_bedge = new DeviceBehaviour_Bedge();
             behaviour_manager->registerBehaviour(behaviour_bedge);
         #else
-            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("BEdge", 0x1397, 0x125A));
+            behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("BEdge", 0x1397, 0x125A));
         #endif
     #endif
     
