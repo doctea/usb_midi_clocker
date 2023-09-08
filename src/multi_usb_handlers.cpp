@@ -9,6 +9,8 @@
 
 #include "behaviours/behaviour_manager.h"
 
+#include <util/atomic.h>
+
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
 usb_midi_device[1] is 2886:800B aka The Tyrell Corporation:Bambleweeny57
@@ -113,8 +115,7 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
 void update_usb_midi_device_connections() {
   for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
     #ifdef IRQ_PROTECT_USB_CHANGES
-      bool irqs_enabled = __irq_enabled();
-      __disable_irq();
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     #endif
 
     uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
@@ -129,7 +130,7 @@ void update_usb_midi_device_connections() {
       Serial.println(F("-----"));
     }
     #ifdef IRQ_PROTECT_USB_CHANGES
-      if (irqs_enabled) __enable_irq();
+      }
     #endif
   }
 }
