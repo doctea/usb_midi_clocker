@@ -185,7 +185,7 @@ class MIDIOutputWrapper {
         virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) {};
         virtual void actual_sendPitchBend(int pitch, byte channel) {};
 
-        virtual inline bool is_note_playing(int pitch) {
+        virtual bool is_note_playing(int pitch) {
             //pitch = recalculate_pitch(pitch);
             if (!is_valid_note(pitch)) return false;
             return playing_notes[pitch]>0;

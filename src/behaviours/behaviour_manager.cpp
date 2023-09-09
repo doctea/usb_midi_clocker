@@ -114,9 +114,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
         //behaviour_manager->registerBehaviour(behaviour_bitbox);
-        behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox"));
+        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox");
+        behaviour_manager->registerBehaviour(behaviour_bitbox);
         Serial.println(F("connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
+
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
@@ -231,7 +233,7 @@ void setup_behaviour_manager() {
     }
 
     //FLASHMEM 
-    inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
+    void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
             //Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
             //debug_free_ram();
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();

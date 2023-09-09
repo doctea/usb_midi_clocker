@@ -34,7 +34,7 @@ const byte colour_intensity[] = {
   APCMINI_YELLOW_BLINK,
   APCMINI_RED_BLINK
 };
-inline byte get_colour(byte lev);
+byte get_colour(byte lev);
 
 
 void apcmini_update_position_display(int ticks);

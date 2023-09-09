@@ -118,7 +118,7 @@ class BambleTriggerOnBar : public SubMenuItemBar {
             this->pattern_selector->set_available_values(available_values);
         }
 
-        virtual inline int get_max_pixel_width(int item_number) override {
+        virtual int get_max_pixel_width(int item_number) override {
             switch(item_number) {
                 case 1: case 2: return tft->width()/4;
                 case 0: return tft->width()/2;
