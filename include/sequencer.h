@@ -17,13 +17,6 @@ const byte cv_out_sequence_pin[NUM_SEQUENCES] = {
 #endif
 //#endif
 
-inline int beat_number_from_ticks(signed long ticks) {  // TODO: move this into midihelpers + make it a macro?
-  return (ticks / PPQN) % BEATS_PER_BAR;
-}
-inline int step_number_from_ticks(signed long ticks) {  // TODO: move this into midihelpers + make it a macro?
-  return (ticks / (PPQN)) % NUM_STEPS;
-}
-
 void init_sequence();
 byte read_sequence(byte row, byte col);
 void write_sequence(byte row, byte col, byte value);
