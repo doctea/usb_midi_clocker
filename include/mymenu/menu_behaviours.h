@@ -3,7 +3,7 @@
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_manager.h"
 
-class BehavioursPanel : public MenuItem {
+class BehavioursPanel : /*virtual*/ public MenuItem {
     public:
         BehavioursPanel() : MenuItem("Behaviours") {}
 

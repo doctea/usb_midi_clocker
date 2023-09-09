@@ -1,3 +1,7 @@
+#include "Config.h"
+
+#ifdef ENABLE_BAMBLE
+
 #include "behaviours/behaviour_bamble.h"
 #include "menuitems.h"
 #include "submenuitem_bar.h"
@@ -128,3 +132,4 @@ class BambleTriggerOnBar : public SubMenuItemBar {
 };
 
 
+#endif

@@ -12,7 +12,7 @@
 
 #include "parameters/MIDICCParameter.h"
 
-class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour, public ModwheelReceiver {
+class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour, public ModwheelReceiver {
     //using DeviceBehaviourSerialBase::sendControlChange; 
     using DeviceBehaviourSerialBase::receives_midi_notes;
     using DeviceBehaviourSerialBase::transmits_midi_notes;

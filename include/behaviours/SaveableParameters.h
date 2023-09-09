@@ -75,7 +75,7 @@ class SaveableParameterBase {
 };
 
 template<class TargetClass, class DataType>
-class SaveableParameter : public SaveableParameterBase {
+class SaveableParameter : virtual public SaveableParameterBase {
     public:
         TargetClass *target = nullptr;
         DataType *variable = nullptr;

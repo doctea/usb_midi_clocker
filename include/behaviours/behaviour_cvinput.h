@@ -59,7 +59,7 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 };
 
 
-class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
+class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
         virtual const char *get_label() override {
             return "Pitch CV Input";
