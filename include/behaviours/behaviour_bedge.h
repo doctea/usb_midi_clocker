@@ -13,7 +13,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 class DeviceBehaviour_Bedge : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;

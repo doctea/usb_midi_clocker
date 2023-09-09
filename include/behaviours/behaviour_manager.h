@@ -8,7 +8,7 @@
 
 #include "behaviours/behaviour_simplewrapper.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "mymenu.h"
 

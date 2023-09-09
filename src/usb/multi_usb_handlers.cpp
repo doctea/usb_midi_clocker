@@ -3,7 +3,7 @@
 #include "bpm.h"
 #include "midi/midi_outs.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "tft.h"
 

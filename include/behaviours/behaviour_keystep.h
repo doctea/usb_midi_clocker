@@ -7,7 +7,7 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 extern MIDIOutputWrapper *keystep_output;
 void keystep_setOutputWrapper(MIDIOutputWrapper *);

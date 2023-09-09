@@ -1,8 +1,8 @@
 
 #ifdef ENABLE_USB
-    #include "multi_usb_handlers.h"
+    #include "usb/multi_usb_handlers.h"
     #ifdef ENABLE_USBSERIAL
-        #include "multi_usbserial_handlers.h"
+        #include "usb/multi_usbserial_handlers.h"
     #endif
     #ifdef ENABLE_TYPING_KEYBOARD
         //#include "input_keyboard.h"

@@ -13,7 +13,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "parameters/MIDICCParameter.h"
 

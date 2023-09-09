@@ -12,7 +12,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;

@@ -5,8 +5,8 @@
     #include "bpm.h"
     #include "midi/midi_outs.h"
 
-    #include "multi_usbserial_handlers.h"
-    #include "multi_usbserial_wrapper.h"
+    #include "usb/multi_usbserial_handlers.h"
+    #include "usb/multi_usbserial_wrapper.h"
 
     #include "tft.h"
 

@@ -60,10 +60,10 @@ void do_tick(uint32_t ticks);
 #include "cv_outs.h"
 
 #ifdef ENABLE_USB
-  #include "multi_usb_handlers.h"
+  #include "usb/multi_usb_handlers.h"
 #endif
 #ifdef ENABLE_USBSERIAL
-  #include "multi_usbserial_handlers.h"
+  #include "usb/multi_usbserial_handlers.h"
 #endif
 
 #include "ParameterManager.h"
