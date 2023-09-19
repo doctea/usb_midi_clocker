@@ -1,3 +1,5 @@
+![eurorack prototype](https://github.com/doctea/usb_midi_clocker/blob/main/media/eurorack%20prototype.jpg)
+
 - This branch is for a Teensy 4.1
   - 'prototype' build profile uses the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/), with a st7789 screen wired up over SPI, Pimoroni +/-24v ADC over i2c, and gate outputs on GPIOs
   - 'pcb' build profile uses prototype [Eurorack module boards](https://github.com/doctea/usb_midi_clocker_hardware), with an ili9341 screen, 2xPimoroni +/-24v ADC, and gate outputs on MCP23s17
