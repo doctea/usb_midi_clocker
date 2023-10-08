@@ -382,7 +382,9 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }*/
         if (!is_valid_note(note)) return NOTE_OFF;
 
-        if (getLowestNote()>0 || getHighestNote()<127) Serial.printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
+        if (debug && (getLowestNote()>0 || getHighestNote()<127)) 
+            Serial.printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
+            
         if (note < getLowestNote()) {
             if (this->debug) Serial.printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
             if (getLowestNoteMode()==NOTE_MODE::IGNORE) {
