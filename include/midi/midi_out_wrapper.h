@@ -99,8 +99,6 @@ class MIDIOutputWrapper {
             }
         #endif
 
-
-
         //virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
         //virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
 
