@@ -305,6 +305,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Inversions
   - Move quantising/chord generation stuff into a more general 'MIDI filter' behaviour type that can be chained with other behaviours?
   - Port quantising/chord options to Microlidian
+- Allow clock input from USB-MIDI devices
+- Allow to configure which DIN-MIDI device to receive clock from
 
 ## Done
 
