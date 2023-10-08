@@ -92,7 +92,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
                 behaviour_neutron->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
             }
         #endif
-        behaviour_neutron->debug = true;
+        //behaviour_neutron->debug = true;
         //behaviour_neutron->test_wrapper = midi_matrix_manager->get_target_for_id(behaviour_neutron->target_id);
     #endif
 
