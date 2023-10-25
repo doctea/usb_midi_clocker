@@ -109,13 +109,13 @@
         #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
     #elif defined(PCB)
         #undef ENABLE_DPT_LOOPER
-        #define ENABLE_DPT_LOOPER   MIDI4   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+        #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
     #endif
 #endif
 
-#define ENABLE_MAMMB33      MIDI2
-
+//#define ENABLE_MAMMB33      MIDI2
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
+#define ENABLE_MIDIMUSO_4PV   MIDI3
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead

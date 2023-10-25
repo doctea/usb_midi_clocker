@@ -65,7 +65,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     // input/output indicator
     bool indicator_done = false;
-    char indicator_text[5];
+    char indicator_text[6];
     virtual const char *get_indicator() {
         if (!indicator_done) {
             snprintf(indicator_text, 5, "%c%c", this->receives_midi_notes()?'I':' ', this->transmits_midi_notes()?'O':' ');

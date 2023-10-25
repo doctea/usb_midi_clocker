@@ -16,6 +16,7 @@
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
 #include "behaviours/behaviour_dptlooper.h"
+#include "behaviours/behaviour_midimuso_4pv.h"
 
 #include "behaviours/behaviour_microlidian.h"
 
@@ -124,6 +125,10 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_DRUMKIT
         //drumkit_source_id = midi_matrix_manager->register_source("drumkit");
         midi_matrix_manager->register_source(behaviour_drumkit, "drumkit");
+    #endif
+
+    #ifdef ENABLE_MIDIMUSO_4PV
+        midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMUSO-PV", behaviour_midimuso_4pv));
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)

@@ -25,7 +25,7 @@ class DeviceBehaviour_Keystep : public DeviceBehaviourUSBBase, public ClockedBeh
         virtual const char *get_label() override {
             return (char*)"Keystep";
         }
-        virtual bool receives_midi_notes() { return true; }
+        virtual bool receives_midi_notes() override { return true; }
 
         FLASHMEM 
         virtual void setup_callbacks() override {

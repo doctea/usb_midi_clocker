@@ -22,6 +22,7 @@
 #include "behaviours/behaviour_cvinput.h"
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso.h"
+#include "behaviours/behaviour_midimuso_4pv.h"
 
 #include "behaviours/behaviour_bedge.h"
 
@@ -163,6 +164,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_MIDIMUSO
         behaviour_manager->registerBehaviour(behaviour_midimuso);
         behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
+    #endif
+    #ifdef ENABLE_MIDIMUSO_4PV
+        behaviour_midimuso_4pv = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("MIDIMUSO CV-12 4PV");
+        behaviour_midimuso_4pv->connect_device_output(&ENABLE_MIDIMUSO_4PV);
+        behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
     #endif
 
     behaviour_midibassproxy = new MIDIBassBehaviourProxy();
