@@ -1,3 +1,5 @@
+![eurorack prototype](https://github.com/doctea/usb_midi_clocker/blob/main/media/eurorack%20prototype.jpg)
+
 - This branch is for a Teensy 4.1
   - 'prototype' build profile uses the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/), with a st7789 screen wired up over SPI, Pimoroni +/-24v ADC over i2c, and gate outputs on GPIOs
   - 'pcb' build profile uses prototype [Eurorack module boards](https://github.com/doctea/usb_midi_clocker_hardware), with an ili9341 screen, 2xPimoroni +/-24v ADC, and gate outputs on MCP23s17
@@ -303,6 +305,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Inversions
   - Move quantising/chord generation stuff into a more general 'MIDI filter' behaviour type that can be chained with other behaviours?
   - Port quantising/chord options to Microlidian
+- Allow clock input from USB-MIDI devices
+- Allow to configure which DIN-MIDI device to receive clock from
 
 ## Done
 

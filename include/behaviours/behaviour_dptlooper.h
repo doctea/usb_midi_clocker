@@ -61,9 +61,9 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
             this->sendRealTime(midi::Stop);
         }
 
-        #ifdef ENABLE_SCREEN
-            LinkedList<MenuItem*> *make_menu_items() override;
-        #endif
+        /*#ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
+        #endif*/
 
 };
 

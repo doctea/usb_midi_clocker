@@ -2,7 +2,7 @@
 
 #include "behaviours/behaviour_midibass.h"
 
-#define DEBUG_MIDIBASS
+//#define DEBUG_MIDIBASS
 
 #ifdef ENABLE_SCREEN
     #include "menu.h"
@@ -22,17 +22,16 @@
         if (this->output_harmony_status!=nullptr)
             this->output_harmony_status->other_value = &this->last_drone_note;
 
-        SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" Note limits"))).c_str());
+        SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" MIDI FX"))).c_str());
 
         //TODO: see commented-out section in DeviceBehaviour_Neutron
-        ObjectToggleControl<MIDIBassBehaviour> *drone_bass = 
-            new ObjectToggleControl<MIDIBassBehaviour> (
-                "Drone",
-                this,
-                &MIDIBassBehaviour::set_drone,
-                &MIDIBassBehaviour::is_drone,
-                nullptr
-            );
+        ObjectToggleControl<MIDIBassBehaviour> *drone_bass = new ObjectToggleControl<MIDIBassBehaviour> (
+            "Drone",
+            this,
+            &MIDIBassBehaviour::set_drone,
+            &MIDIBassBehaviour::is_drone,
+            nullptr
+        );
         bar->add(drone_bass);
 
         ObjectNumberControl<MIDIBassBehaviour,int8_t> *machinegun_mode = new ObjectNumberControl<MIDIBassBehaviour,int8_t>(

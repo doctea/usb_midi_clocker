@@ -22,6 +22,7 @@
 #include "behaviours/behaviour_cvinput.h"
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso.h"
+#include "behaviours/behaviour_midimuso_4pv.h"
 
 #include "behaviours/behaviour_bedge.h"
 
@@ -86,7 +87,8 @@ void setup_behaviour_manager() {
             behaviour_midilights = new DeviceBehaviour_MIDILights();
             behaviour_manager->registerBehaviour(behaviour_midilights);
         #else
-            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("MIDILights", 0x1337, 0x117e));
+            //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper<>("MIDILights", 0x1337, 0x117e));
+            behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("MIDILights", 0x1337, 0x117e));
         #endif
     #endif
 
@@ -94,7 +96,7 @@ void setup_behaviour_manager() {
         behaviour_subclocker = new DeviceBehaviour_Subclocker();
         behaviour_manager->registerBehaviour(behaviour_subclocker);
     #elif ENABLE_SUBCLOCKER
-        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("Subclocker", 0x1337, 0x1337));
+        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper<>("Subclocker", 0x1337, 0x1337));
     #endif
 
     #ifdef ENABLE_CRAFTSYNTH_USB
@@ -112,9 +114,12 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
+        //behaviour_manager->registerBehaviour(behaviour_bitbox);
+        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox");
         behaviour_manager->registerBehaviour(behaviour_bitbox);
         Serial.println(F("connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
+
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
@@ -160,6 +165,11 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_midimuso);
         behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
     #endif
+    #ifdef ENABLE_MIDIMUSO_4PV
+        behaviour_midimuso_4pv = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("MIDIMUSO CV-12 4PV");
+        behaviour_midimuso_4pv->connect_device_output(&ENABLE_MIDIMUSO_4PV);
+        behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
+    #endif
 
     behaviour_midibassproxy = new MIDIBassBehaviourProxy();
     behaviour_manager->registerBehaviour(behaviour_midibassproxy);
@@ -169,7 +179,7 @@ void setup_behaviour_manager() {
             behaviour_bedge = new DeviceBehaviour_Bedge();
             behaviour_manager->registerBehaviour(behaviour_bedge);
         #else
-            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("BEdge", 0x1397, 0x125A));
+            behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("BEdge", 0x1397, 0x125A));
         #endif
     #endif
     
@@ -229,7 +239,7 @@ void setup_behaviour_manager() {
     }
 
     //FLASHMEM 
-    inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
+    void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
             //Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
             //debug_free_ram();
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();

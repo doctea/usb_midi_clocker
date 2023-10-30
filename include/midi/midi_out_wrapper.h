@@ -13,7 +13,7 @@
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
-#define DEBUG_MIDI_WRAPPER
+//#define DEBUG_MIDI_WRAPPER
 
 class MIDITrack;
 
@@ -99,8 +99,6 @@ class MIDIOutputWrapper {
             }
         #endif
 
-
-
         //virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
         //virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
 
@@ -110,7 +108,7 @@ class MIDIOutputWrapper {
             current_note = in_pitch;
             //int pitch = recalculate_pitch(in_pitch);
 
-            if (this->debug) Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush();
+            if (this->debug) { Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush(); }
 
             if (playing_notes[current_note]<8) {
                 //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
@@ -185,7 +183,7 @@ class MIDIOutputWrapper {
         virtual void actual_sendNoteOff(byte pitch, byte velocity, byte channel) {};
         virtual void actual_sendPitchBend(int pitch, byte channel) {};
 
-        virtual inline bool is_note_playing(int pitch) {
+        virtual bool is_note_playing(int pitch) {
             //pitch = recalculate_pitch(pitch);
             if (!is_valid_note(pitch)) return false;
             return playing_notes[pitch]>0;

@@ -25,6 +25,7 @@ extern ParameterManager *parameter_manager;
 
 class DeviceBehaviour_CVInput;
 
+// todo: move this to Parameter library, or midihelpers scale library..?
 template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
 class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
     public:
@@ -59,7 +60,7 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 };
 
 
-class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
+class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
         virtual const char *get_label() override {
             return "Pitch CV Input";
@@ -75,6 +76,8 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         BaseParameterInput *pitch_input = nullptr;
         BaseParameterInput *velocity_input = nullptr;
 
+        // todo: move this functionality to a generic PitchedMonophonicMIDIOutputBehaviour class...?
+        // todo: make a Polyphonic equivalent...?
         // todo: split into mono/fake-poly/true-poly variations and put in dedicated class
         bool is_playing = false;
         bool is_playing_chord = false;
@@ -86,12 +89,13 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         int32_t trigger_delay_ticks = 0;
         int8_t inversion = 0;
 
+        chord_instance_t current_chord_data;
+        chord_instance_t last_chord_data;
+
         #ifdef DEBUG_VELOCITY
             int8_t velocity = 127;
         #endif
 
-        chord_instance_t current_chord_data;
-        chord_instance_t last_chord_data;
  
         byte channel = 0;
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL

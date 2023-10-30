@@ -8,11 +8,15 @@
 
 #include "behaviours/behaviour_simplewrapper.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "mymenu.h"
 
 #include <LinkedList.h>
+
+#ifdef IRQ_PROTECT_USB_CHANGES
+    #include <util/atomic.h>
+#endif
 
 class DeviceBehaviourManager {
     public:
@@ -80,8 +84,9 @@ class DeviceBehaviourManager {
         #ifdef ENABLE_USB
             bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
                 #ifdef IRQ_PROTECT_USB_CHANGES
-                    bool irqs_enabled = __irq_enabled();
-                    __disable_irq();
+                    //bool irqs_enabled = __irq_enabled();
+                    //__disable_irq();
+                    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
                 #endif
 
                 // loop over the registered behaviours and if the correct one is found, set it up
@@ -100,7 +105,8 @@ class DeviceBehaviourManager {
                 }
                 Debug_printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
                 #ifdef IRQ_PROTECT_USB_CHANGES
-                    if (irqs_enabled) __enable_irq();
+                    }
+                    //if (irqs_enabled) __enable_irq();
                 #endif
 
                 return false;
@@ -110,8 +116,9 @@ class DeviceBehaviourManager {
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
                 #ifdef IRQ_PROTECT_USB_CHANGES
-                    bool irqs_enabled = __irq_enabled();
-                    __disable_irq();
+                    //bool irqs_enabled = __irq_enabled();
+                    //__disable_irq();
+                    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
                 #endif
                 Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
@@ -139,7 +146,8 @@ class DeviceBehaviourManager {
                     }
                 }
                 #ifdef IRQ_PROTECT_USB_CHANGES
-                    if (irqs_enabled) __enable_irq();
+                    }
+                    //if (irqs_enabled) __enable_irq();
                 #endif
                 Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial_flush();
                 return false;

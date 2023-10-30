@@ -7,7 +7,7 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "midi/midi_looper.h"
 

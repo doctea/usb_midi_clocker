@@ -9,7 +9,7 @@
 
 #include "behaviours/behaviour_base.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "project.h"
 

@@ -795,7 +795,7 @@ class MIDITrack {
                         #ifdef DEBUG_LOOP_LOADER
                             Serial.printf(F("read message bytes: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
                         #endif
-                        if (this->debug) Serial.printf(F("storing event at %i\n"), time); Serial_flush();
+                        if (this->debug) { Serial.printf(F("storing event at %i\n"), time); Serial_flush(); }
                         store_event(time, m);
                         messages_count++;
                         tok = strtok(NULL,",;:");
@@ -834,7 +834,7 @@ class MIDITrack {
         }       
 
         #ifdef ENABLE_SCREEN
-            LinkedList<MenuItem*> *make_menu_items();
+            virtual LinkedList<MenuItem*> *make_menu_items();
         #endif
 
 };

@@ -123,7 +123,7 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 DisplayTranslator_Configured display_translator = DisplayTranslator_Configured();
 
 #ifndef GDB_DEBUG
-FLASHMEM 
+//FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
 #endif
 void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));

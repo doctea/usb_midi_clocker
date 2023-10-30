@@ -10,7 +10,7 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "queue.h"
 
@@ -419,7 +419,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
         #ifdef ENABLE_SCREEN
             FLASHMEM
-            LinkedList<MenuItem*> *make_menu_items() override;
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 
 };

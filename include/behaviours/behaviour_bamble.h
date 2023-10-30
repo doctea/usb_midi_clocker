@@ -12,7 +12,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
@@ -511,7 +511,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         #ifdef ENABLE_SCREEN
             // FLASHMEM // virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
             FLASHMEM
-            LinkedList<MenuItem*> *make_menu_items() override;
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 };
 

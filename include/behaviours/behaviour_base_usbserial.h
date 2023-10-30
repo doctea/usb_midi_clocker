@@ -7,8 +7,8 @@
 #include "USBHost_t36.h"
 
 #include "behaviours/behaviour_base.h"
-#include "multi_usbserial_handlers.h"
-#include "multi_usbserial_wrapper.h"
+#include "usb/multi_usbserial_handlers.h"
+#include "usb/multi_usbserial_wrapper.h"
 
 // USB device that presents as a Serial connection, instead of as a MIDI device
 class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase {
