@@ -191,13 +191,19 @@ extern bool debug_flag;
 
         //menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-        //menuitems->add(new ObjectScaleMenuItem<DeviceBehaviour_CVInput>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, false));
+        // TODO: move scale/key and quantise items to a dedicated class that can be re-used
+        // TODO: make mono, fake-poly, and true-poly versions of class:-
+        //          mono forces one note at a time, and doesn't offer auto-chord function?
+        //          fake-poly offers auto-chord functions
+        //          true-poly doesn't offer auto-chord functions
+        //          all versions offer quantisation to scale
+        // TODO: allow all pitched behaviours to use a 'global scale' setting (-1?)
         menuitems->add(
             new ObjectScaleMenuItemBar<DeviceBehaviour_CVInput>(
                 "Scale / Key", 
                 this, 
-                &DeviceBehaviour_CVInput::set_scale, 
-                &DeviceBehaviour_CVInput::get_scale, 
+                &DeviceBehaviour_CVInput::set_scale,
+                &DeviceBehaviour_CVInput::get_scale,
                 &DeviceBehaviour_CVInput::set_scale_root, 
                 &DeviceBehaviour_CVInput::get_scale_root
                 //, false
@@ -205,8 +211,8 @@ extern bool debug_flag;
         );
 
         bar = new SubMenuItemBar("Quantise / chords");
-        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
-        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise",    this,  &DeviceBehaviour_CVInput::set_quantise,    &DeviceBehaviour_CVInput::is_quantise));
+        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this,  &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
 
         ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type> *selected_chord_control = new ObjectSelectorControl<DeviceBehaviour_CVInput,CHORD::Type>("Chord", this, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord, nullptr, true);
         for (size_t i = 0 ; i < NUMBER_CHORDS ; i++) {

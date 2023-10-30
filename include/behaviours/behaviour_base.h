@@ -369,6 +369,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
     // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
     //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
+    // TODO: move quantisation calculation here...?
     virtual int recalculate_pitch(byte note) {
         /*if (this->force_octave >= 0) {
             // send incoming notes from beatstep back out to neutron on serial3, but transposed down

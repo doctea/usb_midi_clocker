@@ -75,6 +75,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         BaseParameterInput *pitch_input = nullptr;
         BaseParameterInput *velocity_input = nullptr;
 
+        // todo: split into mono/fake-poly/true-poly variations and put in dedicated class
         bool is_playing = false;
         bool is_playing_chord = false;
         int last_note = -1, current_note = -1, current_raw_note = -1;
@@ -265,6 +266,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         //void on_tick(unsigned long ticks) override {
         // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
+        // TODO: see if this is solved now and we can revert back to using on_tick, now that we have updated to newer version of USBHost_t36 library?
         void on_pre_clock(unsigned long ticks) override {
             // check if playing note duration has passed regardless of whether pitch_input is set, so that notes will still finish even if disconncted
             if (is_playing && this->get_note_length()>0 && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
