@@ -203,7 +203,8 @@
             #define PIN_SEQUENCE_4 36
         #endif
     #elif defined(PCB)
-            // shouldn't need to define pins as should all be handled by teh MCP23s17
+        // shouldn't need to define pins as should all be handled by teh MCP23s17
+        #define ENABLE_MORE_CLOCKS // output a couple of extra clocks (16th and 8th notes) on the extra sequencer pins
     #endif
 #endif
 

@@ -140,39 +140,55 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   }
 #else
   void update_cv_outs(unsigned long ticks) {
-    #ifdef PIN_CLOCK_RESET_PHRASE
-      if (is_bpm_on_phrase(ticks)) {
-        //Serial.printf("On phrase! %i\n", ticks);
-        cv_out_clock_pin_on(PIN_CLOCK_RESET_PHRASE);
-      } else if (is_bpm_on_phrase(ticks,duration)) {
-        cv_out_clock_pin_off(PIN_CLOCK_RESET_PHRASE);
+    #ifdef ENABLE_CLOCKS
+      #ifdef PIN_CLOCK_RESET_PHRASE
+        if (is_bpm_on_phrase(ticks)) {
+          //Serial.printf("On phrase! %i\n", ticks);
+          cv_out_clock_pin_on(PIN_CLOCK_RESET_PHRASE);
+        } else if (is_bpm_on_phrase(ticks,duration)) {
+          cv_out_clock_pin_off(PIN_CLOCK_RESET_PHRASE);
+        }
+      #endif
+      #ifdef PIN_CLOCK_RESET_HALF_PHRASE
+        if (is_bpm_on_half_phrase(ticks)) {
+          //Serial.printf("On phrase! %i\n", ticks);
+          cv_out_clock_pin_on(PIN_CLOCK_RESET_HALF_PHRASE);
+        } else if (is_bpm_on_half_phrase(ticks,duration)) {
+          cv_out_clock_pin_off(PIN_CLOCK_RESET_HALF_PHRASE);
+        }
+      #endif
+      #ifdef PIN_CLOCK_RESET_BAR
+        if (is_bpm_on_bar(ticks)) {
+          //Serial.printf("On phrase! %i\n", ticks);
+          cv_out_clock_pin_on(PIN_CLOCK_RESET_BAR);
+        } else if (is_bpm_on_bar(ticks,duration)) {
+          cv_out_clock_pin_off(PIN_CLOCK_RESET_BAR);
+        }
+      #endif
+      #ifdef PIN_CLOCK_RESET_BEAT
+        if (is_bpm_on_beat(ticks)) {
+          //Serial.printf("On phrase! %i\n", ticks);
+          cv_out_clock_pin_on(PIN_CLOCK_RESET_BEAT);
+        } else if (is_bpm_on_beat(ticks,duration)) {
+          cv_out_clock_pin_off(PIN_CLOCK_RESET_BEAT);
+        }
+      #endif
+
+      for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
+        bool should_go_high = false;
+        bool should_go_low  = false;
+
+        if (should_trigger_clock(ticks, i)) {
+          should_go_high = true;
+        } else if (should_trigger_clock(ticks, i, duration)) {
+          should_go_low = true;
+        }
+
+        if (should_go_high)     cv_out_clock_pin_on(i);
+        else if (should_go_low) cv_out_clock_pin_off(i);
       }
     #endif
-    #ifdef PIN_CLOCK_RESET_HALF_PHRASE
-      if (is_bpm_on_half_phrase(ticks)) {
-        //Serial.printf("On phrase! %i\n", ticks);
-        cv_out_clock_pin_on(PIN_CLOCK_RESET_HALF_PHRASE);
-      } else if (is_bpm_on_half_phrase(ticks,duration)) {
-        cv_out_clock_pin_off(PIN_CLOCK_RESET_HALF_PHRASE);
-      }
-    #endif
-    #ifdef PIN_CLOCK_RESET_BAR
-      if (is_bpm_on_bar(ticks)) {
-        //Serial.printf("On phrase! %i\n", ticks);
-        cv_out_clock_pin_on(PIN_CLOCK_RESET_BAR);
-      } else if (is_bpm_on_bar(ticks,duration)) {
-        cv_out_clock_pin_off(PIN_CLOCK_RESET_BAR);
-      }
-    #endif
-    #ifdef PIN_CLOCK_RESET_BEAT
-      if (is_bpm_on_beat(ticks)) {
-        //Serial.printf("On phrase! %i\n", ticks);
-        cv_out_clock_pin_on(PIN_CLOCK_RESET_BEAT);
-      } else if (is_bpm_on_beat(ticks,duration)) {
-        cv_out_clock_pin_off(PIN_CLOCK_RESET_BEAT);
-      }
-    #endif
-        
+
     #ifdef ENABLE_SEQUENCER
       for (unsigned int i = 0 ; i < NUM_SEQUENCES ; i++) {
         bool should_go_high = false;
@@ -187,22 +203,23 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
         if (should_go_high)     cv_out_sequence_pin_on(i);
         else if (should_go_low) cv_out_sequence_pin_off(i);
       }
-    #endif
-    
-    #ifdef ENABLE_CLOCKS
-      for (unsigned int i = 0 ; i < NUM_CLOCKS ; i++) {
-        bool should_go_high = false;
-        bool should_go_low  = false;
 
-        if (should_trigger_clock(ticks, i)) {
-          should_go_high = true;
-        } else if (should_trigger_clock(ticks, i, duration)) {
-          should_go_low = true;
+      #ifdef ENABLE_MORE_CLOCKS
+        for (unsigned int i = 0 ; i < 2 ; i++) {
+          bool should_go_high = false;
+          bool should_go_low = false;
+
+          if (should_trigger_clock(ticks, i)) {
+            should_go_high = true;
+          } else if (should_trigger_clock(ticks, i, duration)) {
+            should_go_low = true;
+          }
+
+          // actually use the pins after the sequencer output pins for the extra clocks
+          if (should_go_high)   cv_out_sequence_pin_on(NUM_SEQUENCES + i);
+          else (should_go_high) cv_out_sequence_pin_off(NUM_SEQUENCES + i);
         }
-
-        if (should_go_high)     cv_out_clock_pin_on(i);
-        else if (should_go_low) cv_out_clock_pin_off(i);
-      }
+      #endif
     #endif
   }
 
