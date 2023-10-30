@@ -34,8 +34,8 @@
                     &DeviceBehaviourUltimateBase::setLowestNote,
                     &DeviceBehaviourUltimateBase::getLowestNote,
                     nullptr,
-                    (int8_t)0,
-                    (int8_t)127,
+                    (int8_t)MIDI_MIN_NOTE,
+                    (int8_t)MIDI_MAX_NOTE,
                     true,
                     true
                 );
@@ -47,8 +47,8 @@
                     &DeviceBehaviourUltimateBase::setHighestNote,
                     &DeviceBehaviourUltimateBase::getHighestNote,
                     nullptr,
-                    (int8_t)0,
-                    (int8_t)127,
+                    (int8_t)MIDI_MIN_NOTE,
+                    (int8_t)MIDI_MAX_NOTE,
                     true,
                     true
                 );
