@@ -216,8 +216,8 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
           }
 
           // actually use the pins after the sequencer output pins for the extra clocks
-          if (should_go_high)   cv_out_sequence_pin_on(NUM_SEQUENCES + i);
-          else if (should_go_high) cv_out_sequence_pin_off(NUM_SEQUENCES + i);
+          if (should_go_high)     cv_out_sequence_pin_on(NUM_SEQUENCES + i);
+          else if (should_go_low) cv_out_sequence_pin_off(NUM_SEQUENCES + i);
         }
       #endif
     #endif
