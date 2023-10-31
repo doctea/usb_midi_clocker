@@ -12,6 +12,7 @@
 #include "mymenu/menu_bpm.h"
 #include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
+#include "mymenu/menuitems_scale.h"
 
 #include "menuitems_pinned.h"
 
@@ -255,6 +256,14 @@ void setup_menu() {
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(new ObjectActionConfirmItem<MIDIMatrixManager>("{HARD PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes_force));
     menu->add(&midi_matrix_selector);
+    menu->add(new ObjectScaleMenuItemBar<MIDIMatrixManager>(
+        "Global Scale", 
+        midi_matrix_manager, 
+        &MIDIMatrixManager::set_global_scale_type, 
+        &MIDIMatrixManager::get_global_scale_type, 
+        &MIDIMatrixManager::set_global_scale_root, 
+        &MIDIMatrixManager::get_global_scale_root
+    ));
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));

@@ -105,7 +105,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
 
         bool quantise = false, play_chords = false;
         SCALE scale = SCALE::MAJOR;
-        int scale_root = SCALE_ROOT_C;
+        int8_t scale_root = SCALE_ROOT_C;
 
         void set_scale(SCALE scale) {
             //trigger_off_for_pitch_because_changed(this->current_note);
@@ -114,11 +114,11 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
         SCALE get_scale() {
             return this->scale;
         }
-        void set_scale_root(int scale_root) {
+        void set_scale_root(int8_t scale_root) {
             //trigger_off_for_pitch_because_changed(this->current_note);
             this->scale_root = scale_root;
         }
-        int get_scale_root() {
+        int8_t get_scale_root() {
             return this->scale_root;
         }
         void set_quantise(bool quantise) {
@@ -335,7 +335,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
             // key centre + scale
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int>    
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int8_t>    
                 ("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
             // scale number (key) is handled in load_parse_key_value/save_sequence_add_lines because SCALE type breaks SaveableParameter
             //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,SCALE>("scale_number", "CV", this, &this->scale, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale));

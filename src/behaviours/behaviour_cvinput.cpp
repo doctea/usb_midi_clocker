@@ -205,7 +205,8 @@ extern bool debug_flag;
                 &DeviceBehaviour_CVInput::set_scale,
                 &DeviceBehaviour_CVInput::get_scale,
                 &DeviceBehaviour_CVInput::set_scale_root, 
-                &DeviceBehaviour_CVInput::get_scale_root
+                &DeviceBehaviour_CVInput::get_scale_root,
+                true
                 //, false
             )
         );

@@ -37,6 +37,9 @@ class MIDIMatrixManager {
 
     bool debug = false;
 
+    int8_t  global_scale_root = SCALE_ROOT_C;
+    SCALE   global_scale_type = SCALE::MAJOR;
+
     // so we wanna do something like:-
     //      for each source
     //          store a list of targets it is connected to
@@ -351,6 +354,19 @@ class MIDIMatrixManager {
         return -1;
     }
 
+    int8_t get_global_scale_root() {
+        return this->global_scale_root;
+    }
+    void set_global_scale_root(int8_t scale_root) {
+        this->global_scale_root = scale_root;
+    }
+    SCALE get_global_scale_type() {
+        return this->global_scale_type;
+    }
+    void set_global_scale_type(SCALE scale_type) {
+        this->global_scale_type = scale_type;
+    }
+
     private:
         // stuff for making singleton
         static MIDIMatrixManager* inst_;
@@ -360,6 +376,9 @@ class MIDIMatrixManager {
             sources = (source_entry*)calloc(MAX_NUM_SOURCES, sizeof(source_entry));
             //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
             memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
+
+            set_global_scale_root_target(&this->global_scale_root);
+            set_global_scale_type_target(&this->global_scale_type);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);
