@@ -212,7 +212,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         if(this->transmits_midi_notes()) {
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNote, &DeviceBehaviourUltimateBase::getHighestNote));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNoteMode, &DeviceBehaviourUltimateBase::getLowestNoteMode));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNoteMode, &DeviceBehaviourUltimateBase::getHighestNoteMode));
         }
 
