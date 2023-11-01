@@ -26,12 +26,14 @@
     //#include "mymenu/menu_delayticks.h"
     #include "menuitems.h"
     #include "menuitems_selector.h"
+    #include "menuitems_lambda.h"
+    #include "menuitems_lambda_selector.h"
 
-    LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option> *delay_ticks_control_available_values = nullptr;
+    LinkedList<LambdaSelectorControl<int32_t>::option> *delay_ticks_control_available_values = nullptr;
 
-    void add_option_delay_ticks_control(LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option> *list, int32_t value, const char *label) { 
+    void add_option_delay_ticks_control(LinkedList<LambdaSelectorControl<int32_t>::option> *list, int32_t value, const char *label) { 
         String *l = new String(label);
-        list->add(ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option { .value = value, .label = l->c_str() });
+        list->add(LambdaSelectorControl<int32_t>::option { .value = value, .label = l->c_str() });
     }
 
     LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
@@ -42,13 +44,12 @@
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
         //Serial.println(F("\tDividedClockedBehaviour creating divisor_control")); Serial_flush();
-
-        ObjectNumberControl<DividedClockedBehaviour,uint32_t> *divisor_control = new ObjectNumberControl<DividedClockedBehaviour,uint32_t>(
+        DividedClockedBehaviour *self = this;
+        LambdaNumberControl<uint32_t> *divisor_control = new LambdaNumberControl<uint32_t>(
             "Divider",
             //"Subclocker div", 
-            this, 
-            &DividedClockedBehaviour::set_divisor, 
-            &DividedClockedBehaviour::get_divisor, 
+            [=](uint32_t v) -> void { this->set_divisor(v); },
+            [=]() -> uint32_t { return this->get_divisor(); },
             nullptr, // change callback on_subclocker_divisor_changed
             1,  //min
             48  //max
@@ -63,8 +64,8 @@
 
             // use a global delay_ticks_control list of available values to save (hopefully) code space and RAM
             if (delay_ticks_control_available_values==nullptr) {
-                delay_ticks_control_available_values = new LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option>();
-                add_option_delay_ticks_control(delay_ticks_control_available_values, 0,                 "None");
+                delay_ticks_control_available_values = new LinkedList<LambdaSelectorControl<int32_t>::option>();
+                add_option_delay_ticks_control(delay_ticks_control_available_values, 0,                "None");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/4,            "1/4");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/2,            "1/2");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN,              "1");
@@ -100,11 +101,13 @@
             }
 
             //Serial.println(F("\tDividedClockedBehaviour creating delay_ticks_control")); Serial_flush();
-            ObjectSelectorControl<DividedClockedBehaviour,int32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,int32_t>(
+            LambdaSelectorControl<int32_t> *delay_ticks_control = new LambdaSelectorControl<int32_t>(
                 "Delay",
-                this,
+                /*this,
                 &DividedClockedBehaviour::set_delay_ticks,
-                &DividedClockedBehaviour::get_delay_ticks,
+                &DividedClockedBehaviour::get_delay_ticks,*/
+                [=](int32_t v) -> void { this->set_delay_ticks(v); },
+                [=]() -> int32_t { return this->get_delay_ticks(); },
                 nullptr
             );       
             delay_ticks_control->set_available_values(delay_ticks_control_available_values);
@@ -126,11 +129,13 @@
 
         #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
             //Serial.println(F("\tDividedClockedBehaviour creating pause_during_delay_control")); Serial_flush();
-            ObjectSelectorControl<DividedClockedBehaviour,int8_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,int8_t>(
+            LambdaSelectorControl<int8_t> *pause_during_delay_control = new LambdaSelectorControl<int8_t>(
                 "Pause",
-                this,
+                /*this,
                 &DividedClockedBehaviour::set_pause_during_delay,
-                &DividedClockedBehaviour::get_pause_during_delay,
+                &DividedClockedBehaviour::get_pause_during_delay,*/
+                [=](int8_t v) -> void { this->set_pause_during_delay(v); },
+                [=]() -> int8_t { return this->get_pause_during_delay(); },
                 nullptr
             );
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_OFF,    "Off");

@@ -7,6 +7,7 @@
 #ifdef ENABLE_SCREEN
     #include "menu.h"
     #include "menuitems_object.h"
+    #include "menuitems_lambda.h"
     #include "submenuitem_bar.h"
 
     #ifdef DEBUG_MIDIBASS
@@ -34,11 +35,10 @@
         );
         bar->add(drone_bass);
 
-        ObjectNumberControl<MIDIBassBehaviour,int8_t> *machinegun_mode = new ObjectNumberControl<MIDIBassBehaviour,int8_t>(
+        LambdaNumberControl<int8_t> *machinegun_mode = new LambdaNumberControl<int8_t>(
             "Machinegun", 
-            this, 
-            &MIDIBassBehaviour::set_machinegun, 
-            &MIDIBassBehaviour::get_machinegun, 
+            [=](int8_t v) -> void { this->set_machinegun(v); },
+            [=]() -> int8_t { return this->get_machinegun(); },
             nullptr,
             (int8_t)0, 
             (int8_t)4

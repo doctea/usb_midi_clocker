@@ -4,6 +4,8 @@
     #include "menu.h"
     #include "menuitems.h"
 
+    #include "menuitems_lambda_selector.h"
+
     #include "submenuitem_bar.h"
     #include "mymenu/menuitems_scale.h"
 
@@ -54,11 +56,10 @@
                 );
                 transposition_bar->add(highest_note_control);
 
-                ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t> *lowest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
+                LambdaSelectorControl<int8_t> *lowest_note_mode_control = new LambdaSelectorControl<int8_t>(
                     "Low Mode",
-                    this,
-                    &DeviceBehaviourUltimateBase::setLowestNoteMode,
-                    &DeviceBehaviourUltimateBase::getLowestNoteMode,
+                    [=](int8_t v) -> void { this->setLowestNoteMode(v); },
+                    [=]() -> int8_t { return this->getLowestNoteMode(); },
                     nullptr,
                     true
                 );
@@ -66,11 +67,10 @@
                 lowest_note_mode_control->add_available_value(NOTE_MODE::TRANSPOSE, "Transpose");
                 transposition_bar->add(lowest_note_mode_control);
 
-                ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t> *highest_note_mode_control = new ObjectSelectorControl<DeviceBehaviourUltimateBase,int8_t>(
+                LambdaSelectorControl<int8_t> *highest_note_mode_control = new LambdaSelectorControl<int8_t>(
                     "High Mode",
-                    this,
-                    &DeviceBehaviourUltimateBase::setHighestNoteMode,
-                    &DeviceBehaviourUltimateBase::getHighestNoteMode,
+                    [=](int8_t v) -> void { this->setHighestNoteMode(v); },
+                    [=]() -> int8_t { return this->getHighestNoteMode(); },
                     nullptr,
                     true
                 );

@@ -256,14 +256,22 @@ void setup_menu() {
     menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
     menu->add(new ObjectActionConfirmItem<MIDIMatrixManager>("{HARD PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes_force));
     menu->add(&midi_matrix_selector);
-    menu->add(new ObjectScaleMenuItemBar<MIDIMatrixManager>(
+    MIDIMatrixManager *midi_matrix_manager_p = midi_matrix_manager;
+    menu->add(new LambdaScaleMenuItemBar(
+        "Global Scale", 
+        [midi_matrix_manager_p](SCALE scale) -> void { midi_matrix_manager_p->set_global_scale_type(scale); }, 
+        [midi_matrix_manager_p]() -> SCALE { return midi_matrix_manager_p->get_global_scale_type(); },
+        [midi_matrix_manager_p](int8_t scale_root) -> void { midi_matrix_manager_p->set_global_scale_root(scale_root); },
+        [midi_matrix_manager_p]() -> int8_t { return midi_matrix_manager_p->get_global_scale_root(); }
+    ));
+    /*menu->add(new ObjectScaleMenuItemBar<MIDIMatrixManager>(
         "Global Scale", 
         midi_matrix_manager, 
         &MIDIMatrixManager::set_global_scale_type, 
         &MIDIMatrixManager::get_global_scale_type, 
         &MIDIMatrixManager::set_global_scale_root, 
         &MIDIMatrixManager::get_global_scale_root
-    ));
+    ));*/
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
