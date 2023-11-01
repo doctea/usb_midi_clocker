@@ -44,7 +44,6 @@
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
         //Serial.println(F("\tDividedClockedBehaviour creating divisor_control")); Serial_flush();
-        DividedClockedBehaviour *self = this;
         LambdaNumberControl<uint32_t> *divisor_control = new LambdaNumberControl<uint32_t>(
             "Divider",
             //"Subclocker div", 
@@ -117,11 +116,10 @@
 
         #ifdef ENABLE_AUTO_RESTART_CONTROL
             //Serial.println(F("\tDividedClockedBehaviour creating auto_restart_control")); Serial_flush();
-            ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
+            LambdaToggleControl *auto_restart_control = new LambdaToggleControl(
                 "Restart",
-                this,
-                &DividedClockedBehaviour::set_auto_restart_on_change,
-                &DividedClockedBehaviour::should_auto_restart_on_change,
+                [=](bool v) -> void { this->set_auto_restart_on_change(v); },
+                [=]() -> bool { return this->should_auto_restart_on_change(); },
                 nullptr
             );
             //auto_restart_control->debug = true;

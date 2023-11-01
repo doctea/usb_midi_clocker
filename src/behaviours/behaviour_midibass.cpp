@@ -26,11 +26,10 @@
         SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" MIDI FX"))).c_str());
 
         //TODO: see commented-out section in DeviceBehaviour_Neutron
-        ObjectToggleControl<MIDIBassBehaviour> *drone_bass = new ObjectToggleControl<MIDIBassBehaviour> (
+        LambdaToggleControl *drone_bass = new LambdaToggleControl (
             "Drone",
-            this,
-            &MIDIBassBehaviour::set_drone,
-            &MIDIBassBehaviour::is_drone,
+            [=](bool v) -> void { this->set_drone(v); },
+            [=]() -> bool { return this->is_drone(); },
             nullptr
         );
         bar->add(drone_bass);

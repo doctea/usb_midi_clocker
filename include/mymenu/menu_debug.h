@@ -7,6 +7,7 @@
 #include "menuitems_numbers.h"
 #include "submenuitem_bar.h"
 #include "menuitems_listviewer.h"
+#include "menuitems_lambda.h"
 
 #include "__version.h"
 
@@ -56,9 +57,9 @@ void setup_debug_menu() {
 
     SubMenuItemBar *bar = new SubMenuItemBar("Debug");
 
-    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Render times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
+    LambdaToggleControl *debug_times_control = new LambdaToggleControl("Render times", [=](bool v) -> void { menu->setDebugTimes(v); }, [=]() -> bool { return menu->isDebugTimes(); }, nullptr);
     bar->add(debug_times_control);
-    ObjectToggleControl<Menu> *profiler_control = new ObjectToggleControl<Menu>("Profiler", menu, &Menu::setProfileEnable, &Menu::isProfileEnable, nullptr);
+    LambdaToggleControl *profiler_control = new LambdaToggleControl("Profiler", [=](bool v) -> void { menu->setProfileEnable(v); }, [=]() -> bool { return menu->isProfileEnable(); }, nullptr);
     bar->add(profiler_control);
 
     bar->add(new NumberControl<bool>("Extra", (bool*)&debug_flag, debug_flag, false, true));

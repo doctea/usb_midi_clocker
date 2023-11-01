@@ -98,11 +98,10 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
-    ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
+    LambdaToggleControl craftsynth_clock_toggle = LambdaToggleControl (
         "CraftSynth clock enable",
-        behaviour_craftsynth,
-        &ClockedBehaviour::setClockEnabled,
-        &ClockedBehaviour::isClockEnabled,
+        [=](bool v) -> void { behaviour_craftsynth->setClockEnabled(v); },
+        [=]() -> bool { return behaviour_craftsynth->isClockEnabled(); },
         nullptr
     );
 #endif

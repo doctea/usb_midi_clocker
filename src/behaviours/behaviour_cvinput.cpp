@@ -220,10 +220,15 @@ extern bool debug_flag;
             )
         );
 
-
         bar = new SubMenuItemBar("Quantise / chords");
-        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Quantise",    this,  &DeviceBehaviour_CVInput::set_quantise,    &DeviceBehaviour_CVInput::is_quantise));
-        bar->add(new ObjectToggleControl<DeviceBehaviour_CVInput>("Play chords", this,  &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+        bar->add(new LambdaToggleControl("Quantise",    
+            [=](bool v) -> void { this->set_quantise(v); },
+            [=]() -> bool { return this->is_quantise(); }
+        ));
+        bar->add(new LambdaToggleControl("Play chords", 
+            [=](bool v) -> void { this->set_play_chords(v); },
+            [=]() -> bool { return this->is_play_chords(); }
+        ));
 
         LambdaSelectorControl<CHORD::Type> *selected_chord_control = new LambdaSelectorControl<CHORD::Type>(
             "Chord", 

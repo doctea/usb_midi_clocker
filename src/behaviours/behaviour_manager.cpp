@@ -189,6 +189,7 @@ void setup_behaviour_manager() {
 
 #ifdef ENABLE_SCREEN
     #include "menuitems.h"
+    #include "menuitems_lambda.h"
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         //return; // WTF TODO fix crash ?
@@ -230,7 +231,10 @@ void setup_behaviour_manager() {
                     menu->add(new SeparatorMenuItem(p->category_name), behaviour->colour);
                 }
                 menu->add(
-                    new ObjectToggleControl<SaveableParameterBase>(p->niceify(), p, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled),
+                    new LambdaToggleControl(p->niceify(), 
+                        [p](bool v) -> void { p->set_recall_enabled(v); },
+                        [p]() -> bool { return p->is_recall_enabled(); }
+                    ),
                     behaviour->colour
                 );
                 last_category = p->category_name;
