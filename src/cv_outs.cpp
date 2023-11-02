@@ -58,6 +58,7 @@ bool is_clock_off(byte i) {
 
 // clock offsets offset
 byte get_clock_delay(byte i) {
+  //if (i>=NUM_CLOCKS) return 0;
   return current_state.clock_delay[i];
 }
 void decrease_clock_delay(byte clock_selected, byte amount) {
@@ -184,7 +185,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
           should_go_low = true;
         }
 
-        if (should_go_high)     cv_out_clock_pin_on(i);
+        if (should_go_high)     cv_out_clock_pin_on (i);
         else if (should_go_low) cv_out_clock_pin_off(i);
       }
     #endif
@@ -200,23 +201,26 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
           should_go_low = true;
         }
 
-        if (should_go_high)     cv_out_sequence_pin_on(i);
+        if (should_go_high)     cv_out_sequence_pin_on (i);
         else if (should_go_low) cv_out_sequence_pin_off(i);
       }
 
       #ifdef ENABLE_MORE_CLOCKS
         for (unsigned int i = 0 ; i < 2 ; i++) {
           bool should_go_high = false;
-          bool should_go_low = false;
+          bool should_go_low  = false;
 
-          if (should_trigger_clock(ticks, i)) {
+          float m = clock_multiplier_values[i];
+          if (is_bpm_on_multiplier(ticks, m)) {
+            //Serial.printf("%3i: extra clock %i has multiplier %f - on!\n", ticks, i, m);
             should_go_high = true;
-          } else if (should_trigger_clock(ticks, i, duration)) {
+          } else if (is_bpm_on_multiplier(ticks, m, duration)) {
+            //Serial.printf("%3i: extra clock %i has multiplier %f - off!\n", ticks, i, m);
             should_go_low = true;
           }
 
           // actually use the pins after the sequencer output pins for the extra clocks
-          if (should_go_high)     cv_out_sequence_pin_on(NUM_SEQUENCES + i);
+          if (should_go_high)     cv_out_sequence_pin_on (NUM_SEQUENCES + i);
           else if (should_go_low) cv_out_sequence_pin_off(NUM_SEQUENCES + i);
         }
       #endif
