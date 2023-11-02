@@ -153,11 +153,10 @@ void setup_menu() {
     menu->add(new SeparatorMenuItem("Project"));
 
     ActionConfirmItem *project_save = new ActionConfirmItem("Save settings", &save_project_settings);
-    ObjectNumberControl<Project,int> *project_selector = new ObjectNumberControl<Project,int>(
+    LambdaNumberControl<int> *project_selector = new LambdaNumberControl<int>(
         "Project number", 
-        project, 
-        &Project::setProjectNumber, 
-        &Project::getProjectNumber, 
+        [=](int project_number) -> void { project->setProjectNumber(project_number); },
+        [=]() -> int { return project->getProjectNumber(); },
         nullptr, 
         0, 
         100
