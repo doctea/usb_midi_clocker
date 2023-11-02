@@ -196,18 +196,6 @@ extern bool debug_flag;
         //          true-poly doesn't offer auto-chord functions
         //          all versions offer quantisation to scale
         // TODO: allow all pitched behaviours to use a 'global scale' setting (-1?)
-        /*menuitems->add(
-            new ObjectScaleMenuItemBar<DeviceBehaviour_CVInput>(
-                "Scale / Key", 
-                this, 
-                &DeviceBehaviour_CVInput::set_scale,
-                &DeviceBehaviour_CVInput::get_scale,
-                &DeviceBehaviour_CVInput::set_scale_root, 
-                &DeviceBehaviour_CVInput::get_scale_root,
-                true
-                //, false
-            )
-        );*/
         menuitems->add(
             new LambdaScaleMenuItemBar(
                 "Scale / Key", 
