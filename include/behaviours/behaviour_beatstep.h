@@ -366,16 +366,24 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DividedClockedBehaviour::setup_saveable_parameters();
 
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(
+                    /*saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(
                         sysex_parameters[i].label,
                         "Sysex",
                         this,
                         sysex_parameters[i].target_variable, 
                         nullptr,
                         nullptr,
-                        /*&sysex_parameters[i].enable_recall, 
-                        &sysex_parameters[i].enable_recall, */
                         sysex_parameters[i].setter_func
+                    ));*/
+                    saveable_parameters->add(new LSaveableParameter<int8_t>(
+                        sysex_parameters[i].label,
+                        "Sysex",
+                        sysex_parameters[i].target_variable,
+                        [=](int8_t v) -> void { 
+                            void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = sysex_parameters[i].setter_func;
+
+                            (this->*setter_func)(v); 
+                        }
                     ));
                 }                    
             }

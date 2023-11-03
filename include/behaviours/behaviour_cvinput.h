@@ -335,29 +335,28 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
             // key centre + scale
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int8_t>    
-                ("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>    
+                ("scale_root", "CV", &this->scale_root, [=](int8_t v) -> void { this->set_scale_root(v); }, [=]() -> int8_t { return this->get_scale_root(); } ));
             // scale number (key) is handled in load_parse_key_value/save_sequence_add_lines because SCALE type breaks SaveableParameter
-            //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,SCALE>("scale_number", "CV", this, &this->scale, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale));
+            //this->saveable_parameters->add(new LSaveableParameter<SCALE>("scale_number", "CV", &this->scale, [=](SCALE v) -> void { this->set_scale(v); }, [=]() -> SCALE { return this->get_scale(); }));
 
             // note duration and triggers
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
-                ("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
-                ("trigger_each", "CV", this, &this->trigger_on_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_on_ticks, &DeviceBehaviour_CVInput::get_trigger_on_ticks));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
-                ("trigger_delay_ticks", "CV", this, &this->trigger_delay_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_delay_ticks, &DeviceBehaviour_CVInput::get_trigger_delay_ticks));
-
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                ("note_length_ticks", "CV", &this->note_length_ticks, [=](int32_t v) -> void{ this->set_note_length(v); }, [=]() -> int32_t { return this->get_note_length(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                ("trigger_each", "CV", &this->trigger_on_ticks, [=](int32_t v) -> void{ this->set_trigger_on_ticks(v); }, [=]() -> int32_t { return this->get_trigger_on_ticks(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                ("trigger_delay_ticks", "CV", &this->trigger_delay_ticks, [=](int32_t v) -> void { this->set_trigger_delay_ticks(v); }, [=]() -> int32_t { return this->get_trigger_delay_ticks(); } ));
 
             // quantisation settings
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   
-                ("quantise_enable", "CV", this, &this->quantise, nullptr, nullptr, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   
-                ("play_chords", "CV", this, &this->play_chords, nullptr, nullptr, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,CHORD::Type>
-                ("Chord", "CV", this, &this->selected_chord_number, nullptr, nullptr, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int8_t>
-                ("inversion", "CV", this, &this->inversion, nullptr, nullptr, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion));
+            this->saveable_parameters->add(new LSaveableParameter<bool>   
+                ("quantise_enable", "CV", &this->quantise, [=](bool v) -> void { this->set_quantise(v); }, [=]() -> bool { return this->is_quantise(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<bool>   
+                ("play_chords", "CV", &this->play_chords, [=](bool v) -> void{ this->set_play_chords(v); }, [=]() -> bool { return this->is_play_chords(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<CHORD::Type>
+                ("Chord", "CV", &this->selected_chord_number, [=](CHORD::Type v) -> void { this->set_selected_chord(v); }, [=]() -> CHORD::Type { return get_selected_chord(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>
+                ("inversion", "CV", &this->inversion, [=](int8_t v) -> void { this->set_inversion(v); }, [=]() -> int8_t { return this->get_inversion(); } ));
 
         }
 
@@ -393,7 +392,6 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
 
             return false;
         }
-
 
         //FLASHMEM 
         virtual LinkedList<FloatParameter*> *initialise_parameters() override {

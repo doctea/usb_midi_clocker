@@ -210,10 +210,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
 
         if(this->transmits_midi_notes()) {
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNote, &DeviceBehaviourUltimateBase::getLowestNote));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNote, &DeviceBehaviourUltimateBase::getHighestNote));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("lowest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setLowestNoteMode, &DeviceBehaviourUltimateBase::getLowestNoteMode));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int8_t>("highest_note_mode", "Note restriction", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setHighestNoteMode, &DeviceBehaviourUltimateBase::getHighestNoteMode));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note",       "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNote(v); },     [=]() -> int8_t { return this->getLowestNote(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note",      "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNote(v); },    [=]() -> int8_t { return this->getHighestNote(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note_mode",  "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNoteMode(v); }, [=]() -> int8_t { return this->getLowestNoteMode(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note_mode", "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNoteMode(v); },[=]() -> int8_t { return this->getHighestNoteMode(); }));
         }
 
         // todo: add all the modulatable parameters via a wrapped class

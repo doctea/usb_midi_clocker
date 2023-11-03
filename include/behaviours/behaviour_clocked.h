@@ -257,10 +257,10 @@ class DividedClockedBehaviour : public ClockedBehaviour {
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
             Serial.println("DividedClockedBehaviour::setup_saveable_parameters");
             Serial.printf("saveable_parameters is @%p\n", this->saveable_parameters);
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,uint32_t>("divisor", "Clocked", this, &this->clock_divisor, nullptr, nullptr, &DividedClockedBehaviour::set_divisor, &DividedClockedBehaviour::get_divisor));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int32_t>("delay_ticks", "Clocked", this, &this->clock_delay_ticks, nullptr, nullptr, &DividedClockedBehaviour::set_delay_ticks, &DividedClockedBehaviour::get_delay_ticks));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,bool>("auto_restart_on_change", "Clocked", this, &this->auto_restart_on_change, nullptr, nullptr, &DividedClockedBehaviour::set_auto_restart_on_change, &DividedClockedBehaviour::should_auto_restart_on_change));
-            this->saveable_parameters->add(new SaveableParameter<DividedClockedBehaviour,int8_t>("pause_on", "Clocked", this, &this->pause_during_delay, nullptr, nullptr, &DividedClockedBehaviour::set_pause_during_delay, &DividedClockedBehaviour::get_pause_during_delay));
+            this->saveable_parameters->add(new LSaveableParameter<uint32_t>("divisor", "Clocked", &this->clock_divisor, [=](uint32_t v) -> void { this->set_divisor(v); }, [=]() -> uint32_t { return this->get_divisor(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>("delay_ticks", "Clocked", &this->clock_delay_ticks, [=](int32_t v) -> void { this->set_delay_ticks(v); }, [=]() -> int32_t { return this->get_delay_ticks(); }));
+            this->saveable_parameters->add(new LSaveableParameter<bool>("auto_restart_on_change","Clocked", &this->auto_restart_on_change, [=](bool v) -> void { this->set_auto_restart_on_change(v); }, [=]() -> bool { return this->should_auto_restart_on_change(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("pause_on", "Clocked", &this->pause_during_delay, [=](int8_t v) -> void { this->set_pause_during_delay(v); }, [=]() -> int8_t { return this->get_pause_during_delay(); } ));
         }
 
         #ifdef ENABLE_SCREEN

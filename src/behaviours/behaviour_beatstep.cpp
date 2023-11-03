@@ -20,7 +20,6 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->handle_sysex(data, length, complete);
 }
 
-
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
 
@@ -72,7 +71,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         swing->int_unit = '%';
         note_options->add(swing);
 
-        LambdaNumberControl<int8_t> *gate   = new LambdaNumberControl<int8_t>(
+        LambdaNumberControl<int8_t> *gate = new LambdaNumberControl<int8_t>(
             "Gate length", 
             [=](int8_t length) -> void { this->setGate(length); },
             [=]() -> int8_t { return this->getGate(); },
