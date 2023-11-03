@@ -109,18 +109,9 @@ extern bool debug_flag;
         );
         menuitems->add(harmony);
 
-        /*ObjectNumberControl<DeviceBehaviour_CVInput,int32_t> *length_ticks_control 
-        = new ObjectNumberControl<DeviceBehaviour_CVInput,int32_t> (
-                "Note length",
-                this,
-                &DeviceBehaviour_CVInput::set_note_length,
-                &DeviceBehaviour_CVInput::get_note_length
-            );
-        menuitems->add(length_ticks_control);*/
         bar = new SubMenuItemBar("Trigger/durations");
         //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
-        LambdaSelectorControl<int32_t> *length_ticks_control 
-            = new LambdaSelectorControl<int32_t>(
+        LambdaSelectorControl<int32_t> *length_ticks_control = new LambdaSelectorControl<int32_t>(
                 "Note length",
                 [=](int32_t v) -> void { this->set_note_length(v); },
                 [=]() -> int32_t { return this->get_note_length(); },
@@ -141,8 +132,7 @@ extern bool debug_flag;
         bar->add(length_ticks_control);
 
         //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
-        LambdaSelectorControl<int32_t> *trigger_ticks_control 
-            = new LambdaSelectorControl<int32_t>(
+        LambdaSelectorControl<int32_t> *trigger_ticks_control = new LambdaSelectorControl<int32_t>(
                 "Trigger each",
                 [=](int32_t v) -> void { this->set_trigger_on_ticks(v); },
                 [=]() -> int32_t { return this->get_trigger_on_ticks(); },
@@ -196,17 +186,14 @@ extern bool debug_flag;
         //          true-poly doesn't offer auto-chord functions
         //          all versions offer quantisation to scale
         // TODO: allow all pitched behaviours to use a 'global scale' setting (-1?)
-        menuitems->add(
-            new LambdaScaleMenuItemBar(
-                "Scale / Key", 
-                [=](SCALE scale) -> void { this->set_scale(scale); }, 
-                [=]() -> SCALE { return this->get_scale(); },
-                [=](int8_t scale_root) -> void { this->set_scale_root(scale_root); },
-                [=]() -> int8_t { return this->get_scale_root(); },
-                true
-                //, false
-            )
-        );
+        menuitems->add(new LambdaScaleMenuItemBar(
+            "Scale / Key", 
+            [=](SCALE scale) -> void { this->set_scale(scale); }, 
+            [=]() -> SCALE { return this->get_scale(); },
+            [=](int8_t scale_root) -> void { this->set_scale_root(scale_root); },
+            [=]() -> int8_t { return this->get_scale_root(); },
+            true
+        ));
 
         bar = new SubMenuItemBar("Quantise / chords");
         bar->add(new LambdaToggleControl("Quantise",    
@@ -228,8 +215,8 @@ extern bool debug_flag;
             selected_chord_control->add_available_value(i, chords[i].label);
         }
 
-        bar->add(new LambdaNumberControl<int8_t>("Inversion", 
-            //this, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion, 
+        bar->add(new LambdaNumberControl<int8_t>(
+            "Inversion", 
             [=](int8_t v) -> void { this->set_inversion(v); }, 
             [=]() -> int8_t { return this->get_inversion(); },
             nullptr, 0, 4, true
