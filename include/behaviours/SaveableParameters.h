@@ -218,17 +218,17 @@ class LSaveableParameter : virtual public SaveableParameterBase {
 
         using setter_func_def = vl::Func<void(DataType)>;
         using getter_func_def = vl::Func<DataType(void)>;
-        using is_recall_enabled_func_def = vl::Func<bool(void)>;
+        /*using is_recall_enabled_func_def = vl::Func<bool(void)>;
         using is_save_enabled_func_def = vl::Func<bool(void)>;
         using set_recall_enabled_func_def = vl::Func<void(bool)>;
-        using set_save_enabled_func_def = vl::Func<void(bool)>;
+        using set_save_enabled_func_def = vl::Func<void(bool)>;*/
 
         setter_func_def setter_func = [=](DataType v) -> void { /*this->set(v);*/ };
         getter_func_def getter_func = [=]() -> DataType { return this->get(); };
-        is_recall_enabled_func_def  is_recall_enabled_func  = [this]() -> bool { return SaveableParameterBase::is_recall_enabled(); };
+        /*is_recall_enabled_func_def  is_recall_enabled_func  = [this]() -> bool { return SaveableParameterBase::is_recall_enabled(); };
         is_save_enabled_func_def    is_save_enabled_func    = [this]() -> bool { return SaveableParameterBase::is_save_enabled(); };
         set_recall_enabled_func_def set_recall_enabled_func = [this](bool v) { SaveableParameterBase::set_recall_enabled(v); };
-        set_save_enabled_func_def   set_save_enabled_func   = [this](bool v) { SaveableParameterBase::set_save_enabled(v); };
+        set_save_enabled_func_def   set_save_enabled_func   = [this](bool v) { SaveableParameterBase::set_save_enabled(v); };*/
 
         LSaveableParameter(
             const char *label,
@@ -277,7 +277,7 @@ class LSaveableParameter : virtual public SaveableParameterBase {
             }*/
         }
 
-        virtual bool is_recall_enabled () override {
+        /*virtual bool is_recall_enabled () override {
             return this->is_recall_enabled_func();
         }
         virtual bool is_save_enabled () override {
@@ -288,7 +288,7 @@ class LSaveableParameter : virtual public SaveableParameterBase {
         }
         virtual void set_save_enabled(bool state) override {
             this->set_save_enabled_func(state);
-        }
+        }*/
 
         virtual DataType get() {
             if (variable!=nullptr) 
