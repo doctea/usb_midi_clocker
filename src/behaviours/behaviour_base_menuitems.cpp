@@ -18,7 +18,7 @@
             
             if (this->transmits_midi_notes()) {
                 char output_label[MENU_C_MAX];
-                snprintf(output_label, MENU_C_MAX, "%s output", this->get_label());
+                snprintf(output_label, MENU_C_MAX, "%s output (post-transpose)", this->get_label());
 
                 // todo: move this and transpose_control into base Behaviour...?
                 output_harmony_status = new HarmonyStatus(
