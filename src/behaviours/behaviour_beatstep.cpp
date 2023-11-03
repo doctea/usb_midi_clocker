@@ -96,8 +96,8 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         
         menuitems->add(note_options);
 
-        menuitems->add(new LambdaToggleControl("Auto-fetch", [=](bool v) -> void { this->setAutoFetch(v); }, [=]() -> bool { return this->getAutoFetch(); } ));
-        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
+        menuitems->add(new LambdaToggleControl("Auto-fetch",        [=](bool v) -> void { this->setAutoFetch(v); }, [=]() -> bool { return this->getAutoFetch(); } ));
+        menuitems->add(new LambdaActionItem("Request everything",   [=]() -> void { this->request_all_sysex_parameters(); } ));
 
         /* 
         // this is added to the multi-select control, so we don't need it here too

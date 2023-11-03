@@ -251,16 +251,15 @@ void setup_menu() {
 
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
-    menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
-    menu->add(new ObjectActionConfirmItem<MIDIMatrixManager>("{HARD PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes_force));
+    menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
+    menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
-    MIDIMatrixManager *midi_matrix_manager_p = midi_matrix_manager;
     menu->add(new LambdaScaleMenuItemBar(
         "Global Scale", 
-        [midi_matrix_manager_p](SCALE scale) -> void { midi_matrix_manager_p->set_global_scale_type(scale); }, 
-        [midi_matrix_manager_p]() -> SCALE { return midi_matrix_manager_p->get_global_scale_type(); },
-        [midi_matrix_manager_p](int8_t scale_root) -> void { midi_matrix_manager_p->set_global_scale_root(scale_root); },
-        [midi_matrix_manager_p]() -> int8_t { return midi_matrix_manager_p->get_global_scale_root(); }
+        [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+        [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+        [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
     ));
     /*menu->add(new ObjectScaleMenuItemBar<MIDIMatrixManager>(
         "Global Scale", 

@@ -3,16 +3,22 @@
 #ifdef ENABLE_SCREEN
     #include "menu.h"
 
+    #include "submenuitem_bar.h"
+    //#include "mymenu/menu_delayticks.h"
+    #include "menuitems.h"
+    #include "menuitems_selector.h"
+    #include "menuitems_lambda.h"
+    #include "menuitems_lambda_selector.h"
+
     FLASHMEM LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
         LinkedList<MenuItem*> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
             String restart_label = String(F("Restart ") + String(this->get_label()) + F(" on bar"));
 
-            ObjectActionItem<ClockedBehaviour> *restart_action = new ObjectActionItem<ClockedBehaviour>(
+            LambdaActionItem *restart_action = new LambdaActionItem(
                 restart_label.c_str(),
-                this,
-                &ClockedBehaviour::set_restart_on_bar,
-                &ClockedBehaviour::is_set_restart_on_bar,
+                [=]() -> void { this->set_restart_on_bar(true); },
+                [=]() -> bool { return this->is_set_restart_on_bar(); },
                 "Restarting.."
             );
 
@@ -21,13 +27,6 @@
 
         return menuitems;
     }
-
-    #include "submenuitem_bar.h"
-    //#include "mymenu/menu_delayticks.h"
-    #include "menuitems.h"
-    #include "menuitems_selector.h"
-    #include "menuitems_lambda.h"
-    #include "menuitems_lambda_selector.h"
 
     LinkedList<LambdaSelectorControl<int32_t>::option> *delay_ticks_control_available_values = nullptr;
 
@@ -60,7 +59,6 @@
         #define ENABLE_PAUSE_DURING_DELAY_CONTROL
 
         #ifdef ENABLE_DELAY_TICKS_CONTROL
-
             // use a global delay_ticks_control list of available values to save (hopefully) code space and RAM
             if (delay_ticks_control_available_values==nullptr) {
                 delay_ticks_control_available_values = new LinkedList<LambdaSelectorControl<int32_t>::option>();
