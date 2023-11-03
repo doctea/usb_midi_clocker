@@ -102,10 +102,12 @@ extern bool debug_flag;
         #endif
 
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
-        HarmonyStatus *harmony = new HarmonyStatus("CV->MIDI pitch", 
+        HarmonyStatus *harmony = new HarmonyStatus(
+            "CV->MIDI pitch", 
             &this->last_note, 
             &this->current_note,
-            &this->current_raw_note
+            &this->current_raw_note,
+            "Raw"
         );
         menuitems->add(harmony);
 
