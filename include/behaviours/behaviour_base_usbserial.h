@@ -6,6 +6,8 @@
 
 #include "USBHost_t36.h"
 
+#include <util/atomic.h>
+
 #include "behaviours/behaviour_base.h"
 #include "usb/multi_usbserial_handlers.h"
 #include "usb/multi_usbserial_wrapper.h"
@@ -80,10 +82,12 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
 
         // some serial devices may crash if we don't read from their serial devices, apparently?
         virtual void read() override {
-            if (!is_connected() || this->usbdevice==nullptr) return;
-            //Serial.println("DeviceBehaviourUSBSerialBase#read() about to read()..");
-            while(this->usbdevice->available() && this->usbdevice->read()); 
-            //Serial.println("DeviceBehaviourUSBSerialBase#read() came out of read()..");
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                if (!is_connected() || this->usbdevice==nullptr) return;
+                //Serial.println("DeviceBehaviourUSBSerialBase#read() about to read()..");
+                while(this->usbdevice->available() && this->usbdevice->read()); 
+                //Serial.println("DeviceBehaviourUSBSerialBase#read() came out of read()..");
+            }
         };
 };
 
@@ -146,10 +150,12 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
         }
 
         virtual void read() override {
-            if (!is_connected() || this->midi_interface==nullptr) return;
-            //Serial.println("DeviceBehaviourSerialMIDIBase#read() about to go into loop..");
-            while(this->midi_interface->read()); 
-            //Serial.println("DeviceBehaviourSerialMIDIBase#read() came out of loop..");
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                if (!is_connected() || this->midi_interface==nullptr) return;
+                //Serial.println("DeviceBehaviourSerialMIDIBase#read() about to go into loop..");
+                while(this->midi_interface->read()); 
+                //Serial.println("DeviceBehaviourSerialMIDIBase#read() came out of loop..");
+            }
         };
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {

@@ -195,7 +195,7 @@ void setup() {
 
   #ifdef USE_UCLOCK
     Serial.println(F("Initialising uClock.."));
-    setup_uclock();
+    setup_uclock(&do_tick);
   #else
     tft_print((char*)"..clock..\n");
     setup_cheapclock();
@@ -297,12 +297,15 @@ void loop() {
   #endif
 
   if (debug_flag) { Serial.println(F("about to Usb.Task()")); Serial_flush(); }
-  Usb.Task();
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    Usb.Task();
+  }
   if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
   bool ticked = update_clock_ticks();
   
+  #ifndef USE_UCLOCK
   if ( playing && ticked ) {
     if (debug_flag) { Serial.println(F("about to do_tick")); Serial_flush(); }
     do_tick(ticks);
@@ -318,6 +321,11 @@ void loop() {
     last_ticked_at_micros = micros();
     //ticks++;  // todo: see if this is right or problematic that we now tick before do_ticks...?
   }
+  #else
+  if (ticked) {
+      menu->update_ticks(ticks);
+  }
+  #endif
   
   if (!playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
     // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
@@ -348,6 +356,7 @@ void loop() {
 
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
   if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
   behaviour_manager->do_reads();
   if (debug_flag) Serial.println(F("just did behaviour_manager->do_reads()"));
@@ -355,15 +364,18 @@ void loop() {
   if (debug_flag) Serial.println(F("about to behaviour_manager->do_loops().."));
   behaviour_manager->do_loops();
   if (debug_flag) Serial.println(F("just did behaviour_manager->do_loops()"));
+  }
 
   #ifdef ENABLE_USB
-    update_usb_midi_device_connections();
-    #ifdef ENABLE_USBSERIAL
-      update_usbserial_device_connections();
-    #endif 
-    //read_midi_usb_devices();
-    
-    read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      update_usb_midi_device_connections();
+      #ifdef ENABLE_USBSERIAL
+        update_usbserial_device_connections();
+      #endif 
+      //read_midi_usb_devices();
+      
+      read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
+    }
   #endif
 
   // process any events that are waiting from the usb keyboard handler
@@ -384,8 +396,10 @@ void loop() {
   if(debug_flag) { Serial.println(F("reached end of loop()!")); Serial_flush(); }
 }
 
-// called inside interrupt
+// (should be) called inside interrupt
 void do_tick(uint32_t in_ticks) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
   bool debug = debug_flag;
   /*#ifdef DEBUG_TICKS
       unsigned int delta = millis()-last_ticked_at_micros;
@@ -496,4 +510,5 @@ void do_tick(uint32_t in_ticks) {
   //ticks++;
   //last_ticked_at_micros = millis();
   //single_step = false;
+    }
 }

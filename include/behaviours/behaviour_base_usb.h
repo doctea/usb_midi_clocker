@@ -5,6 +5,8 @@
 
 #include "parameters/Parameter.h"
 
+#include <util/atomic.h>
+
 class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
     public:
         //const uint32_t vid = 0x0000, pid = 0x0000;
@@ -57,9 +59,11 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void read() override {
-            if (!is_connected()) return;
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                if (!is_connected()) return;
 
-            if (this->device!=nullptr) while(this->device->read()); 
+                if (this->device!=nullptr) while(this->device->read()); 
+            }
         };
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {

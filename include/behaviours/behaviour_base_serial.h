@@ -6,6 +6,8 @@
 #include "midi/midi_mapper_matrix_types.h"
 #include "midi/midi_mapper_matrix_manager.h"
 
+#include <util/atomic.h>
+
 // a hardware MIDI device over HardwareSerial uart (ie on DIN or stereo jack)
 class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
     public:
@@ -93,10 +95,12 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void read() override {
-            if (!is_connected() || this->input_device==nullptr) return;
-            //Serial.println("DeviceBehaviourSerialBase#read() about to go into loop..");
-            while(this->input_device->read()); 
-            //Serial.println("DeviceBehaviourSerialBase#read() came out of loop..");
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                //if (!is_connected() || this->input_device==nullptr) return;
+                //Serial.println("DeviceBehaviourSerialBase#read() about to go into loop..");
+                //while(this->input_device->read()); 
+                //Serial.println("DeviceBehaviourSerialBase#read() came out of loop..");
+            }
         };
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel = 0) override {
