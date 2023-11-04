@@ -18,12 +18,12 @@ class DeviceBehaviour_Bitbox : public DeviceBehaviourSerialBase, public DividedC
             return (const char*)"BitBox";
         }
 
-        virtual bool receives_midi_notes() override {
+        /*virtual bool receives_midi_notes() override {
             return false;
         }
         virtual bool transmits_midi_notes() override {
-            return false;
-        }
+            return true;
+        }*/
 };
 
 extern DeviceBehaviour_Bitbox *behaviour_bitbox;

@@ -34,7 +34,7 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
 }
 
 #ifdef ENABLE_SCREEN
-    FLASHMEM
+    //FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviourUltimateBase::create_saveable_parameters_recall_selector() {
         if (!this->has_saveable_parameters()) //==nullptr || this->saveable_parameters->size()==0)
             return nullptr;

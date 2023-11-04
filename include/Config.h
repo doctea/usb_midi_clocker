@@ -115,7 +115,7 @@
 
 //#define ENABLE_MAMMB33      MIDI2
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
-#define ENABLE_MIDIMUSO_4PV   MIDI5
+#define ENABLE_MIDIMUSO_4PV   MIDI4
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead

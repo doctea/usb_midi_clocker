@@ -8,6 +8,8 @@
 
 #include <util/atomic.h>
 
+#include <LinkedList.h>
+
 // a hardware MIDI device over HardwareSerial uart (ie on DIN or stereo jack)
 class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
     public:
@@ -23,6 +25,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         virtual bool transmits_midi_notes() { return this->output_device!=nullptr; }
         //char indicator_text[5];
         virtual const char *get_indicator() override;
+
 
         /*DeviceBehaviourSerialBase (
             midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
@@ -74,7 +77,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         }
         
         // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
-        FLASHMEM
+        //FLASHMEM
         virtual void disconnect_device() {
             //if (this->device==nullptr) return;
             if (!is_connected()) return;
@@ -125,6 +128,11 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             if (!is_connected() || this->output_device==nullptr) return;
             this->output_device->sendPitchBend(bend, channel);
         }
+
+        #ifdef ENABLE_SCREEN
+            //FLASHMEM
+            virtual LinkedList<MenuItem*> *make_menu_items_device() override;
+        #endif        
 };
 
 #endif

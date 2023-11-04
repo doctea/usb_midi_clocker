@@ -65,6 +65,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
             this->setup_callbacks();
         }
 
+        //FLASHMEM
         virtual void disconnect_device() {
             if (!this->is_connected()) return;
             //if (this->usbdevice) this->usbdevice->end();
@@ -89,6 +90,14 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
                 //Serial.println("DeviceBehaviourUSBSerialBase#read() came out of read()..");
             }
         };
+
+        #ifdef ENABLE_SCREEN
+            //FLASHMEM
+            virtual LinkedList<MenuItem*> *make_menu_items_device() override {
+                // todo: show a 'connected/not connected' indicator
+                return this->menuitems;
+            }
+        #endif
 };
 
 // USB device that presents as Serial, but supports MIDI (for eg plain Arduino, Hairless-MIDI-alike, OpenTheremin v4 with MIDI code)
@@ -129,6 +138,7 @@ class DeviceBehaviourUSBSerialMIDIBase : virtual public DeviceBehaviourUSBSerial
         }
 
         // remove handlers that might already be set on this port -- new ones assigned below thru setup_callbacks functions
+        //FLASHMEM
         virtual void disconnect_device() {
             //if (this->device==nullptr) return;
             if (!is_connected()) return;

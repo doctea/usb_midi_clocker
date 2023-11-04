@@ -15,10 +15,14 @@
             this->menuitems = new LinkedList<MenuItem*>();
             //this->menuitems->add(new SeparatorMenuItem((char*)this->get_label(), C_WHITE));
             //this->menuitems->add(new MenuItem((char*)this->get_label()));
+
+            // create the controls for the underlying device type first
+            this->make_menu_items_device();
             
+            // create controls for all devices that can transmit midi notes (ie send out from device)
             if (this->transmits_midi_notes()) {
-                char output_label[MENU_C_MAX];
-                snprintf(output_label, MENU_C_MAX, "%s output (post-transpose)", this->get_label());
+                char output_label[MAX_LABEL_LENGTH];
+                snprintf(output_label, MAX_LABEL_LENGTH, "%s output", this->get_label()); //(post-transpose)
 
                 // todo: move this and transpose_control into base Behaviour...?
                 output_harmony_status = new HarmonyStatus(
@@ -81,4 +85,6 @@
 
         return this->menuitems;
     }
+   
+            
 #endif

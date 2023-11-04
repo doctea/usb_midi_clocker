@@ -61,7 +61,7 @@ class MIDIOutputWrapper {
         #endif
 
         MIDIOutputWrapper(const char *label, byte channel = 1) {
-            strcpy(this->label, label);
+            strncpy(this->label, label, MAX_LENGTH_OUTPUT_WRAPPER_LABEL);
             default_channel = channel;
             memset(playing_notes, 0, sizeof(playing_notes));
         }

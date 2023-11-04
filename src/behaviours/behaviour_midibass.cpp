@@ -20,8 +20,10 @@
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         // harmony status control is created by parent class, add drone output to it
-        if (this->output_harmony_status!=nullptr)
+        if (this->output_harmony_status!=nullptr) {
+            this->output_harmony_status->set_header(2, "Drone");
             this->output_harmony_status->other_value = &this->last_drone_note;
+        }
 
         SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" MIDI FX"))).c_str());
 

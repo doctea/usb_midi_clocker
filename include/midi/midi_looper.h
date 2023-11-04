@@ -3,6 +3,8 @@
 
 #include "debug.h"
 
+#include <util/atomic.h>
+
 #include <LinkedList.h>
 #include "Config.h"
 #include "ConfigMidi.h"
@@ -661,6 +663,7 @@ class MIDITrack {
 
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             //Serial.println("save_sequence not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
@@ -724,11 +727,14 @@ class MIDITrack {
             clear_hanging();
 
             loaded_recording_number = recording_number;
+            }
             return true;
         }
 
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File f;
@@ -775,8 +781,9 @@ class MIDITrack {
                     //if (debug) Serial.printf("Read id %i\n", output->id);
                     line = line.remove(0,String(F("loop_data=")).length());
                     line = line.remove(line.length()-1,1);
-                    char c_line[(1+sizeof(midi_message)) * MAX_INSTRUCTIONS];// = line.c_str();
-                    strcpy(c_line, line.c_str());
+                    int MAX_LENGTH = (1+sizeof(midi_message)) * MAX_INSTRUCTIONS;
+                    char c_line[MAX_LENGTH];// = line.c_str();
+                    strncpy(c_line, line.c_str(), MAX_LENGTH);
                     midi_message m;
                     int messages_count = 0;
 
@@ -829,7 +836,7 @@ class MIDITrack {
             this->draw_piano_roll_bitmap_from_save();
 
             //clear_hanging();
-
+            }
             return true;
         }       
 

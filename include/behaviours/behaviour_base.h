@@ -293,6 +293,11 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         LinkedList<MenuItem*> *menuitems = nullptr;
         FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
+        //FLASHMEM
+        virtual LinkedList<MenuItem*> *make_menu_items_device() {
+            // dummy device menuitems
+            return this->menuitems;
+        }
         FLASHMEM
         virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
 

@@ -120,7 +120,7 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
         //behaviour_manager->registerBehaviour(behaviour_bitbox);
-        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox");
+        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
         behaviour_manager->registerBehaviour(behaviour_bitbox);
         Serial.println(F("connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
@@ -128,10 +128,10 @@ void setup_behaviour_manager() {
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
-    #ifdef ENABLE_BASS
+    #ifdef ENABLE_NEUTRON
         Serial.println(F("about to register behaviour_neutron...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_neutron);
-        behaviour_neutron->connect_device_output(&ENABLE_BASS);
+        behaviour_neutron->connect_device_output(&ENABLE_NEUTRON);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
@@ -171,7 +171,7 @@ void setup_behaviour_manager() {
         behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
     #endif
     #ifdef ENABLE_MIDIMUSO_4PV
-        behaviour_midimuso_4pv = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("MIDIMUSO CV-12 4PV");
+        behaviour_midimuso_4pv = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("MIDIMUSO CV-12 4PV", false, true);
         behaviour_midimuso_4pv->connect_device_output(&ENABLE_MIDIMUSO_4PV);
         behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
     #endif

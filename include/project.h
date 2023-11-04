@@ -280,12 +280,16 @@ class Project {
             Debug_printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
             if (auto_advance_sequencer) {
                 this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+                //Serial.printf("on_phrase loading sequence_number %i\n", selected_sequence_number);
                 this->load_sequence(this->selected_sequence_number);
+                //Serial.println("done!");
             }
             #ifdef ENABLE_LOOPER
                 if (auto_advance_looper) {
                     this->selected_loop_number = slot % NUM_LOOP_SLOTS_PER_PROJECT;
+                    //Serial.printf("on_phrase loading loop_number %i\n", selected_loop_number);
                     this->load_loop(this->selected_loop_number);
+                    //Serial.println("done!");
                 }
             #endif
             Debug_printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
