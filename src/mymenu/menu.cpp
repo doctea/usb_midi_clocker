@@ -261,14 +261,6 @@ void setup_menu() {
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
         [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
     ));
-    /*menu->add(new ObjectScaleMenuItemBar<MIDIMatrixManager>(
-        "Global Scale", 
-        midi_matrix_manager, 
-        &MIDIMatrixManager::set_global_scale_type, 
-        &MIDIMatrixManager::get_global_scale_type, 
-        &MIDIMatrixManager::set_global_scale_root, 
-        &MIDIMatrixManager::get_global_scale_root
-    ));*/
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));

@@ -30,11 +30,10 @@
                 menuitems->add(output_harmony_status);
             
                 SubMenuItemBar *transposition_bar = new SubMenuItemBar("Transpose");
-                ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t> *lowest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
+                LambdaScaleNoteMenuItem<int8_t> *lowest_note_control = new LambdaScaleNoteMenuItem<int8_t>(
                     "Lowest",
-                    this,
-                    &DeviceBehaviourUltimateBase::setLowestNote,
-                    &DeviceBehaviourUltimateBase::getLowestNote,
+                    [=](int8_t v) -> void { this->setLowestNote(v); },
+                    [=]() -> int8_t { return this->getLowestNote(); },
                     nullptr,
                     (int8_t)MIDI_MIN_NOTE,
                     (int8_t)MIDI_MAX_NOTE,
@@ -43,11 +42,10 @@
                 );
                 transposition_bar->add(lowest_note_control);
 
-                ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t> *highest_note_control = new ObjectScaleNoteMenuItem<DeviceBehaviourUltimateBase,int8_t>(
+                LambdaScaleNoteMenuItem<int8_t> *highest_note_control = new LambdaScaleNoteMenuItem<int8_t>(
                     "Highest",
-                    this,
-                    &DeviceBehaviourUltimateBase::setHighestNote,
-                    &DeviceBehaviourUltimateBase::getHighestNote,
+                    [=](int8_t v) -> void { this->setHighestNote(v); },
+                    [=]() -> int8_t { return this->getHighestNote(); },
                     nullptr,
                     (int8_t)MIDI_MIN_NOTE,
                     (int8_t)MIDI_MAX_NOTE,
