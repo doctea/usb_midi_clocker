@@ -99,7 +99,7 @@
 //#define ENABLE_DRUM_LOOPER
 
 // enable Neutron behaviour
-#define ENABLE_NEUTRON
+//#define ENABLE_NEUTRON    // now done in ConfigMidi.h
 #define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
 
 //#define ENABLE_DPT_LOOPER
@@ -115,7 +115,7 @@
 
 //#define ENABLE_MAMMB33      MIDI2
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
-#define ENABLE_MIDIMUSO_4PV   MIDI3
+#define ENABLE_MIDIMUSO_4PV   MIDI5
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
