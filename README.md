@@ -114,23 +114,24 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ## Requirements
 
 - Teensy 4.1
-  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
+  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) 
+  - or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
 - ST7789 or ILI9341 oled screen for display
   - st7789 option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current prototype version much prefers this)
   - ILI9341 screen option https://www.aliexpress.com/item/1005003005413104.html 'Module With Touch' version for PCB
 - Rotary encoder + two wired buttons for control and/or USB typing keyboard
   - and [mymenu](https://github.com/doctea/mymenu) library
 - [midihelpers](https://github.com/doctea/midihelpers) library
+- [uClock](https://github.com/midilab/uClock) library
+- [Functional-Vlpp](https://registry.platformio.org/libraries/khoih-prog/Functional-Vlpp/installation) library
 - Akai APCMini for controlling the sequencer and clocks (although not needed for running the rest of it)
 - SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots, loops and CV calibration
 - Gate outputs
   - Prototype version: DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' section below
     - I am currently using one of these in prototype: [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e) (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
     - I was previously using a couple of these [Sparkfun level shifter](https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377) -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
-  - Prototype Eurorack module for gate output using MCP23s17 (in theory supports 16 gates but currently seems flakey.  could perhaps be configured as inputs instead but haven't attempted this)
+  - Prototype Eurorack module for gate output using MCP23s17 (in theory supports 16 gates but currently seems flakey.  could perhaps be configured as inputs instead - but somehow had some problems with this)
 - For CV input: [Pimoroni +/-24v 1015 module](https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003) and my [parameters](https://github.com/doctea/parameters) library
-- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
-  - on 2022-12-23, I recommend you use the maybe_fixed_4_stable branch as this seems like it might be more stable..?
 - As of 2022-12-23, using [this LinkedList fork](https://github.com/vortigont/LinkedList) to try and improve stuff
 
 ## Eurorack modules / PCB / gerbers
@@ -192,7 +193,6 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Am actually doing this in a separate module now, [Microlidian](https://github.com/doctea/Microlidian)
     - Move the Euclidian sequencer stuff from Microlidian into a library so that it could be used here as well
   - ~~Or at least add some controls via the APCMini sliders, eg over the envelopes~~
-- Improve stability of clock by getting it working in uClock/interrupts mode without crashes
 - Sync from external clock input (CV)
   - proof of concept implemented using the support in [midihelpers library](https://github.com/doctea/midihelpers), no reset functionality yet though
 - ~~More outputs~~ - done, now works with 4 clock outs and 4 separate sequencer track outs
@@ -355,6 +355,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?~~
   - ~~Control over the envelopes AHDSR + modulation~~
 - ~~The 'delay' menu item for ClockedBehaviours gets set to an incorrect value when opened?~~
+- Improve stability of clock by getting it working in uClock/interrupts mode without crashes
 
 ---
 
