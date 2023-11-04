@@ -96,9 +96,9 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual void read() override {
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-                //if (!is_connected() || this->input_device==nullptr) return;
+                if (!is_connected() || this->input_device==nullptr) return;
                 //Serial.println("DeviceBehaviourSerialBase#read() about to go into loop..");
-                //while(this->input_device->read()); 
+                while(this->input_device->read()); 
                 //Serial.println("DeviceBehaviourSerialBase#read() came out of loop..");
             }
         };
