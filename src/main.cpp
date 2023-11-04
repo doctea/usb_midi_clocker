@@ -251,6 +251,10 @@ void setup() {
   #ifdef ENABLE_SCREEN
     snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
   #endif
+
+  #ifdef USE_UCLOCK
+    clock_start();
+  #endif
 }
 
 //long loop_counter = 0;

@@ -1,5 +1,6 @@
 #include "Config.h"
 
+#include "clock.h"
 #include "bpm.h"
 #include "midi/midi_outs.h"
 
@@ -173,17 +174,7 @@ void global_on_restart() {
 
   Serial.println(F("on_restart()==>"));
 
-  #ifdef USE_UCLOCK
-    /*uClock.setTempo(bpm_current); // todo: probably not needed?
-    Serial.println(F("reset tempo"));
-    uClock.resetCounters();
-    Serial.println(F("reset counters"));*/
-  #else
-    ticks = 0;
-    Serial.println(F("reset ticks"));
-  #endif
-  //noInterrupts();
-  ticks = 0;
+  clock_reset();
   //interrupts();
   last_processed_tick = -1;
   
