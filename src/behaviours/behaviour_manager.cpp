@@ -40,6 +40,11 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
     return inst_;
 }
 
+// convenience function
+void behaviour_manager_kill_all_current_notes () {
+    behaviour_manager->kill_all_current_notes();
+}
+
 //FLASHMEM
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();

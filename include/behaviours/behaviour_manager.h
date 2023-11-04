@@ -384,6 +384,14 @@ class DeviceBehaviourManager {
             }
         }
 
+        void kill_all_current_notes() {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
+                // todo: only kill if the behaviour is quantising
+                behaviours->get(i)->killCurrentNote();
+            }
+        }
+
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {

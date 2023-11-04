@@ -17,6 +17,8 @@
 
 void setup_midi_mapper_matrix_manager();
 
+void behaviour_manager_kill_all_current_notes();
+
 //#include "behaviours/behaviour_bamble.h"
 
 #define MAX_NUM_SOURCES 24
@@ -358,12 +360,24 @@ class MIDIMatrixManager {
         return this->global_scale_root;
     }
     void set_global_scale_root(int8_t scale_root) {
+        if (scale_root!=global_scale_root) {
+            // force note off for anything currently playing, in theory so that notes don't get stuck on...
+            // but in fact, we may prefer to change things around so that all quantisation is done inside midi_mapper_matrix_manager, 
+            // instead of in the behaviour or wrapper..?
+            //this->stop_all_notes();
+            behaviour_manager_kill_all_current_notes();
+        }
         this->global_scale_root = scale_root;
     }
     SCALE get_global_scale_type() {
         return this->global_scale_type;
     }
     void set_global_scale_type(SCALE scale_type) {
+        if (scale_type!=global_scale_type) {
+            // force note off for anything currently playing, so that notes don't get stuck on
+            //this->stop_all_notes();
+            behaviour_manager_kill_all_current_notes();
+        }
         this->global_scale_type = scale_type;
     }
 
