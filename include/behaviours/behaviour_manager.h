@@ -269,11 +269,12 @@ class DeviceBehaviourManager {
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
                 Debug_printf("About to on_pre_clock() for behaviour #%i at %p...\n", i, behaviours->get(i));
-                if (behaviours->get(i)!=nullptr) 
+                if (behaviours->get(i)!=nullptr) {
                     Debug_printf("\t\t(named %s)\n", behaviours->get(i)->get_label()); 
-                Serial_flush();
-                behaviours->get(i)->on_pre_clock(in_ticks);
-                Debug_printf("finished on_pre_clock() for behaviour #%i...\n", i); Serial_flush();
+                    Serial_flush();
+                    behaviours->get(i)->on_pre_clock(in_ticks);
+                    Debug_printf("finished on_pre_clock() for behaviour #%i...\n", i); Serial_flush();
+                }
             }
         }
 
@@ -281,7 +282,9 @@ class DeviceBehaviourManager {
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
-                behaviours->get(i)->on_tick(in_ticks);
+                if (behaviours->get(i)!=nullptr) {
+                    behaviours->get(i)->on_tick(in_ticks);
+                }
                 //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial_flush();
             }
         }
@@ -290,7 +293,9 @@ class DeviceBehaviourManager {
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
                 //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
-                behaviours->get(i)->on_restart();
+                if (behaviours->get(i)!=nullptr) {
+                    behaviours->get(i)->on_restart();
+                }
                 //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial_flush();
             }
         }
@@ -307,7 +312,7 @@ class DeviceBehaviourManager {
             for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
                 //Serial.printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
-                if (label.equals(device->get_label()))
+                if (device!=nullptr && label.equals(device->get_label()))
                     return device;
             }
             //Serial.printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());

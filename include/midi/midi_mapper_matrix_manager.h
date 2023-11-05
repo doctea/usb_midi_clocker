@@ -308,10 +308,11 @@ class MIDIMatrixManager {
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
-    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle) {
-        return this->register_target(make_midioutputwrapper(handle, target));
+    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle, int8_t channel = 1) {
+        return this->register_target(make_midioutputwrapper(handle, target, channel));
     }
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
+        // TODO: detect and warn if duplicate handle used
         strncpy(targets[NUM_REGISTERED_TARGETS].handle, handle, LANGST_HANDEL_ROUT);
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
         Serial.printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);

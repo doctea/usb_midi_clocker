@@ -68,7 +68,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
 
     // first, add all the output options that will exist
 
-    #ifdef ENABLE_BITBOX
+    #ifdef ENABLE_BITBOX    
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
@@ -189,7 +189,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_LOOPER
         midi_matrix_manager->register_source(&midi_loop_track, "loop_track_1");
         midi_matrix_manager->register_target(&midi_loop_track, "loop_track_1");
-        midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch3");
+        midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch 3");
         #ifdef ENABLE_MPK49
             midi_matrix_manager->connect(behaviour_mpk49,           "loop_track_1");
         #endif
@@ -207,6 +207,11 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_MICROLIDIAN
         behaviour_microlidian->source_id     = midi_matrix_manager->register_source("ulidian ch10");
         behaviour_microlidian->source_id_2   = midi_matrix_manager->register_source("ulidian ch1");
+        //behaviour_microlidian->target_id     = midi_matrix_manager->register_target(behaviour_microlidian, "ulidian ch10");
+        /*#ifdef ENABLE_DRUMKIT
+            // TODO: connect drumkit input to ulidian output
+            midi_matrix_manager->connect(behaviour_drumkit, "ulidian ch10");
+        #endif*/
         #ifdef ENABLE_BAMBLE
             midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
         #endif
@@ -232,7 +237,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_MAMMB33
         midi_matrix_manager->connect("Bass Proxy", "S2 : MAM MB33 : ch 1");
     #else
-        midi_matrix_manager->connect("Bass Proxy", "S2 : unused : ch 1");
+        midi_matrix_manager->connect("Bass Proxy", "S2 : MIDIOUT : ch 1");
     #endif
     #ifdef ENABLE_BEATSTEP
         midi_matrix_manager->connect("beatstep", "Bass Proxy");

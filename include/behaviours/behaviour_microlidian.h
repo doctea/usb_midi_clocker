@@ -55,6 +55,7 @@ class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public Divide
         virtual const char *get_label() override {
             return "Microlidian";
         }
+        // todo: make this able to send drums and bass notes
         virtual bool transmits_midi_notes() { return false; }
         virtual bool receives_midi_notes() { return true; }
 
