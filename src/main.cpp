@@ -307,29 +307,32 @@ void loop() {
   if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
-  bool ticked = update_clock_ticks();
+  bool ticked = false;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    ticked = update_clock_ticks();
   
-  #ifndef USE_UCLOCK
-  if ( playing && ticked ) {
-    if (debug_flag) { Serial.println(F("about to do_tick")); Serial_flush(); }
-    do_tick(ticks);
-    if (debug_flag) { Serial.println(F("just did do_tick")); Serial_flush(); }
+    #ifndef USE_UCLOCK
+    if ( playing && ticked ) {
+      if (debug_flag) { Serial.println(F("about to do_tick")); Serial_flush(); }
+      do_tick(ticks);
+      if (debug_flag) { Serial.println(F("just did do_tick")); Serial_flush(); }
 
-    #ifdef ENABLE_SCREEN
-      if (debug_flag) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
-      menu->update_ticks(ticks);
-      if (debug_flag) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
+      #ifdef ENABLE_SCREEN
+        if (debug_flag) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
+        menu->update_ticks(ticks);
+        if (debug_flag) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
+      #endif
+
+      //last_ticked_at_micros = micros();
+      last_ticked_at_micros = micros();
+      //ticks++;  // todo: see if this is right or problematic that we now tick before do_ticks...?
+    }
+    #else
+    if (ticked) {
+        menu->update_ticks(ticks);
+    }
     #endif
-
-    //last_ticked_at_micros = micros();
-    last_ticked_at_micros = micros();
-    //ticks++;  // todo: see if this is right or problematic that we now tick before do_ticks...?
   }
-  #else
-  if (ticked) {
-      menu->update_ticks(ticks);
-  }
-  #endif
   
   if (!playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
     // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
@@ -343,7 +346,9 @@ void loop() {
         //long before_display = millis();
         if (debug_flag) { Serial.println(F("about to menu->display")); Serial_flush(); }
         if (debug_flag) menu->debug = true;
-        menu->display(); //update(ticks);
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+          menu->display(); //update(ticks);
+        }
         if (debug_flag) { Serial.println(F("just did menu->display")); Serial_flush(); }
         //Serial.printf("display() took %ums..", millis()-before_display);
         last_drawn = millis();
@@ -361,13 +366,13 @@ void loop() {
   //read_midi_serial_devices();
   //loop_midi_serial_devices();
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-  if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
-  behaviour_manager->do_reads();
-  if (debug_flag) Serial.println(F("just did behaviour_manager->do_reads()"));
+    if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
+    behaviour_manager->do_reads();
+    if (debug_flag) Serial.println(F("just did behaviour_manager->do_reads()"));
 
-  if (debug_flag) Serial.println(F("about to behaviour_manager->do_loops().."));
-  behaviour_manager->do_loops();
-  if (debug_flag) Serial.println(F("just did behaviour_manager->do_loops()"));
+    if (debug_flag) Serial.println(F("about to behaviour_manager->do_loops().."));
+    behaviour_manager->do_loops();
+    if (debug_flag) Serial.println(F("just did behaviour_manager->do_loops()"));
   }
 
   #ifdef ENABLE_USB
@@ -402,7 +407,7 @@ void loop() {
 
 // (should be) called inside interrupt
 void do_tick(uint32_t in_ticks) {
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
   bool debug = debug_flag;
   /*#ifdef DEBUG_TICKS
@@ -514,5 +519,5 @@ void do_tick(uint32_t in_ticks) {
   //ticks++;
   //last_ticked_at_micros = millis();
   //single_step = false;
-    }
+  }
 }
