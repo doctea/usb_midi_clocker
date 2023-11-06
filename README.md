@@ -218,7 +218,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~legato~~
   - ~~shuffle~~
   - option to rotate sequence to change the downbeat - read in all the current pad values, ie rotate and write them back out
-- ~~Better way to define custom behaviour in order to add new USB MIDI devices~#
+- ~~Better way to define custom behaviour in order to add new USB MIDI devices~~
   - ~~Partially done, can be improved further~~
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
@@ -233,15 +233,15 @@ Both are encouraged, I would love to have this be useful to others and to accept
       - some performance issues in reading the data, though
         - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart, or even usbserial now?
         - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
-    - some todos remain:
-      - ~~reassign modulation sources~~
-      - ~~load/save modulation settings~~
-      - lock/hold modulation settings
-      - auto-advance modulation settings?
-      - modulation sources other than voltages
-        - ~~MIDI CCs~~ done for first 4 faders
-      - tempo-synced LFOs etc...
-      - Record and playback CCs as well as MIDI
+  - some todos remain:
+    - ~~reassign modulation sources~~
+    - ~~load/save modulation settings~~
+    - lock/hold modulation settings
+    - auto-advance modulation settings?
+    - modulation sources other than voltages
+      - ~~MIDI CCs~~ done for first 4 faders
+    - tempo-synced LFOs etc...
+    - Record and playback CCs as well as MIDI
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
 - Looper improvements
@@ -302,10 +302,10 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~play chords from scale from root note~~
   - ~~choose chord type to play from another CV input~~
   - Arpeggiator 
-  - Inversions
+  - ~~Inversions~~
   - Move quantising/chord generation stuff into a more general 'MIDI filter' behaviour type that can be chained with other behaviours?
   - Port quantising/chord options to Microlidian
-- Allow clock input from USB-MIDI devices
+- Allow clock input from USB-MIDI devices (e.g use Beatstep as master)
 - Allow to configure which DIN-MIDI device to receive clock from
 
 ## Done
