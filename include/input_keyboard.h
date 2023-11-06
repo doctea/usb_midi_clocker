@@ -197,7 +197,7 @@ bool debug_stress_sequencer_load = false;
                 set_restart_on_next_bar(true); 
                 break;
             // take screenshot
-            #if defined(ENABLE_SCREEN) && defined(ENABLE_SD)
+            #if defined(ENABLE_SCREEN) && defined(ENABLE_SD) && defined(ENABLE_SCREENSHOT)
             case ' '            :
                 Serial.println(F("Taking screenshot!"));
                 save_screenshot(display_translator);
