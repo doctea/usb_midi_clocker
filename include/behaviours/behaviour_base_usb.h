@@ -92,11 +92,14 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         
         #ifdef ENABLE_SCREEN
             //FLASHMEM
-            virtual LinkedList<MenuItem*> *make_menu_items_device() override {
+            /*virtual LinkedList<MenuItem*> *make_menu_items_device() override {
                 // todo: show a 'connected/not connected' indicator
                 return this->menuitems;
-            }
+            }*/
+
+            virtual LinkedList<MenuItem*> *make_menu_items_device();
         #endif
 };
+
 
 #endif
