@@ -51,6 +51,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     //int force_octave = -1;
     int last_transposed_note = -1, current_transposed_note = -1;
     int current_channel = 0;
+    int8_t TUNING_OFFSET = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
@@ -126,6 +127,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         if (!is_valid_note(note)) return;
         this->current_transposed_note = note;
         this->current_channel = channel;
+
+        note += this->TUNING_OFFSET;
+        if (!is_valid_note(note)) return;
+
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
@@ -137,6 +142,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->last_transposed_note = note;
         if (this->current_transposed_note==note)
             this->current_transposed_note = NOTE_OFF;
+
+        note += this->TUNING_OFFSET;
+        if (!is_valid_note(note)) return;
+
         this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget

@@ -172,6 +172,7 @@ void setup_behaviour_manager() {
     #endif
     #ifdef ENABLE_MIDIMUSO_4PV
         behaviour_midimuso_4pv = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("MIDIMUSO CV-12 4PV", false, true);
+        behaviour_midimuso_4pv->TUNING_OFFSET = -3; // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
         behaviour_midimuso_4pv->connect_device_output(&ENABLE_MIDIMUSO_4PV);
         behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
     #endif
