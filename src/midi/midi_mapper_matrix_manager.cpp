@@ -128,7 +128,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_MIDIMUSO_4PV
-        midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMUSO-PV", behaviour_midimuso_4pv));
+        behaviour_midimuso_4pv->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMUSO-PV", (DeviceBehaviourUltimateBase *)behaviour_midimuso_4pv, (byte)1, (int8_t)4));
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)

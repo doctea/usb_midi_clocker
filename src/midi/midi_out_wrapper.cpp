@@ -67,16 +67,16 @@ FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack 
 FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, byte channel) {
     return new MIDIOutputWrapper_MIDIUSB(label, output, channel);
 }
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel) {
-    return new MIDIOutputWrapper_MIDISerial(label, output, channel);
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel, int8_t max_voice_count = 1) {
+    return new MIDIOutputWrapper_MIDISerial(label, output, channel, max_voice_count);
 }
 FLASHMEM MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, byte cable_number, byte channel) {
     return new MIDIOutputWrapper_PC(label, cable_number, channel);
 }
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel) {
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel, int8_t max_voice_count = 1) {
     /*MIDIOutputWrapper_Behaviour * v = new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
     behaviour->wrapper = v;*/
-    return new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
+    return new MIDIOutputWrapper_Behaviour(label, behaviour, channel, max_voice_count);
 }
 
 MIDIOutputWrapper::~MIDIOutputWrapper() {}

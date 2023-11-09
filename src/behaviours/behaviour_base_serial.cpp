@@ -19,15 +19,25 @@ const char *DeviceBehaviourSerialBase::get_indicator() {
     return this->indicator_text;
 }
 
-// add menuitems specific to the underlying device type (eg serial, usbserial, usbmidi, virtual)
-//FLASHMEM
-LinkedList<MenuItem*> *DeviceBehaviourSerialBase::make_menu_items_device() {
-    String midi_info = "[MIDI DIN device]";
-    if (this->transmits_midi_notes() || this->receives_midi_notes()) {
-        midi_info = (receives_midi_notes() ? "MIDI in: "    + String(this->input_midi_number+1)    + " "    : "") + 
-                    (transmits_midi_notes()? "MIDI out: "   + String(this->output_midi_number+1)            : " ");
-    }
-    this->menuitems->add(new FixedSizeMenuItem(midi_info.c_str(), 0));
-    
-    return this->menuitems;
-}         
+#ifdef ENABLE_SCREEN
+    #include "mymenu/menu_midioutputwrapper.h"
+    // add menuitems specific to the underlying device type (eg serial, usbserial, usbmidi, virtual)
+    //FLASHMEM
+    LinkedList<MenuItem*> *DeviceBehaviourSerialBase::make_menu_items_device() {
+        String midi_info = "[MIDI DIN device]";
+        if (this->transmits_midi_notes() || this->receives_midi_notes()) {
+            midi_info = (receives_midi_notes() ? "MIDI in: "    + String(this->input_midi_number+1)    + " "    : "") + 
+                        (transmits_midi_notes()? "MIDI out: "   + String(this->output_midi_number+1)            : " ");
+        }
+        this->menuitems->add(new FixedSizeMenuItem(midi_info.c_str(), 0));
+        
+        menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+            "Outgoing?",
+            //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
+            //test_wrapper
+            midi_matrix_manager->get_target_for_id(this->target_id)
+        ));
+
+        return this->menuitems;
+    }         
+#endif

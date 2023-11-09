@@ -13,7 +13,7 @@
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
-//#define DEBUG_MIDI_WRAPPER
+#define DEBUG_MIDI_WRAPPER
 
 class MIDITrack;
 
@@ -49,7 +49,17 @@ class MIDIOutputWrapper {
         byte default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
-        byte playing_notes[127];
+        byte playing_notes[MIDI_MAX_NOTE];
+        byte total_playing_notes = 0;
+
+        bool spread_channel_mode = false;
+
+        int8_t max_voice_count = 1;
+        /*int8_t voices[max_voice_count] = {
+            NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF, 
+            NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF
+        };*/
+        int8_t *voices = nullptr;
 
         int last_note = -1, current_note = -1;
         //int last_transposed_note = -1, current_transposed_note = -1;
@@ -60,12 +70,26 @@ class MIDIOutputWrapper {
             byte next_message_history_index = 0;
         #endif
 
-        MIDIOutputWrapper(const char *label, byte channel = 1) {
+        MIDIOutputWrapper(const char *label, byte channel = 1, int8_t max_voice_count = 1) {
             strncpy(this->label, label, MAX_LENGTH_OUTPUT_WRAPPER_LABEL);
+            this->set_max_voice_count(max_voice_count);
             default_channel = channel;
             memset(playing_notes, 0, sizeof(playing_notes));
         }
         virtual ~MIDIOutputWrapper();
+
+        MIDIOutputWrapper *set_max_voice_count(int8_t max_voice_count) {
+            this->max_voice_count = max_voice_count;
+            if (this->voices!=nullptr)
+                free(this->voices);
+            this->voices = (int8_t*)malloc(max_voice_count);
+            memset(this->voices, -1, max_voice_count);
+
+            return this;
+        }
+        bool should_spread_voices() {
+            return this->max_voice_count>1;
+        }
 
         #ifdef DEBUG_MIDI_WRAPPER
             virtual void set_log_message_mode(bool status) {
@@ -108,21 +132,42 @@ class MIDIOutputWrapper {
             current_note = in_pitch;
             //int pitch = recalculate_pitch(in_pitch);
 
-            if (this->debug) { Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush(); }
-
-            if (playing_notes[current_note]<8) {
-                //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
-                playing_notes[current_note]++;
-            } else {
-                //if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
-            }
-
-            //current_transposed_note = current_note;
-
             if (channel==0) {
                 if (this->debug) Serial.printf(F("\t(swapping channel %i for default_channel %i)\n"), channel, default_channel);
                 channel = default_channel;
             }
+
+            if (this->debug) { Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush(); }
+
+            if (playing_notes[current_note]<max_voice_count) {
+                //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
+                playing_notes[current_note]++;
+                //todo: else dont play note, or re-use one?
+            } else {
+                //if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+            }
+
+            int note_slot = -1;
+            for (int i = 0 ; i < max_voice_count ; i++) {
+                if (voices[i]==-1) {
+                    note_slot = i;
+                    break;
+                }
+            }
+            if (should_spread_voices()) {
+                if(note_slot>=0) {
+                    Serial.printf("sendNoteOn with max_voice_count %i and note_slot %i\n", max_voice_count, note_slot);
+                    voices[note_slot] = current_note;
+                    channel += note_slot;
+                    total_playing_notes++;
+                    // todo: trigger note on events (eg envelopes?)
+                } else {
+                    // drop the note since we did't find any slots
+                    return;
+                }
+            }
+
+            //current_transposed_note = current_note;
 
             #ifdef DEBUG_MIDI_WRAPPER
                 this->log_message_on(current_note, velocity, channel);
@@ -137,12 +182,40 @@ class MIDIOutputWrapper {
             if (this->current_note==in_pitch) 
                 current_note = -1;
 
+            if (channel==0) {
+                if (this->debug) Serial.printf(F("\t(swapping channel %2i for default_channel %2i)\n"), channel, default_channel);
+                channel = default_channel;
+            }
+
             //int pitch = recalculate_pitch(in_pitch);
 
             if (this->debug) 
                 Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", in_pitch, velocity, channel, playing_notes[in_pitch]);
 
-            if (playing_notes[in_pitch]>0) playing_notes[in_pitch]--;
+            if (playing_notes[in_pitch]>0) {
+                playing_notes[in_pitch]--;
+            }
+
+            if (should_spread_voices()) {
+                int8_t note_slot = -1;
+                for (int i = 0 ; i < max_voice_count ; i++) {
+                    if (voices[i]==in_pitch) {
+                        note_slot = i;
+                        break;
+                    }
+                }   
+                if (note_slot>=0) {
+                    Serial.printf("sendNoteOff with max_voice_count %i and note_slot %i\n", max_voice_count, note_slot);
+                    voices[note_slot] = NOTE_OFF;
+                    channel += note_slot;
+                    total_playing_notes--;
+                    // todo: trigger note off events?
+                } else {
+                    // drop note cos isn't already playing
+                    return;
+                }
+            }
+
             if (playing_notes[in_pitch]!=0) {
                 if (this->debug) Serial.printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", in_pitch, playing_notes[in_pitch]);
                 return;
@@ -151,11 +224,6 @@ class MIDIOutputWrapper {
             //this->last_transposed_note = in_pitch;
             //if (this->current_transposed_note==in_pitch)
             //    current_transposed_note = -1;
-
-            if (channel==0) {
-                if (this->debug) Serial.printf(F("\t(swapping channel %2i for default_channel %2i)\n"), channel, default_channel);
-                channel = default_channel;
-            }
 
             #ifdef DEBUG_MIDI_WRAPPER
                 this->log_message_off(in_pitch, velocity, channel);
@@ -242,8 +310,8 @@ class MIDIOutputWrapper_MIDISerial : public MIDIOutputWrapper {
     public:
         midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output = nullptr;
         
-        MIDIOutputWrapper_MIDISerial(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1) 
-            : MIDIOutputWrapper(label, channel) {
+        MIDIOutputWrapper_MIDISerial(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1, int8_t max_voice_count = 1) 
+            : MIDIOutputWrapper(label, channel, max_voice_count) {
             this->output = output;
         }
 
@@ -320,7 +388,7 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
     public:
         DeviceBehaviourUltimateBase *output = nullptr;
 
-        MIDIOutputWrapper_Behaviour(const char *label, DeviceBehaviourUltimateBase *output, byte channel = 1) : MIDIOutputWrapper(label, channel) {
+        MIDIOutputWrapper_Behaviour(const char *label, DeviceBehaviourUltimateBase *output, byte channel = 1, int8_t max_voice_count = 1) : MIDIOutputWrapper(label, channel, max_voice_count) {
             this->output = output;
         }
 
@@ -345,7 +413,7 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
 MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, byte cable_number, byte channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, byte channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, byte channel = 1);
-MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1);
-MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel = 1);
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel = 1, int8_t max_voices_count = 1);
+MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel = 1, int8_t max_voices_count = 1);
 
 #endif
