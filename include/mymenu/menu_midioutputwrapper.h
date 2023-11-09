@@ -16,6 +16,7 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
         bool prompting = false;
         virtual bool action_opened() override {
             prompting = true;
+            return true;
         }
         virtual bool button_back() override {
             return false;
