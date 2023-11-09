@@ -57,7 +57,7 @@ struct tracked_note {
 class MIDITrack {
     LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
 
-    tracked_note recorded_hanging_notes[127];
+    tracked_note recorded_hanging_notes[MIDI_MAX_NOTE];
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
@@ -236,7 +236,7 @@ class MIDITrack {
 
         // clear any notes that we're recording
         void clear_hanging() {
-            for (unsigned int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 recorded_hanging_notes[i] = (tracked_note) {
                     .playing        = false,
                     .velocity       = 0
@@ -308,7 +308,7 @@ class MIDITrack {
         void play_events(unsigned long time) {
             //time = time % LOOP_LENGTH;
             time = ticks_to_sequence_step(time);
-            for (int8_t i = 0 ; i < 127 ; i++) {
+            for (int8_t i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 int transposed_pitch = i + transpose_amount;
                 if (!is_valid_note(transposed_pitch)) {
                     if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
@@ -354,7 +354,7 @@ class MIDITrack {
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
                 if (this->bitmap_enabled) 
-                    for (unsigned int i = 0 ; i < 127 ; i++) {
+                    for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                         (*piano_roll_bitmap)[tick][i] = false;
                     }
                 frames[tick]->clear();
@@ -433,7 +433,7 @@ class MIDITrack {
             Serial.println(F("looper stopped recording"));
             recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
-            for (unsigned int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     this->sendNoteOff(i, 0);
                     store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, 0);
@@ -451,24 +451,24 @@ class MIDITrack {
         //track_note_bitmap *piano_roll_bitmap;
         //byte (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
 
-        typedef byte loop_bitmap[LOOP_LENGTH_STEPS][127];
+        typedef byte loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE];
         loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
 
-        byte piano_roll_held[127];
-        bool pitch_contains_notes[127];
+        byte piano_roll_held[MIDI_MAX_NOTE];
+        bool pitch_contains_notes[MIDI_MAX_NOTE];
         int piano_roll_highest = 0;
-        int piano_roll_lowest = 127;
+        int piano_roll_lowest = MIDI_MAX_NOTE;
 
         // what's the lowest pitch that we've got a note for?
         int first_pitch() {
-            for (unsigned int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 if (pitch_contains_notes[i]) return i;
             }
             return 0;
         }
         // what's the highest pitch that we've got a note for?
         int last_pitch() {
-            for (unsigned int i = 127 ; i > 0 ; i--) {
+            for (unsigned int i = MIDI_MAX_NOTE ; i > 0 ; i--) {
                 if (pitch_contains_notes[i]) return i;
             }
             return 0;
@@ -482,7 +482,7 @@ class MIDITrack {
         void update_bitmap(uint32_t ticks) {
             if (!this->bitmap_enabled) return;
             
-            for (unsigned int i = 0 ; i < 127 ; i++) {
+            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     (*piano_roll_bitmap)[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
                     pitch_contains_notes[i] = true;
@@ -497,10 +497,10 @@ class MIDITrack {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, 127);
+                this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
-            memset(this->piano_roll_held, 0, 127);
-            memset(this->pitch_contains_notes, 0, 127);
+            memset(this->piano_roll_held, 0, MIDI_MAX_NOTE);
+            memset(this->pitch_contains_notes, 0, MIDI_MAX_NOTE);
         }
 
         // render the frames (array of linked list of messages) to a 'bitmap' 2d array of time * pitch
@@ -509,7 +509,7 @@ class MIDITrack {
 
             if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial_flush(); }
             piano_roll_highest = 0;
-            piano_roll_lowest = 127;
+            piano_roll_lowest = MIDI_MAX_NOTE;
 
             //if(this->debug) { Serial.println(F("wiping bitmap..")); Serial_flush(); }
             this->wipe_piano_roll_bitmap();
@@ -529,7 +529,7 @@ class MIDITrack {
                         piano_roll_held[message.pitch] = 0;
                     }
                 }
-                for (int p = 0 ; p < 127 ; p++) {
+                for (int p = 0 ; p < MIDI_MAX_NOTE ; p++) {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
@@ -570,7 +570,7 @@ class MIDITrack {
             this->overwrite = false;
         }
 
-        tracked_note track_playing[127];
+        tracked_note track_playing[MIDI_MAX_NOTE];
 
         // track when a playing note began
         void track_playing_on(uint32_t ticks, byte pitch, byte velocity) {
@@ -611,10 +611,10 @@ class MIDITrack {
             int previous_quant = this->quantization_value;  
             this->quantization_value = 0;
 
-            bool held_state[127];   // for tracking what notes are held
+            bool held_state[MIDI_MAX_NOTE];   // for tracking what notes are held
             int note_on_count = 0, note_off_count = 0;
 
-            memset(held_state, false, 127);
+            memset(held_state, false, MIDI_MAX_NOTE);
             /*for (unsigned int i = 0 ; i < 127; i++) {
                 held_state[i] = false;
             }*/
@@ -624,7 +624,7 @@ class MIDITrack {
             for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
                 //Serial.printf(F("doing time %i:\n"), t);
                 frames[t]->clear();
-                for (int p = 0 ; p < 127 ; p++) {
+                for (int p = 0 ; p < MIDI_MAX_NOTE ; p++) {
                     if ((*piano_roll_bitmap)[t][p]>0           && !held_state[p]) { // note on
                     //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
                         //if (this->debug) Serial.printf(F("Found note on with\tpitch %i\t"), p);
