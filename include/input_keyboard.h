@@ -72,9 +72,10 @@ bool debug_stress_sequencer_load = false;
     uint32_t last_retriggered = 0;  
 
     void OnPress(int key) {
-        if (already_pressing) return;
-        already_pressing = true;
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            if (already_pressing) return;
+            already_pressing = true;
+
             // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
             // the main loop has crashed
             switch(key) {

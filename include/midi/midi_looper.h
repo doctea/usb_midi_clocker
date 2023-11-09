@@ -33,6 +33,8 @@
 
 using namespace storage;
 
+extern volatile bool global_load_lock;
+
 //#define LOWEST_LOOPER_NOTE  24
 //#define HIGHEST_LOOPER_NOTE 96
 
@@ -336,12 +338,13 @@ class MIDITrack {
         // wipe all recorded events
         void clear_all() {
             stop_all_notes();
-            Serial.println(F("clearing recording"));
+            Serial.println(F("clearing recording.."));
             for (unsigned int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
                 // todo: actually free the recorded memory..?
                 frames[i]->clear();
                 //clear_tick(i);
             }
+            //Serial.println(F("cleared"));
             this->wipe_piano_roll_bitmap();
         }
 
@@ -496,7 +499,7 @@ class MIDITrack {
             if (this->piano_roll_bitmap==nullptr)
                 this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, 127);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
-            memset(piano_roll_held, 0, 127);
+            memset(this->piano_roll_held, 0, 127);
             memset(this->pitch_contains_notes, 0, 127);
         }
 
@@ -731,33 +734,47 @@ class MIDITrack {
             return true;
         }
 
+        #define DEBUG_LOOP_LOADER
+
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
+            //this->debug = true;
+            Serial.println("load_loop: top of load_loop()"); Serial_flush();
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-
-            //bool irqs_enabled = __irq_enabled();
-            //__disable_irq();
-            File f;
+            if (global_load_lock) {
+                Serial.println("load_loop: global_load_lock is set, so returning!");
+                return false;
+            }
+            static volatile bool already_loading = false;
+            if (already_loading) {
+                Serial.println("load_loop: global_load_lock is set, so returning!");
+                return false;
+            }
+            already_loading = true;
+            global_load_lock = true;
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
-            Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
-            f = SD.open(filename, FILE_READ);
-            f.setTimeout(0);
+            Serial.printf(F("load_loop: midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
 
+            File f;
+            f = SD.open(filename, FILE_READ);
             if (!f) {
-                Serial.printf(F("\tError: Couldn't open %s for reading!\n"), filename); Serial_flush();
+                Serial.printf(F("\tload_loop: Error: Couldn't open %s for reading!\n"), filename); Serial_flush();
                 /*#ifdef ENABLE_SCREEN
                     menu.set_last_message("Error loading recording!");//, recording_number);
                     menu.set_message_colour(ST77XX_RED);
                 #endif*/
                 //if (irqs_enabled) __enable_irq();
+                global_load_lock = false; already_loading = false;
+
                 return false;
             }
+            f.setTimeout(0);
 
             clear_all();
 
-            Serial.printf("\tEntering load loop for project %i and recording_number %i..\n", project_number, recording_number);
+            Serial.printf("\tload_loop: Entering load loop for project %i and recording_number %i..\n", project_number, recording_number);
             Serial_flush();
 
             int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
@@ -790,9 +807,9 @@ class MIDITrack {
                     char *tok;
                     tok = strtok(c_line,",;:");
                     while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
-                        #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("at time %i: for token '%s', sizeof is already %i, "), time, tok, frames[ticks_to_sequence_step(time)].size());
-                        #endif
+                        //#ifdef DEBUG_LOOP_LOADER
+                        //    Serial.printf(F("at time %i: for token '%s', sizeof is already %i, "), time, tok, frames[ticks_to_sequence_step(time)].size());
+                        //#endif
                         int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
                         sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
                         m.message_type = tmp_message_type;
@@ -808,19 +825,19 @@ class MIDITrack {
                         tok = strtok(NULL,",;:");
                     }
                     #ifdef DEBUG_LOOP_LOADER
-                        Serial.printf(F("for time\t%i read\t%i messages\n"), time, messages_count);
+                        Serial.printf(F("load_loop: for time\t%i read\t%i messages\n"), time, messages_count);
                     #endif
                     total_messages += messages_count;
                     time++;
                 }
             }
             #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("Closing file.."));
+                Serial.println(F("load_loop: Closing file.."));
             #endif
             f.close();
             //if (irqs_enabled) __enable_irq();
             #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("File closed"));
+                Serial.println(F("load_loop: File closed"));
             #endif
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
@@ -828,7 +845,7 @@ class MIDITrack {
                 menu.set_last_message("Loaded recording %i"); //, recording_number);
                 menu.set_message_colour(ST77XX_GREEN);
             #endif*/
-            Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
+            Serial.printf(F("load_loop: Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
             
             loaded_recording_number = recording_number;
             clear_hanging();
@@ -836,7 +853,12 @@ class MIDITrack {
             this->draw_piano_roll_bitmap_from_save();
 
             //clear_hanging();
+            global_load_lock = false; 
+            already_loading = false;
+
             }
+            //this->debug = false;
+
             return true;
         }       
 

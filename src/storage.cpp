@@ -280,6 +280,8 @@ namespace storage {
       #ifdef ENABLE_SD
       static volatile bool already_loading = false;
       if (already_loading) return false;
+      if (global_load_lock) return false;
+      global_load_lock = true; 
       already_loading = true;
 
       messages_log_add(String("Loading sequence ") + String(preset_number));
@@ -294,7 +296,7 @@ namespace storage {
       // ^^^ hmm get more frequent intermittent crashes on load if this is enabled...
 
       File myFile;   
-      Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
+      Serial.printf(F("load_sequence: load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
       myFile = SD.open(filename, FILE_READ);
       clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
@@ -303,9 +305,9 @@ namespace storage {
       }*/
 
       if (!myFile) {
-        Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
+        Serial.printf(F("load_sequence: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
         //if (irqs_enabled) __enable_irq();
-        already_loading = false;
+        global_load_lock = already_loading = false;
         return false;
       }
       myFile.setTimeout(0);
@@ -314,17 +316,17 @@ namespace storage {
       while (line = myFile.readStringUntil('\n')) {
         load_sequence_parse_line(line, output);
       }
-      Serial.println(F("Closing file..")); Serial_flush();
+      Serial.println(F("load_sequence: Closing file..")); Serial_flush();
       myFile.close();
       //if (irqs_enabled) __enable_irq();
-      Serial.println(F("File closed")); Serial_flush();
+      Serial.println(F("load_sequence: File closed")); Serial_flush();
 
       #ifdef ENABLE_APCMINI_DISPLAY
         //redraw_immediately = true;
       #endif
 
-      Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
-      already_loading = false;
+      Serial.printf(F("load_sequence: Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
+      global_load_lock = already_loading = false;
       #endif
     }
     return true;

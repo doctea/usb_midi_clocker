@@ -341,18 +341,20 @@ void loop() {
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
       bool screen_was_drawn = false;
-      menu->update_inputs();
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        menu->update_inputs();
+      }
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
         if (debug_flag) { Serial.println(F("about to menu->display")); Serial_flush(); }
         if (debug_flag) menu->debug = true;
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
           menu->display(); //update(ticks);
+          if (debug_flag) { Serial.println(F("just did menu->display")); Serial_flush(); }
+          //Serial.printf("display() took %ums..", millis()-before_display);
+          last_drawn = millis();
+          screen_was_drawn = true;
         }
-        if (debug_flag) { Serial.println(F("just did menu->display")); Serial_flush(); }
-        //Serial.printf("display() took %ums..", millis()-before_display);
-        last_drawn = millis();
-        screen_was_drawn = true;
       }
       //delay(1000); Serial.println("exiting sleep after menu->display"); Serial_flush();
     #endif
