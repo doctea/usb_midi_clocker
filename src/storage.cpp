@@ -292,7 +292,7 @@ namespace storage {
       char filename[MAX_FILEPATH] = "";
       snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
 
-      update_sequence_filename(String(filename));
+      //update_sequence_filename(String(filename));
       // ^^^ hmm get more frequent intermittent crashes on load if this is enabled...
 
       File myFile;   
