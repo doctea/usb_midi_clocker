@@ -181,7 +181,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
         #ifdef ENABLE_SCREEN
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
-            LinkedList<MenuItem *> *make_menu_items() override;
+            virtual LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
         void stop_chord(chord_instance_t chord) {

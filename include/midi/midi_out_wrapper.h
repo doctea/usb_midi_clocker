@@ -75,6 +75,7 @@ class MIDIOutputWrapper {
             this->set_max_voice_count(max_voice_count);
             default_channel = channel;
             memset(playing_notes, 0, sizeof(playing_notes));
+            //Serial.printf("MIDIOutputWrapper created with label\t%s and channel %i\n", label, channel);
         }
         virtual ~MIDIOutputWrapper();
 
@@ -88,7 +89,8 @@ class MIDIOutputWrapper {
             return this;
         }
         bool should_spread_voices() {
-            return this->max_voice_count>1;
+            return false;
+            //return this->max_voice_count>1;
         }
 
         #ifdef DEBUG_MIDI_WRAPPER
@@ -140,21 +142,21 @@ class MIDIOutputWrapper {
             if (this->debug) { Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush(); }
 
             if (playing_notes[current_note]<max_voice_count) {
-                //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
+                //if (this->debug) Serial.printf("\tplaying1_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
                 playing_notes[current_note]++;
                 //todo: else dont play note, or re-use one?
             } else {
                 //if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
             }
 
-            int note_slot = -1;
-            for (int i = 0 ; i < max_voice_count ; i++) {
-                if (voices[i]==-1) {
-                    note_slot = i;
-                    break;
-                }
-            }
             if (should_spread_voices()) {
+                int note_slot = -1;
+                for (int i = 0 ; i < max_voice_count ; i++) {
+                    if (voices[i]==-1) {
+                        note_slot = i;
+                        break;
+                    }
+                }
                 if(note_slot>=0) {
                     Serial.printf("sendNoteOn with max_voice_count %i and note_slot %i\n", max_voice_count, note_slot);
                     voices[note_slot] = current_note;

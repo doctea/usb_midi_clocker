@@ -17,6 +17,7 @@
 #include "behaviours/behaviour_drumkit.h"
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso_4pv.h"
+#include "behaviours/behaviour_midimuso_4mv.h"
 
 #include "behaviours/behaviour_microlidian.h"
 
@@ -129,6 +130,15 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_MIDIMUSO_4PV
         behaviour_midimuso_4pv->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMUSO-PV", (DeviceBehaviourUltimateBase *)behaviour_midimuso_4pv, (byte)1, (int8_t)4));
+    #endif
+
+    #ifdef ENABLE_MIDIMUSO_4MV
+        behaviour_midimuso_4mv->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 1", behaviour_midimuso_4mv, 1));
+        behaviour_midimuso_4mv->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 2", behaviour_midimuso_4mv, 2));
+        behaviour_midimuso_4mv->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 3", behaviour_midimuso_4mv, 3));
+        behaviour_midimuso_4mv->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 4", behaviour_midimuso_4mv, 4));
+        behaviour_midimuso_4mv->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Auto",  behaviour_midimuso_4mv, 5));
+        midi_matrix_manager->get_target_for_id(behaviour_midimuso_4mv->target_id)->debug = true;
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)

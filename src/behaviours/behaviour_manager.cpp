@@ -23,6 +23,7 @@
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso.h"
 #include "behaviours/behaviour_midimuso_4pv.h"
+#include "behaviours/behaviour_midimuso_4mv.h"
 
 #include "behaviours/behaviour_bedge.h"
 
@@ -175,6 +176,10 @@ void setup_behaviour_manager() {
         behaviour_midimuso_4pv->TUNING_OFFSET = -3; // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
         behaviour_midimuso_4pv->connect_device_output(&ENABLE_MIDIMUSO_4PV);
         behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
+    #endif
+    #ifdef ENABLE_MIDIMUSO_4MV
+        behaviour_midimuso_4mv->connect_device_output(&ENABLE_MIDIMUSO_4MV);
+        behaviour_manager->registerBehaviour(behaviour_midimuso_4mv);
     #endif
 
     behaviour_midibassproxy = new MIDIBassBehaviourProxy();

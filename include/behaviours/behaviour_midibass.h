@@ -184,7 +184,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
 
         #ifdef ENABLE_SCREEN
-            LinkedList<MenuItem *> *make_menu_items() override;
+            virtual LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
 
