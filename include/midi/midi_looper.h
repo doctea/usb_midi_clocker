@@ -734,7 +734,7 @@ class MIDITrack {
             return true;
         }
 
-        #define DEBUG_LOOP_LOADER
+        //#define DEBUG_LOOP_LOADER
 
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
