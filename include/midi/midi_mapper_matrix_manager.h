@@ -64,7 +64,7 @@ class MIDIMatrixManager {
     /* stuff for handling sources of midi data */
     struct source_entry {
         char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
-        byte connection_count = 0;
+        uint8_t connection_count = 0;
     };
     uint8_t sources_count = 0;
 
@@ -172,19 +172,19 @@ class MIDIMatrixManager {
         source_to_targets[source_id][target_id] = false;
     }
 
-    byte connected_to_source_count(source_id_t source_id) {
+    uint8_t connected_to_source_count(source_id_t source_id) {
         if (source_id==-1 || source_id >= NUM_REGISTERED_SOURCES) return 0;
 
         return sources[source_id].connection_count;
     }
-    byte connected_to_target_count(target_id_t target_id) {
+    uint8_t connected_to_target_count(target_id_t target_id) {
         if (target_id==-1 || target_id >= NUM_REGISTERED_SOURCES) return 0;
 
         return targets[target_id].connection_count;
     }
 
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
-    void processNoteOn(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
+    void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (!is_valid_note(pitch)) return;
         if (source_id<0) {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
@@ -200,7 +200,7 @@ class MIDIMatrixManager {
             }
         }
     }
-    void processNoteOff(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
+    void processNoteOff(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (!is_valid_note(pitch)) {
             if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
             return;
@@ -219,7 +219,7 @@ class MIDIMatrixManager {
             }
         }
     }
-    void processControlChange(source_id_t source_id, byte cc, byte value, byte channel = 0) {
+    void processControlChange(source_id_t source_id, int8_t cc, uint8_t value, uint8_t channel = 0) {
         if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
@@ -234,7 +234,7 @@ class MIDIMatrixManager {
             }
         }
     }
-    void processPitchBend(source_id_t source_id, int bend, byte channel = 0) {
+    void processPitchBend(source_id_t source_id, int bend, uint8_t channel = 0) {
         if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
@@ -284,7 +284,7 @@ class MIDIMatrixManager {
         return (const char*)F("[error - unknown]");
     }
 
-    byte getDefaultChannelForTargetId(target_id_t target_id) {
+    uint8_t getDefaultChannelForTargetId(target_id_t target_id) {
         if (target_id>=0 && target_id < NUM_REGISTERED_TARGETS)
             return this->targets[target_id].wrapper->default_channel;
         return 0;
@@ -293,7 +293,7 @@ class MIDIMatrixManager {
     //// stuff for handling targets of midi data
     struct target_entry {
         char handle[LANGST_HANDEL_ROUT];
-        byte connection_count = 0;
+        uint8_t connection_count = 0;
         MIDIOutputWrapper *wrapper = nullptr;
     };
 
@@ -308,7 +308,7 @@ class MIDIMatrixManager {
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
-    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle, int8_t channel = 1) {
+    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle, uint8_t channel = 1) {
         return this->register_target(make_midioutputwrapper(handle, target, channel));
     }
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {

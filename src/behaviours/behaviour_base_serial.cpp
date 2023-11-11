@@ -20,7 +20,9 @@ const char *DeviceBehaviourSerialBase::get_indicator() {
 }
 
 #ifdef ENABLE_SCREEN
-    #include "mymenu/menu_midioutputwrapper.h"
+    #ifdef DEBUG_MIDI_WRAPPER
+        #include "mymenu/menu_midioutputwrapper.h"
+    #endif
     // add menuitems specific to the underlying device type (eg serial, usbserial, usbmidi, virtual)
     //FLASHMEM
     LinkedList<MenuItem*> *DeviceBehaviourSerialBase::make_menu_items_device() {
@@ -31,12 +33,14 @@ const char *DeviceBehaviourSerialBase::get_indicator() {
         }
         this->menuitems->add(new FixedSizeMenuItem(midi_info.c_str(), 0));
         
-        menuitems->add(new MIDIOutputWrapperDebugMenuItem(
-            "Outgoing?",
-            //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
-            //test_wrapper
-            midi_matrix_manager->get_target_for_id(this->target_id)
-        ));
+        #ifdef DEBUG_MIDI_WRAPPER
+            menuitems->add(new MIDIOutputWrapperDebugMenuItem(
+                "Outgoing?",
+                //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
+                //test_wrapper
+                midi_matrix_manager->get_target_for_id(this->target_id)
+            ));
+        #endif
 
         return this->menuitems;
     }         

@@ -4,11 +4,11 @@
 #include "bpm.h"
 
 /*
-MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, byte channel) : MIDIOutputWrapper(label, channel) {
+MIDIOutputWrapper::MIDIOutputWrapper(const char *label, MIDITrack *looper, int8_t channel) : MIDIOutputWrapper(label, channel) {
     output_looper = looper;
 }
 
-void MIDIOutputWrapper::actual_sendNoteOn(byte pitch, byte velocity, byte channel) {
+void MIDIOutputWrapper::actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) {
     if (output_serialmidi!=nullptr) {
         if (this->debug) Serial.printf("midi_out_wrapper#sendNoteOn %s\tgot an output_serialmidi\n", this->label);
         output_serialmidi->sendNoteOn(pitch, velocity, channel);
@@ -24,7 +24,7 @@ void MIDIOutputWrapper::actual_sendNoteOn(byte pitch, byte velocity, byte channe
     if (output_looper!=nullptr)         output_looper->in_event(ticks, midi::NoteOn, pitch, velocity);
 }
 
-void MIDIOutputWrapper::actual_sendNoteOff(byte pitch, byte velocity, byte channel) {
+void MIDIOutputWrapper::actual_sendNoteOff(int8_t pitch, int8_t velocity, int8_t channel) {
     if (output_serialmidi!=nullptr)     output_serialmidi->sendNoteOff(pitch, velocity, channel);
     if (output_usb!=nullptr)            output_usb->sendNoteOff(pitch, velocity, channel);
     if (output_usb_pointer!=nullptr && (*output_usb_pointer)!=nullptr)
@@ -32,7 +32,7 @@ void MIDIOutputWrapper::actual_sendNoteOff(byte pitch, byte velocity, byte chann
     if (output_looper!=nullptr)         output_looper->in_event(ticks, midi::NoteOff, pitch, velocity);
 }
 
-void MIDIOutputWrapper::actual_sendControlChange(byte pitch, byte velocity, byte channel) {
+void MIDIOutputWrapper::actual_sendControlChange(int8_t pitch, int8_t velocity, int8_t channel) {
     if (channel==0) channel = default_channel;
     if (output_serialmidi!=nullptr)     output_serialmidi->sendControlChange(pitch, velocity, channel);
     if (output_usb!=nullptr)            output_usb->sendControlChange(pitch, velocity, channel);
@@ -44,15 +44,15 @@ void MIDIOutputWrapper::actual_sendControlChange(byte pitch, byte velocity, byte
 }*/
 
 
-void MIDIOutputWrapper_LoopTrack::actual_sendNoteOn(byte pitch, byte velocity, byte channel) {
+void MIDIOutputWrapper_LoopTrack::actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) {
     output->in_event(ticks, midi::NoteOn, pitch, velocity); //, channel);
 }
 
-void MIDIOutputWrapper_LoopTrack::actual_sendNoteOff(byte pitch, byte velocity, byte channel) {  
+void MIDIOutputWrapper_LoopTrack::actual_sendNoteOff(int8_t pitch, int8_t velocity, int8_t channel) {  
     output->in_event(ticks, midi::NoteOff, pitch, velocity); //, channel);
 }
 
-void MIDIOutputWrapper_LoopTrack::actual_sendControlChange(byte number, byte value, byte channel) {
+void MIDIOutputWrapper_LoopTrack::actual_sendControlChange(int8_t number, int8_t value, int8_t channel) {
     //TODO: implement loop track CC recording
     //output->sendControlChange(pitch, velocity, channel);
     output->in_event(ticks, midi::ControlChange, number, value); //, channel);
@@ -61,22 +61,22 @@ void MIDIOutputWrapper_LoopTrack::actual_sendControlChange(byte number, byte val
 
 
 
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, byte channel) {
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, int8_t channel) {
     return new MIDIOutputWrapper_LoopTrack(label, output, channel);
 }
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, byte channel) {
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, int8_t channel) {
     return new MIDIOutputWrapper_MIDIUSB(label, output, channel);
 }
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, byte channel, int8_t max_voice_count = 1) {
-    return new MIDIOutputWrapper_MIDISerial(label, output, channel, max_voice_count);
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, int8_t channel) {
+    return new MIDIOutputWrapper_MIDISerial(label, output, channel);
 }
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, byte cable_number, byte channel) {
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, int8_t cable_number, int8_t channel) {
     return new MIDIOutputWrapper_PC(label, cable_number, channel);
 }
-FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, byte channel, int8_t max_voice_count = 1) {
+FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, int8_t channel) {
     /*MIDIOutputWrapper_Behaviour * v = new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
     behaviour->wrapper = v;*/
-    return new MIDIOutputWrapper_Behaviour(label, behaviour, channel, max_voice_count);
+    return new MIDIOutputWrapper_Behaviour(label, behaviour, channel);
 }
 
 MIDIOutputWrapper::~MIDIOutputWrapper() {}

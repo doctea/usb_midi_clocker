@@ -49,7 +49,7 @@ struct midi_message {
 
 struct tracked_note {
     bool playing = false;
-    byte velocity = 0;
+    uint8_t velocity = MIDI_MIN_VELOCITY;
     //int32_t started_at = -1;
 };
 
@@ -173,7 +173,7 @@ class MIDITrack {
             store_event(time, midi_event);
         }
         // for actually storing values into buffer (also used when reloading from save)
-        void store_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ uint8_t pitch, uint8_t velocity) {
+        void store_event(unsigned long time, uint8_t instruction_type, /*uint8_t channel,*/ int8_t pitch, uint8_t velocity) {
             midi_message m;
             m.message_type = instruction_type;
             //m.channel = 3; //channel;
@@ -200,7 +200,7 @@ class MIDITrack {
             } else if (midi_event.message_type==midi::NoteOff) {
                 recorded_hanging_notes[midi_event.pitch] = (tracked_note) {
                     .playing        = false,
-                    .velocity       = 0
+                    .velocity       = MIDI_MIN_VELOCITY
                     //.started_at     = -1
                 };
             }
@@ -239,7 +239,7 @@ class MIDITrack {
             for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 recorded_hanging_notes[i] = (tracked_note) {
                     .playing        = false,
-                    .velocity       = 0
+                    .velocity       = MIDI_MIN_VELOCITY
                     //.started_at     = -1
                 };
             }
@@ -286,7 +286,7 @@ class MIDITrack {
                     case midi::NoteOn:
                         current_note = pitch;
                         if (this->debug) { Serial.printf("\t\tSending note on %i at velocity %i\n", pitch, m.velocity); Serial_flush(); }
-                        this->sendNoteOn((uint8_t)pitch, (byte)m.velocity);
+                        this->sendNoteOn((uint8_t)pitch, (int8_t)m.velocity);
                         track_playing_on(ticks, pitch, m.velocity);
                         break;
                     case midi::NoteOff:
@@ -294,7 +294,7 @@ class MIDITrack {
                         last_note = pitch;
                         if (m.pitch==current_note) // todo: properly check that there are no other notes playing
                             current_note = -1;
-                        this->sendNoteOff((uint8_t)pitch, (byte)m.velocity); //, m.channel);
+                        this->sendNoteOff((uint8_t)pitch, (int8_t)m.velocity); //, m.channel);
                         track_playing_off(ticks, pitch, m.velocity);
                         break;
                     default:
@@ -366,11 +366,11 @@ class MIDITrack {
         void stop_all_notes();
 
         // for sending passthrough or recorded noteOns to actual output
-        void sendNoteOn(byte pitch, byte velocity, byte channel = 0);
-        void sendNoteOff(byte pitch, byte velocity, byte channel = 0);
+        void sendNoteOn (int8_t pitch, uint8_t velocity, uint8_t channel = 0);
+        void sendNoteOff(int8_t pitch, uint8_t velocity, uint8_t channel = 0);
 
         // called by external code to inform the looper about a note being played; looper decides whether to wipe and/or record it
-        void in_event(uint32_t ticks, byte message_type, byte note, byte velocity) {
+        void in_event(uint32_t ticks, uint8_t message_type, int8_t note, uint8_t velocity) {
             if (this->isOverwriting()) 
                 this->clear_tick(ticks);
             if (this->isRecording())
@@ -436,7 +436,7 @@ class MIDITrack {
             for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     this->sendNoteOff(i, 0);
-                    store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, 0);
+                    store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, MIDI_MIN_VELOCITY);
                     recorded_hanging_notes[i].playing = false;
                 }
             }
@@ -445,18 +445,18 @@ class MIDITrack {
 
 
     /* bitmap processing stuff */
-        //byte piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
-        //byte (*piano_roll_bitmap)[LOOP_:];    // velocity of note at this moment
-        //typedef byte track_note_bitmap[LOOP_LENGTH_STEPS][127];
+        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
+        //int8_t (*piano_roll_bitmap)[LOOP_:];    // velocity of note at this moment
+        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][127];
         //track_note_bitmap *piano_roll_bitmap;
-        //byte (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
+        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
 
-        typedef byte loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE];
+        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE];
         loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
 
-        byte piano_roll_held[MIDI_MAX_NOTE];
+        int8_t piano_roll_held[MIDI_MAX_NOTE];
         bool pitch_contains_notes[MIDI_MAX_NOTE];
-        int piano_roll_highest = 0;
+        int piano_roll_highest = MIDI_MIN_NOTE;
         int piano_roll_lowest = MIDI_MAX_NOTE;
 
         // what's the lowest pitch that we've got a note for?
@@ -474,7 +474,7 @@ class MIDITrack {
             return 0;
         }
         // are there any recorded notes for the given pitch?
-        bool does_pitch_contain_notes(byte pitch) {
+        bool does_pitch_contain_notes(int8_t pitch) {
             return pitch_contains_notes[pitch];
         }
 
@@ -573,13 +573,13 @@ class MIDITrack {
         tracked_note track_playing[MIDI_MAX_NOTE];
 
         // track when a playing note began
-        void track_playing_on(uint32_t ticks, byte pitch, byte velocity) {
+        void track_playing_on(uint32_t ticks, int8_t pitch, int8_t velocity) {
             track_playing[pitch].playing = true;
             //track_playing[pitch].started_at = ticks;
             track_playing[pitch].velocity = velocity;
         }
         // stop tracking a playing note
-        void track_playing_off(uint32_t ticks, byte pitch, byte velocity) {
+        void track_playing_off(uint32_t ticks, int8_t pitch, int8_t velocity) {
             track_playing[pitch].playing = false;
             //track_playing[pitch].started_at = -1;
             track_playing[pitch].velocity = velocity;
@@ -596,7 +596,7 @@ class MIDITrack {
                     this->store_event(ticks%LOOP_LENGTH, midi::NoteOff, i, 0);
             }
         }*/
-        /*void fix_overwrite_pitch(uint32_t ticks, byte pitch) {
+        /*void fix_overwrite_pitch(uint32_t ticks, int8_t pitch) {
             if (piano_roll_bitmap[ticks][pitch])
                 this->store_event(ticks, midi::NoteOff, pitch, 0);
         }*/
@@ -817,7 +817,7 @@ class MIDITrack {
                         m.pitch = tmp_pitch;
                         m.velocity = tmp_velocity;
                         #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("read message bytes: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
+                            Serial.printf(F("read message int8_ts: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
                         #endif
                         if (this->debug) { Serial.printf(F("storing event at %i\n"), time); Serial_flush(); }
                         store_event(time, m);
