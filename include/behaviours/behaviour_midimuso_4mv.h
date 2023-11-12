@@ -2,6 +2,8 @@
 
 #include "Config.h"
 
+// MIDI MUSO CV12 4 voice mono mode (handle voice allocation ourselves)
+
 #ifdef ENABLE_MIDIMUSO_4MV
 
 //#include "behaviours/behaviour_base.h";
@@ -15,8 +17,11 @@
 
 //extern Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase> *behaviour_midimuso_4mv;
 
-class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBassBehaviour {
+class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBassBehaviour, public virtual DividedClockedBehaviour {
     public:
+
+    using DividedClockedBehaviour::on_tick;
+    using DividedClockedBehaviour::send_clock;
 
     Behaviour_MIDIMuso_4MV () : DeviceBehaviourSerialBase () {
         /*for (int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
@@ -38,11 +43,18 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
     int last_voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
     target_id_t voice_target_id[max_voice_count] = { -1, -1, -1, -1 };
 
-    //int8_t playing_notes[MIDI_MAX_NOTE];
+    bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };
+
+    void on_bar(int bar) override {
+        MIDIBassBehaviour::on_bar(bar);
+        DividedClockedBehaviour::on_bar(bar);
+    }
 
     int8_t find_slot_for(int8_t note) {
         int8_t note_slot = -1;
         for (int i = 0 ; i < max_voice_count ; i++) {
+            if (!allow_voice_for_auto[i])
+                continue;
             if (voices[i]==note) {
                 note_slot = i;
                 break;
@@ -65,7 +77,8 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
             if (voices[channel-1]!=note)
                 this->sendNoteOff(note, 0, channel);
             voices[channel-1] = note;
-            DeviceBehaviourSerialBase::sendNoteOn(note, velocity, channel);
+            //DeviceBehaviourSerialBase::sendNoteOn(note, velocity, channel);
+            MIDIBassBehaviour::sendNoteOn(note, velocity, channel);
         }
         //this->debug = false;
     }
@@ -87,10 +100,35 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
                 voices[channel-1] = NOTE_OFF;
                 last_voices[channel-1] = note;
             }
-            DeviceBehaviourSerialBase::sendNoteOff(note, velocity, channel);
+            //DeviceBehaviourSerialBase::sendNoteOff(note, velocity, channel);
+            MIDIBassBehaviour::sendNoteOff(note, velocity, channel);
         }
         //this->debug = false;
     }
+
+    virtual void setup_saveable_parameters() override {
+        if (this->saveable_parameters==nullptr)
+            DeviceBehaviourUltimateBase::setup_saveable_parameters();
+
+        MIDIBassBehaviour::setup_saveable_parameters();
+
+        /*for (int i = 0 ; i < max_voice_count ; i++) {
+            char option_label[MAX_LABEL_LENGTH];
+            snprintf(option_label, MAX_LABEL_LENGTH, "Output %i Auto", i);
+            this->saveable_parameters->add(new LSaveableParameter<bool>(option_label, "Allowed by Auto", &this->allow_voice_for_auto[i]));
+        }*/
+        /*this->saveable_parameters->add(new LSaveableParameter<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0]));
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1]));
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2]));
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3]));*/
+
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0], [=](bool v) -> void { this->allow_voice_for_auto[0] = v; }, [=]() -> bool { return this->allow_voice_for_auto[0]; }));
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1], [=](bool v) -> void { this->allow_voice_for_auto[1] = v; }, [=]() -> bool { return this->allow_voice_for_auto[1]; }));
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) -> void { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }));
+        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) -> void { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }));
+
+    }
+
 
     #ifdef ENABLE_SCREEN
         virtual LinkedList<MenuItem *> *make_menu_items() override;

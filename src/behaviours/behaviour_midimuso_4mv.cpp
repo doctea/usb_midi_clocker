@@ -33,6 +33,9 @@
 
             menuitems->add(allow_voice_toggles);
 
+            DividedClockedBehaviour::make_menu_items();
+            MIDIBassBehaviour::make_menu_items();
+
             return menuitems;
         }
     #endif
