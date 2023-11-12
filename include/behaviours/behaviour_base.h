@@ -18,6 +18,10 @@
 
 #include "file_manager/file_manager_interfaces.h"
 
+#ifdef ENABLE_SCREEN
+    #include "mymenu/menuitems_harmony.h"
+#endif
+
 class MenuItem;
 class ArrangementTrackBase;
 

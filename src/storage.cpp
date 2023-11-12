@@ -293,7 +293,7 @@ namespace storage {
       snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
 
       //update_sequence_filename(String(filename));
-      // ^^^ hmm get more frequent intermittent crashes on load if this is enabled...
+      // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
       File myFile;   
       Serial.printf(F("load_sequence: load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();

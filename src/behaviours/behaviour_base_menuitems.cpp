@@ -8,6 +8,7 @@
 
     #include "submenuitem_bar.h"
     #include "mymenu/menuitems_scale.h"
+    #include "mymenu/menuitems_harmony.h"
 
     //FLASHMEM 
     LinkedList<MenuItem*> *DeviceBehaviourUltimateBase::make_menu_items() {

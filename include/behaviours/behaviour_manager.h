@@ -322,7 +322,7 @@ class DeviceBehaviourManager {
         bool load_parse_line(String line) {
             line = line.replace('\n',"");
             line = line.replace('\r',"");
-            //Serial.printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str());
+            //Serial.printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
             return this->load_parse_key_value(key, value);

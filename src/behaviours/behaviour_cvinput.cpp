@@ -18,6 +18,7 @@ extern bool debug_flag;
     #include "submenuitem_bar.h"
     #include "ParameterManager.h"
     #include "mymenu_items/ParameterInputMenuItems.h"
+    #include "mymenu/menuitems_harmony.h"
 
     extern ParameterManager *parameter_manager;
  

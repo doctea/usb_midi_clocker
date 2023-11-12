@@ -8,6 +8,8 @@
 #include "mymenu.h"
 #include "menu.h"
 
+#include "mymenu/menuitems_harmony.h"
+
 #ifdef ENABLE_LOOPER_PIANOROLL
     #include "mymenu/menu_looperdisplay.h"
 #endif

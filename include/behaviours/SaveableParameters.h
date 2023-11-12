@@ -110,12 +110,11 @@ class SaveableParameter : virtual public SaveableParameterBase {
             set_recall_enabled_func(set_recall_enabled_func),
             set_save_enabled_func(set_save_enabled_func) 
         {
-                if (variable_recall_enabled==nullptr)
-                    variable_recall_enabled = &this->recall_enabled;
-                if (variable_save_enabled==nullptr) {
-                    variable_save_enabled = &this->save_enabled;
-                }
-
+            if (variable_recall_enabled==nullptr)
+                variable_recall_enabled = &this->recall_enabled;
+            if (variable_save_enabled==nullptr) {
+                variable_save_enabled = &this->save_enabled;
+            }
         }
 
         virtual bool is_recall_enabled () override {
@@ -223,12 +222,27 @@ class LSaveableParameter : virtual public SaveableParameterBase {
         using set_recall_enabled_func_def = vl::Func<void(bool)>;
         using set_save_enabled_func_def = vl::Func<void(bool)>;*/
 
-        setter_func_def setter_func = [=](DataType v) -> void { /*this->set(v);*/ };
-        getter_func_def getter_func = [=]() -> DataType { return this->get(); };
+        setter_func_def setter_func = [=](DataType v) -> void { 
+            if (variable!=nullptr) 
+                *this->variable = v; 
+        };
+        getter_func_def getter_func = [=]() -> DataType { 
+            if (variable!=nullptr) 
+                return *this->variable; 
+            return (DataType) 0; 
+        };
         /*is_recall_enabled_func_def  is_recall_enabled_func  = [this]() -> bool { return SaveableParameterBase::is_recall_enabled(); };
         is_save_enabled_func_def    is_save_enabled_func    = [this]() -> bool { return SaveableParameterBase::is_save_enabled(); };
         set_recall_enabled_func_def set_recall_enabled_func = [this](bool v) { SaveableParameterBase::set_recall_enabled(v); };
         set_save_enabled_func_def   set_save_enabled_func   = [this](bool v) { SaveableParameterBase::set_save_enabled(v); };*/
+
+        //bool getter_setter_enabled = false;
+
+        LSaveableParameter(
+            const char *label,
+            const char *category_name,
+            DataType *variable
+        ) : SaveableParameterBase(label, category_name), variable(variable) {}
 
         LSaveableParameter(
             const char *label,
@@ -238,12 +252,6 @@ class LSaveableParameter : virtual public SaveableParameterBase {
         ) : LSaveableParameter(label, category_name, variable) {
             this->setter_func = setter_func;
         }
-
-        LSaveableParameter(
-            const char *label,
-            const char *category_name,
-            DataType *variable
-        ) : SaveableParameterBase(label, category_name), variable(variable) {}
 
         LSaveableParameter(
             const char *label, 
@@ -260,16 +268,18 @@ class LSaveableParameter : virtual public SaveableParameterBase {
             is_save_enabled_func_def is_save_enabled_func = [=]() -> bool { return SaveableParameterBase::is_save_enabled(); },
             set_recall_enabled_func_def set_recall_enabled_func = [=](bool v) { SaveableParameterBase::set_recall_enabled(v); },
             set_save_enabled_func_def set_save_enabled_func = [=](bool v) { SaveableParameterBase::set_save_enabled(v); }*/
-        ) : SaveableParameterBase(label, category_name), //, variable_recall_enabled, variable_save_enabled), 
-            variable(variable), 
-            setter_func(setter_func), 
-            getter_func(getter_func)
+        ) : LSaveableParameter(label, category_name, variable, setter_func)//, //, variable_recall_enabled, variable_save_enabled), 
+            //variable(variable), 
+            //setter_func(setter_func), 
+            //getter_func(getter_func)
             /*,
             is_recall_enabled_func(is_recall_enabled_func), 
             is_save_enabled_func(is_save_enabled_func),
             set_recall_enabled_func(set_recall_enabled_func),
             set_save_enabled_func(set_save_enabled_func)*/
         {
+            this->getter_func = getter_func;
+            //this->getter_setter_enabled = true;
             /*if (variable_recall_enabled==nullptr)
                 variable_recall_enabled = &this->recall_enabled;
             if (variable_save_enabled==nullptr) {
@@ -291,10 +301,12 @@ class LSaveableParameter : virtual public SaveableParameterBase {
         }*/
 
         virtual DataType get() {
-            if (variable!=nullptr) 
+            return this->getter_func();
+
+            /*if (variable!=nullptr) 
                 return *variable; 
             else 
-                return (DataType) 0;
+                return (DataType) 0;*/
         }
 
         virtual String get_line() {

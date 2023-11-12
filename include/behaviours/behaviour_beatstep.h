@@ -381,8 +381,10 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         sysex_parameters[i].target_variable,
                         [=](int8_t v) -> void { 
                             void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = sysex_parameters[i].setter_func;
-
-                            (this->*setter_func)(v); 
+                            if (setter_func!=nullptr)
+                                (this->*setter_func)(v); 
+                            else if (sysex_parameters[i].target_variable!=nullptr)
+                                *sysex_parameters[i].target_variable = v;
                         }
                     ));
                 }                    

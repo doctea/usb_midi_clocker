@@ -2,6 +2,8 @@
 
 #include "Config.h"
 
+// MIDI MUSO CV12 4 voice poly mode (let the MUSO handle the voice allocation)
+
 #ifdef ENABLE_MIDIMUSO_4PV
 
 //#include "behaviours/behaviour_base.h";
