@@ -206,11 +206,16 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
       }
 
       #ifdef ENABLE_MORE_CLOCKS
-        for (unsigned int i = 0 ; i < 2 ; i++) {
+        for (unsigned int i = 0 ; i < 4 ; i++) {
           bool should_go_high = false;
           bool should_go_low  = false;
 
-          float m = clock_multiplier_values[i];
+          float m;
+          if (i<2) 
+            m = clock_multiplier_values[i];
+          else 
+            m = clock_multiplier_values[i+4];
+          
           if (is_bpm_on_multiplier(ticks, m)) {
             //Serial.printf("%3i: extra clock %i has multiplier %f - on!\n", ticks, i, m);
             should_go_high = true;
