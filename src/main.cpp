@@ -429,12 +429,7 @@ void do_tick(uint32_t in_ticks) {
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to global_on_restart"));
-    //in_ticks = ticks = 0;
     global_on_restart();
-    //ATOMIC(
-      //midi_apcmini->sendNoteOn(7, APCMINI_OFF, 1);
-    //)
-    //restart_on_next_bar = false;
     set_restart_on_next_bar(false);
   }
 
@@ -450,12 +445,7 @@ void do_tick(uint32_t in_ticks) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_bar()"));
     behaviour_manager->do_bar(BPM_CURRENT_BAR_OF_PHRASE);
     DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_bar()"));
-  } /*else if (is_bpm_on_bar(ticks+1)) {
-    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (is_bpm_on_phrase(ticks+1)) {
-      behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
-    }
-  }*/ else if (is_bpm_on_phrase(ticks+1)) {
+  } else if (is_bpm_on_phrase(ticks+1)) {
     behaviour_manager->do_end_phrase_pre_clock(BPM_CURRENT_PHRASE);
   }
 
