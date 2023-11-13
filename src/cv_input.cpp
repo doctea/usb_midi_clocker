@@ -130,7 +130,7 @@ FLASHMEM void setup_parameter_menu() {
 
     Serial.println(F("Adding ParameterSelectorControls for available_inputs..."));
     // ask ParameterManager to add all the menu items for the ParameterInputs
-    parameter_manager->addAllParameterInputMenuItems(menu, "CV Input ");
+    parameter_manager->addAllParameterInputMenuItems(menu);
 
     // ask ParameterManager to add all the menu items for the Parameters
     // todo: dynamically loop over all the available behaviours
