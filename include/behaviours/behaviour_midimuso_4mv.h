@@ -112,21 +112,10 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
 
         MIDIBassBehaviour::setup_saveable_parameters();
 
-        /*for (int i = 0 ; i < max_voice_count ; i++) {
-            char option_label[MAX_LABEL_LENGTH];
-            snprintf(option_label, MAX_LABEL_LENGTH, "Output %i Auto", i);
-            this->saveable_parameters->add(new LSaveableParameter<bool>(option_label, "Allowed by Auto", &this->allow_voice_for_auto[i]));
-        }*/
-        /*this->saveable_parameters->add(new LSaveableParameter<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0]));
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1]));
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2]));
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3]));*/
-
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0], [=](bool v) -> void { this->allow_voice_for_auto[0] = v; }, [=]() -> bool { return this->allow_voice_for_auto[0]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1], [=](bool v) -> void { this->allow_voice_for_auto[1] = v; }, [=]() -> bool { return this->allow_voice_for_auto[1]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) -> void { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) -> void { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }));
-
     }
 
 
