@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_CVINPUT__INCLUDED
-#define BEHAVIOUR_CVINPUT__INCLUDED
+#pragma once
 
 //#define DEBUG_VELOCITY    // enable velocity control so we can tell what's going on
 
@@ -62,8 +61,15 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 
 class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
+
+        DeviceBehaviour_CVInput(const char *label = nullptr) : DeviceBehaviourUltimateBase () {
+            if (label!=nullptr)
+                strncpy(this->label, label, MAX_LABEL_LENGTH);
+        }
+
+        char label[MAX_LABEL_LENGTH] = "Pitch CV Input";
         virtual const char *get_label() override {
-            return "Pitch CV Input";
+            return label;
         }
 
         virtual int getType() override {
@@ -410,6 +416,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
 
 };
 
-extern DeviceBehaviour_CVInput *behaviour_cvinput;
+extern DeviceBehaviour_CVInput *behaviour_cvinput_1;
+extern DeviceBehaviour_CVInput *behaviour_cvinput_2;
+extern DeviceBehaviour_CVInput *behaviour_cvinput_3;
 
-#endif

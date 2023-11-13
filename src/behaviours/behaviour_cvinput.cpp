@@ -238,5 +238,7 @@ extern bool debug_flag;
     }
 #endif
 
-    DeviceBehaviour_CVInput *behaviour_cvinput = new DeviceBehaviour_CVInput(); //(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>>*)nullptr, &ENABLE_BITBOX);
+    DeviceBehaviour_CVInput *behaviour_cvinput_1 = new DeviceBehaviour_CVInput("CV Pitch Input 1");
+    DeviceBehaviour_CVInput *behaviour_cvinput_2 = new DeviceBehaviour_CVInput("CV Pitch Input 2");
+    DeviceBehaviour_CVInput *behaviour_cvinput_3 = new DeviceBehaviour_CVInput("CV Pitch Input 3");
 #endif

@@ -130,7 +130,9 @@ void setup_behaviour_manager() {
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
         Serial.println(F("about to register behaviour_cvinput...")); Serial_flush();
-        behaviour_manager->registerBehaviour(behaviour_cvinput);
+        behaviour_manager->registerBehaviour(behaviour_cvinput_1);
+        behaviour_manager->registerBehaviour(behaviour_cvinput_2);
+        behaviour_manager->registerBehaviour(behaviour_cvinput_3);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 

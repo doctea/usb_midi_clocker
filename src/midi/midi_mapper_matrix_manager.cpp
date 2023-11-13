@@ -228,10 +228,12 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #endif
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
-        midi_matrix_manager->register_source(behaviour_cvinput, "CV input");
-        #ifdef ENABLE_CRAFTSYNTH
-            midi_matrix_manager->connect("CV input", "USB : CraftSynth : ch 1");
-        #endif
+        midi_matrix_manager->register_source(behaviour_cvinput_1, "CV input 1");
+        midi_matrix_manager->register_source(behaviour_cvinput_2, "CV input 2");
+        midi_matrix_manager->register_source(behaviour_cvinput_3, "CV input 3");
+        //#ifdef ENABLE_CRAFTSYNTH_USB
+        //    midi_matrix_manager->connect("CV input", "USB : CraftSynth : ch 1");
+        //#endif
     #endif
 
     #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)
