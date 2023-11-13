@@ -93,7 +93,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
         chord_instance_t last_chord_data;
 
         #ifdef DEBUG_VELOCITY
-            int8_t velocity = 127;
+            int8_t velocity = MIDI_MAX_VELOCITY;
         #endif
 
  
@@ -176,8 +176,6 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             return this->trigger_delay_ticks;
         }
 
-        //int8_t chord_held_notes[127];
-
         #ifdef ENABLE_SCREEN
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
@@ -207,7 +205,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             this->current_chord_data.clear();
             if (debug) Serial.println("---");
         }
-        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 127) {
+        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = MIDI_MAX_VELOCITY) {
             if (debug) Serial.printf("\t--- play_chord: playing chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
             if (is_playing_chord)
                 this->stop_chord(this->current_chord_data);
@@ -252,7 +250,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             this->last_note = this->current_note;
             this->current_note = 255;
         }
-        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
+        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = MIDI_MAX_VELOCITY, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
             if (this->is_playing)
                 this->stop_chord(this->current_chord_data);
 
@@ -304,9 +302,9 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                         trigger_off_for_pitch_because_changed(this->current_note);
                     }
                     if (this->get_note_length()>0) {
-                        int velocity = 127;
+                        int velocity = MIDI_MAX_VELOCITY;
                         if (this->velocity_input!=nullptr) {
-                            velocity = constrain(127.0*(float)this->velocity_input->get_normal_value(), 0, 127);
+                            velocity = constrain(((float)MIDI_MAX_VELOCITY)*(float)this->velocity_input->get_normal_value(), 0, MIDI_MAX_VELOCITY);
                             if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value());
                         }
 
@@ -393,11 +391,11 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             return false;
         }
 
+        bool already_initialised = false;
         //FLASHMEM 
         virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
-            static bool already_initialised = false;
-            if (already_initialised)
+            if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
 
             DeviceBehaviourUltimateBase::initialise_parameters();
