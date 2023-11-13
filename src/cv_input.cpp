@@ -143,8 +143,8 @@ FLASHMEM void setup_parameter_menu() {
     #endif*/
 
     //parameter_manager->addAllVoltageSourceMenuItems(menu);
-    menu->add_page("Input calibration");
-    parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu);
+    //menu->add_page("Input calibration");
+    parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu, true);
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
