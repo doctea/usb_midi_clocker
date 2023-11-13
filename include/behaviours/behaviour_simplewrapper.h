@@ -51,6 +51,24 @@ class Behaviour_SimpleWrapperUSB : public Behaviour_SimpleWrapper<BaseClass, Dev
 
 };
 
+template<class BaseClass>
+class Behaviour_SimpleWrapperSerial : public Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase> {
+    public:
+
+    /*Behaviour_SimpleWrapperSerial(
+        const char *label,
+        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device = nullptr, 
+        midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device = nullptr
+    ) : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase>(label, input_device!=nullptr, output_device!=nullptr) {
+        this->connect_device_input(input_device);
+        this->connect_device_output(output_device);
+    }    */
+
+    Behaviour_SimpleWrapperSerial(const char *label, bool receives_midi_notes = false, bool transmits_midi_notes = false) 
+    : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase>(label, receives_midi_notes, transmits_midi_notes) 
+    {}
+};
+
 /*
 class Behaviour_SimpleDividedClockedWrapper : public BaseClass, public DividedClockedBehaviour {}
 

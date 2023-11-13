@@ -23,17 +23,8 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual bool receives_midi_notes()  { return this->input_device!=nullptr; }
         virtual bool transmits_midi_notes() { return this->output_device!=nullptr; }
-        //char indicator_text[5];
         virtual const char *get_indicator() override;
 
-
-        /*DeviceBehaviourSerialBase (
-            midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *input_device, 
-            midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output_device
-        ) : DeviceBehaviourSerialBase () {
-            this->input_device = input_device;
-            this->output_device = output_device;
-        }*/
         bool connected_flag = false;
 
         virtual bool is_connected() override {
@@ -47,7 +38,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         //FLASHMEM
         virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
-            //if (!is_connected()) return;
+            if (device==nullptr) return;
 
             //if (this->debug) Serial.printf(F("DeviceBehaviourSerialBase#connect_device_output connecting device %p\n"), device);
             this->output_device = device;
@@ -59,6 +50,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
         }
         //FLASHMEM
         virtual void connect_device_input(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
+            if (device==nullptr) return;
             //if (!is_connected()) return;
 
             //device->begin(MIDI_CHANNEL_OMNI);

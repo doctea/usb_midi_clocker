@@ -131,6 +131,7 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
 
 
     #ifdef ENABLE_SCREEN
+        FLASHMEM
         virtual LinkedList<MenuItem *> *make_menu_items() override;
     #endif
 

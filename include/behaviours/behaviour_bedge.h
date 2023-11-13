@@ -5,7 +5,21 @@
 
 #include "Config.h"
 
-#ifdef ENABLE_BEHRINGER_EDGE_DEDICATED
+#ifdef ENABLE_BEHRINGER_EDGE_SERIAL
+
+#include "behaviours/behaviour_clocked.h"
+
+class DeviceBehaviour_Bedge_Serial : public DeviceBehaviourSerialBase, public DividedClockedBehaviour {
+    using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
+
+    public:
+        virtual const char *get_label() override {
+            return "BEdge";
+        }
+        virtual bool transmits_midi_notes() { return false; }
+};
+
+#elif defined(ENABLE_BEHRINGER_EDGE_DEDICATED)
 
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
