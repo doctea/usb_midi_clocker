@@ -25,10 +25,10 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
         return label;
     }
 
-    bool transmits_midi_notes() override {
+    virtual bool transmits_midi_notes() override {
         return this->can_transmit_midi_notes;
     }
-    bool receives_midi_notes() override {
+    virtual bool receives_midi_notes() override {
         return this->can_receive_midi_notes;
     }
    

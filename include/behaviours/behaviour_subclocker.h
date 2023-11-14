@@ -27,7 +27,7 @@ class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public Divided
         virtual const char *get_label() override {
             return "Subclocker";
         }
-        virtual bool transmits_midi_notes() { return true; }
+        virtual bool transmits_midi_notes() override { return true; }
 };
 
 extern DeviceBehaviour_Subclocker *behaviour_subclocker;

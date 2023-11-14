@@ -7,6 +7,10 @@
 class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
 
+        virtual bool transmits_midi_notes() override {
+            return true;
+        }
+
         bool new_bar = true;        // reset on new bar, so that we can pick up only the first note played
         bool drone_enabled = false; // whether or not drone is enabled
         int last_drone_note = NOTE_OFF;   // note that we should drone on

@@ -67,13 +67,14 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual bool receives_midi_notes()  { return false; }
     virtual bool transmits_midi_notes() { return false; }
+    virtual bool transmits_midi_clock() { return false; }
 
     // input/output indicator
     bool indicator_done = false;
-    char indicator_text[6];
+    char indicator_text[8];
     virtual const char *get_indicator() {
         if (!indicator_done) {
-            snprintf(indicator_text, 5, "%c%c", this->receives_midi_notes()?'I':' ', this->transmits_midi_notes()?'O':' ');
+            snprintf(indicator_text, 7, "%c%c%c", this->receives_midi_notes()?'I':' ', this->transmits_midi_notes()?'O':' ', this->transmits_midi_clock()?'C': ' ');
             indicator_done = true;
         }
         return indicator_text;

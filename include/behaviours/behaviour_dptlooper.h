@@ -15,6 +15,10 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
     public:
         int loop_type = loop_mode_t::ON_BAR;
 
+        virtual bool transmits_midi_clock() override {
+            return true;
+        }
+
         virtual const char *get_label() override {
             return (const char*)"DPT Looper";
         }

@@ -28,6 +28,10 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, public
             return (char*)"Neutron";
         }
 
+        virtual bool transmits_midi_notes() override {
+            return true;
+        }
+
         virtual void on_bar(int bar) override {
             MIDIBassBehaviour::on_bar(bar);
             ClockedBehaviour::on_bar(bar);

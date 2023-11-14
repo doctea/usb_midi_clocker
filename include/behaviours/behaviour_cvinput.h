@@ -103,10 +103,10 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
         #endif
 
  
-        byte channel = 0;
+        uint8_t channel = 0;
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
-            byte get_channel() { return channel; }
-            void set_channel(byte channel) { this->channel = channel; }
+            uint8_t get_channel() { return channel; }
+            void set_channel(uint8_t channel) { this->channel = channel; }
         #endif
 
         bool quantise = false, play_chords = false;
@@ -192,7 +192,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             this->stop_chord(chord.chord_root, chord.chord_type, chord.inversion, chord.velocity);
         }
 
-        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 0) {
+        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, uint8_t velocity = 0) {
             if (debug) Serial.printf("\t---\nstop_chord: Stopping chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
 
             //int8_t n = -1;
@@ -211,7 +211,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             this->current_chord_data.clear();
             if (debug) Serial.println("---");
         }
-        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = MIDI_MAX_VELOCITY) {
+        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, uint8_t velocity = MIDI_MAX_VELOCITY) {
             if (debug) Serial.printf("\t--- play_chord: playing chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
             if (is_playing_chord)
                 this->stop_chord(this->current_chord_data);
@@ -236,7 +236,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             if (debug) Serial.println("---");
         }
 
-        virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
+        virtual void trigger_off_for_pitch_because_length(int8_t pitch, uint8_t velocity = MIDI_MIN_VELOCITY) {
             // don't reset current_note so that we don't retrigger the same note again immediately
             if (is_playing_chord) //is_quantise()) 
                 this->stop_chord(this->current_chord_data);
@@ -246,7 +246,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             is_playing = false;
             this->last_note = pitch;
         }
-        virtual void trigger_off_for_pitch_because_changed(int8_t pitch, byte velocity = 0) {
+        virtual void trigger_off_for_pitch_because_changed(int8_t pitch, uint8_t velocity = MIDI_MIN_VELOCITY) {
             if (is_playing_chord) //is_quantise())
                 this->stop_chord(this->current_chord_data);
             else
@@ -256,7 +256,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             this->last_note = this->current_note;
             this->current_note = 255;
         }
-        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = MIDI_MAX_VELOCITY, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
+        virtual void trigger_on_for_pitch(int8_t pitch, uint8_t velocity = MIDI_MAX_VELOCITY, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
             if (this->is_playing)
                 this->stop_chord(this->current_chord_data);
 

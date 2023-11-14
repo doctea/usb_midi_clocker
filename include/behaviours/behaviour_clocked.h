@@ -18,6 +18,10 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
             return false;
         }
 
+        virtual bool transmits_midi_clock() override {
+            return true;
+        }
+
         virtual void send_clock(uint32_t ticks) override {
             if (!is_connected()) return;
             this->sendRealTime(midi::Clock);
