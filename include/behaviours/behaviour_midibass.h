@@ -182,7 +182,6 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
             //MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-            //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviourUltimateBase, int>("octave", "MIDI Bass", this, nullptr, nullptr, nullptr, &DeviceBehaviourUltimateBase::setForceOctave, &DeviceBehaviourUltimateBase::getForceOctave));
             this->saveable_parameters->add(new LSaveableParameter<bool>("drone", "MIDI Bass", &this->drone_enabled, [=](bool v) { this->set_drone(v); }, [=]() -> bool { return this->is_drone(); }));
             this->saveable_parameters->add(new LSaveableParameter<int8_t>("machinegun", "MIDI Bass", &this->machinegun, [=](int8_t v) { this->set_machinegun(v); }, [=]() -> int8_t { return this->get_machinegun();} ));
         }

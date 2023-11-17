@@ -340,7 +340,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         Serial.printf("%02x ", data[i]);
                     }
                     Serial.print("] ");
-                    Serial.print(complete? "complete" : "incomplete");
+                    Serial.print(complete ? "complete" : "incomplete");
                     Serial.println();
                 }
                 #define BROAD_POS 8
@@ -366,15 +366,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DividedClockedBehaviour::setup_saveable_parameters();
 
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    /*saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(
-                        sysex_parameters[i].label,
-                        "Sysex",
-                        this,
-                        sysex_parameters[i].target_variable, 
-                        nullptr,
-                        nullptr,
-                        sysex_parameters[i].setter_func
-                    ));*/
                     saveable_parameters->add(new LSaveableParameter<int8_t>(
                         sysex_parameters[i].label,
                         "Sysex",
@@ -389,42 +380,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     ));
                 }                    
             }
-
-            /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {   
-                DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-                DividedClockedBehaviour::save_sequence_add_lines(lines);
-
-                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    if (!sysex_parameters[i].enable_recall) continue;
-                    if (sysex_parameters[i].target_variable==nullptr) continue;
-                    //Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
-
-                    String line =   String(sysex_parameters[i].label) + 
-                                    String("=") + 
-                                    String(*sysex_parameters[i].target_variable);
-                    //Serial.printf("Beatstep#save_sequence_add_lines got line: %s\n", line.c_str());
-                    lines->add(line);
-                }
-            }
-            virtual bool load_parse_key_value(String key, String value) override {
-                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    if (!sysex_parameters[i].enable_recall) 
-                        continue;
-                    if (key.equals(sysex_parameters[i].label)) {
-                        if (sysex_parameters[i].setter_func==nullptr) 
-                            break;
-                        (this->*sysex_parameters[i].setter_func)(value.toInt()); 
-                        return true;
-                    }
-                }
-                if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
-                    return true;
-                } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
-                    return true;
-                } 
-                return false;
-            }*/
-
         #endif
 
         #ifdef ENABLE_SCREEN

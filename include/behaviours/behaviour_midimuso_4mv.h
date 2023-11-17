@@ -6,16 +6,11 @@
 
 #ifdef ENABLE_MIDIMUSO_4MV
 
-//#include "behaviours/behaviour_base.h";
-//class DeviceBehaviourUltimateBase;
-
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_base_serial.h"
 #include "behaviours/behaviour_simplewrapper.h"
 
 #include "behaviour_midibass.h"
-
-//extern Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase> *behaviour_midimuso_4mv;
 
 class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBassBehaviour, public virtual DividedClockedBehaviour {
     public:
@@ -24,9 +19,6 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
     using DividedClockedBehaviour::send_clock;
 
     Behaviour_MIDIMuso_4MV () : DeviceBehaviourSerialBase () {
-        /*for (int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
-            playing_notes[i] = NOTE_OFF;
-        }*/
         this->TUNING_OFFSET = -3;   // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
     }
 
@@ -65,7 +57,6 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
-        //this->debug = true;
         if (channel==5) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(-1);
@@ -80,12 +71,10 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
             //DeviceBehaviourSerialBase::sendNoteOn(note, velocity, channel);
             MIDIBassBehaviour::sendNoteOn(note, velocity, channel);
         }
-        //this->debug = false;
     }
 
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
-        //this->debug = true;
         if (channel==5) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(note);
@@ -103,7 +92,6 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
             //DeviceBehaviourSerialBase::sendNoteOff(note, velocity, channel);
             MIDIBassBehaviour::sendNoteOff(note, velocity, channel);
         }
-        //this->debug = false;
     }
 
     virtual void setup_saveable_parameters() override {
@@ -117,7 +105,6 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) -> void { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) -> void { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }));
     }
-
 
     #ifdef ENABLE_SCREEN
         FLASHMEM

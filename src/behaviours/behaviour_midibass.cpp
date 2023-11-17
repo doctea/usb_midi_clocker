@@ -27,7 +27,6 @@
 
         SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(F(" MIDI FX"))).c_str());
 
-        //TODO: see commented-out section in DeviceBehaviour_Neutron
         LambdaToggleControl *drone_bass = new LambdaToggleControl (
             "Drone",
             [=](bool v) -> void { this->set_drone(v); },
@@ -49,16 +48,8 @@
         menuitems->add(bar);
 
         #ifdef DEBUG_MIDIBASS
-            /*menuitems->add(new MIDIOutputWrapperDebugMenuItem(
-                "Incoming?",
-                //midi_matrix_manager->get_target_for_id(this->target_id)
-                //midi_matrix_manager->get_source
-            ));*/
-
             menuitems->add(new MIDIOutputWrapperDebugMenuItem(
-                "Outgoing?",
-                //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")
-                //test_wrapper
+                "Incoming MIDI",
                 midi_matrix_manager->get_target_for_id(this->target_id)
             ));
         #endif

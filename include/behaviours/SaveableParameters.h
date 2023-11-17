@@ -217,10 +217,6 @@ class LSaveableParameter : virtual public SaveableParameterBase {
 
         using setter_func_def = vl::Func<void(DataType)>;
         using getter_func_def = vl::Func<DataType(void)>;
-        /*using is_recall_enabled_func_def = vl::Func<bool(void)>;
-        using is_save_enabled_func_def = vl::Func<bool(void)>;
-        using set_recall_enabled_func_def = vl::Func<void(bool)>;
-        using set_save_enabled_func_def = vl::Func<void(bool)>;*/
 
         setter_func_def setter_func = [=](DataType v) -> void { 
             if (variable!=nullptr) 
@@ -231,12 +227,6 @@ class LSaveableParameter : virtual public SaveableParameterBase {
                 return *this->variable; 
             return (DataType) 0; 
         };
-        /*is_recall_enabled_func_def  is_recall_enabled_func  = [this]() -> bool { return SaveableParameterBase::is_recall_enabled(); };
-        is_save_enabled_func_def    is_save_enabled_func    = [this]() -> bool { return SaveableParameterBase::is_save_enabled(); };
-        set_recall_enabled_func_def set_recall_enabled_func = [this](bool v) { SaveableParameterBase::set_recall_enabled(v); };
-        set_save_enabled_func_def   set_save_enabled_func   = [this](bool v) { SaveableParameterBase::set_save_enabled(v); };*/
-
-        //bool getter_setter_enabled = false;
 
         LSaveableParameter(
             const char *label,
@@ -259,32 +249,9 @@ class LSaveableParameter : virtual public SaveableParameterBase {
             DataType *variable,
             setter_func_def setter_func,
             getter_func_def getter_func
-            //bool *variable_recall_enabled = nullptr,
-            //bool *variable_save_enabled = nullptr
-            /*,
-            setter_func_def setter_func = [=](DataType v) -> void { set(v); },
-            getter_func_def getter_func = [=]() -> DataType { return this->get(); },
-            is_recall_enabled_func_def is_recall_enabled_func = [=]() -> bool { return SaveableParameterBase::is_recall_enabled(); },
-            is_save_enabled_func_def is_save_enabled_func = [=]() -> bool { return SaveableParameterBase::is_save_enabled(); },
-            set_recall_enabled_func_def set_recall_enabled_func = [=](bool v) { SaveableParameterBase::set_recall_enabled(v); },
-            set_save_enabled_func_def set_save_enabled_func = [=](bool v) { SaveableParameterBase::set_save_enabled(v); }*/
-        ) : LSaveableParameter(label, category_name, variable, setter_func)//, //, variable_recall_enabled, variable_save_enabled), 
-            //variable(variable), 
-            //setter_func(setter_func), 
-            //getter_func(getter_func)
-            /*,
-            is_recall_enabled_func(is_recall_enabled_func), 
-            is_save_enabled_func(is_save_enabled_func),
-            set_recall_enabled_func(set_recall_enabled_func),
-            set_save_enabled_func(set_save_enabled_func)*/
+        ) : LSaveableParameter(label, category_name, variable, setter_func)
         {
             this->getter_func = getter_func;
-            //this->getter_setter_enabled = true;
-            /*if (variable_recall_enabled==nullptr)
-                variable_recall_enabled = &this->recall_enabled;
-            if (variable_save_enabled==nullptr) {
-                variable_save_enabled = &this->save_enabled;
-            }*/
         }
 
         /*virtual bool is_recall_enabled () override {
@@ -302,25 +269,10 @@ class LSaveableParameter : virtual public SaveableParameterBase {
 
         virtual DataType get() {
             return this->getter_func();
-
-            /*if (variable!=nullptr) 
-                return *variable; 
-            else 
-                return (DataType) 0;*/
         }
 
         virtual String get_line() {
             return String(this->label) + String('=') + String(this->getter_func());
-            /*if (this->target!=nullptr && this->getter_func!=nullptr) {
-                //Serial.printf("%s#get_line has target and getter func..", this->label );
-                return String(this->label) + String('=') + String((this->target->*getter_func)());
-            } else if (this->variable!=nullptr) {
-                //Serial.printf("%s#get_line has target variable..", this->label);
-                return String(this->label) + String('=') + String(*this->variable);
-            } else {
-                //Serial.printf("%s#get_line has neither target nor getter func!", this->label);
-                return String("; ") + String(this->label) + warning_label;
-            }*/
         }
         virtual bool parse_key_value(String key, String value) {
             if (key.equals(this->label)) {
@@ -331,30 +283,12 @@ class LSaveableParameter : virtual public SaveableParameterBase {
         }
         // todo: rewrite to use constexpr?
         void setInt(String value) {
-            /*if (setter_func!=nullptr)
-                (this->target->*setter_func)(value.toInt());
-            else if (variable!=nullptr)
-                *this->variable = value.toInt();*/
             this->setter_func(value.toInt());
         }
-        /*void setInt(int value) {
-            if (setter_func!=nullptr)
-                (this->target->*setter_func)(value);
-            else if (variable!=nullptr)
-                *this->variable = value;
-        }*/
         void setBool(bool value) {
-            /*if (setter_func!=nullptr)
-                (this->target->*setter_func)(value);
-            else if (variable!=nullptr)
-                *this->variable = value;*/
             this->setter_func(value);
         }
         void setFloat(float value) {
-            /*if (setter_func!=nullptr)
-                (this->target->*setter_func)(value);
-            else if (variable!=nullptr)
-                *this->variable = value;*/
             this->setter_func(value);
         }
         virtual void set(signed int, String value) {

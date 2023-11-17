@@ -1,6 +1,3 @@
-// note: as of 2022-02-17, requires https://github.com/felis/USB_Host_Shield_2.0/pull/438 to be applied to the USB_Host_Shield_2.0 library if using Arturia Beatstep, otherwise it won't receive MIDI data or clock!
-// proof of concept for syncing multiple USB Midi devices wit
-
 #if defined(__arm__) && defined(CORE_TEENSY)
   //#define byte uint8_t
   #define F(X) X
@@ -122,7 +119,6 @@ void setup() {
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
-  // TODO: have the behaviours add their menu items
   Serial.println(F("..USB device handler.."));
   setup_behaviour_manager();
   Serial.printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
@@ -141,7 +137,6 @@ void setup() {
 
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");
   tft_print("Git info: " COMMIT_INFO "\n");
-
 
   #ifdef ENABLE_CV_OUTPUT
     tft_print((char*)"Setting up CV gates..\n");
@@ -162,7 +157,6 @@ void setup() {
   storage::setup_storage();
   Debug_printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
 
-
   tft_print((char*)"..setup project..\n");
   project->setup_project();
   Debug_printf(F("after setup_project(), free RAM is %u\n"), freeRam());
@@ -174,7 +168,6 @@ void setup() {
   setup_parameters();
   Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
   #ifdef ENABLE_SCREEN
-    //menu->add_page("Parameter Inputs");
     setup_parameter_menu();
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
@@ -337,7 +330,6 @@ void loop() {
   if (!playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
     // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
     #ifdef ENABLE_SCREEN
-      //tft_update(ticks);
       ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
       bool screen_was_drawn = false;
@@ -365,8 +357,6 @@ void loop() {
     #endif
   }
 
-  //read_midi_serial_devices();
-  //loop_midi_serial_devices();
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
     behaviour_manager->do_reads();
@@ -468,8 +458,6 @@ void do_tick(uint32_t in_ticks) {
   #ifdef ENABLE_DRUM_LOOPER
     drums_loop_track.process_tick(ticks);
   #endif
-
-  //send_midi_serial_clocks();
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
   behaviour_manager->send_clocks();
