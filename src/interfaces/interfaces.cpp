@@ -50,14 +50,14 @@ GateManager *gate_manager = new GateManager();
         int remap_clocks[num_gates] = { 2, 5, 3, 6, 4, 7, 1, 0 };
         gate_manager->add_bank_interface(BANK_SEQ, 
             new VirtualRemapBankInterface(                              // remap the output-gate mappings because
-                new VirtualBankInterface(mcp_interface, 0, num_gates),  // use outputs 0-7 of underlying MCP object
-                remap_clocks, 
+                new VirtualBankInterface(mcp_interface, 0, num_gates, true)  // use outputs 0-7 of underlying MCP object
+                , remap_clocks, 
                 num_gates
             )
         );
         
         // use outputs 8-15 of the underlying MCP object, and reverse them
-        gate_manager->add_bank_interface(BANK_CLOCK,   new VirtualBankInterface(mcp_interface, num_gates, num_gates, true));
+        gate_manager->add_bank_interface(BANK_CLOCK,   new VirtualBankInterface(mcp_interface, num_gates, num_gates, false));
         
         Serial.println("returning from setup_gate_manager().");
     }

@@ -50,7 +50,9 @@ class VirtualRemapBankInterface : public BankInterface {
         virtual bool check_gate(int gate_number) override {
             return this->underlying->check_gate(this->remap_pins[gate_number]);
         }
-        virtual void update() override {}
+        virtual void update() override {
+            underlying->update();
+        }
 };
 
 // use one underlying BankInterface partitioned into two (or more)
@@ -89,7 +91,9 @@ class VirtualBankInterface : public BankInterface {
             //digitalWrite(pin_numbers[gate_number], state);
             return underlying->check_gate(gate_number+gate_offset);
         }
-        virtual void update() override {}
+        virtual void update() override {
+            underlying->update();
+        }
 };
 
 // standard Arduino GPIO pinMode/digitalWrite
@@ -136,8 +140,10 @@ class DigitalPinBankInterface : public BankInterface {
         };
 };
 
-class Menu;
-class MenuItem;
+#ifdef ENABLE_SCREEN
+    class Menu;
+    class MenuItem;
+#endif
 
 class GateManager {
     public:

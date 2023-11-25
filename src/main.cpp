@@ -294,9 +294,9 @@ void loop() {
   #endif
 
   if (debug_flag) { Serial.println(F("about to Usb.Task()")); Serial_flush(); }
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     Usb.Task();
-  }
+  //}
   if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
@@ -356,6 +356,8 @@ void loop() {
         parameter_manager->throttled_update_cv_input(false, TIME_BETWEEN_CV_INPUT_UPDATES);
     #endif
   }
+
+  gate_manager->update();
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
@@ -469,11 +471,13 @@ void do_tick(uint32_t in_ticks) {
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
     update_cv_outs(in_ticks);
     if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
+    //gate_manager->update();
   #endif
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
   behaviour_manager->do_ticks(in_ticks);
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
+
 
   /*
   // done doesn't end properly for usb behaviours if do_end_bar here!
