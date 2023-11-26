@@ -26,9 +26,9 @@
 
 //#define MAX_INPUT_VOLTAGE_24V 10.0
 
-FLASHMEM 
+//FLASHMEM 
 void setup_cv_input();
-FLASHMEM
+//FLASHMEM
 void setup_parameters();
 #ifdef ENABLE_SCREEN
 void setup_parameter_menu();

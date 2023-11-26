@@ -357,7 +357,9 @@ void loop() {
     #endif
   }
 
-  gate_manager->update();
+  // only update here if paused, so that we can still see effect of manual updating of gates etc
+  if (!playing)
+    gate_manager->update();
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
@@ -471,7 +473,7 @@ void do_tick(uint32_t in_ticks) {
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
     update_cv_outs(in_ticks);
     if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
-    //gate_manager->update();
+    gate_manager->update();
   #endif
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }

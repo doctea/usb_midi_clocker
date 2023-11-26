@@ -21,19 +21,19 @@
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
 // initialise the voltage-reading hardware/libraries and the ParameterManager
-FLASHMEM
+//FLASHMEM
 void setup_cv_input() {
-    Serial.println("setup_cv_input...");
+    //Serial.println("setup_cv_input...");
     tft_print("...setup_cv_input...\n");
 
     parameter_manager->init();
 
     #ifdef ENABLE_CV_INPUT
-        tft_print("...adding ADCPimoroni24v #1!!!\n");
+        tft_print("...adding ADCPimoroni24v #1!\n");
         parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, 5.0));
     #endif
     #ifdef ENABLE_CV_INPUT_2
-        tft_print("...adding ADCPimoroni24v #2!!!\n");
+        tft_print("...adding ADCPimoroni24v #2!\n");
         parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT_2, 5.0));
     #endif
 
@@ -43,9 +43,9 @@ void setup_cv_input() {
 }
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
-FLASHMEM 
+//FLASHMEM 
 void setup_parameters() {
-    Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
+    //Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
     //tft_print("..setup_parameters...");
 
     // initialise the voltage source inputs
@@ -101,7 +101,8 @@ void setup_parameters() {
 
 #ifdef ENABLE_SCREEN
 // set up the menus to provide control over the ParameterInputs and VoltageSources
-FLASHMEM void setup_parameter_menu() {
+//FLASHMEM 
+void setup_parameter_menu() {
     Serial.println(F("==== setup_parameter_menu starting ===="));
     Serial.println(F("Adding ParameterSelectorControls for available_inputs..."));
     // ask ParameterManager to add all the menu items for the ParameterInputs

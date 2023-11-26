@@ -16,14 +16,14 @@
 class BankInterface {
     public:
 
-    int num_gates = 8;
+    uint_least8_t num_gates = 8;
     bool dirty = true;
 
     virtual void set_gate(int gate, bool state) = 0;
     virtual void update() = 0;
     virtual bool check_gate(int gate_number) = 0;
     virtual void stop_all_gates() {
-        for (int i = 0 ; i < num_gates ; i++) {
+        for (uint_least8_t i = 0 ; i < num_gates ; i++) {
             this->set_gate(i, false);
         }
     }
@@ -38,7 +38,7 @@ class VirtualRemapBankInterface : public BankInterface {
         VirtualRemapBankInterface(BankInterface *iface, int *remap_pins, int pin_count) {
             this->pin_count = pin_count;
             this->remap_pins = (int*)calloc(pin_count, sizeof(int));
-            for (int i = 0 ; i < pin_count ; i++) {
+            for (uint_least8_t i = 0 ; i < pin_count ; i++) {
                 this->remap_pins[i] = remap_pins[i];
             }
             this->underlying = iface;
@@ -59,7 +59,7 @@ class VirtualRemapBankInterface : public BankInterface {
 class VirtualBankInterface : public BankInterface {
     public:
         BankInterface *underlying = nullptr;
-        int gate_offset = 0;
+        int_least8_t gate_offset = 0;
         bool reverse = false;   // reverse the order of the gate-output mapping
 
         VirtualBankInterface(BankInterface *iface, int gate_offset, int num_gates, bool reverse = false) {
@@ -100,7 +100,7 @@ class VirtualBankInterface : public BankInterface {
 // note INPUT mode is completely untested!
 class DigitalPinBankInterface : public BankInterface {
     public:
-        int num_gates = 8;
+        uint_least8_t num_gates = 8;
         bool *current_states = nullptr;
         byte mode = OUTPUT;
 
@@ -110,7 +110,7 @@ class DigitalPinBankInterface : public BankInterface {
             this->mode = mode;
             num_gates = num_pins;
             //memcpy(this->pin_numbers, pin_numbers, sizeof(uint8_t)*num_pins);
-            for (int i = 0 ; i < num_pins ; i++) {
+            for (uint_least8_t i = 0 ; i < num_pins ; i++) {
                 this->pin_numbers[i] = pin_numbers[i];
                 pinMode(pin_numbers[i], mode);
             }
@@ -147,7 +147,7 @@ class DigitalPinBankInterface : public BankInterface {
 
 class GateManager {
     public:
-    int num_banks = 0;
+    uint_least8_t num_banks = 0;
 
     // TODO: handle more than 2 banks... currently expects two, BANK_CLOCK and BANK_SEQ
     BankInterface *banks[NUM_GATE_BANKS] = { nullptr, nullptr };
@@ -197,7 +197,7 @@ class GateManager {
     // panic turn off all gates
     void stop_all_gates() {
         Serial.println("stop all gates!");
-        for (int b = 0 ; b < num_banks ; b++) {
+        for (uint_least8_t b = 0 ; b < num_banks ; b++) {
             this->banks[b]->stop_all_gates();
         }
     }
