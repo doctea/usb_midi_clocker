@@ -112,18 +112,19 @@ void set_sequence_gate(int gate_number, bool state) {
 
     #include "mymenu/menu_gatedisplay.h"
     void GateManager::create_controls(Menu *menu) {
-        menu->select_page(2);   // since we do this later in the process, move back to the second page ('Sequencer') to add these items
-
+        menu->select_page(2);   // since we only call create_controls later in the setup process, we need to move back to the second page ('Sequencer') to add these items
         menu->add(new GatesDisplay("Gates"));
+
+        byte gate_count = 0;
 
         char label[MENU_C_MAX];
         for (int bank = 0 ; bank < this->num_banks ; bank++) {
-            snprintf(label, MENU_C_MAX, "Bank %i", bank);
+            snprintf(label, MENU_C_MAX, "Bank %i: %s", bank, bank==BANK_CLOCK ? "Clocks" : "Sequences");
             ObjectMultiToggleControl *gate_toggles = new ObjectMultiToggleControl(label, true);
 
             for (int gate = 0 ; gate < this->banks[bank]->num_gates ; gate++) {
                 //snprintf(label, MENU_C_MAX, "G%2i", gate);
-                gate_toggles->addItem(new GateMultiToggleItem(gate_labels[(bank*num_banks)+gate], bank, gate));
+                gate_toggles->addItem(new GateMultiToggleItem(gate_labels[gate_count++], bank, gate));
             }
             menu->add(gate_toggles);
         }

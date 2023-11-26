@@ -139,7 +139,7 @@ void setup_midi_mapper_matrix_manager() {
         behaviour_midimuso_4mv->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 3", behaviour_midimuso_4mv, 3));
         behaviour_midimuso_4mv->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 4", behaviour_midimuso_4mv, 4));
         behaviour_midimuso_4mv->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Auto",  behaviour_midimuso_4mv, 5));
-        midi_matrix_manager->get_target_for_id(behaviour_midimuso_4mv->target_id)->debug = true;
+        //midi_matrix_manager->get_target_for_id(behaviour_midimuso_4mv->target_id)->debug = true;
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
