@@ -28,9 +28,12 @@ const char *DeviceBehaviourSerialBase::get_indicator() {
     //FLASHMEM
     LinkedList<MenuItem*> *DeviceBehaviourSerialBase::make_menu_items_device() {
         String midi_info = "[MIDI DIN device]";
-        if (this->transmits_midi_notes() || this->receives_midi_notes()) {
-            midi_info = (receives_midi_notes() ? "MIDI in: "    + String(this->input_midi_number+1)    + " "    : "") + 
-                        (transmits_midi_notes()? "MIDI out: "   + String(this->output_midi_number+1)            : " ");
+        if (this->transmits_midi_notes() || this->receives_midi_notes() || this->transmits_midi_clock()) {
+            midi_info = (receives_midi_notes()  ? "MIDI in: "    + String(this->input_midi_number+1)    + " "    : "") + 
+                        ((transmits_midi_notes() || transmits_midi_clock())
+                                                ? "MIDI out: "   + String(this->output_midi_number+1)            : " ")
+                        //+ (transmits_midi_clock() ? "(with clock)" : "")                                                
+                        ;
         }
         this->menuitems->add(new FixedSizeMenuItem(midi_info.c_str(), 0));
         
