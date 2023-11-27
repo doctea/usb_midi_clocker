@@ -4,12 +4,15 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_APCMINI
+
 #include "behaviours/behaviour_base_usb.h"
 #include "midi/midi_apcmini.h"
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 #include "midi/midi_looper.h"
 
 #include "midi/midi_apcmini_display.h"
@@ -38,7 +41,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         virtual const char *get_label() override {
             return "APCMini";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         bool apcmini_shift_held = false;
 
@@ -99,7 +102,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     global_on_restart();
                 
                 //playing = !playing;
-                clock_set_playing(!playing);
+                if (playing)
+                    clock_stop();
+                else
+                    clock_continue();
 
             #ifdef ENABLE_LOOPER
                 } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
@@ -275,4 +281,5 @@ void apcmini_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue
 void apcmini_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
+#endif
 #endif

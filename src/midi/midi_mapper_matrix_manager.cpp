@@ -16,12 +16,15 @@
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
 #include "behaviours/behaviour_dptlooper.h"
+#include "behaviours/behaviour_midimuso_4pv.h"
+#include "behaviours/behaviour_midimuso_4mv.h"
 
 #include "behaviours/behaviour_microlidian.h"
 
 #include "behaviours/behaviour_cvinput.h"
 
 #include "behaviours/behaviour_opentheremin.h"
+#include "behaviours/behaviour_midibassproxy.h"
 
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
@@ -39,13 +42,13 @@ MIDIMatrixManager* MIDIMatrixManager::getInstance() {
 
 source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle) {
     if (loop_track==nullptr) return -1;
-    strcpy(sources[sources_count].handle, handle);
+    strncpy(sources[sources_count].handle, handle, LANGST_HANDEL_ROUT);
     loop_track->source_id = sources_count;
     return sources_count++;
 }
 source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
     if (device==nullptr) return -1;
-    strcpy(sources[sources_count].handle, handle);
+    strncpy(sources[sources_count].handle, handle, LANGST_HANDEL_ROUT);
     device->source_id = sources_count;
     return sources_count++;
 }
@@ -60,39 +63,53 @@ void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char 
 }
 
 // initialise the output pointers, initialise the outputs and assign them to their defaults
-FLASHMEM void setup_midi_mapper_matrix_manager() {
-    Serial.println(F("##### setup_midi_mapper_matrix_manager..")); Serial_flush();
+//FLASHMEM 
+void setup_midi_mapper_matrix_manager() {
+    //Serial.println(F("##### setup_midi_mapper_matrix_manager..")); Serial_flush();
     midi_matrix_manager = MIDIMatrixManager::getInstance();
 
     // first, add all the output options that will exist
 
-    #ifdef ENABLE_BITBOX
+    #ifdef ENABLE_BITBOX    
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
     #endif
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : unused : ch 1", midi_out_serial[1], 1));
+    #ifdef ENABLE_MAMMB33
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : MAM MB33 : ch 1", &ENABLE_MAMMB33, 1)); // for MB33
+    #else 
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : MIDIOUT : ch 1", midi_out_serial[1], 1)); // for MB33
+    #endif
+    //midi_matrix_manager->get_target_for_handle("S2 : unused : ch 1")->always_force_stop_all = true; // mb33 doesn't seem to wanna respect stop all notes message?
+    /*#ifdef ENABLE_MAM
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : unused : ch4", midi_out_serial[2], 4));
+    #endif*/
     #ifdef ENABLE_NEUTRON
         behaviour_neutron->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : Neutron : ch 4", behaviour_neutron, 4));
+        #ifdef DEFAULT_NEUTRON_OCTAVE
+            //behaviour_neutron->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
+            if (DEFAULT_NEUTRON_OCTAVE>=0) {
+                behaviour_neutron->setLowestNote(DEFAULT_NEUTRON_OCTAVE * 12);
+                behaviour_neutron->setHighestNote((1+DEFAULT_NEUTRON_OCTAVE) * 12);
+                behaviour_neutron->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+                behaviour_neutron->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+            }
+        #endif
+        //behaviour_neutron->debug = true;
+        //behaviour_neutron->test_wrapper = midi_matrix_manager->get_target_for_id(behaviour_neutron->target_id);
     #endif
+
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
     #endif
+            
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : MIDIOUT : ch 1", midi_out_serial[4], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : MIDIOUT : ch 1", midi_out_serial[5], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : MIDIOUT : ch 1", midi_out_serial[6], 1));
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : MIDIOUT : ch 1", midi_out_serial[7], 1));
 
-    /*midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : DPT : ch 1", midi_out_serial[4], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : DPT : ch 1", midi_out_serial[5], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : DPT : ch 1", midi_out_serial[6], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : DPT : ch 1", midi_out_serial[7], 1));*/
     #ifdef ENABLE_DPT_LOOPER
         behaviour_dptlooper->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
-    #endif
-
-    //MIDIOutputWrapper("Serial 4 [unused ch1]", midi_out_serial[3], 1),
-    //MIDIOutputWrapper("Serial 5 [unused ch1]", midi_out_serial[4], 1),
-    //MIDIOutputWrapper("Serial 6 [unused ch1]", midi_out_serial[5], 1),
-
-    #ifdef DEFAULT_NEUTRON_OCTAVE
-        midi_matrix_manager->get_target_for_handle((char*)"S3 : Neutron : ch 4")->setForceOctave(DEFAULT_NEUTRON_OCTAVE);
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_OUTPUT)
@@ -110,6 +127,19 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_DRUMKIT
         //drumkit_source_id = midi_matrix_manager->register_source("drumkit");
         midi_matrix_manager->register_source(behaviour_drumkit, "drumkit");
+    #endif
+
+    #ifdef ENABLE_MIDIMUSO_4PV
+        behaviour_midimuso_4pv->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMUSO-PV", (DeviceBehaviourUltimateBase *)behaviour_midimuso_4pv, (byte)1, (int8_t)4));
+    #endif
+
+    #ifdef ENABLE_MIDIMUSO_4MV
+        behaviour_midimuso_4mv->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 1", behaviour_midimuso_4mv, 1));
+        behaviour_midimuso_4mv->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 2", behaviour_midimuso_4mv, 2));
+        behaviour_midimuso_4mv->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 3", behaviour_midimuso_4mv, 3));
+        behaviour_midimuso_4mv->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Out 4", behaviour_midimuso_4mv, 4));
+        behaviour_midimuso_4mv->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("MIDIMuso-4MV Auto",  behaviour_midimuso_4mv, 5));
+        //midi_matrix_manager->get_target_for_id(behaviour_midimuso_4mv->target_id)->debug = true;
     #endif
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
@@ -170,7 +200,7 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_LOOPER
         midi_matrix_manager->register_source(&midi_loop_track, "loop_track_1");
         midi_matrix_manager->register_target(&midi_loop_track, "loop_track_1");
-        midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch3");
+        midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch 3");
         #ifdef ENABLE_MPK49
             midi_matrix_manager->connect(behaviour_mpk49,           "loop_track_1");
         #endif
@@ -188,23 +218,49 @@ FLASHMEM void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_MICROLIDIAN
         behaviour_microlidian->source_id     = midi_matrix_manager->register_source("ulidian ch10");
         behaviour_microlidian->source_id_2   = midi_matrix_manager->register_source("ulidian ch1");
+        //behaviour_microlidian->target_id     = midi_matrix_manager->register_target(behaviour_microlidian, "ulidian ch10");
+        /*#ifdef ENABLE_DRUMKIT
+            // TODO: connect drumkit input to ulidian output
+            midi_matrix_manager->connect(behaviour_drumkit, "ulidian ch10");
+        #endif*/
         #ifdef ENABLE_BAMBLE
             midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
         #endif
     #endif
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
-        midi_matrix_manager->register_source(behaviour_cvinput, "CV input");
-        #ifdef ENABLE_CRAFTSYNTH
-            midi_matrix_manager->connect("CV input", "USB : CraftSynth : ch 1");
-        #endif
+        midi_matrix_manager->register_source(behaviour_cvinput_1, "CV input 1");
+        midi_matrix_manager->register_source(behaviour_cvinput_2, "CV input 2");
+        midi_matrix_manager->register_source(behaviour_cvinput_3, "CV input 3");
+        //#ifdef ENABLE_CRAFTSYNTH_USB
+        //    midi_matrix_manager->connect("CV input", "USB : CraftSynth : ch 1");
+        //#endif
     #endif
 
     #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)
         midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");
     #endif
 
-    Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
+    // set up 'Bass Proxy' behaviour
+    midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
+    MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
+    behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
+
+    // connect default mappings
+    #ifdef ENABLE_MAMMB33
+        midi_matrix_manager->connect("Bass Proxy", "S2 : MAM MB33 : ch 1");
+    #else
+        midi_matrix_manager->connect("Bass Proxy", "S2 : MIDIOUT : ch 1");
+    #endif
+    #ifdef ENABLE_BEATSTEP
+        midi_matrix_manager->connect("beatstep", "Bass Proxy");
+    #endif
+    #ifdef DEBUG_MIDIBASS
+        behaviour_midibassproxy->debug = wrapper->debug = true; // debug switch for machinegun not working?!
+    #endif
+    midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);  // don't allow it to connect to itself
+
+    //Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
     //while(1);
 }
 

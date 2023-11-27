@@ -8,7 +8,7 @@
 
 #include "menuitems.h"
 
-class MidiMatrixSelectorControl : public SelectorControl<int> {
+class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
@@ -115,6 +115,10 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
         bool opened_on_target = opened && selected_source_index>=0;
         const source_id_t relevant_source_id = opened_on_source ? selected_value_index : selected_source_index;
 
+        // for remembering the lowest we go on screen
+        int lowest_y = pos.y;
+
+        // render MIDI sources (left-hand column)
         for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
             const bool is_current_value_selected = source_id==current_value;
             int col = is_current_value_selected ? GREEN : C_WHITE;
@@ -125,6 +129,7 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
             tft->println();
             source_position[source_id] = tft->getCursorY() - (tft->getRowHeight()/2);
         }
+        lowest_y = tft->getCursorY();
 
         // position cursor ready to draw targets
         tft->setCursor(0, pos.y);
@@ -140,6 +145,7 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
         }
 
         int y = pos.y;
+        // render target MIDI (right-hand column)
         for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
 
             const uint16_t target_colour = this->get_colour_for_target_id(target_id);
@@ -210,11 +216,13 @@ class MidiMatrixSelectorControl : public SelectorControl<int> {
             }
             y = tft->getCursorY();
         }
+        if (y > lowest_y) 
+            lowest_y = y;
 
         if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually
             tft->println((char*)"");
 
-        return tft->getCursorY();
+        return lowest_y; //tft->getCursorY();
     }
 
     virtual bool button_select() override {

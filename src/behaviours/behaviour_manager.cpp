@@ -22,10 +22,14 @@
 #include "behaviours/behaviour_cvinput.h"
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso.h"
+#include "behaviours/behaviour_midimuso_4pv.h"
+#include "behaviours/behaviour_midimuso_4mv.h"
 
 #include "behaviours/behaviour_bedge.h"
 
 #include "behaviours/behaviour_opentheremin.h"
+
+#include "behaviours/behaviour_midibassproxy.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -35,6 +39,11 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
         inst_ = new DeviceBehaviourManager();
     }
     return inst_;
+}
+
+// convenience function
+void behaviour_manager_kill_all_current_notes () {
+    behaviour_manager->kill_all_current_notes();
 }
 
 //FLASHMEM
@@ -80,20 +89,20 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_MIDILIGHTS
-        behaviour_midilights = new DeviceBehaviour_MIDILights();
-        behaviour_manager->registerBehaviour(behaviour_midilights);
+        #ifdef ENABLE_MIDILIGHTS_DEDICATED
+            behaviour_midilights = new DeviceBehaviour_MIDILights();
+            behaviour_manager->registerBehaviour(behaviour_midilights);
+        #else
+            //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper<>("MIDILights", 0x1337, 0x117e));
+            behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("MIDILights", 0x1337, 0x117e));
+        #endif
     #endif
 
-    #ifdef ENABLE_SUBCLOCKER
+    #ifdef ENABLE_SUBCLOCKER_DEDICATED
         behaviour_subclocker = new DeviceBehaviour_Subclocker();
         behaviour_manager->registerBehaviour(behaviour_subclocker);
-        //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper("SimpleSubclocker", 0x1337, 0x1337));
-    #endif
-
-    #ifdef ENABLE_CRAFTSYNTH_USB
-        Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
-        behaviour_manager->registerBehaviour(behaviour_craftsynth);
-        Serial.println(F("Finished registering")); Serial_flush();
+    #elif ENABLE_SUBCLOCKER
+        behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper<>("Subclocker", 0x1337, 0x1337));
     #endif
 
     #ifdef ENABLE_CHOCOLATEFEET_USB
@@ -103,20 +112,6 @@ void setup_behaviour_manager() {
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
-    #ifdef ENABLE_BITBOX
-        Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
-        behaviour_manager->registerBehaviour(behaviour_bitbox);
-        Serial.println(F("connecting device output..")); Serial_flush();
-        behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-        Serial.println(F("Finished registering")); Serial_flush();
-    #endif
-
-    #ifdef ENABLE_BASS
-        Serial.println(F("about to register behaviour_neutron...")); Serial_flush();
-        behaviour_manager->registerBehaviour(behaviour_neutron);
-        behaviour_neutron->connect_device_output(&ENABLE_BASS);
-        Serial.println(F("Finished registering")); Serial_flush();
-    #endif
 
     #ifdef ENABLE_LESTRUM
         Serial.println(F("about to register behaviour_lestrum...")); Serial_flush();
@@ -135,7 +130,9 @@ void setup_behaviour_manager() {
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
         Serial.println(F("about to register behaviour_cvinput...")); Serial_flush();
-        behaviour_manager->registerBehaviour(behaviour_cvinput);
+        behaviour_manager->registerBehaviour(behaviour_cvinput_1);
+        behaviour_manager->registerBehaviour(behaviour_cvinput_2);
+        behaviour_manager->registerBehaviour(behaviour_cvinput_3);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
@@ -149,18 +146,61 @@ void setup_behaviour_manager() {
         behaviour_dptlooper->connect_device_output(&ENABLE_DPT_LOOPER);
     #endif
 
+    behaviour_midibassproxy = new MIDIBassBehaviourProxy();
+    behaviour_manager->registerBehaviour(behaviour_midibassproxy);
+
+    #ifdef ENABLE_CRAFTSYNTH_USB
+        Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
+        behaviour_manager->registerBehaviour(behaviour_craftsynth);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+    
+    #ifdef ENABLE_BITBOX
+        Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
+        //behaviour_manager->registerBehaviour(behaviour_bitbox);
+        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        behaviour_manager->registerBehaviour(behaviour_bitbox);
+        Serial.println(F("connecting device output..")); Serial_flush();
+        behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
+
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+
+    #ifdef ENABLE_NEUTRON
+        Serial.println(F("about to register behaviour_neutron...")); Serial_flush();
+        behaviour_manager->registerBehaviour(behaviour_neutron);
+        behaviour_neutron->connect_device_output(&ENABLE_NEUTRON);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+
     #ifdef ENABLE_MIDIMUSO
         behaviour_manager->registerBehaviour(behaviour_midimuso);
         behaviour_midimuso->connect_device_output(&ENABLE_MIDIMUSO);
     #endif
+    #ifdef ENABLE_MIDIMUSO_4PV
+        behaviour_midimuso_4pv = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("MIDIMUSO CV-12 4PV", false, true);
+        behaviour_midimuso_4pv->TUNING_OFFSET = -3; // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
+        behaviour_midimuso_4pv->connect_device_output(&ENABLE_MIDIMUSO_4PV);
+        behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
+    #endif
+    #ifdef ENABLE_MIDIMUSO_4MV
+        behaviour_midimuso_4mv->connect_device_output(&ENABLE_MIDIMUSO_4MV);
+        behaviour_manager->registerBehaviour(behaviour_midimuso_4mv);
+    #endif
 
-    #ifdef ENABLE_BEHRINGER_EDGE
-        #ifdef ENABLE_BEHRINGER_EDGE_DEDICATED
-            behaviour_bedge = new DeviceBehaviour_Bedge();
-            behaviour_manager->registerBehaviour(behaviour_bedge);
-        #else
-            behaviour_manager->registerBehaviour(new Behaviour_USBSimpleDividedClockedWrapper("BEdge", 0x1397, 0x125A));
-        #endif
+    #ifdef ENABLE_BEHRINGER_EDGE_USB
+        behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("BEdge", 0x1397, 0x125A));
+    #elif defined(ENABLE_BEHRINGER_EDGE_SERIAL)
+        Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase> *bedge = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("Bedge", false, false);
+        bedge->connect_device_output(&ENABLE_BEHRINGER_EDGE_SERIAL);
+        behaviour_manager->registerBehaviour(bedge);
+    #elif defined(ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED)
+        DeviceBehaviour_Bedge_Serial *bedge = new DeviceBehaviour_Bedge_Serial();
+        bedge->connect_device_output(&ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED);
+        behaviour_manager->registerBehaviour(bedge);
+    #elif defined(ENABLE_BEHRINGER_EDGE_USB_DEDICATED)
+        behaviour_bedge = new DeviceBehaviour_Bedge();
+        behaviour_manager->registerBehaviour(behaviour_bedge);            
     #endif
     
     Serial.println(F("Exiting setup_behaviour_manager()"));
@@ -169,18 +209,17 @@ void setup_behaviour_manager() {
 
 #ifdef ENABLE_SCREEN
     #include "menuitems.h"
+    #include "menuitems_lambda.h"
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
-        //return; // WTF TODO fix crash ?
-
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-            Serial.printf("about to create_single_behaviour_menu_items() for behaviour %i/%i\n", i+1, behaviours->size());
+            //Serial.printf("about to create_single_behaviour_menu_items() for behaviour %i/%i\n", i+1, behaviours->size());
             if (behaviour==nullptr) {
-                Serial.println("\tgot a nullptr behaviour!");
+                //Serial.println("\tgot a nullptr behaviour!");
                 continue;
             } else {
-                Serial.printf("\tdoing for %s\n", behaviour->get_label());
+                //Serial.printf("\tdoing for %s\n", behaviour->get_label());
             }
             this->create_single_behaviour_menu_items(menu, behaviour);
         }
@@ -188,13 +227,13 @@ void setup_behaviour_manager() {
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-            Serial.printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
+            //Serial.printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
             if (behaviour==nullptr) {
-                Serial.println("\tgot a nullptr behaviour!");
+                //Serial.println("\tgot a nullptr behaviour!");
                 continue;
             } else {
-                Serial.printf("\tdoing for %s\n", behaviour->get_label());
+                //Serial.printf("\tdoing for %s\n", behaviour->get_label());
             }
             LinkedList<SaveableParameterBase*> *saveables = behaviour->saveable_parameters;
             if(saveables==nullptr || saveables->size()==0) 
@@ -210,7 +249,10 @@ void setup_behaviour_manager() {
                     menu->add(new SeparatorMenuItem(p->category_name), behaviour->colour);
                 }
                 menu->add(
-                    new ObjectToggleControl<SaveableParameterBase>(p->niceify(), p, &SaveableParameterBase::set_recall_enabled, &SaveableParameterBase::is_recall_enabled),
+                    new LambdaToggleControl(p->niceify(), 
+                        [p](bool v) -> void { p->set_recall_enabled(v); },
+                        [p]() -> bool { return p->is_recall_enabled(); }
+                    ),
                     behaviour->colour
                 );
                 last_category = p->category_name;
@@ -219,9 +261,9 @@ void setup_behaviour_manager() {
     }
 
     //FLASHMEM 
-    inline void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
-            Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
-            debug_free_ram();
+    void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
+            //Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
+            //debug_free_ram();
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
 
             uint16_t group_colour = C_WHITE;
@@ -236,7 +278,7 @@ void setup_behaviour_manager() {
             }
 
             if (menuitems->size()>0) {
-                Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
+                //Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
                 menu->add(menuitems, group_colour);
             }
 

@@ -20,14 +20,15 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->handle_sysex(data, length, complete);
 }
 
-
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
 
     #include "submenuitem_bar.h"
+    #include "menuitems_lambda_selector.h"
     #include "menuitems_object_selector.h"
     #include "menuitems_numbers.h"
     #include "menuitems_object_multitoggle.h"
+    #include "mymenu/menuitems_harmony.h"
 
     FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
     LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
@@ -37,12 +38,20 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         DividedClockedBehaviour::make_menu_items();
 
         SubMenuItemBar *pattern_options = new SubMenuItemBar("Pattern options");
-        pattern_options->add(new ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t>(
-            "Pattern length",   this, &DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength, nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM
+        pattern_options->add(new LambdaNumberControl<int8_t>(
+            "Pattern length",   
+            //this, 
+            //&DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength, 
+            [=](int8_t length) -> void { this->setPatternLength(length); },
+            [=]() -> int8_t { return this->getPatternLength(); },
+            nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM
         ));
 
-        ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t> *direction = new ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t>(
-            "Direction",        this, &DeviceBehaviour_Beatstep::setDirection,      &DeviceBehaviour_Beatstep::getDirection
+        LambdaSelectorControl<int8_t> *direction = new LambdaSelectorControl<int8_t>(
+            "Direction",        
+            //this, &DeviceBehaviour_Beatstep::setDirection,      &DeviceBehaviour_Beatstep::getDirection
+            [=](int8_t length) -> void { this->setDirection(length); },
+            [=]() -> int8_t { return this->getDirection(); }
         );
         direction->add_available_value(0, "Fwd");
         direction->add_available_value(1, "Rev");
@@ -52,11 +61,10 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         menuitems->add(pattern_options);
 
         SubMenuItemBar *note_options = new SubMenuItemBar("Note options");    
-        ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t> *swing = new ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t>(
+        LambdaNumberControl<int8_t> *swing = new LambdaNumberControl<int8_t>(
             "Swing",
-            this,
-            &DeviceBehaviour_Beatstep::setSwing,
-            &DeviceBehaviour_Beatstep::getSwing, 
+            [=](int8_t length) -> void { this->setSwing(length); },
+            [=]() -> int8_t { return this->getSwing(); },
             nullptr,
             0x32, 
             0x4b
@@ -64,11 +72,10 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         swing->int_unit = '%';
         note_options->add(swing);
 
-        ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t> *gate   = new ObjectNumberControl<DeviceBehaviour_Beatstep,int8_t>(
+        LambdaNumberControl<int8_t> *gate = new LambdaNumberControl<int8_t>(
             "Gate length", 
-            this, 
-            &DeviceBehaviour_Beatstep::setGate,
-            &DeviceBehaviour_Beatstep::getGate,
+            [=](int8_t length) -> void { this->setGate(length); },
+            [=]() -> int8_t { return this->getGate(); },
             nullptr,
             0x32, 
             0x63
@@ -77,11 +84,10 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         note_options->add(gate);
 
         //NumberControl<int8_t> *legato = new NumberControl<int8_t>("Legato", &this->legato, 0x00, 0x00, 0x02);
-        ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t> *legato = new ObjectSelectorControl<DeviceBehaviour_Beatstep,int8_t>(
+        LambdaSelectorControl<int8_t> *legato = new LambdaSelectorControl<int8_t>(
             "Legato",
-            this,
-            &DeviceBehaviour_Beatstep::setLegato,
-            &DeviceBehaviour_Beatstep::getLegato
+            [=](int8_t length) -> void { this->setLegato(length); },
+            [=]() -> int8_t { return this->getLegato(); }
         );
         legato->add_available_value(0, "Off");
         legato->add_available_value(1, "On");
@@ -90,8 +96,8 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         
         menuitems->add(note_options);
 
-        menuitems->add(new ObjectToggleControl<DeviceBehaviour_Beatstep>("Auto-fetch", this, &DeviceBehaviour_Beatstep::setAutoFetch, &DeviceBehaviour_Beatstep::getAutoFetch));
-        menuitems->add(new ObjectActionItem<DeviceBehaviour_Beatstep>("Request everything", this, &DeviceBehaviour_Beatstep::request_all_sysex_parameters));
+        menuitems->add(new LambdaToggleControl("Auto-fetch",        [=](bool v) -> void { this->setAutoFetch(v); }, [=]() -> bool { return this->getAutoFetch(); } ));
+        menuitems->add(new LambdaActionItem("Request everything",   [=]() -> void { this->request_all_sysex_parameters(); } ));
 
         /* 
         // this is added to the multi-select control, so we don't need it here too

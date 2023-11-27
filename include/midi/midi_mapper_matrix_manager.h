@@ -1,3 +1,9 @@
+#if (defined __GNUC__) && (__GNUC__ >= 5) && (__GNUC_MINOR__ >= 4) && (__GNUC_PATCHLEVEL__ > 1)
+    #pragma GCC diagnostic ignored "-Wpragmas"
+    #pragma GCC diagnostic ignored "-Wformat-truncation"
+    #pragma GCC diagnostic ignored "-Wstringop-truncation"
+#endif
+
 #ifndef MIDI_MAPPER_MATRIX__INCLUDED
 #define MIDI_MAPPER_MATRIX__INCLUDED
 
@@ -10,6 +16,8 @@
 #include "LinkedList.h"
 
 void setup_midi_mapper_matrix_manager();
+
+void behaviour_manager_kill_all_current_notes();
 
 //#include "behaviours/behaviour_bamble.h"
 
@@ -30,6 +38,9 @@ class MIDIMatrixManager {
     static MIDIMatrixManager* getInstance();
 
     bool debug = false;
+
+    int8_t  global_scale_root = SCALE_ROOT_C;
+    SCALE   global_scale_type = SCALE::MAJOR;
 
     // so we wanna do something like:-
     //      for each source
@@ -53,7 +64,7 @@ class MIDIMatrixManager {
     /* stuff for handling sources of midi data */
     struct source_entry {
         char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
-        byte connection_count = 0;
+        uint8_t connection_count = 0;
     };
     uint8_t sources_count = 0;
 
@@ -62,14 +73,16 @@ class MIDIMatrixManager {
 
     // assign a source_id for the given name
     FLASHMEM source_id_t register_source(const char *handle) {
-        Serial.printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
+        //Serial.printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
         strncpy(sources[NUM_REGISTERED_SOURCES].handle, handle, LANGST_HANDEL_ROUT);
         return NUM_REGISTERED_SOURCES++;
     }
     // assign a source_id for the midi track
-    FLASHMEM source_id_t register_source(MIDITrack *loop_track, const char *handle);
+    //FLASHMEM 
+    source_id_t register_source(MIDITrack *loop_track, const char *handle);
     // assign a source_id for the device
-    FLASHMEM source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle);
+    //FLASHMEM 
+    source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle);
 
     // get id of source for string
     FLASHMEM source_id_t get_source_id_for_handle(const char *handle) {
@@ -82,6 +95,7 @@ class MIDIMatrixManager {
     }
 
     bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
+    bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
@@ -109,6 +123,14 @@ class MIDIMatrixManager {
             return true;
         }
     }
+
+    // don't allow source X to connect to target Y -- eg to avoid loopbacks
+    void disallow(source_id_t source_id, target_id_t target_id) {
+        disallow_map[source_id][target_id] = true;
+    }
+    bool is_allowed(source_id_t source_id, target_id_t target_id) {
+        return !disallow_map[source_id][target_id];
+    }
     
     // connect source to target)
     void connect(MIDITrack *source_track, DeviceBehaviourUltimateBase *target_behaviour);
@@ -122,6 +144,8 @@ class MIDIMatrixManager {
     }
     void connect(source_id_t source_id, target_id_t target_id) {
         if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
+            return;
+        if (!is_allowed(source_id, target_id))
             return;
         if (!source_to_targets[source_id][target_id]) {
             // increment count if not already connected
@@ -150,19 +174,19 @@ class MIDIMatrixManager {
         source_to_targets[source_id][target_id] = false;
     }
 
-    byte connected_to_source_count(source_id_t source_id) {
+    uint8_t connected_to_source_count(source_id_t source_id) {
         if (source_id==-1 || source_id >= NUM_REGISTERED_SOURCES) return 0;
 
         return sources[source_id].connection_count;
     }
-    byte connected_to_target_count(target_id_t target_id) {
+    uint8_t connected_to_target_count(target_id_t target_id) {
         if (target_id==-1 || target_id >= NUM_REGISTERED_SOURCES) return 0;
 
         return targets[target_id].connection_count;
     }
 
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
-    void processNoteOn(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
+    void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (!is_valid_note(pitch)) return;
         if (source_id<0) {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
@@ -178,8 +202,11 @@ class MIDIMatrixManager {
             }
         }
     }
-    void processNoteOff(source_id_t source_id, byte pitch, byte velocity, byte channel = 0) {
-        if (!is_valid_note(pitch)) return;
+    void processNoteOff(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
+        if (!is_valid_note(pitch)) {
+            if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
+            return;
+        }
         if (source_id<0) {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
@@ -194,7 +221,7 @@ class MIDIMatrixManager {
             }
         }
     }
-    void processControlChange(source_id_t source_id, byte cc, byte value, byte channel = 0) {
+    void processControlChange(source_id_t source_id, int8_t cc, uint8_t value, uint8_t channel = 0) {
         if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
@@ -209,7 +236,7 @@ class MIDIMatrixManager {
             }
         }
     }
-    void processPitchBend(source_id_t source_id, int bend, byte channel = 0) {
+    void processPitchBend(source_id_t source_id, int bend, uint8_t channel = 0) {
         if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
@@ -259,7 +286,7 @@ class MIDIMatrixManager {
         return (const char*)F("[error - unknown]");
     }
 
-    byte getDefaultChannelForTargetId(target_id_t target_id) {
+    uint8_t getDefaultChannelForTargetId(target_id_t target_id) {
         if (target_id>=0 && target_id < NUM_REGISTERED_TARGETS)
             return this->targets[target_id].wrapper->default_channel;
         return 0;
@@ -267,8 +294,8 @@ class MIDIMatrixManager {
 
     //// stuff for handling targets of midi data
     struct target_entry {
-        char handle[25];
-        byte connection_count = 0;
+        char handle[LANGST_HANDEL_ROUT];
+        uint8_t connection_count = 0;
         MIDIOutputWrapper *wrapper = nullptr;
     };
 
@@ -283,10 +310,11 @@ class MIDIMatrixManager {
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
-    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle) {
-        return this->register_target(make_midioutputwrapper(handle, target));
+    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle, uint8_t channel = 1) {
+        return this->register_target(make_midioutputwrapper(handle, target, channel));
     }
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
+        // TODO: detect and warn if duplicate handle used
         strncpy(targets[NUM_REGISTERED_TARGETS].handle, handle, LANGST_HANDEL_ROUT);
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
         Serial.printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);
@@ -331,6 +359,31 @@ class MIDIMatrixManager {
         return -1;
     }
 
+    int8_t get_global_scale_root() {
+        return this->global_scale_root;
+    }
+    void set_global_scale_root(int8_t scale_root) {
+        if (scale_root!=global_scale_root) {
+            // force note off for anything currently playing, in theory so that notes don't get stuck on...
+            // but in fact, we may prefer to change things around so that all quantisation is done inside midi_mapper_matrix_manager, 
+            // instead of in the behaviour or wrapper..?
+            //this->stop_all_notes();
+            behaviour_manager_kill_all_current_notes();
+        }
+        this->global_scale_root = scale_root;
+    }
+    SCALE get_global_scale_type() {
+        return this->global_scale_type;
+    }
+    void set_global_scale_type(SCALE scale_type) {
+        if (scale_type!=global_scale_type) {
+            // force note off for anything currently playing, so that notes don't get stuck on
+            //this->stop_all_notes();
+            behaviour_manager_kill_all_current_notes();
+        }
+        this->global_scale_type = scale_type;
+    }
+
     private:
         // stuff for making singleton
         static MIDIMatrixManager* inst_;
@@ -339,6 +392,10 @@ class MIDIMatrixManager {
             //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
             sources = (source_entry*)calloc(MAX_NUM_SOURCES, sizeof(source_entry));
             //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
+            memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
+
+            set_global_scale_root_target(&this->global_scale_root);
+            set_global_scale_type_target(&this->global_scale_type);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

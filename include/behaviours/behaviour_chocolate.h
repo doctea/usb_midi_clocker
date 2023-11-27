@@ -9,7 +9,7 @@
 
 #include "behaviours/behaviour_base.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "project.h"
 
@@ -35,7 +35,7 @@ class DeviceBehaviour_Chocolate : public DeviceBehaviourUSBBase {
         virtual const char *get_label() override {
             return (const char*)"Chocolate";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         DeviceBehaviour_Chocolate () {
             /*for (unsigned int i = 0 ; i < NUM_TRACK_NOTES ; i++) {

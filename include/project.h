@@ -28,6 +28,8 @@ using namespace storage;
     extern MIDITrack drums_loop_track;
 #endif
 
+extern volatile bool global_load_lock;
+
 class Project {
     bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];
@@ -73,7 +75,7 @@ class Project {
         int loaded_sequence_number = -1;
 
         int selected_loop_number = 0;
-        int loaded_loop_number = -1;
+        volatile int loaded_loop_number = -1;
 
         bool load_matrix_mappings = true;
         bool load_clock_settings = true;
@@ -245,7 +247,7 @@ class Project {
                 return this->load_loop(selected_loop_number);
             }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf(F("load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
+                Serial.printf(F("load_loop(): load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
@@ -280,12 +282,16 @@ class Project {
             Debug_printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
             if (auto_advance_sequencer) {
                 this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+                //Serial.printf("on_phrase loading sequence_number %i\n", selected_sequence_number);
                 this->load_sequence(this->selected_sequence_number);
+                //Serial.println("done!");
             }
             #ifdef ENABLE_LOOPER
                 if (auto_advance_looper) {
                     this->selected_loop_number = slot % NUM_LOOP_SLOTS_PER_PROJECT;
+                    Serial.printf("on_phrase loading loop_number %i\n", selected_loop_number);
                     this->load_loop(this->selected_loop_number);
+                    //Serial.println("done!");
                 }
             #endif
             Debug_printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);

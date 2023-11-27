@@ -21,8 +21,8 @@ class DeviceBehaviour_XiaoSerial : public DeviceBehaviourUSBSerialBase {
             return packed_id==get_packed_id() || packed_id==get_packed_id2();
         }
 
-        //virtual bool has_input() override   { return true; }
-        //virtual bool has_output() override  { return false; }
+        //virtual bool receives_midi_notes() override   { return true; }
+        //virtual bool transmits_midi_notes() override  { return false; }
         
         virtual const char *get_label() {
             return "XiaoSerial";

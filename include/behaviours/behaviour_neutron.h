@@ -12,15 +12,24 @@
 
 #include "parameters/MIDICCParameter.h"
 
-class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour, public ModwheelReceiver {
-    using DeviceBehaviourSerialBase::has_input;
-    //using DeviceBehaviourSerialBase::sendControlChange;
-    using ClockedBehaviour::has_output;
-
+class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, public ClockedBehaviour, public MIDIBassBehaviour, public ModwheelReceiver {
+    //using DeviceBehaviourSerialBase::sendControlChange; 
+    using DeviceBehaviourSerialBase::receives_midi_notes;
+    using DeviceBehaviourSerialBase::transmits_midi_notes;
+    //using ClockedBehaviour::transmits_midi_notes;
     //using MIDIBassBehaviour::on_bar;
+
+    using MIDIBassBehaviour::sendNoteOff;
+    using MIDIBassBehaviour::sendNoteOn;
+    using MIDIBassBehaviour::killCurrentNote;
+    
     public:
         virtual const char *get_label() override {
             return (char*)"Neutron";
+        }
+
+        virtual bool transmits_midi_notes() override {
+            return true;
         }
 
         virtual void on_bar(int bar) override {
@@ -31,6 +40,7 @@ class DeviceBehaviour_Neutron : public DeviceBehaviourSerialBase, public Clocked
         #ifdef ENABLE_SCREEN
             FLASHMEM
             virtual LinkedList<MenuItem*> *make_menu_items() override {
+                DeviceBehaviourSerialBase::make_menu_items();
                 ClockedBehaviour::make_menu_items();
                 return MIDIBassBehaviour::make_menu_items();
             }

@@ -7,7 +7,7 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "midi/midi_looper.h"
 
@@ -30,7 +30,7 @@ class DeviceBehaviour_mpk49 : public DeviceBehaviourUSBBase, public ClockedBehav
         virtual const char *get_label() override {
             return "MPK49";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         FLASHMEM 
         virtual void setup_callbacks() override {

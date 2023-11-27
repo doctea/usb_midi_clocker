@@ -1,3 +1,4 @@
+#include "Config.h"
 #ifdef ENABLE_BEHRINGER_EDGE_DEDICATED
     #include "behaviours/behaviour_bedge.h"
 

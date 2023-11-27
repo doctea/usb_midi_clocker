@@ -8,7 +8,7 @@ ArrangementTrackBase *ClockedBehaviour::create_arrangement_track() {
     //return nullptr;
 }
 
-void ClockedBehaviour::send_clock(uint32_t ticks) {
+/*void ClockedBehaviour::send_clock(uint32_t ticks) {
     if (!is_connected()) return;
     this->sendRealTime(midi::Clock);
     this->sendNow();
@@ -32,7 +32,7 @@ const char *ClockedBehaviour::get_restart_on_bar_status_label(bool value) {
         return "Restarting on bar..";
     else 
         return "Trigger restart on bar";
-}
+}*/
 
 void ClockedBehaviour::on_restart() {
     if (!is_connected()) return;
@@ -48,16 +48,22 @@ void ClockedBehaviour::on_restart() {
 #ifdef ENABLE_SCREEN
     #include "menu.h"
 
+    #include "submenuitem_bar.h"
+    //#include "mymenu/menu_delayticks.h"
+    #include "menuitems.h"
+    #include "menuitems_selector.h"
+    #include "menuitems_lambda.h"
+    #include "menuitems_lambda_selector.h"
+
     FLASHMEM LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
         LinkedList<MenuItem*> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
             String restart_label = String(F("Restart ") + String(this->get_label()) + F(" on bar"));
 
-            ObjectActionItem<ClockedBehaviour> *restart_action = new ObjectActionItem<ClockedBehaviour>(
+            LambdaActionItem *restart_action = new LambdaActionItem(
                 restart_label.c_str(),
-                this,
-                &ClockedBehaviour::set_restart_on_bar,
-                &ClockedBehaviour::is_set_restart_on_bar,
+                [=]() -> void { this->set_restart_on_bar(true); },
+                [=]() -> bool { return this->is_set_restart_on_bar(); },
                 "Restarting.."
             );
 
@@ -67,16 +73,11 @@ void ClockedBehaviour::on_restart() {
         return menuitems;
     }
 
-    #include "submenuitem_bar.h"
-    //#include "mymenu/menu_delayticks.h"
-    #include "menuitems.h"
-    #include "menuitems_selector.h"
+    LinkedList<LambdaSelectorControl<int32_t>::option> *delay_ticks_control_available_values = nullptr;
 
-    LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option> *delay_ticks_control_available_values = nullptr;
-
-    void add_option_delay_ticks_control(LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option> *list, int32_t value, const char *label) { 
+    void add_option_delay_ticks_control(LinkedList<LambdaSelectorControl<int32_t>::option> *list, int32_t value, const char *label) { 
         String *l = new String(label);
-        list->add(ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option { .value = value, .label = l->c_str() });
+        list->add(LambdaSelectorControl<int32_t>::option { .value = value, .label = l->c_str() });
     }
 
     LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
@@ -87,13 +88,11 @@ void ClockedBehaviour::on_restart() {
         SubMenuItemBar *bar = new SubMenuItemBar(bar_label.c_str());
 
         //Serial.println(F("\tDividedClockedBehaviour creating divisor_control")); Serial_flush();
-
-        ObjectNumberControl<DividedClockedBehaviour,uint32_t> *divisor_control = new ObjectNumberControl<DividedClockedBehaviour,uint32_t>(
+        LambdaNumberControl<uint32_t> *divisor_control = new LambdaNumberControl<uint32_t>(
             "Divider",
             //"Subclocker div", 
-            this, 
-            &DividedClockedBehaviour::set_divisor, 
-            &DividedClockedBehaviour::get_divisor, 
+            [=](uint32_t v) -> void { this->set_divisor(v); },
+            [=]() -> uint32_t { return this->get_divisor(); },
             nullptr, // change callback on_subclocker_divisor_changed
             1,  //min
             48  //max
@@ -105,11 +104,10 @@ void ClockedBehaviour::on_restart() {
         #define ENABLE_PAUSE_DURING_DELAY_CONTROL
 
         #ifdef ENABLE_DELAY_TICKS_CONTROL
-
             // use a global delay_ticks_control list of available values to save (hopefully) code space and RAM
             if (delay_ticks_control_available_values==nullptr) {
-                delay_ticks_control_available_values = new LinkedList<ObjectSelectorControl<DividedClockedBehaviour,int32_t>::option>();
-                add_option_delay_ticks_control(delay_ticks_control_available_values, 0,                 "None");
+                delay_ticks_control_available_values = new LinkedList<LambdaSelectorControl<int32_t>::option>();
+                add_option_delay_ticks_control(delay_ticks_control_available_values, 0,                "None");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/4,            "1/4");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/2,            "1/2");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN,              "1");
@@ -145,11 +143,13 @@ void ClockedBehaviour::on_restart() {
             }
 
             //Serial.println(F("\tDividedClockedBehaviour creating delay_ticks_control")); Serial_flush();
-            ObjectSelectorControl<DividedClockedBehaviour,int32_t> *delay_ticks_control = new ObjectSelectorControl<DividedClockedBehaviour,int32_t>(
+            LambdaSelectorControl<int32_t> *delay_ticks_control = new LambdaSelectorControl<int32_t>(
                 "Delay",
-                this,
+                /*this,
                 &DividedClockedBehaviour::set_delay_ticks,
-                &DividedClockedBehaviour::get_delay_ticks,
+                &DividedClockedBehaviour::get_delay_ticks,*/
+                [=](int32_t v) -> void { this->set_delay_ticks(v); },
+                [=]() -> int32_t { return this->get_delay_ticks(); },
                 nullptr
             );       
             delay_ticks_control->set_available_values(delay_ticks_control_available_values);
@@ -159,11 +159,10 @@ void ClockedBehaviour::on_restart() {
 
         #ifdef ENABLE_AUTO_RESTART_CONTROL
             //Serial.println(F("\tDividedClockedBehaviour creating auto_restart_control")); Serial_flush();
-            ObjectToggleControl<DividedClockedBehaviour> *auto_restart_control = new ObjectToggleControl<DividedClockedBehaviour>(
+            LambdaToggleControl *auto_restart_control = new LambdaToggleControl(
                 "Restart",
-                this,
-                &DividedClockedBehaviour::set_auto_restart_on_change,
-                &DividedClockedBehaviour::should_auto_restart_on_change,
+                [=](bool v) -> void { this->set_auto_restart_on_change(v); },
+                [=]() -> bool { return this->should_auto_restart_on_change(); },
                 nullptr
             );
             //auto_restart_control->debug = true;
@@ -171,11 +170,13 @@ void ClockedBehaviour::on_restart() {
 
         #ifdef ENABLE_PAUSE_DURING_DELAY_CONTROL
             //Serial.println(F("\tDividedClockedBehaviour creating pause_during_delay_control")); Serial_flush();
-            ObjectSelectorControl<DividedClockedBehaviour,int8_t> *pause_during_delay_control = new ObjectSelectorControl<DividedClockedBehaviour,int8_t>(
+            LambdaSelectorControl<int8_t> *pause_during_delay_control = new LambdaSelectorControl<int8_t>(
                 "Pause",
-                this,
+                /*this,
                 &DividedClockedBehaviour::set_pause_during_delay,
-                &DividedClockedBehaviour::get_pause_during_delay,
+                &DividedClockedBehaviour::get_pause_during_delay,*/
+                [=](int8_t v) -> void { this->set_pause_during_delay(v); },
+                [=]() -> int8_t { return this->get_pause_during_delay(); },
                 nullptr
             );
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_OFF,    "Off");

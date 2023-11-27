@@ -31,11 +31,11 @@
 #endif
 
 // for sending passthrough or recorded noteOns to actual output
-void MIDITrack::sendNoteOn(byte pitch, byte velocity, byte channel) {
+void MIDITrack::sendNoteOn(int8_t pitch, uint8_t velocity, uint8_t channel) {
     midi_matrix_manager->processNoteOn(this->source_id, pitch, velocity); //, channel);
 }
 // for sending passthrough or recorded noteOffs to actual output
-void MIDITrack::sendNoteOff(byte pitch, byte velocity, byte channel) {
+void MIDITrack::sendNoteOff(int8_t pitch, uint8_t velocity, uint8_t channel) {
     midi_matrix_manager->processNoteOff(this->source_id, pitch, velocity); //, channel);
 }
 

@@ -16,7 +16,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include <Drums.h>
 
@@ -26,16 +26,16 @@ void microlidian_control_change(byte number, byte value, byte channel);
 void microlidian_note_on(byte pitch, byte value, byte channel);
 void microlidian_note_off(byte pitch, byte value, byte channel);
 
-class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public ClockedBehaviour, public MIDI_CC_Source { //}, public ModwheelReceiver {
+class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public DividedClockedBehaviour, public MIDI_CC_Source { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
-    using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
+    using DividedClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     using DeviceBehaviourUltimateBase::receive_note_on;
     using DeviceBehaviourUltimateBase::receive_note_off;
     using ClockedBehaviour::on_tick;
     
     public:
 
-        DeviceBehaviour_Microlidian() : ClockedBehaviour() {
+        DeviceBehaviour_Microlidian() : DividedClockedBehaviour() {
             this->addParameterInput("Env1", "Microlidian", (byte)1 /*MUSO_CC_CV_1*/, (byte)1);
             this->addParameterInput("Env2", "Microlidian", (byte)7 /*MUSO_CC_CV_2*/, (byte)1);
             this->addParameterInput("Env3", "Microlidian", (byte)11 /*MUSO_CC_CV_3*/, (byte)1);
@@ -55,8 +55,9 @@ class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public Clocke
         virtual const char *get_label() override {
             return "Microlidian";
         }
-        virtual bool has_output() { return true; }
-        virtual bool has_input() { return true; }
+        // todo: make this able to send drums and bass notes
+        virtual bool transmits_midi_notes() { return false; }
+        virtual bool receives_midi_notes() { return true; }
 
         source_id_t source_id_2 = -1;
 

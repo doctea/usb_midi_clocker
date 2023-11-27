@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_CVINPUT__INCLUDED
-#define BEHAVIOUR_CVINPUT__INCLUDED
+#pragma once
 
 //#define DEBUG_VELOCITY    // enable velocity control so we can tell what's going on
 
@@ -25,6 +24,7 @@ extern ParameterManager *parameter_manager;
 
 class DeviceBehaviour_CVInput;
 
+// todo: move this to Parameter library, or midihelpers scale library..?
 template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
 class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
     public:
@@ -59,22 +59,32 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 };
 
 
-class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
+class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
+
+        DeviceBehaviour_CVInput(const char *label = nullptr) : DeviceBehaviourUltimateBase () {
+            if (label!=nullptr)
+                strncpy(this->label, label, MAX_LABEL_LENGTH);
+        }
+
+        char label[MAX_LABEL_LENGTH] = "Pitch CV Input";
         virtual const char *get_label() override {
-            return "Pitch CV Input";
+            return label;
         }
 
         virtual int getType() override {
             return BehaviourType::virt;
         }
-        virtual bool has_input() override {
+        virtual bool receives_midi_notes() override {
             return true;
         }
 
         BaseParameterInput *pitch_input = nullptr;
         BaseParameterInput *velocity_input = nullptr;
 
+        // todo: move this functionality to a generic PitchedMonophonicMIDIOutputBehaviour class...?
+        // todo: make a Polyphonic equivalent...?
+        // todo: split into mono/fake-poly/true-poly variations and put in dedicated class
         bool is_playing = false;
         bool is_playing_chord = false;
         int last_note = -1, current_note = -1, current_raw_note = -1;
@@ -85,22 +95,23 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         int32_t trigger_delay_ticks = 0;
         int8_t inversion = 0;
 
-        #ifdef DEBUG_VELOCITY
-            int8_t velocity = 127;
-        #endif
-
         chord_instance_t current_chord_data;
         chord_instance_t last_chord_data;
+
+        #ifdef DEBUG_VELOCITY
+            int8_t velocity = MIDI_MAX_VELOCITY;
+        #endif
+
  
-        byte channel = 0;
+        uint8_t channel = 0;
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
-            byte get_channel() { return channel; }
-            void set_channel(byte channel) { this->channel = channel; }
+            uint8_t get_channel() { return channel; }
+            void set_channel(uint8_t channel) { this->channel = channel; }
         #endif
 
         bool quantise = false, play_chords = false;
         SCALE scale = SCALE::MAJOR;
-        int scale_root = SCALE_ROOT_C;
+        int8_t scale_root = SCALE_ROOT_C;
 
         void set_scale(SCALE scale) {
             //trigger_off_for_pitch_because_changed(this->current_note);
@@ -109,11 +120,11 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
         SCALE get_scale() {
             return this->scale;
         }
-        void set_scale_root(int scale_root) {
+        void set_scale_root(int8_t scale_root) {
             //trigger_off_for_pitch_because_changed(this->current_note);
             this->scale_root = scale_root;
         }
-        int get_scale_root() {
+        int8_t get_scale_root() {
             return this->scale_root;
         }
         void set_quantise(bool quantise) {
@@ -171,25 +182,23 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return this->trigger_delay_ticks;
         }
 
-        //int8_t chord_held_notes[127];
-
         #ifdef ENABLE_SCREEN
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
-            LinkedList<MenuItem *> *make_menu_items() override;
+            virtual LinkedList<MenuItem *> *make_menu_items() override;
         #endif
 
         void stop_chord(chord_instance_t chord) {
             this->stop_chord(chord.chord_root, chord.chord_type, chord.inversion, chord.velocity);
         }
 
-        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 0) {
+        void stop_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, uint8_t velocity = 0) {
             if (debug) Serial.printf("\t---\nstop_chord: Stopping chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
 
-            int8_t n = -1;
+            //int8_t n = -1;
             //for (size_t i = 0 ; (n = quantise_pitch_chord_note(pitch, chord_number, i, this->scale_root, this->scale, this->current_chord_data->inversion, this->debug)) >= 0 ; i++) {
             for (size_t i = 0 ; i < PITCHES_PER_CHORD /*&& ((n = this->current_chord_data.pitches[i]) >= 0)*/ ; i++) {
-                int n = this->current_chord_data.pitches[i];
+                int8_t n = this->current_chord_data.pitches[i];
                 if (debug) Serial.printf("\t\tStopping note\t[%i/%i]: %i\t(%s)\n", i, PITCHES_PER_CHORD, n, get_note_name_c(n));
                 if (is_valid_note(n))
                     receive_note_off(channel, n, velocity);
@@ -202,7 +211,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             this->current_chord_data.clear();
             if (debug) Serial.println("---");
         }
-        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, byte velocity = 127) {
+        void play_chord(int8_t pitch, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0, uint8_t velocity = MIDI_MAX_VELOCITY) {
             if (debug) Serial.printf("\t--- play_chord: playing chord for %i (%s) - chord type %s, inversion %i\n", pitch, get_note_name_c(pitch), chords[chord_number].label, inversion);
             if (is_playing_chord)
                 this->stop_chord(this->current_chord_data);
@@ -227,7 +236,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             if (debug) Serial.println("---");
         }
 
-        virtual void trigger_off_for_pitch_because_length(int8_t pitch, byte velocity = 0) {
+        virtual void trigger_off_for_pitch_because_length(int8_t pitch, uint8_t velocity = MIDI_MIN_VELOCITY) {
             // don't reset current_note so that we don't retrigger the same note again immediately
             if (is_playing_chord) //is_quantise()) 
                 this->stop_chord(this->current_chord_data);
@@ -237,7 +246,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             is_playing = false;
             this->last_note = pitch;
         }
-        virtual void trigger_off_for_pitch_because_changed(int8_t pitch, byte velocity = 0) {
+        virtual void trigger_off_for_pitch_because_changed(int8_t pitch, uint8_t velocity = MIDI_MIN_VELOCITY) {
             if (is_playing_chord) //is_quantise())
                 this->stop_chord(this->current_chord_data);
             else
@@ -247,7 +256,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             this->last_note = this->current_note;
             this->current_note = 255;
         }
-        virtual void trigger_on_for_pitch(int8_t pitch, byte velocity = 127, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
+        virtual void trigger_on_for_pitch(int8_t pitch, uint8_t velocity = MIDI_MAX_VELOCITY, CHORD::Type chord_number = CHORD::TRIAD, int8_t inversion = 0) {
             if (this->is_playing)
                 this->stop_chord(this->current_chord_data);
 
@@ -265,6 +274,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
         //void on_tick(unsigned long ticks) override {
         // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
+        // TODO: see if this is solved now and we can revert back to using on_tick, now that we have updated to newer version of USBHost_t36 library?
         void on_pre_clock(unsigned long ticks) override {
             // check if playing note duration has passed regardless of whether pitch_input is set, so that notes will still finish even if disconncted
             if (is_playing && this->get_note_length()>0 && abs((long)this->note_started_at_tick-(long)ticks) >= this->get_note_length()) {
@@ -298,9 +308,9 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                         trigger_off_for_pitch_because_changed(this->current_note);
                     }
                     if (this->get_note_length()>0) {
-                        int velocity = 127;
+                        int velocity = MIDI_MAX_VELOCITY;
                         if (this->velocity_input!=nullptr) {
-                            velocity = constrain(127.0*(float)this->velocity_input->get_normal_value(), 0, 127);
+                            velocity = constrain(((float)MIDI_MAX_VELOCITY)*(float)this->velocity_input->get_normal_value(), 0, MIDI_MAX_VELOCITY);
                             if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value());
                         }
 
@@ -329,29 +339,28 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
             // key centre + scale
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int>    
-                ("scale_root", "CV", this, &this->scale_root, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>    
+                ("scale_root", "CV", &this->scale_root, [=](int8_t v) -> void { this->set_scale_root(v); }, [=]() -> int8_t { return this->get_scale_root(); } ));
             // scale number (key) is handled in load_parse_key_value/save_sequence_add_lines because SCALE type breaks SaveableParameter
-            //this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,SCALE>("scale_number", "CV", this, &this->scale, nullptr, nullptr, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale));
+            //this->saveable_parameters->add(new LSaveableParameter<SCALE>("scale_number", "CV", &this->scale, [=](SCALE v) -> void { this->set_scale(v); }, [=]() -> SCALE { return this->get_scale(); }));
 
             // note duration and triggers
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
-                ("note_length_ticks", "CV", this, &this->note_length_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_note_length, &DeviceBehaviour_CVInput::get_note_length));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
-                ("trigger_each", "CV", this, &this->trigger_on_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_on_ticks, &DeviceBehaviour_CVInput::get_trigger_on_ticks));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int32_t>
-                ("trigger_delay_ticks", "CV", this, &this->trigger_delay_ticks, nullptr, nullptr, &DeviceBehaviour_CVInput::set_trigger_delay_ticks, &DeviceBehaviour_CVInput::get_trigger_delay_ticks));
-
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                ("note_length_ticks", "CV", &this->note_length_ticks, [=](int32_t v) -> void{ this->set_note_length(v); }, [=]() -> int32_t { return this->get_note_length(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                ("trigger_each", "CV", &this->trigger_on_ticks, [=](int32_t v) -> void{ this->set_trigger_on_ticks(v); }, [=]() -> int32_t { return this->get_trigger_on_ticks(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                ("trigger_delay_ticks", "CV", &this->trigger_delay_ticks, [=](int32_t v) -> void { this->set_trigger_delay_ticks(v); }, [=]() -> int32_t { return this->get_trigger_delay_ticks(); } ));
 
             // quantisation settings
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   
-                ("quantise_enable", "CV", this, &this->quantise, nullptr, nullptr, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,bool>   
-                ("play_chords", "CV", this, &this->play_chords, nullptr, nullptr, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,CHORD::Type>
-                ("Chord", "CV", this, &this->selected_chord_number, nullptr, nullptr, &DeviceBehaviour_CVInput::set_selected_chord, &DeviceBehaviour_CVInput::get_selected_chord));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_CVInput,int8_t>
-                ("inversion", "CV", this, &this->inversion, nullptr, nullptr, &DeviceBehaviour_CVInput::set_inversion, &DeviceBehaviour_CVInput::get_inversion));
+            this->saveable_parameters->add(new LSaveableParameter<bool>   
+                ("quantise_enable", "CV", &this->quantise, [=](bool v) -> void { this->set_quantise(v); }, [=]() -> bool { return this->is_quantise(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<bool>   
+                ("play_chords", "CV", &this->play_chords, [=](bool v) -> void{ this->set_play_chords(v); }, [=]() -> bool { return this->is_play_chords(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<CHORD::Type>
+                ("Chord", "CV", &this->selected_chord_number, [=](CHORD::Type v) -> void { this->set_selected_chord(v); }, [=]() -> CHORD::Type { return get_selected_chord(); } ));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>
+                ("inversion", "CV", &this->inversion, [=](int8_t v) -> void { this->set_inversion(v); }, [=]() -> int8_t { return this->get_inversion(); } ));
 
         }
 
@@ -388,12 +397,11 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
             return false;
         }
 
-
+        bool already_initialised = false;
         //FLASHMEM 
         virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
-            static bool already_initialised = false;
-            if (already_initialised)
+            if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;
 
             DeviceBehaviourUltimateBase::initialise_parameters();
@@ -408,6 +416,7 @@ class DeviceBehaviour_CVInput : public DeviceBehaviourUltimateBase {
 
 };
 
-extern DeviceBehaviour_CVInput *behaviour_cvinput;
+extern DeviceBehaviour_CVInput *behaviour_cvinput_1;
+extern DeviceBehaviour_CVInput *behaviour_cvinput_2;
+extern DeviceBehaviour_CVInput *behaviour_cvinput_3;
 
-#endif

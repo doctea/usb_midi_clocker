@@ -1,3 +1,5 @@
+![eurorack prototype](https://github.com/doctea/usb_midi_clocker/blob/main/media/eurorack%20prototype.jpg)
+
 - This branch is for a Teensy 4.1
   - 'prototype' build profile uses the [Deftaudio 8x8 midi+usb breakout board](https://www.tindie.com/products/deftaudio/teensy-41-midi-breakout-board-8in-8out-usb-host/), with a st7789 screen wired up over SPI, Pimoroni +/-24v ADC over i2c, and gate outputs on GPIOs
   - 'pcb' build profile uses prototype [Eurorack module boards](https://github.com/doctea/usb_midi_clocker_hardware), with an ili9341 screen, 2xPimoroni +/-24v ADC, and gate outputs on MCP23s17
@@ -26,7 +28,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Akai MPK49 (clock+MIDI looping functions, accept input)
   - Akai APCMini (used as interface for sequencer+clock divisions)
   - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
-  - A [mystery device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
+  - A [(not so mystery) device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
     - With divider control and offset delay
   - Modal CraftSynth 2.0 (route an input or looper to play CraftSynth notes, with tempo sync for arpeggiation etc)
   - M-Vave/Cuvave Chocolate footswitch controller (controls the MIDI looper from left to right: play (toggle), record (toggle), overwrite (momentary), record (momentary))
@@ -93,6 +95,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
 - behaviour_clocked: base classes for handling midi clock delay and divison
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0, also CC parameters that can be modulated from CV input
+- behaviour_cvinput: outputs MIDI notes and chords corresponding to incoming CVs
 - behaviour_drumkit: input from midi drumkit over DIN
 - behaviour_dptlooper: send clock and bar/phrase starts for [DPTLooper](https://github.com/doctea/dptlooper) [experimental/WIP]
 - behaviour_keystep: sends clock and receives notes
@@ -107,28 +110,31 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
 - behaviour_base_usbserial: base class for USB serial and USB serial MIDI devices
-- ClockedBehaviour: send clock messages
+- behaviour_simplewrapper: support devices without having to write an entire supporting class (also saves some flash space not having to have specific classes)
+- ClockedBehaviour, DividedClockedBehaviour: send clock messages
+- MIDIBass: 'drone' and 'machinegun' modes
 
 ## Requirements
 
 - Teensy 4.1
-  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
+  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) 
+  - or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
 - ST7789 or ILI9341 oled screen for display
   - st7789 option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current prototype version much prefers this)
   - ILI9341 screen option https://www.aliexpress.com/item/1005003005413104.html 'Module With Touch' version for PCB
 - Rotary encoder + two wired buttons for control and/or USB typing keyboard
   - and [mymenu](https://github.com/doctea/mymenu) library
 - [midihelpers](https://github.com/doctea/midihelpers) library
+- [uClock](https://github.com/midilab/uClock) library
+- [Functional-Vlpp](https://registry.platformio.org/libraries/khoih-prog/Functional-Vlpp/installation) library
 - Akai APCMini for controlling the sequencer and clocks (although not needed for running the rest of it)
 - SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots, loops and CV calibration
 - Gate outputs
   - Prototype version: DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' section below
     - I am currently using one of these in prototype: [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e) (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
     - I was previously using a couple of these [Sparkfun level shifter](https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377) -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
-  - Prototype Eurorack module for gate output using MCP23s17 (in theory supports 16 gates but currently seems flakey.  could perhaps be configured as inputs instead but haven't attempted this)
+  - Prototype Eurorack module for gate output using MCP23s17 (in theory supports 16 gates but currently seems flakey.  could perhaps be configured as inputs instead - but somehow had some problems with this)
 - For CV input: [Pimoroni +/-24v 1015 module](https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003) and my [parameters](https://github.com/doctea/parameters) library
-- Note: as of 2022-04-25, needs patched version of the usbhost_t36 library from here https://github.com/doctea/USBHost_t36 due to https://github.com/PaulStoffregen/USBHost_t36/issues/86
-  - on 2022-12-23, I recommend you use the maybe_fixed_4_stable branch as this seems like it might be more stable..?
 - As of 2022-12-23, using [this LinkedList fork](https://github.com/vortigont/LinkedList) to try and improve stuff
 
 ## Eurorack modules / PCB / gerbers
@@ -147,8 +153,6 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Occasional freezes/crashes... pretty sure related to something in the USB library
 - GDB debug mode doesn't work - might just simply be because we don't have enough RAM to do this now?
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
-- Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
-- ~~USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..~~ <- hmm, fixed this by making CVInput behaviour send message to midi_matrix_manager on channel 0 instead of channel 1..?  but not sure why this would be, since the channel looked correct in DeviceBehaviourUSBBase#sendNoteOn() !
 - Crash on trying to screenshot on ili9341
 
 ## Known issues (may be solved)
@@ -168,6 +172,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - MIDI looper uses a LOT of RAM (~48k for 1 phrase -- 384 (ticks) * 127 (notes)) - less memory-hungry polyphony can be used, but drawing the pianoroll to screen would become more intensive...
 - ~~Voltage Source Calibration UI is ugly / changing sizes constantly~~
 - ~~BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as mentioned below.~~
+- ~~Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?~~ Solved by using [uClock](https://github.com/midilab/uClock) library
+- ~~USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..~~ <- hmm, fixed this by making CVInput behaviour send message to midi_matrix_manager on channel 0 instead of channel 1..?  but not sure why this would be, since the channel looked correct in DeviceBehaviourUSBBase#sendNoteOn() !
 
 ## Configuration
 
@@ -182,6 +188,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ### TODO/Future 
 
 - Quantise all melodic outputs to a chosen scale
+ - make this a setting on the MidiMatrixMapper?
 - Write up controls/instructions/etc
 - Come up with a cooler name (maybe Nexus6 as that's what i've put on the pcb panel?)
 - Update docs to reflect all features
@@ -190,7 +197,6 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Am actually doing this in a separate module now, [Microlidian](https://github.com/doctea/Microlidian)
     - Move the Euclidian sequencer stuff from Microlidian into a library so that it could be used here as well
   - ~~Or at least add some controls via the APCMini sliders, eg over the envelopes~~
-- Improve stability of clock by getting it working in uClock/interrupts mode without crashes
 - Sync from external clock input (CV)
   - proof of concept implemented using the support in [midihelpers library](https://github.com/doctea/midihelpers), no reset functionality yet though
 - ~~More outputs~~ - done, now works with 4 clock outs and 4 separate sequencer track outs
@@ -216,7 +222,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~legato~~
   - ~~shuffle~~
   - option to rotate sequence to change the downbeat - read in all the current pad values, ie rotate and write them back out
-- ~~Better way to define custom behaviour in order to add new USB MIDI devices~#
+- ~~Better way to define custom behaviour in order to add new USB MIDI devices~~
   - ~~Partially done, can be improved further~~
   - Write up docs on how to add a new device behaviour
 - Configurable per-device MIDI clock divisions/multiplier
@@ -231,15 +237,15 @@ Both are encouraged, I would love to have this be useful to others and to accept
       - some performance issues in reading the data, though
         - maybe if the performance problem is actually with the reading of the data, then we could hand that off to a 328p on a nano/uno to do the raw ADC processing, and communicate to the teensy via uart, or even usbserial now?
         - (or just get a dedicated CV-to-MIDI module and feed it in to the MIDI inputs)
-    - some todos remain:
-      - ~~reassign modulation sources~~
-      - ~~load/save modulation settings~~
-      - lock/hold modulation settings
-      - auto-advance modulation settings?
-      - modulation sources other than voltages
-        - ~~MIDI CCs~~ done for first 4 faders
-      - tempo-synced LFOs etc...
-      - Record and playback CCs as well as MIDI
+  - some todos remain:
+    - ~~reassign modulation sources~~
+    - ~~load/save modulation settings~~
+    - lock/hold modulation settings
+    - auto-advance modulation settings?
+    - modulation sources other than voltages
+      - ~~MIDI CCs~~ done for first 4 faders
+    - tempo-synced LFOs etc...
+    - Record and playback CCs as well as MIDI
 - ~~Option to 'lock/hold current' clock/sequencer/MIDI mapping settings etc when switching presets~~
 - Subclocker clock multipliers as well as division (need to calculate time between ticks, and send clock on steps in between...)
 - Looper improvements
@@ -300,9 +306,11 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - ~~play chords from scale from root note~~
   - ~~choose chord type to play from another CV input~~
   - Arpeggiator 
-  - Inversions
+  - ~~Inversions~~
   - Move quantising/chord generation stuff into a more general 'MIDI filter' behaviour type that can be chained with other behaviours?
   - Port quantising/chord options to Microlidian
+- Allow clock input from USB-MIDI devices (e.g use Beatstep as master)
+- Allow to configure which DIN-MIDI device to receive clock from
 
 ## Done
 
@@ -351,6 +359,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?~~
   - ~~Control over the envelopes AHDSR + modulation~~
 - ~~The 'delay' menu item for ClockedBehaviours gets set to an incorrect value when opened?~~
+- ~~Improve stability of clock by getting it working in uClock/interrupts mode without crashes~~
 
 ---
 

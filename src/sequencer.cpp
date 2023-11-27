@@ -62,10 +62,40 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
 
   byte v = read_sequence(sequence, step);
   if (v) {
-    if (is_bpm_on_beat(ticks, offset) 
+    /*if (is_bpm_on_beat(ticks, offset) 
         || (v==2 && is_bpm_on_eighth(ticks, offset))      // ratchetting
         || (v==3 && is_bpm_on_sixteenth(ticks, offset))   // ratchetting
-    ) {
+    ) {*/
+    /*
+    0 = ----
+    1 = x---
+    2 = x-x-
+    3 = xxxx
+    4 = --x-
+    5 = -x-x
+    6 = x--x    
+    */
+    switch(v) {
+      case 1:
+        if (is_bpm_on_beat(ticks, offset)) return true; 
+        break;
+      case 2:
+        if (is_bpm_on_eighth(ticks, offset)) return true; 
+        break;
+      case 3:
+        if (is_bpm_on_sixteenth(ticks, offset)) return true; 
+        break;
+      case 4:
+        if (!is_bpm_on_beat(ticks, offset) && is_bpm_on_eighth(ticks, offset)) return true; 
+        break;
+      case 5:
+        if (!is_bpm_on_beat(ticks, offset) && !is_bpm_on_eighth(ticks, offset) && is_bpm_on_sixteenth(ticks, offset)) return true; 
+        break;
+      case 6:
+        if (is_bpm_on_beat(ticks, offset) || (is_bpm_on_sixteenth(ticks, offset) && ticks%PPQN >= (PPQN/4)*3)) return true; 
+        break;       
+      default:
+        return false;
       #ifdef DEBUG_SEQUENCER
             if (offset==0) {
               Serial.print(F("For tick "));
@@ -79,7 +109,7 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
               Serial.println(F("!"));
             } 
       #endif
-      return true;
+      //return true;
       //digitalWrite(PIN_CLOCK_START+i, HIGH);
     } 
   }

@@ -36,8 +36,8 @@ class SaveableParameterBase {
     SaveableParameterBase(const char *label, const char *category_name, bool *variable_recall_enabled = nullptr, bool *variable_save_enabled = nullptr) :
         label(label), 
         category_name(category_name),
-        variable_recall_enabled(variable_recall_enabled ? variable_recall_enabled : &recall_enabled), 
-        variable_save_enabled(variable_save_enabled ? variable_save_enabled : &save_enabled) {}
+        variable_recall_enabled(variable_recall_enabled ? variable_recall_enabled : &this->recall_enabled), 
+        variable_save_enabled(variable_save_enabled ? variable_save_enabled : &this->save_enabled) {}
         
     virtual String get_line() { return String(nop_label); }
     virtual bool parse_key_value(String key, String value) {
@@ -75,7 +75,7 @@ class SaveableParameterBase {
 };
 
 template<class TargetClass, class DataType>
-class SaveableParameter : public SaveableParameterBase {
+class SaveableParameter : virtual public SaveableParameterBase {
     public:
         TargetClass *target = nullptr;
         DataType *variable = nullptr;
@@ -108,13 +108,13 @@ class SaveableParameter : public SaveableParameterBase {
             is_recall_enabled_func(is_recall_enabled_func), 
             is_save_enabled_func(is_save_enabled_func),
             set_recall_enabled_func(set_recall_enabled_func),
-            set_save_enabled_func(set_save_enabled_func) {
-                if (variable_recall_enabled==nullptr)
-                    variable_recall_enabled = &this->recall_enabled;
-                if (variable_save_enabled==nullptr) {
-                    variable_save_enabled = &this->save_enabled;
-                }
-
+            set_save_enabled_func(set_save_enabled_func) 
+        {
+            if (variable_recall_enabled==nullptr)
+                variable_recall_enabled = &this->recall_enabled;
+            if (variable_save_enabled==nullptr) {
+                variable_save_enabled = &this->save_enabled;
+            }
         }
 
         virtual bool is_recall_enabled () override {
@@ -207,6 +207,113 @@ class SaveableParameter : public SaveableParameterBase {
             setInt(value);
         }*/
 };
+
+#include "functional-vlpp.h"
+
+template<class DataType>
+class LSaveableParameter : virtual public SaveableParameterBase {
+    public:
+        DataType *variable = nullptr;
+
+        using setter_func_def = vl::Func<void(DataType)>;
+        using getter_func_def = vl::Func<DataType(void)>;
+
+        setter_func_def setter_func = [=](DataType v) -> void { 
+            if (variable!=nullptr) 
+                *this->variable = v; 
+        };
+        getter_func_def getter_func = [=]() -> DataType { 
+            if (variable!=nullptr) 
+                return *this->variable; 
+            return (DataType) 0; 
+        };
+
+        LSaveableParameter(
+            const char *label,
+            const char *category_name,
+            DataType *variable
+        ) : SaveableParameterBase(label, category_name), variable(variable) {}
+
+        LSaveableParameter(
+            const char *label,
+            const char *category_name,
+            DataType *variable,
+            setter_func_def setter_func
+        ) : LSaveableParameter(label, category_name, variable) {
+            this->setter_func = setter_func;
+        }
+
+        LSaveableParameter(
+            const char *label, 
+            const char *category_name,
+            DataType *variable,
+            setter_func_def setter_func,
+            getter_func_def getter_func
+        ) : LSaveableParameter(label, category_name, variable, setter_func)
+        {
+            this->getter_func = getter_func;
+        }
+
+        /*virtual bool is_recall_enabled () override {
+            return this->is_recall_enabled_func();
+        }
+        virtual bool is_save_enabled () override {
+            return this->is_save_enabled_func();
+        }
+        virtual void set_recall_enabled(bool state) override {
+            this->set_recall_enabled_func(state);
+        }
+        virtual void set_save_enabled(bool state) override {
+            this->set_save_enabled_func(state);
+        }*/
+
+        virtual DataType get() {
+            return this->getter_func();
+        }
+
+        virtual String get_line() {
+            return String(this->label) + String('=') + String(this->getter_func());
+        }
+        virtual bool parse_key_value(String key, String value) {
+            if (key.equals(this->label)) {
+                this->set((DataType)0,value);
+                return true;
+            }
+            return false;
+        }
+        // todo: rewrite to use constexpr?
+        void setInt(String value) {
+            this->setter_func(value.toInt());
+        }
+        void setBool(bool value) {
+            this->setter_func(value);
+        }
+        void setFloat(float value) {
+            this->setter_func(value);
+        }
+        virtual void set(signed int, String value) {
+            setInt(value);
+        }
+        virtual void set(unsigned int, String value) {
+            setInt(value);
+        }
+        virtual void set(signed long, String value) {
+            setInt(value);
+        }
+        virtual void set(unsigned long, String value) {
+            setInt(value);
+        }
+        virtual void set(bool, String value) {
+            setBool((value.equals(true_label) || value.equals(enable_label) || value.equals("1")));
+        }
+        virtual void set(float, String value) {
+            this->setFloat(value.toFloat());
+        }
+        /*virtual void set(SCALE, String value) {
+            setInt(value);
+        }*/
+};
+
 
 /*
 // this untested, since wrote it then realised that SaveableParameters are only currently used by Sequences, not Projects

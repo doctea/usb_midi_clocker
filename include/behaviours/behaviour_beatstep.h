@@ -10,7 +10,7 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "queue.h"
 
@@ -47,7 +47,6 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         bool auto_advance_pattern = false;   // todo: make configurable!
 
         int last_note = -1, current_note = -1;
-        //int last_transposed_note = -1, current_transposed_note = -1;
 
         uint16_t vid = 0x1c75, pid = 0x0206;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
@@ -55,7 +54,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         virtual const char *get_label() override {
             return "BeatStep";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         //FLASHMEM 
         virtual void setup_callbacks() override {
@@ -341,7 +340,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                         Serial.printf("%02x ", data[i]);
                     }
                     Serial.print("] ");
-                    Serial.print(complete? "complete" : "incomplete");
+                    Serial.print(complete ? "complete" : "incomplete");
                     Serial.println();
                 }
                 #define BROAD_POS 8
@@ -367,60 +366,25 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 DividedClockedBehaviour::setup_saveable_parameters();
 
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Beatstep,int8_t>(
+                    saveable_parameters->add(new LSaveableParameter<int8_t>(
                         sysex_parameters[i].label,
                         "Sysex",
-                        this,
-                        sysex_parameters[i].target_variable, 
-                        nullptr,
-                        nullptr,
-                        /*&sysex_parameters[i].enable_recall, 
-                        &sysex_parameters[i].enable_recall, */
-                        sysex_parameters[i].setter_func
+                        sysex_parameters[i].target_variable,
+                        [=](int8_t v) -> void { 
+                            void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = sysex_parameters[i].setter_func;
+                            if (setter_func!=nullptr)
+                                (this->*setter_func)(v); 
+                            else if (sysex_parameters[i].target_variable!=nullptr)
+                                *sysex_parameters[i].target_variable = v;
+                        }
                     ));
                 }                    
             }
-
-            /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {   
-                DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-                DividedClockedBehaviour::save_sequence_add_lines(lines);
-
-                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    if (!sysex_parameters[i].enable_recall) continue;
-                    if (sysex_parameters[i].target_variable==nullptr) continue;
-                    //Serial.printf("Beatstep#save_sequence_add_lines processing: %i '%s'\n", i, sysex_parameters[i].label);
-
-                    String line =   String(sysex_parameters[i].label) + 
-                                    String("=") + 
-                                    String(*sysex_parameters[i].target_variable);
-                    //Serial.printf("Beatstep#save_sequence_add_lines got line: %s\n", line.c_str());
-                    lines->add(line);
-                }
-            }
-            virtual bool load_parse_key_value(String key, String value) override {
-                for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    if (!sysex_parameters[i].enable_recall) 
-                        continue;
-                    if (key.equals(sysex_parameters[i].label)) {
-                        if (sysex_parameters[i].setter_func==nullptr) 
-                            break;
-                        (this->*sysex_parameters[i].setter_func)(value.toInt()); 
-                        return true;
-                    }
-                }
-                if (DividedClockedBehaviour::load_parse_key_value(key, value)) {
-                    return true;
-                } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
-                    return true;
-                } 
-                return false;
-            }*/
-
         #endif
 
         #ifdef ENABLE_SCREEN
             FLASHMEM
-            LinkedList<MenuItem*> *make_menu_items() override;
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 
 };

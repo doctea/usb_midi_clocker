@@ -7,7 +7,7 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 extern MIDIOutputWrapper *keystep_output;
 void keystep_setOutputWrapper(MIDIOutputWrapper *);
@@ -25,7 +25,7 @@ class DeviceBehaviour_Keystep : public DeviceBehaviourUSBBase, public ClockedBeh
         virtual const char *get_label() override {
             return (char*)"Keystep";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() override { return true; }
 
         FLASHMEM 
         virtual void setup_callbacks() override {

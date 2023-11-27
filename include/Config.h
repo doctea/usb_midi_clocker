@@ -1,3 +1,4 @@
+#pragma once
 //#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
@@ -18,6 +19,10 @@
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 5 //25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
+#ifdef ENABLE_CV_INPUT
+    #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
+#endif
+
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
         #define ENABLE_CALIBRATION_STORAGE          // enable save/recall of calibration data to SD card file
@@ -25,9 +30,6 @@
     #ifndef LOAD_CALIBRATION_ON_BOOT
         #define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card on boot
     #endif
-#endif
-#ifdef ENABLE_CV_INPUT
-    #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
 #endif
 
 // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
@@ -97,16 +99,24 @@
 //#define ENABLE_DRUM_LOOPER
 
 // enable Neutron behaviour
-#define ENABLE_NEUTRON
+//#define ENABLE_NEUTRON    // now done in ConfigMidi.h
 #define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
 
-#ifdef PROTOTYPE
-    #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
-#elif defined(PCB)
-    #define ENABLE_DPT_LOOPER   MIDI4   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+//#define ENABLE_DPT_LOOPER
+#ifdef ENABLE_DPT_LOOPER
+    #ifdef PROTOTYPE
+        #undef ENABLE_DPT_LOOPER
+        #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+    #elif defined(PCB)
+        #undef ENABLE_DPT_LOOPER
+        #define ENABLE_DPT_LOOPER   MIDI8   // enable experimental behaviour (is just a very simple behaviour that sends start/continues on bar/phrases - used by my DPT Looper Daisy sketch, but probably not of much use for anything else!)
+    #endif
 #endif
 
+//#define ENABLE_MAMMB33      MIDI2
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
+//#define ENABLE_MIDIMUSO_4PV   MIDI4
+#define ENABLE_MIDIMUSO_4MV MIDI4
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
@@ -122,15 +132,19 @@
     //#define ENABLE_BAMBLE_OUTPUT  // for sending on the bamble ch1-4
     //#define ENABLE_MPK49
     #define ENABLE_KEYSTEP
-    #define ENABLE_SUBCLOCKER
+    //#define ENABLE_SUBCLOCKER
+    //#define ENABLE_SUBCLOCKER_DEDICATED
     #define ENABLE_CRAFTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
     
     #define ENABLE_MICROLIDIAN
     #define ENABLE_MIDILIGHTS
+    //#define ENABLE_MIDILIGHTS_DEDICATED
 
-    #define ENABLE_BEHRINGER_EDGE
-    //#define ENABLE_BEHRINGER_EDGE_DEDICATED
+    //#define ENABLE_BEHRINGER_EDGE_USB
+    #define ENABLE_BEHRINGER_EDGE_SERIAL    MIDI5
+    //#define ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED    MIDI5
+    //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
@@ -192,10 +206,13 @@
             #define PIN_SEQUENCE_4 36
         #endif
     #elif defined(PCB)
-            // shouldn't need to define pins as should all be handled by teh MCP23s17
+        // shouldn't need to define pins as should all be handled by teh MCP23s17
+        #define ENABLE_MORE_CLOCKS // output a couple of extra clocks (16th and 8th notes) on the extra sequencer pins
     #endif
 #endif
 
-
+// turn off IRQs while checking changed USB devices 
+// seems to prevent crashes on reconnection, but causes pipes to freeze up, it seems
+#define IRQ_PROTECT_USB_CHANGES
 
 //#define FloatParameter FloatParameter

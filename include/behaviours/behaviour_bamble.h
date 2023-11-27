@@ -12,7 +12,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
@@ -91,8 +91,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         using DeviceBehaviourUltimateBase::receive_note_off;
         using DeviceBehaviourUltimateBase::debug;
 
-        virtual bool has_output() { return true; }
-        //virtual bool has_input() { return true; }
+        virtual bool transmits_midi_notes() { return true; }
+        //virtual bool receives_midi_notes() { return true; }
 
         uint16_t vid = 0x2886, pid = 0x800B;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
@@ -511,7 +511,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         #ifdef ENABLE_SCREEN
             // FLASHMEM // virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
             FLASHMEM
-            LinkedList<MenuItem*> *make_menu_items() override;
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 };
 

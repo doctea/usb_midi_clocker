@@ -12,6 +12,7 @@
 #include "mymenu/menu_bpm.h"
 #include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
+#include "mymenu/menuitems_scale.h"
 
 #include "menuitems_pinned.h"
 
@@ -98,11 +99,10 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
-    ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
+    LambdaToggleControl craftsynth_clock_toggle = LambdaToggleControl (
         "CraftSynth clock enable",
-        behaviour_craftsynth,
-        &ClockedBehaviour::setClockEnabled,
-        &ClockedBehaviour::isClockEnabled,
+        [=](bool v) -> void { behaviour_craftsynth->setClockEnabled(v); },
+        [=]() -> bool { return behaviour_craftsynth->isClockEnabled(); },
         nullptr
     );
 #endif
@@ -124,7 +124,7 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 DisplayTranslator_Configured display_translator = DisplayTranslator_Configured();
 
 #ifndef GDB_DEBUG
-FLASHMEM 
+//FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
 #endif
 void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
@@ -154,11 +154,10 @@ void setup_menu() {
     menu->add(new SeparatorMenuItem("Project"));
 
     ActionConfirmItem *project_save = new ActionConfirmItem("Save settings", &save_project_settings);
-    ObjectNumberControl<Project,int> *project_selector = new ObjectNumberControl<Project,int>(
+    LambdaNumberControl<int> *project_selector = new LambdaNumberControl<int>(
         "Project number", 
-        project, 
-        &Project::setProjectNumber, 
-        &Project::getProjectNumber, 
+        [=](int project_number) -> void { project->setProjectNumber(project_number); },
+        [=]() -> int { return project->getProjectNumber(); },
         nullptr, 
         0, 
         100
@@ -253,8 +252,16 @@ void setup_menu() {
 
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
-    menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
+    menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
+    menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
+    menu->add(new LambdaScaleMenuItemBar(
+        "Global Scale", 
+        [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+        [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+        [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+    ));
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
@@ -267,9 +274,6 @@ void setup_menu() {
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
-
-        //menu->add(new GatesDisplay("Gates"));
-        //gate_manager->create_controls(menu);         // do this later, after gate manager has had a chance to be set up...
 
         #ifdef ENABLE_SD
             sequence_fileviewer = new FileViewerMenuItem("Sequence");

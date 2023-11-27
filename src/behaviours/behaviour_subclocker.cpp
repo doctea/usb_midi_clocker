@@ -1,3 +1,5 @@
+#ifdef ENABLE_SUBCLOCKER_DEDICATED
+
 #include "behaviours/behaviour_subclocker.h"
 
 DeviceBehaviour_Subclocker *behaviour_subclocker = nullptr;
@@ -14,3 +16,5 @@ void bamble_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
     if (behaviour_bamble!=nullptr) behaviour_bamble->note_off(inChannel, inNumber, inVelocity);
 }
 */
+
+#endif

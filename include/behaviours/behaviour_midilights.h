@@ -1,3 +1,5 @@
+#ifdef ENABLE_MIDILIGHTS_DEDICATED
+
 #ifndef BEHAVIOUR_MIDILIGHTS__INCLUDED
 #define BEHAVIOUR_MIDILIGHTS__INCLUDED
 
@@ -15,7 +17,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 //#include "parameters/MIDICCParameter.h"
 
@@ -38,8 +40,8 @@ class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public Clocked
         virtual const char *get_label() override {
             return "MIDILights";
         }
-        virtual bool has_output() { return false; }
-        virtual bool has_input()  { return false; }
+        virtual bool transmits_midi_notes() { return false; }
+        virtual bool receives_midi_notes()  { return false; }
 
         source_id_t source_id_2 = -1;
 
@@ -121,4 +123,6 @@ class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public Clocked
 extern DeviceBehaviour_MIDILights *behaviour_midilights;
 
 #endif
+#endif
+
 #endif

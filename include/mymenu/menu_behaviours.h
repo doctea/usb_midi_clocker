@@ -3,13 +3,13 @@
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_manager.h"
 
-class BehavioursPanel : public MenuItem {
+class BehavioursPanel : /*virtual*/ public MenuItem {
     public:
         BehavioursPanel() : MenuItem("Behaviours") {}
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);
-            header("USB Behaviours:", pos, selected, opened);
+            header("MIDI-USB Behaviours:", pos, selected, opened);
             colours(opened);
             tft->setTextSize(1);
             //int connected = 0;
