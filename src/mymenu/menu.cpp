@@ -12,12 +12,17 @@
 #include "mymenu/menu_bpm.h"
 #include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
+#include "mymenu/menuitems_scale.h"
+
+#include "menuitems_pinned.h"
 
 #include "menuitems_object_multitoggle.h"
 
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
 #include "mymenu/menu_arrangement.h"
+
+#include "submenuitem_bar.h"
 
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
@@ -37,7 +42,13 @@
 #include "profiler.h"
 
 //DisplayTranslator *tft;
-DisplayTranslator_STeensy_Big *tft;
+#ifdef TFT_ST7789_T3_BIG
+    DisplayTranslator_STeensy_Big *tft;
+#elif defined(TFT_ILI9341_T3N)
+    DisplayTranslator_ILI9341_T3N *tft;
+#elif defined(TFT_BODMER)
+    DisplayTranslator_Bodmer *tft;
+#endif
 Menu *menu; // = Menu();
 
 #ifdef ENCODER_KNOB_L
@@ -62,13 +73,23 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-
+//uint16_t *framebuffers[2];
+//bool buffer_number = 0;
+/*
+void swap_framebuffer() {
+    //buffer_number = !buffer_number;
+    //tft->tft->setFrameBuffer(framebuffers[buffer_number]);
+    tft->framebuffer_ready = true;
+    //tft->ready_for_frame = 
+}
+*/
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
 ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 
 #ifdef ENABLE_SEQUENCER
+    #include "mymenu/menu_gatedisplay.h"
     SequencerStatus sequencer_status =      SequencerStatus("Pattern");
 #endif
 
@@ -78,36 +99,40 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
-    ObjectToggleControl<ClockedBehaviour> craftsynth_clock_toggle = ObjectToggleControl<ClockedBehaviour> (
+    LambdaToggleControl craftsynth_clock_toggle = LambdaToggleControl (
         "CraftSynth clock enable",
-        behaviour_craftsynth,
-        &ClockedBehaviour::setClockEnabled,
-        &ClockedBehaviour::isClockEnabled,
+        [=](bool v) -> void { behaviour_craftsynth->setClockEnabled(v); },
+        [=]() -> bool { return behaviour_craftsynth->isClockEnabled(); },
         nullptr
     );
 #endif
 
 MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
 
-
-#include "menuitems_fileviewer.h"
-extern FileViewerMenuItem *sequence_fileviewer;
-extern FileViewerMenuItem *project_fileviewer;
+#ifdef ENABLE_SD
+    #include "menuitems_fileviewer.h"
+    extern FileViewerMenuItem *sequence_fileviewer;
+    extern FileViewerMenuItem *project_fileviewer;
+#endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
 
-//DisplayTranslator_STeensy steensy = DisplayTranslator_STeensy();
-//DisplayTranslator_STeensy_Big steensy = DisplayTranslator_STeensy_Big();
-DisplayTranslator_Configured steensy = DisplayTranslator_Configured();
+//DisplayTranslator_STeensy display_translator = DisplayTranslator_STeensy();
+//DisplayTranslator_STeensy_Big display_translator = DisplayTranslator_STeensy_Big();
+DisplayTranslator_Configured display_translator = DisplayTranslator_Configured();
 
 #ifndef GDB_DEBUG
-FLASHMEM 
+//FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
 #endif
 void setup_menu() {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
-    tft = &steensy; //DisplayTranslator_STeensy();
+    tft = &display_translator; //DisplayTranslator_STeensy();
+    #ifdef TFT_BODMER
+        tft->init();
+    #endif
+
     //delay(50);
     //Serial.println(F("Finished  constructor"));
     Serial_flush();
@@ -116,6 +141,8 @@ void setup_menu() {
     menu = new Menu(tft);
     Serial.println(F("Created Menu object"));
     Serial_flush();
+
+    //menu->setup_display();
 
     menu->set_messages_log(messages_log);
 
@@ -127,15 +154,22 @@ void setup_menu() {
     menu->add(new SeparatorMenuItem("Project"));
 
     ActionConfirmItem *project_save = new ActionConfirmItem("Save settings", &save_project_settings);
-    ObjectNumberControl<Project,int> *project_selector = new ObjectNumberControl<Project,int>(
+    LambdaNumberControl<int> *project_selector = new LambdaNumberControl<int>(
         "Project number", 
-        project, 
-        &Project::setProjectNumber, 
-        &Project::getProjectNumber, 
+        [=](int project_number) -> void { project->setProjectNumber(project_number); },
+        [=]() -> int { return project->getProjectNumber(); },
         nullptr, 
         0, 
         100
     );
+
+    // add start/stop/continue bar
+    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport");
+    project_startstop->add(new ActionItem("Start",    clock_start));
+    project_startstop->add(new ActionItem("Stop",     clock_stop));
+    project_startstop->add(new ActionItem("Continue", clock_continue));
+    project_startstop->add(new ActionFeedbackItem("Restart", set_restart_on_next_bar_on, is_restart_on_next_bar, "Restarting..", "Restart"));
+    menu->add(project_startstop);
 
     menu->add(project_save);       // save project settings button
     menu->add(project_selector);   // save project selector button
@@ -211,13 +245,24 @@ void setup_menu() {
     #endif
     menu->add(project_multi_autoadvance);
 
-    project_fileviewer = new FileViewerMenuItem("Project");
-    menu->add(project_fileviewer);
+    #ifdef ENABLE_SD
+        project_fileviewer = new FileViewerMenuItem("Project");
+        menu->add(project_fileviewer);
+    #endif
 
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
-    menu->add(new ObjectActionItem<MIDIMatrixManager>("{PANIC}", midi_matrix_manager, &MIDIMatrixManager::stop_all_notes));
+    menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
+    menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
+    menu->add(new LambdaScaleMenuItemBar(
+        "Global Scale", 
+        [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+        [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+        [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+    ));
+    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
     behaviour_manager->create_all_behaviour_menu_items(menu);
@@ -230,14 +275,16 @@ void setup_menu() {
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
 
-        sequence_fileviewer = new FileViewerMenuItem("Sequence");
-        menu->add(sequence_fileviewer);
+        #ifdef ENABLE_SD
+            sequence_fileviewer = new FileViewerMenuItem("Sequence");
+            menu->add(sequence_fileviewer);
+        #endif
     #endif
 
     // looper stuff
     #ifdef ENABLE_LOOPER
         menu->add_page("Looper");
-        menu->add(mpk49_loop_track.make_menu_items());
+        menu->add(midi_loop_track.make_menu_items());
         #ifdef ENABLE_DRUM_LOOPER
             menu->add(&drum_looper_status);
             menu->add(&drum_loop_quantizer_setting);

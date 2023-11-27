@@ -7,7 +7,7 @@
 #include "Config.h"
 #include "bpm.h"
 
-#ifdef ENABLE_CLOCKS
+#if defined(ENABLE_CLOCKS) && defined(PROTOTYPE)
 const byte cv_out_clock_pin[NUM_CLOCKS] = {
     PIN_CLOCK_1, PIN_CLOCK_2, PIN_CLOCK_3, PIN_CLOCK_4,
     #if NUM_CLOCKS > 4

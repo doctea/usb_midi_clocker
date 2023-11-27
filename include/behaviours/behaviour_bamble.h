@@ -4,12 +4,15 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_BAMBLE
+
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_clocked.h"
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
@@ -88,8 +91,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         using DeviceBehaviourUltimateBase::receive_note_off;
         using DeviceBehaviourUltimateBase::debug;
 
-        virtual bool has_output() { return true; }
-        //virtual bool has_input() { return true; }
+        virtual bool transmits_midi_notes() { return true; }
+        //virtual bool receives_midi_notes() { return true; }
 
         uint16_t vid = 0x2886, pid = 0x800B;
         virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
@@ -309,7 +312,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         /// these for mappable parameters
         //FLASHMEM 
         bool already_initialised = false;
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             Debug_printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)
@@ -424,15 +427,14 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             public:
                 DeviceBehaviour_Bamble *target = nullptr;
                 int index;
-                const String prefix = String("pattern_enable_");
+                const String prefix = String("pattern_enable_") + String(index);
                 SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index) 
                     : SaveableParameterBase(target->patterns[index].label, index < 16 ? "Patterns 1" : "Patterns 2"), 
                     target(target), 
                     index(index) {}
 
                 virtual String get_line() override { 
-                    return prefix+String(index) + String('=') + 
-                            String(target->patterns[index].current_state?"true":"false");
+                    return prefix + String('=') + String(target->patterns[index].current_state?"true":"false");
                 }
                 virtual bool parse_key_value(String key, String value) override {
                     if (key.startsWith(prefix)) {
@@ -452,10 +454,8 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, float>  ("density",        "Euclidian", this, &this->density, nullptr, nullptr, &DeviceBehaviour_Bamble::setDensity,    &DeviceBehaviour_Bamble::getDensity));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("mutate_low",     "Mutate",    this, &this->minimum_pattern, nullptr, nullptr, &DeviceBehaviour_Bamble::setMinimumPattern,    &DeviceBehaviour_Bamble::getMinimumPattern));
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("mutate_high",    "Mutate",    this, &this->maximum_pattern, nullptr, nullptr, &DeviceBehaviour_Bamble::setMaximumPattern,    &DeviceBehaviour_Bamble::getMaximumPattern));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", 
-                                                                                                                    "Mutate",    this, &this->euclidian_seed_modifier, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,    &DeviceBehaviour_Bamble::getEuclidianSeedModifier)); // aka 'Seed Modifier'
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("reset_before_mutate",  
-                                                                                                                    "Mutate",    this, &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,    &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate)); // aka 'auto-reset'
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", "Mutate",    this, &this->euclidian_seed_modifier, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,    &DeviceBehaviour_Bamble::getEuclidianSeedModifier)); // aka 'Seed Modifier' / 'Seed bank'
+            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("reset_before_mutate", "Mutate",    this, &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,    &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate)); // aka 'auto-reset'
             this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("seed_use_phrase","Mutate",    this, &this->euclidian_seed_use_phrase, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase)); // aka 'Use Phrase')
 
             const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
@@ -511,10 +511,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         #ifdef ENABLE_SCREEN
             // FLASHMEM // virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
             FLASHMEM
-            LinkedList<MenuItem*> *make_menu_items();
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
 };
 
 extern DeviceBehaviour_Bamble *behaviour_bamble;
 
+#endif
 #endif

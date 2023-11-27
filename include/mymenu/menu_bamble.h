@@ -1,3 +1,7 @@
+#include "Config.h"
+
+#ifdef ENABLE_BAMBLE
+
 #include "behaviours/behaviour_bamble.h"
 #include "menuitems.h"
 #include "submenuitem_bar.h"
@@ -72,8 +76,8 @@ class BambleTriggerOnBar : public SubMenuItemBar {
         DeviceBehaviour_Bamble *behaviour = nullptr;
 
         BambleTriggerOnSelectorControl *pattern_selector = nullptr;
-        ObjectToggleControl<BambleTriggerOnBar> *loop_toggler = nullptr;
-        ObjectToggleControl<BambleTriggerOnBar> *invert_toggler = nullptr;
+        LambdaToggleControl *loop_toggler = nullptr;
+        LambdaToggleControl *invert_toggler = nullptr;
 
         BambleTriggerOnBar(const char *label, DeviceBehaviour_Bamble *behaviour, int envelope_number) : SubMenuItemBar(label) {
             this->behaviour = behaviour;
@@ -82,8 +86,8 @@ class BambleTriggerOnBar : public SubMenuItemBar {
 
             this->pattern_selector = new BambleTriggerOnSelectorControl("Trigger on", behaviour, envelope_number); //, LinkedList<option> *available_values = nullptr));
             //this->pattern_selector->debug = true;
-            this->loop_toggler =     new ObjectToggleControl<BambleTriggerOnBar>("Loop", this,   &BambleTriggerOnBar::setLoop,   &BambleTriggerOnBar::getLoop);
-            this->invert_toggler =   new ObjectToggleControl<BambleTriggerOnBar>("Invert", this, &BambleTriggerOnBar::setInvert, &BambleTriggerOnBar::getInvert);
+            this->loop_toggler =     new LambdaToggleControl("Loop",    [=](bool v) -> void { this->setLoop(); },   [=]() -> bool { return this->getLoop(); });
+            this->invert_toggler =   new LambdaToggleControl("Invert",  [=](bool v) -> void { this->setInvert(); }, [=]() -> bool { return this->getInvert(); });
             this->add(pattern_selector);
             this->add(loop_toggler);
             this->add(invert_toggler);
@@ -118,7 +122,7 @@ class BambleTriggerOnBar : public SubMenuItemBar {
             this->pattern_selector->set_available_values(available_values);
         }
 
-        virtual inline int get_max_pixel_width(int item_number) override {
+        virtual int get_max_pixel_width(int item_number) override {
             switch(item_number) {
                 case 1: case 2: return tft->width()/4;
                 case 0: return tft->width()/2;
@@ -128,3 +132,4 @@ class BambleTriggerOnBar : public SubMenuItemBar {
 };
 
 
+#endif

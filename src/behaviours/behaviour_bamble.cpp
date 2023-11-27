@@ -1,3 +1,5 @@
+#ifdef ENABLE_BAMBLE
+
 #include "behaviours/behaviour_bamble.h"
 
 DeviceBehaviour_Bamble *behaviour_bamble = new DeviceBehaviour_Bamble(); //nullptr;
@@ -151,10 +153,9 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
         (uint16_t)0,
         (uint16_t)16384
     ));
-    further_euclidian_options->add(new ObjectActionItem<DeviceBehaviour_Bamble>(
+    further_euclidian_options->add(new LambdaActionItem(
        "RaNdOm",
-       this,
-       &DeviceBehaviour_Bamble::setRandomSeed
+       [=]() -> void { this->setRandomSeed(); }
     ));
 
     //Serial.printf("BambleTriggerOnSelectorControl creating...\n"); Serial_flush();
@@ -184,5 +185,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
 
     return menuitems;
 }
+
+#endif
 
 #endif

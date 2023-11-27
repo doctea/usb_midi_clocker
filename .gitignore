@@ -20,3 +20,4 @@ usb_midi_clocker.code-workspace
 wip/*
 hexes/*
 include/__version.h
+scraps

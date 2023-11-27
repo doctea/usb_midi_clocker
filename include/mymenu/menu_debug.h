@@ -1,14 +1,17 @@
 #include "Config.h"
+
 #include "menu.h"
 #include "debug.h"
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
 #include "menuitems_numbers.h"
 #include "submenuitem_bar.h"
+#include "menuitems_listviewer.h"
+#include "menuitems_lambda.h"
 
 #include "__version.h"
 
-extern bool debug, debug_stress_sequencer_load;
+extern bool debug_flag, debug_stress_sequencer_load;
 
 class DebugPanel : public MenuItem {
     public:
@@ -54,10 +57,13 @@ void setup_debug_menu() {
 
     SubMenuItemBar *bar = new SubMenuItemBar("Debug");
 
-    ObjectToggleControl<Menu> *debug_times_control = new ObjectToggleControl<Menu>("Render times", menu, &Menu::setDebugTimes, &Menu::isDebugTimes, nullptr);
+    LambdaToggleControl *debug_times_control = new LambdaToggleControl("Render times", [=](bool v) -> void { menu->setDebugTimes(v); }, [=]() -> bool { return menu->isDebugTimes(); }, nullptr);
     bar->add(debug_times_control);
-    bar->add(new NumberControl<bool>("Extra", (bool*)&debug, debug, false, true));
-    bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug, false, true));
+    LambdaToggleControl *profiler_control = new LambdaToggleControl("Profiler", [=](bool v) -> void { menu->setProfileEnable(v); }, [=]() -> bool { return menu->isProfileEnable(); }, nullptr);
+    bar->add(profiler_control);
+
+    bar->add(new NumberControl<bool>("Extra", (bool*)&debug_flag, debug_flag, false, true));
+    bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug_flag, false, true));
     menu->add(bar);
 
     menu->add(new DebugPanel());

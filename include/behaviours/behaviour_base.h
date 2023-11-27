@@ -12,11 +12,15 @@
 
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
+#include "ParameterManager.h"
 
 #include "behaviours/SaveableParameters.h"
 
 #include "file_manager/file_manager_interfaces.h"
 
+#ifdef ENABLE_SCREEN
+    #include "mymenu/menuitems_harmony.h"
+#endif
 
 class MenuItem;
 class ArrangementTrackBase;
@@ -25,10 +29,15 @@ using namespace midi;
 
 enum BehaviourType {
     undefined,
-    usb,        // a USB MIDI device that identifies as a USB MIDI device
-    serial,     // a MIDI device connected over a hardware serial port
+    usb,             // a USB MIDI device that identifies as a USB MIDI device
+    serial,          // a MIDI device connected over a hardware serial port
     usbserial,       // a USB device that connects over serial, but doesn't support MIDI
-    usbserialmidi   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
+    usbserialmidi,   // a USB MIDI device that identifies as a SERIAL device (ie OpenTheremin, Arduino device á la Hairless MIDI)
+    virt             // a 'virtual' device type that exists only in code (eg CV Input)
+};
+
+enum NOTE_MODE {
+    IGNORE, TRANSPOSE
 };
 
 class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
@@ -36,11 +45,17 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     bool debug = false;
 
-    uint16_t colour = C_WHITE;
+    #ifdef ENABLE_SCREEN
+        uint16_t colour = C_WHITE;
+    #endif
 
     source_id_t source_id = -1;
     target_id_t target_id = -1;
 
+    //int force_octave = -1;
+    int last_transposed_note = -1, current_transposed_note = -1;
+    int current_channel = 0;
+    int8_t TUNING_OFFSET = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
@@ -50,14 +65,17 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         return (const char*)"UltimateBase";
     }
 
-    virtual bool has_input() { return false; }
-    virtual bool has_output() { return false; }
+    virtual bool receives_midi_notes()  { return false; }
+    virtual bool transmits_midi_notes() { return false; }
+    virtual bool transmits_midi_clock() { return false; }
+
     // input/output indicator
+    bool indicator_done = false;
+    char indicator_text[8];
     virtual const char *get_indicator() {
-        static bool done = false;
-        static char indicator_text[5];
-        if (!done) {
-            snprintf(indicator_text, 5, "%c%c", this->has_input()?'I':' ', this->has_output()?'O':' ');
+        if (!indicator_done) {
+            snprintf(indicator_text, 7, "%c%c%c", this->receives_midi_notes()?'I':' ', this->transmits_midi_notes()?'O':' ', this->transmits_midi_clock()?'C': ' ');
+            indicator_done = true;
         }
         return indicator_text;
     }
@@ -100,14 +118,39 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual void init() {};
 
+    virtual void killCurrentNote() {
+        if (is_valid_note(current_transposed_note)) {
+            this->actualSendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
+            current_transposed_note = NOTE_OFF;
+        }
+    }
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
+        // TODO: this is where ForceOctave check should go..?
+        note = this->recalculate_pitch(note);
+        if (!is_valid_note(note)) return;
+        this->current_transposed_note = note;
+        this->current_channel = channel;
+
+        note += this->TUNING_OFFSET;
+        if (!is_valid_note(note)) return;
+
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
+        // TODO: this is where ForceOctave check should go..?
+        note = this->recalculate_pitch(note);
+        if (!is_valid_note(note)) return;
+        this->last_transposed_note = note;
+        if (this->current_transposed_note==note)
+            this->current_transposed_note = NOTE_OFF;
+
+        note += this->TUNING_OFFSET;
+        if (!is_valid_note(note)) return;
+
         this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
@@ -139,19 +182,19 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual void actualSendPitchBend(int16_t bend, uint8_t channel) {}
 
     // parameter handling shit
-    LinkedList<DoubleParameter*> *parameters = new LinkedList<DoubleParameter*>();
-    virtual LinkedList<DoubleParameter*> *get_parameters () {
+    LinkedList<FloatParameter*> *parameters = new LinkedList<FloatParameter*>();
+    virtual LinkedList<FloatParameter*> *get_parameters () {
         if (parameters==nullptr || parameters->size()==0)
             this->initialise_parameters();
         return parameters;
     }
-    virtual LinkedList<DoubleParameter*> *initialise_parameters() {
+    virtual LinkedList<FloatParameter*> *initialise_parameters() {
         return parameters;
     }
     virtual bool has_parameters() {
         return this->get_parameters()->size()>0;
     }
-    virtual DoubleParameter* getParameterForLabel(const char *label) {
+    virtual FloatParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
         for (unsigned int i = 0 ; i < parameters->size() ; i++) {
             //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
@@ -179,6 +222,14 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             Debug_println("instantiating saveable_parameters list");
             this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
         }
+
+        if(this->transmits_midi_notes()) {
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note",       "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNote(v); },     [=]() -> int8_t { return this->getLowestNote(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note",      "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNote(v); },    [=]() -> int8_t { return this->getHighestNote(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note_mode",  "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNoteMode(v); }, [=]() -> int8_t { return this->getLowestNoteMode(); }));
+            this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note_mode", "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNoteMode(v); },[=]() -> int8_t { return this->getHighestNoteMode(); }));
+        }
+
         // todo: add all the modulatable parameters via a wrapped class
         /*if (this->has_parameters()) {
             for (unsigned int i = 0 ; i < parameters->size() ; i++) {
@@ -218,37 +269,12 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
         Debug_println("save_sequence_add_lines_parameters..");
-        LinkedList<DoubleParameter*> *parameters = this->get_parameters();
-        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-            DoubleParameter *parameter = parameters->get(i);
+        if (this->has_parameters()) {
+            LinkedList<FloatParameter*> *parameters = this->get_parameters();
+            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                FloatParameter *parameter = parameters->get(i);
 
-            // save parameter base values (save normalised value; let's hope that this is precise enough to restore from!)
-            lines->add(String("parameter_base_") + String(parameter->label) + "=" + String(parameter->getCurrentNormalValue()));
-
-            if (parameter->is_modulatable()) {
-                #define MAX_SAVELINE 255
-                char line[MAX_SAVELINE];
-                // todo: move handling of this into the Parameter class, or into a third class that can handle saving to different formats..?
-                //          ^^ this could be the SaveableParameter class, used as a wrapper.  would require SaveableParameter to be able to add multiple lines to the save file
-                // todo: make these mappings part of an extra type of thing (like a "preset clip"?), rather than associated with sequence?
-                // todo: move these to be saved with the project instead?
-                for (int slot = 0 ; slot < 3 ; slot++) { // TODO: MAX_CONNECTION_SLOTS...?
-                    if (parameter->connections[slot].parameter_input==nullptr) continue;      // skip if no parameter_input configured in this slot
-                    if (parameter->connections[slot].amount==0.00) continue;                     // skip if no amount configured for this slot
-
-                    const char *input_name = parameter->get_input_name_for_slot(slot);
-
-                    snprintf(line, MAX_SAVELINE, "parameter_%s_%i=%s|%3.3f", 
-                        parameter->label, 
-                        slot, 
-                        input_name,
-                        //'A'+slot, //TODO: implement proper saving of mapping! /*parameter->get_connection_slot_name(slot), */
-                        //parameter->connections[slot].parameter_input->name,
-                        parameter->connections[slot].amount
-                    );
-                    Debug_printf(F("PARAMETERS\t%s: save_sequence_add_lines saving line:\t%s\n"), line);
-                    lines->add(String(line));
-                }
+                parameter->save_sequence_add_lines(lines);
             }
         }
         Serial.println("finished save_sequence_add_lines_parameters.");
@@ -261,54 +287,17 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
         Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
         //static String prefix = String("parameter_" + this->get_label());
+
+        // todo: can optimise this for most cases by remembering the last-found parameter and starting our search there instead
+        //              eg something like parameter_manager->fast_load_parse_key_value(this->parameters, key, value)
         const char *prefix = "parameter_";
-        const char *prefix_base = "parameter_base_";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            // reload base value
-            if (key.startsWith(prefix_base)) {
-                key = key.replace(prefix_base,"");
-                DoubleParameter *p = this->getParameterForLabel(key.c_str());
-                if (p!=nullptr) {
-                    p->updateValueFromNormal(value.toFloat());
+            /*for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                if (parameters->get(i)->load_parse_key_value(key, value)) 
                     return true;
-                }
-                Serial.printf("WARNING: got a %s%s with value %s, but found no matching Parameter!\n", prefix_base, key.c_str(), value.c_str());
-                return false;
-            }
-            // sequence save line looks like: `parameter_Filter Cutoff_0=A|1.000`
-            //                                 ^^head ^^_^^param name^_slot=ParameterInputName|Amount
-            key = key.replace(prefix, "");
-
-            // todo: checking that key has _ in it (ie that it is a modulation setting save)
-
-            String parameter_name = key.substring(0, key.indexOf('_'));
-            int slot_number = key.substring(key.indexOf('_')+1).toInt();
-            String input_name = value.substring(0, value.indexOf('|'));
-            double amount = value.substring(value.indexOf('|')+1).toFloat();
-
-            //this->getParameterForLabel((char*)parameter_name.c_str())->set_slot_input(slot_number, get_input_for_parameter_name(parameter_name)));parameter_name.c_str()[0]);
-            DoubleParameter *p = this->getParameterForLabel(parameter_name.c_str());
-            //Serial.printf("PARAMETERS\t\t%s: Got value substring to convert to float '%s' => %f\n", p->label, value.substring(value.indexOf('|')+1).c_str(), amount);
-
-            if (p!=nullptr) {
-                //Serial.printf(F("PARAMETERS\t\t%s: setting set_slot_amount: %i to %c and %f\n"), p->label, slot_number, input_name.c_str()[0], amount);
-                //Serial.printf(F("\t%s: setting slot_number %i to %f\n"), p->label, slot_number, amount);
-                //BaseParameterInput *input = parameter_manager->getInputForName(input_name.c_str()[0]);
-                p->set_slot_input(slot_number, input_name.c_str());
-                p->set_slot_amount(slot_number, amount);
-                /*Serial.printf("PARAMETERS\t\t%s: after setting slot %i, values look like name=%c and amount=%f\n", 
-                    p->label, 
-                    slot_number, 
-                    p->get_input_name_for_slot(slot_number),
-                    p->get_amount_for_slot(slot_number)
-                );*/
+            }*/
+            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))
                 return true;
-            } else {
-                Serial.printf(F("PARAMETERS\tWARNING: Couldn't find a Parameter for name %s\n"), parameter_name.c_str());
-                return false;
-            }
-            //Serial.printf(F("\t slot_number %i and amount %f but no parameter found for %s in %s\n"), slot_number, amount, parameter_name.c_str(), this->get_label());
-            return true;
         }
         ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a parameter!\n"));
         return false;
@@ -316,11 +305,149 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     #ifdef ENABLE_SCREEN
         LinkedList<MenuItem*> *menuitems = nullptr;
-        //FLASHMEM
+        FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
+        //FLASHMEM
+        virtual LinkedList<MenuItem*> *make_menu_items_device() {
+            // dummy device menuitems
+            return this->menuitems;
+        }
         FLASHMEM
         virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
+
+        HarmonyStatus *output_harmony_status = nullptr; // store a pointer to this so we can update it from subclasses, eg MIDIBass
     #endif
+
+
+    /*virtual void setForceOctave(int octave);
+    virtual int getForceOctave() {
+        //Serial.println("Beatstep_Behaviour#getForceOctave!"); Serial_flush();
+        return this->force_octave;
+    }*/
+
+    int8_t lowest_note_mode  = NOTE_MODE::IGNORE;
+    int8_t highest_note_mode = NOTE_MODE::IGNORE;
+    int8_t lowest_note = 0;
+    int8_t highest_note = MIDI_MAX_NOTE;
+
+    virtual void setLowestNote(int8_t note) {
+        // don't allow highest note to be set higher than highest note
+        if (note > this->getHighestNote())
+            note = this->getHighestNote();
+        if (!is_valid_note(note)) 
+            note = MIDI_MIN_NOTE;
+        // if the currently playing note doesn't fit within the new bounds, kill it
+        //if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < note)
+        //if (note > getLowestNote()) // if new lower-note-limit is higher than existing lower-note-limit, force kill of note
+        // TODO: hmmm so, restricting this kill command as in the above two commented-out lines results in stuck notes on Neutron -- weird, why?
+            this->killCurrentNote();
+            //this->sendNoteOff(this->current_transposed_note, 0, 0);
+        this->lowest_note = note;
+    }
+    virtual int8_t getLowestNote() {
+        return this->lowest_note;
+    }
+    virtual int8_t getLowestNoteMode() {
+        return lowest_note_mode;
+    }
+    virtual void setLowestNoteMode(int8_t mode) {
+        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < this->getLowestNote())
+            this->killCurrentNote();
+            //this->sendNoteOff(this->current_transposed_note, 0, 0);
+        this->lowest_note_mode = mode;
+    }
+
+    virtual void setHighestNote(int8_t note) {
+        // don't allow highest note to be set lower than lowest note
+        if (note < this->getLowestNote())
+            note = this->getLowestNote();
+        if (!is_valid_note(note)) 
+            note = MIDI_MAX_NOTE;
+        // if the currently playing note doesn't fit within the new bounds, kill it
+        //if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > note)
+        //if (note < getHighestNote()) // if new higher-note-limit is lower than existing higher-note-limit, force kill of note
+        // TODO: hmmm so, restricting this kill command as in the above two commented-out lines results in stuck notes on Neutron -- weird, why?
+            this->killCurrentNote();
+            //this->sendNoteOff(this->current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel);
+        this->highest_note = note;
+    }
+    virtual int8_t getHighestNote() {
+        return this->highest_note;
+    }
+    virtual int8_t getHighestNoteMode() {
+        return this->highest_note_mode;
+    }
+    virtual void setHighestNoteMode(int8_t mode) {
+        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > this->getHighestNote())
+            this->killCurrentNote();
+            //this->sendNoteOff(this->current_transposed_note, 0, 0);
+        this->highest_note_mode = mode;
+    }
+
+    // remap pitch if force octave is on, TODO: other tranposition modes
+    // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
+    // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
+    //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
+    // TODO: move quantisation calculation here...?
+    virtual int recalculate_pitch(byte note) {
+        /*if (this->force_octave >= 0) {
+            // send incoming notes from beatstep back out to neutron on serial3, but transposed down
+            uint8_t note2 = note % 12;
+            note2 += (force_octave*12); //24;
+            if(this->debug) {
+                Serial.printf("\trecalculate_pitch on %i => %i\n", note, note2);
+            }
+            note = note2;
+            return note2;
+        }*/
+        if (!is_valid_note(note)) return NOTE_OFF;
+
+        if (debug && (getLowestNote()>0 || getHighestNote()<127)) 
+            Serial.printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
+            
+        if (note < getLowestNote()) {
+            if (this->debug) Serial.printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
+            if (getLowestNoteMode()==NOTE_MODE::IGNORE) {
+                if (this->debug) Serial.println("\tignoring!");
+                note = NOTE_OFF;
+            } else if (getLowestNoteMode()==NOTE_MODE::TRANSPOSE) {
+                //int8_t octave = note / 12;
+                /*int8_t lowest_octave = getLowestNote() / 12;
+                int8_t chromatic_pitch = note % 12;
+                int8_t note2 = note;
+                note = (lowest_octave*12) + chromatic_pitch;*/
+                int8_t note2 = note;
+                while (is_valid_note(note) && note < getLowestNote()) {
+                    note += 12;
+                }
+                if (this->debug) Serial.printf("\ttransposed from %i (%s) up to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
+            }
+        } else if (note > getHighestNote()) {
+            if (this->debug) Serial.printf("\tnote\t%i (%s)\tis higher than highest note\t%i (%s)\n", note, get_note_name_c(note), getHighestNote(), get_note_name_c(getHighestNote()));
+            if (getHighestNoteMode()==NOTE_MODE::IGNORE) {
+                if (this->debug) Serial.println("\tignoring!");
+                note = NOTE_OFF;
+            } else if (getHighestNoteMode()==NOTE_MODE::TRANSPOSE) {
+                //int8_t octave = note / 12;
+                /*int8_t highest_octave = getHighestNote() / 12;
+                int8_t chromatic_pitch = note % 12;
+                int8_t note2 = note;
+                note = ((highest_octave-1)*12) + chromatic_pitch;*/
+                int8_t note2 = note;
+                while (is_valid_note(note) && note > getHighestNote()) {
+                    note -= 12;
+                }
+                if (this->debug) Serial.printf("\ttransposed from %i (%s) down to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
+                //Serial.printf("\t\t(highest_octave =\t%i, chromatic_pitch =\t%i (%s))\n", highest_octave, chromatic_pitch, note_names[chromatic_pitch]);
+            }
+        }
+        if (!is_valid_note(note) || note < getLowestNote() || note > getHighestNote()) {
+            if (this->debug) Serial.printf("\t%i (%s) isn't valid or out of bounds\n", note, get_note_name_c(note));
+            return NOTE_OFF;
+        }
+        return note;
+    }
+
     
     virtual ArrangementTrackBase *create_arrangement_track() {
         return nullptr;

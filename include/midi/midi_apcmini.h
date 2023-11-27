@@ -4,7 +4,7 @@
 
 #include "bpm.h"
 #include "sequencer.h"
-//#include "multi_usb_handlers.h"
+//#include "usb/multi_usb_handlers.h"
 //#include <MIDI.h>
 //#include "USBHost_t36.h"
 
@@ -29,7 +29,15 @@
 #define APCMINI_BUTTON_SEND      70
 #define APCMINI_BUTTON_DEVICE    71
 
-#define APCMINI_FADER_MASTER 56
+#define APCMINI_FADER_CC_1      48
+#define APCMINI_FADER_CC_2      49
+#define APCMINI_FADER_CC_3      50
+#define APCMINI_FADER_CC_4      51
+#define APCMINI_FADER_CC_5      52
+#define APCMINI_FADER_CC_6      53
+#define APCMINI_FADER_CC_7      54
+#define APCMINI_FADER_CC_8      55
+#define APCMINI_FADER_CC_MASTER 56
 
 //#define START_BEAT_INDICATOR 0
 #define START_BEAT_INDICATOR  APCMINI_BUTTON_UP

@@ -8,7 +8,7 @@
 
 #include "menuitems.h"
 
-class MidiMatrixSelectorControl : public SelectorControl {
+class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
@@ -95,72 +95,134 @@ class MidiMatrixSelectorControl : public SelectorControl {
 
     // classic fixed display version
     virtual int display(Coord pos, bool selected, bool opened) override {
-        //Serial.println("MidiOutputSelectorControl display()!");
-        //unsigned long time_micros = micros();
 
         pos.y = header(label, pos, selected, opened);
-        //tft->setTextSize(2);
-
-        if (selected_source_index == -1) {
-            tft->setCursor(pos.x + (18*6), pos.y - 8);
-            for(int i = 0 ; i < midi_matrix_manager->targets_count ; i++) {
-                colours(selected, this->get_colour_for_target_id(i), BLACK);
-                tft->printf("%1x", i);
-            }
-            tft->println();
-        }
-
-        //num_values = NUM_AVAILABLE_OUTPUTS;
         num_values = this->get_num_available();
 
         tft->setTextSize(1);
 
         int current_value = actual_value_index; //this->getter();
 
-        if (selected_source_index==-1) { // show list of sources
-            for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
-                const bool is_current_value_selected = source_id==current_value;
-                const int col = is_current_value_selected ? GREEN : C_WHITE;
-                colours(opened && selected_value_index==source_id, col, BLACK);
-                tft->printf("%15s : ", (char*)get_label_for_index(source_id));
+        int source_position[midi_matrix_manager->sources_count];
+        int target_position[midi_matrix_manager->targets_count];
 
-                for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
-                    colours(BLACK, this->get_colour_for_target_id(target_id));
-                    if (midi_matrix_manager->is_connected(source_id, target_id)) {
-                        //tft->printf((char*)"%15s, ", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
-                        tft->printf("%1x", target_id);
-                    } else {
-                        tft->printf(" ");
-                    }
-                }
-                tft->println();
-            }
-        } else {        // show list of targets
-            tft->setTextColor(BLACK,GREEN);
-            tft->printf("%s outputs to..\n", (char*)midi_matrix_manager->get_label_for_source_id(selected_source_index));
-            for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
-                //bool is_current_value_selected = target_id==current_value;
-                const bool is_current_value_connected = midi_matrix_manager->is_connected(selected_source_index, target_id);
-                /*int col = (is_current_value_connected && is_current_value_selected) ? PURPLE :
-                            is_current_value_connected ? GREEN :
-                            C_WHITE;*/
-                const uint16_t col = this->get_colour_for_target_id(target_id);
-                colours(opened && selected_value_index==target_id, col, BLACK); //this->get_colour_for_target_id(target_id), BLACK);
-                const char indicator = is_current_value_connected ? '*' : ' ';
-                tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
+        byte source_processed_count[midi_matrix_manager->sources_count];
+        byte target_processed_count[midi_matrix_manager->targets_count];
+        memset(source_processed_count, 0, midi_matrix_manager->sources_count);
+        memset(target_processed_count, 0, midi_matrix_manager->targets_count);
 
-                tft->printf("  %3s:%3s", 
-                    (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->current_note),
-                    (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(target_id)->last_note)
-                );
-                tft->println();
-            }
+        bool opened_on_source = opened && selected_source_index==-1;
+        bool opened_on_target = opened && selected_source_index>=0;
+        const source_id_t relevant_source_id = opened_on_source ? selected_value_index : selected_source_index;
+
+        // for remembering the lowest we go on screen
+        int lowest_y = pos.y;
+
+        // render MIDI sources (left-hand column)
+        for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+            const bool is_current_value_selected = source_id==current_value;
+            int col = is_current_value_selected ? GREEN : C_WHITE;
+            if (opened_on_target && !is_current_value_selected) 
+                col = tft->halfbright_565(col);
+            colours(opened && selected_source_index==-1 && selected_value_index==source_id, col, BLACK);
+            tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id));
+            tft->println();
+            source_position[source_id] = tft->getCursorY() - (tft->getRowHeight()/2);
         }
+        lowest_y = tft->getCursorY();
+
+        // position cursor ready to draw targets
+        tft->setCursor(0, pos.y);
+
+        // draw the selected target's currently held + last note
+        if (opened_on_target) {
+            tft->setCursor(0, tft->height()-30);
+            tft->setTextColor(this->get_colour_for_target_id(selected_value_index), BLACK);
+            tft->printf("  %3s:%3s", 
+                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->current_note),
+                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->last_note)
+            );
+        }
+
+        int y = pos.y;
+        // render target MIDI (right-hand column)
+        for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
+
+            const uint16_t target_colour = this->get_colour_for_target_id(target_id);
+            const uint16_t half_target_colour = tft->halfbright_565(target_colour);
+            const bool opened_and_current_target_is_connected = (opened_on_source || opened_on_target) && midi_matrix_manager->is_connected(relevant_source_id, target_id);
+
+            bool opened_and_selected_target_is_current = opened_on_target && selected_value_index==target_id;
+
+            colours(
+                opened_and_selected_target_is_current,
+                !opened || opened_and_current_target_is_connected ? target_colour : half_target_colour, 
+                BLACK
+            ); 
+            
+            tft->setCursor((tft->width()/2), y);
+            //tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
+            tft->printf("%-19.19s", (char*)midi_matrix_manager->get_label_for_target_id(target_id));
+
+            target_position[target_id] = (tft->getCursorY());// + (tft->getRowHeight()/2); // + tft->getRowHeight()) + (tft->getRowHeight()/2);
+            
+            tft->println();
+
+            // draw the lines connecting sources+targets
+            for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+                const uint16_t line_colour = !opened || (opened && relevant_source_id == source_id) ? target_colour : half_target_colour;
+                if (midi_matrix_manager->is_connected(source_id, target_id)) {
+                    // calculate the offset from the label positions to draw the connection line; take into account how many other connections there are (by asking midi_matrix_manager), and how many we've already drawn (by tracking in *_processed_count arrays)
+                    //int pixels_per_source = constrain(source_processed_count[source_id] * (tft->getRowHeight() / midi_matrix_manager->connected_to_source_count(source_id)), 1, tft->getRowHeight());
+                    //int pixels_per_target = constrain(target_processed_count[target_id] * (tft->getRowHeight() / midi_matrix_manager->connected_to_target_count(target_id)), 1, tft->getRowHeight());
+                    int pixels_per_source = source_processed_count[source_id] % tft->getRowHeight();
+                    int pixels_per_target = target_processed_count[target_id] % tft->getRowHeight();
+
+                    int source_y_offset = pixels_per_source;
+                    int target_y_offset = pixels_per_target;
+                    tft->drawLine(
+                        tft->characterWidth() * 13,
+                        source_position[source_id] + source_y_offset, 
+                        tft->characterWidth() * 14,
+                        source_position[source_id] + source_y_offset,  
+                        line_colour
+                    );
+                    tft->drawLine(
+                        ///*3 + */(tft->width()/3), 
+                        tft->characterWidth() * 14,
+                        source_position[source_id] + source_y_offset, 
+                        (tft->width()/2)-(tft->characterWidth()*2), 
+                        target_position[target_id] + target_y_offset, 
+                        line_colour
+                    );
+                    tft->drawLine(
+                        (tft->width()/2)-(tft->characterWidth()*2), 
+                        target_position[target_id] + target_y_offset,
+                        (tft->width()/2)-(tft->characterWidth()*1), 
+                        target_position[target_id] + target_y_offset,
+                        line_colour
+                    );
+                    // TODO: some kinda logic to ensure that we always stay within the source_position and target_position rows
+                    //source_position[i]+=2;   // move the cursor 2 line downs to provide a little bit of disambiguation
+                    //target_position[target_id]+=2;
+                    /*y = tft->getCursorY();
+                    tft->setCursor(0, tft->height()-30);
+                    tft->printf("pixels_per_source = %i\npixels_per_target = %i", pixels_per_source, pixels_per_target);
+                    tft->setCursor(0, y);*/
+
+                    source_processed_count[source_id]++;
+                    target_processed_count[target_id]++;
+                }
+            }
+            y = tft->getCursorY();
+        }
+        if (y > lowest_y) 
+            lowest_y = y;
 
         if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually
             tft->println((char*)"");
 
-        return tft->getCursorY();
+        return lowest_y; //tft->getCursorY();
     }
 
     virtual bool button_select() override {
@@ -181,6 +243,7 @@ class MidiMatrixSelectorControl : public SelectorControl {
         if (selected_source_index >= 0) {
             //Serial.println("Backing out from selecting target");
             //menu_set_last_message((const char*)"Back out", GREEN);
+            selected_value_index = selected_source_index;
             selected_source_index = -1;
             return true;    // don't exit to top menu
         }

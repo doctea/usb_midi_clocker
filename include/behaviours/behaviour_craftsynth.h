@@ -13,7 +13,7 @@
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "parameters/MIDICCParameter.h"
 
@@ -28,7 +28,7 @@ class CraftSynthSpreadParameter : public MIDICCParameter<> {
             : MIDICCParameter<>(label, target, (byte)20, (byte)1) {
         }
 
-        virtual const char* parseFormattedDataType(byte value) {
+        virtual const char* parseFormattedDataType(byte value) override {
             static char fmt[MENU_C_MAX] = "              ";
             switch (value) {
                 case 0 ... 63:
@@ -92,7 +92,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
         virtual const char *get_label() override {
             return "CraftSynth 2.0";
         }
-        virtual bool has_output() { return true; }
+        virtual bool transmits_midi_notes() { return true; }
 
         /*virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
@@ -126,7 +126,7 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }
 
-        FLASHMEM virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        FLASHMEM virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             static bool already_initialised = false;
             if (already_initialised)

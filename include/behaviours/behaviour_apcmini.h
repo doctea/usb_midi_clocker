@@ -4,12 +4,15 @@
 #include <Arduino.h>
 
 #include "Config.h"
+
+#ifdef ENABLE_APCMINI
+
 #include "behaviours/behaviour_base_usb.h"
 #include "midi/midi_apcmini.h"
 #include "project.h"
 #include "clock.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 #include "midi/midi_looper.h"
 
 #include "midi/midi_apcmini_display.h"
@@ -20,14 +23,16 @@
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
 
+#define TIME_BETWEEN_APC_REFRESH_MS 50
+
 class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
     public:
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
             // initialise the CCs that this device can translate into ParameterInputs
-            this->addParameterInput("Fade1", (byte)48, (byte)1);
-            this->addParameterInput("Fade2", (byte)49, (byte)1);
-            this->addParameterInput("Fade3", (byte)50, (byte)1);
-            this->addParameterInput("Fade4", (byte)51, (byte)1);
+            this->addParameterInput("Fade1", "APCMini", (byte)APCMINI_FADER_CC_1, (byte)1);
+            this->addParameterInput("Fade2", "APCMini", (byte)APCMINI_FADER_CC_2, (byte)1);
+            this->addParameterInput("Fade3", "APCMini", (byte)APCMINI_FADER_CC_3, (byte)1);
+            this->addParameterInput("Fade4", "APCMini", (byte)APCMINI_FADER_CC_4, (byte)1);
         }
 
         uint16_t vid = 0x09e8, pid = 0x0028;
@@ -36,7 +41,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         virtual const char *get_label() override {
             return "APCMini";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         bool apcmini_shift_held = false;
 
@@ -75,7 +80,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     //Serial.println("about to call apcmini_update_position_display()"); Serial_flush();
                     apcmini_update_position_display(ticks);
                 
-                    if (redraw_immediately || millis() - last_updated_display > 50) {
+                    if (redraw_immediately || millis() - last_updated_display > TIME_BETWEEN_APC_REFRESH_MS) {
                         //Serial.println(F("redraw_immediately is set!"));
                         //Serial.println("about to call apcmini_update_clock_display()"); Serial_flush();
                         apcmini_update_clock_display();
@@ -96,7 +101,11 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 if (!playing)
                     global_on_restart();
                 
-                playing = !playing;    
+                //playing = !playing;
+                if (playing)
+                    clock_stop();
+                else
+                    clock_continue();
 
             #ifdef ENABLE_LOOPER
                 } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
@@ -117,7 +126,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     apcdisplay_sendNoteOn(7, APCMINI_GREEN_BLINK, 1);
                     //)  // turn on the 'going to restart on next bar' flashing indicator
                 #endif
-                restart_on_next_bar = true;
+                set_restart_on_next_bar(true);
             #ifdef ENABLE_CLOCKS
                 } else if (inNumber==APCMINI_BUTTON_UP) {
                     // move clock selection up
@@ -206,7 +215,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     Serial.print(row);
                     Serial.print(F(" and column "));*/
                     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
-                    Serial.println(col);
+                    //Serial.println(col);
                     sequencer_press(row, col, apcmini_shift_held);
                     #ifdef ENABLE_APCMINI_DISPLAY
                         redraw_sequence_row(row);
@@ -238,20 +247,9 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             }
         }
 
-        // called from loop, already inside ATOMIC, so don't use ATOMIC here
         virtual void receive_control_change (uint8_t channel, uint8_t number, uint8_t value) override {
-            //ATOMIC(
-                /*Serial.print(F("APCMINI CC ch"));
-                Serial.print(inChannel);
-                Serial.print(F("\tnum "));
-                Serial.print(inNumber);
-                Serial.print(F("\tvalue: "));
-                Serial.println(inValue);*/
-            //)
-            //debug_free_ram();
-
             #ifdef ENABLE_BPM
-                if (number==APCMINI_FADER_MASTER) {   // 56 == "master" fader set bpm 
+                if (number==APCMINI_FADER_CC_MASTER) {   // 56 == "master" fader set bpm 
                     if (clock_mode==CLOCK_INTERNAL)
                         set_bpm(map(value, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
                 }
@@ -283,4 +281,5 @@ void apcmini_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue
 void apcmini_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
+#endif
 #endif

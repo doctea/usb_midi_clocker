@@ -11,7 +11,7 @@ class ModwheelReceiver : public virtual DeviceBehaviourUltimateBase {
         MIDICCProxyParameter<> *modwheel_proxy = nullptr;
 
         FLASHMEM
-        virtual LinkedList<DoubleParameter*> *initialise_parameters() override {
+        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
            this->modwheel_proxy = new MIDICCProxyParameter<>(
                 "Modwheel",      
                 this,   
