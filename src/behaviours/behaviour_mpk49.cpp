@@ -1,5 +1,7 @@
 #include "behaviours/behaviour_mpk49.h"
 
+#ifdef ENABLE_MPK49
+
 DeviceBehaviour_mpk49 *behaviour_mpk49 = nullptr;
 
 void mpk49_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
@@ -20,3 +22,5 @@ void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size) {
     //Serial.println("mpk49_handle_system_exclusive");
     if (behaviour_mpk49!=nullptr) behaviour_mpk49->handle_system_exclusive(data, size);
 }
+
+#endif

@@ -7,9 +7,11 @@
 #include "behaviours/behaviour_base_usb.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "midi/midi_looper.h"
+
+#ifdef ENABLE_MPK49
 
 extern MIDIOutputWrapper *mpk49_output;
 
@@ -18,7 +20,7 @@ void mpk49_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocit
 void mpk49_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void mpk49_handle_system_exclusive(uint8_t *data, unsigned int size);
 
-class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
+class DeviceBehaviour_mpk49 : public DeviceBehaviourUSBBase, public ClockedBehaviour {
     public:
         MIDITrack *loop_track = nullptr;
 
@@ -28,7 +30,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         virtual const char *get_label() override {
             return "MPK49";
         }
-        virtual bool has_input() { return true; }
+        virtual bool receives_midi_notes() { return true; }
 
         FLASHMEM 
         virtual void setup_callbacks() override {
@@ -76,7 +78,8 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
         virtual void handle_mmc_start() {
             if (loop_track!=nullptr) {
                 loop_track->start_playing();
-                playing = true;
+                //playing = true;
+                clock_start();
             }
         }
         virtual void handle_mmc_stop() {
@@ -89,5 +92,7 @@ class DeviceBehaviour_mpk49 : virtual public DeviceBehaviourUSBBase, virtual pub
 };
 
 extern DeviceBehaviour_mpk49 *behaviour_mpk49;
+
+#endif
 
 #endif

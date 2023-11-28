@@ -5,6 +5,10 @@
 
 #include "behaviours/behaviour_manager.h"
 
+#include "mymenu/menu_fileviewers.h"
+
+#include <util/atomic.h>
+
 #include "SD.h"
 //#include "SdFat.h"
 #include <SPI.h>
@@ -37,97 +41,110 @@ namespace storage {
   const int chipSelect = BUILTIN_SDCARD;
 
   void make_project_folders(int project_number) {
-    char path[255];
-    sprintf(path, "project%i", project_number);
-    //Serial.printf(F("Checking exists %s.."), path);
-    if (!SD.exists(path)) {
-      //Serial.println(F("making!\n"));
-      SD.mkdir(path);
-    } else {
-      //Serial.println(F("exists!\n"));
-    }
-    
-    sprintf(path, "project%i/sequences", project_number);
-    //Serial.printf("Checking exists %s..", path);
-    if (!SD.exists(path)) {
-      //Serial.println(F("making!\n"));
-      SD.mkdir(path);
-    } else {
-      //Serial.println(F("exists!\n"));
-    }
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      char path[MAX_FILEPATH];
+      snprintf(path, MAX_FILEPATH, "project%i", project_number);
+      //Serial.printf(F("Checking exists %s.."), path);
+      if (!SD.exists(path)) {
+        //Serial.println(F("making!\n"));
+        SD.mkdir(path);
+      } else {
+        //Serial.println(F("exists!\n"));
+      }
+      
+      snprintf(path, MAX_FILEPATH, "project%i/sequences", project_number);
+      //Serial.printf("Checking exists %s..", path);
+      if (!SD.exists(path)) {
+        //Serial.println(F("making!\n"));
+        SD.mkdir(path);
+      } else {
+        //Serial.println(F("exists!\n"));
+      }
 
-    sprintf(path, "project%i/loops", project_number);
-    //Serial.printf("Checking exists %s..", path);
-    if (!SD.exists(path)) {
-      //Serial.println(F("making!\n"));
-      SD.mkdir(path);
-    } else {
-      //Serial.println(F("exists!\n"));
+      snprintf(path, MAX_FILEPATH, "project%i/loops", project_number);
+      //Serial.printf("Checking exists %s..", path);
+      if (!SD.exists(path)) {
+        //Serial.println(F("making!\n"));
+        SD.mkdir(path);
+      } else {
+        //Serial.println(F("exists!\n"));
+      }
     }
   }
 
   FLASHMEM void setup_storage() {
     SD.begin(chipSelect);
 
-    if (!SD.exists("sequences")) {
+    /*if (!SD.exists("sequences")) {
       Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));
       SD.mkdir("sequences");
     }
     if (!SD.exists("loops")) {
       Serial.println(F("Folder 'loops' doesn't exist on SD, creating!"));
       SD.mkdir("loops");
-    }
+    }*/
   }
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
-    //Serial.println("save_sequence not implemented on teensy");
-    //bool irqs_enabled = __irq_enabled();
-    //__disable_irq();
-    File myFile;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      #ifdef ENABLE_SD
+      //Serial.println("save_sequence not implemented on teensy");
+      //bool irqs_enabled = __irq_enabled();
+      //__disable_irq();
+      File myFile;
 
-    char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-    Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
-    if (SD.exists(filename)) {
-      Serial.printf(F("%s exists, deleting first\n"), filename);
-      SD.remove(filename);
-    }
-    myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
-    if (!myFile) {    
-      Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
-      //if (irqs_enabled) __enable_irq();
-      return false;
-    }
-    myFile.println(F("; begin sequence"));
-    myFile.printf(F("id=%i\n"),input->id);
-    myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
-    myFile.printf(F("size_sequences=%i\n"),  input->size_sequences);
-    myFile.printf(F("size_steps=%i\n"),      input->size_steps);
-    for (int i = 0 ; i < input->size_clocks ; i++) {
-      myFile.printf(F("clock_multiplier=%i\n"), input->clock_multiplier[i]);
-    }
-    for (int i = 0 ; i < input->size_clocks ; i++) {
-      myFile.printf(F("clock_delay=%i\n"), input->clock_delay[i]);
-    }
-    for (int i = 0 ; i < input->size_sequences ; i++) {
-      myFile.printf(F("sequence_data="));
-      for (int x = 0 ; x < input->size_steps ; x++) {
-        myFile.printf("%1x", input->sequence_data[i][x]);
+      char filename[MAX_FILEPATH] = "";
+      snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
+      //Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
+      if (SD.exists(filename)) {
+        //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
+        SD.remove(filename);
+        //Serial.println("deleted"); Serial.flush();
       }
-      myFile.println();
+      myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
+      if (!myFile) {    
+        //Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+        //if (irqs_enabled) __enable_irq();
+        return false;
+      }
+      Serial.println("Starting data write.."); Serial_flush();
+      myFile.println(F("; begin sequence"));
+      myFile.printf(F("id=%i\n"),input->id);
+      myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
+      myFile.printf(F("size_sequences=%i\n"),  input->size_sequences);
+      myFile.printf(F("size_steps=%i\n"),      input->size_steps);
+      for (unsigned int i = 0 ; i < input->size_clocks ; i++) {
+        myFile.printf(F("clock_multiplier=%i\n"), input->clock_multiplier[i]);
+      }
+      for (unsigned int i = 0 ; i < input->size_clocks ; i++) {
+        myFile.printf(F("clock_delay=%i\n"), input->clock_delay[i]);
+      }
+      for (unsigned int i = 0 ; i < input->size_sequences ; i++) {
+        myFile.printf(F("sequence_data="));
+        for (int x = 0 ; x < input->size_steps ; x++) {
+          myFile.printf("%1x", input->sequence_data[i][x]);
+        }
+        myFile.println();
+      }
+      myFile.println(F("; behaviour extensions")); 
+      LinkedList<String> behaviour_lines = LinkedList<String>();
+      //Serial.println("calling save_sequence_add_lines..");
+      behaviour_manager->save_sequence_add_lines(&behaviour_lines);
+      //Serial.println("got behaviour_lines to save.."); Serial.flush();
+      for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
+        //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
+        //Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
+        //Serial.flush();
+        myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
+      }
+      myFile.println(F("; end sequence"));
+      myFile.close();
+      //if (irqs_enabled) __enable_irq();
+      //Serial.println(F("Finished saving."));
+
+      update_sequence_filename(String(filename));
+      #endif
     }
-    myFile.println(F("; behaviour extensions"));
-    LinkedList<String> behaviour_lines = LinkedList<String>();
-    behaviour_manager->add_save_lines(&behaviour_lines);
-    for (int i = 0 ; i < behaviour_lines.size() ; i++) {
-      //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
-      Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
-      myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
-    }
-    myFile.println(F("; end sequence"));
-    myFile.close();
-    //if (irqs_enabled) __enable_irq();
-    Serial.println(F("Finished saving."));
     return true;
   }
 
@@ -198,20 +215,24 @@ namespace storage {
 
   void load_sequence_parse_line(String line, savestate *output) {
     bool debug = false;
-    if (line.charAt(0)==';') 
+    if (line.charAt(0)==';') {
       return;  // skip comment lines
-    if (line.startsWith(F("id="))) {
+    } else if (line.startsWith(F("id="))) {
       output->id = (uint8_t) line.remove(0,String(F("id=")).length()).toInt();
       if (debug) Serial.printf(F("Read id %i\n"), output->id);
+      return;
     } else if (line.startsWith(F("size_clocks="))) {
       output->size_clocks = (uint8_t) line.remove(0,String(F("size_clocks=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_clocks %i\n"), output->size_clocks);
+      return;
     } else if (line.startsWith(F("size_sequences="))) {
       output->size_sequences = (uint8_t) line.remove(0,String(F("size_sequences=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_sequences %i\n"), output->size_sequences);
+      return;
     } else if (line.startsWith(F("size_steps="))) {
       output->size_steps = (uint8_t) line.remove(0,String(F("size_steps=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_steps %i\n"), output->size_steps);
+      return;
     } else if (project->isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
       if (clock_multiplier_index>NUM_CLOCKS) {
         Serial.println(F("Skipping clock_multiplier entry as exceeds NUM_CLOCKS"));
@@ -219,7 +240,8 @@ namespace storage {
       }
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String(F("clock_multiplier=")).length()).toInt();
       if (debug) Serial.printf(F("Read a clock_multiplier: %i\n"), output->clock_multiplier[clock_multiplier_index]);
-      clock_multiplier_index++;      
+      clock_multiplier_index++;
+      return;
     } else if (project->isLoadClockSettings() && line.startsWith(F("clock_delay="))) {
       if (clock_delay_index>NUM_CLOCKS) {
         Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
@@ -228,6 +250,7 @@ namespace storage {
       output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String(F("clock_delay=")).length()).toInt();      
       if (debug) Serial.printf(F("Read a clock_delay: %i\n"), output->clock_delay[clock_delay_index]);
       clock_delay_index++;
+      return;
     } else if (project->isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
       if (clock_delay_index>NUM_SEQUENCES) {
         Serial.println(F("Skipping sequence_data entry as exceeds NUM_CLOCKS"));
@@ -246,6 +269,7 @@ namespace storage {
       }
       if (debug) Serial.println(']');
       sequence_data_index++;
+      return;
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
       //Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
       /*String partial = line.remove(0,String("behaviour_option_").length());
@@ -256,52 +280,67 @@ namespace storage {
       /*String key = line.substring(0, line.indexOf('='));
       String value = line.substring(line.indexOf("=")+1);
       behaviour_manager->load_parse_key_value(key, value);*/
+      return;
     }
+    messages_log_add(String("Ignoring line '") + line + String("'"));
   }
 
+  //void update_sequence_filename(String filename);
+
   bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
-    static volatile bool already_loading = false;
-    if (already_loading) return false;
-    already_loading = true;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      #ifdef ENABLE_SD
+      static volatile bool already_loading = false;
+      if (already_loading) return false;
+      if (global_load_lock) return false;
+      global_load_lock = true; 
+      already_loading = true;
 
-    //bool irqs_enabled = __irq_enabled();
-    //__disable_irq();
-    File myFile;   
+      messages_log_add(String("Loading sequence ") + String(preset_number));
 
-    char filename[255] = "";
-    sprintf(filename, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-    Serial.printf(F("load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
-    myFile = SD.open(filename, FILE_READ);
-    myFile.setTimeout(0);
+      //bool irqs_enabled = __irq_enabled();
+      //__disable_irq();
 
-    clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
+      char filename[MAX_FILEPATH] = "";
+      snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
 
-    /*if(project.isLoadBehaviourOptions()) {
-      behaviour_manager->reset_all_mappings();
-    }*/
+      //update_sequence_filename(String(filename));
+      // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
-    if (!myFile) {
-      Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
+      File myFile;   
+      Serial.printf(F("load_sequence: load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
+      myFile = SD.open(filename, FILE_READ);
+      clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
+
+      /*if(project.isLoadBehaviourOptions()) {
+        behaviour_manager->reset_all_mappings();
+      }*/
+
+      if (!myFile) {
+        Serial.printf(F("load_sequence: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
+        //if (irqs_enabled) __enable_irq();
+        global_load_lock = already_loading = false;
+        return false;
+      }
+      myFile.setTimeout(0);
+
+      String line;
+      while (line = myFile.readStringUntil('\n')) {
+        load_sequence_parse_line(line, output);
+      }
+      Serial.println(F("load_sequence: Closing file..")); Serial_flush();
+      myFile.close();
       //if (irqs_enabled) __enable_irq();
-      already_loading = false;
-      return false;
+      Serial.println(F("load_sequence: File closed")); Serial_flush();
+
+      #ifdef ENABLE_APCMINI_DISPLAY
+        //redraw_immediately = true;
+      #endif
+
+      Serial.printf(F("load_sequence: Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
+      global_load_lock = already_loading = false;
+      #endif
     }
-
-    String line;
-    while (line = myFile.readStringUntil('\n')) {
-      load_sequence_parse_line(line, output);
-    }
-    Serial.println(F("Closing file..")); Serial_flush();
-    myFile.close();
-    //if (irqs_enabled) __enable_irq();
-    Serial.println(F("File closed")); Serial_flush();
-
-    #ifdef ENABLE_APCMINI_DISPLAY
-      //redraw_immediately = true;
-    #endif
-
-    Serial.printf(F("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
-    already_loading = false;
     return true;
   }
 

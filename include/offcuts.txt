@@ -29,7 +29,7 @@ class FilebrowserPanel : public MenuItem {
             header("Filebrowser", pos, selected, opened);
             if (opened) {
                 tft.println(current_directory);
-                for (int i = 0 ; i < contents_list.size() ; i++) {
+                for (unsigned int i = 0 ; i < contents_list.size() ; i++) {
                     tft.println(contents_list.get(i));
                 }
             }

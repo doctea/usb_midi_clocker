@@ -1,6 +1,11 @@
 #ifndef DEBUG__INCLUDED
 #define DEBUG__INCLUDED
 
+//#define ENABLE_DEBUG_SERIAL
+//#define SERIAL_FLUSH_REALLY
+
+#include <Arduino.h>
+
 int freeRam();
 void debug_free_ram();
 
@@ -24,5 +29,10 @@ void reset_teensy();
         #define Debug_print(X)      {}
     #endif
 #endif
+
+#include "LinkedList.h"
+#define MAX_MESSAGES_LOG 20
+extern LinkedList<String> *messages_log;
+void messages_log_add(String msg);
 
 #endif

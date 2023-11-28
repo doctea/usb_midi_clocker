@@ -1,8 +1,8 @@
 
 #ifdef ENABLE_USB
-    #include "multi_usb_handlers.h"
+    #include "usb/multi_usb_handlers.h"
     #ifdef ENABLE_USBSERIAL
-        #include "multi_usbserial_handlers.h"
+        #include "usb/multi_usbserial_handlers.h"
     #endif
     #ifdef ENABLE_TYPING_KEYBOARD
         //#include "input_keyboard.h"
@@ -15,26 +15,26 @@
 
             virtual int display(Coord pos, bool selected, bool opened) override {
                 tft->setCursor(pos.x,pos.y);
-                header("USB devices:", pos, selected, opened);
+                header("MIDI-USB devices:", pos, selected, opened);
                 colours(opened);
                 tft->setTextSize(1);
                 int connected = 0;
-                for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+                for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
                     if (usb_midi_slots[i].packed_id && usb_midi_slots[i].device && usb_midi_slots[i].device->idVendor()>0) {
                         connected++;
                         char buf[100];
-                        sprintf(buf, "%i %19s\n", i, usb_midi_slots[i].device->product());
+                        snprintf(buf, 100, "%i %19s %04X:%04X\n", i, usb_midi_slots[i].device->product(), usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct());
                         tft->printf(buf);
                     }            
                 }
                 #ifdef ENABLE_USBSERIAL
                     pos.y = tft->getCursorY();
                     header("Serial-USB devices:", pos, selected, opened);
-                    for (int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
+                    for (unsigned int i = 0 ; i < NUM_USB_SERIAL_DEVICES ; i++) {
                         if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
                             connected++;
                             char buf[100];
-                            sprintf(buf, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
+                            snprintf(buf, 100, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
                             tft->printf(buf);
                         }
                     }
@@ -46,7 +46,6 @@
                         tft->printf("K (Typing disconnected)\n");
                 #endif
                 tft->println();
-                tft->printf("Free RAM: %u bytes\n", freeRam());
 
                 return tft->getCursorY();
             }

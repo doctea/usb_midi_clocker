@@ -5,27 +5,39 @@
 
 #include "storage.h"
 
-extern DisplayTranslator_Configured steensy;
+#include <util/atomic.h>
 
-#include "screenshot.h"
+#ifdef ENABLE_SCREEN
+    void toggle_autoadvance(bool on = false);
+    void toggle_recall(bool on = false);
+    #include "screenshot.h"
+    #include "mymenu.h"
+    #include "midi/midi_mapper_matrix_manager.h"
+    extern DisplayTranslator_Configured *display_translator;
+#endif
 
-#include "mymenu.h"
+#include "project.h"
 
-#include "midi/midi_mapper_matrix_manager.h"
-
-void toggle_autoadvance(bool on = false);
-void toggle_recall(bool on = false);
+#include "interfaces/interfaces.h"
 
 bool debug_stress_sequencer_load = false;
 
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
 
-    #include "menu.h"
+    #ifdef ENABLE_SCREEN
+        #include "menu.h"
+    #endif
 
-    #define KEYD_BACKSPACE 127
+    #define KEYREPEAT      200   // ms to repeat when a key is held
+
+    // todo: convert to using raw keycodes, since these fuck up when modifiers are held
+    #define KEYD_TAB       9
     #define KEYD_ENTER     10
+    #define KEYD_ESC       27
     #define KEYD_HASH      92
+    #define KEYD_BACKSPACE 127
+
     #define MOD_LCTRL      1
     #define MOD_LSHIFT     2
     #define MOD_LALT       4
@@ -35,100 +47,98 @@ bool debug_stress_sequencer_load = false;
     #define MOD_RALT       64
 
     extern USBHost Usb;
-    extern bool debug;
+    extern bool debug_flag;
       
     KeyboardController keyboard1(Usb);
+    // need these with more recent versions of the USBHost_t36 library, otherwise keyboard doesn't get detected!
+    USBHIDParser hid1(Usb);
+    USBHIDParser hid2(Usb);
 
-    // track commands received over usb keyboard so that they can be executed inside of main loop(), instead of potentially causing crashes by eg overlapping file accesses
-    class InputKeyboardQueue {
-        public:
-            volatile bool queued_load_selected_sequence = false,
-                    queued_save_selected_sequence = false,
-                    queued_load_next_sequence = false,
-                    queued_load_previous_sequence = false,
-                    queued_save_screenshot = false
-            ;
-            volatile int queued_setprojectnumber = -1;
-
-            void queue_load_selected_sequence() {
-                this->queued_load_selected_sequence = true;
-            }
-            void queue_save_selected_sequence() {
-                this->queued_save_selected_sequence = true;
-            }
-            void queue_load_next_sequence() {
-                this->queued_load_next_sequence = true;
-            }
-            void queue_load_previous_sequence() {
-                this->queued_load_previous_sequence = true;
-            }
-            void queue_save_screenshot() {
-                this->queued_save_screenshot = true;
-            }
-            void queue_setProjectNumber(int number) {
-                this->queued_setprojectnumber = number;
-            }
-
-            void process_queue() {
-                if (this->queued_load_selected_sequence) {
-                    project->load_selected_sequence();
-                    this->queued_load_selected_sequence = false;
-                }
-                if (this->queued_save_selected_sequence) {
-                    project->save_selected_sequence();
-                    this->queued_save_selected_sequence = false;
-                }
-                if (this->queued_load_next_sequence) {
-                    project->load_next_sequence();
-                    this->queued_load_next_sequence = false;
-                }
-                if (this->queued_load_previous_sequence) {
-                    project->load_previous_sequence();
-                    this->queued_load_previous_sequence = false;
-                }
-                if (this->queued_save_screenshot) {
-                    save_screenshot(&steensy.actual);
-                    this->queued_save_screenshot = false;
-                }
-                if (this->queued_setprojectnumber>=0) {
-                    project->setProjectNumber(this->queued_setprojectnumber);
-                    this->queued_setprojectnumber = -1;
-                }
-            }
-    };
-
-    InputKeyboardQueue input_keyboard;
-    volatile bool already_pressing = false;
+    #include "queue.h"
 
     struct keypress_t {
         int key = 0;
         byte modifiers = 0;
     };
 
-    keypress_t key_log[10];
-    int key_log_count = -1;
+    Queue<keypress_t, 10> *keyboard_queue = new Queue<keypress_t, 10> ();
+
+    // for avoiding re-entrant interrupts
+    volatile bool already_pressing = false;
+
+    // for handling keyrepeat
+    keypress_t currently_held;
+    volatile bool held = false;
+    uint32_t last_retriggered = 0;  
 
     void OnPress(int key) {
-        bool irqs_enabled = __irq_enabled();
-        __disable_irq();
-        //Serial.printf("OnPress()! storing code %i to queue position %i\n", key, key_log_count);
-        key_log[key_log_count].key = key;
-        key_log[key_log_count].modifiers = keyboard1.getModifiers();
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            if (already_pressing) return;
+            already_pressing = true;
 
-        key_log_count++;
-        if (key_log_count>=10) 
-            key_log_count = 0;
+            // there is some stuff that we want to do (reboot, enable debug mode, reset serial monitor) even if
+            // the main loop has crashed
+            switch(key) {
+                /*case KEY_ESC             :  // ESCAPE
+                    while(menu->is_opened())
+                        menu->button_back();
+                    break;*/
+                case 'D'    :
+                    debug_flag = true;
+                    break;
+                case 'd'    :
+                    debug_flag = false;
+                    break;
+                // debug
+                case 'Z'    :
+                    Serial.clear();
+                    Serial.clearWriteError();
+                    Serial.end();
+                    Serial.begin(115200);
+                    Serial.setTimeout(0);
+                    Serial.println(F("---restarted serial---"));
+                    break;
+                case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
+                    {
+                        int modifiers = keyboard1.getModifiers();
+                        if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
+                            Serial.println("running a loop() manually because ctrl+alt+lshift+delete");
+                            loop();
+                            break;
+                        }                    
+                        if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT)) {
+                            reset_teensy();  
+                            break;
+                        }
+                    }
+                default:
+                    //Serial.println("received key?");
+                    keyboard_queue->push({key, keyboard1.getModifiers()});
 
-        //Serial.printf("queue position left at %i\n", key_log_count);
+                    currently_held.key = key;
+                    currently_held.modifiers = keyboard1.getModifiers();
+                    held = true;
+                    last_retriggered = millis();
+                    break;
+            }
 
-        if (irqs_enabled) 
-            __enable_irq();
+            already_pressing = false;
+        }
     }
 
-    void process_key(int key, int modifiers) {
-        if (already_pressing) return;
-        already_pressing = true;
+    /*void OnRawPress(uint8_t keycode) {
+        Serial.printf("OnRawPress with keycode %i (%c), modifiers %i\n", keycode, keycode, keyboard1.getModifiers());
+    }*/
 
+    void OnRelease(int key) {
+        held = false;
+    }
+
+    /*void OnRawPress(uint8_t keycode) {
+        Serial.printf("OnRawPress: %02x\n", keycode);
+    }*/
+
+    void process_key(int key, int modifiers) {
         //int modifiers = keyboard1.getModifiers();
         //bool irqs_enabled = __irq_enabled();
         //__disable_irq();
@@ -137,36 +147,43 @@ bool debug_stress_sequencer_load = false;
                 while(menu->is_opened())
                     menu->button_back();
                 break;*/
-            case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
-                if (modifiers==(MOD_LCTRL+MOD_LALT) || modifiers==(MOD_RCTRL+MOD_RALT))
-                    reset_teensy();  
-                break; /* ctrl+alt+delete to soft reboot */
+            #ifdef ENABLE_SCREEN
             case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
             case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
-            case KEY_ESC        :
+            case KEYD_ESC        :
             case KEYD_LEFT      : 
             case KEYD_BACKSPACE : Serial.println(F("LEFT"));           menu->button_back(); break;
             case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
             case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
             case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
+            case KEYD_TAB       :
+                // switch menu page
+                if (modifiers & MOD_LSHIFT || modifiers & MOD_RSHIFT) {
+                    // go backwards
+                    menu->select_previous_page();
+                } else {
+                    // go forwards
+                    menu->select_next_page();
+                }
+                break;
+            #endif
             case 'T':
                 debug_stress_sequencer_load = true;
                 break;
             case 't':
                 debug_stress_sequencer_load = false;
                 break;
-            case 'D'    :
-                debug = true;
-                break;
-            case 'd'    :
-                debug = false;
-                break;
             case '-':
                 Serial.println(F("------------------------")); break;
-            case 'p'            :
+            case 'p': case 'P':
                 Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
-                midi_matrix_manager->stop_all_notes();
+                if (key=='P')   // hard panic
+                    midi_matrix_manager->stop_all_notes_force();
+                else
+                    midi_matrix_manager->stop_all_notes();
+                gate_manager->stop_all_gates();
                 break;
+            #ifdef ENABLE_SCREEN
             case 'A': case 'a':
                 Serial.println(F("Toggling (a)uto-advances"));
                 toggle_autoadvance(key=='A');
@@ -175,33 +192,38 @@ bool debug_stress_sequencer_load = false;
                 Serial.println(F("Toggling Re(q)all"));
                 toggle_recall(key=='Q');
                 break;
+            #endif
             case 'r'            : 
                 Serial.println(F("Setting (r)estart_on_next_bar"));
-                restart_on_next_bar = true; 
+                set_restart_on_next_bar(true); 
                 break;
             // take screenshot
+            #if defined(ENABLE_SCREEN) && defined(ENABLE_SD) && defined(ENABLE_SCREENSHOT)
             case ' '            :
                 Serial.println(F("Taking screenshot!"));
-                input_keyboard.queue_save_screenshot();
+                save_screenshot(display_translator);
                 break;
+            #endif
             // load/save/move selected sequence
             case 'L'            : 
                 Serial.println(F("(L)oad selected sequence"));
-                input_keyboard.queue_load_selected_sequence(); 
+                project->load_selected_sequence();
                 Serial.println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
                 Serial.println(F("(S)ave sequencer!"));
-                input_keyboard.queue_save_selected_sequence();
+                project->save_selected_sequence();
                 break;
             case 'J'            :
                 Serial.println(F("==== Loading previous sequence.."));
-                input_keyboard.queue_load_previous_sequence();
+                //input_keyboard.queue_load_previous_sequence();
+                project->load_previous_sequence();
                 Serial.println(F("==== Loaded previous sequence!"));
                 break;
             case ':'            :
                 Serial.println(F("==== Loading next sequence")); Serial_flush();
-                input_keyboard.queue_load_next_sequence();
+                //input_keyboard.queue_load_next_sequence();
+                project->load_next_sequence();
                 Serial.println(F("==== Loaded next sequence!")); Serial_flush();
                 break;
             case 'j'            :
@@ -211,15 +233,6 @@ bool debug_stress_sequencer_load = false;
             case ';'            :
                 //Serial.println(F("Select next sequence"));
                 project->select_next_sequence();
-                break;
-            // debug
-            case 'Z'    :
-                Serial.clear();
-                Serial.clearWriteError();
-                Serial.end();
-                Serial.begin(115200);
-                Serial.setTimeout(0);
-                Serial.println(F("---restarted serial---"));
                 break;
             // change project number
             case 49 ... 57      :
@@ -231,7 +244,8 @@ bool debug_stress_sequencer_load = false;
                     }
                     if (modifiers==0) {
                         Serial.printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
-                        input_keyboard.queue_setProjectNumber(key - adjust);
+                        //input_keyboard.queue_setProjectNumber(key - adjust);
+                        project->setProjectNumber(key - adjust);
                     } else {
                         Serial.printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
                     }
@@ -241,30 +255,20 @@ bool debug_stress_sequencer_load = false;
                 Serial.printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
                 break;
         }
-        already_pressing = false;
         //if (irqs_enabled) __enable_irq();
     }
 
     void process_key_buffer() {
-        bool irqs_enabled = __irq_enabled();
-        __disable_irq();
-
-        if (key_log_count<=0) 
-            return;
-        
-        //Serial.println("----");
-        for (int i = 0 ; i < key_log_count ; i++) {
-            if (key_log[i].key>=0) {
-                //Serial.printf("Processing queue log at %i: %i\n", i, key_log[i].key);
-                process_key(key_log[i].key, key_log[i].modifiers);
-                key_log[i].key = -1;
-                key_log[i].modifiers = -1;
-                key_log_count--;
-                if (key_log_count<=0) 
-                    break;
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            if (keyboard_queue->isReady()) {
+                keypress_t *current = keyboard_queue->pop();
+                process_key(current->key, current->modifiers);       
+            }
+            if (held && millis() - last_retriggered>KEYREPEAT) {
+                keyboard_queue->push(currently_held);
+                last_retriggered = millis();
             }
         }
-        if (irqs_enabled) __enable_irq();
     }
 
     #ifndef GDB_DEBUG
@@ -272,6 +276,8 @@ bool debug_stress_sequencer_load = false;
     #endif
     void setup_typing_keyboard() {
         keyboard1.attachPress(OnPress);
+        //keyboard1.attachRawPress(OnRawPress);
+        keyboard1.attachRelease(OnRelease);
     }
 #endif
 

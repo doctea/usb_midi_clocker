@@ -8,6 +8,8 @@
 #include "mymenu.h"
 #include "menu.h"
 
+#include "mymenu/menuitems_harmony.h"
+
 #ifdef ENABLE_LOOPER_PIANOROLL
     #include "mymenu/menu_looperdisplay.h"
 #endif
@@ -16,9 +18,7 @@
 class LooperRecStatus : public MenuItem {   
     public:
         MIDITrack *loop_track = nullptr;
-        LooperRecStatus(const char *label, MIDITrack *loop_track) : MenuItem(label) {
-            this->loop_track = loop_track;
-        };
+        LooperRecStatus(const char *label, MIDITrack *loop_track) : MenuItem(label), loop_track(loop_track) {};
 
         virtual int display(Coord pos, bool selected, bool opened) override {
             tft->setCursor(pos.x,pos.y);
@@ -57,7 +57,7 @@ class LooperRecStatus : public MenuItem {
         }
 };
 
-class LooperQuantizeControl : public SelectorControl {
+class LooperQuantizeControl : public SelectorControl<int> {
     MIDITrack *loop_track = nullptr;
 
     // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?
@@ -91,15 +91,15 @@ class LooperQuantizeControl : public SelectorControl {
             static char l[3] = "?";
             // TODO: add -1 and -2 for half-bar and bar respectively; maybe add -3 for two-bar and -4 for phrase too?
             if (value==0) {
-                strcpy(l, "N");
+                strncpy(l, "N", 3);
             } else if (value==1) {
-                strcpy(l, "q"); //return "¼";
+                strncpy(l, "q", 3); //return "¼";
             } else if (value==2) {
-                strcpy(l, "8");
+                strncpy(l, "8", 3);
             } else if (value==3) {
-                strcpy(l, "16");
+                strncpy(l, "16", 3);
             } else if (value==4) {
-                strcpy(l, "32");
+                strncpy(l, "32", 3);
             } 
             //Serial.printf("get_label_for_value(%i) returning '%s'\n", value, l);
             return l;

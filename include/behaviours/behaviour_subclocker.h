@@ -1,3 +1,5 @@
+#ifdef ENABLE_SUBCLOCKER_DEDICATED
+
 #ifndef BEHAVIOUR_SUBCLOCKER__INCLUDED
 #define BEHAVIOUR_SUBCLOCKER__INCLUDED
 
@@ -8,7 +10,7 @@
 #include "behaviours/behaviour_clocked.h"
 #include "bpm.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 /*void subclocker_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 void subclocker_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
@@ -25,9 +27,11 @@ class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public Divided
         virtual const char *get_label() override {
             return "Subclocker";
         }
-        virtual bool has_output() { return true; }
+        virtual bool transmits_midi_notes() override { return true; }
 };
 
 extern DeviceBehaviour_Subclocker *behaviour_subclocker;
+
+#endif
 
 #endif

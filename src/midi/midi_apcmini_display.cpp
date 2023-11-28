@@ -1,4 +1,6 @@
 #include "Config.h"
+#if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
+
 //#include "behaviours/behaviour_apcmini->device.h"
 #include "midi/midi_apcmini_display.h"
 
@@ -96,7 +98,7 @@ void redraw_clock_row(byte c) {
     if (behaviour_apcmini->device==nullptr) return;
 
     int start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
-    for (int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+    for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
       int io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
       float cm = get_clock_multiplier(c);
       if (is_clock_off(c)) {
@@ -125,7 +127,7 @@ void redraw_sequence_row(byte c) {
   if (behaviour_apcmini->device==nullptr) return;
 
   int start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
-  for (int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
+  for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
     int v = read_sequence(c,i);
     if (v) { //should_trigger_sequence(i*PPQN,c)) {
       ATOMIC(apcdisplay_sendNoteOn(start_row+i, get_colour(v-1)/*(2*(v-1)) + APCMINI_ON*/, 1);)
@@ -154,6 +156,11 @@ void redraw_sequence_row(byte c) {
         apcdisplay_sendNoteOff(x, APCMINI_OFF, 1, true);
       )
     }
+    // clear the 'selected clock row' indicator lights
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF);
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_SOLO, APCMINI_OFF);
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_REC_ARM, APCMINI_OFF);
+    apcdisplay_sendNoteOff(APCMINI_BUTTON_MUTE, APCMINI_OFF);
     //delay(1000);
     Serial.println(F("Leaving APC display"));
     // 
@@ -178,4 +185,5 @@ void redraw_sequence_row(byte c) {
     )
     //Serial.println(F("returning from apcmini_update_clock_display()"));
   }
+#endif
 #endif

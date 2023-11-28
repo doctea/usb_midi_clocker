@@ -5,6 +5,8 @@
 
 #include "parameters/Parameter.h"
 
+#include <util/atomic.h>
+
 class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
     public:
         //const uint32_t vid = 0x0000, pid = 0x0000;
@@ -17,7 +19,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             return BehaviourType::usb;
         }
 
-        virtual uint32_t get_packed_id() = 0;///{ return (this->vid<<16 | this->pid); }
+        virtual uint32_t get_packed_id() { return 0xFFFFFFFF; }//= 0;///{ return (this->vid<<16 | this->pid); }
 
         // interface methods - static
         /*virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
@@ -31,6 +33,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             return this->device!=nullptr;
         }
 
+        //FLASHMEM
         virtual void connect_device(MIDIDeviceBase *device) {
             //if (!is_connected()) return;
 
@@ -41,6 +44,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         }
 
         // remove handlers that might already be set on this port -- new ones assigned thru setup_callbacks functions
+        //FLASHMEM
         virtual void disconnect_device() {
             //if (this->device==nullptr) return;
             if (!is_connected()) return;
@@ -57,13 +61,16 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual void read() override {
-            if (!is_connected()) return;
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                if (!is_connected()) return;
 
-            if (this->device!=nullptr) while(this->device->read()); 
+                if (this->device!=nullptr) while(this->device->read()); 
+            }
         };
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (!is_connected()) return;
+            if (debug) Serial.printf("USB#%s#actualSendNoteOn(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
             this->device->sendNoteOn(note, velocity, channel);
         };
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
@@ -82,6 +89,17 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
             if (!is_connected() || this->device==nullptr) return;
             this->device->sendPitchBend(bend, channel);
         }
+        
+        #ifdef ENABLE_SCREEN
+            //FLASHMEM
+            /*virtual LinkedList<MenuItem*> *make_menu_items_device() override {
+                // todo: show a 'connected/not connected' indicator
+                return this->menuitems;
+            }*/
+
+            virtual LinkedList<MenuItem*> *make_menu_items_device();
+        #endif
 };
+
 
 #endif

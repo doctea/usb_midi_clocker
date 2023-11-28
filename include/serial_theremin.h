@@ -1,7 +1,7 @@
 #ifdef SERIAL_THEREMIN_HACK
 /*
 #include "USBHost_t36.h"
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #define USBBAUD 115200
 uint32_t baud = USBBAUD;

@@ -1,13 +1,16 @@
 #include "Config.h"
 
+#include "clock.h"
 #include "bpm.h"
 #include "midi/midi_outs.h"
 
-#include "multi_usb_handlers.h"
+#include "usb/multi_usb_handlers.h"
 
 #include "tft.h"
 
 #include "behaviours/behaviour_manager.h"
+
+#include <util/atomic.h>
 
 /*
 usb_midi_device[0] is 1C75:0288 aka Arturia:Arturia KeyStep 32
@@ -112,6 +115,10 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
 
 void update_usb_midi_device_connections() {
   for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
+    #ifdef IRQ_PROTECT_USB_CHANGES
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    #endif
+
     uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
     //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
     if (usb_midi_slots[port].packed_id != packed_id) {
@@ -123,6 +130,9 @@ void update_usb_midi_device_connections() {
       setup_usb_midi_device(port, packed_id);
       Serial.println(F("-----"));
     }
+    #ifdef IRQ_PROTECT_USB_CHANGES
+      }
+    #endif
   }
 }
 
@@ -131,13 +141,13 @@ void update_usb_midi_device_connections() {
 
 /*void read_midi_usb_devices() {
   #ifdef SINGLE_FRAME_READ_ALL
-    for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+    for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
       while(usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()); //device->read());
     }
   #else
     #ifdef SINGLE_FRAME_READ_ONCE
       //static int counter;
-      for (int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
+      for (unsigned int i = 0 ; i < NUM_USB_MIDI_DEVICES ; i++) {
         //while(usb_midi_device[i]->read());
         if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
           //usb_midi_device[counter%NUM_USB_MIDI_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
@@ -160,21 +170,11 @@ void update_usb_midi_device_connections() {
 
 // call this when global clock should be reset
 void global_on_restart() {
-  restart_on_next_bar = false;
+  set_restart_on_next_bar(false);
 
   Serial.println(F("on_restart()==>"));
 
-  #ifdef USE_UCLOCK
-    /*uClock.setTempo(bpm_current); // todo: probably not needed?
-    Serial.println(F("reset tempo"));
-    uClock.resetCounters();
-    Serial.println(F("reset counters"));*/
-  #else
-    ticks = 0;
-    Serial.println(F("reset ticks"));
-  #endif
-  //noInterrupts();
-  ticks = 0;
+  clock_reset();
   //interrupts();
   last_processed_tick = -1;
   
@@ -191,13 +191,11 @@ void setup_multi_usb() { // error: void setup_multi_usb() causes a section type 
 
   Usb.begin();
   Serial.println(F("Usb.begin() returned")); Serial_flush();
-  for (int i = 0 ; i < 5 ; i++) {
-    //digitalWrite(LED_BUILTIN, HIGH);
+  for (unsigned int i = 0 ; i < 5 ; i++) {
     Serial.printf(F("%i/5: Waiting 500ms for USB to settle down.."), i+1); Serial_flush();
-    tft_print((char*)".");
+    tft_print(".");
     delay(500);
-    //digitalWrite(LED_BUILTIN, LOW);
   }
-  tft_print((char*)"done.\n");
+  tft_print("done.\n");
   Serial.println(F("setup_multi_usb() finishing.")); Serial_flush();
 }

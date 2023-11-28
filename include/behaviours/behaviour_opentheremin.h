@@ -16,8 +16,8 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
         uint16_t vid = 0x1a86, pid = 0x7523;            // 1a867523
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
 
-        virtual bool has_input() override   { return true; }
-        virtual bool has_output() override  { return false; }
+        virtual bool receives_midi_notes() override   { return true; }
+        virtual bool transmits_midi_notes() override  { return false; }
         
         virtual const char *get_label() {
             return "OpenTheremin";
@@ -30,6 +30,7 @@ class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
             this->midi_interface->setHandleNoteOff(handle_theremin_note_off);
             this->midi_interface->setHandlePitchBend(handle_theremin_pitch_bend);
         }
+
 };
 
 extern DeviceBehaviour_OpenTheremin *behaviour_opentheremin;

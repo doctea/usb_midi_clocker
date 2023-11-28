@@ -15,6 +15,10 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
     public:
         int loop_type = loop_mode_t::ON_BAR;
 
+        virtual bool transmits_midi_clock() override {
+            return true;
+        }
+
         virtual const char *get_label() override {
             return (const char*)"DPT Looper";
         }
@@ -33,9 +37,9 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
                 this->sendRealTime(midi::Start);
             }
         }
-        virtual void on_tick (uint32_t tick) override {
+        /*virtual void on_tick (uint32_t tick) override {
             send_clock(tick);
-        }
+        }*/
 
         virtual void send_clock(uint32_t ticks) override {
             if (!is_connected()) return;
@@ -61,9 +65,9 @@ class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
             this->sendRealTime(midi::Stop);
         }
 
-        #ifdef ENABLE_SCREEN
-            LinkedList<MenuItem*> *make_menu_items();
-        #endif
+        /*#ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem*> *make_menu_items() override;
+        #endif*/
 
 };
 

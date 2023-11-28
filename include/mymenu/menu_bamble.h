@@ -1,3 +1,7 @@
+#include "Config.h"
+
+#ifdef ENABLE_BAMBLE
+
 #include "behaviours/behaviour_bamble.h"
 #include "menuitems.h"
 #include "submenuitem_bar.h"
@@ -6,40 +10,36 @@
 class BambleTriggerOnBar;
 
 
-class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTriggerOnSelectorControl,int> {
+class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTriggerOnSelectorControl,int8_t> {
     public:
-        int envelope_number = -1;
+        int8_t envelope_number = -1;
         DeviceBehaviour_Bamble *behaviour = nullptr;
-        BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int envelope_number, LinkedList<option> *available_values = nullptr) 
-            : ObjectSelectorControl(label, this, &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn, &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn, nullptr)//, &BambleTriggerOnSelectorControl::setE &DeviceBehaviour_Bamble::get_envelope_trigger_on, nullptr)
-        {
-            strncpy(this->label, label, MAX_LABEL_LENGTH);
-            this->behaviour = behaviour;
-            this->envelope_number = envelope_number;
-
+        BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int8_t envelope_number, LinkedList<option> *available_values = nullptr) 
+            : ObjectSelectorControl(label, this, &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn, &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn, nullptr)
+            , behaviour(behaviour), envelope_number(envelope_number) {
             this->go_back_on_select = true;
         }
 
-        LinkedList<option> *setup_available_values() override {
+        virtual LinkedList<option> *setup_available_values() override {
             ObjectSelectorControl::setup_available_values();
 
             const int num_patterns = (int)(sizeof(behaviour->patterns) / sizeof(bamble_pattern));
-            for (int i = 0 ; i < num_patterns ; i++) {
+            for (unsigned int i = 0 ; i < num_patterns ; i++) {
                 this->add_available_value(i, behaviour->patterns[i].label);
             }
-            this->add_available_value(20, "Off");
+            this->add_available_value(20, label_off);
 
             return this->available_values;
         }
 
-        int getEnvelopeTriggerOn() {
+        int8_t getEnvelopeTriggerOn() {
             return this->behaviour->get_envelope_trigger_on(this->envelope_number);
         }
-        void setEnvelopeTriggerOn(int v) {
+        void setEnvelopeTriggerOn(int8_t v) {
             this->behaviour->set_envelope_trigger_on(this->envelope_number, v);
         }
 
-        virtual void add_available_value(int value, const char *label) override {
+        virtual void add_available_value(int8_t value, const char *label) override {
             //Serial.printf("add_available_values(%i, %s)\n", value, label);
             if (this->available_values==nullptr) {
                 this->setup_available_values();
@@ -76,8 +76,8 @@ class BambleTriggerOnBar : public SubMenuItemBar {
         DeviceBehaviour_Bamble *behaviour = nullptr;
 
         BambleTriggerOnSelectorControl *pattern_selector = nullptr;
-        ObjectToggleControl<BambleTriggerOnBar> *loop_toggler = nullptr;
-        ObjectToggleControl<BambleTriggerOnBar> *invert_toggler = nullptr;
+        LambdaToggleControl *loop_toggler = nullptr;
+        LambdaToggleControl *invert_toggler = nullptr;
 
         BambleTriggerOnBar(const char *label, DeviceBehaviour_Bamble *behaviour, int envelope_number) : SubMenuItemBar(label) {
             this->behaviour = behaviour;
@@ -86,8 +86,8 @@ class BambleTriggerOnBar : public SubMenuItemBar {
 
             this->pattern_selector = new BambleTriggerOnSelectorControl("Trigger on", behaviour, envelope_number); //, LinkedList<option> *available_values = nullptr));
             //this->pattern_selector->debug = true;
-            this->loop_toggler =     new ObjectToggleControl<BambleTriggerOnBar>("Loop", this,   &BambleTriggerOnBar::setLoop,   &BambleTriggerOnBar::getLoop);
-            this->invert_toggler =   new ObjectToggleControl<BambleTriggerOnBar>("Invert", this, &BambleTriggerOnBar::setInvert, &BambleTriggerOnBar::getInvert);
+            this->loop_toggler =     new LambdaToggleControl("Loop",    [=](bool v) -> void { this->setLoop(); },   [=]() -> bool { return this->getLoop(); });
+            this->invert_toggler =   new LambdaToggleControl("Invert",  [=](bool v) -> void { this->setInvert(); }, [=]() -> bool { return this->getInvert(); });
             this->add(pattern_selector);
             this->add(loop_toggler);
             this->add(invert_toggler);
@@ -122,7 +122,7 @@ class BambleTriggerOnBar : public SubMenuItemBar {
             this->pattern_selector->set_available_values(available_values);
         }
 
-        virtual inline int get_max_pixel_width(int item_number) override {
+        virtual int get_max_pixel_width(int item_number) override {
             switch(item_number) {
                 case 1: case 2: return tft->width()/4;
                 case 0: return tft->width()/2;
@@ -132,3 +132,4 @@ class BambleTriggerOnBar : public SubMenuItemBar {
 };
 
 
+#endif

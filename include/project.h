@@ -14,19 +14,23 @@
 
 //extern DeviceBehaviour_Subclocker *behaviour_subclocker;
 
+#include "mymenu/menu_fileviewers.h"
+
 #define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
 
 using namespace storage;
 
 #ifdef ENABLE_LOOPER
-    extern MIDITrack mpk49_loop_track;
+    extern MIDITrack midi_loop_track;
 #endif
 #ifdef ENABLE_DRUM_LOOPER
     extern MIDITrack drums_loop_track;
 #endif
 
 #include "file_manager/file_manager_interfaces.h"
+
+extern volatile bool global_load_lock;
 
 class Project : public IParseKeyValueReceiver {
     bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];
@@ -38,9 +42,9 @@ class Project : public IParseKeyValueReceiver {
 
     void initialise_sequence_slots() {
         Serial.println(F("initialise_sequence_slots starting.."));
-        for (int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
-            char filepath[255];
-            sprintf(filepath, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
+        for (unsigned int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
+            char filepath[MAX_FILEPATH];
+            snprintf(filepath, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
             Serial.printf(F("\tsequence_slot_has_file[i] = %i for %s\n"), sequence_slot_has_file[i], filepath);
         }
@@ -50,9 +54,9 @@ class Project : public IParseKeyValueReceiver {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
         temp_loop->bitmap_enabled = false;
 
-        for (int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
-            char filepath[255];
-            sprintf(filepath, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
+        for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
+            char filepath[MAX_FILEPATH];
+            snprintf(filepath, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
                 Serial.printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
@@ -73,7 +77,7 @@ class Project : public IParseKeyValueReceiver {
         int loaded_sequence_number = -1;
 
         int selected_loop_number = 0;
-        int loaded_loop_number = -1;
+        volatile int loaded_loop_number = -1;
 
         bool load_matrix_mappings = true;
         bool load_clock_settings = true;
@@ -229,23 +233,23 @@ class Project : public IParseKeyValueReceiver {
         #ifdef ENABLE_LOOPER
             // load and save sequences / clock settings etc
             bool load_loop(int selected_loop_number) {
-                return load_loop(selected_loop_number, &mpk49_loop_track);
+                return load_loop(selected_loop_number, &midi_loop_track);
             }
             bool load_loop() {
-                return load_loop(this->selected_loop_number, &mpk49_loop_track);
+                return load_loop(this->selected_loop_number, &midi_loop_track);
             }
             bool save_loop() {
-                return save_loop(this->selected_loop_number, &mpk49_loop_track);
+                return save_loop(this->selected_loop_number, &midi_loop_track);
             }
             bool save_loop(int selected_loop_number) {
-                return this->save_loop(selected_loop_number, &mpk49_loop_track);
+                return this->save_loop(selected_loop_number, &midi_loop_track);
             }
 
             bool load_specific_loop(int selected_loop_number) {
                 return this->load_loop(selected_loop_number);
             }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf(F("load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
+                Serial.printf(F("load_loop(): load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
@@ -277,18 +281,22 @@ class Project : public IParseKeyValueReceiver {
         bool auto_advance_sequencer = false;
         void on_phrase(int phrase) {
             int slot = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
-            Serial.printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
+            Debug_printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
             if (auto_advance_sequencer) {
                 this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+                //Serial.printf("on_phrase loading sequence_number %i\n", selected_sequence_number);
                 this->load_sequence(this->selected_sequence_number);
+                //Serial.println("done!");
             }
             #ifdef ENABLE_LOOPER
                 if (auto_advance_looper) {
                     this->selected_loop_number = slot % NUM_LOOP_SLOTS_PER_PROJECT;
+                    Serial.printf("on_phrase loading loop_number %i\n", selected_loop_number);
                     this->load_loop(this->selected_loop_number);
+                    //Serial.println("done!");
                 }
             #endif
-            Serial.printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
+            Debug_printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
         }
         bool is_auto_advance_sequencer() {
             return this->auto_advance_sequencer;
@@ -302,14 +310,15 @@ class Project : public IParseKeyValueReceiver {
             return this->save_project_settings(current_project_number);
         }
         bool save_project_settings(int save_to_project_number) {
+            #ifdef ENABLE_SD
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File myFile;
 
             // determine filename, delete if exists, and open the file up for writing
-            char filename[255] = "";
-            sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
-            Serial.printf(F("save_sequence(%i) writing to %s\n"), save_to_project_number, filename);
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
+            Serial.printf(F("save_project_settings(%i) writing to %s\n"), save_to_project_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf(F("%s exists, deleting first\n"), filename);
                 SD.remove(filename);
@@ -330,7 +339,7 @@ class Project : public IParseKeyValueReceiver {
             //myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
             LinkedList<String> behaviour_lines = LinkedList<String>();
             behaviour_manager->save_project_add_lines(&behaviour_lines);
-            for (int i = 0 ; i < behaviour_lines.size() ; i++) {
+            for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
                 myFile.println(behaviour_lines.get(i));
             }
 
@@ -351,22 +360,29 @@ class Project : public IParseKeyValueReceiver {
             myFile.println(F("; end project"));
             myFile.close();
             Serial.println(F("Finished saving."));
+
+            update_project_filename(filename);
+
             //if (irqs_enabled) __enable_irq();
+            #endif
             return true;
         }
 
         bool load_project_settings(int project_number) {
+            #ifdef ENABLE_SD
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             //File myFile;
+
+            messages_log_add(String("Loading project ") + String(project_number));
 
             if (isLoadMatrixMappings()) {
                 Serial.printf(F("load_project_settings(%i) resetting matrix!\n"), project_number);
                 midi_matrix_manager->reset_matrix(); 
             }
 
-            char filename[255] = "";
-            sprintf(filename, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
             Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
 
             if (!load_file(filename, this)) {
@@ -395,6 +411,9 @@ class Project : public IParseKeyValueReceiver {
             */
             current_project_number = project_number;
             Serial.printf(F("Loaded project settings.\n"));
+
+            update_project_filename(filename);
+            #endif
 
             return true;
         }
@@ -427,6 +446,7 @@ class Project : public IParseKeyValueReceiver {
 
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
+            line = line.replace('\n',"");
 
             if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
                 // legacy save format, pre-matrix
@@ -437,6 +457,7 @@ class Project : public IParseKeyValueReceiver {
                 source_label = source_label.replace(F("_output"),F(""));  // translate pre-matrix style naming to matrix-style naming
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+                return;
             } else if (this->isLoadMatrixMappings() && line.startsWith(F("midi_matrix_map="))) {
                 // midi matrix version
                 Serial.printf(F("----\nLoading midi_matrix_map line '%s'\n"), line.c_str());
@@ -445,12 +466,19 @@ class Project : public IParseKeyValueReceiver {
                 String source_label = line.substring(0,split);
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+                return;
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
-                Serial.printf(F("processed by behaviour_manager\n"), line.c_str());
+                Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str());
+                return;
             }
+<<<<<<< HEAD
         }*/
+=======
+            messages_log_add(String("Unknown Project line '") + line + String("'"));
+        }
+>>>>>>> main
 };
 
 extern Project *project;

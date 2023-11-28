@@ -16,9 +16,7 @@ class LooperDisplay : public MenuItem {
 
     //GFXcanvas16 *canvas;
 
-    LooperDisplay(const char *label, MIDITrack *loop_track) : MenuItem(label) {
-        this->loop_track = loop_track;
-    }
+    LooperDisplay(const char *label, MIDITrack *loop_track) : MenuItem(label), loop_track(loop_track) {}
 
     /*float ticks_per_pixel = 1.0;
     virtual void on_add() override {
@@ -34,7 +32,7 @@ class LooperDisplay : public MenuItem {
     virtual int get_screen_x_for_tick(int tick) {
         if (!precalculated) {
             static int ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
-            for (int i = 0 ; i < LOOP_LENGTH_TICKS ; i++) {
+            for (unsigned int i = 0 ; i < LOOP_LENGTH_TICKS ; i++) {
                 precalculated_value_screen_x_for_tick[i] = i / ticks_per_pixel;
             }
             precalculated = true;
@@ -48,7 +46,7 @@ class LooperDisplay : public MenuItem {
     virtual int get_tick_for_screen_x(int screen_x) {
         if (!precalculated_tick_for_screen_x) {
             static int ticks_per_pixel = (float)LOOP_LENGTH_TICKS / (float)tft->width();
-            for (int i = 0 ; i < tft->width() ; i++) {
+            for (unsigned int i = 0 ; i < tft->width() ; i++) {
                 precalculated_value_tick_for_screen_x[i] = ticks_to_sequence_step((int)((float)screen_x * ticks_per_pixel));
             }
             precalculated_tick_for_screen_x = true;
@@ -82,7 +80,7 @@ class LooperDisplay : public MenuItem {
         /*int ticks_per_pixel = round((float)LOOP_LENGTH / (float)tft->width());
         Serial.printf("ticks_per_pixel = %i / %i = %i\n", tft->width(), LOOP_LENGTH, ticks_per_pixel);
 
-        for (int i = 0 ; i < tft->width() ; i++) {
+        for (unsigned int i = 0 ; i < tft->width() ; i++) {
             //Serial.printf("for real pixel %i: \n", i);
             // for each pixel, process ticks_per_pixel ticks
             for (int pitch = 127 ; pitch > 0 ; pitch--) {
@@ -111,10 +109,6 @@ class LooperDisplay : public MenuItem {
         int last_pitch = loop_track->last_pitch();
         uint8_t range = last_pitch - first_pitch;
 
-        // we're going to use direct access to the underlying Adafruit library here
-        const DisplayTranslator_STeensy *tft2 = (DisplayTranslator_STeensy*)tft;
-        ST7789_t3 *actual = tft2->tft;
-
         // draw a vertical line showing the cursor position, if we're playing, recording or overwriting
         if (this->loop_track->isPlaying() || this->loop_track->isOverwriting() || this->loop_track->isRecording()) {
             uint16_t indicatorcolour = 0xAAAA;
@@ -127,7 +121,7 @@ class LooperDisplay : public MenuItem {
             else if (this->loop_track->isPlaying()) 
                 indicatorcolour = GREEN;
             const int current_screen_x = ticks%LOOP_LENGTH_TICKS / ticks_per_pixel;
-            actual->drawFastVLine(current_screen_x, base_row, range, indicatorcolour);
+            tft->drawFastVLine(current_screen_x, base_row, range, indicatorcolour);
         }
 
         // only draw over a range between the lowest and highest notes
@@ -170,12 +164,12 @@ class LooperDisplay : public MenuItem {
                     if (ticks%LOOP_LENGTH_TICKS==tick_for_screen_X || ((int)(ticks+ticks_per_pixel))%LOOP_LENGTH_TICKS==tick_for_screen_X)
                         colour = YELLOW;
 
-                    actual->drawFastHLine(screen_x, draw_at_y, 2, colour);
+                    tft->drawFastHLine(screen_x, draw_at_y, 2, colour);
                 }
             }
             if (this->loop_track->track_playing[pitch].velocity>0) {
                 // draw a little indicator displaying what notes are currently held, with brightness indicating velocity
-                actual->drawFastHLine(0, draw_at_y, 2, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
+                tft->drawFastHLine(0, draw_at_y, 2, C_WHITE + (this->loop_track->track_playing[pitch].velocity<<8));
             } else {
                 //tft->drawLine(0, pos.y+(127-pitch), 2, pos.y+(127-pitch), BLACK); // + (this->loop_track->track_playing[pitch].velocity<<8));
             }
