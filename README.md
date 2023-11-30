@@ -28,7 +28,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
   - Akai MPK49 (clock+MIDI looping functions, accept input)
   - Akai APCMini (used as interface for sequencer+clock divisions)
   - [Bambleweeny 57](https://github.com/doctea/drum2musocv/) (clock)
-  - A [mystery device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
+  - A [(not so mystery) device](https://github.com/doctea/usb_midi_clocker/tree/arduino_version) with USB MIDI VID=0x1337 PID=0x1337
     - With divider control and offset delay
   - Modal CraftSynth 2.0 (route an input or looper to play CraftSynth notes, with tempo sync for arpeggiation etc)
   - M-Vave/Cuvave Chocolate footswitch controller (controls the MIDI looper from left to right: play (toggle), record (toggle), overwrite (momentary), record (momentary))
@@ -95,6 +95,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_chocolate: for the M-Vave Chocolate footswitch to control looper
 - behaviour_clocked: base classes for handling midi clock delay and divison
 - behaviour_craftsynth: send notes to the Modal CraftSynth 2.0, also CC parameters that can be modulated from CV input
+- behaviour_cvinput: outputs MIDI notes and chords corresponding to incoming CVs
 - behaviour_drumkit: input from midi drumkit over DIN
 - behaviour_dptlooper: send clock and bar/phrase starts for [DPTLooper](https://github.com/doctea/dptlooper) [experimental/WIP]
 - behaviour_keystep: sends clock and receives notes
@@ -109,7 +110,9 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - behaviour_base_serial: base class for DIN MIDI serial devices
 - behaviour_base_usb: base class for USB MIDI devices
 - behaviour_base_usbserial: base class for USB serial and USB serial MIDI devices
-- ClockedBehaviour: send clock messages
+- behaviour_simplewrapper: support devices without having to write an entire supporting class (also saves some flash space not having to have specific classes)
+- ClockedBehaviour, DividedClockedBehaviour: send clock messages
+- MIDIBass: 'drone' and 'machinegun' modes
 
 ## Requirements
 
@@ -150,8 +153,6 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - Occasional freezes/crashes... pretty sure related to something in the USB library
 - GDB debug mode doesn't work - might just simply be because we don't have enough RAM to do this now?
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
-- Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?
-- ~~USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..~~ <- hmm, fixed this by making CVInput behaviour send message to midi_matrix_manager on channel 0 instead of channel 1..?  but not sure why this would be, since the channel looked correct in DeviceBehaviourUSBBase#sendNoteOn() !
 - Crash on trying to screenshot on ili9341
 
 ## Known issues (may be solved)
@@ -171,6 +172,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - MIDI looper uses a LOT of RAM (~48k for 1 phrase -- 384 (ticks) * 127 (notes)) - less memory-hungry polyphony can be used, but drawing the pianoroll to screen would become more intensive...
 - ~~Voltage Source Calibration UI is ugly / changing sizes constantly~~
 - ~~BeatStep auto-advance via SYSEX is unreliable/non-working -- had it working a few times, but couldn't work out rhyme or reason why it randomly stops working?  Left in as option.. maybe related to the same strange USB MIDI glitches as mentioned below.~~
+- ~~Think it may be a couple of BPM slower in practice than what is actually set -- maybe rounding error in how tick length is calculated?  or due to a loop taking too long and missing the tick?~~ Solved by using [uClock](https://github.com/midilab/uClock) library
+- ~~USBMIDI devices (CraftSynth, Beatstep) don't seem to receive Note messages sent from the 'CV Input' behaviour, while SerialMIDI devices eg Neutron and Bitbox play them without any problem.  Have checked and the messages /are/ being sent, with correct channel too, so bit of a mystery why they aren't being acted on..~~ <- hmm, fixed this by making CVInput behaviour send message to midi_matrix_manager on channel 0 instead of channel 1..?  but not sure why this would be, since the channel looked correct in DeviceBehaviourUSBBase#sendNoteOn() !
 
 ## Configuration
 
@@ -185,6 +188,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 ### TODO/Future 
 
 - Quantise all melodic outputs to a chosen scale
+ - make this a setting on the MidiMatrixMapper?
 - Write up controls/instructions/etc
 - Come up with a cooler name (maybe Nexus6 as that's what i've put on the pcb panel?)
 - Update docs to reflect all features
@@ -355,7 +359,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - ~~Visual control over the features of the [drum2musocv Bamblweeny](https://github.com/doctea/drum2musocv)?~~
   - ~~Control over the envelopes AHDSR + modulation~~
 - ~~The 'delay' menu item for ClockedBehaviours gets set to an incorrect value when opened?~~
-- Improve stability of clock by getting it working in uClock/interrupts mode without crashes
+- ~~Improve stability of clock by getting it working in uClock/interrupts mode without crashes~~
 
 ---
 
