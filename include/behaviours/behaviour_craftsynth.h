@@ -141,7 +141,8 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
 
             //Serial.println(F("\tAdding parameters..."));
             //parameters->clear();
-            // todo: read these from a file
+            // todo: read these from a configuration file
+            // todo: add the rest of the available parameters
             //this->add_parameters();
             parameters->add(new MIDICCParameter<>("Glide",         this,   (byte)5,    (byte)1));
             parameters->add(new MIDICCParameter<>("Distortion",    this,   (byte)12,   (byte)1));
