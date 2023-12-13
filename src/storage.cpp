@@ -259,15 +259,6 @@ namespace storage {
       sequence_data_index++;
       return;
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      //Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
-      /*String partial = line.remove(0,String("behaviour_option_").length());
-      // todo: something is off with my understanding of how remove works here
-      int split_point = partial.indexOf("=");
-      String key = partial.remove(split_point);
-      String value = line.remove(0,split_point+1);*/
-      /*String key = line.substring(0, line.indexOf('='));
-      String value = line.substring(line.indexOf("=")+1);
-      behaviour_manager->load_parse_key_value(key, value);*/
       return;
     }
     messages_log_add(String("Ignoring line '") + line + String("'"));

@@ -352,14 +352,18 @@ void loop() {
     #endif
 
     #ifdef ENABLE_CV_INPUT
-      if (!screen_was_drawn)
-        parameter_manager->throttled_update_cv_input(false, TIME_BETWEEN_CV_INPUT_UPDATES);
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        if (!screen_was_drawn)
+          parameter_manager->throttled_update_cv_input(false, TIME_BETWEEN_CV_INPUT_UPDATES);
+      }
     #endif
   }
 
-  // only update here if paused, so that we can still see effect of manual updating of gates etc
-  if (!playing)
-    gate_manager->update();
+  // only update from main loop if we're paused, so that we can still see effect of manual updating of gates etc
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    if (!playing)
+      gate_manager->update(); 
+  }
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
@@ -403,7 +407,7 @@ void loop() {
 
 // (should be) called inside interrupt
 void do_tick(uint32_t in_ticks) {
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
   bool debug = debug_flag;
   /*#ifdef DEBUG_TICKS
@@ -473,7 +477,7 @@ void do_tick(uint32_t in_ticks) {
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
     update_cv_outs(in_ticks);
     if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
-    gate_manager->update();
+    gate_manager->update(); 
   #endif
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
@@ -505,5 +509,5 @@ void do_tick(uint32_t in_ticks) {
   //ticks++;
   //last_ticked_at_micros = millis();
   //single_step = false;
-  }
+  //}
 }
