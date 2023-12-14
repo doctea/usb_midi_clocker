@@ -6,6 +6,7 @@
 #include "behaviours/behaviour_keystep.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "behaviours/behaviour_subclocker.h"
+#include "behaviours/behaviour_skulptsynth.h"
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_chocolate.h"
 
@@ -152,6 +153,12 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_craftsynth);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+
+    #ifdef ENABLE_SKULPTSYNTH_USB
+        Serial.println(F("about to register DeviceBehaviour_SkulptSynth...")); Serial_flush();
+        behaviour_manager->registerBehaviour(behaviour_skulptsynth);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
     

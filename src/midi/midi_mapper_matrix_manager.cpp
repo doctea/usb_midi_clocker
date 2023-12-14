@@ -7,6 +7,7 @@
 
 #include "behaviours/behaviour_bamble.h"
 #include "behaviours/behaviour_craftsynth.h"
+#include "behaviours/behaviour_skulptsynth.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
@@ -122,6 +123,10 @@ void setup_midi_mapper_matrix_manager() {
     #if defined(ENABLE_CRAFTSYNTH) && !defined(ENABLE_CRAFTSYNTH_USB)
         midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S6 : CraftSynth : ch1", midi_out_serial[5], 1));
         midi_out_serial_clock_enabled[5] = true;
+    #endif
+
+    #ifdef ENABLE_SKULPTSYNTH_USB
+        behaviour_skulptsynth->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : SkulptSynth : ch 1", behaviour_skulptsynth, 1));
     #endif
 
     #ifdef ENABLE_DRUMKIT
