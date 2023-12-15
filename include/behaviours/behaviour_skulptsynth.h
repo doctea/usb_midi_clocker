@@ -247,12 +247,16 @@ class DeviceBehaviour_SkulptSynth : public DeviceBehaviourUSBBase, public Clocke
             parameters->add(new MIDICCParameter<>("Delay Dry/Wet", this,   (byte)13,   (byte)1));
             parameters->add(new MIDICCParameter<>("Delay Time",    this,   (byte)14,   (byte)1));
             parameters->add(new MIDICCParameter<>("Delay Feedback",this,   (byte)15,   (byte)1));
-/*
+
             parameters->add(new SkulptSynthOsc1Parameter("Osc 1 Wave",    this,   (byte)16,   (byte)1));
             parameters->add(new SkulptSynthOsc2Parameter("Osc 2 Wave",    this,   (byte)17,   (byte)1));
             parameters->add(new MIDICCParameter<>("Osc Mix",       this,   (byte)18,   (byte)1));
 
-            parameters->add(new MIDICCParameter<>("FM amt",        this,   (byte)19,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Osc Morph",     this,   (byte)33,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Filter Cutoff", this,   (byte)34,   (byte)1));
+            parameters->add(new MIDICCParameter<>("Filter Reso",   this,   (byte)35,   (byte)1));
+
+            /*parameters->add(new MIDICCParameter<>("FM amt",        this,   (byte)19,   (byte)1));
             parameters->add(new SkulptSynthSpreadParameter((char*)"Spread",        this)); //,   (byte)20,   (byte)1));
             parameters->add(new SkulptSynthOnOffParameter("Chord mode", this, 21));
 
@@ -263,12 +267,8 @@ class DeviceBehaviour_SkulptSynth : public DeviceBehaviourUSBBase, public Clocke
             parameters->add(new SkulptSynthCenteredParameter("Velo depth", this, 62));
             parameters->add(new SkulptSynthCenteredParameter("Note depth", this, 63));
             parameters->add(new SkulptSynthOnOffParameter("Sustain pedal", this, 64));
-            parameters->add(new SkulptSynthCenteredParameter("Aft depth", this, 65));
+            parameters->add(new SkulptSynthCenteredParameter("Aft depth", this, 65));*/
 
-            parameters->add(new MIDICCParameter<>("Osc Morph",     this,   (byte)33,   (byte)1));
-            parameters->add(new MIDICCParameter<>("Filter Cutoff", this,   (byte)34,   (byte)1));
-            parameters->add(new MIDICCParameter<>("Filter Reso",   this,   (byte)35,   (byte)1));
-*/
             Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
             return parameters;
