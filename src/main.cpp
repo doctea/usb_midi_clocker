@@ -258,11 +258,13 @@ bool debug_flag = false;
 // 
 // -----------------------------------------------------------------------------
 void loop() {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
   if (Serial.getReadError() || Serial.getWriteError()) {
       Serial.end();
       Serial.clearReadError(); Serial.clearWriteError();
       Serial.begin(115200);
       Serial.setTimeout(0);
+  }
   }
 
   if (debug_stress_sequencer_load && ticks % 6 == 1)  {
@@ -294,9 +296,9 @@ void loop() {
   #endif
 
   if (debug_flag) { Serial.println(F("about to Usb.Task()")); Serial_flush(); }
-  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     Usb.Task();
-  //}
+  }
   if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
@@ -352,10 +354,17 @@ void loop() {
     #endif
 
     #ifdef ENABLE_CV_INPUT
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-        if (!screen_was_drawn)
-          parameter_manager->throttled_update_cv_input(false, TIME_BETWEEN_CV_INPUT_UPDATES);
-      }
+      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        if (!screen_was_drawn) {
+          //__disable_irq();
+          parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
+          //parameter_manager->update_mixers();
+          //__enable_irq();                              
+        }
+        if (!playing) {
+          parameter_manager->update_mixers();
+        }
+      //}
     #endif
   }
 
@@ -484,6 +493,7 @@ void do_tick(uint32_t in_ticks) {
   behaviour_manager->do_ticks(in_ticks);
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
 
+  parameter_manager->update_mixers();
 
   /*
   // done doesn't end properly for usb behaviours if do_end_bar here!
