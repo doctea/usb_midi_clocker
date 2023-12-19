@@ -248,6 +248,8 @@ void setup() {
   #ifdef USE_UCLOCK
     clock_start();
   #endif
+
+  debug_free_ram();
 }
 
 //long loop_counter = 0;
@@ -357,12 +359,12 @@ void loop() {
       //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         if (!screen_was_drawn) {
           //__disable_irq();
-          parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
-          //parameter_manager->update_mixers();
+          //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
+          parameter_manager->throttled_update_cv_input__all(TIME_BETWEEN_CV_INPUT_UPDATES, false, false);
           //__enable_irq();                              
         }
         if (!playing) {
-          parameter_manager->update_mixers();
+          //parameter_manager->update_mixers();
         }
       //}
     #endif
@@ -493,7 +495,7 @@ void do_tick(uint32_t in_ticks) {
   behaviour_manager->do_ticks(in_ticks);
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
 
-  parameter_manager->update_mixers();
+  //parameter_manager->update_mixers();
 
   /*
   // done doesn't end properly for usb behaviours if do_end_bar here!
