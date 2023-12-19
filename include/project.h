@@ -44,9 +44,9 @@ class Project {
             char filepath[MAX_FILEPATH];
             snprintf(filepath, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
             sequence_slot_has_file[i] = SD.exists(filepath);
-            Serial.printf(F("\tsequence_slot_has_file[i] = %i for %s\n"), sequence_slot_has_file[i], filepath);
+            Serial_printf(F("\tsequence_slot_has_file[i] = %i for %s\n"), sequence_slot_has_file[i], filepath);
         }
-        Serial.println(F("initialise_sequence_slots finished"));
+        Serial_println(F("initialise_sequence_slots finished"));
     }
     void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
@@ -57,14 +57,14 @@ class Project {
             snprintf(filepath, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
-                Serial.printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
+                Serial_printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
                 temp_loop->load_loop(this->current_project_number, i);
-                Serial.printf(F("initialise_loop_slots: loaded loop ok\n")); Serial_flush();
+                Serial_printf(F("initialise_loop_slots: loaded loop ok\n")); Serial_flush();
                 if (temp_loop->count_events()==0)
                     loop_slot_has_file[i] = false;
-                Serial.printf(F("initialise_loop_slots: did count_events\n"));
+                Serial_printf(F("initialise_loop_slots: did count_events\n"));
             }
-            Serial.printf(F("initialise_loop_slots: loop_slot_has_file[i] = %i for %s\n"), loop_slot_has_file[i], filepath);
+            Serial_printf(F("initialise_loop_slots: loop_slot_has_file[i] = %i for %s\n"), loop_slot_has_file[i], filepath);
         }
         temp_loop->clear_all();
     }
@@ -121,10 +121,10 @@ class Project {
         }
 
         void setProjectNumber(int number) {
-            if (this->debug) Serial.printf(F("Project#setProjectNumber(%i)...\n"), number);
+            if (this->debug) Serial_printf(F("Project#setProjectNumber(%i)...\n"), number);
             if (this->current_project_number!=number) {
                 this->current_project_number = number;
-                if (this->debug) Serial.printf(F("Switched to project number %i\n"), this->current_project_number);
+                if (this->debug) Serial_printf(F("Switched to project number %i\n"), this->current_project_number);
                 make_project_folders(number);
                 this->load_project_settings(number);
                 this->initialise_loop_slots();
@@ -137,7 +137,7 @@ class Project {
 
         ////////////// clocks / sequences
         bool select_sequence_number(int sn) {
-            Serial.printf(F("select_sequence_number %i\n"), sn);
+            Serial_printf(F("select_sequence_number %i\n"), sn); Serial_flush();
             selected_sequence_number = sn % NUM_SEQUENCE_SLOTS_PER_PROJECT;
             return sn == selected_sequence_number;
         }

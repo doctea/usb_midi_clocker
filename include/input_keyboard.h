@@ -96,13 +96,13 @@ bool debug_stress_sequencer_load = false;
                     Serial.end();
                     Serial.begin(115200);
                     Serial.setTimeout(0);
-                    Serial.println(F("---restarted serial---"));
+                    Serial_println(F("---restarted serial---"));
                     break;
                 case KEYD_DELETE    :   // ctrl+alt+delete to reset Teensy
                     {
                         int modifiers = keyboard1.getModifiers();
                         if (modifiers==(MOD_LCTRL+MOD_LALT+MOD_LSHIFT)) {
-                            Serial.println("running a loop() manually because ctrl+alt+lshift+delete");
+                            Serial_println("running a loop() manually because ctrl+alt+lshift+delete");
                             loop();
                             break;
                         }                    
@@ -148,14 +148,14 @@ bool debug_stress_sequencer_load = false;
                     menu->button_back();
                 break;*/
             #ifdef ENABLE_SCREEN
-            case KEYD_UP        : Serial.println(F("UP"));             menu->knob_left(); break;
-            case KEYD_DOWN      : Serial.println(F("DN"));             menu->knob_right(); break;
-            case KEYD_ESC        :
+            case KEYD_UP        : Serial_println(F("UP"));             menu->knob_left(); break;
+            case KEYD_DOWN      : Serial_println(F("DN"));             menu->knob_right(); break;
+            case KEYD_ESC       :
             case KEYD_LEFT      : 
-            case KEYD_BACKSPACE : Serial.println(F("LEFT"));           menu->button_back(); break;
-            case KEYD_RIGHT     : Serial.println(F("RIGHT")); 
-            case KEYD_ENTER     : Serial.println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
-            case KEYD_HASH      : Serial.println(F("right-button"));   menu->button_right(); break;
+            case KEYD_BACKSPACE : Serial_println(F("LEFT"));           menu->button_back(); break;
+            case KEYD_RIGHT     : Serial_println(F("RIGHT")); 
+            case KEYD_ENTER     : Serial_println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
+            case KEYD_HASH      : Serial_println(F("right-button"));   menu->button_right(); break;
             case KEYD_TAB       :
                 // switch menu page
                 if (modifiers & MOD_LSHIFT || modifiers & MOD_RSHIFT) {
@@ -174,9 +174,9 @@ bool debug_stress_sequencer_load = false;
                 debug_stress_sequencer_load = false;
                 break;
             case '-':
-                Serial.println(F("------------------------")); break;
+                Serial_println(F("------------------------")); break;
             case 'p': case 'P':
-                Serial.println(F("MIDI (p)ANIC AT THE DISCO"));
+                Serial_println(F("MIDI (p)ANIC AT THE DISCO"));
                 if (key=='P')   // hard panic
                     midi_matrix_manager->stop_all_notes_force();
                 else
@@ -185,53 +185,53 @@ bool debug_stress_sequencer_load = false;
                 break;
             #ifdef ENABLE_SCREEN
             case 'A': case 'a':
-                Serial.println(F("Toggling (a)uto-advances"));
+                Serial_println(F("Toggling (a)uto-advances"));
                 toggle_autoadvance(key=='A');
                 break;
             case 'Q': case 'q':
-                Serial.println(F("Toggling Re(q)all"));
+                Serial_println(F("Toggling Re(q)all"));
                 toggle_recall(key=='Q');
                 break;
             #endif
             case 'r'            : 
-                Serial.println(F("Setting (r)estart_on_next_bar"));
+                Serial_println(F("Setting (r)estart_on_next_bar"));
                 set_restart_on_next_bar(true); 
                 break;
             // take screenshot
             #if defined(ENABLE_SCREEN) && defined(ENABLE_SD) && defined(ENABLE_SCREENSHOT)
             case ' '            :
-                Serial.println(F("Taking screenshot!"));
+                Serial_println(F("Taking screenshot!"));
                 save_screenshot(display_translator);
                 break;
             #endif
             // load/save/move selected sequence
             case 'L'            : 
-                Serial.println(F("(L)oad selected sequence"));
+                Serial_println(F("(L)oad selected sequence"));
                 project->load_selected_sequence();
-                Serial.println(F("Finished loading selected sequence"));
+                Serial_println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
-                Serial.println(F("(S)ave sequencer!"));
+                Serial_println(F("(S)ave sequencer!"));
                 project->save_selected_sequence();
                 break;
             case 'J'            :
-                Serial.println(F("==== Loading previous sequence.."));
+                Serial_println(F("==== Loading previous sequence.."));
                 //input_keyboard.queue_load_previous_sequence();
                 project->load_previous_sequence();
-                Serial.println(F("==== Loaded previous sequence!"));
+                Serial_println(F("==== Loaded previous sequence!"));
                 break;
             case ':'            :
-                Serial.println(F("==== Loading next sequence")); Serial_flush();
+                Serial_println(F("==== Loading next sequence")); Serial_flush();
                 //input_keyboard.queue_load_next_sequence();
                 project->load_next_sequence();
-                Serial.println(F("==== Loaded next sequence!")); Serial_flush();
+                Serial_println(F("==== Loaded next sequence!")); Serial_flush();
                 break;
             case 'j'            :
-                //Serial.println(F("Select previous sequence"));
+                //Serial_println(F("Select previous sequence"));
                 project->select_previous_sequence();
                 break;
             case ';'            :
-                //Serial.println(F("Select next sequence"));
+                //Serial_println(F("Select next sequence"));
                 project->select_next_sequence();
                 break;
             // change project number
@@ -243,16 +243,16 @@ bool debug_stress_sequencer_load = false;
                         modifiers &= ~MOD_LALT;
                     }
                     if (modifiers==0) {
-                        Serial.printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
+                        Serial_printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
                         //input_keyboard.queue_setProjectNumber(key - adjust);
                         project->setProjectNumber(key - adjust);
                     } else {
-                        Serial.printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
+                        Serial_printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
                     }
                 }
                 break;
             default:
-                Serial.printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
+                Serial_printf(F("received unhandled OnPress(%i/%c) with modifier %i!\n"), key, key, modifiers);
                 break;
         }
         //if (irqs_enabled) __enable_irq();

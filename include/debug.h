@@ -11,6 +11,11 @@ void debug_free_ram();
 
 void reset_teensy();
 
+// need these because we get stuck in a race condition if printing to Serial when Serial isn't connected?
+#define Serial_println(X)   if(Serial)Serial.println(X)
+#define Serial_printf(...)  if(Serial)Serial.printf(__VA_ARGS__)
+#define Serial_printx(X)    if(Serial)Serial.print(X)
+
 #ifndef Serial_flush
     #ifdef SERIAL_FLUSH_REALLY
         #define Serial_flush() if(Serial)Serial.flush()
