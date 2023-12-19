@@ -234,6 +234,8 @@ class DeviceBehaviour_SkulptSynth : public DeviceBehaviourUSBBase, public Clocke
             if (already_initialised)
                 return this->parameters;
 
+            already_initialised = true;
+
             DeviceBehaviourUSBBase::initialise_parameters();
             ClockedBehaviour::initialise_parameters();
 

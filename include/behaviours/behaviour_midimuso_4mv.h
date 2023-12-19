@@ -133,6 +133,8 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
         if (already_initialised)
             return this->parameters;
 
+        already_initialised  = true;
+
         //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
         DeviceBehaviourSerialBase::initialise_parameters();
         MIDIBassBehaviour::initialise_parameters();

@@ -132,6 +132,8 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             if (already_initialised)
                 return this->parameters;
 
+            already_initialised = true;
+
             //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
             DeviceBehaviourUSBBase::initialise_parameters();
             //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
