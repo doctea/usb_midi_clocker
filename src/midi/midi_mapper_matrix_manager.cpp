@@ -250,6 +250,11 @@ void setup_midi_mapper_matrix_manager() {
     midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
     MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
     behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
+    behaviour_midibassproxy->setHighestNote(4*12);
+    behaviour_midibassproxy->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+    behaviour_midibassproxy->setLowestNote(1*12);
+    behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+
 
     // connect default mappings
     #ifdef ENABLE_MAMMB33

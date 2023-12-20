@@ -17,7 +17,7 @@ usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI
 usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 */
 
-#define NUM_USB_MIDI_DEVICES 10
+#define NUM_USB_MIDI_DEVICES 16
 
 // assign device to port and set appropriate handlers
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id);

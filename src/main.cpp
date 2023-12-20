@@ -81,7 +81,7 @@ void do_tick(uint32_t ticks);
 
 //#define DEBUG_MAIN_LOOP
 #ifdef DEBUG_MAIN_LOOP
-  #define DEBUG_MAIN_PRINTLN(X) Serial.printf(X)
+  #define DEBUG_MAIN_PRINTLN(X) Serial_printf(X)
 #else
   #define DEBUG_MAIN_PRINTLN(X) {}
 #endif
@@ -100,35 +100,35 @@ void setup() {
     //tft_print("\nWaiting for serial connection..");
     while (!Serial);
     //tft_print("Connected serial!\n");
-    Serial.println(F("Connected serial!")); Serial_flush();
+    Serial_println(F("Connected serial!")); Serial_flush();
   #endif
   if (CrashReport) {
     while (!Serial);
-    Serial.println("CRASHREPORT!");
-    Serial.print(CrashReport);
+    Serial_println("CRASHREPORT!");
+    Serial_print(CrashReport);
     while(Serial.available()==0);
     Serial.clear();
   }
   delay(1);
 
   /*while (1) {
-    Serial.printf(".");
+    Serial_printf(".");
   }*/
 
-  Serial.printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
+  Serial_printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
-  Serial.println(F("..USB device handler.."));
+  Serial_println(F("..USB device handler.."));
   setup_behaviour_manager();
-  Serial.printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
+  Serial_printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
 
-  //Serial.println("..MIDIOutputWrapper manager..");
+  //Serial_println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
-  Serial.println(F("..MIDI matrix manager.."));
+  Serial_println(F("..MIDI matrix manager.."));
   //setup_midi_output_wrapper_manager();
   setup_midi_mapper_matrix_manager();
-  Serial.printf(F("after setup_midi_mapper_matrix_manager(), free RAM is %u\n"), freeRam());
+  Serial_printf(F("after setup_midi_mapper_matrix_manager(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
@@ -150,7 +150,7 @@ void setup() {
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
-  Serial.println(F("Serial ready."));   
+  Serial_println(F("Serial ready."));   
   Debug_printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
 
   tft_print((char*)"..storage..\n");
@@ -175,9 +175,9 @@ void setup() {
   behaviour_manager->setup_saveable_parameters();
 
   #ifdef ENABLE_SCREEN
-    Serial.println(F("...starting behaviour_manager#make_menu_items..."));
+    Serial_println(F("...starting behaviour_manager#make_menu_items..."));
     behaviour_manager->create_all_behaviour_menu_items(menu);
-    Serial.println(F("...finished behaviour_manager#make_menu_items..."));
+    Serial_println(F("...finished behaviour_manager#make_menu_items..."));
   #endif
 
   #ifdef ENABLE_SEQUENCER
@@ -187,7 +187,7 @@ void setup() {
   #endif
 
   #ifdef USE_UCLOCK
-    Serial.println(F("Initialising uClock.."));
+    Serial_println(F("Initialising uClock.."));
     setup_uclock(&do_tick);
   #else
     tft_print((char*)"..clock..\n");
@@ -201,7 +201,7 @@ void setup() {
   #ifdef ENABLE_USB
     tft_print((char*)"..USB..");
     setup_multi_usb();
-    Serial.println(F("USB ready.")); Serial_flush();
+    Serial_println(F("USB ready.")); Serial_flush();
     Debug_printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
 
@@ -213,16 +213,16 @@ void setup() {
   #ifdef ENABLE_USBSERIAL
     tft_print((char*)"..USBSerial..");
     setup_multi_usbserial();
-    Serial.println(F("USBSerial ready.")); Serial_flush();
+    Serial_println(F("USBSerial ready.")); Serial_flush();
     Debug_printf(F("after setup_multi_usbserial(), free RAM is %u\n"), freeRam());
   #endif
 
-  Serial.println(F("Arduino ready.")); Serial_flush();
+  Serial_println(F("Arduino ready.")); Serial_flush();
   #ifdef ENABLE_SCREEN
     tft_print((char*)"Ready!"); 
     //tft_clear();
 
-    Serial.println(F("About to init menu..")); Serial_flush();
+    Serial_println(F("About to init menu..")); Serial_flush();
     menu->start();
     Debug_printf(F("after menu->start(), free RAM is %u\n"), freeRam());
     //tft_start();
@@ -234,19 +234,23 @@ void setup() {
   #endif
 
   #ifdef ENABLE_PROFILER
-    Serial.printf("Allocating array for profiler");
+    Serial_printf("Allocating array for profiler");
     main_loop_length_averages = malloc(sizeof(uint32_t)*NUMBER_AVERAGES);
   #endif
 
-  Serial.println(F("Finished setup()!"));
-  Serial.printf(F("at end of setup(), free RAM is %u\n"), freeRam());
+  Serial_println(F("Finished setup()!"));
+  Serial_printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_SCREEN
     snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
   #endif
 
   #ifdef USE_UCLOCK
+    Serial_println("Starting uClock...");
+    Serial_flush();
     clock_start();
+    Serial_println("Started uClock!");
+    Serial_flush();
   #endif
 
   debug_free_ram();
@@ -284,7 +288,7 @@ void loop() {
     uint32_t start_loop_micros_stamp = micros();
   //#endif
   //bool debug = true;
-  if (debug_flag) { Serial.println(F("start of loop!")); Serial_flush(); }
+  if (debug_flag) { Serial_println(F("start of loop!")); Serial_flush(); }
 
   #ifdef DEBUG_LED
     static int loop_counter;
@@ -293,15 +297,15 @@ void loop() {
     if (loop_counter%1000000==0) {
       digitalWrite(LED_BUILTIN, lit);
       lit = !lit;
-      //Serial.println(F("100000th loop()"));
+      //Serial_println(F("100000th loop()"));
     }
   #endif
 
-  if (debug_flag) { Serial.println(F("about to Usb.Task()")); Serial_flush(); }
+  if (debug_flag) { Serial_println(F("about to Usb.Task()")); Serial_flush(); }
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     Usb.Task();
   }
-  if (debug_flag) { Serial.println(F("just did Usb.Task()")); Serial_flush(); }
+  if (debug_flag) { Serial_println(F("just did Usb.Task()")); Serial_flush(); }
   //static unsigned long last_ticked_at_micros = 0;
 
   bool ticked = false;
@@ -310,14 +314,14 @@ void loop() {
   
     #ifndef USE_UCLOCK
     if ( playing && ticked ) {
-      if (debug_flag) { Serial.println(F("about to do_tick")); Serial_flush(); }
+      if (debug_flag) { Serial_println(F("about to do_tick")); Serial_flush(); }
       do_tick(ticks);
-      if (debug_flag) { Serial.println(F("just did do_tick")); Serial_flush(); }
+      if (debug_flag) { Serial_println(F("just did do_tick")); Serial_flush(); }
 
       #ifdef ENABLE_SCREEN
-        if (debug_flag) { Serial.println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
+        if (debug_flag) { Serial_println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
         menu->update_ticks(ticks);
-        if (debug_flag) { Serial.println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
+        if (debug_flag) { Serial_println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
       #endif
 
       //last_ticked_at_micros = micros();
@@ -334,7 +338,7 @@ void loop() {
   if (!playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
     // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
     #ifdef ENABLE_SCREEN
-      ///Serial.println("going into menu->display and then pausing 1000ms: "); Serial_flush();
+      ///Serial_println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
       bool screen_was_drawn = false;
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -342,17 +346,17 @@ void loop() {
       }
       if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
-        if (debug_flag) { Serial.println(F("about to menu->display")); Serial_flush(); }
+        if (debug_flag) { Serial_println(F("about to menu->display")); Serial_flush(); }
         if (debug_flag) menu->debug = true;
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
           menu->display(); //update(ticks);
-          if (debug_flag) { Serial.println(F("just did menu->display")); Serial_flush(); }
-          //Serial.printf("display() took %ums..", millis()-before_display);
+          if (debug_flag) { Serial_println(F("just did menu->display")); Serial_flush(); }
+          //Serial_printf("display() took %ums..", millis()-before_display);
           last_drawn = millis();
           screen_was_drawn = true;
         }
       }
-      //delay(1000); Serial.println("exiting sleep after menu->display"); Serial_flush();
+      //delay(1000); Serial_println("exiting sleep after menu->display"); Serial_flush();
     #endif
 
     #ifdef ENABLE_CV_INPUT
@@ -377,13 +381,13 @@ void loop() {
   }
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    if (debug_flag) Serial.println(F("about to behaviour_manager->do_reads().."));
+    if (debug_flag) Serial_println(F("about to behaviour_manager->do_reads().."));
     behaviour_manager->do_reads();
-    if (debug_flag) Serial.println(F("just did behaviour_manager->do_reads()"));
+    if (debug_flag) Serial_println(F("just did behaviour_manager->do_reads()"));
 
-    if (debug_flag) Serial.println(F("about to behaviour_manager->do_loops().."));
+    if (debug_flag) Serial_println(F("about to behaviour_manager->do_loops().."));
     behaviour_manager->do_loops();
-    if (debug_flag) Serial.println(F("just did behaviour_manager->do_loops()"));
+    if (debug_flag) Serial_println(F("just did behaviour_manager->do_loops()"));
   }
 
   #ifdef ENABLE_USB
@@ -392,8 +396,11 @@ void loop() {
       #ifdef ENABLE_USBSERIAL
         update_usbserial_device_connections();
       #endif 
+      //Serial_println("finished calling update_usb_xxx_device_connections.."); Serial_flush();
       //read_midi_usb_devices();
-      
+    }
+
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {      
       read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
     }
   #endif
@@ -408,12 +415,12 @@ void loop() {
       accumulator += main_loop_length_averages[i];
     }
     average_loop_micros = accumulator / NUMBER_AVERAGES;
-    //Serial.printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
+    //Serial_printf("average_loop_micros got %u from accumulator %u divided by %i", average_loop_micros,  accumulator, NUMBER_AVERAGES);
     if (count>=NUMBER_AVERAGES) count = 0;
   #else
     average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
-  if(debug_flag) { Serial.println(F("reached end of loop()!")); Serial_flush(); }
+  if(debug_flag) { Serial_println(F("reached end of loop()!")); Serial_flush(); }
 }
 
 // (should be) called inside interrupt
@@ -424,14 +431,14 @@ void do_tick(uint32_t in_ticks) {
   /*#ifdef DEBUG_TICKS
       unsigned int delta = millis()-last_ticked_at_micros;
 
-      Serial.print(ticks);
-      Serial.print(F(":\tTicked with delta\t"));
-      Serial.print(delta);
-      Serial.print(F("!\t(ms_per_tick is "));
-      Serial.print(ms_per_tick);
-      Serial.print(F(") sending clock for [ "));
+      Serial_print(ticks);
+      Serial_print(F(":\tTicked with delta\t"));
+      Serial_print(delta);
+      Serial_print(F("!\t(ms_per_tick is "));
+      Serial_print(ms_per_tick);
+      Serial_print(F(") sending clock for [ "));
   #endif*/
-  //Serial.println("ticked");
+  //Serial_println("ticked");
 
   ticks = in_ticks;
   
@@ -514,7 +521,7 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
 
   #ifdef DEBUG_TICKS
-    Serial.println(F(" ]"));
+    Serial_println(F(" ]"));
   #endif 
 
   //last_processed_tick = ticks;

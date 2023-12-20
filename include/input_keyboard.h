@@ -29,7 +29,7 @@ bool debug_stress_sequencer_load = false;
         #include "menu.h"
     #endif
 
-    #define KEYREPEAT      200   // ms to repeat when a key is held
+    #define KEYREPEAT      120   // ms to repeat when a key is held
 
     // todo: convert to using raw keycodes, since these fuck up when modifiers are held
     #define KEYD_TAB       9
