@@ -35,11 +35,12 @@ use_MIDIDevice_BigBuffer midi07(Usb);
 use_MIDIDevice_BigBuffer midi08(Usb);
 use_MIDIDevice_BigBuffer midi09(Usb);
 use_MIDIDevice_BigBuffer midi10(Usb);
-/*use_MIDIDevice_BigBuffer midi11(Usb);
+use_MIDIDevice_BigBuffer midi11(Usb);
 use_MIDIDevice_BigBuffer midi12(Usb);
 use_MIDIDevice_BigBuffer midi13(Usb);
 use_MIDIDevice_BigBuffer midi14(Usb);
-use_MIDIDevice_BigBuffer midi15(Usb);*/
+use_MIDIDevice_BigBuffer midi15(Usb);
+use_MIDIDevice_BigBuffer midi16(Usb);
 
 /*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_MIDI_DEVICES] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
@@ -55,18 +56,19 @@ usb_midi_slot usb_midi_slots[NUM_USB_MIDI_DEVICES] = {
   { 0x00, 0x00, 0x0000, &midi07, nullptr },
   { 0x00, 0x00, 0x0000, &midi08, nullptr },
   { 0x00, 0x00, 0x0000, &midi09, nullptr },
-  { 0x00, 0x00, 0x0000, &midi10, nullptr }
-  /*{ 0x00, 0x00, 0x0000, &midi11, nullptr },
+  { 0x00, 0x00, 0x0000, &midi10, nullptr },
+  { 0x00, 0x00, 0x0000, &midi11, nullptr },
   { 0x00, 0x00, 0x0000, &midi12, nullptr },
   { 0x00, 0x00, 0x0000, &midi13, nullptr },
   { 0x00, 0x00, 0x0000, &midi14, nullptr },
-  { 0x00, 0x00, 0x0000, &midi15, nullptr },*/
+  { 0x00, 0x00, 0x0000, &midi15, nullptr },
+  { 0x00, 0x00, 0x0000, &midi16, nullptr }
 };
 
 //uint64_t usb_midi_connected[NUM_USB_MIDI_DEVICES] = { 0,0,0,0,0,0,0,0 };
 
 // assign device to port and set appropriate handlers
-void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
+void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x00000000) {
   uint16_t vid, pid;
   if (packed_id==0) {
     vid = usb_midi_slots[idx].device->idVendor();
@@ -114,26 +116,27 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x0000) {
 
 
 void update_usb_midi_device_connections() {
-  for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
-    #ifdef IRQ_PROTECT_USB_CHANGES
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-    #endif
-
-    uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
-    //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
-    if (usb_midi_slots[port].packed_id != packed_id) {
-      // device at this port has changed since we last saw it -- ie, disconnection or connection
-      // unassign the midi_xxx helper pointers if appropriate
-      //usb_midi_slots[port].behaviour = nullptr;
-      Serial.printf(F("update_usb_midi_device_connections: device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_midi_slots[port].packed_id);
-      // call setup_usb_midi_device() to assign device to port and set handlers
-      setup_usb_midi_device(port, packed_id);
-      Serial.println(F("-----"));
-    }
-    #ifdef IRQ_PROTECT_USB_CHANGES
+  #ifdef IRQ_PROTECT_USB_CHANGES
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  #endif
+  {
+    for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
+      //Serial_printf("update_usb_midi_device_connections() checking port %i/%i\n", port+1, NUM_USB_MIDI_DEVICES);
+      uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
+      //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
+      if (usb_midi_slots[port].packed_id != packed_id) {
+        // device at this port has changed since we last saw it -- ie, disconnection or connection
+        // unassign the midi_xxx helper pointers if appropriate
+        //usb_midi_slots[port].behaviour = nullptr;
+        Serial_printf(F("update_usb_midi_device_connections: device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_midi_slots[port].packed_id);
+        // call setup_usb_midi_device() to assign device to port and set handlers
+        setup_usb_midi_device(port, packed_id);
+        Serial_println(F("-----"));
       }
-    #endif
+    }
+    //Serial_println("finished loop in update_usb_midi_device_connections");
   }
+  //Serial_println("returning from update_usb_midi_device_connections");
 }
 
 //#define SINGLE_FRAME_READ_ONCE
@@ -193,6 +196,7 @@ void setup_multi_usb() { // error: void setup_multi_usb() causes a section type 
   Serial.println(F("Usb.begin() returned")); Serial_flush();
   for (unsigned int i = 0 ; i < 5 ; i++) {
     Serial.printf(F("%i/5: Waiting 500ms for USB to settle down.."), i+1); Serial_flush();
+    Usb.Task();
     tft_print(".");
     delay(500);
   }
