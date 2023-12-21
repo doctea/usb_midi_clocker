@@ -126,6 +126,7 @@
     #define ENABLE_APCMINI_DISPLAY
 
     #define ENABLE_BEATSTEP
+    #define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     //#define ENABLE_BAMBLE
     //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny

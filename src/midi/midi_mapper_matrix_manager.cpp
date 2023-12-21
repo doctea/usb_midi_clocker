@@ -192,7 +192,10 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_BEATSTEP
-        midi_matrix_manager->register_source(behaviour_beatstep, "beatstep");
+        midi_matrix_manager->register_source(behaviour_beatstep,    "beatstep");
+        #ifdef ENABLE_BEATSTEP_2
+            midi_matrix_manager->register_source(behaviour_beatstep_2,  "beatstep#2");
+        #endif
         midi_matrix_manager->connect(behaviour_beatstep,    "S3 : Neutron : ch 4");
     #endif
 

@@ -65,6 +65,9 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_BEATSTEP
         behaviour_manager->registerBehaviour(behaviour_beatstep);
+        #ifdef ENABLE_BEATSTEP_2
+            behaviour_manager->registerBehaviour(behaviour_beatstep_2);
+        #endif
         //behaviour_beatstep->debug = true;
     #endif
 

@@ -95,7 +95,7 @@ class DeviceBehaviourManager {
                     DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
                     Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                     usb_midi_slots[idx].packed_id = packed_id;
-                    if (behaviour->matches_identifiers(packed_id)) {
+                    if (!behaviour->is_connected() && behaviour->matches_identifiers(packed_id)) {
                         Debug_printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                         behaviour->connect_device(usb_midi_slots[idx].device);
                         usb_midi_slots[idx].behaviour = behaviour;

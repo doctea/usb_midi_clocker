@@ -3,7 +3,10 @@
 
 #include "behaviours/behaviour_beatstep.h"
 
-DeviceBehaviour_Beatstep *behaviour_beatstep = new DeviceBehaviour_Beatstep();
+DeviceBehaviour_Beatstep    *behaviour_beatstep     = new DeviceBehaviour_Beatstep();
+#ifdef ENABLE_BEATSTEP_2
+    DeviceBehaviour_Beatstep_2  *behaviour_beatstep_2   = new DeviceBehaviour_Beatstep_2();
+#endif
 /*void beatstep_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->receive_control_change(inChannel, inNumber, inValue);
 }*/
@@ -19,6 +22,21 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->handle_sysex(data, length, complete);
 }
+
+#ifdef ENABLE_BEATSTEP_2
+    void beatstep_2_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
+        if (behaviour_beatstep_2!=nullptr) behaviour_beatstep_2->receive_note_on(inChannel, inNumber, inVelocity);
+    }
+
+    void beatstep_2_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
+        if (behaviour_beatstep_2!=nullptr) behaviour_beatstep_2->receive_note_off(inChannel, inNumber, inVelocity);
+    }
+
+    void beatstep_2_handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
+        if (behaviour_beatstep_2!=nullptr) behaviour_beatstep_2->handle_sysex(data, length, complete);
+    }
+#endif
+
 
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"

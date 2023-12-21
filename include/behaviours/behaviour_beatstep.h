@@ -24,6 +24,12 @@ void beatstep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelo
 void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 
+#ifdef ENABLE_BEATSTEP_2
+    void beatstep_2_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+    void beatstep_2_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
+    void beatstep_2_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
+#endif
+
 #define BEATSTEP_PATTERN_LENGTH_MINIMUM 1
 #define BEATSTEP_PATTERN_LENGTH_MAXIMUM 16
 
@@ -388,8 +394,28 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         #endif
 
 };
-
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
+
+#ifdef ENABLE_BEATSTEP_2
+    class DeviceBehaviour_Beatstep_2 : public DeviceBehaviour_Beatstep {
+        public:
+
+        virtual const char *get_label() override {
+            return "BeatStep#2";
+        }
+
+        //FLASHMEM 
+        virtual void setup_callbacks() override {
+            if (!DeviceBehaviourUSBBase::is_connected()) return;
+
+            this->device->setHandleNoteOn(beatstep_2_handle_note_on);
+            this->device->setHandleNoteOff(beatstep_2_handle_note_off);
+            this->device->setHandleSysEx(beatstep_2_handle_sysex);
+        }
+    };
+    extern DeviceBehaviour_Beatstep_2 *behaviour_beatstep_2;
+#endif
+
 
 //#include "menuitems_object_multitoggle.h"
 
