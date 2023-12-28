@@ -33,6 +33,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             this->addParameterInput("Fade2", "APCMini", (byte)APCMINI_FADER_CC_2, (byte)1);
             this->addParameterInput("Fade3", "APCMini", (byte)APCMINI_FADER_CC_3, (byte)1);
             this->addParameterInput("Fade4", "APCMini", (byte)APCMINI_FADER_CC_4, (byte)1);
+            this->addParameterInput("Fade5", "APCMini", (byte)APCMINI_FADER_CC_5, (byte)1);
+            this->addParameterInput("Fade6", "APCMini", (byte)APCMINI_FADER_CC_6, (byte)1);
+            this->addParameterInput("Fade7", "APCMini", (byte)APCMINI_FADER_CC_7, (byte)1);
+            this->addParameterInput("Fade8", "APCMini", (byte)APCMINI_FADER_CC_8, (byte)1);
         }
 
         uint16_t vid = 0x09e8, pid = 0x0028;
