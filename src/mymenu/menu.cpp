@@ -236,11 +236,23 @@ void setup_menu() {
     #endif
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
-            "Beatstep",
+            #ifdef ENABLE_BEATSTEP_2
+                "Beatstep 1",
+            #else
+                "Beatstep",
+            #endif
             behaviour_beatstep,
             &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
             &DeviceBehaviour_Beatstep::is_auto_advance_pattern
         ));
+        #ifdef ENABLE_BEATSTEP_2
+        project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
+            "Beatstep 2",
+            behaviour_beatstep_2,
+            &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
+            &DeviceBehaviour_Beatstep::is_auto_advance_pattern
+        ));
+        #endif
     #endif
     menu->add(project_multi_autoadvance);
 
