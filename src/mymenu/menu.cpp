@@ -273,7 +273,7 @@ void setup_menu() {
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
         [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
     );
-    global_quantise_bar->add(new LambdaToggleControl("Active",
+    global_quantise_bar->add(new LambdaToggleControl("Quantise",
         [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
         [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
     ));

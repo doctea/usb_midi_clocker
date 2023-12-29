@@ -323,9 +323,14 @@ class DeviceBehaviourManager {
             line = line.replace('\n',"");
             line = line.replace('\r',"");
             //Serial_printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
-            String key = line.substring(0, line.indexOf('='));
-            String value = line.substring(line.indexOf('=')+1);
-            return this->load_parse_key_value(key, value);
+            int split = line.indexOf('=');
+            if (split>=0) {
+                String key = line.substring(0, split);
+                String value = line.substring(split+1);
+                return this->load_parse_key_value(key, value);
+            } else {
+                return this->load_parse_key_value(line, "");
+            }
         }
 
         bool load_parse_key_value(String key, String value) {
@@ -355,6 +360,7 @@ class DeviceBehaviourManager {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
                 device->save_project_add_lines(lines);
+                // only add behaviour_start and behaviour_end lines if the behaviour added lines
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
                     lines->add(F("behaviour_end=") + String(device->get_label()));
@@ -373,6 +379,7 @@ class DeviceBehaviourManager {
                 //Serial_printf("about to save_sequence_add_lines on behaviour.."); Serial_flush();
                 device->save_sequence_add_lines(lines);
                 //Serial_printf("just did save_sequence_add_lines and got %i items\n", lines->size()); Serial_flush();
+                // only add behaviour_start and behaviour_end lines if the behaviour added lines
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
                     //Serial_printf("\tbehaviour_manager#save_sequence_add_lines calling on behaviour...\n");

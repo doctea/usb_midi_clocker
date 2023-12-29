@@ -398,6 +398,59 @@ class MIDIMatrixManager {
     bool is_global_quantise_on() {
         return this->global_quantise_on;
     }
+    void save_project_add_lines(LinkedList<String> *lines) {
+        for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
+            for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
+                if (is_connected(source_id,target_id)) {
+                    lines->add(
+                        String("midi_matrix_map=")+
+                        String(sources[source_id].handle) +
+                        String('|') +
+                        String(targets[target_id].handle)
+                    );
+                }
+            }
+        }
+        lines->add(String("global_scale_type=")+String(get_global_scale_type()));
+        lines->add(String("global_scale_root=")+String(get_global_scale_root()));
+        lines->add(String("global_quantise_on=")+String(is_global_quantise_on()?"true":"false"));
+    }
+
+    bool load_parse_line(String line) {
+        line = line.replace('\n',"");
+        line = line.replace('\r',"");
+        //Serial_printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
+        int split = line.indexOf('=');
+        if (split>=0) {
+            String key = line.substring(0, split);
+            String value = line.substring(split+1);
+            return this->load_parse_key_value(key, value);
+        } else {
+            return this->load_parse_key_value(line, "");
+        }
+    }
+
+    bool load_parse_key_value(String key, String value) {
+        if (key.equals(F("midi_matrix_map"))) {
+            // midi matrix version
+            Serial_printf(F("----\nLoading midi_matrix_map line '%s=%s'\n"), key.c_str(), value.c_str());
+            int split = value.indexOf('|');
+            String source_label = value.substring(0,split);
+            String target_label = value.substring(split+1,value.length());
+            this->connect(source_label.c_str(), target_label.c_str());
+            return true;
+        } else if (key.equals("global_scale_type")) {
+            this->set_global_scale_type((SCALE)value.toInt());
+            return true;
+        } else if (key.equals("global_scale_root")) {
+            this->set_global_scale_root(value.toInt());
+            return true;
+        } else if (key.equals("global_quantise_on")) {
+            this->set_global_quantise_on(value.equals("true") || value.equals("on") || value.equals("1"));
+            return true;
+        }
+        return false;
+    }
 
     private:
         // stuff for making singleton

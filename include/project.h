@@ -333,8 +333,6 @@ class Project {
             myFile.printf(F("id=%i\n"), save_to_project_number);
 
             // subclocker settings
-            //myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
-            //myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
             LinkedList<String> behaviour_lines = LinkedList<String>();
             behaviour_manager->save_project_add_lines(&behaviour_lines);
             for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
@@ -342,18 +340,11 @@ class Project {
             }
 
             // midi matrix settings
-            for (int source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
-                for (int target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
-                    if (midi_matrix_manager->is_connected(source_id,target_id)) {
-                        myFile.printf(
-                            F("midi_matrix_map=%s|%s\n"), 
-                            midi_matrix_manager->sources[source_id].handle, 
-                            midi_matrix_manager->targets[target_id].handle
-                        );
-                    }
-                }
+            LinkedList<String> matrix_lines = LinkedList<String>();
+            midi_matrix_manager->save_project_add_lines(&matrix_lines);
+            for (unsigned int i = 0 ; i < matrix_lines.size() ; i++) {
+                myFile.println(matrix_lines.get(i));
             }
-            //midi_matrix_manager->save_to_file(myFile);
 
             myFile.println(F("; end project"));
             myFile.close();
@@ -428,14 +419,7 @@ class Project {
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
                 return;
-            } else if (this->isLoadMatrixMappings() && line.startsWith(F("midi_matrix_map="))) {
-                // midi matrix version
-                Serial.printf(F("----\nLoading midi_matrix_map line '%s'\n"), line.c_str());
-                line = line.remove(0,String(F("midi_matrix_map=")).length());
-                int split = line.indexOf('|');
-                String source_label = line.substring(0,split);
-                String target_label = line.substring(split+1,line.length());
-                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+            } else if (this->isLoadMatrixMappings() && midi_matrix_manager->load_parse_line(line)) {
                 return;
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
