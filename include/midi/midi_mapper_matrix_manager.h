@@ -39,6 +39,7 @@ class MIDIMatrixManager {
 
     bool debug = false;
 
+    bool    global_quantise_on = false;
     int8_t  global_scale_root = SCALE_ROOT_C;
     SCALE   global_scale_type = SCALE::MAJOR;
 
@@ -188,11 +189,15 @@ class MIDIMatrixManager {
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (!is_valid_note(pitch)) return;
+        if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+        if (!is_valid_note(pitch)) return;
+
         if (source_id<0) {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
         if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
@@ -207,11 +212,15 @@ class MIDIMatrixManager {
             if (this->debug) Serial.printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
             return;
         }
+        if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+        if (!is_valid_note(pitch)) return;
+
         if (source_id<0) {
             if (this->debug) Serial.printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
         if (this->debug) Serial.printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
@@ -382,6 +391,12 @@ class MIDIMatrixManager {
             behaviour_manager_kill_all_current_notes();
         }
         this->global_scale_type = scale_type;
+    }
+    void set_global_quantise_on(bool v) {
+        this->global_quantise_on = v;
+    }
+    bool is_global_quantise_on() {
+        return this->global_quantise_on;
     }
 
     private:

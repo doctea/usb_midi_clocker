@@ -266,13 +266,18 @@ void setup_menu() {
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
-    menu->add(new LambdaScaleMenuItemBar(
+    LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
         [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
         [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
         [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+    );
+    global_quantise_bar->add(new LambdaToggleControl("Active",
+        [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
+        [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
     ));
+    menu->add(global_quantise_bar);
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
