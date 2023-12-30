@@ -45,6 +45,63 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 
 #define SYSEX_TIMEOUT   50   // timeout if a request for a sysex parameter doesn't get a response, so that the queue doesn't get stuck
 
+#define BEATSTEP_SYSEX_BASE_ENCODER 0x20
+#define BEATSTEP_SYSEX_BASE_PADS    0x70
+#define NUM_ENCODERS                16
+#define NUM_PADS                    16
+#define CHANNEL_GLOBAL              0x41
+#define SYSEX_CHANNEL               0x02
+#define SYSEX_CCNOTE                0x03
+#define SYSEX_BEHAVIOUR             0x06
+#define SYSEX_PAD_MODE_OFF          0x00
+#define SYSEX_PAD_MODE_SILENT_CC_SWITCH 0x01
+#define SYSEX_PAD_MODE_MMC          0x07
+#define SYSEX_PAD_MODE_CC_SWITCH    0x08
+#define SYSEX_PAD_MODE_NOTE         0x09
+
+/*
+For future configuration of Beatstep pads, to implement a 'second sequencer' mode:-
+
+from https://www.untergeek.de/2014/11/taming-arturias-beatstep-sysex-codes-for-programming-via-ipad/
+
+PADS
+----
+The pads 1-16 have controller numbers 0x70 to 0x7F.
+    F0 00 20 6B 7F 42 02 00 01 cc vv F7
+        cc is the controller you like to program, 
+        vv sets the mode: 0=off, 1=Silent CC Switch, 7=MMC, 8=CC Switch, 9=Note, 0x0B=Program Change. Hm. Makes you wonder which modes the missing values might activate.
+            SILENT CC SWITCH MODE (VV=1) Works just like CC, but doesn’t light up the (red) pad LED while it is pressed, unlike the CC (vv=8) mode.
+
+    Setting the parameters: Send F0 00 20 6B 7F 42 02 00 and then…
+        …02 cc vv F7 to set MIDI channel (vv: channel-1, 0-15)
+        …03 cc vv F7 to set the CC (vv from 0-127)
+
+    The MIDI channel for all other parameters may be set to follow the global channel by using vv=0x41.
+
+ENCODERS
+----
+The encoders 1-16 have controller numbers 0x20 to 0x2F, the large volume dial has controller number 0x30.
+    F0 00 20 6B 7F 42 02 00 01 cc vv F7
+        cc is the controller you like to program, 
+        vv sets the mode: 0=off, 1=Midi CC, 4=RPN/NRPN.
+
+    Setting the parameters: Send F0 00 20 6B 7F 42 02 00 and then…
+        …02 cc vv F7 to set MIDI channel (vv: channel-1, 0-15)
+        …03 cc vv F7 to set the CC number that is used.
+        …06 cc vv F7 to set the behaviour: 0=Absolute, 1-3=Relative mode 1-3.
+            Relative modes 1-3 send a delta. The center values are 64, 0 and 16, respectively.
+            I.e. for RELATIVE1, turning a knob (slowly) clockwise yields 65, turning it anticlockwise yields 63. For RELATIVE2 it would be 1 and 127 respectively.
+
+Global MIDI channel – F0 00 20 6B 7F 42 02 00 50 0B nn F7 (MIDI channel-1, 0-15)
+
+STORE COMMAND:
+    F0 00 20 6B 7F 42 06 mm F7
+RECALL COMMAND:
+    F0 00 20 6B 7F 42 05 mm F7
+
+*/
+
+
 class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
     
@@ -72,14 +129,14 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
         }
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            //Serial.printf("beatstep got note on %i\n", note); Serial_flush();
+            //Serial_printf("beatstep %s got note on %i on channel %i\n", get_label(), note, channel); Serial_flush();
 
             this->current_note = note;
             ClockedBehaviour::receive_note_on(channel, note, 127);
         }
 
         virtual void receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) override {
-            //Serial.printf("beatstep got note off %i\n", note); Serial_flush();
+            //Serial_printf("beatstep %s got note off %i on channel %i\n", get_label(), note, channel); Serial_flush();
 
             // update current / remember last played note
             this->last_note = note;
@@ -182,6 +239,18 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
                 uint8_t data[] = {
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
+                };
+                this->device->sendSysEx(sizeof(data), data, true);
+
+                //this->request_all_sysex_parameters(50);
+            }
+            void send_preset_save(int preset_number) {
+                if (this->device==nullptr) return;
+
+                Serial.printf(F("beatstep#send_preset_save(%i)\n"), preset_number % NUM_PATTERNS);
+
+                uint8_t data[] = {
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x06, (uint8_t)/*1+*/(preset_number % NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
 
@@ -392,6 +461,25 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             FLASHMEM
             virtual LinkedList<MenuItem*> *make_menu_items() override;
         #endif
+
+        // UNTESTED!!! 
+        void configure_cntrl_for_mock_sequencer() {
+            Serial.println("starting configure_cntrl_for_mock_sequencer...");
+            for (int preset = 0 ; preset < 16 ; preset++) {
+                this->send_preset_change(preset);
+                delay(10);
+                for (int pad = 0 ; pad < NUM_ENCODERS ; pad++) {
+                    Serial.printf("Processing pad/encoder %i/%i..\n", pad, NUM_ENCODERS+1);
+                    this->set_sysex_parameter(SYSEX_CHANNEL,    BEATSTEP_SYSEX_BASE_ENCODER + pad, 0x41);
+                    this->set_sysex_parameter(SYSEX_CHANNEL,    BEATSTEP_SYSEX_BASE_PADS    + pad, 0x41);
+                    this->set_sysex_parameter(SYSEX_BEHAVIOUR,  BEATSTEP_SYSEX_BASE_PADS    + pad, SYSEX_PAD_MODE_SILENT_CC_SWITCH);
+                    delay(10);
+                }
+                this->send_preset_save(preset);
+                delay(10);
+            }
+            Serial.println("finished configure_cntrl_for_mock_sequencer");
+        }
 
 };
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
