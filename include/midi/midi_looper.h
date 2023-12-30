@@ -868,4 +868,6 @@ class MIDITrack {
 
 };
 
+extern MIDITrack midi_looper;
+
 #endif

@@ -3,6 +3,8 @@
 
 #include "Config.h"
 
+#include "project.h"
+
 #include "midi/midi_mapper_matrix_manager.h"
 
 #include "behaviours/behaviour_bamble.h"
@@ -29,6 +31,7 @@
 
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
+#include "midi/midi_looper.h"
 #include "midi/midi_pc_usb.h"
 
 MIDIMatrixManager *midi_matrix_manager = nullptr;

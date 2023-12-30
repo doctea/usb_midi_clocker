@@ -127,16 +127,18 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
 
 
     //FLASHMEM 
+    bool already_initialised_parameters = false;
     virtual LinkedList<FloatParameter*> *initialise_parameters() override {
-        //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
-        static bool already_initialised = false;
-        if (already_initialised)
+        Serial_printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()...")); Serial_flush();
+        if (already_initialised_parameters)
             return this->parameters;
 
-        already_initialised  = true;
+        already_initialised_parameters = true;
 
+        
         //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
         DeviceBehaviourSerialBase::initialise_parameters();
+        /*
         MIDIBassBehaviour::initialise_parameters();
         //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
         DividedClockedBehaviour::initialise_parameters();
@@ -155,7 +157,9 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
         //parameters->add(new MIDICCParameter<>("72 release",    this,   (byte)11,   (byte)1));
         parameters->add(new MIDICCParameter<>("71 res/aft",    this,    (byte)71,   (byte)1));
         parameters->add(new MIDICCParameter<>("74 cut off",    this,    (byte)74,   (byte)1));
+        */
 
+        Serial_printf(F("DeviceBehaviour_CraftSynth#initialise_parameters() returning %p\n"), parameters); Serial_flush();
         return parameters;
     }
 

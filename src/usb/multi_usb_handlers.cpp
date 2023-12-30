@@ -2,14 +2,32 @@
 
 #include "clock.h"
 #include "bpm.h"
-#include "midi/midi_outs.h"
-
-#include "usb/multi_usb_handlers.h"
-
-#include "tft.h"
-
+#include "debug.h"
 #include "behaviours/behaviour_manager.h"
 
+// call this when global clock should be reset
+// todo: should probably move this elsewhere..?
+void global_on_restart() {
+  set_restart_on_next_bar(false);
+
+  Serial_println(F("on_restart()==>"));
+
+  clock_reset();
+  //interrupts();
+  last_processed_tick = -1;
+  
+  //send_midi_serial_stop_start();
+
+  behaviour_manager->on_restart();
+
+  Serial.println(F("<==on_restart()"));
+}
+
+#ifdef ENABLE_USB
+
+#include "midi/midi_outs.h"
+#include "usb/multi_usb_handlers.h"
+#include "tft.h"
 #include <util/atomic.h>
 
 /*
@@ -170,24 +188,6 @@ void update_usb_midi_device_connections() {
 }*/
 
 
-
-// call this when global clock should be reset
-void global_on_restart() {
-  set_restart_on_next_bar(false);
-
-  Serial.println(F("on_restart()==>"));
-
-  clock_reset();
-  //interrupts();
-  last_processed_tick = -1;
-  
-  //send_midi_serial_stop_start();
-
-  behaviour_manager->on_restart();
-
-  Serial.println(F("<==on_restart()"));
-}
-
 //FLASHMEM 
 void setup_multi_usb() { // error: void setup_multi_usb() causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
   Serial.print(F("Arduino initialising usb/midi...")); Serial_flush();
@@ -203,3 +203,5 @@ void setup_multi_usb() { // error: void setup_multi_usb() causes a section type 
   tft_print("done.\n");
   Serial.println(F("setup_multi_usb() finishing.")); Serial_flush();
 }
+
+#endif

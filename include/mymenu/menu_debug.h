@@ -35,7 +35,7 @@ class DebugPanel : public MenuItem {
 
 
 #ifndef GDB_DEBUG
-FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
+//FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
 #endif
 void setup_debug_menu() {
     menu->add_page("Behaviours/USB");

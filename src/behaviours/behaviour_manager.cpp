@@ -222,22 +222,27 @@ void setup_behaviour_manager() {
     #include "menuitems_lambda.h"
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
+        Serial_println("Starting create_all_behaviour_menu_items"); Serial_flush();
+
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-            //Serial.printf("about to create_single_behaviour_menu_items() for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_printf("about to create_single_behaviour_menu_items() for behaviour %i/%i...", i+1, behaviours->size());
+            Serial_flush();
             if (behaviour==nullptr) {
-                //Serial.println("\tgot a nullptr behaviour!");
+                Serial.println("\tgot a nullptr behaviour!");
                 continue;
             } else {
-                //Serial.printf("\tdoing for %s\n", behaviour->get_label());
+                Serial.printf(" ('%s')", behaviour->get_label());
             }
             this->create_single_behaviour_menu_items(menu, behaviour);
+            Serial_println("...created.");
         }
 
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-            //Serial.printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_flush();
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
             if (behaviour==nullptr) {
                 //Serial.println("\tgot a nullptr behaviour!");
@@ -268,13 +273,17 @@ void setup_behaviour_manager() {
                 last_category = p->category_name;
             }
         }
+
+        Serial_println("Finished in create_all_behaviour_menu_items"); Serial_flush();
     }
 
-    //FLASHMEM 
+    //FLASHMEM
+    // create the menuitems relating to a behaviour's parameters and saveableparameters
     void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
-            //Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
+            Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'...\n"), behaviour->get_label()); Serial_flush(); 
             //debug_free_ram();
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
+            Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: done calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
 
             uint16_t group_colour = C_WHITE;
             if (menuitems->size()>0 || behaviour->has_parameters() || behaviour->has_saveable_parameters()) {
@@ -288,26 +297,31 @@ void setup_behaviour_manager() {
             }
 
             if (menuitems->size()>0) {
-                //Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
+                Serial_printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
                 menu->add(menuitems, group_colour);
+                Serial_println("added.");
             }
 
             // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
             if (behaviour->has_parameters()) {
+                Serial_print("doing addParameterSubMenuItems.."); Serial_flush(); 
                 parameter_manager->addParameterSubMenuItems(
                     menu, 
                     behaviour->get_label(), 
                     behaviour->get_parameters(),
                     group_colour
                 );
+                Serial_println("done."); Serial_flush(); 
             }
 
             // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
             if (behaviour->has_saveable_parameters()) {
+                Serial_print("doing create_saveable_parameters_recall_selector.."); Serial_flush(); 
                 menu->add(
                     behaviour->create_saveable_parameters_recall_selector(), 
                     group_colour
                 );
+                Serial_println("done."); Serial_flush(); 
             }
 
     }

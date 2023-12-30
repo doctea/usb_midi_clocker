@@ -228,9 +228,9 @@ class DeviceBehaviour_SkulptSynth : public DeviceBehaviourUSBBase, public Clocke
             DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }
 
+        bool already_initialised = false;
         FLASHMEM virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             Serial.printf(F("DeviceBehaviour_SkulptSynth#initialise_parameters()..."));
-            static bool already_initialised = false;
             if (already_initialised)
                 return this->parameters;
 
