@@ -38,7 +38,7 @@ class MCP23S17BankInterface : public BankInterface {
 
             mcp = new MCP23S17(MCP23S17_SPI_CS1_PIN, 0, &SPI1);
             //mcp->setSPIspeed(5000000);
-            mcp->setSPIspeed(20000000);
+            mcp->setSPIspeed(10000000);
             //mcp->setPullup16(0xFFFF);
             //mcp->setPolarity16(0xFFFF);
             Serial.println("\tconstructed!... calling begin()");
