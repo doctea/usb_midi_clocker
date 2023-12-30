@@ -30,13 +30,16 @@ class MCP23S17BankInterface : public BankInterface {
             SPI1.setMOSI(26);
             SPI1.setSCK(27);
             //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
-            SPI1.beginTransaction(SPISettings(2000000, LSBFIRST, SPI_MODE3));
+            //SPI1.beginTransaction(SPISettings(3000000, LSBFIRST, SPI_MODE3));
             //SPI1.setClockDivider(SPI_CLOCK_DIV4);
             SPI1.begin();
 
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
             mcp = new MCP23S17(MCP23S17_SPI_CS1_PIN, 0, &SPI1);
+            mcp->setSPIspeed(5000000);
+            //mcp->setPullup16(0xFFFF);
+            mcp->setPolarity16(0xFFFF);
             //mcp->setSPIspeed(20000000);
             Serial.println("\tconstructed!... calling begin()");
             if (!mcp->begin()) {
