@@ -343,7 +343,7 @@ void loop() {
     #endif
   }
   
-  if (true || !playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
+  if (!playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
     // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
     #ifdef ENABLE_SCREEN
       ///Serial_println("going into menu->display and then pausing 1000ms: "); Serial_flush();
@@ -354,7 +354,7 @@ void loop() {
         menu->update_inputs();
         if (debug_flag) { Serial_println(F("just did menu->update_inputs")); Serial_flush(); }
       }
-      if (millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
+      if (is_bpm_on_beat(ticks) || millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
         if (debug_flag) { Serial_println(F("about to menu->display")); Serial_flush(); }
         if (debug_flag) menu->debug = true;
