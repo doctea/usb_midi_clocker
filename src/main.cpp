@@ -364,7 +364,7 @@ void loop() {
         if (!screen_was_drawn) {
           //__disable_irq();
           //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
-          parameter_manager->throttled_update_cv_input__all(TIME_BETWEEN_CV_INPUT_UPDATES, false, false);
+          parameter_manager->throttled_update_cv_input__all(1/*TIME_BETWEEN_CV_INPUT_UPDATES*/, false, false);
           //__enable_irq();                              
         }
         if (!playing) {
@@ -425,6 +425,7 @@ void loop() {
 
 // (should be) called inside interrupt
 void do_tick(uint32_t in_ticks) {
+  uint32_t start_time = micros();
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
   bool debug = debug_flag;
@@ -493,9 +494,13 @@ void do_tick(uint32_t in_ticks) {
 
   #ifdef ENABLE_CV_OUTPUT
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
-    update_cv_outs(in_ticks);
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      update_cv_outs(in_ticks);
+    //}
     if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
-    gate_manager->update(); 
+    //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      gate_manager->update(); 
+    }
   #endif
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
@@ -529,4 +534,7 @@ void do_tick(uint32_t in_ticks) {
   //last_ticked_at_micros = millis();
   //single_step = false;
   //}
+  uint32_t time_to_tick = micros() - start_time;
+  if (time_to_tick>=micros_per_tick)
+    Serial_printf("WARNING: Took %ius to tick, needs to be <%ius!\n", time_to_tick, micros_per_tick);
 }
