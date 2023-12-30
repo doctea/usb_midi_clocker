@@ -258,7 +258,7 @@ void setup() {
 
 //long loop_counter = 0;
 
-bool debug_flag = true;
+bool debug_flag = false;
 
 // -----------------------------------------------------------------------------
 // 
@@ -337,7 +337,7 @@ void loop() {
     #else
       if (ticked) {
           if (debug_flag) { Serial_println(F("about to menu->update_ticks")); Serial_flush(); }
-          //menu->update_ticks(ticks);
+          menu->update_ticks(ticks);
           if (debug_flag) { Serial_println(F("just did menu->update_ticks")); Serial_flush(); }
       }
     #endif

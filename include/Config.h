@@ -32,11 +32,6 @@
     #endif
 #endif
 
-// enable a USB typing keyboard as a control method (see include/input_keyboard.h)
-#ifdef ENABLE_USB
-    #define ENABLE_TYPING_KEYBOARD
-#endif
-
 // choose which MIDIDevice object from the USBHost_t36 library to use; seems to work completely fine using just the plain MIDIDevice, and saves a ton of flash memory too
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BigBuffer
@@ -85,11 +80,15 @@
     #endif
 #endif
 
-//#define ENABLE_USB          // USB host behaviours
-//#define ENABLE_CV_OUTPUT    // clock and sequencer outputs
+#define ENABLE_USB          // USB host behaviours
+#define ENABLE_CV_OUTPUT    // clock and sequencer outputs
 
 #ifdef ENABLE_USB
-    #define ENABLE_USBSERIAL    // enable USB devices that present as serial interfaces
+    // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
+    #define ENABLE_TYPING_KEYBOARD
+
+    // enable USB devices that present as serial interfaces but support MIDI
+    #define ENABLE_USBSERIAL    
     #ifdef ENABLE_USBSERIAL
         #define ENABLE_OPENTHEREMIN
     #endif
