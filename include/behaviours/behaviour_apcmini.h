@@ -72,6 +72,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             DeviceBehaviourUSBBase::init();
             apcdisplay_initialise_last_sent();
             apcmini_clear_display();
+            redraw_immediately = true;
+            //apcmini_update_clock_display();
         }
 
         virtual void loop(unsigned long ticks) override {
