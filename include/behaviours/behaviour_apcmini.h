@@ -92,9 +92,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                         apcmini_update_clock_display();
                         redraw_immediately = false;
                     }
-                    //ATOMIC(
-                        last_processed_tick = ticks;
-                    //)
+                    last_processed_tick = ticks;
                 }
             #endif
             //Serial.println(F("finished apcmini_loop"));

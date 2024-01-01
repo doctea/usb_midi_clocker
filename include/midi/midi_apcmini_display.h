@@ -38,8 +38,8 @@ byte get_colour(byte lev);
 
 
 void apcmini_update_position_display(int ticks);
-void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel = 1, bool force = false);
-void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel = 1, bool force = false);
+void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
+void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
 void apcdisplay_initialise_last_sent();
 
 

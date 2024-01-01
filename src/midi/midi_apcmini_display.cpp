@@ -4,6 +4,8 @@
 //#include "behaviours/behaviour_apcmini->device.h"
 #include "midi/midi_apcmini_display.h"
 
+#include "midi_helpers.h"
+
 #include "Config.h"
 #include "cv_outs.h"
 #include "sequencer.h"
@@ -12,26 +14,25 @@
 
 #include "behaviours/behaviour_apcmini.h"
 
-int8_t apc_note_last_sent[128] = {};
+int8_t apc_note_last_sent[MIDI_MAX_NOTE+1] = {};
 
 // cached send note on
-void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel, bool force) {
+void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
   if (!behaviour_apcmini->is_connected()) return;
 
-  if (force || value!=apc_note_last_sent[pitch])
+  if (force || value != apc_note_last_sent[pitch]) {
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
 
-  //if (value==0)
-  //  behaviour_apcmini->device->sendNoteOff(pitch, 0, channel);
-
-  if (!force) apc_note_last_sent[pitch] = value;
+    //if (!force) 
+    apc_note_last_sent[pitch] = value;
+  }
 }
 //cached send note off
-void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel, bool force) {
+void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel, bool force) {
   apcdisplay_sendNoteOn(pitch, 0 /*value*/, channel, force);
 }
 void apcdisplay_initialise_last_sent() {
-  for(int i = 0 ; i < 127 ; i++)
+  for(int i = 0 ; i < MIDI_MAX_NOTE ; i++)
     apc_note_last_sent[i] = -1;
 }
 
@@ -63,10 +64,10 @@ void apcmini_update_position_display(int ticks) {
         Serial.print(F(" "));
     #endif
     //Serial.printf("On %i\n", beat_counter);
-    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN, 1);
+    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN);
   } else if (is_bpm_on_beat(ticks,duration)) {
     //Serial.printf("Off %i (ticks %i with duration %i)\n", beat_counter, ticks, duration);
-    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
+    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF);
     //apcdisplay_sendNoteOff(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
       //behaviour_apcmini->device->send_now();
   }
@@ -106,7 +107,7 @@ int get_sequencer_cell_apc_colour(byte row, byte column) {
     }
   } else {
     // sequencer
-    int v = read_sequence(row-4, column);
+    int v = read_sequence(row-NUM_CLOCKS, column);
     return v ? get_colour(v-1) : APCMINI_OFF;
   }
 }
@@ -150,17 +151,16 @@ void redraw_sequence_row(byte sequence_number, bool force) {
 
   int start_row = 32-((sequence_number+1)*APCMINI_DISPLAY_WIDTH);
   for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-    apcdisplay_sendNoteOn(start_row+i, get_sequencer_cell_apc_colour(4+sequence_number,i));
+    apcdisplay_sendNoteOn(start_row+i, get_sequencer_cell_apc_colour(NUM_CLOCKS+sequence_number,i));
   }
 }
 #endif
-
 
 #ifdef ENABLE_APCMINI_DISPLAY
   void apcmini_clear_display() {
     if (behaviour_apcmini->device==nullptr) return;
     
-    Serial.println(F("Clearing APC display.."));
+    Serial_println(F("Clearing APC display..")); Serial_flush();
     for (int i = 0 ; i < 4 ; i++) {
       redraw_clock_row(i,true);
       redraw_sequence_row(i,true);
@@ -173,15 +173,16 @@ void redraw_sequence_row(byte sequence_number, bool force) {
       }
     }
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
-      apcdisplay_sendNoteOff(x, APCMINI_OFF, 1, true);
+      apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, true);
     }
     // clear the 'selected clock row' indicator lights
-    apcdisplay_sendNoteOff(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOff(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOff(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOff(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, true);
     //delay(1000);
-    Serial.println(F("Leaving APC display"));
+    apcdisplay_initialise_last_sent();
+    Serial_println(F("Leaving APC display")); Serial_flush();
     // 
   }
 
