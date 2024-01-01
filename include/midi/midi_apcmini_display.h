@@ -42,6 +42,11 @@ void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel = 1, bool force 
 void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel = 1, bool force = false);
 void apcdisplay_initialise_last_sent();
 
+
+int get_sequencer_cell_apc_colour(byte c, byte i);
+int get_sequencer_cell_565_colour(byte row, byte column);
+int16_t get_565_colour_for_apc_colour(int colour);
+
 #ifdef ENABLE_CLOCKS
 void redraw_clock_row(byte c, bool force = false);
 void redraw_clock_selected(byte old_clock_selected, byte clock_selected, bool force = false);

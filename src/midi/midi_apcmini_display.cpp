@@ -16,8 +16,14 @@ int8_t apc_note_last_sent[127];
 
 // cached send note on
 void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel, bool force) {
+  if (!behaviour_apcmini->is_connected()) return;
+
   if (force || value!=apc_note_last_sent[pitch])
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
+
+  //if (value==0)
+  //  behaviour_apcmini->device->sendNoteOff(pitch, 0, channel);
+
   if (!force) apc_note_last_sent[pitch] = value;
 }
 //cached send note off
@@ -86,24 +92,47 @@ byte get_colour_for_clock_multiplier(float cm) {
   return get_colour(LEVEL_1);
 }
 
+int get_sequencer_cell_apc_colour(byte row, byte column) {
+  if (row < NUM_CLOCKS) {
+    // clock
+    int io = (column - current_state.clock_delay[row]) % APCMINI_DISPLAY_WIDTH;
+    float cm = get_clock_multiplier(row);
+    if (is_clock_off(row)) {
+      return APCMINI_OFF;
+    } else if (cm<=1.0 || io%(byte)cm==0) {
+      return get_colour_for_clock_multiplier(cm);
+    } else { // shouldn't reach this
+      return APCMINI_OFF;
+    }
+  } else {
+    // sequencer
+    int v = read_sequence(row-4, column);
+    return v ? get_colour(v-1) : APCMINI_OFF;
+  }
+}
+int get_sequencer_cell_565_colour(byte row, byte column) {
+  int colour = get_sequencer_cell_apc_colour(row, column);
+  return get_565_colour_for_apc_colour(colour);
+}
+int16_t get_565_colour_for_apc_colour(int colour) {
+  switch(colour) {
+    case APCMINI_GREEN: return GREEN;
+    case APCMINI_RED:   return RED;
+    case APCMINI_YELLOW:return YELLOW;
+    case APCMINI_GREEN_BLINK: return millis()%500 > 250 ? GREEN : BLUE;
+    case APCMINI_RED_BLINK:   return millis()%500 > 250 ? RED : BLUE;
+    case APCMINI_YELLOW_BLINK:return millis()%500 > 250 ? YELLOW : BLUE;
+    default:
+      return colour>0 ? C_WHITE : BLACK;
+  }
+}
 
-void redraw_clock_row(byte c, bool force) {
+void redraw_clock_row(byte clock_number, bool force) {
     if (behaviour_apcmini->device==nullptr) return;
 
-    int start_row = 64-((c+1)*APCMINI_DISPLAY_WIDTH);
-    for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-      int io = (i - current_state.clock_delay[c]) % APCMINI_DISPLAY_WIDTH;
-      float cm = get_clock_multiplier(c);
-      if (is_clock_off(c)) {
-        apcdisplay_sendNoteOn(start_row+i, APCMINI_OFF, 1, force);
-      } else if (cm<=1.0) {
-        apcdisplay_sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1, force);
-      } else if (io%(byte)cm==0) {
-        apcdisplay_sendNoteOn(start_row+i, get_colour_for_clock_multiplier(cm), 1, force);
-      } else { // shouldn't reach this
-        //Serial.printf("WARNING: reached unexpected branch for clock %i: cm is %0.2f\n", c, cm);
-        apcdisplay_sendNoteOff(start_row+i, APCMINI_OFF, 1, force);  // turn the led off
-      }
+    int start_row = 64-((clock_number+1)*APCMINI_DISPLAY_WIDTH);
+    for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+      apcdisplay_sendNoteOn(start_row+x, get_sequencer_cell_apc_colour(clock_number, x));
     }
 }
 
@@ -116,17 +145,12 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected, bool fo
 #endif
 
 #ifdef ENABLE_SEQUENCER
-void redraw_sequence_row(byte c, bool force) {
+void redraw_sequence_row(byte sequence_number, bool force) {
   if (behaviour_apcmini->device==nullptr) return;
 
-  int start_row = 32-((c+1)*APCMINI_DISPLAY_WIDTH);
+  int start_row = 32-((sequence_number+1)*APCMINI_DISPLAY_WIDTH);
   for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-    int v = read_sequence(c,i);
-    if (v) { //should_trigger_sequence(i*PPQN,c)) {
-      apcdisplay_sendNoteOn(start_row+i, get_colour(v-1), 1, force);
-    } else {
-      apcdisplay_sendNoteOff(start_row+i, APCMINI_OFF, 1, force);
-    }
+    apcdisplay_sendNoteOn(start_row+i, get_sequencer_cell_apc_colour(4+sequence_number,i));
   }
 }
 #endif
@@ -145,7 +169,7 @@ void redraw_sequence_row(byte c, bool force) {
       for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
           //apcdisplay_initialise_last_sent();
           apcdisplay_sendNoteOn (x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
-          apcdisplay_sendNoteOff(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
+          //apcdisplay_sendNoteOff(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
       }
     }
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
