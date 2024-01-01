@@ -12,7 +12,7 @@
 
 #include "behaviours/behaviour_apcmini.h"
 
-int8_t apc_note_last_sent[127];
+int8_t apc_note_last_sent[128] = {};
 
 // cached send note on
 void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel, bool force) {

@@ -20,7 +20,7 @@
 #define APCMINI_YELLOW        5
 #define APCMINI_YELLOW_BLINK  6
 
-extern int8_t apc_note_last_sent[127];
+extern int8_t apc_note_last_sent[128];
 
 // gradation of colours to use
 #define LEVEL_1 0
