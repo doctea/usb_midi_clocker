@@ -95,8 +95,8 @@ class MIDIMatrixManager {
         return -1;
     }
 
-    bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS];  // 24*24 = 576 bytes
-    bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS];
+    bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
+    bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
@@ -309,7 +309,7 @@ class MIDIMatrixManager {
     };
 
     uint8_t targets_count = 0;
-    target_entry targets[MAX_NUM_TARGETS];
+    target_entry targets[MAX_NUM_TARGETS] = {};
 
     /*target_id_t register_target(DeviceBehaviourUltimateBase *target_behaviour, const char *handle) {
         target_id_t t = this->register_target(make_midioutputwrapper(handle, target_behaviour));
