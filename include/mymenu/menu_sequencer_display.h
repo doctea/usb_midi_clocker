@@ -11,11 +11,16 @@
 #include "storage.h"
 #include "project.h"
 extern Menu *menu;
-//extern Project project;
+
+// display sequence+clocks
+// todo: rename to something more representative
+// todo: add controls to allow editing
 class SequencerDisplay : public MenuItem {
     //int ui_selected_sequence_number = 0;
     public: 
-        SequencerDisplay(const char *label) : MenuItem(label) {};
+        SequencerDisplay(const char *label) : MenuItem(label) {
+            this->selectable = false;
+        };
 
         int display(Coord pos, bool selected, bool opened) {
             pos.y = header(label, pos, selected, opened);

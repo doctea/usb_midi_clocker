@@ -198,7 +198,8 @@ void redraw_sequence_row(byte sequence_number, bool force) {
     //Serial.println(F("starting apcmini_update_clock_display().."));
 
     #ifdef ENABLE_APCMINI_PARTIAL_UPDATE_WORKAROUND
-      // don't redraw all of the rows in the same go-around, to avoid weird problem with some messages apparently not being received
+      // don't redraw all of the rows in the same call, to avoid weird problem with some messages apparently not being received
+      // TODO: make this support more than 4 clocks/sequencers (ie not rely on NUM_CLOCKS like it does)
       static int row_to_draw = 0;
       redraw_clock_row(row_to_draw);
       redraw_sequence_row(row_to_draw);
