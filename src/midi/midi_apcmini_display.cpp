@@ -1,6 +1,11 @@
 #include "Config.h"
 #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
 
+// enable workaround to prevent some LED updates being somehow missed
+// this only started happening recently (i believe in the month before 2024-12-01)
+// and i hope that it can be disabled at some point in the future!
+#define ENABLE_APCMINI_PARTIAL_UPDATE_WORKAROUND
+
 //#include "behaviours/behaviour_apcmini->device.h"
 #include "midi/midi_apcmini_display.h"
 
@@ -113,16 +118,16 @@ int get_sequencer_cell_apc_colour(byte row, byte column) {
 }
 int get_sequencer_cell_565_colour(byte row, byte column) {
   int colour = get_sequencer_cell_apc_colour(row, column);
-  return get_565_colour_for_apc_colour(colour);
+  return get_565_colour_for_apc_note(colour);
 }
-int16_t get_565_colour_for_apc_colour(int colour) {
+int16_t get_565_colour_for_apc_note(int colour) {
   switch(colour) {
     case APCMINI_GREEN: return GREEN;
     case APCMINI_RED:   return RED;
     case APCMINI_YELLOW:return YELLOW;
-    case APCMINI_GREEN_BLINK: return millis()%500 > 250 ? GREEN : BLUE;
-    case APCMINI_RED_BLINK:   return millis()%500 > 250 ? RED : BLUE;
-    case APCMINI_YELLOW_BLINK:return millis()%500 > 250 ? YELLOW : BLUE;
+    case APCMINI_GREEN_BLINK: return millis()%500 > 250 ? GREEN  : DARK_GREEN;
+    case APCMINI_RED_BLINK:   return millis()%500 > 250 ? RED    : DARK_RED;
+    case APCMINI_YELLOW_BLINK:return millis()%500 > 250 ? YELLOW : DARK_YELLOW;
     default:
       return colour>0 ? C_WHITE : BLACK;
   }
@@ -133,6 +138,7 @@ void redraw_clock_row(byte clock_number, bool force) {
 
     int start_row = 64-((clock_number+1)*APCMINI_DISPLAY_WIDTH);
     for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+      //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
       apcdisplay_sendNoteOn(start_row+x, get_sequencer_cell_apc_colour(clock_number, x));
     }
 }
@@ -150,8 +156,9 @@ void redraw_sequence_row(byte sequence_number, bool force) {
   if (behaviour_apcmini->device==nullptr) return;
 
   int start_row = 32-((sequence_number+1)*APCMINI_DISPLAY_WIDTH);
-  for (unsigned int i = 0 ; i < APCMINI_DISPLAY_WIDTH ; i++) {
-    apcdisplay_sendNoteOn(start_row+i, get_sequencer_cell_apc_colour(NUM_CLOCKS+sequence_number,i));
+  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+    //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
+    apcdisplay_sendNoteOn(start_row+x, get_sequencer_cell_apc_colour(NUM_CLOCKS+sequence_number,x));
   }
 }
 #endif
@@ -186,22 +193,35 @@ void redraw_sequence_row(byte sequence_number, bool force) {
     // 
   }
 
+  // update the APCMini display
   void apcmini_update_clock_display() {
     //Serial.println(F("starting apcmini_update_clock_display().."));
-    // draw the clock divisions
-    #ifdef ENABLE_CLOCKS
-      for (int c = 0 ; c < NUM_CLOCKS ; c++) {
-        //byte start_row = (8-NUM_CLOCKS) * 8;
-        redraw_clock_row(c);
+
+    #ifdef ENABLE_APCMINI_PARTIAL_UPDATE_WORKAROUND
+      // don't redraw all of the rows in the same go-around, to avoid weird problem with some messages apparently not being received
+      static int row_to_draw = 0;
+      redraw_clock_row(row_to_draw);
+      redraw_sequence_row(row_to_draw);
+      row_to_draw++;
+      if (row_to_draw >= NUM_CLOCKS) {
+        row_to_draw = 0;
+        behaviour_apcmini->last_updated_display = millis();
       }
+    #else
+      #ifdef ENABLE_CLOCKS
+        for (int c = 0 ; c < NUM_CLOCKS ; c++) {
+          //byte start_row = (8-NUM_CLOCKS) * 8;
+          redraw_clock_row(c);
+        }
+      #endif
+      #ifdef ENABLE_SEQUENCER
+        for (int c = 0 ; c < NUM_SEQUENCES ; c++) {
+          redraw_sequence_row(c);
+        }
+      #endif
+      behaviour_apcmini->last_updated_display = millis();
+      //Serial.println(F("returning from apcmini_update_clock_display()"));
     #endif
-    #ifdef ENABLE_SEQUENCER
-      for (int c = 0 ; c < NUM_SEQUENCES ; c++) {
-        redraw_sequence_row(c);
-      }
-    #endif
-    behaviour_apcmini->last_updated_display = millis();
-    //Serial.println(F("returning from apcmini_update_clock_display()"));
   }
 #endif
 #endif

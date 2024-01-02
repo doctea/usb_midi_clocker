@@ -265,7 +265,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
 
         virtual void on_tick(volatile uint32_t ticks) override {
             if (device!=nullptr) {
-
+                //this->actualSendNoteOn(ticks % 64, random(APCMINI_YELLOW_BLINK), 1);
+                //apcdisplay_sendNoteOn(ticks % 64, random(APCMINI_YELLOW_BLINK), 1);
             }
         }
 

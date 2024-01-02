@@ -293,8 +293,9 @@ void setup_menu() {
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
         menu->add(&sequencer_display);
-        menu->add(new ActionItem("Reset cache", apcdisplay_initialise_last_sent, false));
-        menu->add(new ActionItem("Clear display", apcmini_clear_display, false));
+        
+        //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
+        //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD
             sequence_fileviewer = new FileViewerMenuItem("Sequence");

@@ -45,7 +45,7 @@ void apcdisplay_initialise_last_sent();
 
 int get_sequencer_cell_apc_colour(byte c, byte i);
 int get_sequencer_cell_565_colour(byte row, byte column);
-int16_t get_565_colour_for_apc_colour(int colour);
+int16_t get_565_colour_for_apc_note(int colour);
 
 #ifdef ENABLE_CLOCKS
 void redraw_clock_row(byte c, bool force = false);
