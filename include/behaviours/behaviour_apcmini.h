@@ -72,6 +72,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             DeviceBehaviourUSBBase::init();
             apcdisplay_initialise_last_sent();
             apcmini_clear_display();
+            redraw_immediately = true;
+            //apcmini_update_clock_display();
         }
 
         virtual void loop(unsigned long ticks) override {
@@ -90,9 +92,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                         apcmini_update_clock_display();
                         redraw_immediately = false;
                     }
-                    //ATOMIC(
-                        last_processed_tick = ticks;
-                    //)
+                    last_processed_tick = ticks;
                 }
             #endif
             //Serial.println(F("finished apcmini_loop"));
@@ -265,7 +265,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
 
         virtual void on_tick(volatile uint32_t ticks) override {
             if (device!=nullptr) {
-
+                //this->actualSendNoteOn(ticks % 64, random(APCMINI_YELLOW_BLINK), 1);
+                //apcdisplay_sendNoteOn(ticks % 64, random(APCMINI_YELLOW_BLINK), 1);
             }
         }
 

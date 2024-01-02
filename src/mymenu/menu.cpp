@@ -89,7 +89,9 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 
 #ifdef ENABLE_SEQUENCER
     #include "mymenu/menu_gatedisplay.h"
+    #include "mymenu/menu_sequencer_display.h"
     SequencerStatus sequencer_status =      SequencerStatus("Pattern");
+    SequencerDisplay sequencer_display =    SequencerDisplay("Sequence");
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER
@@ -290,6 +292,10 @@ void setup_menu() {
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
+        menu->add(&sequencer_display);
+        
+        //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
+        //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD
             sequence_fileviewer = new FileViewerMenuItem("Sequence");
