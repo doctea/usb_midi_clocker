@@ -41,7 +41,7 @@ class SequencerDisplay : public MenuItem {
             for (int y = 0 ; y < NUM_SEQUENCES ; y++) {
                 for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
                     //int16_t colour = get_sequencer_cell_apc_colour(y+4, x) ? RED : BLACK;
-                    const int16_t colour = get_sequencer_cell_565_colour(y+4, x);
+                    const int16_t colour = get_sequencer_cell_565_colour(y+NUM_CLOCKS, x);
                     const int16_t cache_colour = get_565_colour_for_apc_note(apc_note_last_sent[(32-((y+1)*APCMINI_DISPLAY_WIDTH)) + x]);
                     tft->fillRect(pos.x + (x * cell_width), pos.y, cell_width-2, cell_height-2, colour);
                     tft->fillRect(pos.x + (x * cell_width), pos.y, cell_width/4, cell_height/4, cache_colour); // draw the currently cached colour as a little inset rectangle so that we can see what's cached etc
