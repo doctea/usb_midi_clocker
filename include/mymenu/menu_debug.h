@@ -37,10 +37,10 @@ class DebugPanel : public MenuItem {
             tft->println("Built at " __TIME__ " on " __DATE__);
             tft->println("Git info: " COMMIT_INFO);
             #ifdef ENABLE_GATES_MCP23S17
-                tft->printf("MCP23S17 version: %s\n", MCP23S17_LIB_VERSION);
+                tft->printf("MCP23S17 version: %s\n", (char*)MCP23S17_LIB_VERSION);
             #endif
             #ifdef ENABLE_CV_INPUT
-                tft->printf("ADS1X15  version: %s\n", ADS1X15_LIB_VERSION);
+                tft->printf("ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
             #endif
             return tft->getCursorY();
         }

@@ -132,7 +132,8 @@ void setup() {
 
   #ifdef ENABLE_SCREEN
     //setup_tft();
-    setup_menu();
+    void setup_menu(bool button_pressed_state = LOW);
+    setup_menu(LOW);
   #endif
 
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");

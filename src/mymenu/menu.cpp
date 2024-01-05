@@ -40,6 +40,10 @@
 
 #include "profiler.h"
 
+
+#include "Bounce2.h"
+
+
 //DisplayTranslator *tft;
 #ifdef TFT_ST7789_T3_BIG
     DisplayTranslator_STeensy_Big *tft;
@@ -55,15 +59,15 @@ Menu *menu; // = Menu();
     //extern Encoder knob;
 #endif
 #ifdef PIN_BUTTON_A
-    Bounce pushButtonA = Bounce(PIN_BUTTON_A, 10); // 10ms debounce
+    Button pushButtonA = Button(); // 10ms debounce
     //extern Bounce pushButtonA;
 #endif
 #ifdef PIN_BUTTON_B
-    Bounce pushButtonB = Bounce(PIN_BUTTON_B, 10); // 10ms debounce
+    Button pushButtonB = Button(); // 10ms debounce
     //extern Bounce pushButtonB; 
 #endif
 #ifdef PIN_BUTTON_C
-    Bounce pushButtonC = Bounce(PIN_BUTTON_C, 10); // 10ms debounce
+    Button pushButtonC = Button(); // 10ms debounce
     //extern Bounce pushButtonC;
 #endif
 
@@ -127,8 +131,25 @@ DisplayTranslator_Configured display_translator = DisplayTranslator_Configured()
 #ifndef GDB_DEBUG
 //FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
 #endif
-void setup_menu() {
+void setup_menu(bool button_high_state) {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
+
+    #ifdef PIN_BUTTON_A
+        pushButtonA.attach(PIN_BUTTON_A, INPUT);
+        pushButtonA.interval(10);
+        pushButtonA.setPressedState(button_high_state);
+    #endif
+    #ifdef PIN_BUTTON_B
+        pushButtonB.attach(PIN_BUTTON_B, INPUT);
+        pushButtonB.interval(10);
+        pushButtonB.setPressedState(button_high_state);
+    #endif
+    #ifdef PIN_BUTTON_C
+        pushButtonC.attach(PIN_BUTTON_C, INPUT);
+        pushButtonC.interval(10);
+        pushButtonC.setPressedState(button_high_state);
+    #endif
+
     tft = &display_translator; //DisplayTranslator_STeensy();
     #ifdef TFT_BODMER
         tft->init();
@@ -139,7 +160,7 @@ void setup_menu() {
     Serial_flush();
     Serial.println(F("Creating Menu object.."));
     Serial_flush();
-    menu = new Menu(tft);
+    menu = new Menu(tft, false);
     Serial.println(F("Created Menu object"));
     Serial_flush();
 
