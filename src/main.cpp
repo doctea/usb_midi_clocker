@@ -103,11 +103,13 @@ void setup() {
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
   if (CrashReport) {
-    while (!Serial);
+    /*while (!Serial);
     Serial_println("CRASHREPORT!");
     Serial_print(CrashReport);
     while(Serial.available()==0);
-    Serial.clear();
+    Serial.clear();*/
+    setup_storage();
+    log_crashreport();
   }
   delay(1);
 
@@ -382,7 +384,7 @@ void loop() {
           //__disable_irq();
           //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
           if (debug_flag) { Serial_println(F("about to parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
-          parameter_manager->throttled_update_cv_input__all(1/*TIME_BETWEEN_CV_INPUT_UPDATES*/, false, false);
+          parameter_manager->throttled_update_cv_input__all(TIME_BETWEEN_CV_INPUT_UPDATES, false, false);
           if (debug_flag) { Serial_println(F("just did parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
           //__enable_irq();                              
         }

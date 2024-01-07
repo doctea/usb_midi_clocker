@@ -128,6 +128,9 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 //DisplayTranslator_STeensy_Big display_translator = DisplayTranslator_STeensy_Big();
 DisplayTranslator_Configured display_translator = DisplayTranslator_Configured();
 
+//#include "menuitems_numbers.h"
+//int8_t shuffle_data = 0;
+
 #ifndef GDB_DEBUG
 //FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
 #endif
@@ -138,16 +141,19 @@ void setup_menu(bool button_high_state) {
         pushButtonA.attach(PIN_BUTTON_A, INPUT);
         pushButtonA.interval(10);
         pushButtonA.setPressedState(button_high_state);
+        pushButtonA.update();
     #endif
     #ifdef PIN_BUTTON_B
         pushButtonB.attach(PIN_BUTTON_B, INPUT);
         pushButtonB.interval(10);
         pushButtonB.setPressedState(button_high_state);
+        pushButtonB.update();
     #endif
     #ifdef PIN_BUTTON_C
         pushButtonC.attach(PIN_BUTTON_C, INPUT);
         pushButtonC.interval(10);
         pushButtonC.setPressedState(button_high_state);
+        pushButtonC.update();
     #endif
 
     tft = &display_translator; //DisplayTranslator_STeensy();
@@ -172,6 +178,13 @@ void setup_menu(bool button_high_state) {
     menu->add(&posbar);     // bpm and position indicator
 
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
+
+    // todo: support midi clock shuffle, when possible to do so..
+    //menu->add(new DirectNumberControl<int8_t>("Shuffle", &shuffle_data, 0, (int8_t)0, (int8_t)255));
+    /*menu->add(new LambdaToggleControl("Shuffle", 
+        [=](bool v) -> void { uClock.setShuffle(v); },   [=]() -> bool { return uClock.isShuffled(); }
+    ));
+    */
 
     menu->add(new SeparatorMenuItem("Project"));
 

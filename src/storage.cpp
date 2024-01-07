@@ -38,6 +38,53 @@ namespace storage {
       return val;
   }
 
+  void log_crashreport() {
+    if (SD.mediaPresent()) {
+      File f = SD.open("crashreport.log", O_WRONLY | O_CREAT);
+      if (f) {
+        f.println("-----");
+        f.print(CrashReport);
+        f.println("-----");
+        f.close();
+      }
+    }
+  }
+
+  void dump_crashreport_log() {
+    File f = SD.open("crashreport.log", FILE_READ);
+    f.setTimeout(0);
+    if (f) {
+      while (String line = f.readStringUntil('\n')) {
+        f.println(line);
+        Serial.print(line);
+        Serial.print("\r\n");
+      }
+    } else {
+      Serial.println("dump_crashreport_log: crashreport.log not found");
+      messages_log_add("crashreport.log not found");
+    }
+  }
+
+  void clear_crashreport_log() {
+    if (!SD.mediaPresent()) {
+      messages_log_add("No media present");
+      return;
+    } else {
+      if (SD.remove("crashreport.log")) {
+        messages_log_add("Deleted crashreport.log");
+      } else {
+        messages_log_add("Failed to remove crashreport.log");
+      }
+    }
+  }
+
+  // force a crash, for testing CrashReport purposes
+  void force_crash() {
+    messages_log_add("Forcing crash!");
+    Serial_println("Forcing crash!");
+    *(volatile uint32_t *)0x30000000 = 0;
+  }
+
   const int chipSelect = BUILTIN_SDCARD;
 
   void make_project_folders(int project_number) {
@@ -73,7 +120,11 @@ namespace storage {
   }
 
   FLASHMEM void setup_storage() {
+    static bool storage_initialised = false;
+    if (storage_initialised) 
+      return;
     SD.begin(chipSelect);
+    storage_initialised = true;
 
     /*if (!SD.exists("sequences")) {
       Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));

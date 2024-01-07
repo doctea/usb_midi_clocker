@@ -90,6 +90,11 @@ bool debug_stress_sequencer_load = false;
                     debug_flag = false;
                     break;
                 // debug
+                case 'c': case 'C'    : 
+                    dump_crashreport_log();
+                    if (key=='C')
+                        clear_crashreport_log();
+                    break;
                 case 'Z'    :
                     Serial.clear();
                     Serial.clearWriteError();

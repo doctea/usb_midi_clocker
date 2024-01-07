@@ -17,7 +17,7 @@
 #else
     #define ENABLE_CV_INPUT 0x49
 #endif
-#define TIME_BETWEEN_CV_INPUT_UPDATES 5 //25    
+#define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 #ifdef ENABLE_CV_INPUT
     #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI

@@ -81,5 +81,11 @@ void setup_debug_menu() {
 
     menu->add(new DebugPanel());
 
+    SubMenuItemBar *crashreport_bar = new SubMenuItemBar("CrashReport");
+    crashreport_bar->add(new ActionItem("Dump log", dump_crashreport_log));
+    crashreport_bar->add(new ActionConfirmItem("Clear log", clear_crashreport_log));
+    crashreport_bar->add(new ActionConfirmItem("ForceCrash", force_crash));
+    menu->add(crashreport_bar);
+
     menu->add(new ListViewerMenuItem("Message history", messages_log));
 }
