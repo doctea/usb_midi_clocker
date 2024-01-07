@@ -284,6 +284,7 @@ void setup_menu(bool button_high_state) {
         menu->add(project_fileviewer);
     #endif
 
+    // TODO: move this MIDI page setup into a dedicated function?
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 

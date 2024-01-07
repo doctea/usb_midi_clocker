@@ -228,6 +228,8 @@ void setup() {
     Debug_printf(F("after menu->start(), free RAM is %u\n"), freeRam());
     //tft_start();
 
+    menu->setup_quickjump();
+
     setup_debug_menu();
     Debug_printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
 

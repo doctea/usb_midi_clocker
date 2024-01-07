@@ -174,6 +174,7 @@ bool debug_stress_sequencer_load = false;
                 debug_stress_sequencer_load = false;
                 break;
             case '-':
+                menu->select_page_quickjump();
                 Serial_println(F("------------------------")); break;
             case 'p': case 'P':
                 Serial_println(F("MIDI (p)ANIC AT THE DISCO"));
