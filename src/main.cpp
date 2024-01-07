@@ -354,7 +354,11 @@ void loop() {
       bool screen_was_drawn = false;
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
-        menu->update_inputs();
+        static bool first_run = true;
+        if (!first_run) {
+          menu->update_inputs();
+        }
+        first_run = false;
         if (debug_flag) { Serial_println(F("just did menu->update_inputs")); Serial_flush(); }
       }
       if (is_bpm_on_beat(ticks) || millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
