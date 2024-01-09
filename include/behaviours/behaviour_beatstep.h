@@ -33,11 +33,16 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete);
 #define BEATSTEP_PATTERN_LENGTH_MINIMUM 1
 #define BEATSTEP_PATTERN_LENGTH_MAXIMUM 16
 
+// Step size: (0=1/4, 1=1/8, 2=1/16, 3=1/32)
+#define BEATSTEP_PATTERN_STEP_SIZE_MINIMUM 0
+#define BEATSTEP_PATTERN_STEP_SIZE_MAXIMUM 3
+
 #define BEATSTEP_GLOBAL         0x50
 
 // todo: note that the first requested sysex parameter is often missed!  so in this case 'TRANSPOSE' is kinda sacrificial
 #define BEATSTEP_TRANSPOSE      0x02
 #define BEATSTEP_DIRECTION      0x04
+#define BEATSTEP_STEP_SIZE      0x05
 #define BEATSTEP_PATTERN_LENGTH 0x06
 #define BEATSTEP_SWING          0x07
 #define BEATSTEP_GATE           0x08
@@ -268,6 +273,17 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 return pattern_length;
             }
 
+            //step size settings
+            int8_t pattern_step_size = 0;
+            void setStepSize(int8_t step_size) {
+                step_size = constrain(step_size,BEATSTEP_PATTERN_STEP_SIZE_MINIMUM,BEATSTEP_PATTERN_STEP_SIZE_MAXIMUM);
+                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_STEP_SIZE, step_size);
+                this->pattern_step_size = step_size;
+            }
+            int8_t getStepSize() {
+                return pattern_step_size;
+            }
+
             //playback direction settings
             int8_t direction = 0;
             void setDirection(int8_t direction) {
@@ -323,7 +339,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                 void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = nullptr;
                 //bool enable_recall = true;
             };
-            #define NUM_SYSEX_PARAMETERS 6
+            #define NUM_SYSEX_PARAMETERS 7
 
             // proof of concept of fetching parameter values from beatstep over sysex
 
@@ -332,6 +348,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
             sysex_parameter_t sysex_parameters[NUM_SYSEX_PARAMETERS] {
                 { BEATSTEP_GLOBAL, BEATSTEP_TRANSPOSE, nullptr, "Transpose"},    // transpose (unused, sacrificial to the gods of missing beatstep data)
                 { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->direction, "Direction", &DeviceBehaviour_Beatstep::setDirection },
+                { BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, &this->pattern_step_size, "Step Size", &DeviceBehaviour_Beatstep::setStepSize },
                 { BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, &this->pattern_length, "Steps", &DeviceBehaviour_Beatstep::setPatternLength },
                 { BEATSTEP_GLOBAL, BEATSTEP_SWING, &this->swing, "Swing", &DeviceBehaviour_Beatstep::setSwing },        // swing, 0x32 to 0x4b (ie 50-100%)
                 { BEATSTEP_GLOBAL, BEATSTEP_GATE, &this->gate, "Gate", &DeviceBehaviour_Beatstep::setGate },            // gate length, 0x32 to 0x63
