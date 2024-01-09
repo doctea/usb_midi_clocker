@@ -40,8 +40,7 @@
 
 #include "profiler.h"
 
-
-#include "Bounce2.h"
+#include "menu_io.h"
 
 
 //DisplayTranslator *tft;
@@ -138,22 +137,19 @@ void setup_menu(bool button_high_state) {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
 
     #ifdef PIN_BUTTON_A
-        pushButtonA.attach(PIN_BUTTON_A, INPUT);
-        pushButtonA.interval(10);
         pushButtonA.setPressedState(button_high_state);
-        pushButtonA.update();
+        pushButtonA.attach(PIN_BUTTON_A, INPUT_PULLUP);
+        pushButtonA.interval(10);
     #endif
     #ifdef PIN_BUTTON_B
-        pushButtonB.attach(PIN_BUTTON_B, INPUT);
-        pushButtonB.interval(10);
         pushButtonB.setPressedState(button_high_state);
-        pushButtonB.update();
+        pushButtonB.attach(PIN_BUTTON_B, INPUT_PULLUP);
+        pushButtonB.interval(10);
     #endif
     #ifdef PIN_BUTTON_C
-        pushButtonC.attach(PIN_BUTTON_C, INPUT);
-        pushButtonC.interval(10);
         pushButtonC.setPressedState(button_high_state);
-        pushButtonC.update();
+        pushButtonC.attach(PIN_BUTTON_C, INPUT_PULLUP);
+        pushButtonC.interval(10);
     #endif
 
     tft = &display_translator; //DisplayTranslator_STeensy();
@@ -364,11 +360,6 @@ void setup_menu(bool button_high_state) {
         average->readOnly = true;
         menu->add(average);
     #endif
-
-    // enable encoder and separate buttons
-    pinMode(PIN_BUTTON_A, INPUT_PULLUP);
-    pinMode(PIN_BUTTON_B, INPUT_PULLUP);
-    pinMode(PIN_BUTTON_C, INPUT_PULLUP);
 
     Serial.println(F("Exiting setup_menu"));
     Serial_flush();

@@ -259,6 +259,10 @@ void setup() {
   #endif
 
   debug_free_ram();
+
+  pushButtonA.resetStateChange();
+  pushButtonB.resetStateChange();
+  pushButtonC.resetStateChange();
 }
 
 //long loop_counter = 0;
