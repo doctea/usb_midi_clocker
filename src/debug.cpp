@@ -11,6 +11,11 @@ void messages_log_add(String msg) {
   }
 }
 
+void messages_log_clear() {
+  messages_log->clear();
+}
+
+
 #if defined(__arm__) && defined(CORE_TEENSY)
   extern unsigned long _heap_start;
   extern unsigned long _heap_end;
