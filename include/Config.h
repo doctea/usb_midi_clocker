@@ -1,5 +1,4 @@
 #pragma once
-//#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
 /////////////////// now moved to BootConfig.h  #define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
@@ -103,7 +102,7 @@
 
 // enable Neutron behaviour
 //#define ENABLE_NEUTRON    // now done in ConfigMidi.h
-#define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
+#define DEFAULT_NEUTRON_OCTAVE 3    // set to -1 for 'disabled'
 
 //#define ENABLE_DPT_LOOPER
 #ifdef ENABLE_DPT_LOOPER
