@@ -87,7 +87,6 @@ void setup_debug_menu() {
     crashreport_bar->add(new ActionConfirmItem("ForceCrash", force_crash));
     menu->add(crashreport_bar);
 
-    menu->add_page("Messages");
-    menu->add(new ActionConfirmItem("Clear", messages_log_clear));
-    menu->add(new ListViewerMenuItem("Message history", messages_log));
+    setup_messages_menu();
+
 }

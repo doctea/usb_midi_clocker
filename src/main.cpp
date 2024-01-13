@@ -267,7 +267,6 @@ void setup() {
 
 //long loop_counter = 0;
 
-bool debug_flag = false;
 
 // -----------------------------------------------------------------------------
 // 
@@ -367,7 +366,7 @@ void loop() {
         first_run = false;
         if (debug_flag) { Serial_println(F("just did menu->update_inputs")); Serial_flush(); }
       }
-      if (is_bpm_on_beat(ticks) || millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
+      if (/*(ticked && is_bpm_on_beat(ticks)) || */millis() - last_drawn > MENU_MS_BETWEEN_REDRAW) {
         //long before_display = millis();
         if (debug_flag) { Serial_println(F("about to menu->display")); Serial_flush(); }
         if (debug_flag) menu->debug = true;

@@ -6,6 +6,8 @@
 
 #include <Arduino.h>
 
+extern bool debug_flag;
+
 int freeRam();
 void debug_free_ram();
 
@@ -35,10 +37,6 @@ void reset_teensy();
     #endif
 #endif
 
-#include "LinkedList.h"
-#define MAX_MESSAGES_LOG 20
-extern LinkedList<String> *messages_log;
-void messages_log_add(String msg);
-void messages_log_clear();
+#include "menu_messages.h"
 
 #endif

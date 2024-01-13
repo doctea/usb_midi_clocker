@@ -2,20 +2,6 @@
 
 #include "debug.h"
 
-LinkedList<String> *messages_log = new LinkedList<String>();
-
-void messages_log_add(String msg) {
-  messages_log->add(msg);
-  if (messages_log->size() >= MAX_MESSAGES_LOG) {
-    messages_log->unlink(0);
-  }
-}
-
-void messages_log_clear() {
-  messages_log->clear();
-}
-
-
 #if defined(__arm__) && defined(CORE_TEENSY)
   extern unsigned long _heap_start;
   extern unsigned long _heap_end;
