@@ -195,7 +195,7 @@ void setup_menu(bool button_high_state) {
     );
 
     // add start/stop/continue bar
-    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport");
+    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport", false);
     project_startstop->add(new ActionItem("Start",    clock_start));
     project_startstop->add(new ActionItem("Stop",     clock_stop));
     project_startstop->add(new ActionItem("Continue", clock_continue));

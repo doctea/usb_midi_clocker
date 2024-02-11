@@ -284,12 +284,14 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
+        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+
+        // first check the 'saveable parameters'
         if (this->load_parse_key_value_saveable_parameters(key, value)) {
             return true;
         }
-        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
-        //static String prefix = String("parameter_" + this->get_label());
 
+        // then check the 'modulatable parameters' (ie those from parameters library))
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
             if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))

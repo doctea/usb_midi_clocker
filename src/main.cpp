@@ -326,24 +326,20 @@ void loop() {
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
   
-    #ifndef USE_UCLOCK
+    #ifdef USE_UCLOCK
+      // do_tick is called from interrupt via uClock, so we don't need to do it manually here
+      // do, however, tell the menu to update stuff if a new tick has happend
+    #else
       if ( playing && ticked ) {
         if (debug_flag) { Serial_println(F("about to do_tick")); Serial_flush(); }
         do_tick(ticks);
         if (debug_flag) { Serial_println(F("just did do_tick")); Serial_flush(); }
 
-        #ifdef ENABLE_SCREEN
-          if (debug_flag) { Serial_println(F("about to do menu->update_ticks(ticks)")); Serial_flush(); }
-          menu->update_ticks(ticks);
-          if (debug_flag) { Serial_println(F("just did menu->update_ticks(ticks)")); Serial_flush(); }
-        #endif
-
-        //last_ticked_at_micros = micros();
         last_ticked_at_micros = micros();
-        //ticks++;  // todo: see if this is right or problematic that we now tick before do_ticks...?
       }
-    #else
-      if (ticked) {
+    #endif
+    #ifdef ENABLE_SCREEN
+      if (playing && ticked) {
           if (debug_flag) { Serial_println(F("about to menu->update_ticks")); Serial_flush(); }
           menu->update_ticks(ticks);
           if (debug_flag) { Serial_println(F("just did menu->update_ticks")); Serial_flush(); }
@@ -478,7 +474,7 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
   //Serial_println("ticked");
 
-  ticks = in_ticks;
+  ::ticks = in_ticks;
   
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
