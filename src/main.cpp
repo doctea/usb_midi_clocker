@@ -272,13 +272,14 @@ void setup() {
 // 
 // -----------------------------------------------------------------------------
 void loop() {
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-  if (Serial.getReadError() || Serial.getWriteError()) {
-      Serial.end();
-      Serial.clearReadError(); Serial.clearWriteError();
-      Serial.begin(115200);
-      Serial.setTimeout(0);
-  }
+  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
+    if (Serial.getReadError() || Serial.getWriteError()) {
+        Serial.end();
+        Serial.clearReadError(); Serial.clearWriteError();
+        Serial.begin(115200);
+        Serial.setTimeout(0);
+    }
   }
 
   #ifdef ENABLE_TYPING_KEYBOARD
@@ -312,16 +313,18 @@ void loop() {
   #endif
 
   #ifdef ENABLE_USB
-  if (debug_flag) { Serial_println(F("about to Usb.Task()")); Serial_flush(); }
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    if (debug_flag) { Serial_println(F("about to Usb.Task()")); Serial_flush(); }
+    //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+    //{
       Usb.Task();
-    }
+    //}
     if (debug_flag) { Serial_println(F("just did Usb.Task()")); Serial_flush(); }
   #endif
   //static unsigned long last_ticked_at_micros = 0;
 
   bool ticked = false;
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
     if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
@@ -353,7 +356,8 @@ void loop() {
       ///Serial_println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
       bool screen_was_drawn = false;
-      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+      {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
         static bool first_run = true;
         if (!first_run) {
@@ -366,7 +370,8 @@ void loop() {
         //long before_display = millis();
         if (debug_flag) { Serial_println(F("about to menu->display")); Serial_flush(); }
         if (debug_flag) menu->debug = true;
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+        {
           menu->display(); //update(ticks);
           if (debug_flag) { Serial_println(F("just did menu->display")); Serial_flush(); }
           //Serial_printf("display() took %ums..", millis()-before_display);
@@ -378,7 +383,8 @@ void loop() {
     #endif
 
     #ifdef ENABLE_CV_INPUT
-      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+      {
         if (!screen_was_drawn) {
           //__disable_irq();
           //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
@@ -390,12 +396,13 @@ void loop() {
         if (!playing) {
           //parameter_manager->update_mixers();
         }
-      //}
+      }
     #endif
   }
 
   // only update from main loop if we're paused, so that we can still see effect of manual updating of gates etc
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  {
     if (!playing) {
       if (debug_flag) { Serial_println(F("about to gate_manager->update();")); Serial_flush(); }
       gate_manager->update(); 
@@ -403,18 +410,23 @@ void loop() {
     }
   }
 
-  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+  {
     if (debug_flag) { Serial_println(F("about to behaviour_manager->do_reads()..")); Serial_flush(); }
     behaviour_manager->do_reads();
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_reads()")); Serial_flush(); }
+  }
 
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  { 
     if (debug_flag) { Serial_println(F("about to behaviour_manager->do_loops()..")); Serial_flush(); }
     behaviour_manager->do_loops();
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_loops()")); Serial_flush(); }
   }
 
   #ifdef ENABLE_USB
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+    {
       if (debug_flag) { Serial_println(F("about to update_usb_midi_device_connections();..")); Serial_flush(); }
       update_usb_midi_device_connections();
       if (debug_flag) { Serial_println(F("just did update_usb_midi_device_connections();..")); Serial_flush(); }
@@ -427,7 +439,8 @@ void loop() {
       //read_midi_usb_devices();
     }
 
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {      
+    //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+    {      
       if (debug_flag) { Serial_println(F("about to read_usb_from_computer();..")); Serial_flush(); }
       read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
       if (debug_flag) { Serial_println(F("just did read_usb_from_computer();..")); Serial_flush(); }
@@ -527,7 +540,8 @@ void do_tick(uint32_t in_ticks) {
 
   #ifdef ENABLE_CV_OUTPUT
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+    {
       update_cv_outs(in_ticks);
     //}
     if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did update_cv_outs()")); Serial_flush(); }
