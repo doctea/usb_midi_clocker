@@ -17,6 +17,9 @@ const byte cv_out_sequence_pin[NUM_SEQUENCES] = {
 #endif
 //#endif
 
+void sequencer_clear_pattern();
+void sequencer_clear_row(byte row);
+
 void init_sequence();
 byte read_sequence(byte row, byte col);
 void write_sequence(byte row, byte col, byte value);

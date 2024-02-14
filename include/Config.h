@@ -11,8 +11,8 @@
 
 //// CV input options
 #ifdef PCB
-    #define ENABLE_CV_INPUT 0x48                // specify the i2c address of the input board
-    #define ENABLE_CV_INPUT_2 0x49
+    #define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
+    #define ENABLE_CV_INPUT_2   0x49
 #else
     #define ENABLE_CV_INPUT 0x49
 #endif

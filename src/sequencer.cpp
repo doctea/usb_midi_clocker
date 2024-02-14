@@ -21,6 +21,18 @@ FLASHMEM void init_sequence() {
   }*/
 }
 
+void sequencer_clear_pattern() {
+  for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
+    sequencer_clear_row(i);
+  }
+}
+
+void sequencer_clear_row(byte row) {
+  for (int i = 0 ; i < NUM_STEPS ; i++) {
+    write_sequence(row, i, 0);
+  }
+}
+
 void cv_out_sequence_pin_off(byte i) {
   //raw_write_pin(cv_out_sequence_pin[i], LOW);  // TODO: MCP23017 version of this
   set_sequence_gate(i, LOW);
