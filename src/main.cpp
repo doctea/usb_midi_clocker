@@ -190,10 +190,10 @@ void setup() {
   #endif
 
   #ifdef USE_UCLOCK
-    Serial_println(F("Initialising uClock.."));
+    tft_print((char*)"Initialising uClock..\n");
     setup_uclock(&do_tick);
   #else
-    tft_print((char*)"..clock..\n");
+    tft_print((char*)"..Cheap clock..\n");
     setup_cheapclock();
   #endif
 

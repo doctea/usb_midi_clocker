@@ -162,6 +162,12 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
 
         virtual void set_selected_parameter_input(BaseParameterInput *input); 
         virtual void set_selected_velocity_input(BaseParameterInput *input); 
+        virtual BaseParameterInput * get_selected_parameter_input() {
+            return this->pitch_input;
+        }
+        virtual BaseParameterInput * get_selected_velocity_input() {
+            return this->velocity_input;
+        }
         
         virtual void set_note_length(int32_t length_ticks) {
             this->note_length_ticks = length_ticks;
@@ -310,8 +316,8 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                     if (this->get_note_length()>0) {
                         int velocity = MIDI_MAX_VELOCITY;
                         if (this->velocity_input!=nullptr) {
-                            velocity = constrain(((float)MIDI_MAX_VELOCITY)*(float)this->velocity_input->get_normal_value(), 0, MIDI_MAX_VELOCITY);
-                            if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value());
+                            velocity = constrain(((float)MIDI_MAX_VELOCITY)*(float)this->velocity_input->get_normal_value_unipolar(), 0, MIDI_MAX_VELOCITY);
+                            if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value_unipolar());
                         }
 
                         if (this->debug) Serial.printf(F("CVInput: Starting note %i\tat\t%u\n"), new_note, ticks);

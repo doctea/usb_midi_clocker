@@ -109,17 +109,17 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
       default:
         return false;
       #ifdef DEBUG_SEQUENCER
-            if (offset==0) {
-              Serial.print(F("For tick "));
-              Serial.print(ticks);
-              Serial.print(F(" got step_number "));
-              Serial.print(step);
-              Serial.print(F(", trigger sequence #"));
-              Serial.print(sequence);
-              Serial.print(F(" on step "));
-              Serial.print(step);
-              Serial.println(F("!"));
-            } 
+        if (offset==0) {
+          Serial.print(F("For tick "));
+          Serial.print(ticks);
+          Serial.print(F(" got step_number "));
+          Serial.print(step);
+          Serial.print(F(", trigger sequence #"));
+          Serial.print(sequence);
+          Serial.print(F(" on step "));
+          Serial.print(step);
+          Serial.println(F("!"));
+        } 
       #endif
       //return true;
       //digitalWrite(PIN_CLOCK_START+i, HIGH);

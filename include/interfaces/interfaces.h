@@ -189,15 +189,15 @@ class GateManager {
     }
 
     void update() {
-        for (int bank = 0 ; bank < num_banks ; bank++) {
+        for (uint_fast8_t bank = 0 ; bank < num_banks ; bank++) {
             this->banks[bank]->update();
         }
     }
 
     // panic turn off all gates
     void stop_all_gates() {
-        Serial.println("stop all gates!");
-        for (uint_least8_t b = 0 ; b < num_banks ; b++) {
+        //Serial.println("stop all gates!");
+        for (uint_fast8_t b = 0 ; b < num_banks ; b++) {
             this->banks[b]->stop_all_gates();
         }
     }

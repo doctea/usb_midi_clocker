@@ -28,10 +28,10 @@ extern bool debug_flag;
         else
             Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);*/
 
-        if (this->pitch_parameter_selector!=nullptr/* && input!=nullptr*/) {
+        /*if (this->pitch_parameter_selector!=nullptr) {
             //Serial.println(F("set_selected_parameter_input() updating the control.."));
             this->pitch_parameter_selector->update_source(input);
-        } 
+        }*/
         this->pitch_input = input;
 
         if (is_valid_note(this->current_note)) {
@@ -47,10 +47,10 @@ extern bool debug_flag;
         else
             Serial.printf(F("set_selected_parameter_input(%s)\n"), input->name);*/
 
-        if (this->velocity_parameter_selector!=nullptr/* && input!=nullptr*/) {
+        /*if (this->velocity_parameter_selector!=nullptr) {
             //Serial.println(F("set_selected_parameter_input() updating the control.."));
             this->velocity_parameter_selector->update_source(input);
-        } 
+        } */
         this->velocity_input = input;
 
         /*if (is_valid_note(this->current_note)) {
@@ -81,6 +81,7 @@ extern bool debug_flag;
                 "1v/oct Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
+                &DeviceBehaviour_CVInput::get_selected_velocity_input,
                 parameter_manager->get_available_pitch_inputs(),
                 this->pitch_input
         );
@@ -91,6 +92,7 @@ extern bool debug_flag;
                 "Velocity Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_velocity_input,
+                &DeviceBehaviour_CVInput::get_selected_velocity_input,
                 parameter_manager->available_inputs,
                 this->pitch_input
         );
