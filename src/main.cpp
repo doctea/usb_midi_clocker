@@ -314,10 +314,10 @@ void loop() {
 
   #ifdef ENABLE_USB
     if (debug_flag) { Serial_println(F("about to Usb.Task()")); Serial_flush(); }
-    //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
-    //{
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+    {
       Usb.Task();
-    //}
+    }
     if (debug_flag) { Serial_println(F("just did Usb.Task()")); Serial_flush(); }
   #endif
   //static unsigned long last_ticked_at_micros = 0;
@@ -417,7 +417,7 @@ void loop() {
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_reads()")); Serial_flush(); }
   }
 
-  //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   { 
     if (debug_flag) { Serial_println(F("about to behaviour_manager->do_loops()..")); Serial_flush(); }
     behaviour_manager->do_loops();
