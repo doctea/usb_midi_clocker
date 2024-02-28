@@ -134,6 +134,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### Libraries
 
+- Patched [USBHost_t36](https://github.com/doctea/USBHost_t36/tree/merge-interrupt-fix) library
 - [mymenu](https://github.com/doctea/mymenu) library
 - [midihelpers](https://github.com/doctea/midihelpers) library
 - [parameters](https://github.com/doctea/parameters) library
