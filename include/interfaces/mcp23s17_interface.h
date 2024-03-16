@@ -10,7 +10,6 @@
 #define MCP23S17_SPI_MOSI       26
 #define MCP23S17_SPI_SCK        27*/
 
-
 // todo: accept config (SPI and CS number) in constructor
 class MCP23S17BankInterface : public BankInterface {
     public:
@@ -30,14 +29,15 @@ class MCP23S17BankInterface : public BankInterface {
             SPI1.setMOSI(26);
             SPI1.setSCK(27);
             //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
-            SPI1.beginTransaction(SPISettings(2000000, LSBFIRST, SPI_MODE3));
+            //SPI1.beginTransaction(SPISettings(3000000, LSBFIRST, SPI_MODE3));
             //SPI1.setClockDivider(SPI_CLOCK_DIV4);
             SPI1.begin();
 
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
             mcp = new MCP23S17(MCP23S17_SPI_CS1_PIN, 0, &SPI1);
-            //mcp->setSPIspeed(20000000);
+            mcp->setSPIspeed(10000000);
+            
             Serial.println("\tconstructed!... calling begin()");
             if (!mcp->begin()) {
                 Serial.println("\tbegin() return false!");
@@ -45,7 +45,7 @@ class MCP23S17BankInterface : public BankInterface {
             Serial.println("\tdid begin()!");
             for(int i = 0 ; i < num_gates ; i++) {
                 Serial.printf("\tSetting up pin %i!..\n", i);
-                if (!mcp->pinMode(i, OUTPUT)) {
+                if (!mcp->pinMode1(i, OUTPUT)) {
                     Serial.printf("MCP23s17BankInterface: Error setting pinMode %i\n", i);
                 }
                 set_gate(i, false);
@@ -71,7 +71,7 @@ class MCP23S17BankInterface : public BankInterface {
                 return;            
             }
             if (!combine_writes) {
-                mcp->digitalWrite(gate_number, state);
+                mcp->write1(gate_number, state);
             } else {
                 dirty = true;
             }
@@ -142,10 +142,10 @@ class MCP23S17InputBankInterface : public BankInterface {
             Serial.println("\tdid begin()!");
             for(int i = 0 ; i < num_gates ; i++) {
                 Serial.printf("\tSetting up pin %i!..\n", i);
-                if (mcp->pinMode(i, OUTPUT))
-                    mcp->digitalWrite(i, false);
+                if (mcp->pinMode1(i, OUTPUT))
+                    mcp->write1(i, false);
                 //mcp->setPullup(i, false);
-                if (!mcp->pinMode(i, INPUT)) {
+                if (!mcp->pinMode1(i, INPUT)) {
                     Serial.printf("\tMCP23s17BankInterface: Error setting pinMode %i\n", i);
                 }
 
@@ -169,7 +169,7 @@ class MCP23S17InputBankInterface : public BankInterface {
         }
         virtual bool check_gate(int gate_number) override {
             //return this->current_states[gate_number];
-            return mcp->digitalRead(gate_number);
+            return mcp->read1(gate_number);
         }
         virtual void update() override {
 

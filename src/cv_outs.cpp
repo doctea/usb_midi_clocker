@@ -141,6 +141,7 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   }
 #else
   void update_cv_outs(unsigned long ticks) {
+    // todo: investigate whether we can use uClock's shuffle to process these instead..
     #ifdef ENABLE_CLOCKS
       #ifdef PIN_CLOCK_RESET_PHRASE
         if (is_bpm_on_phrase(ticks)) {

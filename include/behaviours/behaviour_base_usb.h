@@ -79,7 +79,25 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         };
         virtual void actualSendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
             if (!is_connected()) return;
+            /*
+            WEIRD FREEZE...
+
+            - when sending MIDI CC from main loop, from update_mixers, to a MIDIDeviceBase
+            - via actualSendControlChange in behaviour_base_usb.h
+            - no crash so long as:-
+            - sending serial text
+            - and serial.flush
+            - and serial monitor is connected
+            - uClock disabled..
+            - only if ticking..
+            - only if CraftSynth is actually connected
+            */
+            //return; // <-- tryna figure out why getting crash ..
+            //Serial.printf("%s\t#actualSendControlChange(%3i, %3i, %2i)\n", this->get_label(), number, value, channel);
+            //Serial.flush();
+            //delay(1);
             this->device->sendControlChange(number, value, channel);
+            //this->device->send_now();
         };
         virtual void actualSendRealTime(uint8_t message) override {
             if (!is_connected()) return;

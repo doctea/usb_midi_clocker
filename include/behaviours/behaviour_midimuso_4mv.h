@@ -12,7 +12,12 @@
 
 #include "behaviour_midibass.h"
 
-class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBassBehaviour, public virtual DividedClockedBehaviour {
+#include "behaviour_modwheelreceiver.h"
+
+// todo: send program controls to switch modes
+// todo: switch into 4A mode (extra gates, extra cv outs instead of velocity outs), or even 6 mode 
+
+class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBassBehaviour, public ModwheelReceiver, public virtual DividedClockedBehaviour {
     public:
 
     using DividedClockedBehaviour::on_tick;
@@ -94,16 +99,67 @@ class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBass
         }
     }
 
+    virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) override {
+        //if (this->debug) Serial.printf(F("%s#sendControlChange(cc=%i, value=%i, channel=%i)\n"), this->get_label(), cc_number, value, channel);
+        // if we receive a value from another device, then update the proxy parameter, which will handle the actual sending
+        // if modwheel should handle this event, handle it and return early
+        if (ModwheelReceiver::process(cc_number, value, channel)) 
+            return;
+
+        DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
+    }
+
     virtual void setup_saveable_parameters() override {
         if (this->saveable_parameters==nullptr)
             DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
         MIDIBassBehaviour::setup_saveable_parameters();
 
+        DividedClockedBehaviour::setup_saveable_parameters();
+
+        //ModwheelReceiver::setup_saveable_parameters();
+
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0], [=](bool v) -> void { this->allow_voice_for_auto[0] = v; }, [=]() -> bool { return this->allow_voice_for_auto[0]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1], [=](bool v) -> void { this->allow_voice_for_auto[1] = v; }, [=]() -> bool { return this->allow_voice_for_auto[1]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) -> void { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }));
         this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) -> void { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }));
+    }
+
+
+    //FLASHMEM 
+    bool already_initialised_parameters = false;
+    virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+        Serial_printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()...")); Serial_flush();
+        if (already_initialised_parameters)
+            return this->parameters;
+
+        already_initialised_parameters = true;
+
+        
+        //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
+        DeviceBehaviourSerialBase::initialise_parameters();
+        
+        MIDIBassBehaviour::initialise_parameters();
+        //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
+        DividedClockedBehaviour::initialise_parameters();
+
+        ModwheelReceiver::initialise_parameters();
+
+        //Serial.println(F("\tAdding parameters..."));
+        //parameters->clear();
+        // todo: read these from a configuration file
+        //this->add_parameters();
+        //parameters->add(new MIDICCParameter<>("Mod Wheel",     this,    (byte)1,    (byte)1));    // this should be handled by ModwheelReceiver
+        // todo: enable these two extra CC outputs when muso is in 4B or 6 mode - four extra CC outputs when in 4A mode!
+        //parameters->add(new MIDICCParameter<>("7 vol",         this,   (byte)7,   (byte)1));
+        //parameters->add(new MIDICCParameter<>("11 expr",       this,   (byte)11,   (byte)1));
+        //parameters->add(new MIDICCParameter<>("73 attack",     this,   (byte)7,   (byte)1));
+        //parameters->add(new MIDICCParameter<>("72 release",    this,   (byte)11,   (byte)1));
+        parameters->add(new MIDICCParameter<>("71 res/aft",    this,    (byte)71,   (byte)1));
+        parameters->add(new MIDICCParameter<>("74 cut off",    this,    (byte)74,   (byte)1));
+        
+        Serial_printf(F("DeviceBehaviour_CraftSynth#initialise_parameters() returning %p\n"), parameters); Serial_flush();
+        return parameters;
     }
 
     #ifdef ENABLE_SCREEN

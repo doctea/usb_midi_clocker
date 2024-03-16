@@ -25,7 +25,6 @@
                 char output_label[MAX_LABEL_LENGTH];
                 snprintf(output_label, MAX_LABEL_LENGTH, "%s output", this->get_label()); //(post-transpose)
 
-                // todo: move this and transpose_control into base Behaviour...?
                 output_harmony_status = new HarmonyStatus(
                     output_label, 
                     &this->last_transposed_note, 

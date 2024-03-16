@@ -14,14 +14,16 @@
                         (transmits_midi_notes()? "MIDI out: "   + String(this->output_midi_number+1)            : " ");
         }
         this->menuitems->add(new FixedSizeMenuItem(midi_info.c_str(), 0));*/
-        this->menuitems->add(new CallbackMenuItem("Connection info", [=]() -> const char* {
-            static const char *connected_string = "USB: Connected";
-            static const char *disconnected_string = "USB: Disconnected";
-            //char connection_info[MENU_C_MAX];
-            //snprintf(connection_info, MENU_C_MAX, "USB: %s", this->is_connected() ? "Connected" : "Disconnected");
-            //return connection_info;
-            return this->is_connected() ? connected_string : disconnected_string;
-        }));
+        this->menuitems->add(new CallbackMenuItem("Connection info", 
+                [=]() -> const char* {
+                static const char *connected_string = "USB: Connected";
+                static const char *disconnected_string = "USB: Disconnected";
+                //char connection_info[MENU_C_MAX];
+                //snprintf(connection_info, MENU_C_MAX, "USB: %s", this->is_connected() ? "Connected" : "Disconnected");
+                //return connection_info;
+                return this->is_connected() ? connected_string : disconnected_string;
+            }
+        ));
         
         return this->menuitems;
     }    

@@ -3,10 +3,13 @@
 
 #include "Config.h"
 
+#include "project.h"
+
 #include "midi/midi_mapper_matrix_manager.h"
 
 #include "behaviours/behaviour_bamble.h"
 #include "behaviours/behaviour_craftsynth.h"
+#include "behaviours/behaviour_skulptsynth.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
@@ -28,6 +31,7 @@
 
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
+#include "midi/midi_looper.h"
 #include "midi/midi_pc_usb.h"
 
 MIDIMatrixManager *midi_matrix_manager = nullptr;
@@ -124,6 +128,10 @@ void setup_midi_mapper_matrix_manager() {
         midi_out_serial_clock_enabled[5] = true;
     #endif
 
+    #ifdef ENABLE_SKULPTSYNTH_USB
+        behaviour_skulptsynth->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : SkulptSynth : ch 1", behaviour_skulptsynth, 1));
+    #endif
+
     #ifdef ENABLE_DRUMKIT
         //drumkit_source_id = midi_matrix_manager->register_source("drumkit");
         midi_matrix_manager->register_source(behaviour_drumkit, "drumkit");
@@ -187,7 +195,10 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_BEATSTEP
-        midi_matrix_manager->register_source(behaviour_beatstep, "beatstep");
+        midi_matrix_manager->register_source(behaviour_beatstep,    "beatstep");
+        #ifdef ENABLE_BEATSTEP_2
+            midi_matrix_manager->register_source(behaviour_beatstep_2,  "beatstep#2");
+        #endif
         midi_matrix_manager->connect(behaviour_beatstep,    "S3 : Neutron : ch 4");
     #endif
 
@@ -245,6 +256,11 @@ void setup_midi_mapper_matrix_manager() {
     midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
     MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
     behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
+    behaviour_midibassproxy->setHighestNote(4*12);
+    behaviour_midibassproxy->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+    behaviour_midibassproxy->setLowestNote(1*12);
+    behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+
 
     // connect default mappings
     #ifdef ENABLE_MAMMB33

@@ -3,7 +3,10 @@
 
 #include "behaviours/behaviour_beatstep.h"
 
-DeviceBehaviour_Beatstep *behaviour_beatstep = new DeviceBehaviour_Beatstep();
+DeviceBehaviour_Beatstep    *behaviour_beatstep     = new DeviceBehaviour_Beatstep();
+#ifdef ENABLE_BEATSTEP_2
+    DeviceBehaviour_Beatstep_2  *behaviour_beatstep_2   = new DeviceBehaviour_Beatstep_2();
+#endif
 /*void beatstep_handle_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue) {
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->receive_control_change(inChannel, inNumber, inValue);
 }*/
@@ -19,6 +22,21 @@ void beatstep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVel
 void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
     if (behaviour_beatstep!=nullptr) behaviour_beatstep->handle_sysex(data, length, complete);
 }
+
+#ifdef ENABLE_BEATSTEP_2
+    void beatstep_2_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
+        if (behaviour_beatstep_2!=nullptr) behaviour_beatstep_2->receive_note_on(inChannel, inNumber, inVelocity);
+    }
+
+    void beatstep_2_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
+        if (behaviour_beatstep_2!=nullptr) behaviour_beatstep_2->receive_note_off(inChannel, inNumber, inVelocity);
+    }
+
+    void beatstep_2_handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
+        if (behaviour_beatstep_2!=nullptr) behaviour_beatstep_2->handle_sysex(data, length, complete);
+    }
+#endif
+
 
 #ifdef ENABLE_SCREEN
     #include "mymenu/menu_looper.h"
@@ -39,7 +57,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
 
         SubMenuItemBar *pattern_options = new SubMenuItemBar("Pattern options");
         pattern_options->add(new LambdaNumberControl<int8_t>(
-            "Pattern length",   
+            "Length",   
             //this, 
             //&DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength, 
             [=](int8_t length) -> void { this->setPatternLength(length); },
@@ -47,9 +65,19 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
             nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM
         ));
 
+        LambdaSelectorControl<int8_t> *step_size = new LambdaSelectorControl<int8_t>(
+            "Step Size",        
+            [=](int8_t step_size) -> void { this->setStepSize(step_size); },
+            [=]() -> int8_t { return this->getStepSize(); }
+        );
+        step_size->add_available_value(0, "1/4");
+        step_size->add_available_value(1, "1/8");
+        step_size->add_available_value(2, "1/16");
+        step_size->add_available_value(3, "1/32");
+        pattern_options->add(step_size);
+
         LambdaSelectorControl<int8_t> *direction = new LambdaSelectorControl<int8_t>(
             "Direction",        
-            //this, &DeviceBehaviour_Beatstep::setDirection,      &DeviceBehaviour_Beatstep::getDirection
             [=](int8_t length) -> void { this->setDirection(length); },
             [=]() -> int8_t { return this->getDirection(); }
         );

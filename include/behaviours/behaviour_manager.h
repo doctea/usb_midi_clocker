@@ -37,7 +37,7 @@ class DeviceBehaviourManager {
 
         void setup_saveable_parameters() {
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                Serial.printf("setup_saveable_parameters for %i: %s\n", i, behaviours->get(i)->get_label());
+                Serial_printf("setup_saveable_parameters for %i: %s\n", i, behaviours->get(i)->get_label());
                 behaviours->get(i)->setup_saveable_parameters();
             }
         }
@@ -95,7 +95,7 @@ class DeviceBehaviourManager {
                     DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
                     Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                     usb_midi_slots[idx].packed_id = packed_id;
-                    if (behaviour->matches_identifiers(packed_id)) {
+                    if (!behaviour->is_connected() && behaviour->matches_identifiers(packed_id)) {
                         Debug_printf(F("\tDetected!  Behaviour %i on usb midi idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
                         behaviour->connect_device(usb_midi_slots[idx].device);
                         usb_midi_slots[idx].behaviour = behaviour;
@@ -103,7 +103,7 @@ class DeviceBehaviourManager {
                         return true;
                     }
                 }
-                Debug_printf(F("Didn't find a behaviour for device #%u with %08X!\n"), idx, packed_id);
+                Debug_printf(F("Didn't find a behaviour for usbmidi device #%u with %08X!\n"), idx, packed_id);
                 #ifdef IRQ_PROTECT_USB_CHANGES
                     }
                     //if (irqs_enabled) __enable_irq();
@@ -120,12 +120,12 @@ class DeviceBehaviourManager {
                     //__disable_irq();
                     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
                 #endif
-                Serial.printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
+                Serial_printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 const unsigned int size = behaviours_usbserial->size();
                 for (unsigned int i = 0 ; i < size ; i++) {
                     if (!usb_serial_slots[idx].usbdevice || usb_serial_slots[idx].packed_id!=packed_id) {
-                        Serial.printf(F("WARNING: usb serial device at %i went away!\n"), idx);
+                        Serial_printf(F("WARNING: usb serial device at %i went away!\n"), idx);
                         //if (irqs_enabled) __enable_irq();
                         return false;
                     }
@@ -134,7 +134,7 @@ class DeviceBehaviourManager {
                     usb_serial_slots[idx].packed_id = packed_id;
                     if (behaviour->matches_identifiers(packed_id)) {
                         Debug_printf(F("\tDetected!  Behaviour %i on usb serial idx %i\n"), i, idx); //-- does it match %u?\n", i, packed_id);
-                        Serial.printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'?\n"), 
+                        Serial_printf(F("\t\tbehaviour name '%s' w/ id %08X, device product name '%s'?\n"), 
                             behaviour->get_label(), 
                             behaviour->get_packed_id(), 
                             usb_serial_slots[idx].usbdevice->product()
@@ -149,7 +149,7 @@ class DeviceBehaviourManager {
                     }
                     //if (irqs_enabled) __enable_irq();
                 #endif
-                Serial.printf(F("Didn't find a behaviour for device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial_flush();
+                Serial_printf(F("Didn't find a behaviour for usbserial device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial_flush();
                 return false;
             }
         #endif
@@ -157,10 +157,10 @@ class DeviceBehaviourManager {
         void do_reads() {
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                //Serial.printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial_flush();
-                //Serial.printf("\t\t%s\n", behaviours->get(i)->get_label());
+                //Serial_printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial_flush();
+                //Serial_printf("\t\t%s\n", behaviours->get(i)->get_label());
                 behaviours->get(i)->read();
-                //Serial.printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours->get(i)); Serial_flush();
+                //Serial_printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours->get(i)); Serial_flush();
             }
         }
         /*#define SINGLE_FRAME_READ
@@ -193,7 +193,7 @@ class DeviceBehaviourManager {
                 //while(usb_midi_device[i]->read());
                 if (usb_midi_slots[i].device!=nullptr && usb_midi_slots[i].device->read()) {
                 //usb_midi_device[counter%NUM_USB_MIDI_DEVICES]->sendNoteOn(random(0,127),random(0,127),random(1,16));
-                //Serial.printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
+                //Serial_printf("%i: read data from %04x:%04x\n", counter, usb_midi_device[i]->idVendor(), usb_midi_device[i]->idProduct());
                 }
                 //counter++;
             }
@@ -211,9 +211,9 @@ class DeviceBehaviourManager {
         void send_clocks() {    // replaces behaviours_send_clock
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial_flush();
+                //Serial_printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->send_clock(ticks);
-                //Serial.printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial_flush();
+                //Serial_printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial_flush();
             }  
         }
 
@@ -258,9 +258,9 @@ class DeviceBehaviourManager {
             for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
                 if (behaviour!=nullptr) {
-                    //Serial.printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial_flush();
+                    //Serial_printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial_flush();
                     behaviour->loop(temp_tick);
-                    //Serial.printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial_flush();
+                    //Serial_printf("behaviours#do_loops called loop on behaviour %i\n", i); Serial_flush();
                 }
             }
         }
@@ -281,22 +281,22 @@ class DeviceBehaviourManager {
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
+                //Serial_printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
                 if (behaviours->get(i)!=nullptr) {
                     behaviours->get(i)->on_tick(in_ticks);
                 }
-                //Serial.printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial_flush();
+                //Serial_printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial_flush();
             }
         }
 
         void on_restart() {
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                //Serial.printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
+                //Serial_printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
                 if (behaviours->get(i)!=nullptr) {
                     behaviours->get(i)->on_restart();
                 }
-                //Serial.printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial_flush();
+                //Serial_printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial_flush();
             }
         }
 
@@ -311,40 +311,45 @@ class DeviceBehaviourManager {
             const unsigned int size = this->behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
-                //Serial.printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
+                //Serial_printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
                 if (device!=nullptr && label.equals(device->get_label()))
                     return device;
             }
-            //Serial.printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
+            //Serial_printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
             return nullptr;
         }
 
         bool load_parse_line(String line) {
             line = line.replace('\n',"");
             line = line.replace('\r',"");
-            //Serial.printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
-            String key = line.substring(0, line.indexOf('='));
-            String value = line.substring(line.indexOf('=')+1);
-            return this->load_parse_key_value(key, value);
+            //Serial_printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
+            int split = line.indexOf('=');
+            if (split>=0) {
+                String key = line.substring(0, split);
+                String value = line.substring(split+1);
+                return this->load_parse_key_value(key, value);
+            } else {
+                return this->load_parse_key_value(line, "");
+            }
         }
 
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
             if (key.equals(F("behaviour_start"))) {
-                //Serial.printf(F("found behaviour_start for '%s'\n"), value.c_str());
+                //Serial_printf(F("found behaviour_start for '%s'\n"), value.c_str());
                 current_behaviour = this->find_behaviour_for_label(value);
                 return true;
             } else if (key.equals(F("behaviour_end"))) {
-                //Serial.printf(F("found behaviour_end for '%s'\n"), value.c_str());
+                //Serial_printf(F("found behaviour_end for '%s'\n"), value.c_str());
                 current_behaviour = nullptr;
                 return true;
             } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
-                //Serial.printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
+                //Serial_printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
                 return true;
             }
-            /*Serial.printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
-            if (current_behaviour==nullptr) Serial.printf("and not a behaviour ");
-            Serial.println();*/
+            /*Serial_printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
+            if (current_behaviour==nullptr) Serial_printf("and not a behaviour ");
+            Serial_println();*/
             return false;
         }
 
@@ -355,6 +360,7 @@ class DeviceBehaviourManager {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
                 device->save_project_add_lines(lines);
+                // only add behaviour_start and behaviour_end lines if the behaviour added lines
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
                     lines->add(F("behaviour_end=") + String(device->get_label()));
@@ -367,18 +373,19 @@ class DeviceBehaviourManager {
             //LinkedList<String> lines = LinkedList<String>();
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                //Serial.printf(">>> behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
+                //Serial_printf(">>> behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
-                //Serial.printf("about to save_sequence_add_lines on behaviour.."); Serial_flush();
+                //Serial_printf("about to save_sequence_add_lines on behaviour.."); Serial_flush();
                 device->save_sequence_add_lines(lines);
-                //Serial.printf("just did save_sequence_add_lines and got %i items\n", lines->size()); Serial_flush();
+                //Serial_printf("just did save_sequence_add_lines and got %i items\n", lines->size()); Serial_flush();
+                // only add behaviour_start and behaviour_end lines if the behaviour added lines
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
-                    //Serial.printf("\tbehaviour_manager#save_sequence_add_lines calling on behaviour...\n");
+                    //Serial_printf("\tbehaviour_manager#save_sequence_add_lines calling on behaviour...\n");
                     lines->add(F("behaviour_end=") + String(device->get_label()));
                 }
-                //Serial.printf("<<< behaviour_manager#save_sequence_add_lines completed behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
+                //Serial_printf("<<< behaviour_manager#save_sequence_add_lines completed behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
             }
         }
 

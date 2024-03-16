@@ -49,7 +49,7 @@ class MIDIOutputWrapper {
         int8_t default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
-        int8_t playing_notes[MIDI_MAX_NOTE];
+        int8_t playing_notes[MIDI_MAX_NOTE+1];
 
         int last_note = -1, current_note = -1;
         //int last_transposed_note = -1, current_transposed_note = -1;

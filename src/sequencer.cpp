@@ -21,6 +21,18 @@ FLASHMEM void init_sequence() {
   }*/
 }
 
+void sequencer_clear_pattern() {
+  for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
+    sequencer_clear_row(i);
+  }
+}
+
+void sequencer_clear_row(byte row) {
+  for (int i = 0 ; i < NUM_STEPS ; i++) {
+    write_sequence(row, i, 0);
+  }
+}
+
 void cv_out_sequence_pin_off(byte i) {
   //raw_write_pin(cv_out_sequence_pin[i], LOW);  // TODO: MCP23017 version of this
   set_sequence_gate(i, LOW);
@@ -97,17 +109,17 @@ bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
       default:
         return false;
       #ifdef DEBUG_SEQUENCER
-            if (offset==0) {
-              Serial.print(F("For tick "));
-              Serial.print(ticks);
-              Serial.print(F(" got step_number "));
-              Serial.print(step);
-              Serial.print(F(", trigger sequence #"));
-              Serial.print(sequence);
-              Serial.print(F(" on step "));
-              Serial.print(step);
-              Serial.println(F("!"));
-            } 
+        if (offset==0) {
+          Serial.print(F("For tick "));
+          Serial.print(ticks);
+          Serial.print(F(" got step_number "));
+          Serial.print(step);
+          Serial.print(F(", trigger sequence #"));
+          Serial.print(sequence);
+          Serial.print(F(" on step "));
+          Serial.print(step);
+          Serial.println(F("!"));
+        } 
       #endif
       //return true;
       //digitalWrite(PIN_CLOCK_START+i, HIGH);

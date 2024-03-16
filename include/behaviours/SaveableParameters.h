@@ -198,7 +198,7 @@ class SaveableParameter : virtual public SaveableParameterBase {
             setInt(value);
         }
         virtual void set(bool, String value) {
-            setBool((value.equals(true_label) || value.equals(enable_label) || value.equals("1")));
+            setBool(value.equals("1") || value.equals(true_label) || value.equals(enable_label));
         }
         virtual void set(float, String value) {
             this->setFloat(value.toFloat());
@@ -304,7 +304,7 @@ class LSaveableParameter : virtual public SaveableParameterBase {
             setInt(value);
         }
         virtual void set(bool, String value) {
-            setBool((value.equals(true_label) || value.equals(enable_label) || value.equals("1")));
+            setBool(value.equals("1") || value.equals(true_label) || value.equals(enable_label));
         }
         virtual void set(float, String value) {
             this->setFloat(value.toFloat());

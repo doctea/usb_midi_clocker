@@ -1,0 +1,20 @@
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:301440, data:95828, headers:8232   free for files:7720964
+teensy_size:    RAM1: variables:144640, code:279112, padding:15800   free for local variables:84736
+teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+^^ after compiling 'clips'
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:293432, data:93780, headers:9072   free for files:7730180
+teensy_size:    RAM1: variables:140544, code:272568, padding:22344   free for local variables:88832
+teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+^^ main build during same era; ~7k currently used by the clips/arrangement logic.
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:293744, data:94804, headers:8760   free for files:7729156
+teensy_size:    RAM1: variables:140544, code:273336, padding:21576   free for local variables:88832
+teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+^^ added dividedclockedbehaviour saveable parameters and midiccparameters to midimuso_4mv

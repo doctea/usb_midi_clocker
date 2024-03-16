@@ -33,6 +33,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             this->addParameterInput("Fade2", "APCMini", (byte)APCMINI_FADER_CC_2, (byte)1);
             this->addParameterInput("Fade3", "APCMini", (byte)APCMINI_FADER_CC_3, (byte)1);
             this->addParameterInput("Fade4", "APCMini", (byte)APCMINI_FADER_CC_4, (byte)1);
+            this->addParameterInput("Fade5", "APCMini", (byte)APCMINI_FADER_CC_5, (byte)1);
+            this->addParameterInput("Fade6", "APCMini", (byte)APCMINI_FADER_CC_6, (byte)1);
+            this->addParameterInput("Fade7", "APCMini", (byte)APCMINI_FADER_CC_7, (byte)1);
+            this->addParameterInput("Fade8", "APCMini", (byte)APCMINI_FADER_CC_8, (byte)1);
         }
 
         uint16_t vid = 0x09e8, pid = 0x0028;
@@ -68,6 +72,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
             DeviceBehaviourUSBBase::init();
             apcdisplay_initialise_last_sent();
             apcmini_clear_display();
+            redraw_immediately = true;
+            //apcmini_update_clock_display();
         }
 
         virtual void loop(unsigned long ticks) override {
@@ -86,9 +92,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                         apcmini_update_clock_display();
                         redraw_immediately = false;
                     }
-                    //ATOMIC(
-                        last_processed_tick = ticks;
-                    //)
+                    last_processed_tick = ticks;
                 }
             #endif
             //Serial.println(F("finished apcmini_loop"));
@@ -261,7 +265,8 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
 
         virtual void on_tick(volatile uint32_t ticks) override {
             if (device!=nullptr) {
-
+                //this->actualSendNoteOn(ticks % 64, random(APCMINI_YELLOW_BLINK), 1);
+                //apcdisplay_sendNoteOn(ticks % 64, random(APCMINI_YELLOW_BLINK), 1);
             }
         }
 

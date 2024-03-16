@@ -116,31 +116,38 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Requirements
 
+### Hardware
+
 - Teensy 4.1
-  - Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) 
-  - or [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
-- ST7789 or ILI9341 oled screen for display
-  - st7789 option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current prototype version much prefers this)
+  - ~~Deftaudio 8x8 midi board (or DIY'd serial MIDI ins&outs) ~~
+  - or prototype [Eurorack module boards]([https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware))
+- [8MB PSRAM expansion](https://www.pjrc.com/store/psram.html)
+- ~~ST7789 or ~~ILI9341 oled screen for display
+  - ~~st7789 option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current prototype version much prefers this)~~
   - ILI9341 screen option https://www.aliexpress.com/item/1005003005413104.html 'Module With Touch' version for PCB
 - Rotary encoder + two wired buttons for control and/or USB typing keyboard
-  - and [mymenu](https://github.com/doctea/mymenu) library
+- Akai APCMini for controlling the sequencer and clocks (although not needed for running the rest of it)
+- Prototype Eurorack module for gate output using MCP23s17 (supports 16 gate outputs.  could be configured as inputs instead - but somehow had some problems with this)
+  - if building a breadboard/DeftAudio version, [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e)
+- SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots, loops and CV calibration
+- For CV input: prototype Eurorack module with 2x[Pimoroni +/-24v 1015 module](https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003)
+
+### Libraries
+
+- Patched [USBHost_t36](https://github.com/doctea/USBHost_t36/tree/merge-interrupt-fix) library
+- [mymenu](https://github.com/doctea/mymenu) library
 - [midihelpers](https://github.com/doctea/midihelpers) library
+- [parameters](https://github.com/doctea/parameters) library
 - [uClock](https://github.com/midilab/uClock) library
 - [Functional-Vlpp](https://registry.platformio.org/libraries/khoih-prog/Functional-Vlpp/installation) library
-- Akai APCMini for controlling the sequencer and clocks (although not needed for running the rest of it)
-- SD card in the onboard Teensy SD card reader, for saving projects, sequences, screenshots, loops and CV calibration
-- Gate outputs
-  - Prototype version: DIY'd circuit to shift 3.3v Teensy IO up to 5v to be used as clock/sequencer triggers, see 'Suggested wiring' section below
-    - I am currently using one of these in prototype: [Level shifter breakout](https://coolcomponents.co.uk/products/level-shifter-8-channel-txs01018e) (see 'Suggested wiring', these need extra resistors in the output path to work properly!)
-    - I was previously using a couple of these [Sparkfun level shifter](https://shop.pimoroni.com/products/sparkfun-logic-level-converter-bi-directional?variant=7493045377) -- these work reliably without needing the extra resistor on each output (although you probably should still add one)
-  - Prototype Eurorack module for gate output using MCP23s17 (in theory supports 16 gates but currently seems flakey.  could perhaps be configured as inputs instead - but somehow had some problems with this)
-- For CV input: [Pimoroni +/-24v 1015 module](https://shop.pimoroni.com/products/ads1015-adc-breakout?variant=27859155026003) and my [parameters](https://github.com/doctea/parameters) library
-- As of 2022-12-23, using [this LinkedList fork](https://github.com/vortigont/LinkedList) to try and improve stuff
+- [this LinkedList fork](https://github.com/vortigont/LinkedList) to try and improve stuff
 
 ## Eurorack modules / PCB / gerbers
 
 - Experimental KiCad files + gerbers for PCB version at [https://github.com/doctea/usb_midi_clocker_hardware](https://github.com/doctea/usb_midi_clocker_hardware)
   - Some problems with these initial versions, but kinda working with a bit of hackery
+  - Use at your own risk
+  - !!Contact me to find out what their current state is before making any of these made!!
 
 ## Suggested wiring - breadboard prototype
 
@@ -150,7 +157,7 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Known issues (current)
 
-- Occasional freezes/crashes... pretty sure related to something in the USB library
+- ~~Occasional freezes/crashes... pretty sure related to something in the USB library~~
 - GDB debug mode doesn't work - might just simply be because we don't have enough RAM to do this now?
 - MIDI looper quantiser: Some notes get lost/mangled when quantising looper; need a bit cleverer logic to ensure that a playable note is always created
 - Crash on trying to screenshot on ili9341
@@ -187,8 +194,6 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ### TODO/Future 
 
-- Quantise all melodic outputs to a chosen scale
- - make this a setting on the MidiMatrixMapper?
 - Write up controls/instructions/etc
 - Come up with a cooler name (maybe Nexus6 as that's what i've put on the pcb panel?)
 - Update docs to reflect all features
@@ -314,6 +319,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 
 ## Done
 
+- ~~Quantise all melodic outputs to a chosen scale~~
+ - ~~make this a setting on the MidiMatrixMapper?~~
 - ~~Port menu etc to use ili9340 screen + touchscreen -- **done**, needs testing~~
 - ~~Panic / all notes off action~~
 - ~~Add 'all notes off' on 'extra button' press in midi_matrix_mapper menu~~

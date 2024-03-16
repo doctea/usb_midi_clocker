@@ -126,11 +126,13 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
             DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }
 
+        bool already_initialised = false;
         FLASHMEM virtual LinkedList<FloatParameter*> *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
-            static bool already_initialised = false;
             if (already_initialised)
                 return this->parameters;
+
+            already_initialised = true;
 
             //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
             DeviceBehaviourUSBBase::initialise_parameters();
@@ -141,7 +143,8 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
 
             //Serial.println(F("\tAdding parameters..."));
             //parameters->clear();
-            // todo: read these from a file
+            // todo: read these from a configuration file
+            // todo: add the rest of the available parameters
             //this->add_parameters();
             parameters->add(new MIDICCParameter<>("Glide",         this,   (byte)5,    (byte)1));
             parameters->add(new MIDICCParameter<>("Distortion",    this,   (byte)12,   (byte)1));

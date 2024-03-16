@@ -15,8 +15,9 @@
 
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_craftsynth.h"
-
 #include "behaviours/behaviour_manager.h"
+
+#include "parameter_inputs/VirtualParameterInput.h"
 
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
@@ -28,13 +29,15 @@ void setup_cv_input() {
 
     parameter_manager->init();
 
+    Wire.begin();
+
     #ifdef ENABLE_CV_INPUT
         tft_print("...adding ADCPimoroni24v #1!\n");
-        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, 5.0));
+        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, &Wire, 5.0));
     #endif
     #ifdef ENABLE_CV_INPUT_2
         tft_print("...adding ADCPimoroni24v #2!\n");
-        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT_2, 5.0));
+        parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT_2, &Wire, 5.0));
     #endif
 
     parameter_manager->auto_init_devices();
@@ -75,6 +78,13 @@ void setup_parameters() {
         parameter_manager->addInput(vpi5);
         parameter_manager->addInput(vpi6);
     #endif
+
+    VirtualParameterInput *virtpi1 = new VirtualParameterInput((char*)"LFO sync", "LFOs", LFO_LOCKED);
+    VirtualParameterInput *virtpi2 = new VirtualParameterInput((char*)"LFO free", "LFOs", LFO_FREE);
+    VirtualParameterInput *virtpi3 = new VirtualParameterInput((char*)"Random",   "LFOs", RAND);
+    parameter_manager->addInput(virtpi1);
+    parameter_manager->addInput(virtpi2);
+    parameter_manager->addInput(virtpi3);
 
     // get the available target parameters
     // todo: dynamically pull them from other things that could have parameters available

@@ -38,6 +38,53 @@ namespace storage {
       return val;
   }
 
+  void log_crashreport() {
+    if (SD.mediaPresent()) {
+      File f = SD.open("crashreport.log", O_WRONLY | O_CREAT);
+      if (f) {
+        f.println("-----");
+        f.print(CrashReport);
+        f.println("-----");
+        f.close();
+      }
+    }
+  }
+
+  void dump_crashreport_log() {
+    File f = SD.open("crashreport.log", FILE_READ);
+    f.setTimeout(0);
+    if (f) {
+      while (String line = f.readStringUntil('\n')) {
+        f.println(line);
+        Serial.print(line);
+        Serial.print("\r\n");
+      }
+    } else {
+      Serial.println("dump_crashreport_log: crashreport.log not found");
+      messages_log_add("crashreport.log not found");
+    }
+  }
+
+  void clear_crashreport_log() {
+    if (!SD.mediaPresent()) {
+      messages_log_add("No media present");
+      return;
+    } else {
+      if (SD.remove("crashreport.log")) {
+        messages_log_add("Deleted crashreport.log");
+      } else {
+        messages_log_add("Failed to remove crashreport.log");
+      }
+    }
+  }
+
+  // force a crash, for testing CrashReport purposes
+  void force_crash() {
+    messages_log_add("Forcing crash!");
+    Serial_println("Forcing crash!");
+    *(volatile uint32_t *)0x30000000 = 0;
+  }
+
   const int chipSelect = BUILTIN_SDCARD;
 
   void make_project_folders(int project_number) {
@@ -73,7 +120,11 @@ namespace storage {
   }
 
   FLASHMEM void setup_storage() {
+    static bool storage_initialised = false;
+    if (storage_initialised) 
+      return;
     SD.begin(chipSelect);
+    storage_initialised = true;
 
     /*if (!SD.exists("sequences")) {
       Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));
@@ -87,15 +138,13 @@ namespace storage {
 
   bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      bool debug = false;
       #ifdef ENABLE_SD
-      //Serial.println("save_sequence not implemented on teensy");
-      //bool irqs_enabled = __irq_enabled();
-      //__disable_irq();
       File myFile;
 
       char filename[MAX_FILEPATH] = "";
       snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-      //Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
+      if (debug) Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
       if (SD.exists(filename)) {
         //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
         SD.remove(filename);
@@ -103,7 +152,7 @@ namespace storage {
       }
       myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
       if (!myFile) {    
-        //Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+        if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
         //if (irqs_enabled) __enable_irq();
         return false;
       }
@@ -128,21 +177,23 @@ namespace storage {
       }
       myFile.println(F("; behaviour extensions")); 
       LinkedList<String> behaviour_lines = LinkedList<String>();
-      //Serial.println("calling save_sequence_add_lines..");
+      if (debug) Serial.println("calling save_sequence_add_lines..");
       behaviour_manager->save_sequence_add_lines(&behaviour_lines);
-      //Serial.println("got behaviour_lines to save.."); Serial.flush();
+      if (debug) Serial.println("got behaviour_lines to save.."); Serial.flush();
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
         //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
-        //Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
+        if (debug) Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
         //Serial.flush();
         myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
       }
+      if (debug) Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size());
       myFile.println(F("; end sequence"));
       myFile.close();
       //if (irqs_enabled) __enable_irq();
       //Serial.println(F("Finished saving."));
 
       update_sequence_filename(String(filename));
+
       #endif
     }
     return true;
@@ -259,15 +310,6 @@ namespace storage {
       sequence_data_index++;
       return;
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      //Serial.printf(F("Processed line by behaviour_manager\n"), line.c_str());
-      /*String partial = line.remove(0,String("behaviour_option_").length());
-      // todo: something is off with my understanding of how remove works here
-      int split_point = partial.indexOf("=");
-      String key = partial.remove(split_point);
-      String value = line.remove(0,split_point+1);*/
-      /*String key = line.substring(0, line.indexOf('='));
-      String value = line.substring(line.indexOf("=")+1);
-      behaviour_manager->load_parse_key_value(key, value);*/
       return;
     }
     messages_log_add(String("Ignoring line '") + line + String("'"));

@@ -41,6 +41,9 @@
 
 #include "profiler.h"
 
+#include "menu_io.h"
+
+
 //DisplayTranslator *tft;
 #ifdef TFT_ST7789_T3_BIG
     DisplayTranslator_STeensy_Big *tft;
@@ -56,15 +59,15 @@ Menu *menu; // = Menu();
     //extern Encoder knob;
 #endif
 #ifdef PIN_BUTTON_A
-    Bounce pushButtonA = Bounce(PIN_BUTTON_A, 10); // 10ms debounce
+    Button pushButtonA = Button(); // 10ms debounce
     //extern Bounce pushButtonA;
 #endif
 #ifdef PIN_BUTTON_B
-    Bounce pushButtonB = Bounce(PIN_BUTTON_B, 10); // 10ms debounce
+    Button pushButtonB = Button(); // 10ms debounce
     //extern Bounce pushButtonB; 
 #endif
 #ifdef PIN_BUTTON_C
-    Bounce pushButtonC = Bounce(PIN_BUTTON_C, 10); // 10ms debounce
+    Button pushButtonC = Button(); // 10ms debounce
     //extern Bounce pushButtonC;
 #endif
 
@@ -90,7 +93,9 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 
 #ifdef ENABLE_SEQUENCER
     #include "mymenu/menu_gatedisplay.h"
+    #include "mymenu/menu_sequencer_display.h"
     SequencerStatus sequencer_status =      SequencerStatus("Pattern");
+    SequencerDisplay sequencer_display =    SequencerDisplay("Trigger Sequencer");
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER
@@ -123,11 +128,31 @@ MenuItem test_item_3 = MenuItem("test 3");*/
 //DisplayTranslator_STeensy_Big display_translator = DisplayTranslator_STeensy_Big();
 DisplayTranslator_Configured display_translator = DisplayTranslator_Configured();
 
+//#include "menuitems_numbers.h"
+//int8_t shuffle_data = 0;
+
 #ifndef GDB_DEBUG
 //FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
 #endif
-void setup_menu() {
+void setup_menu(bool button_high_state) {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
+
+    #ifdef PIN_BUTTON_A
+        pushButtonA.setPressedState(button_high_state);
+        pushButtonA.attach(PIN_BUTTON_A, INPUT_PULLUP);
+        pushButtonA.interval(10);
+    #endif
+    #ifdef PIN_BUTTON_B
+        pushButtonB.setPressedState(button_high_state);
+        pushButtonB.attach(PIN_BUTTON_B, INPUT_PULLUP);
+        pushButtonB.interval(10);
+    #endif
+    #ifdef PIN_BUTTON_C
+        pushButtonC.setPressedState(button_high_state);
+        pushButtonC.attach(PIN_BUTTON_C, INPUT_PULLUP);
+        pushButtonC.interval(10);
+    #endif
+
     tft = &display_translator; //DisplayTranslator_STeensy();
     #ifdef TFT_BODMER
         tft->init();
@@ -138,7 +163,7 @@ void setup_menu() {
     Serial_flush();
     Serial.println(F("Creating Menu object.."));
     Serial_flush();
-    menu = new Menu(tft);
+    menu = new Menu(tft, false);
     Serial.println(F("Created Menu object"));
     Serial_flush();
 
@@ -150,6 +175,13 @@ void setup_menu() {
     menu->add(&posbar);     // bpm and position indicator
 
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
+
+    // todo: support midi clock shuffle, when possible to do so..
+    //menu->add(new DirectNumberControl<int8_t>("Shuffle", &shuffle_data, 0, (int8_t)0, (int8_t)255));
+    /*menu->add(new LambdaToggleControl("Shuffle", 
+        [=](bool v) -> void { uClock.setShuffle(v); },   [=]() -> bool { return uClock.isShuffled(); }
+    ));
+    */
 
     menu->add(new SeparatorMenuItem("Project"));
 
@@ -164,7 +196,7 @@ void setup_menu() {
     );
 
     // add start/stop/continue bar
-    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport");
+    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport", false);
     project_startstop->add(new ActionItem("Start",    clock_start));
     project_startstop->add(new ActionItem("Stop",     clock_stop));
     project_startstop->add(new ActionItem("Continue", clock_continue));
@@ -237,11 +269,23 @@ void setup_menu() {
     #endif
     #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
         project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
-            "Beatstep",
+            #ifdef ENABLE_BEATSTEP_2
+                "Beatstep 1",
+            #else
+                "Beatstep",
+            #endif
             behaviour_beatstep,
             &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
             &DeviceBehaviour_Beatstep::is_auto_advance_pattern
         ));
+        #ifdef ENABLE_BEATSTEP_2
+        project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
+            "Beatstep 2",
+            behaviour_beatstep_2,
+            &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
+            &DeviceBehaviour_Beatstep::is_auto_advance_pattern
+        ));
+        #endif
     #endif
     menu->add(project_multi_autoadvance);
 
@@ -250,18 +294,24 @@ void setup_menu() {
         menu->add(project_fileviewer);
     #endif
 
+    // TODO: move this MIDI page setup into a dedicated function?
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
-    menu->add(new LambdaScaleMenuItemBar(
+    LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
         [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
         [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
         [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+    );
+    global_quantise_bar->add(new LambdaToggleControl("Quantise",
+        [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
+        [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
     ));
+    menu->add(global_quantise_bar);
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
     
     /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
@@ -274,6 +324,12 @@ void setup_menu() {
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
+        menu->add(&sequencer_display);
+
+        menu->add(new ActionConfirmItem("Clear sequencer pattern", sequencer_clear_pattern));
+        
+        //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
+        //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD
             sequence_fileviewer = new FileViewerMenuItem("Sequence");
@@ -307,11 +363,6 @@ void setup_menu() {
         average->readOnly = true;
         menu->add(average);
     #endif
-
-    // enable encoder and separate buttons
-    pinMode(PIN_BUTTON_A, INPUT_PULLUP);
-    pinMode(PIN_BUTTON_B, INPUT_PULLUP);
-    pinMode(PIN_BUTTON_C, INPUT_PULLUP);
 
     Serial.println(F("Exiting setup_menu"));
     Serial_flush();

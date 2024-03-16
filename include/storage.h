@@ -69,6 +69,11 @@ namespace storage {
   void load_sequence_parse_line(String line, savestate *output);
   FLASHMEM void setup_storage();
 
+  FLASHMEM void log_crashreport();
+  FLASHMEM void dump_crashreport_log();
+  FLASHMEM void clear_crashreport_log();
+  FLASHMEM void force_crash();
+
   void make_project_folders(int project_number);
 
   bool copy_file(char *src, char *dst);

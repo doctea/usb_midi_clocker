@@ -1,5 +1,4 @@
 #pragma once
-//#define USE_UCLOCK  // experimental: crashes a lot // actually not even implemented at all anymore
 
 ///// DEBUG options
 /////////////////// now moved to BootConfig.h  #define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
@@ -12,12 +11,12 @@
 
 //// CV input options
 #ifdef PCB
-    #define ENABLE_CV_INPUT 0x48                // specify the i2c address of the input board
-    #define ENABLE_CV_INPUT_2 0x49
+    #define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
+    #define ENABLE_CV_INPUT_2   0x49
 #else
     #define ENABLE_CV_INPUT 0x49
 #endif
-#define TIME_BETWEEN_CV_INPUT_UPDATES 5 //25    
+#define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 #ifdef ENABLE_CV_INPUT
     #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
@@ -31,9 +30,6 @@
         #define LOAD_CALIBRATION_ON_BOOT            // whether to attempt to load calibration from SD card on boot
     #endif
 #endif
-
-// enable a USB typing keyboard as a control method (see include/input_keyboard.h)
-#define ENABLE_TYPING_KEYBOARD
 
 // choose which MIDIDevice object from the USBHost_t36 library to use; seems to work completely fine using just the plain MIDIDevice, and saves a ton of flash memory too
 //#define use_MIDIDevice_BigBuffer    MIDIDevice_BiggerBuffer
@@ -83,13 +79,19 @@
     #endif
 #endif
 
-#define ENABLE_USBSERIAL    // enable USB devices that present as serial interfaces
-#ifdef ENABLE_USBSERIAL
-    #define ENABLE_OPENTHEREMIN
-#endif
-
 #define ENABLE_USB          // USB host behaviours
 #define ENABLE_CV_OUTPUT    // clock and sequencer outputs
+
+#ifdef ENABLE_USB
+    // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
+    #define ENABLE_TYPING_KEYBOARD
+
+    // enable USB devices that present as serial interfaces but support MIDI
+    #define ENABLE_USBSERIAL    
+    #ifdef ENABLE_USBSERIAL
+        #define ENABLE_OPENTHEREMIN
+    #endif
+#endif
 
 // enable MIDI looping for MPK49
 #define ENABLE_LOOPER
@@ -100,7 +102,7 @@
 
 // enable Neutron behaviour
 //#define ENABLE_NEUTRON    // now done in ConfigMidi.h
-#define DEFAULT_NEUTRON_OCTAVE 3    // set to 1 for 'disabled'  // todo: confirm this, surely i meant 'set to -1 for disabled'?
+#define DEFAULT_NEUTRON_OCTAVE 3    // set to -1 for 'disabled'
 
 //#define ENABLE_DPT_LOOPER
 #ifdef ENABLE_DPT_LOOPER
@@ -126,6 +128,7 @@
     #define ENABLE_APCMINI_DISPLAY
 
     #define ENABLE_BEATSTEP
+    #define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     //#define ENABLE_BAMBLE
     //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
@@ -135,6 +138,7 @@
     //#define ENABLE_SUBCLOCKER
     //#define ENABLE_SUBCLOCKER_DEDICATED
     #define ENABLE_CRAFTSYNTH_USB
+    #define ENABLE_SKULPTSYNTH_USB
     #define ENABLE_CHOCOLATEFEET_USB
     
     #define ENABLE_MICROLIDIAN
