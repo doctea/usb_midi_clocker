@@ -50,7 +50,9 @@
             [=]() -> uint32_t { return this->get_divisor(); },
             nullptr, // change callback on_subclocker_divisor_changed
             1,  //min
-            48  //max
+            48,  //max
+            false,
+            false
         );
         divisor_control->go_back_on_select = true;
 

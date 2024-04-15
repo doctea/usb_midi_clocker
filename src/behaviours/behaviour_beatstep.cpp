@@ -62,7 +62,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
             //&DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength, 
             [=](int8_t length) -> void { this->setPatternLength(length); },
             [=]() -> int8_t { return this->getPatternLength(); },
-            nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM
+            nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM, false, false
         ));
 
         LambdaSelectorControl<int8_t> *step_size = new LambdaSelectorControl<int8_t>(
@@ -94,8 +94,10 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
             [=](int8_t length) -> void { this->setSwing(length); },
             [=]() -> int8_t { return this->getSwing(); },
             nullptr,
-            0x32, 
-            0x4b
+            (int8_t)0x32, 
+            (int8_t)0x4b,
+            false,
+            false
         );
         swing->int_unit = '%';
         note_options->add(swing);
@@ -105,8 +107,10 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
             [=](int8_t length) -> void { this->setGate(length); },
             [=]() -> int8_t { return this->getGate(); },
             nullptr,
-            0x32, 
-            0x63
+            (int8_t)0x32, 
+            (int8_t)0x63,
+            false,
+            false
         );
         gate->int_unit = '%';
         note_options->add(gate);
