@@ -34,8 +34,8 @@ extern bool debug_flag;
         }*/
         this->pitch_input = input;
 
-        if (is_valid_note(this->current_note)) {
-            trigger_off_for_pitch_because_changed(this->current_note);
+        if (is_valid_note(this->chord_player.current_note)) {
+            chord_player.trigger_off_for_pitch_because_changed(this->chord_player.current_note);
         }
         //Serial.println(F("finished in set_selected_paramter_input"));
         //else
@@ -81,7 +81,7 @@ extern bool debug_flag;
                 "1v/oct Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                &DeviceBehaviour_CVInput::get_selected_velocity_input,
+                &DeviceBehaviour_CVInput::get_selected_parameter_input,
                 parameter_manager->get_available_pitch_inputs(),
                 this->pitch_input
         );
@@ -94,7 +94,7 @@ extern bool debug_flag;
                 &DeviceBehaviour_CVInput::set_selected_velocity_input,
                 &DeviceBehaviour_CVInput::get_selected_velocity_input,
                 parameter_manager->available_inputs,
-                this->pitch_input
+                this->velocity_input
         );
         bar->add(velocity_parameter_selector);
         menuitems->add(bar);
@@ -107,9 +107,9 @@ extern bool debug_flag;
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() setting up HarmonyStatus")); Serial_flush();
         HarmonyStatus *harmony = new HarmonyStatus(
             "CV->MIDI pitch", 
-            &this->last_note, 
-            &this->current_note,
-            &this->current_raw_note,
+            &this->chord_player.last_note, 
+            &this->chord_player.current_note,
+            &this->chord_player.current_raw_note,
             "Raw"
         );
         menuitems->add(harmony);
@@ -118,8 +118,8 @@ extern bool debug_flag;
         //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         LambdaSelectorControl<int32_t> *length_ticks_control = new LambdaSelectorControl<int32_t>(
                 "Note length",
-                [=](int32_t v) -> void { this->set_note_length(v); },
-                [=]() -> int32_t { return this->get_note_length(); },
+                [=](int32_t v) -> void { this->chord_player.set_note_length(v); },
+                [=]() -> int32_t { return this->chord_player.get_note_length(); },
                 nullptr,
                 true
         );
@@ -139,8 +139,8 @@ extern bool debug_flag;
         //Serial.println(F("about to create length_ticks_control ObjectSelectorControl..")); Serial_flush();
         LambdaSelectorControl<int32_t> *trigger_ticks_control = new LambdaSelectorControl<int32_t>(
                 "Trigger each",
-                [=](int32_t v) -> void { this->set_trigger_on_ticks(v); },
-                [=]() -> int32_t { return this->get_trigger_on_ticks(); },
+                [=](int32_t v) -> void { this->chord_player.set_trigger_on_ticks(v); },
+                [=]() -> int32_t { return this->chord_player.get_trigger_on_ticks(); },
                 nullptr,
                 true
         );
@@ -159,8 +159,8 @@ extern bool debug_flag;
         LambdaSelectorControl<int32_t> *trigger_delay_ticks_control 
             = new LambdaSelectorControl<int32_t>(
                 "Delay",
-                [=](int32_t v) -> void { this->set_trigger_delay_ticks(v); },
-                [=]() -> int32_t { return this->get_trigger_delay_ticks(); },
+                [=](int32_t v) -> void { this->chord_player.set_trigger_delay_ticks(v); },
+                [=]() -> int32_t { return this->chord_player.get_trigger_delay_ticks(); },
                 nullptr,
                 true
         );
@@ -179,7 +179,7 @@ extern bool debug_flag;
         menuitems->add(bar);
 
         #ifdef CVINPUT_CONFIGURABLE_CHANNEL
-            menuitems->add(new LambdaNumberControl<byte>("Channel", [=](byte v) -> void { this->set_channel(v); }, [=]() -> byte { return this->get_channel(); }));
+            menuitems->add(new LambdaNumberControl<byte>("Channel", [=](byte v) -> void { this->chord_player.set_channel(v); }, [=]() -> byte { return this->chord_player.get_channel(); }));
         #endif
 
         //menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
@@ -193,27 +193,27 @@ extern bool debug_flag;
         // TODO: allow all pitched behaviours to use a 'global scale' setting (-1?)
         menuitems->add(new LambdaScaleMenuItemBar(
             "Scale / Key", 
-            [=](SCALE scale) -> void { this->set_scale(scale); }, 
-            [=]() -> SCALE { return this->get_scale(); },
-            [=](int8_t scale_root) -> void { this->set_scale_root(scale_root); },
-            [=]() -> int8_t { return this->get_scale_root(); },
+            [=](SCALE scale) -> void { this->chord_player.set_scale(scale); }, 
+            [=]() -> SCALE { return this->chord_player.get_scale(); },
+            [=](int8_t scale_root) -> void { this->chord_player.set_scale_root(scale_root); },
+            [=]() -> int8_t { return this->chord_player.get_scale_root(); },
             true
         ));
 
         bar = new SubMenuItemBar("Quantise / chords");
         bar->add(new LambdaToggleControl("Quantise",    
-            [=](bool v) -> void { this->set_quantise(v); },
-            [=]() -> bool { return this->is_quantise(); }
+            [=](bool v) -> void { this->chord_player.set_quantise(v); },
+            [=]() -> bool { return this->chord_player.is_quantise(); }
         ));
         bar->add(new LambdaToggleControl("Play chords", 
-            [=](bool v) -> void { this->set_play_chords(v); },
-            [=]() -> bool { return this->is_play_chords(); }
+            [=](bool v) -> void { this->chord_player.set_play_chords(v); },
+            [=]() -> bool { return this->chord_player.is_play_chords(); }
         ));
 
         LambdaSelectorControl<CHORD::Type> *selected_chord_control = new LambdaSelectorControl<CHORD::Type>(
             "Chord", 
-            [=](CHORD::Type chord_type) -> void { this->set_selected_chord(chord_type); }, 
-            [=]() -> CHORD::Type { return this->get_selected_chord(); },
+            [=](CHORD::Type chord_type) -> void { this->chord_player.set_selected_chord(chord_type); }, 
+            [=]() -> CHORD::Type { return this->chord_player.get_selected_chord(); },
             nullptr, true
         );
         for (size_t i = 0 ; i < NUMBER_CHORDS ; i++) {
@@ -222,16 +222,16 @@ extern bool debug_flag;
 
         bar->add(new LambdaNumberControl<int8_t>(
             "Inversion", 
-            [=](int8_t v) -> void { this->set_inversion(v); }, 
-            [=]() -> int8_t { return this->get_inversion(); },
+            [=](int8_t v) -> void { this->chord_player.set_inversion(v); }, 
+            [=]() -> int8_t { return this->chord_player.get_inversion(); },
             nullptr, 0, 4, true
         ));
         bar->add(selected_chord_control);
 
         menuitems->add(bar);
 
-        menuitems->add(new ChordMenuItem("Current chord",   &this->current_chord_data));
-        menuitems->add(new ChordMenuItem("Last chord",      &this->last_chord_data));
+        menuitems->add(new ChordMenuItem("Current chord",   &this->chord_player.current_chord_data));
+        menuitems->add(new ChordMenuItem("Last chord",      &this->chord_player.last_chord_data));
 
         menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
