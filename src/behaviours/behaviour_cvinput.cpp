@@ -81,7 +81,7 @@ extern bool debug_flag;
                 "1v/oct Input",
                 this,
                 &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                &DeviceBehaviour_CVInput::get_selected_velocity_input,
+                &DeviceBehaviour_CVInput::get_selected_parameter_input,
                 parameter_manager->get_available_pitch_inputs(),
                 this->pitch_input
         );
@@ -94,7 +94,7 @@ extern bool debug_flag;
                 &DeviceBehaviour_CVInput::set_selected_velocity_input,
                 &DeviceBehaviour_CVInput::get_selected_velocity_input,
                 parameter_manager->available_inputs,
-                this->pitch_input
+                this->velocity_input
         );
         bar->add(velocity_parameter_selector);
         menuitems->add(bar);
