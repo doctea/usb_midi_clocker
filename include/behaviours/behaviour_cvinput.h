@@ -65,8 +65,8 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
         ChordPlayer chord_player = ChordPlayer(
-            [=](int8_t note, int8_t velocity, int8_t channel) -> void { this->receive_note_on(channel, note, velocity); },
-            [=](int8_t note, int8_t velocity, int8_t channel) -> void { this->receive_note_off(channel, note, velocity); }
+            [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_on(channel, note, velocity); },
+            [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_off(channel, note, velocity); }
         );
 
         DeviceBehaviour_CVInput(const char *label = nullptr) : DeviceBehaviourUltimateBase () {
@@ -116,6 +116,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             if (this->pitch_input!=nullptr && this->pitch_input->supports_pitch()) {
                 VoltageParameterInput *voltage_source_input = (VoltageParameterInput*)this->pitch_input;
                 new_note = voltage_source_input->get_voltage_pitch();
+                if (this->debug) Serial.printf("setting pitch to %i (%2.2f)\n", new_note, this->pitch_input->get_normal_value_unipolar());
             }
             int velocity = MIDI_MAX_VELOCITY;
             if (this->velocity_input!=nullptr) {
