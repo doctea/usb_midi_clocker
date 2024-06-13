@@ -93,8 +93,9 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 #ifdef ENABLE_SEQUENCER
     #include "mymenu/menu_gatedisplay.h"
     #include "mymenu/menu_sequencer_display.h"
-    SequencerStatus sequencer_status =      SequencerStatus("Pattern");
-    SequencerDisplay sequencer_display =    SequencerDisplay("Trigger Sequencer");
+    SequencerStatus sequencer_status = SequencerStatus("Pattern");
+    TriggerSequencerDisplay trigger_sequencer_display = TriggerSequencerDisplay("Trigger Sequencer");
+    ClockSequencerDisplay   clock_sequencer_display   = ClockSequencerDisplay("Clock Sequencer");
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER
@@ -323,7 +324,8 @@ void setup_menu(bool button_high_state) {
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
-        menu->add(&sequencer_display);
+        menu->add(&clock_sequencer_display);
+        menu->add(&trigger_sequencer_display);
 
         menu->add(new ActionConfirmItem("Clear sequencer pattern", sequencer_clear_pattern));
         
