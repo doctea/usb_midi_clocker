@@ -62,9 +62,13 @@ class ClockSequencerDisplay : public MenuItem {
             // draw selection box
             if (opened) {
                 int y = y_after_header + (selected_row * cell_height);
-                //if (opened_level == ROW) {
+                if (opened_level==DELAY) {
+                    // draw a box around the cell indicating the delay amount
+                    tft->drawRect(pos.x + ((get_clock_delay(selected_row)) * cell_width) -1, y-1, cell_width, cell_height, C_WHITE);
+                } else {
                     // draw a box around the entire row to show what is selected
                     tft->drawRect(pos.x, y-1, tft->width()-1, cell_height, C_WHITE);
+                }
                 //} else if (opened_level == MULTIPLIER || opened_level == CELL) {
                 //    // draw a box around selected cell only
                 //    tft->drawRect(pos.x + (selected_column*cell_width), y, cell_width, cell_height-1, C_WHITE);
