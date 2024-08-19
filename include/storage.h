@@ -7,6 +7,7 @@
 
 namespace storage {
 
+  #define FILEPATH_PROJECT_FOLDER_FORMAT    "project%i"
   #define FILEPATH_SEQUENCE_FORMAT          "project%i/sequences/sequence%i.txt"
   #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
   #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"

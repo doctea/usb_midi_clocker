@@ -142,6 +142,10 @@ namespace storage {
       #ifdef ENABLE_SD
       File myFile;
 
+      // check + create project folders, if they don't already exist
+      make_project_folders(project_number);
+
+      // check + remove sequence file if it already exists
       char filename[MAX_FILEPATH] = "";
       snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
       if (debug) Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
@@ -150,6 +154,7 @@ namespace storage {
         SD.remove(filename);
         //Serial.println("deleted"); Serial.flush();
       }
+
       myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
       if (!myFile) {    
         if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
