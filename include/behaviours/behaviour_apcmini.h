@@ -23,6 +23,9 @@
 //extern MIDITrack mpk49_loop_track;
 //class MIDITrack;
 
+#include "behaviours/behaviour_gate_clocks.h"
+#include "behaviours/behaviour_gate_sequencer.h"
+
 #define TIME_BETWEEN_APC_REFRESH_MS 50
 
 class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
@@ -156,7 +159,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 } else if (inNumber==APCMINI_BUTTON_LEFT) {
                     // shift clock offset left
                     redraw_immediately = true;
-                    decrease_clock_delay(clock_selected);
+                    behaviour_clock_gates->decrease_clock_delay(clock_selected);
                     //redraw_immediately = true;
                     #ifdef ENABLE_APCMINI_DISPLAY
                         redraw_clock_row(clock_selected);
@@ -164,7 +167,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 } else if (inNumber==APCMINI_BUTTON_RIGHT) {
                     // shift clock offset right
                     redraw_immediately = true;
-                    increase_clock_delay(clock_selected);
+                    behaviour_clock_gates->increase_clock_delay(clock_selected);
                     #ifdef ENABLE_APCMINI_DISPLAY
                         redraw_clock_row(clock_selected);
                     #endif
@@ -176,10 +179,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     clock_selected = clock_number;
                     
                     if (apcmini_shift_held) {
-                        increase_clock_multiplier(clock_number);
+                        behaviour_clock_gates->increase_clock_multiplier(clock_number);
                         //clock_multiplier[clock_number] *= 2;   // double the selected clock multiplier -> more pulses
                     } else {
-                        decrease_clock_multiplier(clock_number);
+                        behaviour_clock_gates->decrease_clock_multiplier(clock_number);
                         //clock_multiplier[clock_number] /= 2;   // halve the selected clock multiplier -> fewer pulses
                     }
                     
@@ -220,7 +223,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     Serial.print(F(" and column "));*/
                     byte col = inNumber - ((3-row)*APCMINI_DISPLAY_WIDTH);
                     //Serial.println(col);
-                    sequencer_press(row, col, apcmini_shift_held);
+                    behaviour_sequencer_gates->sequencer_press(row, col, apcmini_shift_held);
                     #ifdef ENABLE_APCMINI_DISPLAY
                         redraw_sequence_row(row);
                     #endif

@@ -51,6 +51,15 @@ void behaviour_manager_kill_all_current_notes () {
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
+    #ifdef ENABLE_CLOCKS
+        behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);
+        behaviour_manager->registerBehaviour(behaviour_clock_gates);
+    #endif
+    #ifdef ENABLE_SEQUENCER
+        behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
+        behaviour_manager->registerBehaviour(behaviour_sequencer_gates);
+    #endif
+
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();
         #ifdef ENABLE_LOOPER

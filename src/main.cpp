@@ -183,11 +183,13 @@ void setup() {
     Serial_println(F("...finished behaviour_manager#make_menu_items...")); Serial_flush();
   #endif
 
+  /*
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
     init_sequence();
     Debug_printf(F("after init_sequence(), free RAM is %u\n"), freeRam());
   #endif
+  */
 
   #ifdef USE_UCLOCK
     tft_print((char*)"Initialising uClock..\n");
@@ -515,6 +517,8 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
+  gate_manager->update(); 
+
   #ifdef ENABLE_LOOPER
     midi_loop_track.process_tick(ticks);
   #endif
@@ -538,7 +542,7 @@ void do_tick(uint32_t in_ticks) {
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
-  #ifdef ENABLE_CV_OUTPUT
+  /*#ifdef ENABLE_CV_OUTPUT
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
     {
@@ -548,7 +552,7 @@ void do_tick(uint32_t in_ticks) {
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       gate_manager->update(); 
     }
-  #endif
+  #endif*/
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
   behaviour_manager->do_ticks(in_ticks);

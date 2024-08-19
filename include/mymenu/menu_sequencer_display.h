@@ -12,6 +12,9 @@
 #include "project.h"
 extern Menu *menu;
 
+#include "behaviours/behaviour_gate_clocks.h"
+#include "behaviours/behaviour_gate_sequencer.h"
+
 // display&edit apcmini sequence+clocks
 // todo: tidy this up a bit
 class ClockSequencerDisplay : public MenuItem {
@@ -64,7 +67,7 @@ class ClockSequencerDisplay : public MenuItem {
                 int y = y_after_header + (selected_row * cell_height);
                 if (opened_level==DELAY) {
                     // draw a box around the cell indicating the delay amount
-                    tft->drawRect(pos.x + ((get_clock_delay(selected_row)) * cell_width) -1, y-1, cell_width, cell_height, C_WHITE);
+                    tft->drawRect(pos.x + ((behaviour_clock_gates->get_clock_delay(selected_row)) * cell_width) -1, y-1, cell_width, cell_height, C_WHITE);
                 } else {
                     // draw a box around the entire row to show what is selected
                     tft->drawRect(pos.x, y-1, tft->width()-1, cell_height, C_WHITE);
@@ -111,9 +114,9 @@ class ClockSequencerDisplay : public MenuItem {
         /*bool button_right() override { }*/
         virtual bool knob_left() override {
             if (opened_level==MULTIPLIER) {
-                 decrease_clock_multiplier(selected_row);
+                behaviour_clock_gates->decrease_clock_multiplier(selected_row);
             } else if (opened_level==DELAY) {
-                 decrease_clock_delay(selected_row);
+                behaviour_clock_gates->decrease_clock_delay(selected_row);
             } else if (opened_level==ROW) {
                 selected_row--;
                 if (selected_row < 0)
@@ -125,9 +128,9 @@ class ClockSequencerDisplay : public MenuItem {
         }
         virtual bool knob_right() override {
             if (opened_level==MULTIPLIER) {
-                increase_clock_multiplier(selected_row);
+                behaviour_clock_gates->increase_clock_multiplier(selected_row);
             } else if (opened_level==DELAY) {
-                increase_clock_delay(selected_row);
+                behaviour_clock_gates->increase_clock_delay(selected_row);
             } else if (opened_level==ROW) {
                 selected_row++;
                 if (selected_row < 0)
@@ -234,7 +237,7 @@ class TriggerSequencerDisplay : public MenuItem {
         /*bool button_right() override { }*/
         virtual bool knob_left() override {
             if (opened_level==CELL) {
-                sequencer_press(selected_row, selected_column, true);
+                behaviour_sequencer_gates->sequencer_press(selected_row, selected_column, true);
             } else if (opened_level==ROW) {
                 selected_row--;
                 if (selected_row < 0)
@@ -252,7 +255,7 @@ class TriggerSequencerDisplay : public MenuItem {
         }
         virtual bool knob_right() override {
             if (opened_level==CELL) {
-                sequencer_press(selected_row, selected_column, false);
+                behaviour_sequencer_gates->sequencer_press(selected_row, selected_column, false);
             } else if (opened_level==ROW) {
                 selected_row++;
                 if (selected_row < 0)

@@ -70,7 +70,7 @@ void apcmini_update_position_display(int ticks) {
     #endif
     //Serial.printf("On %i\n", beat_counter);
     apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN);
-  } else if (is_bpm_on_beat(ticks,duration)) {
+  } else if (is_bpm_on_beat(ticks,behaviour_clock_gates->duration)) {
     //Serial.printf("Off %i (ticks %i with duration %i)\n", beat_counter, ticks, duration);
     apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF);
     //apcdisplay_sendNoteOff(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
@@ -102,8 +102,8 @@ int get_sequencer_cell_apc_colour(byte row, byte column) {
   if (row < NUM_CLOCKS) {
     // clock
     int io = (column - current_state.clock_delay[row]) % APCMINI_DISPLAY_WIDTH;
-    float cm = get_clock_multiplier(row);
-    if (is_clock_off(row)) {
+    float cm = behaviour_clock_gates->get_clock_multiplier(row);
+    if (behaviour_clock_gates->is_clock_off(row)) {
       return APCMINI_OFF;
     } else if (cm<=1.0 || io%(byte)cm==0) {
       return get_colour_for_clock_multiplier(cm);
@@ -112,7 +112,7 @@ int get_sequencer_cell_apc_colour(byte row, byte column) {
     }
   } else {
     // sequencer
-    int v = read_sequence(row-NUM_CLOCKS, column);
+    int v =behaviour_sequencer_gates-> read_sequence(row-NUM_CLOCKS, column);
     return v ? get_colour(v-1) : APCMINI_OFF;
   }
 }

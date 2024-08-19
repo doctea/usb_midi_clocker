@@ -190,16 +190,16 @@
         //#define PIN_CLOCK_RESET 40
     #elif defined(PCB)
         // PCB + expander uses SPI MCP23s17 for output, don't need to define pins because that's all handled by the MCP23s17
-        #define NUM_CLOCKS 4                    // number of custom clocks (not including resets)
-        #define PIN_CLOCK_RESET_PHRASE      4   // 5th output used as phrase reset
+        #define NUM_CLOCKS 8                    // number of custom clocks (not including resets)
+        /*#define PIN_CLOCK_RESET_PHRASE      4   // 5th output used as phrase reset
         #define PIN_CLOCK_RESET_HALF_PHRASE 5   // 6th output used as 2-bar reset
         #define PIN_CLOCK_RESET_BAR         6   // 7th output used as 2-bar reset
-        #define PIN_CLOCK_RESET_BEAT        7   // 8th output used as locked every beat output
+        #define PIN_CLOCK_RESET_BEAT        7   // 8th output used as locked every beat output*/
     #endif
 #endif
 
 #ifdef ENABLE_SEQUENCER
-    #define NUM_SEQUENCES 4
+    #define NUM_SEQUENCES 8
     #define NUM_STEPS 8
     #ifdef PROTOTYPE
         #ifdef SEPARATE_SEQUENCER_AND_CLOCKS   
@@ -211,7 +211,7 @@
         #endif
     #elif defined(PCB)
         // shouldn't need to define pins as should all be handled by teh MCP23s17
-        #define ENABLE_MORE_CLOCKS // output a couple of extra clocks (16th and 8th notes) on the extra sequencer pins
+        //#define ENABLE_MORE_CLOCKS // output a couple of extra clocks (16th and 8th notes) on the extra sequencer pins
     #endif
 #endif
 
