@@ -1,5 +1,3 @@
-#ifndef MIDI_MAPPER_MATRIX_MANAGER__INCLUDED
-#define MIDI_MAPPER_MATRIX_MANAGER__INCLUDED
 
 #include "Config.h"
 
@@ -279,5 +277,3 @@ void setup_midi_mapper_matrix_manager() {
     //Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
     //while(1);
 }
-
-#endif
