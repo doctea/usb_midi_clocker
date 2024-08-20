@@ -2,7 +2,7 @@
 #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
 
 // enable workaround to prevent some LED updates being somehow missed
-// this only started happening recently (i believe in the month before 2024-12-01)
+// this only started happening recently (i believe in the month before 2023-12-01)
 // and i hope that it can be disabled at some point in the future!
 #define ENABLE_APCMINI_PARTIAL_UPDATE_WORKAROUND
 
@@ -30,7 +30,6 @@ void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool forc
   if (force || value != apc_note_last_sent[pitch]) {
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
 
-    //if (!force) 
     apc_note_last_sent[pitch] = value;
   }
 }
