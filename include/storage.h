@@ -32,7 +32,7 @@ namespace storage {
     uint8_t size_clocks    = NUM_CLOCKS;
     uint8_t size_sequences = NUM_SEQUENCES;
     uint8_t size_steps     = NUM_STEPS;
-    uint8_t clock_multiplier[NUM_CLOCKS] = { 5, 4, 3, 2, 
+    /*uint8_t clock_multiplier[NUM_CLOCKS] = { 5, 4, 3, 2, 
       #if NUM_CLOCKS>4
       1,
       #endif
@@ -45,25 +45,28 @@ namespace storage {
       #if NUM_CLOCKS>7
       7,
       #endif
+    };*/
+    uint8_t clock_multiplier[NUM_CLOCKS] = {
+      7, 6, 5, 4, 3, 2, 1, 0
     };
     uint8_t sequence_data[NUM_SEQUENCES][NUM_STEPS];
     uint8_t clock_delay[NUM_CLOCKS] = { 0, 0, 0, 0,
       #if NUM_CLOCKS>4
-        1,
+        0,
       #endif
       #if NUM_CLOCKS>5
-        3,
+        0,
       #endif
       #if NUM_CLOCKS>6
-        5,
+        0,
       #endif
       #if NUM_CLOCKS>7
-        7
+        0
       #endif
     };
   } savestate;
 
-  bool save_sequence(int project_number, uint8_t preset_number, savestate *input);
+  bool save_pattern(int project_number, uint8_t preset_number, savestate *input);
   bool load_sequence(int project_number, uint8_t preset_number, savestate *input);
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/

@@ -161,13 +161,13 @@ class Project {
             return load_sequence(selected_sequence_number);
         }
         bool save_selected_sequence() {
-            return save_sequence(selected_sequence_number);
+            return save_pattern(selected_sequence_number);
         }
         bool load_sequence() {
             return load_sequence(selected_sequence_number);
         }
-        bool save_sequence() {
-            return save_sequence(selected_sequence_number);
+        bool save_pattern() {
+            return save_pattern(selected_sequence_number);
         }
         bool load_specific_sequence(int selected_sequence_number) {
             return this->load_sequence(selected_sequence_number);
@@ -181,9 +181,9 @@ class Project {
             Serial.println(F("returning\n"));  Serial_flush();
             return result;
         }
-        bool save_sequence(int selected_sequence_number) {
+        bool save_pattern(int selected_sequence_number) {
             Serial.printf(F("save for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
-            bool result = storage::save_sequence(current_project_number, selected_sequence_number, &storage::current_state);
+            bool result = storage::save_pattern(current_project_number, selected_sequence_number, &storage::current_state);
             if (result) {
                 sequence_slot_has_file[selected_sequence_number] = true;
                 loaded_sequence_number = selected_sequence_number;
@@ -256,7 +256,7 @@ class Project {
             }
             bool save_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("save for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
-                //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
+                //bool result = storage::save_pattern(selected_loop_number, &storage::current_state);
                 bool result = track->save_loop(current_project_number, selected_loop_number);
                 if (result) {
                     if (track->count_events()>0)

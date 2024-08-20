@@ -19,6 +19,8 @@
 
 #include "behaviours/behaviour_apcmini.h"
 
+apc_gate_page_t apc_gate_page = CLOCKS;
+
 int8_t apc_note_last_sent[MIDI_MAX_NOTE+1] = {};
 
 // cached send note on
@@ -136,10 +138,19 @@ int16_t get_565_colour_for_apc_note(int colour) {
 void redraw_clock_row(byte clock_number, bool force) {
     if (behaviour_apcmini->device==nullptr) return;
 
-    int start_row = 64-((clock_number+1)*APCMINI_DISPLAY_WIDTH);
+    int start_row = (NUM_CLOCKS*APCMINI_DISPLAY_WIDTH)-((clock_number+1)*APCMINI_DISPLAY_WIDTH);
     for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
       //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
       apcdisplay_sendNoteOn(start_row+x, get_sequencer_cell_apc_colour(clock_number, x));
+    }
+    // draw the selector
+    
+    if (clock_number==behaviour_apcmini->clock_selected) {
+      Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
+      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_GREEN);
+    } else {
+      Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
+      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_OFF);
     }
 }
 
@@ -155,7 +166,7 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected, bool fo
 void redraw_sequence_row(byte sequence_number, bool force) {
   if (behaviour_apcmini->device==nullptr) return;
 
-  int start_row = 32-((sequence_number+1)*APCMINI_DISPLAY_WIDTH);
+  int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((sequence_number+1)*APCMINI_DISPLAY_WIDTH);
   for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
     //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
     apcdisplay_sendNoteOn(start_row+x, get_sequencer_cell_apc_colour(NUM_CLOCKS+sequence_number,x));
@@ -168,25 +179,38 @@ void redraw_sequence_row(byte sequence_number, bool force) {
     if (behaviour_apcmini->device==nullptr) return;
     
     Serial_println(F("Clearing APC display..")); Serial_flush();
-    for (int i = 0 ; i < 4 ; i++) {
-      redraw_clock_row(i,true);
-      redraw_sequence_row(i,true);
-    }
-    for (int y = 0 ; y < APCMINI_NUM_ROWS ; y++) {
+
+    /*for (int y = 0 ; y < APCMINI_NUM_ROWS ; y++) {
       for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
           //apcdisplay_initialise_last_sent();
           apcdisplay_sendNoteOn (x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
           //apcdisplay_sendNoteOff(x+(y*APCMINI_DISPLAY_WIDTH), APCMINI_OFF, 1, true);
       }
-    }
+    }*/
+
+    if (get_apc_gate_page()==CLOCKS)
+      for (int i = 0 ; i < NUM_CLOCKS ; i++)
+        redraw_clock_row(i,true);
+
+    if (get_apc_gate_page()==SEQUENCES) 
+      for (int i = 0 ; i < NUM_SEQUENCES ; i++)
+        redraw_sequence_row(i,true);
+
+    // clear the beat position indicator
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
       apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, true);
     }
     // clear the 'selected clock row' indicator lights
+    // todo: can replace this with a loop around 0 -> APCMINI_BUTTON_CLIP_STOP+NUM_CLOCKS
     apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, true);
     apcdisplay_sendNoteOn(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, true);
     apcdisplay_sendNoteOn(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, true);
     apcdisplay_sendNoteOn(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_SELECT, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_STOP_ALL_CLIPS, APCMINI_OFF, 1, true);
+
     //delay(1000);
     apcdisplay_initialise_last_sent();
     Serial_println(F("Leaving APC display")); Serial_flush();
@@ -201,8 +225,8 @@ void redraw_sequence_row(byte sequence_number, bool force) {
       // don't redraw all of the rows in the same call, to avoid weird problem with some messages apparently not being received
       // TODO: make this support more than 4 clocks/sequencers (ie not rely on NUM_CLOCKS like it does)
       static int row_to_draw = 0;
-      redraw_clock_row(row_to_draw);
-      redraw_sequence_row(row_to_draw);
+      if (get_apc_gate_page()==CLOCKS)         redraw_clock_row(row_to_draw);
+      else if (get_apc_gate_page()==SEQUENCES) redraw_sequence_row(row_to_draw);
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;
@@ -210,14 +234,18 @@ void redraw_sequence_row(byte sequence_number, bool force) {
       }
     #else
       #ifdef ENABLE_CLOCKS
-        for (int c = 0 ; c < NUM_CLOCKS ; c++) {
-          //byte start_row = (8-NUM_CLOCKS) * 8;
-          redraw_clock_row(c);
+        if (get_apc_gate_page()==CLOCKS) {
+          for (int c = 0 ; c < NUM_CLOCKS ; c++) {
+            //byte start_row = (8-NUM_CLOCKS) * 8;
+            redraw_clock_row(c);
+          }
         }
       #endif
       #ifdef ENABLE_SEQUENCER
-        for (int c = 0 ; c < NUM_SEQUENCES ; c++) {
-          redraw_sequence_row(c);
+        if (get_apc_gate_page()==SEQUENCES) {
+          for (int c = 0 ; c < NUM_SEQUENCES ; c++) {
+            redraw_sequence_row(c);
+          }
         }
       #endif
       behaviour_apcmini->last_updated_display = millis();
@@ -225,4 +253,13 @@ void redraw_sequence_row(byte sequence_number, bool force) {
     #endif
   }
 #endif
+
+void set_apc_gate_page(apc_gate_page_t page) {
+  Serial.printf("Switched to page %i\n", page);
+  apc_gate_page = page;
+}
+apc_gate_page_t get_apc_gate_page() {
+  return apc_gate_page;
+}
+
 #endif

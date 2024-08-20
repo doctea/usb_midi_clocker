@@ -127,7 +127,7 @@ class SlotController : public MenuItem {
         virtual bool button_right() override {
             //project.select_sequence_number(ui_selected_number);
             //this->target->*move_to_slot_callback(ui_selected_number);
-            //bool success = project.save_sequence(ui_selected_number); //, &mpk49_loop_track);
+            //bool success = project.save_pattern(ui_selected_number); //, &mpk49_loop_track);
             this->move_to_slot_number(ui_selected_number);
             bool success = this->save_to_slot_number(ui_selected_number); //this->target->*right_button_callback(ui_selected_number);
             uint8_t max_length = tft->get_c_max();

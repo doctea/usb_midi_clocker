@@ -33,7 +33,7 @@ class SequencerStatus : public SlotController {
             return project->load_sequence(i);
         };
         virtual bool save_to_slot_number(int i) override {
-            return project->save_sequence(i);
+            return project->save_pattern(i);
         };
 };
 

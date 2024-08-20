@@ -667,7 +667,7 @@ class MIDITrack {
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            //Serial.println("save_sequence not implemented on teensy");
+            //Serial.println("save_pattern not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File f;

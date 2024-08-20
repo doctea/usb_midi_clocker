@@ -36,12 +36,20 @@ const byte colour_intensity[] = {
 };
 byte get_colour(byte lev);
 
+// which page the apcmini is currently displaying
+enum apc_gate_page_t {
+  CLOCKS,
+  SEQUENCES
+};
+extern apc_gate_page_t apc_gate_page;
 
 void apcmini_update_position_display(int ticks);
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
 void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
 void apcdisplay_initialise_last_sent();
 
+void set_apc_gate_page(apc_gate_page_t page);
+apc_gate_page_t get_apc_gate_page();
 
 int get_sequencer_cell_apc_colour(byte c, byte i);
 int get_sequencer_cell_565_colour(byte row, byte column);

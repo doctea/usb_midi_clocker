@@ -136,7 +136,7 @@ namespace storage {
     }*/
   }
 
-  bool save_sequence(int project_number, uint8_t preset_number, savestate *input) {
+  bool save_pattern(int project_number, uint8_t preset_number, savestate *input) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       bool debug = false;
       #ifdef ENABLE_SD
@@ -148,7 +148,7 @@ namespace storage {
       // check + remove sequence file if it already exists
       char filename[MAX_FILEPATH] = "";
       snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-      if (debug) Serial.printf(F("save_sequence(%i, %i) writing to %s\n"), project_number, preset_number, filename);
+      if (debug) Serial.printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, preset_number, filename);
       if (SD.exists(filename)) {
         //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
         SD.remove(filename);
@@ -431,9 +431,9 @@ namespace storage {
     // nothing to do for Arduino
   }
 
-  void save_sequence(uint8_t preset_number, savestate *input) {
+  void save_pattern(uint8_t preset_number, savestate *input) {
     int eeAddress = 16 + (preset_number * sizeof(savestate));
-    Serial.print(F("save_sequence at "));
+    Serial.print(F("save_pattern at "));
     Serial.println(eeAddress);
     EEPROM.put(eeAddress, *input);
   }

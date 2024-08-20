@@ -29,6 +29,7 @@ class ClockSequencerDisplay : public MenuItem {
     int8_t selected_column = 0, selected_row = 0;
     openlevel_t opened_level = NONE;
 
+
     public: 
         ClockSequencerDisplay(const char *label) : MenuItem(label) {
             //this->selectable = false;
@@ -51,7 +52,7 @@ class ClockSequencerDisplay : public MenuItem {
                 for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {                
                     //int16_t colour = get_sequencer_cell_apc_colour(y, x) ? GREEN : BLACK;
                     const int16_t colour = get_sequencer_cell_565_colour(y, x);
-                    const int16_t cache_colour = get_565_colour_for_apc_note(apc_note_last_sent[(64-((y+1)*APCMINI_DISPLAY_WIDTH)) + x]);
+                    const int16_t cache_colour = get_565_colour_for_apc_note(apc_note_last_sent[((NUM_CLOCKS*APCMINI_DISPLAY_WIDTH)-((y+1)*APCMINI_DISPLAY_WIDTH)) + x]);
                     if (colour==BLACK) {
                         tft->drawRect(pos.x + (x * cell_width), pos.y, cell_width-2, cell_height-2, GREY);
                     } else {
@@ -178,7 +179,7 @@ class TriggerSequencerDisplay : public MenuItem {
                 for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
                     //int16_t colour = get_sequencer_cell_apc_colour(y+4, x) ? RED : BLACK;
                     const int16_t colour = get_sequencer_cell_565_colour(y+NUM_CLOCKS, x);
-                    const int16_t cache_colour = get_565_colour_for_apc_note(apc_note_last_sent[(32-((y+1)*APCMINI_DISPLAY_WIDTH)) + x]);
+                    const int16_t cache_colour = get_565_colour_for_apc_note(apc_note_last_sent[((NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((y+1)*APCMINI_DISPLAY_WIDTH)) + x]);
                     if (colour==BLACK) {
                         tft->drawRect(pos.x + (x * cell_width), pos.y, cell_width-2, cell_height-2, GREY);
                     } else {
