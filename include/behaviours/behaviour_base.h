@@ -385,8 +385,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // remap pitch if force octave is on, TODO: other tranposition modes
-    // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
-    // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
+    // DONE?: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
+    // DONE?: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
     //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
     // TODO: move quantisation calculation here...?
     virtual int recalculate_pitch(byte note) {

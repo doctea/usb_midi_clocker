@@ -67,6 +67,9 @@ void VirtualBehaviour_SequencerGates::sequencer_press(byte row, byte col, bool s
 }
 
 bool VirtualBehaviour_SequencerGates::should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
+  // todo: option to disable sequencer so that can just send eg midi drums without confusion
+  // return false;  // for testing, disable sequencer entirely
+
   byte step = step_number_from_ticks(ticks); //(ticks / (PPQN)) % NUM_STEPS;
   /*if (offset==0 && is_bpm_on_beat(ticks)) {
     Serial.print(F("On step "));

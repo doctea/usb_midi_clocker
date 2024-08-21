@@ -27,6 +27,8 @@
 #include "behaviours/behaviour_opentheremin.h"
 #include "behaviours/behaviour_midibassproxy.h"
 
+#include "behaviours/behaviour_gate_sequencer.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -72,6 +74,7 @@ void setup_midi_mapper_matrix_manager() {
 
     // first, add all the output options that will exist
 
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"Seq. Gate Drums", behaviour_sequencer_gates, 10));
     #ifdef ENABLE_BITBOX    
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
