@@ -148,8 +148,8 @@ void redraw_clock_row(byte clock_number, bool force) {
       //Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
       apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_GREEN);
     } else {
-      Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
-      //apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_OFF);
+      //Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
+      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_OFF);
     }
 }
 
