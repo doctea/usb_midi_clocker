@@ -24,7 +24,7 @@ class VirtualBehaviour_ClockGates : public DeviceBehaviourUltimateBase {
     }
 
     virtual void on_tick(uint32_t ticks) override {
-      this->update_cv_outs(ticks);
+      this->process_clocks(ticks);
     };
 
     #if defined(ENABLE_CLOCKS) && defined(PROTOTYPE)
@@ -74,7 +74,7 @@ class VirtualBehaviour_ClockGates : public DeviceBehaviourUltimateBase {
     void decrease_clock_delay(byte clock_selected, byte amount = 1);
     void increase_clock_delay(byte clock_selected, byte amount = 1);
     bool should_trigger_clock(unsigned long ticks, byte i, byte offset = 0);
-    void update_cv_outs(unsigned long ticks);
+    void process_clocks(unsigned long ticks);
 
     void cv_out_clock_pin_off(byte i) {
       gate_manager->send_gate(this->bank, i, LOW);

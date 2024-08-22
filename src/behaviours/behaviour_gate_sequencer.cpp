@@ -69,6 +69,8 @@ void VirtualBehaviour_SequencerGates::sequencer_press(byte row, byte col, bool s
 bool VirtualBehaviour_SequencerGates::should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
   // todo: option to disable sequencer so that can just send eg midi drums without confusion
   // return false;  // for testing, disable sequencer entirely
+  if (!this->sequencer_enabled)
+    return false;
 
   byte step = step_number_from_ticks(ticks); //(ticks / (PPQN)) % NUM_STEPS;
   /*if (offset==0 && is_bpm_on_beat(ticks)) {
@@ -134,8 +136,10 @@ bool VirtualBehaviour_SequencerGates::should_trigger_sequence(unsigned long tick
 }
 
 
-void VirtualBehaviour_SequencerGates::update_cv_outs(unsigned long ticks) {
+void VirtualBehaviour_SequencerGates::process_sequencer(unsigned long ticks) {
     // todo: investigate whether we can use uClock's shuffle to process these instead..
+    if (!this->sequencer_enabled)
+        return;
 
     #ifdef ENABLE_SEQUENCER
         for (unsigned int i = 0 ; i < NUM_SEQUENCES ; i++) {

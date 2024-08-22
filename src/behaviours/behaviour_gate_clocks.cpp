@@ -67,7 +67,7 @@ bool VirtualBehaviour_ClockGates::should_trigger_clock(unsigned long ticks, byte
 #endif
 
 #ifndef SEPARATE_SEQUENCER_AND_CLOCKS
-  void update_cv_outs(unsigned long ticks) {
+  void process_clocks(unsigned long ticks) {
     #if defined(ENABLE_SEQUENCER) || defined(ENABLE_CLOCKS)
 
       #ifdef PIN_CLOCK_RESET_PHRASE
@@ -116,7 +116,7 @@ bool VirtualBehaviour_ClockGates::should_trigger_clock(unsigned long ticks, byte
 
   }
 #else
-  void VirtualBehaviour_ClockGates::update_cv_outs(unsigned long ticks) {
+  void VirtualBehaviour_ClockGates::process_clocks(unsigned long ticks) {
     // todo: investigate whether we can use uClock's shuffle to process these instead..
     #ifdef ENABLE_CLOCKS
       /*#ifdef PIN_CLOCK_RESET_PHRASE
