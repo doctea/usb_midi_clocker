@@ -213,32 +213,32 @@ bool debug_stress_sequencer_load = false;
             // load/save/move selected sequence
             case 'L'            : 
                 Serial_println(F("(L)oad selected sequence"));
-                project->load_selected_sequence();
+                project->load_selected_pattern();
                 Serial_println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
                 Serial_println(F("(S)ave sequencer!"));
-                project->save_selected_sequence();
+                project->save_selected_pattern();
                 break;
             case 'J'            :
                 Serial_println(F("==== Loading previous sequence.."));
                 //input_keyboard.queue_load_previous_sequence();
-                project->load_previous_sequence();
+                project->load_previous_pattern();
                 Serial_println(F("==== Loaded previous sequence!"));
                 break;
             case ':'            :
                 Serial_println(F("==== Loading next sequence")); Serial_flush();
                 //input_keyboard.queue_load_next_sequence();
-                project->load_next_sequence();
+                project->load_next_pattern();
                 Serial_println(F("==== Loaded next sequence!")); Serial_flush();
                 break;
             case 'j'            :
                 //Serial_println(F("Select previous sequence"));
-                project->select_previous_sequence();
+                project->select_previous_pattern();
                 break;
             case ';'            :
                 //Serial_println(F("Select next sequence"));
-                project->select_next_sequence();
+                project->select_next_pattern();
                 break;
             // change project number
             case 49 ... 57      :

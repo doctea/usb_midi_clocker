@@ -136,7 +136,7 @@ namespace storage {
     }*/
   }
 
-  bool save_pattern(int project_number, uint8_t preset_number, savestate *input) {
+  bool save_pattern(int project_number, uint8_t pattern_number, savestate *input) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       bool debug = false;
       #ifdef ENABLE_SD
@@ -147,8 +147,8 @@ namespace storage {
 
       // check + remove sequence file if it already exists
       char filename[MAX_FILEPATH] = "";
-      snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
-      if (debug) Serial.printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, preset_number, filename);
+      snprintf(filename, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, project_number, pattern_number);
+      if (debug) Serial.printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, pattern_number, filename);
       if (SD.exists(filename)) {
         //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
         SD.remove(filename);
@@ -182,8 +182,8 @@ namespace storage {
       }
       myFile.println(F("; behaviour extensions")); 
       LinkedList<String> behaviour_lines = LinkedList<String>();
-      if (debug) Serial.println("calling save_sequence_add_lines..");
-      behaviour_manager->save_sequence_add_lines(&behaviour_lines);
+      if (debug) Serial.println("calling save_pattern_add_lines..");
+      behaviour_manager->save_pattern_add_lines(&behaviour_lines);
       if (debug) Serial.println("got behaviour_lines to save.."); Serial.flush();
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
         //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
@@ -197,7 +197,7 @@ namespace storage {
       //if (irqs_enabled) __enable_irq();
       //Serial.println(F("Finished saving."));
 
-      update_sequence_filename(String(filename));
+      update_pattern_filename(String(filename));
 
       #endif
     }
@@ -224,8 +224,8 @@ namespace storage {
     String line;
     if(line = load_state_file.readStringUntil('\n')) {
       Serial.printf("%i: parsing line %s\n", millis(), line.c_str());
-      load_sequence_parse_line(line, load_state_output);
-      Serial.printf("%i: finished load_sequence_parse_line\n", millis());
+      load_pattern_parse_line(line, load_state_output);
+      Serial.printf("%i: finished load_pattern_parse_line\n", millis());
     } else {
       Serial.printf("%i: Finished loading file\n", millis());
       load_state_current = load_states::NONE;
@@ -235,7 +235,7 @@ namespace storage {
   }
   void load_state_start(uint8_t preset_number, savestate *output) {
     //bool debug = false;
-    //Serial.println("load_sequence not implemented on teensy");
+    //Serial.println("load_pattern not implemented on teensy");
     if (load_state_current==load_states::LOADING) {
       load_state_file.close();
       load_state_current = load_states::NONE;
@@ -257,7 +257,7 @@ namespace storage {
     load_state_output = output;
   }*/
 
-  void load_sequence_parse_line(String line, savestate *output) {
+  void load_pattern_parse_line(String line, savestate *output) {
     bool debug = false;
     if (line.charAt(0)==';') {
       return;  // skip comment lines
@@ -320,9 +320,9 @@ namespace storage {
     messages_log_add(String("Ignoring line '") + line + String("'"));
   }
 
-  //void update_sequence_filename(String filename);
+  //void update_pattern_filename(String filename);
 
-  bool load_sequence(int project_number, uint8_t preset_number, savestate *output) {
+  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       #ifdef ENABLE_SD
       static volatile bool already_loading = false;
@@ -331,19 +331,19 @@ namespace storage {
       global_load_lock = true; 
       already_loading = true;
 
-      messages_log_add(String("Loading sequence ") + String(preset_number));
+      messages_log_add(String("Loading pattern ") + String(pattern_number));
 
       //bool irqs_enabled = __irq_enabled();
       //__disable_irq();
 
       char filename[MAX_FILEPATH] = "";
-      snprintf(filename, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, project_number, preset_number);
+      snprintf(filename, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, project_number, pattern_number);
 
-      //update_sequence_filename(String(filename));
+      //update_pattern_filename(String(filename));
       // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
       File myFile;   
-      Serial.printf(F("load_sequence: load_sequence(%i,%i) opening %s\n"), project_number, preset_number, filename); Serial_flush();
+      Serial.printf(F("load_pattern: load_pattern(%i,%i) opening %s\n"), project_number, pattern_number, filename); Serial_flush();
       myFile = SD.open(filename, FILE_READ);
       clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
@@ -352,7 +352,7 @@ namespace storage {
       }*/
 
       if (!myFile) {
-        Serial.printf(F("load_sequence: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
+        Serial.printf(F("load_pattern: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
         //if (irqs_enabled) __enable_irq();
         global_load_lock = already_loading = false;
         return false;
@@ -361,18 +361,18 @@ namespace storage {
 
       String line;
       while (line = myFile.readStringUntil('\n')) {
-        load_sequence_parse_line(line, output);
+        load_pattern_parse_line(line, output);
       }
-      Serial.println(F("load_sequence: Closing file..")); Serial_flush();
+      Serial.println(F("load_pattern: Closing file..")); Serial_flush();
       myFile.close();
       //if (irqs_enabled) __enable_irq();
-      Serial.println(F("load_sequence: File closed")); Serial_flush();
+      Serial.println(F("load_pattern: File closed")); Serial_flush();
 
       #ifdef ENABLE_APCMINI_DISPLAY
         //redraw_immediately = true;
       #endif
 
-      Serial.printf(F("load_sequence: Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
+      Serial.printf(F("load_pattern: Loaded pattern from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
       global_load_lock = already_loading = false;
       #endif
     }
@@ -438,7 +438,7 @@ namespace storage {
     EEPROM.put(eeAddress, *input);
   }
 
-  bool load_sequence(uint8_t preset_number, savestate *output) {
+  bool load_pattern(uint8_t preset_number, savestate *output) {
     int eeAddress = 16 + (preset_number * sizeof(savestate));
     byte id = EEPROM.read(eeAddress);
     if (id==SAVE_ID_BYTE_V0 || id==SAVE_ID_BYTE_V1) {

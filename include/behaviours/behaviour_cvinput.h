@@ -134,8 +134,8 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 lines->add(String(F("velocity_source=")) + String(this->velocity_input->name));
         }
 
-        virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
+        virtual void save_pattern_add_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUltimateBase::save_pattern_add_lines(lines);
             lines->add(String(F("scale=")) + String(this->chord_player.get_scale()));    // add this here because SCALE won't cast to Int implicitly TODO: solve this
         }
 
@@ -146,7 +146,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             // key centre + scale
             this->saveable_parameters->add(new LSaveableParameter<int8_t>    
                 ("scale_root", "CV", &this->chord_player.scale_root, [=](int8_t v) -> void { this->chord_player.set_scale_root(v); }, [=]() -> int8_t { return this->chord_player.get_scale_root(); } ));
-            // scale number (key) is handled in load_parse_key_value/save_sequence_add_lines because SCALE type breaks SaveableParameter
+            // scale number (key) is handled in load_parse_key_value/save_pattern_add_lines because SCALE type breaks SaveableParameter
             //this->saveable_parameters->add(new LSaveableParameter<SCALE>("scale_number", "CV", &this->scale, [=](SCALE v) -> void { this->set_scale(v); }, [=]() -> SCALE { return this->get_scale(); }));
 
             // note duration and triggers

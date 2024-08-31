@@ -264,7 +264,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
         this->save_sequence_add_lines_parameters(lines);
         this->save_sequence_add_lines_saveable_parameters(lines);
     }
@@ -276,7 +276,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
                 FloatParameter *parameter = parameters->get(i);
 
-                parameter->save_sequence_add_lines(lines);
+                parameter->save_pattern_add_lines(lines);
             }
         }
         Serial.println("finished save_sequence_add_lines_parameters.");

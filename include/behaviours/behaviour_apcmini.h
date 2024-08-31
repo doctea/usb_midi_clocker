@@ -226,6 +226,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                         this->loop_track->clear_all();
                 //mpk49_loop_track.clear_all();
             #endif
+
             } else if (inNumber==BUTTON_RESTART_IMMEDIATELY && apcmini_shift_held) { // up pressed with shift
                 // restart/resync immediately
                 Debug_println(F("APCmini pressed, restarting downbeat"));
@@ -256,14 +257,14 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 Serial.print(F("Single-stepped to tick "));
                 Serial.println(ticks);*/
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
-                //load_state_start(project.selected_sequence_number, &project.current_state);
-                project->load_sequence(); //project.selected_sequence_number);
+                //load_state_start(project.selected_pattern_number, &project.current_state);
+                project->load_pattern(); //project.selected_pattern_number);
                 #ifdef ENABLE_APCMINI_DISPLAY
                     apcmini_update_clock_display();
                 #endif
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
-                //save_pattern(project.selected_sequence_number, &project.current_state);
-                project->save_pattern(); //project.selected_sequence_number);
+                //save_pattern(project.selected_pattern_number, &project.current_state);
+                project->save_pattern(); //project.selected_pattern_number);
             #ifdef ENABLE_DRUM_LOOPER
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_SEND) {
                 // toggle drums recording status?

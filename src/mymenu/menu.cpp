@@ -190,7 +190,7 @@ void setup_menu_transport() {
             );
         #endif
         #ifdef ENABLE_SEQUENCER
-            MultiToggleItemClass<Project> *load_sequence = new MultiToggleItemClass<Project> (
+            MultiToggleItemClass<Project> *load_pattern = new MultiToggleItemClass<Project> (
                 "Sequence Settings",
                 project,
                 &Project::setLoadSequencerSettings,
@@ -208,7 +208,7 @@ void setup_menu_transport() {
             project_multi_recall_options->addItem(load_clock);
         #endif
         #ifdef ENABLE_SEQUENCER
-            project_multi_recall_options->addItem(load_sequence);
+            project_multi_recall_options->addItem(load_pattern);
         #endif
         project_multi_recall_options->addItem(load_behaviour_settings);
         //menu->add(&project_load_matrix_mappings);
@@ -217,13 +217,13 @@ void setup_menu_transport() {
         // options for whether to auto-advance looper/sequencer/beatstep
         project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
         #ifdef ENABLE_SEQUENCER
-            MultiToggleItemClass<Project> *auto_advance_sequencer = new MultiToggleItemClass<Project> (
+            MultiToggleItemClass<Project> *auto_advance_pattern = new MultiToggleItemClass<Project> (
                 "Sequence",
                 project,
-                &Project::set_auto_advance_sequencer,
-                &Project::is_auto_advance_sequencer
+                &Project::set_auto_advance_pattern,
+                &Project::is_auto_advance_pattern
             );
-            project_multi_autoadvance->addItem(auto_advance_sequencer);
+            project_multi_autoadvance->addItem(auto_advance_pattern);
         #endif
         #ifdef ENABLE_LOOPER
             MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (

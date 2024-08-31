@@ -784,7 +784,7 @@ class MIDITrack {
             int time = 0;
             while (line = f.readStringUntil('\n')) {
                 if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
-                //load_sequence_parse_line(line, output);
+                //load_pattern_parse_line(line, output);
                 if (line.startsWith(F("starts_at="))) {
                     time =      line.remove(0,String(F("starts_at=")).length()).toInt() * loop_length_size;
                 } else if (line.startsWith(F("step_size="))) {
