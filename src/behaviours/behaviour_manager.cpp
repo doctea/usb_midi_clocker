@@ -32,6 +32,8 @@
 
 #include "behaviours/behaviour_midibassproxy.h"
 
+#include "behaviours/behaviour_euclidian.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -59,6 +61,9 @@ void setup_behaviour_manager() {
         behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
         behaviour_manager->registerBehaviour(behaviour_sequencer_gates);
     #endif
+
+    behaviour_euclidian = new VirtualBehaviour_Euclidian();
+    behaviour_manager->registerBehaviour(behaviour_euclidian);
 
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();

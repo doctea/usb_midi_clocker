@@ -89,13 +89,13 @@
     // enable USB devices that present as serial interfaces but support MIDI
     #define ENABLE_USBSERIAL    
     #ifdef ENABLE_USBSERIAL
-        #define ENABLE_OPENTHEREMIN
+        //#define ENABLE_OPENTHEREMIN
     #endif
 #endif
 
 // enable MIDI looping for MPK49
-#define ENABLE_LOOPER
-#define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
+//#define ENABLE_LOOPER
+//#define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
 
 // enable MIDI looping for drumkit - experimental
 //#define ENABLE_DRUM_LOOPER
@@ -118,7 +118,7 @@
 //#define ENABLE_MAMMB33      MIDI2
 //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
 //#define ENABLE_MIDIMUSO_4PV   MIDI4
-#define ENABLE_MIDIMUSO_4MV MIDI4
+//#define ENABLE_MIDIMUSO_4MV MIDI4
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
@@ -127,22 +127,22 @@
     #define ENABLE_APCMINI
     #define ENABLE_APCMINI_DISPLAY
 
-    #define ENABLE_BEATSTEP
-    #define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
-    #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
+    //#define ENABLE_BEATSTEP
+    //#define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
+    //#define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
     //#define ENABLE_BAMBLE
     //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
     //#define ENABLE_BAMBLE_OUTPUT  // for sending on the bamble ch1-4
     //#define ENABLE_MPK49
-    #define ENABLE_KEYSTEP
+    //#define ENABLE_KEYSTEP
     //#define ENABLE_SUBCLOCKER
     //#define ENABLE_SUBCLOCKER_DEDICATED
-    #define ENABLE_CRAFTSYNTH_USB
-    #define ENABLE_SKULPTSYNTH_USB
-    #define ENABLE_CHOCOLATEFEET_USB
+    //#define ENABLE_CRAFTSYNTH_USB
+    //#define ENABLE_SKULPTSYNTH_USB
+    //#define ENABLE_CHOCOLATEFEET_USB
     
-    #define ENABLE_MICROLIDIAN
-    #define ENABLE_MIDILIGHTS
+    //#define ENABLE_MICROLIDIAN
+    //#define ENABLE_MIDILIGHTS
     //#define ENABLE_MIDILIGHTS_DEDICATED
 
     //#define ENABLE_BEHRINGER_EDGE_USB

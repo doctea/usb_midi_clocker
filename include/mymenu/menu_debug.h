@@ -9,6 +9,8 @@
 #include "menuitems_listviewer.h"
 #include "menuitems_lambda.h"
 
+#include "storage.h"
+
 #ifdef ENABLE_GATES_MCP23S17
     #include "MCP23S17.h"
 #endif
@@ -82,9 +84,9 @@ void setup_debug_menu() {
     menu->add(new DebugPanel());
 
     SubMenuItemBar *crashreport_bar = new SubMenuItemBar("CrashReport");
-    crashreport_bar->add(new ActionItem("Dump log", dump_crashreport_log));
-    crashreport_bar->add(new ActionConfirmItem("Clear log", clear_crashreport_log));
-    crashreport_bar->add(new ActionConfirmItem("ForceCrash", force_crash));
+    crashreport_bar->add(new ActionItem("Dump log", storage::dump_crashreport_log));
+    crashreport_bar->add(new ActionConfirmItem("Clear log", storage::clear_crashreport_log));
+    crashreport_bar->add(new ActionConfirmItem("ForceCrash", storage::force_crash));
     menu->add(crashreport_bar);
 
     setup_messages_menu();
