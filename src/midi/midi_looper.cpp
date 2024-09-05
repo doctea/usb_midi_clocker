@@ -1,10 +1,12 @@
 //#include <midi.h>
 #include <MIDI.h>
+#include "Config.h"
 
 #include "bpm.h"
 #include "midi/midi_looper.h"
 
-#include "Config.h"
+#ifdef ENABLE_LOOPER
+
 #include "ConfigMidi.h"
 #include "midi/midi_outs.h"
 
@@ -68,4 +70,6 @@ void MIDITrack::stop_all_notes() {
 
         return menuitems;
     }
+#endif
+
 #endif

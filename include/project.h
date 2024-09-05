@@ -1,8 +1,11 @@
-#ifndef PROJECT__INCLUDED
-#define PROJECT__INCLUDED
+#pragma once
+
+#include "Config.h"
 
 #include "storage.h"
+#ifdef ENABLE_LOOPER
 #include "midi/midi_looper.h"
+#endif
 
 #include "midi/midi_mapper_matrix_manager.h"
 #include "behaviours/behaviour_manager.h"
@@ -25,11 +28,15 @@ extern volatile bool global_load_lock;
 
 class Project {
     bool pattern_slot_has_file[NUM_PATTERN_SLOTS_PER_PROJECT];
+    #ifdef ENABLE_LOOPER
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];
+    #endif
 
     bool debug = false;
 
+    #ifdef ENABLE_LOOPER
     MIDITrack *temp_loop = new MIDITrack();
+    #endif
 
     void initialise_pattern_slots() {
         Serial.println(F("initialise_pattern_slots starting.."));
@@ -41,6 +48,7 @@ class Project {
         }
         Serial_println(F("initialise_pattern_slots finished"));
     }
+    #ifdef ENABLE_LOOPER
     void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
         temp_loop->bitmap_enabled = false;
@@ -61,14 +69,17 @@ class Project {
         }
         temp_loop->clear_all();
     }
+    #endif
     public:
         int current_project_number = 0;
 
         int selected_pattern_number = 0;
         int loaded_pattern_number = -1;
 
+        #ifdef ENABLE_LOOPER
         int selected_loop_number = 0;
         volatile int loaded_loop_number = -1;
+        #endif
 
         bool load_matrix_mappings = true;
         bool load_clock_settings = true;
@@ -83,7 +94,9 @@ class Project {
             setProjectNumber(this->current_project_number);
 
             initialise_pattern_slots();
+            #ifdef ENABLE_LOOPER
             initialise_loop_slots(false);
+            #endif
         }
 
         void setLoadMatrixMappings(bool value = true) {
@@ -120,7 +133,9 @@ class Project {
                 if (this->debug) Serial_printf(F("Switched to project number %i\n"), this->current_project_number);
                 make_project_folders(number);
                 this->load_project_settings(number);
+                #ifdef ENABLE_LOOPER
                 this->initialise_loop_slots();
+                #endif
                 this->initialise_pattern_slots();
             }
         }
@@ -185,6 +200,7 @@ class Project {
         }
 
         //////// loops/recordings
+        #ifdef ENABLE_LOOPER
         bool select_loop_number(int sn) {
             Serial.printf(F("select_loop_number %i\n"), sn);
             selected_loop_number = sn % NUM_LOOP_SLOTS_PER_PROJECT;
@@ -197,6 +213,7 @@ class Project {
         void set_loop_slot_has_file(int slot, bool state = true) {
             loop_slot_has_file[slot] = state;
         }
+        #endif
 
         void select_next_pattern() {
             selected_pattern_number++;
@@ -428,5 +445,3 @@ extern Project *project;
 
 // for use by the Menu
 void save_project_settings();
-
-#endif

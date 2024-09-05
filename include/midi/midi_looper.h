@@ -1,5 +1,4 @@
-#ifndef MIDI_LOOPER__INCLUDED
-#define MIDI_LOOPER__INCLUDED
+#pragma once
 
 #include "debug.h"
 
@@ -7,6 +6,9 @@
 
 #include <LinkedList.h>
 #include "Config.h"
+
+#ifdef ENABLE_LOOPER
+
 #include "ConfigMidi.h"
 #include "midi/MidiMappings.h"
 //#include "midi/midi_out_wrapper.h"

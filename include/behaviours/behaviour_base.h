@@ -40,7 +40,7 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
+class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget {
     public:
 
     bool debug = false;
@@ -125,7 +125,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
     }
     // tell the device to play a note on
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
         // TODO: this is where ForceOctave check should go..?
         note = this->recalculate_pitch(note);
@@ -139,7 +139,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
-    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         // TODO: this is where ForceOctave check should go..?
         note = this->recalculate_pitch(note);
@@ -154,7 +154,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
-    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
+    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
         this->actualSendControlChange(number, value, channel);
     };
