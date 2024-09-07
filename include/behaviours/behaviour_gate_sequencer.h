@@ -25,6 +25,8 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
 
   public:
     VirtualBehaviour_SequencerGates(GateManager *gate_manager, int bank = BANK_SEQ) : DeviceBehaviourUltimateBase () {
+      initialise_note_to_gate_map();
+
       this->gate_manager = gate_manager;
       this->bank = bank;
     }
@@ -58,7 +60,7 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         ));
 
         // todo: use a more user-friendly and less memory-hungry way of doing this
-        for (int i = 0 ; i < 128 ; i++) {
+        for (int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
             //for (int i = GM_NOTE_MINIMUM ; i < GM_NOTE_MAXIMUM ; i++) {
             char label[MENU_C_MAX] = "";
             snprintf(label, MENU_C_MAX, "Gate for %3s: ", get_note_name_c(i, GM_CHANNEL_DRUMS));
@@ -72,14 +74,15 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
                 true,
                 true
             );
-            s->horiz_label = s->show_header =  true;
+            s->horiz_label = s->show_header = true;
             menuitems->add(s);
         }
 
         return menuitems;
     }
 
-    int8_t map_note_to_gate[128] = {
+    int8_t *map_note_to_gate = nullptr;
+    /*int8_t map_note_to_gate[MIDI_MAX_NOTE+1] = {
         NOTE_OFF,  // 0
         NOTE_OFF,  // 1
         NOTE_OFF,  // 2
@@ -202,13 +205,46 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         NOTE_OFF,  
         NOTE_OFF,  
         NOTE_OFF,        
-    };
+    };*/
+
+    void initialise_note_to_gate_map() {
+        this->map_note_to_gate = (int8_t*)calloc(sizeof(int8_t), MIDI_MAX_NOTE+1);
+        for(int8_t i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+            this->map_note_to_gate[i] = get_default_gate_number_for_note(i);
+        }
+    }
+
+    int8_t get_default_gate_number_for_note(int8_t note) {
+        switch(note) {
+            case GM_NOTE_ACOUSTIC_BASS_DRUM:
+            case GM_NOTE_ELECTRIC_BASS_DRUM:
+                return 0;
+            case GM_NOTE_ACOUSTIC_SNARE:
+            case GM_NOTE_ELECTRIC_SNARE:
+                return 1;
+            case GM_NOTE_HAND_CLAP:
+                return 2;
+            case GM_NOTE_COWBELL:
+                return 3;
+            case GM_NOTE_CLOSED_HI_HAT:
+                return 4;
+            case GM_NOTE_OPEN_HI_HAT:
+                return 5;
+            case GM_NOTE_PEDAL_HI_HAT:
+                return 6;
+            case GM_NOTE_CRASH_CYMBAL_1:
+                return 7;            
+        }
+        return -1;
+    }
 
     // done: pull this from a configurable array
     // done: with a way to display what the mapping should be
     // done:   name drums - so make get_note_name return a three-letter abbreviation
     virtual uint8_t midi_drum_note_to_gate_number(uint8_t note) {
-        return map_note_to_gate[note];
+        if (is_valid_note(note))
+            return map_note_to_gate[note];
+        return -1;
         /*switch(note) {
             case GM_NOTE_ACOUSTIC_BASS_DRUM:
             case GM_NOTE_ELECTRIC_BASS_DRUM:
@@ -238,7 +274,7 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         // translate MIDI drum notes to gates
         if (channel==GM_CHANNEL_DRUMS) {
             int gate = midi_drum_note_to_gate_number(note);
-            if (gate < NUM_SEQUENCES) {
+            if (gate >= 0 && gate < NUM_SEQUENCES) {
                 //Serial_printf("At tick %5i, got NoteOn  for %s,\t%i,\t%iGate %i\n", ticks, get_note_name_c(note,channel), velocity, channel, gate);
                 cv_out_sequence_pin_on(gate);
             }
@@ -248,7 +284,7 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         // translate MIDI drum notes to gates
         if (channel==GM_CHANNEL_DRUMS) {
             int gate = midi_drum_note_to_gate_number(note);
-            if (gate < NUM_SEQUENCES) {
+            if (gate >= 0 && gate < NUM_SEQUENCES) {
                 //Serial_printf("At tick %5i, got NoteOff for %s,\t%i,\t%iGate %i\n", ticks, get_note_name_c(note,channel), velocity, channel, gate);
                 cv_out_sequence_pin_off(gate);
             }
@@ -271,8 +307,6 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
     void sequencer_press(byte row, byte col, bool shift = false);
     bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0);
 
-    void raw_write_pin(int,int);
-
     void process_sequencer(unsigned long ticks);
 
     void clear_all_outputs() {
@@ -282,10 +316,12 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
     }
 
     void cv_out_sequence_pin_off(byte i) {
-      gate_manager->send_gate(this->bank, i, LOW);
+        if (i >= 0 && i < NUM_SEQUENCES)
+            gate_manager->send_gate(this->bank, i, LOW);
     }
     void cv_out_sequence_pin_on(byte i) {
-      gate_manager->send_gate(this->bank, i, HIGH);
+        if (i >= 0 && i < NUM_SEQUENCES)
+            gate_manager->send_gate(this->bank, i, HIGH);
     }
 };
 

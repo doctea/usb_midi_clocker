@@ -119,7 +119,7 @@ class DigitalPinBankInterface : public BankInterface {
 
         virtual void set_gate(int gate_number, bool state) override {
             //this->dirty = true;
-            if (gate_number >= num_gates) {
+            if (gate_number < 0 || gate_number >= num_gates) {
                 //messages_log_add(String("Attempted to send to invalid gate %i:%i") + String(bank) + String(": ") + String(gate));
                 return;            
             }
@@ -129,6 +129,9 @@ class DigitalPinBankInterface : public BankInterface {
             this->current_states[gate_number] = state;
         }
         virtual bool check_gate(int gate_number) override {
+            if (gate_number < 0 || gate_number >= num_gates)
+                return false;
+
             if (mode==OUTPUT)
                 return this->current_states[gate_number%num_gates];
             else
