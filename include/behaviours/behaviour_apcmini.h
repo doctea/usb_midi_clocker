@@ -20,9 +20,6 @@
 // use parameter library adapter to handle cc events
 #include "midi/midi_cc_source.h"
 
-//extern MIDITrack mpk49_loop_track;
-//class MIDITrack;
-
 #include "behaviours/behaviour_gate_clocks.h"
 #include "behaviours/behaviour_gate_sequencer.h"
 
@@ -51,8 +48,11 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
         virtual bool receives_midi_notes() { return true; }
 
         bool apcmini_shift_held = false;
+        uint8_t tempo_fader_cc = APCMINI_FADER_CC_MASTER;
 
-        MIDITrack *loop_track = nullptr;
+        #ifdef ENABLE_LOOPER
+            MIDITrack *loop_track = nullptr;
+        #endif
 
         #ifdef ENABLE_CLOCKS
             byte clock_selected = 0;
@@ -222,8 +222,10 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
 
             #ifdef ENABLE_LOOPER
                 } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
-                    if (this->loop_track!=nullptr) 
-                        this->loop_track->clear_all();
+                    #ifdef ENABLE_LOOPER
+                        if (this->loop_track!=nullptr) 
+                            this->loop_track->clear_all();
+                    #endif
                 //mpk49_loop_track.clear_all();
             #endif
 
@@ -293,7 +295,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
 
         virtual void receive_control_change(uint8_t channel, uint8_t number, uint8_t value) override {
             #ifdef ENABLE_BPM
-                if (number==APCMINI_FADER_CC_MASTER) {   // 56 == "master" fader set bpm 
+                if (number==tempo_fader_cc/*APCMINI_FADER_CC_MASTER*/) {   // 56 == "master" fader set bpm 
                     if (clock_mode==CLOCK_INTERNAL)
                         set_bpm(map(value, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
                 }
@@ -317,6 +319,22 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 #endif
             }
         }
+
+        virtual void save_project_add_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUSBBase::save_project_add_lines(lines);
+            lines->add(String("tempo_cc=")+String(this->tempo_fader_cc));
+        }
+
+        virtual bool parse_project_key_value(String key, String value) override {
+            if (key.equals("tempo_cc")) {
+                this->tempo_fader_cc = value.toInt();
+                return true;
+            }
+            return DeviceBehaviourUSBBase::parse_project_key_value(key, value);
+        }
+
+        //FLASHMEM // causes a section type conflict with virtual void DeviceBehaviour_APCMini::setup_callbacks() 
+        LinkedList<MenuItem*> *make_menu_items() override;
 
 };
 

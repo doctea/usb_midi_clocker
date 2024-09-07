@@ -323,6 +323,24 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         if (i >= 0 && i < NUM_SEQUENCES)
             gate_manager->send_gate(this->bank, i, HIGH);
     }
+
+    virtual void save_project_add_lines(LinkedList<String> *lines) override {
+        DeviceBehaviourUltimateBase::save_project_add_lines(lines);
+        for (int i = 0 ; i < MIDI_MAX_NOTE+1 ; i++) {
+            lines->add(String("map_note_to_gate=")+String(i)+'|'+String(this->map_note_to_gate[i]));
+        }
+    }
+
+    virtual bool parse_project_key_value(String key, String value) override {
+        if (key.startsWith("map_note_to_gate")) {
+            int8_t separator = value.indexOf('|');
+            if (separator>=0)
+                this->map_note_to_gate[value.substring(0,separator).toInt()] = value.substring(separator+0).toInt();
+            return true;
+        }
+        return DeviceBehaviourUltimateBase::parse_project_key_value(key, value);
+    }
+
 };
 
 extern VirtualBehaviour_SequencerGates *behaviour_sequencer_gates;
