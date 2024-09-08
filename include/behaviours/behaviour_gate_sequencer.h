@@ -332,10 +332,11 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
     }
 
     virtual bool parse_project_key_value(String key, String value) override {
+        //Serial.printf("VirtualBehaviour_SequencerGates#parse_project_key_value(%s, %s): ", key.c_str(), value.c_str()); Serial_flush();
         if (key.startsWith("map_note_to_gate")) {
             int8_t separator = value.indexOf('|');
             if (separator>=0)
-                this->map_note_to_gate[value.substring(0,separator).toInt()] = value.substring(separator+0).toInt();
+                this->map_note_to_gate[value.substring(0,separator).toInt()] = value.substring(separator+1).toInt();
             return true;
         }
         return DeviceBehaviourUltimateBase::parse_project_key_value(key, value);

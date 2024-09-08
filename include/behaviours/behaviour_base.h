@@ -238,6 +238,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }*/
     }
     virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
+        if (saveable_parameters==nullptr) {
+            Serial_printf("WARNING: load_parse_key_value_saveable_parameters(%s,%s) called for %s, but saveable_parameters isn't initialised yet!\n", key.c_str(), value.c_str(), this->get_label());
+            return false;
+        }
         for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             if (!saveable_parameters->get(i)->is_recall_enabled())
                 continue;

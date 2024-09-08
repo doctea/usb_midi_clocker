@@ -128,7 +128,7 @@ class Project {
 
         void setProjectNumber(int number) {
             if (this->debug) Serial_printf(F("Project#setProjectNumber(%i)...\n"), number);
-            if (this->current_project_number!=number) {
+            //if (this->current_project_number!=number) {
                 this->current_project_number = number;
                 if (this->debug) Serial_printf(F("Switched to project number %i\n"), this->current_project_number);
                 make_project_folders(number);
@@ -137,7 +137,7 @@ class Project {
                 this->initialise_loop_slots();
                 #endif
                 this->initialise_pattern_slots();
-            }
+            //}
         }
         int getProjectNumber() {
             return this->current_project_number;
@@ -419,6 +419,8 @@ class Project {
             String value = line.substring(line.indexOf('=')+1);
             line = line.replace('\n',"");
 
+            //Serial_printf("load_project_parse_line(%s)\n", line.c_str());
+
             if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
                 // legacy save format, pre-matrix
                 Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
@@ -434,7 +436,7 @@ class Project {
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
-                Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str());
+                //Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str()); Serial_flush();
                 return;
             }
             messages_log_add(String("Unknown Project line '") + line + String("'"));

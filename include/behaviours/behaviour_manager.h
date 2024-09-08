@@ -327,6 +327,7 @@ class DeviceBehaviourManager {
             if (split>=0) {
                 String key = line.substring(0, split);
                 String value = line.substring(split+1);
+                //Serial.printf("behaviour_manager#load_parse_line processing %s\n", line.c_str());
                 return this->load_parse_key_value(key, value);
             } else {
                 return this->load_parse_key_value(line, "");
@@ -335,9 +336,12 @@ class DeviceBehaviourManager {
 
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
+            //Serial.printf("behaviour_manager#load_parse_key_value passed '%s','%s' while curerent_behaviour is @%p\n", key.c_str(), value.c_str(), current_behaviour);
+
             if (key.equals(F("behaviour_start"))) {
-                //Serial_printf(F("found behaviour_start for '%s'\n"), value.c_str());
-                current_behaviour = this->find_behaviour_for_label(value);
+                DeviceBehaviourUltimateBase *d = this->find_behaviour_for_label(value);
+                //Serial_printf(F("found behaviour_start for '%s' with behaviour @%p\n"), value.c_str(), d); 
+                current_behaviour = d;
                 return true;
             } else if (key.equals(F("behaviour_end"))) {
                 //Serial_printf(F("found behaviour_end for '%s'\n"), value.c_str());

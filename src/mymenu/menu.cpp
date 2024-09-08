@@ -285,37 +285,37 @@ void setup_menu_midi() {
 }
 
 #ifdef ENABLE_SEQUENCER
-void setup_menu_sequencer() {
-    // sequencer
-    menu->add_page("Sequencer");
-    //menu->add(&project_auto_advance_sequencer);
-    menu->add(new SeparatorMenuItem("Sequencer"));
-    menu->add(&sequencer_status);
-    menu->add(&clock_sequencer_display);
-    menu->add(&trigger_sequencer_display);
+    void setup_menu_sequencer() {
+        // sequencer
+        menu->add_page("Sequencer");
+        //menu->add(&project_auto_advance_sequencer);
+        menu->add(new SeparatorMenuItem("Sequencer"));
+        menu->add(&sequencer_status);
+        menu->add(&clock_sequencer_display);
 
-    menu->add(new ObjectActionConfirmItem<VirtualBehaviour_SequencerGates>("Clear sequencer pattern", behaviour_sequencer_gates, &VirtualBehaviour_SequencerGates::sequencer_clear_pattern));
-    
-    //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
-    //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
+        menu->add(new ObjectActionConfirmItem<VirtualBehaviour_SequencerGates>("Clear sequencer pattern", behaviour_sequencer_gates, &VirtualBehaviour_SequencerGates::sequencer_clear_pattern));
+        menu->add(&trigger_sequencer_display);
+        
+        //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
+        //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
-    #ifdef ENABLE_SD
-        sequence_fileviewer = new FileViewerMenuItem("Sequence");
-        menu->add(sequence_fileviewer);
+        #ifdef ENABLE_SD
+            sequence_fileviewer = new FileViewerMenuItem("Sequence");
+            menu->add(sequence_fileviewer);
         #endif
-}
+    }
 #endif
 
 #ifdef ENABLE_LOOPER
-void setup_menu_looper() {
-    // looper stuff
-    menu->add_page("Looper");
-    menu->add(midi_loop_track.make_menu_items());
-    #ifdef ENABLE_DRUM_LOOPER
-        menu->add(&drum_looper_status);
-        menu->add(&drum_loop_quantizer_setting);
-    #endif
-}
+    void setup_menu_looper() {
+        // looper stuff
+        menu->add_page("Looper");
+        menu->add(midi_loop_track.make_menu_items());
+        #ifdef ENABLE_DRUM_LOOPER
+            menu->add(&drum_looper_status);
+            menu->add(&drum_loop_quantizer_setting);
+        #endif
+    }
 #endif
 
 #ifndef GDB_DEBUG

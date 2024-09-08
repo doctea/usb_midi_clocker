@@ -224,8 +224,10 @@ void redraw_sequence_row(byte sequence_number, bool force) {
       // don't redraw all of the rows in the same call, to avoid weird problem with some messages apparently not being received
       // TODO: make this support more than 4 clocks/sequencers (ie not rely on NUM_CLOCKS like it does)
       static int row_to_draw = 0;
-      if (get_apc_gate_page()==CLOCKS)         redraw_clock_row(row_to_draw);
-      else if (get_apc_gate_page()==SEQUENCES) redraw_sequence_row(row_to_draw);
+      if (get_apc_gate_page()==CLOCKS)         
+        redraw_clock_row(row_to_draw);
+      else if (get_apc_gate_page()==SEQUENCES) 
+        redraw_sequence_row(row_to_draw);
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;

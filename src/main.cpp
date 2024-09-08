@@ -125,6 +125,10 @@ void setup() {
   setup_behaviour_manager();
   Serial_printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
 
+  Serial_println(F("..setup_saveable_parameters.."));
+  behaviour_manager->setup_saveable_parameters();
+  Serial_printf(F("after setup_saveable_parameters(), free RAM is %u\n"), freeRam());
+
   //Serial_println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
   Serial_println(F("..MIDI matrix manager.."));
@@ -175,7 +179,7 @@ void setup() {
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
-  behaviour_manager->setup_saveable_parameters();
+  //behaviour_manager->setup_saveable_parameters();
 
   #ifdef ENABLE_SCREEN
     Serial_println(F("...starting behaviour_manager#make_menu_items...")); Serial_flush();
