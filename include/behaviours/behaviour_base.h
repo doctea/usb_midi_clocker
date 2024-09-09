@@ -290,6 +290,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     virtual bool load_parse_key_value(String key, String value) {
         Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
 
+        if (this->parse_project_key_value(key, value)) {
+            return true;
+        }
+
         // first check the 'saveable parameters'
         if (this->load_parse_key_value_saveable_parameters(key, value)) {
             return true;
