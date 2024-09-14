@@ -1,5 +1,4 @@
-#ifndef CONFIGMIDI__INCLUDED
-#define CONFIGMIDI__INCLUDED
+#pragma once
 
 #include "Config.h"
 //#include "ConfigMidi.h"
@@ -22,5 +21,3 @@
 //#endif
 
 #define ENABLE_DISTING              midi_out_serial[3]     // 
-
-#endif

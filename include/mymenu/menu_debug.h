@@ -34,6 +34,7 @@ class DebugPanel : public MenuItem {
             header("Statistics:", pos, selected, opened);
             tft->printf("Free RAM: %u bytes\n", freeRam());
             tft->printf("Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
+            tft->printf("Tick:   %i\n", ticks);
             tft->print("Serial: ");
             tft->print(Serial?"connected\n":"not connected\n");
             tft->println("Built at " __TIME__ " on " __DATE__);
