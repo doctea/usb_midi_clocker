@@ -10,7 +10,7 @@
 // NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
 
 //// CV input options
-#ifdef PCB
+#ifdef PCB_STUDIO
     #define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
     #define ENABLE_CV_INPUT_2   0x49
 #else
@@ -18,9 +18,6 @@
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
 #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
-#ifdef ENABLE_CV_INPUT
-    #define ENABLE_CV_INPUT_PITCH               // enable a behaviour that can read from one of the inputs and output MIDI
-#endif
 
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
@@ -38,9 +35,6 @@
 
 #define DEFAULT_CLOCK_MODE  CLOCK_INTERNAL      
 
-/*#ifndef ENABLE_SCREEN
-    #define ENABLE_SCREEN       // tft
-#endif*/
 #ifdef ENABLE_SCREEN 
     #ifdef TFT_ST7789_T3
         //#define TFT_ST7789_T3_BIG
@@ -94,15 +88,19 @@
 #endif
 
 // enable MIDI looping for MPK49
-#define ENABLE_LOOPER
-#define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
+#ifdef PCB_STUDIO
+    #define ENABLE_LOOPER
+    #define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
+#endif
 
 // enable MIDI looping for drumkit - experimental
 //#define ENABLE_DRUM_LOOPER
 
 // enable Neutron behaviour
-//#define ENABLE_NEUTRON    // now done in ConfigMidi.h
-#define DEFAULT_NEUTRON_OCTAVE 3    // set to -1 for 'disabled'
+#ifdef PCB_STUDIO
+    //#define ENABLE_NEUTRON    // now done in ConfigMidi.h
+    #define DEFAULT_NEUTRON_OCTAVE 3    // set to -1 for 'disabled'
+#endif
 
 //#define ENABLE_DPT_LOOPER
 #ifdef ENABLE_DPT_LOOPER
@@ -115,10 +113,12 @@
     #endif
 #endif
 
-//#define ENABLE_MAMMB33      MIDI2
-//#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
-//#define ENABLE_MIDIMUSO_4PV   MIDI4
-#define ENABLE_MIDIMUSO_4MV MIDI4
+#ifdef PCB_STUDIO
+    //#define ENABLE_MAMMB33      MIDI2
+    //#define ENABLE_MIDIMUSO     MIDI4   // enable quick haxx to set mode of a connected midimuso cv-12 https://midimuso.co.uk/tools/
+    //#define ENABLE_MIDIMUSO_4PV   MIDI4
+    #define ENABLE_MIDIMUSO_4MV MIDI4
+#endif
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
@@ -128,27 +128,31 @@
     #define ENABLE_APCMINI_DISPLAY
 
     #define ENABLE_BEATSTEP
-    #define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
+    //#define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
-    //#define ENABLE_BAMBLE
-    //#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
-    //#define ENABLE_BAMBLE_OUTPUT  // for sending on the bamble ch1-4
-    //#define ENABLE_MPK49
-    #define ENABLE_KEYSTEP
-    //#define ENABLE_SUBCLOCKER
-    //#define ENABLE_SUBCLOCKER_DEDICATED
-    #define ENABLE_CRAFTSYNTH_USB
-    #define ENABLE_SKULPTSYNTH_USB
-    #define ENABLE_CHOCOLATEFEET_USB
+    ////#define ENABLE_BAMBLE
+    ////#define ENABLE_BAMBLE_INPUT   // for collecting input from bambleweeny
+    ////#define ENABLE_BAMBLE_OUTPUT  // for sending on the bamble ch1-4
+    ////#define ENABLE_MPK49
+    ////#define ENABLE_SUBCLOCKER
+    ////#define ENABLE_SUBCLOCKER_DEDICATED
+    #ifdef PCB_STUDIO
+        #define ENABLE_KEYSTEP
+        //#define ENABLE_CRAFTSYNTH_USB
+        //#define ENABLE_SKULPTSYNTH_USB
+        #define ENABLE_CHOCOLATEFEET_USB
+        #define ENABLE_MIDILIGHTS
+        //#define ENABLE_MIDILIGHTS_DEDICATED
+        //#define ENABLE_BEHRINGER_EDGE_USB
+        //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
+    #endif
     
     #define ENABLE_MICROLIDIAN
-    #define ENABLE_MIDILIGHTS
-    //#define ENABLE_MIDILIGHTS_DEDICATED
+#endif
 
-    //#define ENABLE_BEHRINGER_EDGE_USB
+#ifdef PCB_STUDIO
     #define ENABLE_BEHRINGER_EDGE_SERIAL    MIDI5
     //#define ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED    MIDI5
-    //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
