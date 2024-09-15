@@ -11,7 +11,7 @@ void handle_theremin_note_on(byte channel, byte cc_number, byte value);
 void handle_theremin_note_off(byte channel, byte cc_number, byte value);
 void handle_theremin_pitch_bend(byte channel, int bend);*/
 
-class DeviceBehaviour_XiaoSerial : public DeviceBehaviourUSBSerialBase {
+class DeviceBehaviour_XiaoSerial : virtual public DeviceBehaviourUSBSerialBase {
     public:
         uint16_t vid = 0x2E8A, pid = 0x000A;
         uint16_t vid2 = 0x1337, pid2 = 0xBEEF;

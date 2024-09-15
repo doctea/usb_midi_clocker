@@ -9,7 +9,7 @@
 #include "interfaces/interfaces.h"
 
 #include "behaviours/behaviour_base.h"
-class VirtualBehaviour_ClockGates : public DeviceBehaviourUltimateBase {
+class VirtualBehaviour_ClockGates : virtual public DeviceBehaviourUltimateBase {
   GateManager *gate_manager;
   int bank = -1;
 

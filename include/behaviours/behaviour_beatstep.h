@@ -107,7 +107,7 @@ RECALL COMMAND:
 */
 
 
-class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
+class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
     
     public:
@@ -502,7 +502,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
 
 #ifdef ENABLE_BEATSTEP_2
-    class DeviceBehaviour_Beatstep_2 : public DeviceBehaviour_Beatstep {
+    class DeviceBehaviour_Beatstep_2 : virtual public DeviceBehaviour_Beatstep {
         public:
 
         virtual const char *get_label() override {

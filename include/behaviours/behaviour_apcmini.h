@@ -25,7 +25,7 @@
 #define TIME_BETWEEN_APC_REFRESH_MS 50
 //#define APCMINI_STOP_ALL_MODE_CLOCK   // make the 'stop all clips' button enable/disable sequencer
 
-class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
+class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual public MIDI_CC_Source {
     public:
         DeviceBehaviour_APCMini() : DeviceBehaviourUSBBase() {
             // initialise the CCs that this device can translate into ParameterInputs

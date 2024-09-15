@@ -1,8 +1,6 @@
-#ifndef BEHAVIOUR_CRAFTSYNTH__INCLUDED
-#define BEHAVIOUR_CRAFTSYNTH__INCLUDED
+#pragma once
 
 #include <Arduino.h>
-
 #include "Config.h"
 
 #ifdef ENABLE_CRAFTSYNTH_USB
@@ -80,7 +78,7 @@ SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 =1/4 / 24-31 =1/2 / 32-39
 /* 0-32 Sine to Triangle / 33-64 - Triangle to Sawtooth / 65-96 -
 Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
-class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public ClockedBehaviour, public ModwheelReceiver {
+class DeviceBehaviour_CraftSynth : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour, virtual public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     
@@ -168,7 +166,5 @@ class DeviceBehaviour_CraftSynth : public DeviceBehaviourUSBBase, public Clocked
 
 //void craftsynth_setOutputWrapper(MIDIOutputWrapper *);
 extern DeviceBehaviour_CraftSynth *behaviour_craftsynth;
-
-#endif
 
 #endif

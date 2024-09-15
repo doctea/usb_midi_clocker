@@ -62,7 +62,7 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 #include "chord_player.h"
 #include "functional-vlpp.h"
 
-class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
+class DeviceBehaviour_CVInput : /* virtual */ public virtual DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
         ChordPlayer chord_player = ChordPlayer(
             [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_on(channel, note, velocity); },

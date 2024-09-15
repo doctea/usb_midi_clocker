@@ -17,7 +17,7 @@ void keystep_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVeloc
 void keystep_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void keystep_handle_pitchbend(uint8_t inChannel, int bend);
 
-class DeviceBehaviour_Keystep : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+class DeviceBehaviour_Keystep : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
     public:
         uint16_t vid = 0x1c75, pid = 0x0288;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }
