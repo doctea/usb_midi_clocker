@@ -142,8 +142,9 @@ void setup() {
     setup_menu(LOW);
   #endif
 
-  tft_print("Built at " __TIME__ " on " __DATE__ "\n");
+  tft_print("PIO Env: " ENV_NAME "\n");
   tft_print("Git info: " COMMIT_INFO "\n");
+  tft_print("Built at " __TIME__ " on " __DATE__ "\n");
 
   #ifdef ENABLE_CV_OUTPUT
     tft_print((char*)"Setting up CV gates..\n");
