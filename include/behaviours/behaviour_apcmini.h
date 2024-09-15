@@ -1,8 +1,6 @@
-#ifndef BEHAVIOUR_APCMINI__INCLUDED
-#define BEHAVIOUR_APCMINI__INCLUDED
+#pragma once
 
 #include <Arduino.h>
-
 #include "Config.h"
 
 #ifdef ENABLE_APCMINI
@@ -23,7 +21,9 @@
 #include "behaviours/behaviour_gate_clocks.h"
 #include "behaviours/behaviour_gate_sequencer.h"
 
+// config
 #define TIME_BETWEEN_APC_REFRESH_MS 50
+//#define APCMINI_STOP_ALL_MODE_CLOCK   // make the 'stop all clips' button enable/disable sequencer
 
 class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_Source {
     public:
@@ -188,7 +188,22 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                     redraw_sequence_row(row);
                 #endif
                 return true;
+            } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
+                #ifdef APCMINI_STOP_ALL_MODE_CLOCK
+                    // start / stop play
+                    if (!playing)
+                        global_on_restart();
+                    
+                    //playing = !playing;
+                    if (playing)
+                        clock_stop();
+                    else
+                        clock_continue();
+                #else
+                    behaviour_sequencer_gates->set_sequencer_enabled(!behaviour_sequencer_gates->is_sequencer_enabled());
+                #endif
             }
+
             return false;
         }
 
@@ -209,17 +224,7 @@ class DeviceBehaviour_APCMini : public DeviceBehaviourUSBBase, public MIDI_CC_So
                 process_note_on_defaults(inChannel, inNumber, inVelocity);
             }*/
 
-            if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
-                // start / stop play
-                if (!playing)
-                    global_on_restart();
-                
-                //playing = !playing;
-                if (playing)
-                    clock_stop();
-                else
-                    clock_continue();
-
+            if (false) {    // dummy 
             #ifdef ENABLE_LOOPER
                 } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && apcmini_shift_held) {
                     #ifdef ENABLE_LOOPER
@@ -344,5 +349,4 @@ void apcmini_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue
 void apcmini_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
-#endif
 #endif

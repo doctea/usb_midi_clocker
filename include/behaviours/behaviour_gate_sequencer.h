@@ -39,6 +39,17 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
       return BehaviourType::virt;
     }
 
+    virtual bool is_sequencer_enabled() {
+        return this->sequencer_enabled;
+    }
+    virtual void set_sequencer_enabled(bool v = true) {
+        this->sequencer_enabled = v;
+        if (!v) {
+            // turn off all currently active steps
+            this->clear_all_outputs();
+        }
+    }
+
     //virtual bool receives_midi_notes()  { return false; }
     virtual bool transmits_midi_notes() override { return true; }
     virtual bool transmits_midi_clock() override { return true; }
@@ -53,10 +64,11 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         menuitems->add(new LambdaToggleControl(
             "Enable sequencer",
             [=](bool v) -> void { 
-                this->sequencer_enabled = v; 
-                this->clear_all_outputs();
+                this->set_sequencer_enabled(v);
             },
-            [=](void) -> bool { return this->sequencer_enabled; }
+            [=](void) -> bool { 
+                return this->is_sequencer_enabled(); 
+            }
         ));
 
         // todo: use a more user-friendly and less memory-hungry way of doing this
