@@ -106,10 +106,14 @@ void setup_midi_mapper_matrix_manager() {
         #endif
         //behaviour_neutron->debug = true;
         //behaviour_neutron->test_wrapper = midi_matrix_manager->get_target_for_id(behaviour_neutron->target_id);
+    #else
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : MIDIOUT : ch 1", midi_out_serial[2], 1)); // for MB33
     #endif
 
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
+    #else
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : MIDIOUT : ch 1", midi_out_serial[3], 1)); // for MB33
     #endif
             
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : MIDIOUT : ch 1", midi_out_serial[4], 1));
