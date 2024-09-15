@@ -1,3 +1,5 @@
+#include "Config.h"
+
 #include "behaviours/behaviour_manager.h"
 
 #include "behaviours/behaviour_apcmini.h"
@@ -177,12 +179,15 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
         //behaviour_manager->registerBehaviour(behaviour_bitbox);
-        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        #ifdef ENABLE_BITBOX_DEDICATED
+            //
+        #else
+            behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        #endif
         behaviour_manager->registerBehaviour(behaviour_bitbox);
-        Serial.println(F("connecting device output..")); Serial_flush();
+        Serial.println(F("Bitbox: connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial.println(F("Bitbox: Finished registering.")); Serial_flush();
     #endif
 
     #ifdef ENABLE_NEUTRON
