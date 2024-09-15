@@ -14,14 +14,15 @@
 
 #include "menuitems_lambda.h"
 
-// todo: save/load mappings to patterns
+// todo: save/load mappings to patterns? (currrently saves to project)
 // todo: use a more user-friendly and less memory-hungry way of presenting the UI
 
-class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
+class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBase {
   GateManager *gate_manager;
   int bank = -1;
 
   bool sequencer_enabled = true;
+  bool midi_notes_enabled = true;   // enable reception of midi notes from midi mapper matrix
 
   public:
     VirtualBehaviour_SequencerGates(GateManager *gate_manager, int bank = BANK_SEQ) : DeviceBehaviourUltimateBase () {
@@ -50,6 +51,16 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         }
     }
 
+    virtual bool is_midi_notes_enabled() {
+        return this->midi_notes_enabled;
+    }
+    virtual void set_midi_notes_enabled(bool v = true) {
+        this->midi_notes_enabled = v;
+        if (!v) {
+            this->clear_all_outputs();
+        }
+    }
+
     //virtual bool receives_midi_notes()  { return false; }
     virtual bool transmits_midi_notes() override { return true; }
     virtual bool transmits_midi_clock() override { return true; }
@@ -62,7 +73,7 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         menuitems->add(new LambdaToggleControl(
-            "Enable sequencer",
+            "Enable APC sequencer",
             [=](bool v) -> void { 
                 this->set_sequencer_enabled(v);
             },
@@ -70,6 +81,16 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
                 return this->is_sequencer_enabled(); 
             }
         ));
+        menuitems->add(new LambdaToggleControl(
+            "Enable MIDI Notes",
+            [=](bool v) -> void { 
+                this->set_midi_notes_enabled(v);
+            },
+            [=](void) -> bool { 
+                return this->is_midi_notes_enabled(); 
+            }
+        ));
+
 
         // todo: use a more user-friendly and less memory-hungry way of doing this
         for (int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
@@ -281,7 +302,8 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
     }
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        // todo: turns out that if the duration of a received note is very short -- ie 1 tick or less so the note on and off get received in the same tick -- then it can be effectively ignored, leading to missed hits...
+        if (!this->is_midi_notes_enabled()) return;
+        // note: turns out that if the duration of a received note is very short -- ie 1 tick or less so the note on and off get received in the same tick -- then it can be effectively ignored, leading to missed hits...
         //          work around this by using minimum duration of 2 ticks; maybe can implement a more robust fix in gate interface code by latching to ensure that 'GATE ONs' always last at least 1 tick before going off..?
         // translate MIDI drum notes to gates
         if (channel==GM_CHANNEL_DRUMS) {
@@ -293,6 +315,7 @@ class VirtualBehaviour_SequencerGates : public DeviceBehaviourUltimateBase {
         }
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        if (!this->is_midi_notes_enabled()) return;
         // translate MIDI drum notes to gates
         if (channel==GM_CHANNEL_DRUMS) {
             int gate = midi_drum_note_to_gate_number(note);
