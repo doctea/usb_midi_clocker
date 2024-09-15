@@ -1,6 +1,8 @@
-#ifdef ENABLE_BITBOX_DEDICATED
-    #include "Config.h"
-    #include "ConfigMidi.h"
+#include "Config.h"
+#include "ConfigMidi.h"
+
+#if defined(ENABLE_BITBOX) && defined(ENABLE_BITBOX_DEDICATED)
+
 
     #include "midi/midi_outs.h"
 
