@@ -1,13 +1,12 @@
 #ifdef ENABLE_BITBOX_DEDICATED
+    #include "Config.h"
+    #include "ConfigMidi.h"
 
-#include "Config.h"
-#include "ConfigMidi.h"
+    #include "midi/midi_outs.h"
 
-#include "midi/midi_outs.h"
+    #include "behaviours/behaviour_bitbox.h"
 
-#include "behaviours/behaviour_bitbox.h"
-
-DeviceBehaviour_Bitbox *behaviour_bitbox = new DeviceBehaviour_Bitbox(); //(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>>*)nullptr, &ENABLE_BITBOX);
+    DeviceBehaviour_Bitbox *behaviour_bitbox = new DeviceBehaviour_Bitbox(); //(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>>*)nullptr, &ENABLE_BITBOX);
 #else
     #include "behaviours/behaviour_base_serial.h"
     #include "behaviours/behaviour_simplewrapper.h"
