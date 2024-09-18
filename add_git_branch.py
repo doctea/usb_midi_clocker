@@ -32,3 +32,6 @@ def make_version_header():
     f.close()
 
 make_version_header()
+
+# include the build environment name in the firmware filename
+env.Replace(PROGNAME="firmware_%s" % env["PIOENV"])
