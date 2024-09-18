@@ -13,6 +13,8 @@
 #ifdef PCB_STUDIO
     #define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
     #define ENABLE_CV_INPUT_2   0x49
+#elif defined(PCB_GO)
+    // disalbe for PCB_GO
 #else
     #define ENABLE_CV_INPUT 0x49
 #endif
