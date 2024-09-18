@@ -17,6 +17,9 @@ extern Menu *menu;
 
 // display&edit apcmini sequence+clocks
 // todo: tidy this up a bit
+// todo: make the trigger sequencer display dots that relate to the number and timing of pulses per square
+//              eg, "|___", "_|__", "||||", "__|_"
+
 class ClockSequencerDisplay : public MenuItem {
 
     enum openlevel_t {

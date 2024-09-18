@@ -389,22 +389,22 @@ void loop() {
       //delay(1000); Serial_println("exiting sleep after menu->display"); Serial_flush();
     #endif
 
-    #ifdef ENABLE_CV_INPUT
+    //#ifdef ENABLE_CV_INPUT
       //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
       {
-        if (!screen_was_drawn) {
+        //if (!screen_was_drawn) {
           //__disable_irq();
           //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
           if (debug_flag) { Serial_println(F("about to parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
           parameter_manager->throttled_update_cv_input__all(TIME_BETWEEN_CV_INPUT_UPDATES, false, false);
           if (debug_flag) { Serial_println(F("just did parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
           //__enable_irq();                              
-        }
+        //}
         if (!playing) {
           //parameter_manager->update_mixers();
         }
       }
-    #endif
+    //#endif
   }
 
   // only update from main loop if we're paused, so that we can still see effect of manual updating of gates etc
