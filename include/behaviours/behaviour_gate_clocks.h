@@ -19,6 +19,10 @@ class VirtualBehaviour_ClockGates : virtual public DeviceBehaviourUltimateBase {
       this->bank = bank;
     }
 
+    virtual const char *get_label() override {
+      return (const char*)"Gate Clocks";
+    }
+
     virtual int getType() override {
       return BehaviourType::virt;
     }
