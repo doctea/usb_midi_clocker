@@ -42,6 +42,14 @@ void apcdisplay_initialise_last_sent() {
     apc_note_last_sent[i] = -1;
 }
 
+// x,y addressing for apcmini grid
+void apcdisplay_drawgrid_on(int column, int row, int8_t value, bool force = false) {
+  static constexpr int8_t top = (APCMINI_NUM_ROWS*APCMINI_DISPLAY_WIDTH);
+  int start_row = top-((row+1)*APCMINI_DISPLAY_WIDTH);
+  int note = start_row + column;
+  apcdisplay_sendNoteOn(note, value, 1, force);
+}
+
 /*const byte colour_intensity[] = {
   APCMINI_GREEN,
   APCMINI_YELLOW,
@@ -173,6 +181,33 @@ void redraw_sequence_row(byte sequence_number, bool force) {
 }
 #endif
 
+void redraw_patterns_row(byte row, bool force) {
+  if (behaviour_apcmini->device==nullptr) return;
+
+  // draw the available patterns...
+  int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
+  //start_row = APCMINI_NUM_ROWS - start_row;
+
+  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+    //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
+    if (row==0) {
+      // only draw on the first row
+        byte colour = APCMINI_OFF;
+        if (!project->is_selected_pattern_number_empty(x))
+          colour = APCMINI_GREEN;
+        if (project->loaded_pattern_number==x)
+          colour = APCMINI_YELLOW;
+        if (project->selected_pattern_number==x && project->is_selected_pattern_number_empty(x))
+          colour = APCMINI_GREEN_BLINK;
+        else if (project->selected_pattern_number==x)
+          colour += 1;
+        apcdisplay_sendNoteOn(start_row+x, colour);
+    } else {
+      apcdisplay_sendNoteOff(start_row+x);
+    }
+  }
+}
+
 #ifdef ENABLE_APCMINI_DISPLAY
   void apcmini_clear_display() {
     if (behaviour_apcmini->device==nullptr) return;
@@ -228,6 +263,8 @@ void redraw_sequence_row(byte sequence_number, bool force) {
         redraw_clock_row(row_to_draw);
       else if (get_apc_gate_page()==SEQUENCES) 
         redraw_sequence_row(row_to_draw);
+      else if (get_apc_gate_page()==PATTERNS)
+        redraw_patterns_row(row_to_draw);
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;

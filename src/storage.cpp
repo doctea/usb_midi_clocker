@@ -205,6 +205,8 @@ namespace storage {
 
       update_pattern_filename(String(filename));
 
+      messages_log_add(String("Saved to project : pattern ") + String(project_number) + " : " + String(pattern_number));
+
       #endif
     }
     return true;

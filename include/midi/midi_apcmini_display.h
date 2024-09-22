@@ -39,13 +39,14 @@ byte get_colour(byte lev);
 // which page the apcmini is currently displaying
 enum apc_gate_page_t {
   CLOCKS,
-  SEQUENCES
+  SEQUENCES,
+  PATTERNS
 };
 extern apc_gate_page_t apc_gate_page;
 
 void apcmini_update_position_display(int ticks);
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
-void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
+void apcdisplay_sendNoteOff(int8_t pitch, int8_t value = APCMINI_OFF, int8_t channel = 1, bool force = false);
 void apcdisplay_initialise_last_sent();
 
 void set_apc_gate_page(apc_gate_page_t page);
@@ -63,6 +64,8 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected, bool fo
 #ifdef ENABLE_SEQUENCER
 void redraw_sequence_row(byte c, bool force = false);
 #endif
+
+void redraw_patterns_row(byte row, bool force = false);
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_clear_display();

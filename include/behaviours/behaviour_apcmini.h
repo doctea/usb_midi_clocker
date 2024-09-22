@@ -207,6 +207,21 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             return false;
         }
 
+        bool process_note_on_patterns_page(byte inChannel, byte inNumber, byte inVelocity) {
+            if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+                byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
+                byte col = inNumber - (((NUM_SEQUENCES-1)-row)*APCMINI_DISPLAY_WIDTH);
+                if (row==0) {
+                    if (apcmini_shift_held)
+                        project->save_pattern(col);
+                    else
+                        project->load_pattern(col);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /*bool process_note_on_defaults(byte inChannel, byte inNumber, byte inVelocity) {
             return false;
         }*/
@@ -219,6 +234,9 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 return;
             } else if (get_apc_gate_page()==SEQUENCES && process_note_on_sequence_page(inChannel, inNumber, inVelocity)) {
                 // on SEQUENCES page and processed value
+                return;
+            } else if (get_apc_gate_page()==PATTERNS && process_note_on_patterns_page(inChannel, inNumber, inVelocity)) {
+                // on PATTERNS page and processed value
                 return;
             }/* else {
                 process_note_on_defaults(inChannel, inNumber, inVelocity);
@@ -255,6 +273,9 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             } else if (inNumber==APCMINI_BUTTON_PAN) {
                 apcmini_clear_display();
                 set_apc_gate_page(SEQUENCES);
+            } else if (inNumber==APCMINI_BUTTON_SEND) {
+                apcmini_clear_display();
+                set_apc_gate_page(PATTERNS);
             } else if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = true;
                 /*  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
