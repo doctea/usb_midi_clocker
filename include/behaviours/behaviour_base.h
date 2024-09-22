@@ -283,7 +283,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 parameter->save_pattern_add_lines(lines);
             }
         }
-        Serial.println("finished save_sequence_add_lines_parameters.");
+        if (debug) Serial.println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair

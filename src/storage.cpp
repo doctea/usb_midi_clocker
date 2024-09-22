@@ -161,7 +161,9 @@ namespace storage {
         //if (irqs_enabled) __enable_irq();
         return false;
       }
-      Serial.println("Starting data write.."); Serial_flush();
+      if (debug) Serial.println("Starting data write.."); Serial_flush();
+
+      // save clock + sequence data
       myFile.println(F("; begin sequence"));
       myFile.printf(F("id=%i\n"),input->id);
       myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
@@ -180,6 +182,8 @@ namespace storage {
         }
         myFile.println();
       }
+
+      // save behaviour extensions
       myFile.println(F("; behaviour extensions")); 
       LinkedList<String> behaviour_lines = LinkedList<String>();
       if (debug) Serial.println("calling save_pattern_add_lines..");
@@ -193,6 +197,8 @@ namespace storage {
       }
       if (debug) Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size());
       myFile.println(F("; end sequence"));
+
+      // all done -- close the file
       myFile.close();
       //if (irqs_enabled) __enable_irq();
       //Serial.println(F("Finished saving."));
@@ -279,7 +285,7 @@ namespace storage {
       return;
     } else if (project->isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
       if (clock_multiplier_index>NUM_CLOCKS) {
-        Serial.println(F("Skipping clock_multiplier entry as exceeds NUM_CLOCKS"));
+        if (debug) Serial.println(F("Skipping clock_multiplier entry as exceeds NUM_CLOCKS"));
         return;
       }
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String(F("clock_multiplier=")).length()).toInt();
@@ -288,7 +294,7 @@ namespace storage {
       return;
     } else if (project->isLoadClockSettings() && line.startsWith(F("clock_delay="))) {
       if (clock_delay_index>NUM_CLOCKS) {
-        Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
+        if (debug) Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
         return;
       }
       output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String(F("clock_delay=")).length()).toInt();      
@@ -297,7 +303,7 @@ namespace storage {
       return;
     } else if (project->isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
       if (clock_delay_index>NUM_SEQUENCES) {
-        Serial.println(F("Skipping sequence_data entry as exceeds NUM_CLOCKS"));
+        if (debug) Serial.println(F("Skipping sequence_data entry as exceeds NUM_CLOCKS"));
         return;
       }
       //output->clock_multiplier = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();      
