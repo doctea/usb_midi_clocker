@@ -240,8 +240,8 @@ void setup_behaviour_manager() {
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         Serial_println("Starting create_all_behaviour_menu_items"); Serial_flush();
 
-        menu->add_page("QuickJump Behaviours");
-        CustomQuickPagesMenuItem *quickjump = new CustomQuickPagesMenuItem("QuickJump Behaviours");
+        menu->add_page("QuickJumpBehaviours");
+        CustomQuickPagesMenuItem *quickjump = new CustomQuickPagesMenuItem("QuickJump to Behaviours");
         menu->add(quickjump);
         page_t *started_page = menu->get_selected_page();   // for remembering what page the quickjump menu itself is
         

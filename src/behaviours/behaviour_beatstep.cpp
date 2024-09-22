@@ -42,6 +42,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     #include "mymenu/menu_looper.h"
 
     #include "submenuitem_bar.h"
+    #include "menuitems_lambda.h"
     #include "menuitems_lambda_selector.h"
     #include "menuitems_object_selector.h"
     #include "menuitems_numbers.h"
@@ -56,6 +57,15 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         DividedClockedBehaviour::make_menu_items();
 
         SubMenuItemBar *pattern_options = new SubMenuItemBar("Pattern options");
+
+        // quantise length/step size/direction changes to phrase ends..
+        pattern_options->add(new LambdaToggleControl(
+            "Quantise",
+            [=](bool v) -> void { this->wait_before_changing = v; },
+            [=]() -> bool { return this->wait_before_changing; },
+            nullptr
+        ));
+
         pattern_options->add(new LambdaNumberControl<int8_t>(
             "Length",   
             //this, 
@@ -87,6 +97,17 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         direction->add_available_value(3, "Rnd");
         pattern_options->add(direction);
         menuitems->add(pattern_options);
+
+        // indicate that there are queued settings to be sent
+        menuitems->add(new CallbackMenuItem(
+            "Queued status", [=](void) -> const char * {
+                if (direction_queued || pattern_length_queued || step_size_queued) {
+                    return "Queued changes...";
+                } else {
+                    return "[ nothing queued ]";
+                }
+            }
+        ));
 
         SubMenuItemBar *note_options = new SubMenuItemBar("Note options");    
         LambdaNumberControl<int8_t> *swing = new LambdaNumberControl<int8_t>(
