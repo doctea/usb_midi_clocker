@@ -188,6 +188,20 @@ class TriggerSequencerDisplay : public MenuItem {
                     } else {
                         tft->fillRect(pos.x + (x * cell_width), pos.y, cell_width-2, cell_height-2, colour);
                         tft->fillRect(pos.x + (x * cell_width), pos.y, cell_width/4, cell_height/4, cache_colour); // draw the currently cached colour as a little inset rectangle so that we can see what's cached etc
+                        byte step_type = behaviour_sequencer_gates->read_sequence(y, x);
+                        const byte gap = 7;
+                        if (behaviour_sequencer_gates->is_tick_for_step_type(step_type, 0)) {
+                            tft->fillRect(pos.x + (x * cell_width), pos.y + cell_height/2, 2, cell_height/2, BLACK);
+                        }
+                        if (behaviour_sequencer_gates->is_tick_for_step_type(step_type, 6)) {
+                            tft->fillRect(pos.x + (x * cell_width) + (gap), pos.y + cell_height/2, 2, cell_height/2, BLACK);
+                        }
+                        if (behaviour_sequencer_gates->is_tick_for_step_type(step_type, 12)) {
+                            tft->fillRect(pos.x + (x * cell_width) + (gap*2), pos.y + cell_height/2, 2, cell_height/2, BLACK);
+                        }
+                        if (behaviour_sequencer_gates->is_tick_for_step_type(step_type, 18)) {
+                            tft->fillRect(pos.x + (x * cell_width) + (gap*3), pos.y + cell_height/2, 2, cell_height/2, BLACK);
+                        }
                     }
                 }
                 pos.y += cell_height;

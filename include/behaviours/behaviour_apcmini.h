@@ -188,7 +188,11 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                     redraw_sequence_row(row);
                 #endif
                 return true;
-            } else if (inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS && !apcmini_shift_held) {
+            } else if (!apcmini_shift_held && inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber <= APCMINI_BUTTON_STOP_ALL_CLIPS) {
+                byte row = inNumber - APCMINI_BUTTON_CLIP_STOP;
+                behaviour_sequencer_gates->toggle_track_active(row);
+                return true;
+            } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_STOP_ALL_CLIPS) {
                 #ifdef APCMINI_STOP_ALL_MODE_CLOCK
                     // start / stop play
                     if (!playing)
@@ -202,6 +206,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 #else
                     behaviour_sequencer_gates->set_sequencer_enabled(!behaviour_sequencer_gates->is_sequencer_enabled());
                 #endif
+                return true;
             }
 
             return false;
@@ -212,10 +217,16 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
                 byte col = inNumber - (((NUM_SEQUENCES-1)-row)*APCMINI_DISPLAY_WIDTH);
                 if (row==0) {
-                    if (apcmini_shift_held)
+                    if (apcmini_shift_held) {
                         project->save_pattern(col);
-                    else
-                        project->load_pattern(col);
+                    } else {
+                        if (!project->is_selected_pattern_number_empty(col)) {
+                            project->load_pattern(col);
+                        } else {
+                            project->select_pattern_number(col);
+                            behaviour_sequencer_gates->sequencer_clear_pattern();
+                        }
+                    }
                     return true;
                 }
             }

@@ -24,12 +24,19 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
   bool sequencer_enabled = true;
   bool midi_notes_enabled = true;   // enable reception of midi notes from midi mapper matrix
 
+  bool sequencer_track_active[NUM_SEQUENCES];   // all are set to true in constructor
+
   public:
     VirtualBehaviour_SequencerGates(GateManager *gate_manager, int bank = BANK_SEQ) : DeviceBehaviourUltimateBase () {
       initialise_note_to_gate_map();
 
       this->gate_manager = gate_manager;
       this->bank = bank;
+
+      // set all tracks active by default
+      for (int i = 0 ; i < NUM_SEQUENCES ; i++) {
+        sequencer_track_active[i] = true;
+      }
     }
 
     const char *get_label() override {
@@ -342,7 +349,23 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     void sequencer_press(byte row, byte col, bool shift = false);
     bool should_trigger_sequence(unsigned long ticks, byte sequence, int offset = 0);
 
+    // test a tick count and see if it should trigger for given step type
+    bool is_tick_for_step_type(byte type, unsigned long ticks, int offset = 0);
+
     void process_sequencer(unsigned long ticks);
+
+    void toggle_track_active(byte track) {
+        this->set_track_active(track, !this->is_track_active(track));
+    }
+    void set_track_active(byte track, bool active = true) {
+        this->sequencer_track_active[track] = active;
+        if (!active) {
+            cv_out_sequence_pin_off(track);
+        }
+    }
+    bool is_track_active(byte track) {
+        return this->sequencer_track_active[track];
+    }
 
     void clear_all_outputs() {
         for (int i = 0 ; i < NUM_SEQUENCES ; i++) {

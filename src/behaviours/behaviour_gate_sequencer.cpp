@@ -66,35 +66,11 @@ void VirtualBehaviour_SequencerGates::sequencer_press(byte row, byte col, bool s
     write_sequence(row, col, read_sequence(row, col)+1);
 }
 
-bool VirtualBehaviour_SequencerGates::should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
-  // todo: option to disable sequencer so that can just send eg midi drums without confusion
-  // return false;  // for testing, disable sequencer entirely
-  if (!this->sequencer_enabled)
-    return false;
-
-  byte step = step_number_from_ticks(ticks); //(ticks / (PPQN)) % NUM_STEPS;
-  /*if (offset==0 && is_bpm_on_beat(ticks)) {
-    Serial.print(F("On step "));
-    Serial.print(step);
-    Serial.println(F("!"));
-  }*/
-
-  byte v = read_sequence(sequence, step);
-  if (v) {
-    /*if (is_bpm_on_beat(ticks, offset) 
-        || (v==2 && is_bpm_on_eighth(ticks, offset))      // ratchetting
-        || (v==3 && is_bpm_on_sixteenth(ticks, offset))   // ratchetting
-    ) {*/
-    /*
-    0 = ----
-    1 = x---
-    2 = x-x-
-    3 = xxxx
-    4 = --x-
-    5 = -x-x
-    6 = x--x    
-    */
-    switch(v) {
+bool VirtualBehaviour_SequencerGates::is_tick_for_step_type(byte type, unsigned long ticks, int offset) {
+  switch(type) {
+      case 0:
+        return false;
+        break;
       case 1:
         if (is_bpm_on_beat(ticks, offset)) return true; 
         break;
@@ -115,24 +91,23 @@ bool VirtualBehaviour_SequencerGates::should_trigger_sequence(unsigned long tick
         break;       
       default:
         return false;
-      #ifdef DEBUG_SEQUENCER
-        if (offset==0) {
-          Serial.print(F("For tick "));
-          Serial.print(ticks);
-          Serial.print(F(" got step_number "));
-          Serial.print(step);
-          Serial.print(F(", trigger sequence #"));
-          Serial.print(sequence);
-          Serial.print(F(" on step "));
-          Serial.print(step);
-          Serial.println(F("!"));
-        } 
-      #endif
-      //return true;
-      //digitalWrite(PIN_CLOCK_START+i, HIGH);
-    } 
   }
   return false;
+}
+
+bool VirtualBehaviour_SequencerGates::should_trigger_sequence(unsigned long ticks, byte sequence, int offset) {
+  // todo: option to disable sequencer so that can just send eg midi drums without confusion
+  // return false;  // for testing, disable sequencer entirely
+  if (!this->sequencer_enabled)
+    return false;
+
+  if (!this->is_track_active(sequence))
+    return false;
+
+  byte step = step_number_from_ticks(ticks);
+  byte step_type = read_sequence(sequence, step);
+
+  return is_tick_for_step_type(step_type, ticks, offset);
 }
 
 

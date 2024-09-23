@@ -121,7 +121,7 @@ int get_sequencer_cell_apc_colour(byte row, byte column) {
     }
   } else {
     // sequencer
-    int v =behaviour_sequencer_gates-> read_sequence(row-NUM_CLOCKS, column);
+    int v = behaviour_sequencer_gates-> read_sequence(row-NUM_CLOCKS, column);
     return v ? get_colour(v-1) : APCMINI_OFF;
   }
 }
@@ -154,10 +154,10 @@ void redraw_clock_row(byte clock_number, bool force) {
     
     if (clock_number==behaviour_apcmini->clock_selected) {
       //Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
-      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_GREEN);
+      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_number, APCMINI_GREEN);
     } else {
       //Serial.printf("redraw_clock_row(%i) while clock_selected=%i\n", clock_number,behaviour_apcmini->clock_selected);
-      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP+clock_number, APCMINI_OFF);
+      apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP + clock_number, APCMINI_OFF);
     }
 }
 
@@ -178,6 +178,11 @@ void redraw_sequence_row(byte sequence_number, bool force) {
     //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
     apcdisplay_sendNoteOn(start_row+x, get_sequencer_cell_apc_colour(NUM_CLOCKS+sequence_number,x));
   }
+
+  apcdisplay_sendNoteOn(
+    APCMINI_BUTTON_CLIP_STOP + sequence_number, 
+    behaviour_sequencer_gates->is_track_active(sequence_number) ? APCMINI_ON : APCMINI_OFF
+  );
 }
 #endif
 
