@@ -43,7 +43,7 @@ void MIDIOutputWrapper::actual_sendControlChange(int8_t pitch, int8_t velocity, 
     }
 }*/
 
-
+#ifdef ENABLE_LOOPER
 void MIDIOutputWrapper_LoopTrack::actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) {
     output->in_event(ticks, midi::NoteOn, pitch, velocity); //, channel);
 }
@@ -57,13 +57,14 @@ void MIDIOutputWrapper_LoopTrack::actual_sendControlChange(int8_t number, int8_t
     //output->sendControlChange(pitch, velocity, channel);
     output->in_event(ticks, midi::ControlChange, number, value); //, channel);
 }
+#endif
 
 
-
-
+#ifdef ENABLE_LOOPER
 FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, int8_t channel) {
     return new MIDIOutputWrapper_LoopTrack(label, output, channel);
 }
+#endif
 FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, int8_t channel) {
     return new MIDIOutputWrapper_MIDIUSB(label, output, channel);
 }

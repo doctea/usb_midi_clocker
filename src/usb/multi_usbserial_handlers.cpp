@@ -76,24 +76,24 @@
 
 
     void update_usbserial_device_connections() {
-        for (int port = 0 ; port < NUM_USB_SERIAL_DEVICES ; port++) {
-            #ifdef IRQ_PROTECT_USB_CHANGES
-                ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            #endif
-            uint32_t packed_id = (usb_serial_slots[port].usbdevice->idVendor()<<16) | (usb_serial_slots[port].usbdevice->idProduct());
-            //Serial.printf("update_usbserial_device_connections(): packed %04X and %04X to %08X\n", usb_serial_slots[port].usbdevice->idVendor(),  usb_serial_slots[port].usbdevice->idProduct(), packed_id);
-            if (usb_serial_slots[port].packed_id != packed_id) {
-                // device at this port has changed since we last saw it -- ie, disconnection or connection
-                // unassign the midi_xxx helper pointers if appropriate
-                //usb_serial_slots[port].behaviour = nullptr;
-                Serial.printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_serial_slots[port].packed_id);
-                // call setup_usb_midi_device() to assign device to port and set handlers
-                setup_usbserial_midi_device(port, packed_id);
-                Serial.println(F("-----"));
-            }
-            #ifdef IRQ_PROTECT_USB_CHANGES
+        #ifdef IRQ_PROTECT_USB_CHANGES
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
+        #endif
+        {
+            for (int port = 0 ; port < NUM_USB_SERIAL_DEVICES ; port++) {
+
+                uint32_t packed_id = (usb_serial_slots[port].usbdevice->idVendor()<<16) | (usb_serial_slots[port].usbdevice->idProduct());
+                //Serial.printf("update_usbserial_device_connections(): packed %04X and %04X to %08X\n", usb_serial_slots[port].usbdevice->idVendor(),  usb_serial_slots[port].usbdevice->idProduct(), packed_id);
+                if (usb_serial_slots[port].packed_id != packed_id) {
+                    // device at this port has changed since we last saw it -- ie, disconnection or connection
+                    // unassign the midi_xxx helper pointers if appropriate
+                    //usb_serial_slots[port].behaviour = nullptr;
+                    Serial.printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_serial_slots[port].packed_id);
+                    // call setup_usb_midi_device() to assign device to port and set handlers
+                    setup_usbserial_midi_device(port, packed_id);
+                    Serial.println(F("-----"));
                 }
-            #endif
+            }
         }
     }
 

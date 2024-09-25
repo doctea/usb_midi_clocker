@@ -1,5 +1,4 @@
-#ifndef MIDI_LOOPER__INCLUDED
-#define MIDI_LOOPER__INCLUDED
+#pragma once
 
 #include "debug.h"
 
@@ -7,6 +6,9 @@
 
 #include <LinkedList.h>
 #include "Config.h"
+
+#ifdef ENABLE_LOOPER
+
 #include "ConfigMidi.h"
 #include "midi/MidiMappings.h"
 //#include "midi/midi_out_wrapper.h"
@@ -56,10 +58,10 @@ struct tracked_note {
 };
 
 
-class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
+class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKeyValueSource {
     LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
 
-    tracked_note recorded_hanging_notes[MIDI_MAX_NOTE];
+    tracked_note recorded_hanging_notes[MIDI_MAX_NOTE+1];
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
@@ -447,17 +449,17 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
 
 
     /* bitmap processing stuff */
-        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
+        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];    // velocity of note at this moment
         //int8_t (*piano_roll_bitmap)[LOOP_:];    // velocity of note at this moment
-        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][127];
+        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
         //track_note_bitmap *piano_roll_bitmap;
-        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
+        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
 
-        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE];
+        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
         loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
 
-        int8_t piano_roll_held[MIDI_MAX_NOTE];
-        bool pitch_contains_notes[MIDI_MAX_NOTE];
+        int8_t piano_roll_held[MIDI_MAX_NOTE+1];
+        bool pitch_contains_notes[MIDI_MAX_NOTE+1];
         int piano_roll_highest = MIDI_MIN_NOTE;
         int piano_roll_lowest = MIDI_MAX_NOTE;
 
@@ -499,7 +501,7 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
+                this->piano_roll_bitmap = (loop_bitmap*)extmem_calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(this->piano_roll_held, 0, MIDI_MAX_NOTE);
             memset(this->pitch_contains_notes, 0, MIDI_MAX_NOTE);
@@ -613,7 +615,7 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             int previous_quant = this->quantization_value;  
             this->quantization_value = 0;
 
-            bool held_state[MIDI_MAX_NOTE];   // for tracking what notes are held
+            bool held_state[MIDI_MAX_NOTE+1];   // for tracking what notes are held
             int note_on_count = 0, note_off_count = 0;
 
             memset(held_state, false, MIDI_MAX_NOTE);
@@ -666,8 +668,8 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             this->quantization_value = previous_quant;  // restore original quantization setting
         }
 
-<<<<<<< HEAD
-        virtual void add_save_lines(LinkedList<String> *lines) {
+        virtual void add_save_lines(LinkedList<String> *lines) override {
+
             lines->add(F("; begin loop"));
             lines->add(F("step_size="+LOOP_LENGTH_STEP_SIZE));
             lines->add(F("starts_at=0"));
@@ -675,12 +677,31 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             bool last_written = false;
             int lines_written = 0;
             for (int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
-                int size = frames[x]->size();
-=======
+                int size = frames[x]->size();       
+                if (size==0) {      // only write lines that have data
+                    last_written = false;
+                    continue;
+                } else if (!last_written || LOOP_LENGTH_STEP_SIZE>1) {
+                    lines->add(F("starts_at="+(x*LOOP_LENGTH_STEP_SIZE)));
+                }
+
+                for(unsigned int i = 0 ; i < size ; i++) {
+                    midi_message m = frames[x]->get(i);
+                    char message[10];
+                    sprintf(message, "%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
+                    data += message;
+                }
+                lines->add(F("loop_data=")+data);
+                
+                lines_written++;
+                //f.println();
+            }
+        }
+
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            //Serial.println("save_sequence not implemented on teensy");
+            //Serial.println("save_pattern not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File f;
@@ -700,48 +721,6 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
                 Serial.printf(F("\tError: couldn't open %s for writing\n"), filename);
                 return false;
             }
-            f.println(F("; begin loop"));
-            f.printf(F("step_size=%i\n"), LOOP_LENGTH_STEP_SIZE);
-            //myFile.printf("id=%i\n",input->id);
-            f.println(F("starts_at=0"));
-            f.printf(F("transpose=%i\n"), transpose_amount);
-            bool last_written = false;
-            int lines_written = 0;
-            for (unsigned int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {
-                unsigned int size = frames[x]->size();
-                /*if (!last_written) {
-                    myFile.printf("starts_at=%i\n",x);
-                }*/
-                //myFile.printf("%1x", input->sequence_data[i][x]);
->>>>>>> main
-                if (size==0) {      // only write lines that have data
-                    last_written = false;
-                    continue;
-                } else if (!last_written || LOOP_LENGTH_STEP_SIZE>1) {
-                    lines->add(F("starts_at="+(x*LOOP_LENGTH_STEP_SIZE)));
-                }
-<<<<<<< HEAD
-                String data = "";
-                for(int i = 0 ; i < size ; i++) {
-=======
-                f.printf(F("loop_data=")); //%2x:", frames[x].size());
-                
-                for(unsigned int i = 0 ; i < size ; i++) {
->>>>>>> main
-                    midi_message m = frames[x]->get(i);
-                    char message[10];
-                    sprintf(message, "%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
-                    data += message;
-                }
-                lines->add(F("loop_data=")+data);
-                
-                lines_written++;
-                //f.println();
-            }
-        }
-
-        /* save+load stuff to filesystem - linkedlist-of-message format */
-        bool save_loop(int project_number, int recording_number) {
             //Serial.println("save_sequence not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
@@ -765,7 +744,6 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             return true;
         }
 
-<<<<<<< HEAD
         struct load_state_t {
             int total_frames = 0, total_messages = 0, load_time = 0, loop_length_size = 1;
         };
@@ -818,9 +796,6 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             }
             return false;
         }
-=======
-        //#define DEBUG_LOOP_LOADER
->>>>>>> main
 
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
@@ -839,7 +814,6 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             already_loading = true;
             global_load_lock = true;
 
-<<<<<<< HEAD
             char filename[255] = "";
             sprintf(filename, FILEPATH_LOOP_FORMAT, project_number, recording_number);
             Serial.printf(F("midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
@@ -855,101 +829,6 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
             Serial_flush();
 
             Serial.printf(F("Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, load_state.total_frames, load_state.total_messages); Serial_flush();
-=======
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
-            Serial.printf(F("load_loop: midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
-
-            File f;
-            f = SD.open(filename, FILE_READ);
-            if (!f) {
-                Serial.printf(F("\tload_loop: Error: Couldn't open %s for reading!\n"), filename); Serial_flush();
-                /*#ifdef ENABLE_SCREEN
-                    menu.set_last_message("Error loading recording!");//, recording_number);
-                    menu.set_message_colour(ST77XX_RED);
-                #endif*/
-                //if (irqs_enabled) __enable_irq();
-                global_load_lock = false; already_loading = false;
-
-                return false;
-            }
-            f.setTimeout(0);
-
-            clear_all();
-
-            Serial.printf("\tload_loop: Entering load loop for project %i and recording_number %i..\n", project_number, recording_number);
-            Serial_flush();
-
-            int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
-
-            int total_frames = 0, total_messages = 0;
-            String line;
-            int time = 0;
-            while (line = f.readStringUntil('\n')) {
-                if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
-                //load_sequence_parse_line(line, output);
-                if (line.startsWith(F("starts_at="))) {
-                    time =      line.remove(0,String(F("starts_at=")).length()).toInt() * loop_length_size;
-                } else if (line.startsWith(F("step_size="))) {
-                    loop_length_size = line.remove(0,String(F("step_size=")).length()).toInt();
-                    //Serial.printf("read loop_length_size %i!\n", loop_length_size);
-                } else if (line.startsWith(F("transpose="))) {
-                    transpose_amount = line.remove(0,String(F("transpose=")).length()).toInt();
-                } else if (line.startsWith(F("loop_data="))) {
-                    //Serial.printf("processing a loop_data line..\n");
-                    total_frames++;
-                    //if (debug) Serial.printf("Read id %i\n", output->id);
-                    line = line.remove(0,String(F("loop_data=")).length());
-                    line = line.remove(line.length()-1,1);
-                    int MAX_LENGTH = (1+sizeof(midi_message)) * MAX_INSTRUCTIONS;
-                    char c_line[MAX_LENGTH];// = line.c_str();
-                    strncpy(c_line, line.c_str(), MAX_LENGTH);
-                    midi_message m;
-                    int messages_count = 0;
-
-                    char *tok;
-                    tok = strtok(c_line,",;:");
-                    while (tok!=NULL && messages_count<MAX_INSTRUCTIONS) {
-                        //#ifdef DEBUG_LOOP_LOADER
-                        //    Serial.printf(F("at time %i: for token '%s', sizeof is already %i, "), time, tok, frames[ticks_to_sequence_step(time)].size());
-                        //#endif
-                        int tmp_message_type, tmp_channel, tmp_pitch, tmp_velocity;
-                        sscanf(tok, "%02x%02x%02x%02x", &tmp_message_type, &tmp_channel, &tmp_pitch, &tmp_velocity);
-                        m.message_type = tmp_message_type;
-                        m.channel = tmp_channel;
-                        m.pitch = tmp_pitch;
-                        m.velocity = tmp_velocity;
-                        #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("read message int8_ts: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
-                        #endif
-                        if (this->debug) { Serial.printf(F("storing event at %i\n"), time); Serial_flush(); }
-                        store_event(time, m);
-                        messages_count++;
-                        tok = strtok(NULL,",;:");
-                    }
-                    #ifdef DEBUG_LOOP_LOADER
-                        Serial.printf(F("load_loop: for time\t%i read\t%i messages\n"), time, messages_count);
-                    #endif
-                    total_messages += messages_count;
-                    time++;
-                }
-            }
-            #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("load_loop: Closing file.."));
-            #endif
-            f.close();
-            //if (irqs_enabled) __enable_irq();
-            #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("load_loop: File closed"));
-            #endif
-
-            //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
-            /*#ifdef ENABLE_SCREEN
-                menu.set_last_message("Loaded recording %i"); //, recording_number);
-                menu.set_message_colour(ST77XX_GREEN);
-            #endif*/
-            Serial.printf(F("load_loop: Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
->>>>>>> main
             
             loaded_recording_number = recording_number;
             clear_hanging();
@@ -971,5 +850,7 @@ class MIDITrack : public IParseKeyValueReceiver, public ISaveKeyValueSource {
         #endif
 
 };
+
+extern MIDITrack midi_looper;
 
 #endif

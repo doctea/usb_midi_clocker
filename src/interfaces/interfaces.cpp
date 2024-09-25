@@ -112,7 +112,7 @@ void set_sequence_gate(int gate_number, bool state) {
 
     #include "mymenu/menu_gatedisplay.h"
     void GateManager::create_controls(Menu *menu) {
-        menu->select_page(2);   // since we only call create_controls later in the setup process, we need to move back to the second page ('Sequencer') to add these items
+        menu->select_page_for_name("Sequencer");   // since we only call create_controls later in the setup process, we need to move back to the second page ('Sequencer') to add these items
         menu->add(new GatesDisplay("Gates"));
 
         byte gate_count = 0;

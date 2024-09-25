@@ -1,22 +1,18 @@
-#ifndef PROJECT__INCLUDED
-#define PROJECT__INCLUDED
+#pragma once
+
+#include "Config.h"
 
 #include "storage.h"
+#ifdef ENABLE_LOOPER
 #include "midi/midi_looper.h"
-
-//#include "behaviours/behaviour_subclocker.h"
-/*#include "behaviours/behaviour_beatstep.h"
-#include "behaviours/behaviour_keystep.h"
-#include "behaviours/behaviour_mpk49.h"*/
+#endif
 
 #include "midi/midi_mapper_matrix_manager.h"
 #include "behaviours/behaviour_manager.h"
 
-//extern DeviceBehaviour_Subclocker *behaviour_subclocker;
-
 #include "mymenu/menu_fileviewers.h"
 
-#define NUM_SEQUENCE_SLOTS_PER_PROJECT  8
+#define NUM_PATTERN_SLOTS_PER_PROJECT   8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
 
 using namespace storage;
@@ -29,27 +25,33 @@ using namespace storage;
 #endif
 
 #include "file_manager/file_manager_interfaces.h"
+#include "file_manager/file_manager.h"
 
 extern volatile bool global_load_lock;
 
 class Project : public IParseKeyValueReceiver {
-    bool sequence_slot_has_file[NUM_SEQUENCE_SLOTS_PER_PROJECT];
+    bool pattern_slot_has_file[NUM_PATTERN_SLOTS_PER_PROJECT];
+    #ifdef ENABLE_LOOPER
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];
+    #endif
 
     bool debug = false;
 
+    #ifdef ENABLE_LOOPER
     MIDITrack *temp_loop = new MIDITrack();
+    #endif
 
-    void initialise_sequence_slots() {
-        Serial.println(F("initialise_sequence_slots starting.."));
-        for (unsigned int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
+    void initialise_pattern_slots() {
+        Serial.println(F("initialise_pattern_slots starting.."));
+        for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
             char filepath[MAX_FILEPATH];
-            snprintf(filepath, MAX_FILEPATH, FILEPATH_SEQUENCE_FORMAT, this->current_project_number, i);
-            sequence_slot_has_file[i] = SD.exists(filepath);
-            Serial.printf(F("\tsequence_slot_has_file[i] = %i for %s\n"), sequence_slot_has_file[i], filepath);
+            snprintf(filepath, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, this->current_project_number, i);
+            pattern_slot_has_file[i] = SD.exists(filepath);
+            Serial_printf(F("\tpattern_slot_has_file[i] = %i for %s\n"), pattern_slot_has_file[i], filepath);
         }
-        Serial.println(F("initialise_sequence_slots finished"));
+        Serial_println(F("initialise_pattern_slots finished"));
     }
+    #ifdef ENABLE_LOOPER
     void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
         temp_loop->bitmap_enabled = false;
@@ -59,25 +61,28 @@ class Project : public IParseKeyValueReceiver {
             snprintf(filepath, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
             loop_slot_has_file[i] = SD.exists(filepath);
             if (!quick && loop_slot_has_file[i]) {        // test whether file is actually empty or not
-                Serial.printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
+                Serial_printf(F("initialise_loop_slots: checking if loop slot %i is actually empty...\n"), i);
                 temp_loop->load_loop(this->current_project_number, i);
-                Serial.printf(F("initialise_loop_slots: loaded loop ok\n")); Serial_flush();
+                Serial_printf(F("initialise_loop_slots: loaded loop ok\n")); Serial_flush();
                 if (temp_loop->count_events()==0)
                     loop_slot_has_file[i] = false;
-                Serial.printf(F("initialise_loop_slots: did count_events\n"));
+                Serial_printf(F("initialise_loop_slots: did count_events\n"));
             }
-            Serial.printf(F("initialise_loop_slots: loop_slot_has_file[i] = %i for %s\n"), loop_slot_has_file[i], filepath);
+            Serial_printf(F("initialise_loop_slots: loop_slot_has_file[i] = %i for %s\n"), loop_slot_has_file[i], filepath);
         }
         temp_loop->clear_all();
     }
+    #endif
     public:
         int current_project_number = 0;
 
-        int selected_sequence_number = 0;
-        int loaded_sequence_number = -1;
+        int selected_pattern_number = 0;
+        int loaded_pattern_number = -1;
 
+        #ifdef ENABLE_LOOPER
         int selected_loop_number = 0;
         volatile int loaded_loop_number = -1;
+        #endif
 
         bool load_matrix_mappings = true;
         bool load_clock_settings = true;
@@ -85,14 +90,16 @@ class Project : public IParseKeyValueReceiver {
         bool load_behaviour_options = true;
         
         Project() {
-            //initialise_sequence_slots();
+            //initialise_pattern_slots();
         }
 
         FLASHMEM void setup_project() {
             setProjectNumber(this->current_project_number);
 
-            initialise_sequence_slots();
+            initialise_pattern_slots();
+            #ifdef ENABLE_LOOPER
             initialise_loop_slots(false);
+            #endif
         }
 
         void setLoadMatrixMappings(bool value = true) {
@@ -123,77 +130,80 @@ class Project : public IParseKeyValueReceiver {
         }
 
         void setProjectNumber(int number) {
-            if (this->debug) Serial.printf(F("Project#setProjectNumber(%i)...\n"), number);
-            if (this->current_project_number!=number) {
+            if (this->debug) Serial_printf(F("Project#setProjectNumber(%i)...\n"), number);
+            //if (this->current_project_number!=number) {
                 this->current_project_number = number;
-                if (this->debug) Serial.printf(F("Switched to project number %i\n"), this->current_project_number);
+                if (this->debug) Serial_printf(F("Switched to project number %i\n"), this->current_project_number);
                 make_project_folders(number);
                 this->load_project_settings(number);
+                #ifdef ENABLE_LOOPER
                 this->initialise_loop_slots();
-                this->initialise_sequence_slots();
-            }
+                #endif
+                this->initialise_pattern_slots();
+            //}
         }
         int getProjectNumber() {
             return this->current_project_number;
         }
 
         ////////////// clocks / sequences
-        bool select_sequence_number(int sn) {
-            Serial.printf(F("select_sequence_number %i\n"), sn);
-            selected_sequence_number = sn % NUM_SEQUENCE_SLOTS_PER_PROJECT;
-            return sn == selected_sequence_number;
+        bool select_pattern_number(int sn) {
+            Serial_printf(F("select_pattern_number %i\n"), sn); Serial_flush();
+            selected_pattern_number = sn % NUM_PATTERN_SLOTS_PER_PROJECT;
+            return sn == selected_pattern_number;
         }
 
-        bool is_selected_sequence_number_empty(int sn) {
-            return !sequence_slot_has_file[sn];
+        bool is_selected_pattern_number_empty(int sn) {
+            return !pattern_slot_has_file[sn];
         }
 
-        int get_selected_sequence_number() {
-            return this->selected_sequence_number;
+        int get_selected_pattern_number() {
+            return this->selected_pattern_number;
         }
-        int get_loaded_sequence_number() {
-            return this->loaded_sequence_number;
+        int get_loaded_pattern_number() {
+            return this->loaded_pattern_number;
         }
-        int get_max_sequence_slots() {
-            return NUM_SEQUENCE_SLOTS_PER_PROJECT;
+        int get_max_pattern_slots() {
+            return NUM_PATTERN_SLOTS_PER_PROJECT;
         }
 
         // load and save sequences / clock settings etc
-        bool load_selected_sequence() {
-            return load_sequence(selected_sequence_number);
+        bool load_selected_pattern() {
+            return load_pattern(selected_pattern_number);
         }
-        bool save_selected_sequence() {
-            return save_sequence(selected_sequence_number);
+        bool save_selected_pattern() {
+            return save_pattern(selected_pattern_number);
         }
-        bool load_sequence() {
-            return load_sequence(selected_sequence_number);
+        bool load_pattern() {
+            return load_pattern(selected_pattern_number);
         }
-        bool save_sequence() {
-            return save_sequence(selected_sequence_number);
+        bool save_pattern() {
+            return save_pattern(selected_pattern_number);
         }
-        bool load_specific_sequence(int selected_sequence_number) {
-            return this->load_sequence(selected_sequence_number);
+        bool load_specific_pattern(int selected_pattern_number) {
+            return this->load_pattern(selected_pattern_number);
         }
 
-        bool load_sequence(int selected_sequence_number) {
-            Serial.printf(F("load for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
-            bool result = storage::load_sequence(current_project_number, selected_sequence_number, &storage::current_state);
+        bool load_pattern(int selected_pattern_number) {
+            if (debug) Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush();
+            bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state);
             if (result)
-                loaded_sequence_number = selected_sequence_number;
+                loaded_pattern_number = selected_pattern_number;
             Serial.println(F("returning\n"));  Serial_flush();
             return result;
         }
-        bool save_sequence(int selected_sequence_number) {
-            Serial.printf(F("save for selected_sequence_number %i\n"), selected_sequence_number); Serial_flush();
-            bool result = storage::save_sequence(current_project_number, selected_sequence_number, &storage::current_state);
+        bool save_pattern(int selected_pattern_number) {
+            if (debug) Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush();
+            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state);
             if (result) {
-                sequence_slot_has_file[selected_sequence_number] = true;
-                loaded_sequence_number = selected_sequence_number;
+                pattern_slot_has_file[selected_pattern_number] = true;
+                loaded_pattern_number = selected_pattern_number;
             }
             return result;
         }
 
         //////// loops/recordings
+        #ifdef ENABLE_LOOPER
         bool select_loop_number(int sn) {
             Serial.printf(F("select_loop_number %i\n"), sn);
             selected_loop_number = sn % NUM_LOOP_SLOTS_PER_PROJECT;
@@ -206,28 +216,29 @@ class Project : public IParseKeyValueReceiver {
         void set_loop_slot_has_file(int slot, bool state = true) {
             loop_slot_has_file[slot] = state;
         }
+        #endif
 
-        void select_next_sequence() {
-            selected_sequence_number++;
-            if (selected_sequence_number>=NUM_SEQUENCE_SLOTS_PER_PROJECT)
-                selected_sequence_number = 0;
+        void select_next_pattern() {
+            selected_pattern_number++;
+            if (selected_pattern_number>=NUM_PATTERN_SLOTS_PER_PROJECT)
+                selected_pattern_number = 0;
         }
-        void select_previous_sequence() {
-            selected_sequence_number--;
-            if (selected_sequence_number < 0) 
-                selected_sequence_number = NUM_SEQUENCE_SLOTS_PER_PROJECT-1;
+        void select_previous_pattern() {
+            selected_pattern_number--;
+            if (selected_pattern_number < 0) 
+                selected_pattern_number = NUM_PATTERN_SLOTS_PER_PROJECT-1;
         }
-        void load_next_sequence() {
-            loaded_sequence_number++;
-            if (loaded_sequence_number>=NUM_SEQUENCE_SLOTS_PER_PROJECT)
-                loaded_sequence_number = 0;
-            load_sequence(loaded_sequence_number);
+        void load_next_pattern() {
+            loaded_pattern_number++;
+            if (loaded_pattern_number>=NUM_PATTERN_SLOTS_PER_PROJECT)
+                loaded_pattern_number = 0;
+            load_pattern(loaded_pattern_number);
         }
-        void load_previous_sequence() {
-            loaded_sequence_number--;
-            if (loaded_sequence_number < 0)
-                loaded_sequence_number = NUM_SEQUENCE_SLOTS_PER_PROJECT-1;
-            load_sequence(loaded_sequence_number);
+        void load_previous_pattern() {
+            loaded_pattern_number--;
+            if (loaded_pattern_number < 0)
+                loaded_pattern_number = NUM_PATTERN_SLOTS_PER_PROJECT-1;
+            load_pattern(loaded_pattern_number);
         }
 
         #ifdef ENABLE_LOOPER
@@ -250,7 +261,7 @@ class Project : public IParseKeyValueReceiver {
             }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("load_loop(): load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
-                //bool result = storage::load_sequence(selected_loop_number, &storage::current_state);
+                //bool result = storage::load_pattern(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
                     loaded_loop_number = selected_loop_number;
@@ -258,7 +269,7 @@ class Project : public IParseKeyValueReceiver {
             }
             bool save_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("save for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
-                //bool result = storage::save_sequence(selected_loop_number, &storage::current_state);
+                //bool result = storage::save_pattern(selected_loop_number, &storage::current_state);
                 bool result = track->save_loop(current_project_number, selected_loop_number);
                 if (result) {
                     if (track->count_events()>0)
@@ -278,14 +289,14 @@ class Project : public IParseKeyValueReceiver {
         #endif
 
         // callbacks so project can respond to events eg on_phrase...
-        bool auto_advance_sequencer = false;
+        bool auto_advance_pattern = false;
         void on_phrase(int phrase) {
-            int slot = phrase % NUM_SEQUENCE_SLOTS_PER_PROJECT;
+            int slot = phrase % NUM_PATTERN_SLOTS_PER_PROJECT;
             Debug_printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
-            if (auto_advance_sequencer) {
-                this->selected_sequence_number = slot % NUM_SEQUENCE_SLOTS_PER_PROJECT;
-                //Serial.printf("on_phrase loading sequence_number %i\n", selected_sequence_number);
-                this->load_sequence(this->selected_sequence_number);
+            if (auto_advance_pattern) {
+                this->selected_pattern_number = slot % NUM_PATTERN_SLOTS_PER_PROJECT;
+                //Serial.printf("on_phrase loading sequence_number %i\n", selected_pattern_number);
+                this->load_pattern(this->selected_pattern_number);
                 //Serial.println("done!");
             }
             #ifdef ENABLE_LOOPER
@@ -298,11 +309,11 @@ class Project : public IParseKeyValueReceiver {
             #endif
             Debug_printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
         }
-        bool is_auto_advance_sequencer() {
-            return this->auto_advance_sequencer;
+        bool is_auto_advance_pattern() {
+            return this->auto_advance_pattern;
         }
-        void set_auto_advance_sequencer(bool auto_advance_sequencer) {
-            this->auto_advance_sequencer = auto_advance_sequencer;
+        void set_auto_advance_pattern(bool auto_advance_pattern) {
+            this->auto_advance_pattern = auto_advance_pattern;
         }
 
 
@@ -335,8 +346,6 @@ class Project : public IParseKeyValueReceiver {
             myFile.printf(F("id=%i\n"), save_to_project_number);
 
             // subclocker settings
-            //myFile.printf("subclocker_divisor=%i\n",     behaviour_subclocker->get_divisor());
-            //myFile.printf("subclocker_delay_ticks=%i\n", behaviour_subclocker->get_delay_ticks());
             LinkedList<String> behaviour_lines = LinkedList<String>();
             behaviour_manager->save_project_add_lines(&behaviour_lines);
             for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
@@ -344,18 +353,11 @@ class Project : public IParseKeyValueReceiver {
             }
 
             // midi matrix settings
-            for (int source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
-                for (int target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
-                    if (midi_matrix_manager->is_connected(source_id,target_id)) {
-                        myFile.printf(
-                            F("midi_matrix_map=%s|%s\n"), 
-                            midi_matrix_manager->sources[source_id].handle, 
-                            midi_matrix_manager->targets[target_id].handle
-                        );
-                    }
-                }
+            LinkedList<String> matrix_lines = LinkedList<String>();
+            midi_matrix_manager->save_project_add_lines(&matrix_lines);
+            for (unsigned int i = 0 ; i < matrix_lines.size() ; i++) {
+                myFile.println(matrix_lines.get(i));
             }
-            //midi_matrix_manager->save_to_file(myFile);
 
             myFile.println(F("; end project"));
             myFile.close();
@@ -448,6 +450,8 @@ class Project : public IParseKeyValueReceiver {
             String value = line.substring(line.indexOf('=')+1);
             line = line.replace('\n',"");
 
+            //Serial_printf("load_project_parse_line(%s)\n", line.c_str());
+
             if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
                 // legacy save format, pre-matrix
                 Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
@@ -458,32 +462,19 @@ class Project : public IParseKeyValueReceiver {
                 String target_label = line.substring(split+1,line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
                 return;
-            } else if (this->isLoadMatrixMappings() && line.startsWith(F("midi_matrix_map="))) {
-                // midi matrix version
-                Serial.printf(F("----\nLoading midi_matrix_map line '%s'\n"), line.c_str());
-                line = line.remove(0,String(F("midi_matrix_map=")).length());
-                int split = line.indexOf('|');
-                String source_label = line.substring(0,split);
-                String target_label = line.substring(split+1,line.length());
-                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
+            } else if (this->isLoadMatrixMappings() && midi_matrix_manager->load_parse_line(line)) {
                 return;
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
                 // ask behaviour_manager to process the line
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
-                Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str());
+                //Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str()); Serial_flush();
                 return;
             }
-<<<<<<< HEAD
-        }*/
-=======
             messages_log_add(String("Unknown Project line '") + line + String("'"));
-        }
->>>>>>> main
+        }*/
 };
 
 extern Project *project;
 
 // for use by the Menu
 void save_project_settings();
-
-#endif

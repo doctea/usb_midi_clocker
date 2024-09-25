@@ -4,7 +4,7 @@
 
 #ifdef ENABLE_DPT_LOOPER
 
-class DeviceBehaviour_DPTLooper : public DeviceBehaviourSerialBase {
+class DeviceBehaviour_DPTLooper : virtual public DeviceBehaviourSerialBase {
     enum loop_mode_t {
         ON_BAR,
         ON_2BAR,

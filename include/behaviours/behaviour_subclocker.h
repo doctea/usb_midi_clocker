@@ -18,7 +18,7 @@ void subclocker_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity
 /*void on_subclocker_divisor_changed(int new_value, int old_value) {
 }*/
 
-class DeviceBehaviour_Subclocker : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
+class DeviceBehaviour_Subclocker : virtual public DeviceBehaviourUSBBase, virtual public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
     public:
         uint16_t vid = 0x1337, pid = 0x1337;
