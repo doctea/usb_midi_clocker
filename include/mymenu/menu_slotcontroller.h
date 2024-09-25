@@ -57,7 +57,7 @@ class SlotController : public MenuItem {
                         tft->fillRect(x-1, y-1, button_size+2, button_size+2, ST77XX_BLACK);
                     #endif
                 }
-                //if (project.is_selected_sequence_number_empty(i)) {
+                //if (project.is_selected_pattern_number_empty(i)) {
                 if (this->is_slot_empty(i)) { //this->target->*is_slot_empty_callback(i)) {
                     #ifdef ROUNDED
                         tft->drawRect(x, y, button_size, button_size, colour);
@@ -84,7 +84,7 @@ class SlotController : public MenuItem {
             ui_selected_number--;
             if (ui_selected_number < 0)
                 ui_selected_number = this->get_max_slots()-1;
-            //project.select_sequence_number(ui_selected_number);
+            //project.select_pattern_number(ui_selected_number);
             this->move_to_slot_number(ui_selected_number);
             return true;
         }
@@ -93,22 +93,22 @@ class SlotController : public MenuItem {
             ui_selected_number++;
             if (ui_selected_number >= this->get_max_slots())
                 ui_selected_number = 0;
-            //project.select_sequence_number(ui_selected_number);
+            //project.select_pattern_number(ui_selected_number);
             this->move_to_slot_number(ui_selected_number);
             return true;
         }
 
         // load
         virtual bool button_select() override {
-            //project.select_sequence_number(ui_selected_number);
+            //project.select_pattern_number(ui_selected_number);
             //this->target->*move_to_slot_callback(ui_selected_number);
             //this->select_slot_number(ui_selected_number);
-            //bool success = project.load_sequence(); //selected_sequence_number);
+            //bool success = project.load_pattern(); //selected_pattern_number);
             //bool success = this->target->*select_callback(ui_selected_number);
             bool success = this->load_slot_number(ui_selected_number);
             uint8_t max_length = tft->get_c_max();
             if (success) {
-                //loaded_sequence_number = ui_selected_number;
+                //loaded_pattern_number = ui_selected_number;
                 char msg[tft->get_c_max()] = "";
                 snprintf(msg, max_length, "Loaded %i", this->get_loaded_slot()); //this->target->*getter_callback());
                 menu->set_message_colour(GREEN);
@@ -125,16 +125,16 @@ class SlotController : public MenuItem {
 
         // save 
         virtual bool button_right() override {
-            //project.select_sequence_number(ui_selected_number);
+            //project.select_pattern_number(ui_selected_number);
             //this->target->*move_to_slot_callback(ui_selected_number);
-            //bool success = project.save_sequence(ui_selected_number); //, &mpk49_loop_track);
+            //bool success = project.save_pattern(ui_selected_number); //, &mpk49_loop_track);
             this->move_to_slot_number(ui_selected_number);
             bool success = this->save_to_slot_number(ui_selected_number); //this->target->*right_button_callback(ui_selected_number);
             uint8_t max_length = tft->get_c_max();
             if (success) {
-                //loaded_sequence_number = ui_selected_number;
+                //loaded_pattern_number = ui_selected_number;
                 char msg[tft->get_c_max()] = "";
-                snprintf(msg, max_length, "Saved %i", this->get_loaded_slot()); //->target->*getter_callback()); //project.loaded_sequence_number);
+                snprintf(msg, max_length, "Saved %i", this->get_loaded_slot()); //->target->*getter_callback()); //project.loaded_pattern_number);
                 menu->set_message_colour(GREEN);
                 menu->set_last_message(msg);
             } else {

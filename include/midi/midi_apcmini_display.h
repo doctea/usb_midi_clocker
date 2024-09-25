@@ -20,7 +20,7 @@
 #define APCMINI_YELLOW        5
 #define APCMINI_YELLOW_BLINK  6
 
-extern byte apc_note_last_sent[127];
+extern int8_t apc_note_last_sent[128];
 
 // gradation of colours to use
 #define LEVEL_1 0
@@ -36,24 +36,36 @@ const byte colour_intensity[] = {
 };
 byte get_colour(byte lev);
 
+// which page the apcmini is currently displaying
+enum apc_gate_page_t {
+  CLOCKS,
+  SEQUENCES,
+  PATTERNS
+};
+extern apc_gate_page_t apc_gate_page;
 
 void apcmini_update_position_display(int ticks);
-
-
-void apcdisplay_sendNoteOn(byte pitch, byte value, byte channel = 1, bool force = false);
-void apcdisplay_sendNoteOff(byte pitch, byte value, byte channel = 1, bool force = false);
+void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel = 1, bool force = false);
+void apcdisplay_sendNoteOff(int8_t pitch, int8_t value = APCMINI_OFF, int8_t channel = 1, bool force = false);
 void apcdisplay_initialise_last_sent();
 
-#ifdef ENABLE_CLOCKS
-void redraw_clock_row(byte c);
+void set_apc_gate_page(apc_gate_page_t page);
+apc_gate_page_t get_apc_gate_page();
 
-void redraw_clock_selected(byte old_clock_selected, byte clock_selected);
+int get_sequencer_cell_apc_colour(byte c, byte i);
+int get_sequencer_cell_565_colour(byte row, byte column);
+int16_t get_565_colour_for_apc_note(int colour);
+
+#ifdef ENABLE_CLOCKS
+void redraw_clock_row(byte c, bool force = false);
+void redraw_clock_selected(byte old_clock_selected, byte clock_selected, bool force = false);
 #endif
 
 #ifdef ENABLE_SEQUENCER
-void redraw_sequence_row(byte c);
+void redraw_sequence_row(byte c, bool force = false);
 #endif
 
+void redraw_patterns_row(byte row, bool force = false);
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_clear_display();

@@ -464,9 +464,9 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             }
         }
 
-        /*virtual void save_sequence_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUltimateBase::save_sequence_add_lines(lines);
-            //DividedClockedBehaviour::save_sequence_add_lines(lines);
+        /*virtual void save_pattern_add_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUltimateBase::save_pattern_add_lines(lines);
+            //DividedClockedBehaviour::save_pattern_add_lines(lines);
 
             // save out the 'saveable parameters'
             //this->save_sequence_add_lines_saveable_parameters(lines);

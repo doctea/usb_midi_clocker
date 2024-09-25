@@ -1,5 +1,4 @@
-#ifndef MIDI_LOOPER__INCLUDED
-#define MIDI_LOOPER__INCLUDED
+#pragma once
 
 #include "debug.h"
 
@@ -7,6 +6,9 @@
 
 #include <LinkedList.h>
 #include "Config.h"
+
+#ifdef ENABLE_LOOPER
+
 #include "ConfigMidi.h"
 #include "midi/MidiMappings.h"
 //#include "midi/midi_out_wrapper.h"
@@ -57,7 +59,7 @@ struct tracked_note {
 class MIDITrack {
     LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
 
-    tracked_note recorded_hanging_notes[MIDI_MAX_NOTE];
+    tracked_note recorded_hanging_notes[MIDI_MAX_NOTE+1];
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
@@ -445,17 +447,17 @@ class MIDITrack {
 
 
     /* bitmap processing stuff */
-        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][127];    // velocity of note at this moment
+        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];    // velocity of note at this moment
         //int8_t (*piano_roll_bitmap)[LOOP_:];    // velocity of note at this moment
-        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][127];
+        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
         //track_note_bitmap *piano_roll_bitmap;
-        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][127];
+        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
 
-        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE];
+        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
         loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
 
-        int8_t piano_roll_held[MIDI_MAX_NOTE];
-        bool pitch_contains_notes[MIDI_MAX_NOTE];
+        int8_t piano_roll_held[MIDI_MAX_NOTE+1];
+        bool pitch_contains_notes[MIDI_MAX_NOTE+1];
         int piano_roll_highest = MIDI_MIN_NOTE;
         int piano_roll_lowest = MIDI_MAX_NOTE;
 
@@ -497,7 +499,7 @@ class MIDITrack {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
+                this->piano_roll_bitmap = (loop_bitmap*)extmem_calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(this->piano_roll_held, 0, MIDI_MAX_NOTE);
             memset(this->pitch_contains_notes, 0, MIDI_MAX_NOTE);
@@ -611,7 +613,7 @@ class MIDITrack {
             int previous_quant = this->quantization_value;  
             this->quantization_value = 0;
 
-            bool held_state[MIDI_MAX_NOTE];   // for tracking what notes are held
+            bool held_state[MIDI_MAX_NOTE+1];   // for tracking what notes are held
             int note_on_count = 0, note_off_count = 0;
 
             memset(held_state, false, MIDI_MAX_NOTE);
@@ -667,7 +669,7 @@ class MIDITrack {
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            //Serial.println("save_sequence not implemented on teensy");
+            //Serial.println("save_pattern not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
             //__disable_irq();
             File f;
@@ -784,7 +786,7 @@ class MIDITrack {
             int time = 0;
             while (line = f.readStringUntil('\n')) {
                 if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
-                //load_sequence_parse_line(line, output);
+                //load_pattern_parse_line(line, output);
                 if (line.startsWith(F("starts_at="))) {
                     time =      line.remove(0,String(F("starts_at=")).length()).toInt() * loop_length_size;
                 } else if (line.startsWith(F("step_size="))) {
@@ -867,5 +869,7 @@ class MIDITrack {
         #endif
 
 };
+
+extern MIDITrack midi_looper;
 
 #endif

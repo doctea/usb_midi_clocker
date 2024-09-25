@@ -1,3 +1,5 @@
+#include "Config.h"
+
 #include "behaviours/behaviour_manager.h"
 
 #include "behaviours/behaviour_apcmini.h"
@@ -6,6 +8,7 @@
 #include "behaviours/behaviour_keystep.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "behaviours/behaviour_subclocker.h"
+#include "behaviours/behaviour_skulptsynth.h"
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_chocolate.h"
 
@@ -50,6 +53,15 @@ void behaviour_manager_kill_all_current_notes () {
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
+    #ifdef ENABLE_CLOCKS
+        behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);
+        behaviour_manager->registerBehaviour(behaviour_clock_gates);
+    #endif
+    #ifdef ENABLE_SEQUENCER
+        behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
+        behaviour_manager->registerBehaviour(behaviour_sequencer_gates);
+    #endif
+
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();
         #ifdef ENABLE_LOOPER
@@ -64,6 +76,9 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_BEATSTEP
         behaviour_manager->registerBehaviour(behaviour_beatstep);
+        #ifdef ENABLE_BEATSTEP_2
+            behaviour_manager->registerBehaviour(behaviour_beatstep_2);
+        #endif
         //behaviour_beatstep->debug = true;
     #endif
 
@@ -154,16 +169,25 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_craftsynth);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
+
+    #ifdef ENABLE_SKULPTSYNTH_USB
+        Serial.println(F("about to register DeviceBehaviour_SkulptSynth...")); Serial_flush();
+        behaviour_manager->registerBehaviour(behaviour_skulptsynth);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
     
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
         //behaviour_manager->registerBehaviour(behaviour_bitbox);
-        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        #ifdef ENABLE_BITBOX_DEDICATED
+            //
+        #else
+            behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        #endif
         behaviour_manager->registerBehaviour(behaviour_bitbox);
-        Serial.println(F("connecting device output..")); Serial_flush();
+        Serial.println(F("Bitbox: connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial.println(F("Bitbox: Finished registering.")); Serial_flush();
     #endif
 
     #ifdef ENABLE_NEUTRON
@@ -210,24 +234,43 @@ void setup_behaviour_manager() {
 #ifdef ENABLE_SCREEN
     #include "menuitems.h"
     #include "menuitems_lambda.h"
+    #include "menuitems_quickpage.h"
+
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
+        Serial_println("Starting create_all_behaviour_menu_items"); Serial_flush();
+
+        menu->add_page("QuickJumpBehaviours");
+        CustomQuickPagesMenuItem *quickjump = new CustomQuickPagesMenuItem("QuickJump to Behaviours");
+        menu->add(quickjump);
+        page_t *started_page = menu->get_selected_page();   // for remembering what page the quickjump menu itself is
+        
+        // add the behaviours quickjump page to the 'main' menu quickjump list
+        menu->remember_opened_page(menu->get_page_index_for_name(menu->get_selected_page()->title));
+
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-            //Serial.printf("about to create_single_behaviour_menu_items() for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_printf("about to create_single_behaviour_menu_items() for behaviour %i/%i...", i+1, behaviours->size());
+            Serial_flush();
             if (behaviour==nullptr) {
-                //Serial.println("\tgot a nullptr behaviour!");
+                Serial.println("\tgot a nullptr behaviour!");
                 continue;
             } else {
-                //Serial.printf("\tdoing for %s\n", behaviour->get_label());
+                Serial.printf(" ('%s')", behaviour->get_label());
             }
             this->create_single_behaviour_menu_items(menu, behaviour);
+
+            // add page to behaviour quickjump, so long as isn't itself
+            if (started_page!=menu->get_selected_page())
+                quickjump->add_page(menu->get_selected_page());
+            Serial_println("...created.");
         }
 
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-            //Serial.printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_flush();
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
             if (behaviour==nullptr) {
                 //Serial.println("\tgot a nullptr behaviour!");
@@ -258,13 +301,17 @@ void setup_behaviour_manager() {
                 last_category = p->category_name;
             }
         }
+
+        Serial_println("Finished in create_all_behaviour_menu_items"); Serial_flush();
     }
 
-    //FLASHMEM 
+    //FLASHMEM
+    // create the menuitems relating to a behaviour's parameters and saveableparameters
     void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
-            //Serial.printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
+            Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'...\n"), behaviour->get_label()); Serial_flush(); 
             //debug_free_ram();
             LinkedList<MenuItem *> *menuitems = behaviour->make_menu_items();
+            Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: done calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
 
             uint16_t group_colour = C_WHITE;
             if (menuitems->size()>0 || behaviour->has_parameters() || behaviour->has_saveable_parameters()) {
@@ -278,26 +325,31 @@ void setup_behaviour_manager() {
             }
 
             if (menuitems->size()>0) {
-                //Serial.printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
+                Serial_printf(F("\t\tGot %i items, adding them to menu...\n"), menuitems->size()); Serial_flush();
                 menu->add(menuitems, group_colour);
+                Serial_println("added.");
             }
 
             // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
             if (behaviour->has_parameters()) {
+                Serial_print("doing addParameterSubMenuItems.."); Serial_flush(); 
                 parameter_manager->addParameterSubMenuItems(
                     menu, 
                     behaviour->get_label(), 
                     behaviour->get_parameters(),
                     group_colour
                 );
+                Serial_println("done."); Serial_flush(); 
             }
 
             // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
             if (behaviour->has_saveable_parameters()) {
+                Serial_print("doing create_saveable_parameters_recall_selector.."); Serial_flush(); 
                 menu->add(
                     behaviour->create_saveable_parameters_recall_selector(), 
                     group_colour
                 );
+                Serial_println("done."); Serial_flush(); 
             }
 
     }

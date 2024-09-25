@@ -3,6 +3,7 @@
 
 #include "behaviour_clocked.h"
 #include "behaviour_base_usb.h"
+#include "behaviour_base_serial.h"
 
 template<class BaseClass = DividedClockedBehaviour, class DeviceClass = DeviceBehaviourUSBBase>
 class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
@@ -34,6 +35,7 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
    
 };
 
+#ifdef ENABLE_USB
 template<class BaseClass>
 class Behaviour_SimpleWrapperUSB : public Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourUSBBase> {
     public:
@@ -50,6 +52,7 @@ class Behaviour_SimpleWrapperUSB : public Behaviour_SimpleWrapper<BaseClass, Dev
     virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
 
 };
+#endif
 
 template<class BaseClass>
 class Behaviour_SimpleWrapperSerial : public Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase> {
@@ -68,6 +71,7 @@ class Behaviour_SimpleWrapperSerial : public Behaviour_SimpleWrapper<BaseClass, 
     : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase>(label, receives_midi_notes, transmits_midi_notes) 
     {}
 };
+
 
 /*
 class Behaviour_SimpleDividedClockedWrapper : public BaseClass, public DividedClockedBehaviour {}

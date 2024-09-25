@@ -40,7 +40,7 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
+class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget {
     public:
 
     bool debug = false;
@@ -125,7 +125,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
     }
     // tell the device to play a note on
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
         // TODO: this is where ForceOctave check should go..?
         note = this->recalculate_pitch(note);
@@ -139,7 +139,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
-    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         // TODO: this is where ForceOctave check should go..?
         note = this->recalculate_pitch(note);
@@ -154,7 +154,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
-    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
+    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
         this->actualSendControlChange(number, value, channel);
     };
@@ -221,13 +221,13 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         if (this->saveable_parameters==nullptr) {
             Debug_println("instantiating saveable_parameters list");
             this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
-        }
 
-        if(this->transmits_midi_notes()) {
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note",       "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNote(v); },     [=]() -> int8_t { return this->getLowestNote(); }));
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note",      "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNote(v); },    [=]() -> int8_t { return this->getHighestNote(); }));
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note_mode",  "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNoteMode(v); }, [=]() -> int8_t { return this->getLowestNoteMode(); }));
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note_mode", "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNoteMode(v); },[=]() -> int8_t { return this->getHighestNoteMode(); }));
+            if(this->transmits_midi_notes()) {
+                this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note",       "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNote(v); },     [=]() -> int8_t { return this->getLowestNote(); }));
+                this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note",      "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNote(v); },    [=]() -> int8_t { return this->getHighestNote(); }));
+                this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note_mode",  "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNoteMode(v); }, [=]() -> int8_t { return this->getLowestNoteMode(); }));
+                this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note_mode", "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNoteMode(v); },[=]() -> int8_t { return this->getHighestNoteMode(); }));
+            }
         }
 
         // todo: add all the modulatable parameters via a wrapped class
@@ -238,14 +238,20 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }*/
     }
     virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
-        for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
-            if (saveable_parameters->get(i)->is_recall_enabled() && saveable_parameters->get(i)->parse_key_value(key, value))
+        if (saveable_parameters==nullptr) {
+            Serial_printf("WARNING: load_parse_key_value_saveable_parameters(%s,%s) called for %s, but saveable_parameters isn't initialised yet!\n", key.c_str(), value.c_str(), this->get_label());
+            return false;
+        }
+        for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
+            if (!saveable_parameters->get(i)->is_recall_enabled())
+                continue;
+            if (saveable_parameters->get(i)->parse_key_value(key, value))
                 return true;
         }
         return false;
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
-        for (unsigned int i = 0 ; i < saveable_parameters->size() ; i++) {
+        for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             Debug_printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
             if (saveable_parameters->get(i)->is_save_enabled()) {
                 Debug_printf("\t\tis_save_enabled() returned true, getting line!");
@@ -262,7 +268,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
         this->save_sequence_add_lines_parameters(lines);
         this->save_sequence_add_lines_saveable_parameters(lines);
     }
@@ -271,31 +277,32 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         Debug_println("save_sequence_add_lines_parameters..");
         if (this->has_parameters()) {
             LinkedList<FloatParameter*> *parameters = this->get_parameters();
-            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+            for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
                 FloatParameter *parameter = parameters->get(i);
 
-                parameter->save_sequence_add_lines(lines);
+                parameter->save_pattern_add_lines(lines);
             }
         }
-        Serial.println("finished save_sequence_add_lines_parameters.");
+        if (debug) Serial.println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
+        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+
+        // first check the behaviour's custom project key values
+        if (this->parse_project_key_value(key, value)) {
+            return true;
+        }
+
+        // then check the 'saveable parameters'
         if (this->load_parse_key_value_saveable_parameters(key, value)) {
             return true;
         }
-        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
-        //static String prefix = String("parameter_" + this->get_label());
 
-        // todo: can optimise this for most cases by remembering the last-found parameter and starting our search there instead
-        //              eg something like parameter_manager->fast_load_parse_key_value(this->parameters, key, value)
+        // then check the 'modulatable parameters' (ie those from parameters library))
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            /*for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-                if (parameters->get(i)->load_parse_key_value(key, value)) 
-                    return true;
-            }*/
             if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))
                 return true;
         }
@@ -350,6 +357,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual int8_t getLowestNoteMode() {
         return lowest_note_mode;
     }
+    // mode from NOTE_MODE enum (IGNORE or TRANSPOSE)
     virtual void setLowestNoteMode(int8_t mode) {
         if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < this->getLowestNote())
             this->killCurrentNote();
@@ -377,6 +385,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     virtual int8_t getHighestNoteMode() {
         return this->highest_note_mode;
     }
+    // mode from NOTE_MODE enum (IGNORE or TRANSPOSE)
     virtual void setHighestNoteMode(int8_t mode) {
         if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > this->getHighestNote())
             this->killCurrentNote();
@@ -385,8 +394,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // remap pitch if force octave is on, TODO: other tranposition modes
-    // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
-    // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
+    // DONE?: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
+    // DONE?: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
     //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
     // TODO: move quantisation calculation here...?
     virtual int recalculate_pitch(byte note) {

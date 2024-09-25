@@ -1,3 +1,4 @@
+/*
 // cv clock and cv sequencer outputs (controlled by APCMini)
 
 #include <Arduino.h>
@@ -10,41 +11,20 @@
 
 //extern storage::savestate current_state;
 
-using namespace storage;
+//using namespace storage;
 
-int duration = PPQN/8;
 
-float clock_multiplier_values[NUM_CLOCK_MULTIPLIER_VALUES] = {
-  0.25,     // 0 - 16th notes
-  0.5,      // 1 - 8th notes
-  1,        // 2 - quarter notes
-  2,        // 3 - every two beats
-  4,        // 4 - every four beats    (1 bar)
-  8,        // 5 - every eight beats   (2 bars)
-  16,       // 6 - every sixteen beats (4 bars, 1 phrase)
-  32,       // 7 - every thirty two beats (8 bars, 2 phrases)
-  64,       // 8 - clock is completely off (would be every 64 beats, except we don't have enough colours to represent this on the apcmini display)
-};
-#define CLOCK_MULTIPLIER_OFF        64.0  // if clock multipler is set to this value, then actually turn it off completely
-
-void cv_out_clock_pin_off(byte i) {
-  set_clock_gate(i, LOW);
-}
-void cv_out_clock_pin_on(byte i) {
-  set_clock_gate(i, HIGH);
-}
-
-/*  get / manipulate clock multipliers */
-float get_clock_multiplier(byte i) { 
+//  get / manipulate clock multipliers 
+float VirtualBehaviour_ClockGates::get_clock_multiplier(byte i) { 
   return clock_multiplier_values[current_state.clock_multiplier[i]];
 }
-void increase_clock_multiplier(byte i) {
+void VirtualBehaviour_ClockGates::increase_clock_multiplier(byte i) {
   current_state.clock_multiplier[i]++;
   if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES)
     current_state.clock_multiplier[i] = 0;
   cv_out_clock_pin_off(i);
 }
-void decrease_clock_multiplier(byte i) {
+void VirtualBehaviour_ClockGates::decrease_clock_multiplier(byte i) {
   current_state.clock_multiplier[i]--;
   if (current_state.clock_multiplier[i]>=NUM_CLOCK_MULTIPLIER_VALUES) // ie has wrapped around to 255
     current_state.clock_multiplier[i] = NUM_CLOCK_MULTIPLIER_VALUES-1;
@@ -52,7 +32,7 @@ void decrease_clock_multiplier(byte i) {
 }
 
 // check if multiplier is set to 'never trigger'
-bool is_clock_off(byte i) {
+bool VirtualBehaviour_ClockGates::is_clock_off(byte i) {
   return ((byte)get_clock_multiplier(i)>=CLOCK_MULTIPLIER_OFF);
 }
 
@@ -61,14 +41,14 @@ byte get_clock_delay(byte i) {
   //if (i>=NUM_CLOCKS) return 0;
   return current_state.clock_delay[i];
 }
-void decrease_clock_delay(byte clock_selected, byte amount) {
+void VirtualBehaviour_ClockGates::decrease_clock_delay(byte clock_selected, byte amount) {
   current_state.clock_delay[clock_selected] -= amount; // wraps around to 255
   if (current_state.clock_delay[clock_selected]>CLOCK_DELAY_MAX)
     current_state.clock_delay[clock_selected] = CLOCK_DELAY_MAX;  
   Debug_print(F("Decreased selected clock delay to "));
   Debug_println(get_clock_delay(clock_selected));
 }
-void increase_clock_delay(byte clock_selected, byte amount) {
+void VirtualBehaviour_ClockGates::increase_clock_delay(byte clock_selected, byte amount) {
   current_state.clock_delay[clock_selected] += amount;
   if (current_state.clock_delay[clock_selected]>7)
     current_state.clock_delay[clock_selected] = 0;
@@ -76,7 +56,7 @@ void increase_clock_delay(byte clock_selected, byte amount) {
   Debug_println(current_state.clock_delay[clock_selected]);
 }
 
-bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
+bool VirtualBehaviour_ClockGates::should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   byte clock_delay = get_clock_delay(i);
   return !is_clock_off(i) && 
     is_bpm_on_multiplier(
@@ -140,7 +120,8 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
 
   }
 #else
-  void update_cv_outs(unsigned long ticks) {
+  void VirtualBehaviour_ClockGates::update_cv_outs(unsigned long ticks) {
+    // todo: investigate whether we can use uClock's shuffle to process these instead..
     #ifdef ENABLE_CLOCKS
       #ifdef PIN_CLOCK_RESET_PHRASE
         if (is_bpm_on_phrase(ticks)) {
@@ -233,3 +214,4 @@ bool should_trigger_clock(unsigned long ticks, byte i, byte offset) {
   }
 
 #endif
+*/

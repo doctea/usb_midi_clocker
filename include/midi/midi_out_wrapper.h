@@ -1,5 +1,4 @@
-#ifndef MIDI_OUT_WRAPPER__INCLUDED
-#define MIDI_OUT_WRAPPER__INCLUDED
+#pragma once
 
 #include "debug.h"
 
@@ -39,7 +38,7 @@ class MIDITrack;
     };
 #endif
 
-class MIDIOutputWrapper {
+class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
 
     public:
         bool debug = false;
@@ -49,7 +48,7 @@ class MIDIOutputWrapper {
         int8_t default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
-        int8_t playing_notes[MIDI_MAX_NOTE];
+        int8_t playing_notes[MIDI_MAX_NOTE+1];
 
         int last_note = -1, current_note = -1;
         //int last_transposed_note = -1, current_transposed_note = -1;
@@ -102,7 +101,7 @@ class MIDIOutputWrapper {
         //virtual void sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel = 0);
         //virtual void sendNoteOff(int8_t pitch, int8_t velocity, int8_t channel = 0);
 
-        virtual void sendNoteOn(int8_t in_pitch, int8_t velocity, int8_t channel) {
+        virtual void sendNoteOn(uint8_t in_pitch, uint8_t velocity, uint8_t channel) override {
             if (!is_valid_note(in_pitch)) return;
 
             current_note = in_pitch;
@@ -130,7 +129,7 @@ class MIDIOutputWrapper {
             this->actual_sendNoteOn(current_note, velocity, channel);
         }
 
-        virtual void sendNoteOff(int8_t in_pitch, int8_t velocity, int8_t channel) {
+        virtual void sendNoteOff(uint8_t in_pitch, uint8_t velocity, uint8_t channel) override {
             if (!is_valid_note(in_pitch)) return;
 
             this->last_note = in_pitch;
@@ -167,7 +166,7 @@ class MIDIOutputWrapper {
             //    current_transposed_note = -1;
         }
 
-        virtual void sendControlChange(int8_t cc_number, int8_t velocity, int8_t channel = 0) {
+        virtual void sendControlChange(uint8_t cc_number, uint8_t velocity, uint8_t channel = 0) override {
             if (channel == 0) channel = this->default_channel;
             this->actual_sendControlChange(cc_number, velocity, channel);
         };
@@ -297,6 +296,7 @@ class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
         }
 };
 
+#ifdef ENABLE_LOOPER
 class MIDIOutputWrapper_LoopTrack : public MIDIOutputWrapper {
     public:
         MIDITrack *output = nullptr;
@@ -312,7 +312,7 @@ class MIDIOutputWrapper_LoopTrack : public MIDIOutputWrapper {
             //output->sendPitchBend(bend, channel);
         }*/
 };
-
+#endif
 
 #include "behaviours/behaviour_base.h"
 
@@ -348,4 +348,3 @@ MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *out
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, int8_t channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, int8_t channel = 1);
 
-#endif

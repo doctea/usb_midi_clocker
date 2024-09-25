@@ -11,7 +11,7 @@ void handle_theremin_note_on(byte channel, byte cc_number, byte value);
 void handle_theremin_note_off(byte channel, byte cc_number, byte value);
 void handle_theremin_pitch_bend(byte channel, int bend);
 
-class DeviceBehaviour_OpenTheremin : public DeviceBehaviourUSBSerialMIDIBase {
+class DeviceBehaviour_OpenTheremin : virtual public DeviceBehaviourUSBSerialMIDIBase {
     public:
         uint16_t vid = 0x1a86, pid = 0x7523;            // 1a867523
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }

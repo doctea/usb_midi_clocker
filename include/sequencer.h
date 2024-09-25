@@ -1,4 +1,4 @@
-#ifndef INCLUDED_SEQUENCER
+/*#ifndef INCLUDED_SEQUENCER
 #define INCLUDED_SEQUENCER
 
 #include <Arduino.h>
@@ -17,6 +17,9 @@ const byte cv_out_sequence_pin[NUM_SEQUENCES] = {
 #endif
 //#endif
 
+void sequencer_clear_pattern();
+void sequencer_clear_row(byte row);
+
 void init_sequence();
 byte read_sequence(byte row, byte col);
 void write_sequence(byte row, byte col, byte value);
@@ -29,3 +32,4 @@ void cv_out_sequence_pin_off(byte i);
 void raw_write_pin(int,int);
 
 #endif
+*/

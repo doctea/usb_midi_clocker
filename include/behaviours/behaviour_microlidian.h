@@ -26,7 +26,7 @@ void microlidian_control_change(byte number, byte value, byte channel);
 void microlidian_note_on(byte pitch, byte value, byte channel);
 void microlidian_note_off(byte pitch, byte value, byte channel);
 
-class DeviceBehaviour_Microlidian : public DeviceBehaviourUSBBase, public DividedClockedBehaviour, public MIDI_CC_Source { //}, public ModwheelReceiver {
+class DeviceBehaviour_Microlidian : virtual public DeviceBehaviourUSBBase, virtual public DividedClockedBehaviour, virtual public MIDI_CC_Source { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using DividedClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     using DeviceBehaviourUltimateBase::receive_note_on;

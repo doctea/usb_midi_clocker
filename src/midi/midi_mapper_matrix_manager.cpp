@@ -1,12 +1,13 @@
-#ifndef MIDI_MAPPER_MATRIX_MANAGER__INCLUDED
-#define MIDI_MAPPER_MATRIX_MANAGER__INCLUDED
 
 #include "Config.h"
+
+#include "project.h"
 
 #include "midi/midi_mapper_matrix_manager.h"
 
 #include "behaviours/behaviour_bamble.h"
 #include "behaviours/behaviour_craftsynth.h"
+#include "behaviours/behaviour_skulptsynth.h"
 #include "behaviours/behaviour_mpk49.h"
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
@@ -26,8 +27,11 @@
 #include "behaviours/behaviour_opentheremin.h"
 #include "behaviours/behaviour_midibassproxy.h"
 
+#include "behaviours/behaviour_gate_sequencer.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
+#include "midi/midi_looper.h"
 #include "midi/midi_pc_usb.h"
 
 MIDIMatrixManager *midi_matrix_manager = nullptr;
@@ -40,12 +44,14 @@ MIDIMatrixManager* MIDIMatrixManager::getInstance() {
     return inst_;
 }
 
+#ifdef ENABLE_LOOPER
 source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle) {
     if (loop_track==nullptr) return -1;
     strncpy(sources[sources_count].handle, handle, LANGST_HANDEL_ROUT);
     loop_track->source_id = sources_count;
     return sources_count++;
 }
+#endif
 source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
     if (device==nullptr) return -1;
     strncpy(sources[sources_count].handle, handle, LANGST_HANDEL_ROUT);
@@ -53,10 +59,12 @@ source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *devi
     return sources_count++;
 }
 
+#ifdef ENABLE_LOOPER
 void MIDIMatrixManager::connect(MIDITrack *track, DeviceBehaviourUltimateBase *device) {
     if (track==nullptr || device==nullptr) return;
     this->connect(track->source_id, device->target_id);
 }
+#endif
 void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char *handle) {
     if (device==nullptr || handle==nullptr) return;
     this->connect(device->source_id, this->get_target_id_for_handle(handle)); //this->get_target_id_for_handle->target_id);
@@ -70,6 +78,7 @@ void setup_midi_mapper_matrix_manager() {
 
     // first, add all the output options that will exist
 
+    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"Seq. Gate Drums", behaviour_sequencer_gates, 10));
     #ifdef ENABLE_BITBOX    
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
@@ -97,10 +106,14 @@ void setup_midi_mapper_matrix_manager() {
         #endif
         //behaviour_neutron->debug = true;
         //behaviour_neutron->test_wrapper = midi_matrix_manager->get_target_for_id(behaviour_neutron->target_id);
+    #else
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S3 : MIDIOUT : ch 1", midi_out_serial[2], 1)); // for MB33
     #endif
 
     #ifdef ENABLE_DISTING
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
+    #else
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : MIDIOUT : ch 1", midi_out_serial[3], 1)); // for MB33
     #endif
             
     midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : MIDIOUT : ch 1", midi_out_serial[4], 1));
@@ -122,6 +135,10 @@ void setup_midi_mapper_matrix_manager() {
     #if defined(ENABLE_CRAFTSYNTH) && !defined(ENABLE_CRAFTSYNTH_USB)
         midi_matrix_manager->register_target(new MIDIOutputWrapper((char*)"S6 : CraftSynth : ch1", midi_out_serial[5], 1));
         midi_out_serial_clock_enabled[5] = true;
+    #endif
+
+    #ifdef ENABLE_SKULPTSYNTH_USB
+        behaviour_skulptsynth->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : SkulptSynth : ch 1", behaviour_skulptsynth, 1));
     #endif
 
     #ifdef ENABLE_DRUMKIT
@@ -187,7 +204,10 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_BEATSTEP
-        midi_matrix_manager->register_source(behaviour_beatstep, "beatstep");
+        midi_matrix_manager->register_source(behaviour_beatstep,    "beatstep");
+        #ifdef ENABLE_BEATSTEP_2
+            midi_matrix_manager->register_source(behaviour_beatstep_2,  "beatstep#2");
+        #endif
         midi_matrix_manager->connect(behaviour_beatstep,    "S3 : Neutron : ch 4");
     #endif
 
@@ -245,6 +265,11 @@ void setup_midi_mapper_matrix_manager() {
     midi_matrix_manager->register_source(behaviour_midibassproxy, "Bass Proxy");
     MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
     behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
+    behaviour_midibassproxy->setHighestNote(4*12);
+    behaviour_midibassproxy->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+    behaviour_midibassproxy->setLowestNote(1*12);
+    behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+
 
     // connect default mappings
     #ifdef ENABLE_MAMMB33
@@ -263,5 +288,3 @@ void setup_midi_mapper_matrix_manager() {
     //Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
     //while(1);
 }
-
-#endif
