@@ -134,8 +134,8 @@ class DeviceBehaviour_CVInput : /* virtual */ public virtual DeviceBehaviourUlti
                 lines->add(String(F("velocity_source=")) + String(this->velocity_input->name));
         }
 
-        virtual void save_pattern_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUltimateBase::save_pattern_add_lines(lines);
+        virtual void add_save_lines(LinkedList<String> *lines) override {
+            DeviceBehaviourUltimateBase::add_save_lines(lines);
             lines->add(String(F("scale=")) + String(this->chord_player.get_scale()));    // add this here because SCALE won't cast to Int implicitly TODO: solve this
         }
 

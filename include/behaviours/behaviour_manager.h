@@ -18,7 +18,9 @@
     #include <util/atomic.h>
 #endif
 
-class DeviceBehaviourManager {
+
+#include "file_manager/file_manager_interfaces.h"
+class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtual IParseKeyValueReceiver {
     public:
         bool debug = false;
 
@@ -334,7 +336,7 @@ class DeviceBehaviourManager {
             }
         }
 
-        bool load_parse_key_value(String key, String value) {
+        bool load_parse_key_value(String key, String value) override {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
             //Serial.printf("behaviour_manager#load_parse_key_value passed '%s','%s' while curerent_behaviour is @%p\n", key.c_str(), value.c_str(), current_behaviour);
 
@@ -372,8 +374,8 @@ class DeviceBehaviourManager {
             }
         }
 
-        // ask each behaviour to add option lines to save pattern file
-        void save_pattern_add_lines(LinkedList<String> *lines) {
+        // ask each behaviour to add option lines to save sequence file
+        void add_save_lines(LinkedList<String> *lines) override {
             //LinkedList<String> lines = LinkedList<String>();
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
@@ -381,7 +383,7 @@ class DeviceBehaviourManager {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
                 //Serial_printf("about to save_pattern_add_lines on behaviour.."); Serial_flush();
-                device->save_pattern_add_lines(lines);
+                device->add_save_lines(lines);
                 //Serial_printf("just did save_pattern_add_lines and got %i items\n", lines->size()); Serial_flush();
                 // only add behaviour_start and behaviour_end lines if the behaviour added lines
                 if (lines_before!=lines->size()) {

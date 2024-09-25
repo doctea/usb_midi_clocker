@@ -40,7 +40,7 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget {
+class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget, public virtual IParseKeyValueReceiver, public virtual ISaveKeyValueSource {
     public:
 
     bool debug = false;
@@ -268,7 +268,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
+    virtual void add_save_lines(LinkedList<String> *lines) override {
         this->save_sequence_add_lines_parameters(lines);
         this->save_sequence_add_lines_saveable_parameters(lines);
     }
@@ -287,7 +287,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     }
 
     // ask behaviour to process the key/value pair
-    virtual bool load_parse_key_value(String key, String value) {
+    virtual bool load_parse_key_value(String key, String value) override {
         Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
 
         // first check the behaviour's custom project key values
