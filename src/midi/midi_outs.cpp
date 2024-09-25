@@ -7,6 +7,7 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI1);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI2);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial3, MIDI3);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial4, MIDI4);
+// todo: make this configurable so that eg we can have pcb_go environment only using first 4 MIDI ports
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial5, MIDI5);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial6, MIDI6);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial7, MIDI7);
@@ -16,58 +17,3 @@ midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_serial[NUM_MIDI_
     // TODO: properly initialise up to the size of NUM_MIDI_OUTS
     &MIDI1,&MIDI2,&MIDI3,&MIDI4,&MIDI5,&MIDI6,&MIDI7,&MIDI8
 };
-
-/*bool midi_out_serial_clock_enabled[NUM_MIDI_OUTS] = {
-    true,       // bitbox
-    false,      // blue (currently unused)
-    true,       // neutron
-    true,       // disting ex
-    true,       // dazb guitar
-    false,
-    false,
-    false
-};*/
-
-/*void send_midi_serial_clocks() {
-    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        if (midi_out_serial_clock_enabled[i]) {
-            midi_out_serial[i]->sendRealTime(midi::Clock);
-        }
-    }
-}*/
-
-/*void send_midi_serial_stop_start() {
-    // send all stops first
-    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        if (midi_out_serial_clock_enabled[i]) {
-            midi_out_serial[i]->sendRealTime(midi::Stop);
-        }
-    }
-    // then send all starts
-    for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        if (midi_out_serial_clock_enabled[i]) {
-            midi_out_serial[i]->sendRealTime(midi::Start);
-        }
-    }
-}*/
-
-/*#define SINGLE_FRAME_READ
-void read_midi_serial_devices() {
-    #ifdef SINGLE_FRAME_READ
-        //int i = 0;
-        for (unsigned int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-            while (midi_out_serial[i]->read());
-        }
-    #else
-        static int counter = 0;
-        if (counter>=NUM_MIDI_OUTS) 
-            counter = 0;
-        while(midi_out_serial[counter]->read());
-        counter++;
-    #endif
-}*/
-
-/*void loop_midi_serial_devices() {
-    // anything that should be done per-loop for serial midi devices
-
-}*/

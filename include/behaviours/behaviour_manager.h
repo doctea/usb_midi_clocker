@@ -52,7 +52,7 @@ class DeviceBehaviourManager {
         }
         void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
             if (behaviour==nullptr) {
-                Debug_println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
+                Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
                 return;
             }
             Debug_printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
@@ -327,6 +327,7 @@ class DeviceBehaviourManager {
             if (split>=0) {
                 String key = line.substring(0, split);
                 String value = line.substring(split+1);
+                //Serial.printf("behaviour_manager#load_parse_line processing %s\n", line.c_str());
                 return this->load_parse_key_value(key, value);
             } else {
                 return this->load_parse_key_value(line, "");
@@ -335,9 +336,12 @@ class DeviceBehaviourManager {
 
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
+            //Serial.printf("behaviour_manager#load_parse_key_value passed '%s','%s' while curerent_behaviour is @%p\n", key.c_str(), value.c_str(), current_behaviour);
+
             if (key.equals(F("behaviour_start"))) {
-                //Serial_printf(F("found behaviour_start for '%s'\n"), value.c_str());
-                current_behaviour = this->find_behaviour_for_label(value);
+                DeviceBehaviourUltimateBase *d = this->find_behaviour_for_label(value);
+                //Serial_printf(F("found behaviour_start for '%s' with behaviour @%p\n"), value.c_str(), d); 
+                current_behaviour = d;
                 return true;
             } else if (key.equals(F("behaviour_end"))) {
                 //Serial_printf(F("found behaviour_end for '%s'\n"), value.c_str());
@@ -368,24 +372,24 @@ class DeviceBehaviourManager {
             }
         }
 
-        // ask each behaviour to add option lines to save sequence file
-        void save_sequence_add_lines(LinkedList<String> *lines) {
+        // ask each behaviour to add option lines to save pattern file
+        void save_pattern_add_lines(LinkedList<String> *lines) {
             //LinkedList<String> lines = LinkedList<String>();
             const unsigned int size = behaviours->size();
             for (unsigned int i = 0 ; i < size ; i++) {
-                //Serial_printf(">>> behaviour_manager#save_sequence_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
+                //Serial_printf(">>> behaviour_manager#save_pattern_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
-                //Serial_printf("about to save_sequence_add_lines on behaviour.."); Serial_flush();
-                device->save_sequence_add_lines(lines);
-                //Serial_printf("just did save_sequence_add_lines and got %i items\n", lines->size()); Serial_flush();
+                //Serial_printf("about to save_pattern_add_lines on behaviour.."); Serial_flush();
+                device->save_pattern_add_lines(lines);
+                //Serial_printf("just did save_pattern_add_lines and got %i items\n", lines->size()); Serial_flush();
                 // only add behaviour_start and behaviour_end lines if the behaviour added lines
                 if (lines_before!=lines->size()) {
                     lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
-                    //Serial_printf("\tbehaviour_manager#save_sequence_add_lines calling on behaviour...\n");
+                    //Serial_printf("\tbehaviour_manager#save_pattern_add_lines calling on behaviour...\n");
                     lines->add(F("behaviour_end=") + String(device->get_label()));
                 }
-                //Serial_printf("<<< behaviour_manager#save_sequence_add_lines completed behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
+                //Serial_printf("<<< behaviour_manager#save_pattern_add_lines completed behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
             }
         }
 

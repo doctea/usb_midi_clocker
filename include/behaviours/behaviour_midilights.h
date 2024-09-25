@@ -25,7 +25,7 @@
 void midilights_note_on(byte pitch, byte value, byte channel);
 void midilights_note_off(byte pitch, byte value, byte channel);*/
 
-class DeviceBehaviour_MIDILights : public DeviceBehaviourUSBBase, public ClockedBehaviour { //}, public ModwheelReceiver {
+class DeviceBehaviour_MIDILights : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour { //}, public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     /*using DeviceBehaviourUltimateBase::receive_note_on;

@@ -11,7 +11,7 @@
 FileViewerMenuItem *sequence_fileviewer = nullptr;
 FileViewerMenuItem *project_fileviewer = nullptr;
 
-void update_sequence_filename(String filename) {
+void update_pattern_filename(String filename) {
     if (sequence_fileviewer!=nullptr) {
         sequence_fileviewer->setFilename(filename);
         sequence_fileviewer->readFile();

@@ -9,6 +9,8 @@
 #include "menuitems_listviewer.h"
 #include "menuitems_lambda.h"
 
+#include "storage.h"
+
 #ifdef ENABLE_GATES_MCP23S17
     #include "MCP23S17.h"
 #endif
@@ -29,19 +31,26 @@ class DebugPanel : public MenuItem {
         virtual int display(Coord pos, bool selected, bool opened) override {
             unsigned long time = millis()/1000;
             tft->setCursor(pos.x,pos.y);
-            header("Statistics:", pos, selected, opened);
-            tft->printf("Free RAM: %u bytes\n", freeRam());
-            tft->printf("Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
-            tft->print("Serial: ");
+
+            pos.y = header("Status:", pos, selected, opened);
+            tft->printf("  Free RAM: %u bytes\n", freeRam());
+            tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
+            tft->printf("  Tick:   %i\n", ticks);
+            tft->print("\nSerial: ");
             tft->print(Serial?"connected\n":"not connected\n");
-            tft->println("Built at " __TIME__ " on " __DATE__);
-            tft->println("Git info: " COMMIT_INFO);
+
+            tft->println("\nBuild info:");
+            tft->println("  PIO Env: " ENV_NAME);
+            tft->println("  Git info: " COMMIT_INFO);
+            tft->println("  Built at " __TIME__ " on " __DATE__);
+
             #ifdef ENABLE_GATES_MCP23S17
-                tft->printf("MCP23S17 version: %s\n", (char*)MCP23S17_LIB_VERSION);
+                tft->printf("  MCP23S17 version: %s\n", (char*)MCP23S17_LIB_VERSION);
             #endif
             #ifdef ENABLE_CV_INPUT
-                tft->printf("ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
+                tft->printf("  ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
             #endif
+
             return tft->getCursorY();
         }
 };
@@ -82,9 +91,9 @@ void setup_debug_menu() {
     menu->add(new DebugPanel());
 
     SubMenuItemBar *crashreport_bar = new SubMenuItemBar("CrashReport");
-    crashreport_bar->add(new ActionItem("Dump log", dump_crashreport_log));
-    crashreport_bar->add(new ActionConfirmItem("Clear log", clear_crashreport_log));
-    crashreport_bar->add(new ActionConfirmItem("ForceCrash", force_crash));
+    crashreport_bar->add(new ActionItem("Dump log", storage::dump_crashreport_log));
+    crashreport_bar->add(new ActionConfirmItem("Clear log", storage::clear_crashreport_log));
+    crashreport_bar->add(new ActionConfirmItem("ForceCrash", storage::force_crash));
     menu->add(crashreport_bar);
 
     setup_messages_menu();

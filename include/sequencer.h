@@ -1,4 +1,4 @@
-#ifndef INCLUDED_SEQUENCER
+/*#ifndef INCLUDED_SEQUENCER
 #define INCLUDED_SEQUENCER
 
 #include <Arduino.h>
@@ -32,3 +32,4 @@ void cv_out_sequence_pin_off(byte i);
 void raw_write_pin(int,int);
 
 #endif
+*/

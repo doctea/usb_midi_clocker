@@ -1,3 +1,5 @@
+#include "Config.h"
+
 #include "behaviours/behaviour_manager.h"
 
 #include "behaviours/behaviour_apcmini.h"
@@ -50,6 +52,15 @@ void behaviour_manager_kill_all_current_notes () {
 //FLASHMEM
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
+
+    #ifdef ENABLE_CLOCKS
+        behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);
+        behaviour_manager->registerBehaviour(behaviour_clock_gates);
+    #endif
+    #ifdef ENABLE_SEQUENCER
+        behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
+        behaviour_manager->registerBehaviour(behaviour_sequencer_gates);
+    #endif
 
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();
@@ -168,12 +179,15 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_BITBOX
         Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
         //behaviour_manager->registerBehaviour(behaviour_bitbox);
-        behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        #ifdef ENABLE_BITBOX_DEDICATED
+            //
+        #else
+            behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
+        #endif
         behaviour_manager->registerBehaviour(behaviour_bitbox);
-        Serial.println(F("connecting device output..")); Serial_flush();
+        Serial.println(F("Bitbox: connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial.println(F("Bitbox: Finished registering.")); Serial_flush();
     #endif
 
     #ifdef ENABLE_NEUTRON
@@ -220,9 +234,19 @@ void setup_behaviour_manager() {
 #ifdef ENABLE_SCREEN
     #include "menuitems.h"
     #include "menuitems_lambda.h"
+    #include "menuitems_quickpage.h"
+
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         Serial_println("Starting create_all_behaviour_menu_items"); Serial_flush();
+
+        menu->add_page("QuickJumpBehaviours");
+        CustomQuickPagesMenuItem *quickjump = new CustomQuickPagesMenuItem("QuickJump to Behaviours");
+        menu->add(quickjump);
+        page_t *started_page = menu->get_selected_page();   // for remembering what page the quickjump menu itself is
+        
+        // add the behaviours quickjump page to the 'main' menu quickjump list
+        menu->remember_opened_page(menu->get_page_index_for_name(menu->get_selected_page()->title));
 
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
@@ -235,6 +259,10 @@ void setup_behaviour_manager() {
                 Serial.printf(" ('%s')", behaviour->get_label());
             }
             this->create_single_behaviour_menu_items(menu, behaviour);
+
+            // add page to behaviour quickjump, so long as isn't itself
+            if (started_page!=menu->get_selected_page())
+                quickjump->add_page(menu->get_selected_page());
             Serial_println("...created.");
         }
 

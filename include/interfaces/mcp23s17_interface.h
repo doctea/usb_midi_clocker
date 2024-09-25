@@ -6,9 +6,9 @@
 
 #define MCP23S17_SPI_CS1_PIN    38
 #define MCP23S17_SPI_CS2_PIN    37
-/*#define MCP23S17_SPI_MISO       39
+#define MCP23S17_SPI_MISO       39
 #define MCP23S17_SPI_MOSI       26
-#define MCP23S17_SPI_SCK        27*/
+#define MCP23S17_SPI_SCK        27
 
 // todo: accept config (SPI and CS number) in constructor
 class MCP23S17BankInterface : public BankInterface {
@@ -25,9 +25,9 @@ class MCP23S17BankInterface : public BankInterface {
         MCP23S17BankInterface() {
             Serial.println("MCP23S17BankInterface() constructor");
             //SPI1.setCS(MCP23S17_SPI_CS1_PIN);
-            SPI1.setMISO(39);
-            SPI1.setMOSI(26);
-            SPI1.setSCK(27);
+            SPI1.setMISO(MCP23S17_SPI_MISO);
+            SPI1.setMOSI(MCP23S17_SPI_MOSI);
+            SPI1.setSCK(MCP23S17_SPI_SCK);
             //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
             //SPI1.beginTransaction(SPISettings(3000000, LSBFIRST, SPI_MODE3));
             //SPI1.setClockDivider(SPI_CLOCK_DIV4);

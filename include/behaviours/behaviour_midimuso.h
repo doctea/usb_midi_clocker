@@ -4,7 +4,7 @@
 
 #ifdef ENABLE_DPT_LOOPER
 
-class DeviceBehaviour_MIDIMuso : public DeviceBehaviourSerialBase {
+class DeviceBehaviour_MIDIMuso : virtual public DeviceBehaviourSerialBase {
     public:
         virtual const char *get_label() override {
             return (const char*)"MIDIMuso";

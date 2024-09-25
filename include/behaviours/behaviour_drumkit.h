@@ -13,7 +13,7 @@
 void drumkit_note_on(byte pitch, byte velocity, byte channel);
 void drumkit_note_off(byte pitch, byte velocity, byte channel);
 
-class DeviceBehaviour_DrumKit : public DeviceBehaviourSerialBase {
+class DeviceBehaviour_DrumKit : virtual public DeviceBehaviourSerialBase {
     public:
         DeviceBehaviour_DrumKit () : DeviceBehaviourSerialBase () {}
 

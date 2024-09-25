@@ -13,7 +13,7 @@
 void lestrum_note_on(byte pitch, byte velocity, byte channel);
 void lestrum_note_off(byte pitch, byte velocity, byte channel);
 
-class DeviceBehaviour_LeStrum : public DeviceBehaviourSerialBase {
+class DeviceBehaviour_LeStrum : virtual public DeviceBehaviourSerialBase {
     public:
         DeviceBehaviour_LeStrum () : DeviceBehaviourSerialBase () {}
 

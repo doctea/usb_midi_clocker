@@ -21,3 +21,4 @@ wip/*
 hexes/*
 include/__version.h
 scraps
+__unused/*

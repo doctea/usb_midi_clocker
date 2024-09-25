@@ -4,8 +4,7 @@
     #pragma GCC diagnostic ignored "-Wstringop-truncation"
 #endif
 
-#ifndef MIDI_MAPPER_MATRIX__INCLUDED
-#define MIDI_MAPPER_MATRIX__INCLUDED
+#pragma once
 
 #include "Config.h"
 #include "midi/midi_outs.h"
@@ -470,5 +469,3 @@ class MIDIMatrixManager {
 };
 
 extern MIDIMatrixManager *midi_matrix_manager;
-
-#endif

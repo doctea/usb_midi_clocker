@@ -128,6 +128,10 @@ void setup() {
   setup_behaviour_manager();
   Serial_printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
 
+  Serial_println(F("..setup_saveable_parameters.."));
+  behaviour_manager->setup_saveable_parameters();
+  Serial_printf(F("after setup_saveable_parameters(), free RAM is %u\n"), freeRam());
+
   //Serial_println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
   Serial_println(F("..MIDI matrix manager.."));
@@ -141,8 +145,9 @@ void setup() {
     setup_menu(LOW);
   #endif
 
-  tft_print("Built at " __TIME__ " on " __DATE__ "\n");
+  tft_print("PIO Env: " ENV_NAME "\n");
   tft_print("Git info: " COMMIT_INFO "\n");
+  tft_print("Built at " __TIME__ " on " __DATE__ "\n");
 
   #ifdef ENABLE_CV_OUTPUT
     tft_print((char*)"Setting up CV gates..\n");
@@ -178,7 +183,7 @@ void setup() {
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
-  behaviour_manager->setup_saveable_parameters();
+  //behaviour_manager->setup_saveable_parameters();
 
   #ifdef ENABLE_SCREEN
     Serial_println(F("...starting behaviour_manager#make_menu_items...")); Serial_flush();
@@ -186,11 +191,13 @@ void setup() {
     Serial_println(F("...finished behaviour_manager#make_menu_items...")); Serial_flush();
   #endif
 
+  /*
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
     init_sequence();
     Debug_printf(F("after init_sequence(), free RAM is %u\n"), freeRam());
   #endif
+  */
 
   #ifdef USE_UCLOCK
     tft_print((char*)"Initialising uClock..\n");
@@ -389,22 +396,22 @@ void loop() {
       //delay(1000); Serial_println("exiting sleep after menu->display"); Serial_flush();
     #endif
 
-    #ifdef ENABLE_CV_INPUT
+    //#ifdef ENABLE_CV_INPUT
       //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
       {
-        if (!screen_was_drawn) {
+        //if (!screen_was_drawn) {
           //__disable_irq();
           //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
           if (debug_flag) { Serial_println(F("about to parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
           parameter_manager->throttled_update_cv_input__all(TIME_BETWEEN_CV_INPUT_UPDATES, false, false);
           if (debug_flag) { Serial_println(F("just did parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
           //__enable_irq();                              
-        }
+        //}
         if (!playing) {
           //parameter_manager->update_mixers();
         }
       }
-    #endif
+    //#endif
   }
 
   // only update from main loop if we're paused, so that we can still see effect of manual updating of gates etc
@@ -523,6 +530,8 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
+  gate_manager->update(); 
+
   #ifdef ENABLE_LOOPER
     midi_loop_track.process_tick(ticks);
   #endif
@@ -546,7 +555,7 @@ void do_tick(uint32_t in_ticks) {
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
-  #ifdef ENABLE_CV_OUTPUT
+  /*#ifdef ENABLE_CV_OUTPUT
     if (debug) {DEBUG_MAIN_PRINTLN(F("in do_tick() about to update_cv_outs()")); Serial_flush(); }
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
     {
@@ -556,7 +565,7 @@ void do_tick(uint32_t in_ticks) {
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       gate_manager->update(); 
     }
-  #endif
+  #endif*/
 
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
   behaviour_manager->do_ticks(in_ticks);

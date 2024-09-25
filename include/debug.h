@@ -1,5 +1,4 @@
-#ifndef DEBUG__INCLUDED
-#define DEBUG__INCLUDED
+#pragma once
 
 //#define ENABLE_DEBUG_SERIAL
 #define SERIAL_FLUSH_REALLY
@@ -39,4 +38,3 @@ void reset_teensy();
 
 #include "menu_messages.h"
 
-#endif

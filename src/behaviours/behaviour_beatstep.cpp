@@ -42,6 +42,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     #include "mymenu/menu_looper.h"
 
     #include "submenuitem_bar.h"
+    #include "menuitems_lambda.h"
     #include "menuitems_lambda_selector.h"
     #include "menuitems_object_selector.h"
     #include "menuitems_numbers.h"
@@ -56,13 +57,22 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         DividedClockedBehaviour::make_menu_items();
 
         SubMenuItemBar *pattern_options = new SubMenuItemBar("Pattern options");
+
+        // quantise length/step size/direction changes to phrase ends..
+        pattern_options->add(new LambdaToggleControl(
+            "Quantise",
+            [=](bool v) -> void { this->wait_before_changing = v; },
+            [=]() -> bool { return this->wait_before_changing; },
+            nullptr
+        ));
+
         pattern_options->add(new LambdaNumberControl<int8_t>(
             "Length",   
             //this, 
             //&DeviceBehaviour_Beatstep::setPatternLength,  &DeviceBehaviour_Beatstep::getPatternLength, 
             [=](int8_t length) -> void { this->setPatternLength(length); },
             [=]() -> int8_t { return this->getPatternLength(); },
-            nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM
+            nullptr, BEATSTEP_PATTERN_LENGTH_MINIMUM, BEATSTEP_PATTERN_LENGTH_MAXIMUM, false, false
         ));
 
         LambdaSelectorControl<int8_t> *step_size = new LambdaSelectorControl<int8_t>(
@@ -88,14 +98,27 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
         pattern_options->add(direction);
         menuitems->add(pattern_options);
 
+        // indicate that there are queued settings to be sent
+        menuitems->add(new CallbackMenuItem(
+            "Queued status", [=](void) -> const char * {
+                if (direction_queued || pattern_length_queued || step_size_queued) {
+                    return "Queued changes...";
+                } else {
+                    return "[ nothing queued ]";
+                }
+            }
+        ));
+
         SubMenuItemBar *note_options = new SubMenuItemBar("Note options");    
         LambdaNumberControl<int8_t> *swing = new LambdaNumberControl<int8_t>(
             "Swing",
             [=](int8_t length) -> void { this->setSwing(length); },
             [=]() -> int8_t { return this->getSwing(); },
             nullptr,
-            0x32, 
-            0x4b
+            (int8_t)0x32, 
+            (int8_t)0x4b,
+            false,
+            false
         );
         swing->int_unit = '%';
         note_options->add(swing);
@@ -105,8 +128,10 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
             [=](int8_t length) -> void { this->setGate(length); },
             [=]() -> int8_t { return this->getGate(); },
             nullptr,
-            0x32, 
-            0x63
+            (int8_t)0x32, 
+            (int8_t)0x63,
+            false,
+            false
         );
         gate->int_unit = '%';
         note_options->add(gate);

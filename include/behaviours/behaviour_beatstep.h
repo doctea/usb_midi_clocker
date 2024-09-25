@@ -106,13 +106,13 @@ RECALL COMMAND:
 
 */
 
-
-class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedClockedBehaviour {
+class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
     
     public:
         #define NUM_PATTERNS 16
         bool auto_advance_pattern = false;   // todo: make configurable!
+        bool wait_before_changing = true;    // for quantising pattern parameters that otherwise force untimely pattern restarts
 
         int last_note = -1, current_note = -1;
 
@@ -235,6 +235,25 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
                     this->set_restart_on_bar(true);
                 }
 
+                if (this->wait_before_changing) {
+                    // do queued changes
+                    if (this->pattern_length_queued) {
+                        this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, pattern_length);
+                        this->pattern_length_queued = false;
+                        this->sent_pattern_length = this->pattern_length;
+                    }
+                    if (this->step_size_queued) {
+                        this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_STEP_SIZE, pattern_step_size);
+                        this->step_size_queued = false;
+                        this->sent_step_size = this->pattern_step_size;
+                    }
+                    if (this->direction_queued) {
+                        this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, direction);
+                        this->direction_queued = false;
+                        this->sent_direction = this->direction;
+                    }
+                }
+
                 DividedClockedBehaviour::on_end_phrase_pre_clock(phrase);
             }
             void send_preset_change(int phrase_number) {
@@ -264,9 +283,16 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             // pattern length settings
             int8_t pattern_length = 16;
+            int8_t sent_pattern_length = pattern_length;
+            bool pattern_length_queued = false;
             void setPatternLength(int8_t length) {
                 length = constrain(length,BEATSTEP_PATTERN_LENGTH_MINIMUM,BEATSTEP_PATTERN_LENGTH_MAXIMUM);
-                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, length);
+                if (!wait_before_changing) {
+                    this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, length);
+                    this->sent_pattern_length = length;
+                } else {
+                    this->pattern_length_queued = true;
+                }
                 this->pattern_length = length;
             }
             int8_t getPatternLength() {
@@ -275,9 +301,16 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             //step size settings
             int8_t pattern_step_size = 0;
+            int8_t sent_step_size = pattern_step_size;
+            bool step_size_queued = false;
             void setStepSize(int8_t step_size) {
                 step_size = constrain(step_size,BEATSTEP_PATTERN_STEP_SIZE_MINIMUM,BEATSTEP_PATTERN_STEP_SIZE_MAXIMUM);
-                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_STEP_SIZE, step_size);
+                if (!wait_before_changing) {
+                    this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_STEP_SIZE, step_size);
+                    this->sent_step_size = step_size;
+                } else {
+                    this->step_size_queued = true;
+                }
                 this->pattern_step_size = step_size;
             }
             int8_t getStepSize() {
@@ -286,9 +319,16 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 
             //playback direction settings
             int8_t direction = 0;
+            int8_t sent_direction = direction;
+            bool direction_queued = false;
             void setDirection(int8_t direction) {
                 direction = constrain(direction,0,3);
-                this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, direction);
+                if (!wait_before_changing) {
+                    this->set_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, direction);
+                    sent_direction = direction;
+                } else {
+                    this->direction_queued = true;
+                }
                 this->direction = direction;
             }
             int8_t getDirection() {
@@ -502,7 +542,7 @@ class DeviceBehaviour_Beatstep : public DeviceBehaviourUSBBase, public DividedCl
 extern DeviceBehaviour_Beatstep *behaviour_beatstep;
 
 #ifdef ENABLE_BEATSTEP_2
-    class DeviceBehaviour_Beatstep_2 : public DeviceBehaviour_Beatstep {
+    class DeviceBehaviour_Beatstep_2 : virtual public DeviceBehaviour_Beatstep {
         public:
 
         virtual const char *get_label() override {

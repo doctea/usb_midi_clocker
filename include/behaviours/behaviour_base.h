@@ -40,7 +40,7 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
+class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget {
     public:
 
     bool debug = false;
@@ -125,7 +125,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }
     }
     // tell the device to play a note on
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
         // TODO: this is where ForceOctave check should go..?
         note = this->recalculate_pitch(note);
@@ -139,7 +139,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->actualSendNoteOn(note, velocity, channel);
     };
     // tell the device to play a note off
-    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         // TODO: this is where ForceOctave check should go..?
         note = this->recalculate_pitch(note);
@@ -154,7 +154,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         this->actualSendNoteOff(note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
-    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) {
+    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
         this->actualSendControlChange(number, value, channel);
     };
@@ -238,6 +238,10 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
         }*/
     }
     virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
+        if (saveable_parameters==nullptr) {
+            Serial_printf("WARNING: load_parse_key_value_saveable_parameters(%s,%s) called for %s, but saveable_parameters isn't initialised yet!\n", key.c_str(), value.c_str(), this->get_label());
+            return false;
+        }
         for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             if (!saveable_parameters->get(i)->is_recall_enabled())
                 continue;
@@ -264,7 +268,7 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_sequence_add_lines(LinkedList<String> *lines) {
+    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
         this->save_sequence_add_lines_parameters(lines);
         this->save_sequence_add_lines_saveable_parameters(lines);
     }
@@ -276,17 +280,22 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
             for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
                 FloatParameter *parameter = parameters->get(i);
 
-                parameter->save_sequence_add_lines(lines);
+                parameter->save_pattern_add_lines(lines);
             }
         }
-        Serial.println("finished save_sequence_add_lines_parameters.");
+        if (debug) Serial.println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
         Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
 
-        // first check the 'saveable parameters'
+        // first check the behaviour's custom project key values
+        if (this->parse_project_key_value(key, value)) {
+            return true;
+        }
+
+        // then check the 'saveable parameters'
         if (this->load_parse_key_value_saveable_parameters(key, value)) {
             return true;
         }
@@ -385,8 +394,8 @@ class DeviceBehaviourUltimateBase : public IMIDIProxiedCCTarget {
     }
 
     // remap pitch if force octave is on, TODO: other tranposition modes
-    // TODO: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
-    // TODO: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
+    // DONE?: two separate controls: one for lowest pitch/octave, one for highest pitch/octave
+    // DONE?: two separate controls: out-of-bounds-lower rule, out-of-bounds-higher-rule
     //          options: ignore (just don't play the note in question); transpose (move the note into allowed range)
     // TODO: move quantisation calculation here...?
     virtual int recalculate_pitch(byte note) {

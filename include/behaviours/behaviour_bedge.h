@@ -9,7 +9,7 @@
 
 #include "behaviours/behaviour_clocked.h"
 
-class DeviceBehaviour_Bedge_Serial : public DeviceBehaviourSerialBase, public DividedClockedBehaviour {
+class DeviceBehaviour_Bedge_Serial : virtual public DeviceBehaviourSerialBase,virtual  public DividedClockedBehaviour {
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
 
     public:
@@ -28,7 +28,7 @@ class DeviceBehaviour_Bedge_Serial : public DeviceBehaviourSerialBase, public Di
 #include "clock.h"
 
 #include "usb/multi_usb_handlers.h"
-class DeviceBehaviour_Bedge : public DeviceBehaviourUSBBase, public ClockedBehaviour {
+class DeviceBehaviour_Bedge : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     

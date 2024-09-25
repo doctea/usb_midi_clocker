@@ -17,7 +17,7 @@
 // todo: send program controls to switch modes
 // todo: switch into 4A mode (extra gates, extra cv outs instead of velocity outs), or even 6 mode 
 
-class Behaviour_MIDIMuso_4MV : public DeviceBehaviourSerialBase, public MIDIBassBehaviour, public ModwheelReceiver, public virtual DividedClockedBehaviour {
+class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual public MIDIBassBehaviour, virtual public ModwheelReceiver, virtual public DividedClockedBehaviour {
     public:
 
     using DividedClockedBehaviour::on_tick;
