@@ -1,5 +1,7 @@
 #include "Config.h"
 
+#ifdef ENABLE_USB
+
 #include "clock.h"
 #include "bpm.h"
 #include "midi/midi_outs.h"

@@ -57,7 +57,7 @@ bool save_file(char *filename, ISaveKeyValueSource *source) {
 
     source->add_save_lines(&lines);
     
-    for (int i = 0 ; i < lines.size() ; i++) {
+    for (uint_fast16_t i = 0 ; i < lines.size() ; i++) {
         myFile.println(lines.get(i));
     }
     myFile.println(F("; end"));

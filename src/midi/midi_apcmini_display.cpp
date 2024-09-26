@@ -193,7 +193,7 @@ void redraw_patterns_row(byte row, bool force) {
   int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
   //start_row = APCMINI_NUM_ROWS - start_row;
 
-  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+  for (int_fast8_t x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
     //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
     if (row==0) {
       // only draw on the first row

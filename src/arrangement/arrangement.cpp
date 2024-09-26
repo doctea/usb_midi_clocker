@@ -20,18 +20,21 @@ void setup_clip_manager() {
 #include "arrangement/arrangement.h"
 Arrangement *arrangement = nullptr;
 
+#include "project.h"
+
 FLASHMEM
 void setup_arrangement() {
     //Serial.println("setup_arrangement...");
     Serial.println("========== adding sequence clips");
     arrangement = new Arrangement();
     ArrangementTrackBase *sequencer_track = arrangement->addTrack(new ArrangementSingleTrack("Sequence"));
-	for (unsigned int i = 0 ; i < NUM_SEQUENCE_SLOTS_PER_PROJECT ; i++) {
+	for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
         Serial.printf("setup_arrangement insert_clip_instance for a sequence %i\n", i);
 		sequencer_track->insert_clip_instance(i, clip_manager->add_clip(new SequenceClip(7-i))); //new SequenceClip(7-i)); //clip_manager->get_clip_for_id(7-i));
 	}
     Serial.println("added sequence clips");
 
+    #ifdef ENABLE_LOOPER
     Serial.println("========== adding loop clips");
     ArrangementMultipleTrack *loop_arrangement = (ArrangementMultipleTrack *)arrangement->addTrack(new ArrangementSingleTrack("Looper"));
     for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
@@ -41,6 +44,7 @@ void setup_arrangement() {
         loop_arrangement->insert_clip_instance(random(0,16), clip_manager->add_clip(new LoopClip(i)));
     }
     Serial.println("added all looper clips"); Serial_flush();
+    #endif
 
     // loop over each behaviour, add an ArrangementTrack as appropriate...
     Serial.println("========== adding behaviour tracks");

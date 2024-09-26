@@ -88,13 +88,15 @@ class ObjectValueClip : public Clip {
 
 class SequenceClip : public ObjectValueClip<Project, int> {
 	public:
-		SequenceClip(int sequence_number) : ObjectValueClip<Project,int>(project, &Project::load_specific_sequence, sequence_number) {}
+		SequenceClip(int sequence_number) : ObjectValueClip<Project,int>(project, &Project::load_specific_pattern, sequence_number) {}
 };
 
+#ifdef ENABLE_LOOPER
 class LoopClip : public ObjectValueClip<Project, int> {
 	public:
 		LoopClip(int loop_number) : ObjectValueClip<Project,int>(project, &Project::load_specific_loop, loop_number) {}
 };
+#endif
 
 // a Clip that contains a sequence/clock information
 /*class SequenceClip : public Clip {
