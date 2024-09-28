@@ -25,27 +25,61 @@ class ClipManager {
             return this->clips->get(id);
         }
 
-        // TODO: save clips from disk - maybe move this to be handled by teh tracks
-        void save_clips(int arrangement_number) {
-            
+        // TODO: save clips from disk - maybe move this to be handled by the tracks
+        void save_clips(int arrangement_number = 0) {            
             for (unsigned int i = 0 ; i < this->clips->size() ; i++) {
-                if (this->clips->get(i)->is_dirty()) {
-                    Serial.printf(F("TODO: save clip %i to disk in arrangemnet %i\n"), i, arrangement_number);
-                    this->clips->get(i)->set_dirty(true);
-                    // 
+                Clip *c = this->clips->get(i);
+                if (c->is_dirty()) {
+                    Serial.printf(F("TODO: save clip %i to disk in arrangement %i\n"), i, arrangement_number);
+			        char filepath[255];
+                    snprintf(filepath, 255, FILEPATH_CLIP_FILE_FORMAT, project->current_project_number, c->type, c->clip_id);
+                    save_file(filepath, c);
                 }
             }
         }
-        // TODO: load clips from disk - maybe move this to be handled by teh tracks
-        void load_clips() {
+        // TODO: load clips from disk - maybe move this to be handled by the tracks
+        void load_clips(int arrangement_number = 0) {
             // load all the available clip data from disk...
             // get directory listing
-            // find all the clip files
-            // load them into memory 
+            char path[255];
+            snprintf(path, 255, FILEPATH_CLIP_FOLDER_FORMAT, project->current_project_number);
+            File clip_folder = SD.open(path);
+            if (clip_folder && clip_folder.isDirectory()) {
+                // find all the clip files
+                File entry = clip_folder.openNextFile();
+                while (entry) {
+                    // determine the type of clip to create
+                    String s = String(entry.name());
+                    s = s.replace("clip_","");
+                    String clip_type = s.substring(0, s.indexOf('_'));
+                    int clip_id = s.substring(s.indexOf('_')+1).toInt();
+
+                    // load them into memory
+                    Clip *clip = this->instantiate_clip(clip_type, clip_id);
+                    this->clips->add(clip);
+                }
+            }
+        }
+
+        Clip *instantiate_clip(String clip_type, int clip_id) {
+            if (clip_type.equals("SequenceClip")) {
+                return new SequenceClip();
+            } // else if ...
+            // TODO: cover other types..
+            return nullptr;
+        }
+
+        // todo: test whether this even works
+        void clear_clips() {
+            for (int i = 0; i < this->clips->size() ; i++) {
+                delete this->clips->remove(i);
+            }
+            this->clips->clear();
         }
 
         Clip *add_clip(Clip *clip) {
-            clip->clip_id = this->get_new_clip_id();
+            if (clip->clip_id==-1)
+                clip->clip_id = this->get_new_clip_id();
             Serial.printf(F("add_clip adding clip at index %i with id %i\n"), clips->size()-1, clip->clip_id);
 
             this->clips->add(clip);

@@ -188,9 +188,9 @@ class ArrangementSingleTrack : public ArrangementMultipleTrack {
 	}
 };
 
+#include "file_manager/file_manager_interfaces.h"
 
-
-class Arrangement {
+class Arrangement : public virtual IParseKeyValueReceiver, public virtual ISaveKeyValueSource {
 	public:
 		Arrangement() {}
 
@@ -275,23 +275,38 @@ class Arrangement {
 			this->current_song_phrase = 0; //-1;
 		}
 
-		/*void save_arrangement(int arrangement_number) {
+		void save_arrangement(int arrangement_number) {
+			// first, store the used clips to disk
 			clip_manager->save_clips(arrangement_number);
+
+			// then, write the track arrangements to disk
+			// TODO:
+
+			/*char filepath[255];
 			for (unsigned int i = 0 ; i < song_structure->size() ; i++) {
 				clip_instance_t *c = &song_structure->get(i);
+				snprintf(filepath, 255, FILEPATH_CLIP_FOLDER_FORMAT, project->current_project_number, c->clip_id);
+				save_file()
 				Serial.printf(F("TODO: write clip data for arrangement %i: clip_id=%i, song_position=%i\n"), arrangement_number, c->clip->clip_id, c->position);
-			}
+			}*/
 		}
 		void load_arrangement(int arrangement_number) {
 			Serial.printf(F("TODO: load arrangement %i\n"), arrangement_number);
 			//
-		}*/
+		}
 		void debug_arrangement() {
 			Serial.println(F("debug_arrangement:"));
 			for (unsigned int i = 0 ; i < tracks->size() ; i++) {
 				tracks->get(i)->debug_track();
 			}
 			Serial.println(F("-----"));
+		}
+
+		// load arrangement 
+		virtual bool load_parse_key_value(String key, String value) override {
+			return false;
+		}
+		virtual void add_save_lines(LinkedList<String> *lines) override {
 		}
 };
 

@@ -65,19 +65,24 @@ void setup_arrangement() {
 #include "mymenu.h"
 #include "menu.h"
 
+#include "menuitems_lambda.h"
+
 #include "submenuitem_bar.h"
 
 FLASHMEM
 void setup_arrangement_menu(Arrangement *arrangement) {
     menu->add_page("Arrangement"); //, 1);
 
-    SubMenuItemBar *transport = new SubMenuItemBar("Transport");
-    //Serial.println("instantiated transport bar");    
+    SubMenuItemBar *control = new SubMenuItemBar("Control");
+    control->add(new LambdaActionItem("Load", [=] (void) -> void { clip_manager->load_clips(); }));
+    control->add(new LambdaActionConfirmItem("Save", [=] (void) -> void { clip_manager->save_clips(); }));
+    control->add(new LambdaActionConfirmItem("Clear", [=] (void) -> void { clip_manager->clear_clips(); }));
+    menu->add(control);
 
+    SubMenuItemBar *transport = new SubMenuItemBar("Transport");
     transport->add(new NumberControl<bool>("Play", &arrangement->playing, arrangement->playing, 0, 1, true));
     transport->add(new NumberControl<bool>("Loop", &arrangement->looping, arrangement->looping, 0, 1, true));
-    transport->add(new NumberControl<int> ("Phrase", &arrangement->current_song_phrase, arrangement->current_song_phrase, 0, 1024, true));
-    
+    transport->add(new NumberControl<int> ("Phrase", &arrangement->current_song_phrase, arrangement->current_song_phrase, 0, 1024, true));    
     menu->add(transport);
     
     Serial.println("added transport bar");

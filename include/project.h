@@ -414,6 +414,9 @@ class Project : public IParseKeyValueReceiver {
             current_project_number = project_number;
             Serial.printf(F("Loaded project settings.\n"));
 
+            arrangement->clear();
+            arrangement->load();
+
             update_project_filename(filename);
             #endif
 

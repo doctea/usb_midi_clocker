@@ -13,8 +13,10 @@
 
 #include "project.h"
 
+#include "file_manager/file_manager_interfaces.h"
+
 // abstract base Clip class
-class Clip {
+class Clip : public virtual IParseKeyValueReceiver, public virtual ISaveKeyValueSource {
 	public:
 		Clip() {};
 		~Clip() = default;
@@ -32,14 +34,17 @@ class Clip {
 		virtual void on_bar(uint32_t bar) {};
 
 		// todo: save/load
-		virtual void save() {}
-		virtual void load() {}
+		//virtual void save() {}
+		//virtual void load() {}
 		virtual void set_dirty(bool v = true) {
 			this->dirty = v;
 		}
 		virtual bool is_dirty() {
 			return dirty;
 		}
+
+		virtual bool load_parse_key_value(String key, String value) override {}
+		virtual void add_save_lines(LinkedList<String> *lines) override {}
 
 };
 
@@ -52,7 +57,7 @@ class ObjectValueClip : public Clip {
 
 		DataType value = 0;
 
-		ObjectValueClip(TargetClass *target, bool(TargetClass::*setter_func)(DataType), DataType value) {
+		ObjectValueClip(TargetClass *target, bool(TargetClass::*setter_func)(DataType), DataType value = 0) {
 			this->target_object = target;
 			this->setter_func = setter_func;
 			this->value = value;
@@ -88,7 +93,20 @@ class ObjectValueClip : public Clip {
 
 class SequenceClip : public ObjectValueClip<Project, int> {
 	public:
+		SequenceClip() : SequenceClip(0) {}
 		SequenceClip(int sequence_number) : ObjectValueClip<Project,int>(project, &Project::load_specific_pattern, sequence_number) {}
+
+		virtual bool load_parse_key_value(String key, String value) override {
+			if (key.equals("sequence_number")) {
+				this->setValue(value.toInt());
+				return true;
+			}
+			return ObjectValueClip::load_parse_key_value(key, value);
+		}
+
+		virtual void add_save_lines(LinkedList<String> *lines) override {
+			lines->add(String("sequence_number=") + String(this->value));
+		}
 };
 
 #ifdef ENABLE_LOOPER

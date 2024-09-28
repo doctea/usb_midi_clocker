@@ -12,6 +12,8 @@ namespace storage {
   #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
   #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
   #define FILEPATH_CALIBRATION_FORMAT       "calibration_voltage_source_%i.txt"
+  #define FILEPATH_CLIP_FOLDER_FORMAT       "project%i/clips"
+  #define FILEPATH_CLIP_FILE_FORMAT         FILEPATH_CLIP_FOLDER_FORMAT "/clip_%s_%i.txt"
 
   #define MAX_FILEPATH 255
 
