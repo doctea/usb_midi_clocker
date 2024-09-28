@@ -106,6 +106,7 @@ class SequenceClip : public ObjectValueClip<Project, int> {
 
 		virtual void add_save_lines(LinkedList<String> *lines) override {
 			lines->add(String("sequence_number=") + String(this->value));
+			ObjectValueClip::add_save_lines(lines);
 		}
 };
 
