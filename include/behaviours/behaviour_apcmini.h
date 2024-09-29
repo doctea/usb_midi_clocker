@@ -279,13 +279,13 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 set_restart_on_next_bar(true);
 
             } else if (inNumber==APCMINI_BUTTON_VOLUME) {
-                apcmini_clear_display();
+                apcmini_clear_display(false);
                 set_apc_gate_page(CLOCKS);
             } else if (inNumber==APCMINI_BUTTON_PAN) {
-                apcmini_clear_display();
+                apcmini_clear_display(false);
                 set_apc_gate_page(SEQUENCES);
             } else if (inNumber==APCMINI_BUTTON_SEND) {
-                apcmini_clear_display();
+                apcmini_clear_display(false);
                 set_apc_gate_page(PATTERNS);
             } else if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = true;

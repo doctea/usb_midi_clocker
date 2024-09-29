@@ -46,11 +46,11 @@
 #define BUTTON_RESTART_IMMEDIATELY    APCMINI_BUTTON_UP
 #define BUTTON_RESTART_AT_END_OF_BAR  APCMINI_BUTTON_DEVICE
 
-#ifdef ENABLE_APCMINI_DISPLAY
+/*#ifdef ENABLE_APCMINI_DISPLAY
     void apcmini_update_clock_display();
     void apcmini_update_position_display(int ticks);
     void apcmini_clear_display();
-#endif
+#endif*/
 
 void apcmini_loop(unsigned long ticks); 
 

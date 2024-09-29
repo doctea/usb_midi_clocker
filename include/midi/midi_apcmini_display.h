@@ -68,7 +68,7 @@ void redraw_sequence_row(byte c, bool force = false);
 void redraw_patterns_row(byte row, bool force = false);
 
 #ifdef ENABLE_APCMINI_DISPLAY
-void apcmini_clear_display();
+void apcmini_clear_display(bool force = true);
 void apcmini_update_position_display(int ticks);
 void apcmini_update_clock_display(); 
 #endif

@@ -214,11 +214,13 @@ void redraw_patterns_row(byte row, bool force) {
 }
 
 #ifdef ENABLE_APCMINI_DISPLAY
-  void apcmini_clear_display() {
+  void apcmini_clear_display(bool force) {
     if (behaviour_apcmini->device==nullptr) return;
-    
     Serial_println(F("Clearing APC display..")); Serial_flush();
 
+    if (force) 
+      apcdisplay_initialise_last_sent();
+  
     /*for (int y = 0 ; y < APCMINI_NUM_ROWS ; y++) {
       for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
           //apcdisplay_initialise_last_sent();
@@ -229,29 +231,28 @@ void redraw_patterns_row(byte row, bool force) {
 
     if (get_apc_gate_page()==CLOCKS)
       for (int i = 0 ; i < NUM_CLOCKS ; i++)
-        redraw_clock_row(i,true);
+        redraw_clock_row(i,force);
 
     if (get_apc_gate_page()==SEQUENCES) 
       for (int i = 0 ; i < NUM_SEQUENCES ; i++)
-        redraw_sequence_row(i,true);
+        redraw_sequence_row(i,force);
 
     // clear the beat position indicator
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
-      apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, true);
+      apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, force);
     }
     // clear the 'selected clock row' indicator lights
     // todo: can replace this with a loop around 0 -> APCMINI_BUTTON_CLIP_STOP+NUM_CLOCKS
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_SELECT, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_STOP_ALL_CLIPS, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_SELECT, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_STOP_ALL_CLIPS, APCMINI_OFF, 1, force);
 
     //delay(1000);
-    apcdisplay_initialise_last_sent();
     Serial_println(F("Leaving APC display")); Serial_flush();
     // 
   }
@@ -298,7 +299,7 @@ void redraw_patterns_row(byte row, bool force) {
 #endif
 
 void set_apc_gate_page(apc_gate_page_t page) {
-  Serial.printf("Switched to page %i\n", page);
+  //Serial.printf("Switched to page %i\n", page);
   apc_gate_page = page;
 }
 apc_gate_page_t get_apc_gate_page() {
