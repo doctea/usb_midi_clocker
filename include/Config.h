@@ -138,6 +138,8 @@
     ////#define ENABLE_MPK49
     ////#define ENABLE_SUBCLOCKER
     ////#define ENABLE_SUBCLOCKER_DEDICATED
+    #define ENABLE_KEYSTEP
+
     #ifdef PCB_STUDIO
         #define ENABLE_KEYSTEP
         //#define ENABLE_CRAFTSYNTH_USB
