@@ -95,9 +95,9 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
 
     // classic fixed display version
     virtual int display(Coord pos, bool selected, bool opened) override {
-
         pos.y = header(label, pos, selected, opened);
         num_values = this->get_num_available();
+
 
         tft->setTextSize(1);
 
@@ -114,6 +114,17 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         bool opened_on_source = opened && selected_source_index==-1;
         bool opened_on_target = opened && selected_source_index>=0;
         const source_id_t relevant_source_id = opened_on_source ? selected_value_index : selected_source_index;
+
+        // draw the selected target's currently held + last note
+        if (opened_on_target) {
+            //tft->setCursor(0, tft->height()-30);
+            tft->setTextColor(this->get_colour_for_target_id(selected_value_index), BLACK);
+            tft->printf("Current: %3s   Last: %3s\n", 
+                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->current_note, midi_matrix_manager->get_target_for_id(selected_value_index)->default_channel),
+                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->last_note, midi_matrix_manager->get_target_for_id(selected_value_index)->default_channel)
+            );
+            pos.y = tft->getCursorY();
+        }
 
         // for remembering the lowest we go on screen
         int lowest_y = pos.y;
@@ -134,15 +145,6 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         // position cursor ready to draw targets
         tft->setCursor(0, pos.y);
 
-        // draw the selected target's currently held + last note
-        if (opened_on_target) {
-            tft->setCursor(0, tft->height()-30);
-            tft->setTextColor(this->get_colour_for_target_id(selected_value_index), BLACK);
-            tft->printf("  %3s:%3s", 
-                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->current_note),
-                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->last_note)
-            );
-        }
 
         int y = pos.y;
         // render target MIDI (right-hand column)
