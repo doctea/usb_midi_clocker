@@ -29,6 +29,8 @@
 
 #include "behaviours/behaviour_gate_sequencer.h"
 
+#include "behaviours/behaviour_apcmini.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -83,6 +85,7 @@ void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 10", behaviour_bitbox, 10));
     #endif
     #ifdef ENABLE_MAMMB33
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S2 : MAM MB33 : ch 1", &ENABLE_MAMMB33, 1)); // for MB33
@@ -246,6 +249,10 @@ void setup_midi_mapper_matrix_manager() {
         #ifdef ENABLE_BAMBLE
             midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
         #endif
+    #endif
+
+    #ifdef ENABLE_APCMINI
+        midi_matrix_manager->register_source(behaviour_apcmini, "APCMini Pads");
     #endif
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)

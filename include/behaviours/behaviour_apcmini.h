@@ -165,7 +165,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
 
                     #ifdef ENABLE_APCMINI_DISPLAY
                         redraw_clock_row(clock_selected);
-                        redraw_clock_selected(old_clock_selected, clock_selected);
+                        //redraw_clock_selected(old_clock_selected, clock_selected);
                     #endif
                     return true;
                 }
@@ -233,6 +233,45 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             return false;
         }
 
+        bool process_note_on_pads_page(byte inChannel, byte inNumber, byte inVelocity) {
+            if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+                // process drum pad
+                byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
+                byte col = inNumber - (((NUM_SEQUENCES-1)-row)*APCMINI_DISPLAY_WIDTH);
+
+                Serial_printf("process_note_on_pads_page(%i, %i, %i)\n", inChannel, inNumber, inVelocity);
+
+                if (row>=4 && row <= 7 && col>=0 && col<=3) {
+                    row = 7 - row;
+                    //row = 3 - row;
+                    byte note = 36 + (row*4) + col;
+                    DeviceBehaviourUltimateBase::receive_note_on(GM_CHANNEL_DRUMS, note, MIDI_MAX_VELOCITY);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool process_note_off_pads_page(byte inChannel, byte inNumber, byte inVelocity) {
+            if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+                // process drum pad
+                byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
+                byte col = inNumber - (((NUM_SEQUENCES-1)-row)*APCMINI_DISPLAY_WIDTH);
+
+                Serial_printf("process_note_on_pads_page(%i, %i, %i)\n", inChannel, inNumber, inVelocity);
+
+                if (row>=4 && row <= 7 && col>=0 && col<=3) {
+                    row = 7 - row;
+                    //row = 3 - row;
+                    byte note = 36 + (row*4) + col;
+                    Serial_printf("sending for note %i: %s\n", note, get_note_name_c(note, GM_CHANNEL_DRUMS));
+                    DeviceBehaviourUltimateBase::receive_note_off(GM_CHANNEL_DRUMS, note, MIDI_MAX_VELOCITY);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /*bool process_note_on_defaults(byte inChannel, byte inNumber, byte inVelocity) {
             return false;
         }*/
@@ -249,7 +288,9 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             } else if (get_apc_gate_page()==PATTERNS && process_note_on_patterns_page(inChannel, inNumber, inVelocity)) {
                 // on PATTERNS page and processed value
                 return;
-            }/* else {
+            } else if (get_apc_gate_page()==PADS && process_note_on_pads_page(inChannel, inNumber, inVelocity)) {
+                return;
+            } /* else {
                 process_note_on_defaults(inChannel, inNumber, inVelocity);
             }*/
 
@@ -287,6 +328,9 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             } else if (inNumber==APCMINI_BUTTON_SEND) {
                 apcmini_clear_display(false);
                 set_apc_gate_page(PATTERNS);
+            } else if (inNumber==APCMINI_BUTTON_DEVICE) {
+                apcmini_clear_display(false);
+                set_apc_gate_page(PADS);
             } else if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = true;
                 /*  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
@@ -327,6 +371,9 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
         virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) override {
             if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = false;
+            }
+            if (get_apc_gate_page()==PADS && process_note_off_pads_page(inChannel, inNumber, inVelocity)) {
+                return;
             }
         }
 

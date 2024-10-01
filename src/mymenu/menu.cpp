@@ -296,7 +296,7 @@ void setup_menu_midi() {
         menu->add(new ObjectActionConfirmItem<VirtualBehaviour_SequencerGates>("Clear sequencer pattern", behaviour_sequencer_gates, &VirtualBehaviour_SequencerGates::sequencer_clear_pattern));
         menu->add(&trigger_sequencer_display);
         
-        //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
+        menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
         //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD

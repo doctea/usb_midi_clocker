@@ -213,6 +213,22 @@ void redraw_patterns_row(byte row, bool force) {
   }
 }
 
+void redraw_pads_row(byte row, bool force) {
+  if (behaviour_apcmini->device==nullptr) return;
+
+  #define PADS_WIDTH 4
+  #define PADS_HEIGHT 4
+
+  if (row>=0 && row < APCMINI_NUM_ROWS) {
+    for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+      if (row < PADS_WIDTH && x < PADS_HEIGHT)
+        apcdisplay_sendNoteOn((row * APCMINI_DISPLAY_WIDTH) + x, APCMINI_ON, 1, force);    
+      else
+        apcdisplay_sendNoteOn((row * APCMINI_DISPLAY_WIDTH) + x, APCMINI_OFF, 1, force);    
+    }
+  }
+}
+
 #ifdef ENABLE_APCMINI_DISPLAY
   void apcmini_clear_display(bool force) {
     if (behaviour_apcmini->device==nullptr) return;
@@ -232,10 +248,14 @@ void redraw_patterns_row(byte row, bool force) {
     if (get_apc_gate_page()==CLOCKS)
       for (int i = 0 ; i < NUM_CLOCKS ; i++)
         redraw_clock_row(i,force);
-
-    if (get_apc_gate_page()==SEQUENCES) 
+    else if (get_apc_gate_page()==SEQUENCES) 
       for (int i = 0 ; i < NUM_SEQUENCES ; i++)
         redraw_sequence_row(i,force);
+    else if (get_apc_gate_page()==PADS)
+      for (int i = 0 ; i < APCMINI_NUM_ROWS ; i++) {
+        redraw_pads_row(i);
+      }
+   
 
     // clear the beat position indicator
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
@@ -271,6 +291,8 @@ void redraw_patterns_row(byte row, bool force) {
         redraw_sequence_row(row_to_draw);
       else if (get_apc_gate_page()==PATTERNS)
         redraw_patterns_row(row_to_draw);
+      else if (get_apc_gate_page()==PADS)
+        redraw_pads_row(row_to_draw);
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;
