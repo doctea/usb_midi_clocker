@@ -74,7 +74,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
         virtual void init() override {
             DeviceBehaviourUSBBase::init();
             apcdisplay_initialise_last_sent();
-            apcmini_clear_display();
+            apcmini_clear_display(true);
             redraw_immediately = true;
             //apcmini_update_clock_display();
         }

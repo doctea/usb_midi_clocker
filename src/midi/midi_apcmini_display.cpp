@@ -38,7 +38,7 @@ void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel, bool for
   apcdisplay_sendNoteOn(pitch, 0 /*value*/, channel, force);
 }
 void apcdisplay_initialise_last_sent() {
-  for(int i = 0 ; i < MIDI_MAX_NOTE ; i++)
+  for(int_fast8_t i = 0 ; i < MIDI_MAX_NOTE ; i++)
     apc_note_last_sent[i] = -1;
 }
 
@@ -245,18 +245,6 @@ void redraw_pads_row(byte row, bool force) {
       }
     }*/
 
-    if (get_apc_gate_page()==CLOCKS)
-      for (int i = 0 ; i < NUM_CLOCKS ; i++)
-        redraw_clock_row(i,force);
-    else if (get_apc_gate_page()==SEQUENCES) 
-      for (int i = 0 ; i < NUM_SEQUENCES ; i++)
-        redraw_sequence_row(i,force);
-    else if (get_apc_gate_page()==PADS)
-      for (int i = 0 ; i < APCMINI_NUM_ROWS ; i++) {
-        redraw_pads_row(i);
-      }
-   
-
     // clear the beat position indicator
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
       apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, force);
@@ -272,6 +260,18 @@ void redraw_pads_row(byte row, bool force) {
     apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, APCMINI_OFF, 1, force);
     apcdisplay_sendNoteOn(APCMINI_BUTTON_STOP_ALL_CLIPS, APCMINI_OFF, 1, force);
 
+    /*
+    if (get_apc_gate_page()==CLOCKS)
+      for (int i = 0 ; i < NUM_CLOCKS ; i++)
+        redraw_clock_row(i,force);
+    else if (get_apc_gate_page()==SEQUENCES) 
+      for (int i = 0 ; i < NUM_SEQUENCES ; i++)
+        redraw_sequence_row(i,force);
+    else if (get_apc_gate_page()==PADS)
+      for (int i = 0 ; i < APCMINI_NUM_ROWS ; i++)
+        redraw_pads_row(i,force);
+    */
+   
     //delay(1000);
     Serial_println(F("Leaving APC display")); Serial_flush();
     // 
