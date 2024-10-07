@@ -10,9 +10,12 @@
 #include "mymenu/menu_looper.h"
 #include "mymenu/menu_sequencer.h"
 #include "mymenu/menu_bpm.h"
+#include "mymenu/menu_taptempo.h"
 #include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
 #include "mymenu/menuitems_scale.h"
+
+#include "mymenu/menu_taptempo.h"
 
 #include "menuitems_pinned.h"
 
@@ -75,20 +78,13 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-//uint16_t *framebuffers[2];
-//bool buffer_number = 0;
-/*
-void swap_framebuffer() {
-    //buffer_number = !buffer_number;
-    //tft->tft->setFrameBuffer(framebuffers[buffer_number]);
-    tft->framebuffer_ready = true;
-    //tft->ready_for_frame = 
-}
-*/
+TapTempoControl *tapper_control = nullptr;
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
 ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
+
+extern TapTempoTracker *tapper;
 
 #ifdef ENABLE_SEQUENCER
     #include "mymenu/menu_gatedisplay.h"
@@ -152,6 +148,11 @@ void setup_menu_transport() {
     project_startstop->add(new ActionItem("Continue", clock_continue));
     project_startstop->add(new ActionFeedbackItem("Restart", set_restart_on_next_bar_on, is_restart_on_next_bar, "Restarting..", "Restart"));
     menu->add(project_startstop);
+}
+
+void setup_menu_taptempo() {
+    tapper_control = new TapTempoControl("Tap tempo", tapper);
+    menu->add(tapper_control);   
 }
 
 #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
@@ -359,6 +360,7 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
 
     setup_menu_transport();
+    setup_menu_taptempo();
     setup_menu_project();
     setup_menu_midi();
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
