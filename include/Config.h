@@ -80,7 +80,10 @@
 
 #ifdef ENABLE_USB
     // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
-    #define ENABLE_TYPING_KEYBOARD
+    //#define ENABLE_TYPING_KEYBOARD
+
+    // enable a USB AliExpress keyboard eg https://www.aliexpress.com/item/1005006353228764.html
+    #define ENABLE_CONTROLLER_KEYBOARD
 
     // enable USB devices that present as serial interfaces but support MIDI
     #define ENABLE_USBSERIAL    
