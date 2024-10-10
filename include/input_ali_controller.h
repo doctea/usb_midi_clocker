@@ -114,6 +114,9 @@
             case KNOB_BIG_CLICK:
                 keyboard_queue->push({KEYD_ENTER, keyboard1.getModifiers()});
                 break;
+            case KEYPAD_C_3:
+                keyboard_queue->push({KEYD_HASH, keyboard1.getModifiers()});
+                break;
             case KEYPAD_C_4:
                 keyboard_queue->push({KEYD_LEFT, keyboard1.getModifiers()});
                 break;
