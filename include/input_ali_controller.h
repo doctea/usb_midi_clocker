@@ -21,6 +21,7 @@
 
 #include "interfaces/interfaces.h"
 
+#include "taptempo.h"
 
 #ifdef ENABLE_CONTROLLER_KEYBOARD
 
@@ -125,6 +126,9 @@
                 break;
             case KEYPAD_C_4:
                 keyboard_queue->push({KEYD_LEFT, keyboard1.getModifiers()});
+                break;
+            case KEYPAD_A_1:
+                tapper->clock_tempo_tap();
                 break;
         }
 
