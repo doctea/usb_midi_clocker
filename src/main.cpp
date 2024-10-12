@@ -68,6 +68,7 @@ void do_tick(uint32_t ticks);
 #include "behaviours/behaviour_manager.h"
 
 #include "input_keyboard.h"
+#include "input_ali_controller.h"
 
 #include "profiler.h"
 
@@ -219,7 +220,7 @@ void setup() {
     Debug_printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
 
-  #ifdef ENABLE_TYPING_KEYBOARD
+  #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
     tft_print((char*)"Setting up typing keyboard..\n"); Serial_flush();
     setup_typing_keyboard();
   #endif
@@ -293,7 +294,7 @@ void loop() {
     }
   }
 
-  #ifdef ENABLE_TYPING_KEYBOARD
+  #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
   if (debug_stress_sequencer_load && ticks % 6 == 1)  {
     OnPress(':');
     OnPress('L');
@@ -461,7 +462,7 @@ void loop() {
     }
   #endif
 
-  #ifdef ENABLE_TYPING_KEYBOARD
+  #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
     // process any events that are waiting from the usb keyboard handler
     if (debug_flag) { Serial_println(F("about to process_key_buffer();..")); Serial_flush(); }
     process_key_buffer();

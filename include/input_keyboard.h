@@ -1,5 +1,4 @@
-#ifndef KEYBOARD__INCLUDED
-#define KEYBOARD__INCLUDED
+#pragma once
 
 #include "Config.h"
 
@@ -20,10 +19,10 @@
 
 #include "interfaces/interfaces.h"
 
-bool debug_stress_sequencer_load = false;
-
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
+
+    bool debug_stress_sequencer_load = false;
 
     #ifdef ENABLE_SCREEN
         #include "menu.h"
@@ -285,6 +284,4 @@ bool debug_stress_sequencer_load = false;
         //keyboard1.attachRawPress(OnRawPress);
         keyboard1.attachRelease(OnRelease);
     }
-#endif
-
 #endif
