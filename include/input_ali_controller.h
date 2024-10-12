@@ -1,9 +1,11 @@
 #pragma once
 
+// todo: something nicer where keys are abstracted from the triggered events
+// todo: ability to have multiple keyboards connected and to detect when one is the 'ali controller'
+// todo: control the RGB light to indicate modes?
+
 #include "Config.h"
-
 #include "storage.h"
-
 #include <util/atomic.h>
 
 #ifdef ENABLE_SCREEN
@@ -113,6 +115,10 @@
                 break;
             case KNOB_BIG_CLICK:
                 keyboard_queue->push({KEYD_ENTER, keyboard1.getModifiers()});
+                break;
+            case KEYPAD_A_4:
+                // trigger 'restart'
+                keyboard_queue->push({'r', keyboard1.getModifiers()});
                 break;
             case KEYPAD_C_3:
                 keyboard_queue->push({KEYD_HASH, keyboard1.getModifiers()});
