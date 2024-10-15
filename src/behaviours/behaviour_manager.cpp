@@ -34,6 +34,8 @@
 
 #include "behaviours/behaviour_midibassproxy.h"
 
+#include "behaviours/behaviour_euclidianrhythms.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -60,6 +62,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_SEQUENCER
         behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
         behaviour_manager->registerBehaviour(behaviour_sequencer_gates);
+    #endif
+
+    #ifdef ENABLE_EUCLIDIAN
+        behaviour_euclidianrhythms = new VirtualBehaviour_EuclidianRhythms();
+        behaviour_manager->registerBehaviour(behaviour_euclidianrhythms);
     #endif
 
     #ifdef ENABLE_APCMINI
@@ -256,7 +263,7 @@ void setup_behaviour_manager() {
                 Serial.println("\tgot a nullptr behaviour!");
                 continue;
             } else {
-                Serial.printf(" ('%s')", behaviour->get_label());
+                Serial.printf(" ('%s')\n", behaviour->get_label());
             }
             this->create_single_behaviour_menu_items(menu, behaviour);
 

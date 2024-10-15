@@ -155,6 +155,7 @@
     #endif
     
     #define ENABLE_MICROLIDIAN
+    #define ENABLE_EUCLIDIAN
 #endif
 
 #ifdef PCB_STUDIO

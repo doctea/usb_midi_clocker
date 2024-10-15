@@ -63,6 +63,13 @@ void do_tick(uint32_t ticks);
   #include "usb/multi_usbserial_handlers.h"
 #endif
 
+#ifdef ENABLE_EUCLIDIAN
+  #include "sequencer/Euclidian.h"
+  #include "outputs/output.h"
+  #include "outputs/output_processor.h"
+  #include "sequencer/sequencing.h"
+#endif
+
 #include "ParameterManager.h"
 
 #include "behaviours/behaviour_manager.h"
@@ -156,6 +163,18 @@ void setup() {
   Debug_printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 
   delay( 100 );
+
+  /*#ifdef ENABLE_EUCLIDIAN
+      tft_print("setting up EUCLIDIAN..!");
+      delay(1000);
+      setup_sequencer();
+      output_processor->configure_sequencer(sequencer);
+      #ifdef ENABLE_SCREEN
+          setup_menu_euclidian(sequencer);
+          setup_sequencer_menu();
+          Debug_printf("after setup_sequencer_menu, free RAM is %u\n", freeRam());
+      #endif
+  #endif*/
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();

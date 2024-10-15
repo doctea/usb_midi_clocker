@@ -31,6 +31,8 @@
 
 #include "behaviours/behaviour_apcmini.h"
 
+#include "behaviours/behaviour_euclidianrhythms.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -166,6 +168,7 @@ void setup_midi_mapper_matrix_manager() {
         behaviour_bamble->self_register_midi_matrix_sources(midi_matrix_manager);
     #endif
 
+
     #ifdef ENABLE_USB
         // add the sources - these are *from* PC *to* Teensy
         pc_usb_sources[0] = midi_matrix_manager->register_source((const char*)"pc_usb_1");
@@ -249,6 +252,11 @@ void setup_midi_mapper_matrix_manager() {
         #ifdef ENABLE_BAMBLE
             midi_matrix_manager->connect("ulidian ch10", "USB : Bamble : drums");
         #endif
+    #endif
+
+    #ifdef ENABLE_EUCLIDIAN
+        behaviour_euclidianrhythms->source_id = midi_matrix_manager->register_source("EucRhythms ch10");
+        behaviour_euclidianrhythms->source_id_2 = midi_matrix_manager->register_source("EucRhythms ch1");
     #endif
 
     #ifdef ENABLE_APCMINI
