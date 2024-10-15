@@ -79,10 +79,11 @@
 #define ENABLE_CV_OUTPUT    // clock and sequencer outputs
 
 #ifdef ENABLE_USB
-    // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
+    // enable a generic USB typing keyboard as a control method (see include/input_keyboard.h)
     //#define ENABLE_TYPING_KEYBOARD
 
     // enable a USB AliExpress keyboard eg https://www.aliexpress.com/item/1005006353228764.html
+    // todo: automatic detection of appropriate device
     #define ENABLE_CONTROLLER_KEYBOARD
 
     // enable USB devices that present as serial interfaces but support MIDI
