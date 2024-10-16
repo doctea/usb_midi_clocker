@@ -24,10 +24,11 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     source_id_t source_id_2 = -1;
 
     VirtualBehaviour_EuclidianRhythms() : DeviceBehaviourUltimateBase () {
-        output_processor = new MIDIOutputProcessor(this);
+        this->output_processor = new MIDIOutputProcessor(this);
         this->sequencer = new EuclidianSequencer(output_processor->nodes);
         sequencer->initialise_patterns();
         sequencer->reset_patterns();
+        output_processor->configure_sequencer(sequencer);
     }
 
     virtual const char *get_label() override {
@@ -39,7 +40,11 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     }
 
     virtual void on_tick(uint32_t ticks) override {
-        this->sequencer->on_tick(ticks);
+        if (sequencer->is_running()) 
+            sequencer->on_tick(ticks);
+        if (is_bpm_on_sixteenth(ticks) && output_processor->is_enabled()) {
+            output_processor->process();
+        }
         /*if (is_bpm_on_sixteenth(ticks)) 
             this->sequencer->on_step(BPM_CURRENT_STEP_OF_PHRASE);
         if (is_bpm_on_sixteenth(ticks),PPQN-1) 
@@ -58,19 +63,17 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_on ...
         //if (this->debug) 
-        Serial.printf(F("behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
+        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOn(this->source_id, note, 127, channel);
-            //lestrum_arp_output->sendNoteOn(note, 127);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id_2, note, 127);
-            //lestrum_pads_output->sendNoteOn(note, 127);
         }
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_off !
         //if (this->debug) Serial.printf(F("!! behaviour_lestrum#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i)with source_id %i: \n"), channel, note, velocity, source_id_2);
-        Serial.printf(F("behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
+        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOff(this->source_id, note, 0, channel);
             //lestrum_arp_output->sendNoteOff(note, 0);
@@ -92,15 +95,20 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         DeviceBehaviourUltimateBase::initialise_parameters();
         sequencer->getParameters(); // initialises the sequencer and pattern parameters?
 
-        // todo: move this into a separate function, in order to disentangle the parameters from menus?
-        this->sequencer->make_menu_items(menu);
-        this->output_processor->create_menu_items();
-
-        Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
+        //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
         already_initialised = true;
 
         return parameters;
+    }
+
+    virtual LinkedList<MenuItem*> *make_menu_items() override {
+        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+
+        this->sequencer->make_menu_items(menu, true);
+        this->output_processor->create_menu_items();
+
+        return menuitems;
     }
 
 };

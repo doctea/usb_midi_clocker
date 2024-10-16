@@ -316,18 +316,19 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
         if (channel==GM_CHANNEL_DRUMS) {
             int gate = midi_drum_note_to_gate_number(note);
             if (gate >= 0 && gate < NUM_SEQUENCES) {
-                //Serial_printf("At tick %5i, got NoteOn  for %s,\t%i,\t%iGate %i\n", ticks, get_note_name_c(note,channel), velocity, channel, gate);
+                Serial_printf("At tick %5i, got NoteOn  for %s,\t%i,\t%i\t:\tGate %i\n", ticks, get_note_name_c(note,channel), velocity, channel, gate);
                 cv_out_sequence_pin_on(gate);
             }
         }
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        Serial.printf("%s#sendNoteOff(note=%i, velocity=%i, channel=%i)\n", this->get_label(), note, velocity, channel);
         if (!this->is_midi_notes_enabled()) return;
         // translate MIDI drum notes to gates
         if (channel==GM_CHANNEL_DRUMS) {
             int gate = midi_drum_note_to_gate_number(note);
             if (gate >= 0 && gate < NUM_SEQUENCES) {
-                //Serial_printf("At tick %5i, got NoteOff for %s,\t%i,\t%iGate %i\n", ticks, get_note_name_c(note,channel), velocity, channel, gate);
+                Serial_printf("At tick %5i, got NoteOff for %s,\t%i,\t%i\t:\tGate %i\n", ticks, get_note_name_c(note,channel), velocity, channel, gate);
                 cv_out_sequence_pin_off(gate);
             }
         }

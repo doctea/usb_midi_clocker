@@ -6,21 +6,21 @@
 
 #include <util/atomic.h>
 
-#ifdef ENABLE_SCREEN
-    void toggle_autoadvance(bool on = false);
-    void toggle_recall(bool on = false);
-    #include "screenshot.h"
-    #include "mymenu.h"
-    #include "midi/midi_mapper_matrix_manager.h"
-    extern DisplayTranslator_Configured *display_translator;
-#endif
-
 #include "project.h"
 
 #include "interfaces/interfaces.h"
 
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
+
+    #ifdef ENABLE_SCREEN
+        void toggle_autoadvance(bool on = false);
+        void toggle_recall(bool on = false);
+        #include "screenshot.h"
+        #include "mymenu.h"
+        #include "midi/midi_mapper_matrix_manager.h"
+        extern DisplayTranslator_Configured *display_translator;
+    #endif
 
     bool debug_stress_sequencer_load = false;
 

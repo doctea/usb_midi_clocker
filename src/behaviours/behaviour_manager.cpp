@@ -268,9 +268,14 @@ void setup_behaviour_manager() {
             this->create_single_behaviour_menu_items(menu, behaviour);
 
             // add page to behaviour quickjump, so long as isn't itself
-            if (started_page!=menu->get_selected_page())
+            if (started_page < menu->get_selected_page()) {
+                // todo: figure out a better way of adding the correct page to the quickjump
                 quickjump->add_page(menu->get_selected_page());
+                //quickjump->add_page(started_page+1);
+                //started_page = menu->get_selected_page();
+            }
             Serial_println("...created.");
+            //started_page = menu->get_selected_page();
         }
 
         // create a page for holding recall/save options from every behaviour

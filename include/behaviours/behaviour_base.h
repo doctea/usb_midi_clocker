@@ -315,6 +315,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
         //FLASHMEM
+        // make menu items for the underlying device type (ie usb, usbserial, serial, virtual)
         virtual LinkedList<MenuItem*> *make_menu_items_device() {
             // dummy device menuitems
             return this->menuitems;
