@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_BAMBLE__INCLUDED
-#define BEHAVIOUR_BAMBLE__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
@@ -517,5 +516,4 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
 extern DeviceBehaviour_Bamble *behaviour_bamble;
 
-#endif
 #endif

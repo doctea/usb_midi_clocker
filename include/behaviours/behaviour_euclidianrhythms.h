@@ -111,6 +111,16 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         return menuitems;
     }
 
+    virtual void setup_saveable_parameters() override {
+        DeviceBehaviourUltimateBase::setup_saveable_parameters();
+        this->sequencer->setup_saveable_parameters();
+
+        // todo: better way of 'nesting' a sequencer/child object's saveableparameters within a host object's
+        for(int i = 0 ; i < sequencer->saveable_parameters->size() ; i++) {
+            this->saveable_parameters->add(sequencer->saveable_parameters->get(i));
+        }
+    }
+
 };
 
 
