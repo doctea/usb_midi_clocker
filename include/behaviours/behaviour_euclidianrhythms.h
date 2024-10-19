@@ -106,7 +106,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         this->sequencer->make_menu_items(menu, true);
-        this->output_processor->create_menu_items();
+        this->output_processor->create_menu_items(true);
 
         return menuitems;
     }
