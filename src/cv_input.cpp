@@ -87,8 +87,12 @@ void setup_parameters() {
     parameter_manager->addInput(virtpi2);
     parameter_manager->addInput(virtpi3);
 
-    VirtualMixerParameterInput *mixerpi1 = new VirtualMixerParameterInput((char*)"Mixer", "Mixers");
+    VirtualMixerParameterInput *mixerpi1 = new VirtualMixerParameterInput((char*)"Mix 1", "Mixers");
+    VirtualMixerParameterInput *mixerpi2 = new VirtualMixerParameterInput((char*)"Mix 2", "Mixers");
+    VirtualMixerParameterInput *mixerpi3 = new VirtualMixerParameterInput((char*)"Mix 3", "Mixers");
     parameter_manager->addInput(mixerpi1);
+    parameter_manager->addInput(mixerpi2);
+    parameter_manager->addInput(mixerpi3);
 
     // get the available target parameters
     // todo: dynamically pull them from other things that could have parameters available
