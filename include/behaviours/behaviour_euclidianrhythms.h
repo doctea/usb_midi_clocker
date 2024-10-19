@@ -29,6 +29,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         sequencer->initialise_patterns();
         sequencer->reset_patterns();
         output_processor->configure_sequencer(sequencer);
+        output_processor->setup_parameters();
     }
 
     virtual const char *get_label() override {
