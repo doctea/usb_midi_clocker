@@ -200,11 +200,11 @@ void redraw_patterns_row(byte row, bool force) {
         byte colour = APCMINI_OFF;
         if (!project->is_selected_pattern_number_empty(x))
           colour = APCMINI_GREEN;
-        if (project->loaded_pattern_number==x)
+        if (project->loaded_pattern_number==(int)x)
           colour = APCMINI_YELLOW;
-        if (project->selected_pattern_number==x && project->is_selected_pattern_number_empty(x))
+        if (project->selected_pattern_number==(int)x && project->is_selected_pattern_number_empty(x))
           colour = APCMINI_GREEN_BLINK;
-        else if (project->selected_pattern_number==x)
+        else if (project->selected_pattern_number==(int)x)
           colour += 1;
         apcdisplay_sendNoteOn(start_row+x, colour);
     } else {

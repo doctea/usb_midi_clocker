@@ -14,7 +14,7 @@
 
 #include "queue.h"
 
-#include "behaviours/SaveableParameters.h"
+#include "SaveableParameters.h"
 
 extern MIDIOutputWrapper *beatstep_output;
 
