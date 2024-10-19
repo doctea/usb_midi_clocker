@@ -51,8 +51,10 @@ class DebugPanel : public MenuItem {
                 tft->printf("  ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
             #endif
 
-            tft->println("\nStats:");
-            tft->printf("  Parameters: %i\n", parameter_manager->available_parameters->size());
+            #ifdef ENABLE_PARAMETERS
+                tft->println("\nStats:");
+                tft->printf("  Parameters: %i\n", parameter_manager->available_parameters->size());
+            #endif
 
             return tft->getCursorY();
         }

@@ -116,7 +116,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         this->sequencer->setup_saveable_parameters();
 
         // todo: better way of 'nesting' a sequencer/child object's saveableparameters within a host object's
-        for(int i = 0 ; i < sequencer->saveable_parameters->size() ; i++) {
+        for(unsigned int i = 0 ; i < sequencer->saveable_parameters->size() ; i++) {
             this->saveable_parameters->add(sequencer->saveable_parameters->get(i));
         }
     }

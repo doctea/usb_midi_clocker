@@ -24,6 +24,7 @@
 #include "project.h"
 
 //#ifdef ENABLE_CV_INPUT
+  // todo: separate cv-only stuff from parameters stuff
   #include "cv_input.h"
 //#endif
 #include "ParameterManager.h"
