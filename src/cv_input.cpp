@@ -18,6 +18,7 @@
 #include "behaviours/behaviour_manager.h"
 
 #include "parameter_inputs/VirtualParameterInput.h"
+#include "parameter_inputs/MixerParameterInput.h"
 
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
@@ -85,6 +86,9 @@ void setup_parameters() {
     parameter_manager->addInput(virtpi1);
     parameter_manager->addInput(virtpi2);
     parameter_manager->addInput(virtpi3);
+
+    VirtualMixerParameterInput *mixerpi1 = new VirtualMixerParameterInput((char*)"Mixer", "Mixers");
+    parameter_manager->addInput(mixerpi1);
 
     // get the available target parameters
     // todo: dynamically pull them from other things that could have parameters available
