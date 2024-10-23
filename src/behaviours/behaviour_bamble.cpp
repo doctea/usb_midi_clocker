@@ -68,6 +68,7 @@ LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
     euclidian_mode_control->add_available_value(4, "ArtsEtc");
     euclidian_mode_control->add_available_value(5, "Random");
 
+    // todo: convert all these ObjectNumberControls and ObjectToggleControls into LambdaNumberControls and LambdaToggleControls
     ObjectToggleControl<DeviceBehaviour_Bamble> *fills_control = new ObjectToggleControl<DeviceBehaviour_Bamble>(
         "Fills",
         this,
