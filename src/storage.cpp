@@ -87,6 +87,7 @@ namespace storage {
 
   const int chipSelect = BUILTIN_SDCARD;
 
+  FLASHMEM
   void make_project_folders(int project_number) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       char path[MAX_FILEPATH];

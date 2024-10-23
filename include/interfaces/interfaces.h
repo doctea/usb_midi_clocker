@@ -206,6 +206,7 @@ class GateManager {
     }
 
     #ifdef ENABLE_SCREEN
+        FLASHMEM
         void create_controls(Menu *menu);
     #endif
 };

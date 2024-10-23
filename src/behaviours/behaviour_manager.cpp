@@ -319,6 +319,7 @@ void setup_behaviour_manager() {
 
     //FLASHMEM
     // create the menuitems relating to a behaviour's parameters and saveableparameters
+    //FLASHMEM
     void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
             Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'...\n"), behaviour->get_label()); Serial_flush(); 
             //debug_free_ram();
