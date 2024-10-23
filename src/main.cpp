@@ -119,6 +119,10 @@ void setup() {
     Serial.clear();*/
     setup_storage();
     log_crashreport();
+    #ifdef DUMP_CRASHLOG_AT_STARTUP
+      while (!Serial);
+      dump_crashreport_log();
+    #endif
   }
   delay(1);
 
@@ -279,11 +283,9 @@ void setup() {
   #endif
 
   #ifdef USE_UCLOCK
-    Serial_println("Starting uClock...");
-    Serial_flush();
+    Serial_println("Starting uClock..."); Serial_flush();
     clock_start();
-    Serial_println("Started uClock!");
-    Serial_flush();
+    Serial_println("Started uClock!"); Serial_flush();
   #endif
 
   debug_free_ram();
@@ -291,6 +293,8 @@ void setup() {
   pushButtonA.resetStateChange();
   pushButtonB.resetStateChange();
   pushButtonC.resetStateChange();
+  
+  Serial_println("Finished setup()!");
 }
 
 //long loop_counter = 0;

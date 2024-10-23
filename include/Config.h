@@ -85,10 +85,12 @@
     // enable a USB AliExpress keyboard eg https://www.aliexpress.com/item/1005006353228764.html
     #define ENABLE_CONTROLLER_KEYBOARD
 
-    // enable USB devices that present as serial interfaces but support MIDI
-    #define ENABLE_USBSERIAL    
-    #ifdef ENABLE_USBSERIAL
-        #define ENABLE_OPENTHEREMIN
+    #if defined(PCB_STUDIO)
+        // enable USB devices that present as serial interfaces but support MIDI
+        #define ENABLE_USBSERIAL
+        #ifdef ENABLE_USBSERIAL
+            #define ENABLE_OPENTHEREMIN
+        #endif
     #endif
 #endif
 
@@ -144,7 +146,7 @@
     #define ENABLE_KEYSTEP
 
     #ifdef PCB_STUDIO
-        #define ENABLE_KEYSTEP
+        //#define ENABLE_KEYSTEP
         //#define ENABLE_CRAFTSYNTH_USB
         //#define ENABLE_SKULPTSYNTH_USB
         #define ENABLE_CHOCOLATEFEET_USB
@@ -153,8 +155,15 @@
         //#define ENABLE_BEHRINGER_EDGE_USB
         //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
     #endif
+
+    #ifdef PCB_GO
+        #define ENABLE_KEYSTEP
+    #endif
     
-    #define ENABLE_MICROLIDIAN
+    #ifndef ENABLE_EUCLIDIAN
+        #define ENABLE_MICROLIDIAN
+    #endif
+    #define ENABLE_MIDILIGHTS
 #endif
 
 #ifdef PCB_STUDIO
