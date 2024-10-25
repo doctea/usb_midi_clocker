@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_BASE_USB__INCLUDED
-#define BEHAVIOUR_BASE_USB__INCLUDED
+#pragma once
 
 #include "behaviours/behaviour_base.h"
 
@@ -115,9 +114,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
                 return this->menuitems;
             }*/
 
+            FLASHMEM
             virtual LinkedList<MenuItem*> *make_menu_items_device();
         #endif
 };
-
-
-#endif

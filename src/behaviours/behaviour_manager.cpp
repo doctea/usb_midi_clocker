@@ -134,7 +134,6 @@ void setup_behaviour_manager() {
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
-
     #ifdef ENABLE_LESTRUM
         Serial.println(F("about to register behaviour_lestrum...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);

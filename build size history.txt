@@ -18,3 +18,27 @@ teensy_size:    RAM1: variables:140544, code:273336, padding:21576   free for lo
 teensy_size:    RAM2: variables:17664  free for malloc/new:506624
 
 ^^ added dividedclockedbehaviour saveable parameters and midiccparameters to midimuso_4mv
+
+
+.....
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:336360, data:105044, headers:9152   free for files:7675908
+teensy_size:    RAM1: variables:158880, code:315464, padding:12216   free for local variables:37728
+teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+^^ pcb_go, with cv input re-enabled, but some other things disabled
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:354684, data:110164, headers:8236   free for files:7653380
+teensy_size:    RAM1: variables:163072, code:331080, padding:29368   free for local variables:768
+teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+^^ with LDataParameters for raw DataParameters, and CV input behaviours enabled :#
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:353324, data:102996, headers:8572   free for files:7661572
+teensy_size:    RAM1: variables:154880, code:329496, padding:30952   free for local variables:8960
+teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+^^ with midilights disabled again ..
