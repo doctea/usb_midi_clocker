@@ -105,13 +105,13 @@
         Serial.printf("OnPress key=%04x\n", key);
 
         switch (key) {
-            case KNOB_BIG_LEFT:
+            case KNOB_BIG_LEFT: case KNOB_SMALL_2_LEFT:
                 keyboard_queue->push({KEYD_UP, keyboard1.getModifiers()});
                 break;
-            case KNOB_BIG_RIGHT:
+            case KNOB_BIG_RIGHT: case KNOB_SMALL_2_RIGHT:
                 keyboard_queue->push({KEYD_DOWN, keyboard1.getModifiers()});
                 break;
-            case KNOB_BIG_CLICK:
+            case KNOB_BIG_CLICK: case KNOB_SMALL_2_CLICK:
                 keyboard_queue->push({KEYD_ENTER, keyboard1.getModifiers()});
                 break;
             case KEYPAD_A_4:
