@@ -60,7 +60,7 @@ extern bool debug_flag;
         //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
     }
 
-    FLASHMEM
+    //FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();

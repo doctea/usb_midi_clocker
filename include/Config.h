@@ -20,7 +20,9 @@
     #define ENABLE_CV_INPUT 0x49
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
-#define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
+#ifndef FAST_VOLTAGE_READS
+    #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading - is now configured in platformio.ini build flags
+#endif
 
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
