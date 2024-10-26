@@ -119,12 +119,12 @@ void setup() {
     Serial.clear();*/
     setup_storage();
     log_crashreport();
-    #ifdef DUMP_CRASHLOG_AT_STARTUP
-      while (!Serial);
-      dump_crashreport_log();
-    #endif
   }
   delay(1);
+  #ifdef DUMP_CRASHLOG_AT_STARTUP
+    while (!Serial);
+    dump_crashreport_log();
+  #endif
 
   /*while (1) {
     Serial_printf(".");
