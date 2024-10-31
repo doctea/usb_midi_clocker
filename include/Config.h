@@ -11,15 +11,18 @@
 
 //// CV input options
 #ifdef PCB_STUDIO
-    #define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
-    #define ENABLE_CV_INPUT_2   0x49
+    // these are now defined in build flags platformio.ini
+    //#define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
+    //#define ENABLE_CV_INPUT_2   0x49
 #elif defined(PCB_GO)
-    // disalbe for PCB_GO
+    // these are now defined in build flags platformio.ini
 #else
     #define ENABLE_CV_INPUT 0x49
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
-#define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
+#ifndef FAST_VOLTAGE_READS
+    #define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading - is now configured in platformio.ini build flags
+#endif
 
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
@@ -86,10 +89,12 @@
     // todo: automatic detection of appropriate device
     #define ENABLE_CONTROLLER_KEYBOARD
 
-    // enable USB devices that present as serial interfaces but support MIDI
-    #define ENABLE_USBSERIAL    
-    #ifdef ENABLE_USBSERIAL
-        #define ENABLE_OPENTHEREMIN
+    #if defined(PCB_STUDIO)
+        // enable USB devices that present as serial interfaces but support MIDI
+        #define ENABLE_USBSERIAL
+        #ifdef ENABLE_USBSERIAL
+            #define ENABLE_OPENTHEREMIN
+        #endif
     #endif
 #endif
 
@@ -145,7 +150,7 @@
     #define ENABLE_KEYSTEP
 
     #ifdef PCB_STUDIO
-        #define ENABLE_KEYSTEP
+        //#define ENABLE_KEYSTEP
         //#define ENABLE_CRAFTSYNTH_USB
         //#define ENABLE_SKULPTSYNTH_USB
         #define ENABLE_CHOCOLATEFEET_USB
@@ -154,8 +159,16 @@
         //#define ENABLE_BEHRINGER_EDGE_USB
         //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
     #endif
+
+    #ifdef PCB_GO
+        #define ENABLE_KEYSTEP
+        //#define ENABLE_MIDILIGHTS
+    #endif
     
-    #define ENABLE_MICROLIDIAN
+    #ifndef ENABLE_EUCLIDIAN
+        #define ENABLE_MICROLIDIAN
+    #endif
+    #define ENABLE_MIDILIGHTS
 #endif
 
 #ifdef PCB_STUDIO
@@ -230,5 +243,3 @@
 // turn off IRQs while checking changed USB devices 
 // seems to prevent crashes on reconnection, but causes pipes to freeze up, it seems
 #define IRQ_PROTECT_USB_CHANGES
-
-//#define FloatParameter FloatParameter

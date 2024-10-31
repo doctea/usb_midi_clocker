@@ -24,6 +24,7 @@
 #include "project.h"
 
 //#ifdef ENABLE_CV_INPUT
+  // todo: separate cv-only stuff from parameters stuff
   #include "cv_input.h"
 //#endif
 #include "ParameterManager.h"
@@ -61,6 +62,13 @@ void do_tick(uint32_t ticks);
 #endif
 #ifdef ENABLE_USBSERIAL
   #include "usb/multi_usbserial_handlers.h"
+#endif
+
+#ifdef ENABLE_EUCLIDIAN
+  #include "sequencer/Euclidian.h"
+  #include "outputs/output.h"
+  #include "outputs/output_processor.h"
+  #include "sequencer/sequencing.h"
 #endif
 
 #include "ParameterManager.h"
@@ -117,6 +125,10 @@ void setup() {
     log_crashreport();
   }
   delay(1);
+  #ifdef DUMP_CRASHLOG_AT_STARTUP
+    while (!Serial);
+    dump_crashreport_log();
+  #endif
 
   /*while (1) {
     Serial_printf(".");
@@ -160,6 +172,18 @@ void setup() {
   Debug_printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 
   delay( 100 );
+
+  /*#ifdef ENABLE_EUCLIDIAN
+      tft_print("setting up EUCLIDIAN..!");
+      delay(1000);
+      setup_sequencer();
+      output_processor->configure_sequencer(sequencer);
+      #ifdef ENABLE_SCREEN
+          setup_menu_euclidian(sequencer);
+          setup_sequencer_menu();
+          Debug_printf("after setup_sequencer_menu, free RAM is %u\n", freeRam());
+      #endif
+  #endif*/
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
@@ -263,11 +287,9 @@ void setup() {
   #endif
 
   #ifdef USE_UCLOCK
-    Serial_println("Starting uClock...");
-    Serial_flush();
+    Serial_println("Starting uClock..."); Serial_flush();
     clock_start();
-    Serial_println("Started uClock!");
-    Serial_flush();
+    Serial_println("Started uClock!"); Serial_flush();
   #endif
 
   debug_free_ram();
@@ -275,6 +297,8 @@ void setup() {
   pushButtonA.resetStateChange();
   pushButtonB.resetStateChange();
   pushButtonC.resetStateChange();
+  
+  Serial_println("Finished setup()!");
 }
 
 //long loop_counter = 0;

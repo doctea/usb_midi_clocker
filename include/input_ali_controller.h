@@ -8,15 +8,6 @@
 #include "storage.h"
 #include <util/atomic.h>
 
-#ifdef ENABLE_SCREEN
-    void toggle_autoadvance(bool on = false);
-    void toggle_recall(bool on = false);
-    #include "screenshot.h"
-    #include "mymenu.h"
-    #include "midi/midi_mapper_matrix_manager.h"
-    extern DisplayTranslator_Configured *display_translator;
-#endif
-
 #include "project.h"
 
 #include "interfaces/interfaces.h"
@@ -24,10 +15,18 @@
 #include "taptempo.h"
 
 #ifdef ENABLE_CONTROLLER_KEYBOARD
+    #include "USBHost_t36.h"
+
+    #ifdef ENABLE_SCREEN
+        void toggle_autoadvance(bool on = false);
+        void toggle_recall(bool on = false);
+        #include "screenshot.h"
+        #include "mymenu.h"
+        #include "midi/midi_mapper_matrix_manager.h"
+        extern DisplayTranslator_Configured *display_translator;
+    #endif
 
     bool debug_stress_sequencer_load = false;
-
-    #include "USBHost_t36.h"
 
     #ifdef ENABLE_SCREEN
         #include "menu.h"
@@ -108,13 +107,13 @@
         Serial.printf("OnPress key=%04x\n", key);
 
         switch (key) {
-            case KNOB_BIG_LEFT:
+            case KNOB_BIG_LEFT: case KNOB_SMALL_2_LEFT:
                 keyboard_queue->push({KEYD_UP, keyboard1.getModifiers()});
                 break;
-            case KNOB_BIG_RIGHT:
+            case KNOB_BIG_RIGHT: case KNOB_SMALL_2_RIGHT:
                 keyboard_queue->push({KEYD_DOWN, keyboard1.getModifiers()});
                 break;
-            case KNOB_BIG_CLICK:
+            case KNOB_BIG_CLICK: case KNOB_SMALL_2_CLICK:
                 keyboard_queue->push({KEYD_ENTER, keyboard1.getModifiers()});
                 break;
             case KEYPAD_A_4:
