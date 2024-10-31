@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_SIMPLEWRAPPER__INCLUDED
-#define BEHAVIOUR_SIMPLEWRAPPER__INCLUDED
+#pragma once
 
 #include "behaviour_clocked.h"
 #include "behaviour_base_usb.h"
@@ -139,5 +138,3 @@ class Behaviour_USBSimpleDividedClockedWrapper : public BaseClass, public Divide
     virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
 };
 */
-
-#endif

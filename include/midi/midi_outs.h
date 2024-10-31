@@ -1,5 +1,4 @@
-#ifndef MIDIOUT__INCLUDED
-#define MIDIOUT__INCLUDED
+#pragma once
 
 #include <MIDI.h>
 
@@ -54,5 +53,3 @@ void read_midi_serial_devices();
 void loop_midi_serial_devices();*/
 
 #include "ConfigMidi.h"
-
-#endif

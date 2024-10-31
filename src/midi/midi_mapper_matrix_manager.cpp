@@ -31,6 +31,8 @@
 
 #include "behaviours/behaviour_apcmini.h"
 
+#include "behaviours/behaviour_euclidianrhythms.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -80,11 +82,12 @@ void setup_midi_mapper_matrix_manager() {
 
     // first, add all the output options that will exist
 
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"Seq. Gate Drums", behaviour_sequencer_gates, 10));
+    behaviour_sequencer_gates->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"Seq. Gate Drums", behaviour_sequencer_gates, 10));
     #ifdef ENABLE_BITBOX    
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1", behaviour_bitbox, 1));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2", behaviour_bitbox, 2));
-        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3", behaviour_bitbox, 3));
+        // todo: assign multiple values to target_id of behaviour_bitbox .. ?
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 1",  behaviour_bitbox, 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 2",  behaviour_bitbox, 2));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 3",  behaviour_bitbox, 3));
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S1 : Bitbox : ch 10", behaviour_bitbox, 10));
     #endif
     #ifdef ENABLE_MAMMB33
@@ -118,11 +121,13 @@ void setup_midi_mapper_matrix_manager() {
     #else
         midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : MIDIOUT : ch 1", midi_out_serial[3], 1)); // for MB33
     #endif
-            
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : MIDIOUT : ch 1", midi_out_serial[4], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : MIDIOUT : ch 1", midi_out_serial[5], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : MIDIOUT : ch 1", midi_out_serial[6], 1));
-    midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : MIDIOUT : ch 1", midi_out_serial[7], 1));
+    
+    #if NUM_MIDI_OUTS>=8
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S5 : MIDIOUT : ch 1", midi_out_serial[4], 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S6 : MIDIOUT : ch 1", midi_out_serial[5], 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S7 : MIDIOUT : ch 1", midi_out_serial[6], 1));
+        midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S8 : MIDIOUT : ch 1", midi_out_serial[7], 1));
+    #endif
 
     #ifdef ENABLE_DPT_LOOPER
         behaviour_dptlooper->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
@@ -165,6 +170,7 @@ void setup_midi_mapper_matrix_manager() {
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
         behaviour_bamble->self_register_midi_matrix_sources(midi_matrix_manager);
     #endif
+
 
     #ifdef ENABLE_USB
         // add the sources - these are *from* PC *to* Teensy
@@ -251,6 +257,13 @@ void setup_midi_mapper_matrix_manager() {
         #endif
     #endif
 
+    #ifdef ENABLE_EUCLIDIAN
+        behaviour_euclidianrhythms->source_id   = midi_matrix_manager->register_source("EucRhythms ch10");
+        behaviour_euclidianrhythms->source_id_2 = midi_matrix_manager->register_source("EucRhythms ch1");
+        //Serial.printf("ENABLE_EUCLIDIAN: connecting source_id=%i to target_id=%i\n", behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
+        midi_matrix_manager->connect(behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
+    #endif
+
     #ifdef ENABLE_APCMINI
         midi_matrix_manager->register_source(behaviour_apcmini, "APCMini Pads");
     #endif
@@ -282,7 +295,7 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_MAMMB33
         midi_matrix_manager->connect("Bass Proxy", "S2 : MAM MB33 : ch 1");
     #else
-        midi_matrix_manager->connect("Bass Proxy", "S2 : MIDIOUT : ch 1");
+        //midi_matrix_manager->connect("Bass Proxy", "S2 : MIDIOUT : ch 1");
     #endif
     #ifdef ENABLE_BEATSTEP
         midi_matrix_manager->connect("beatstep", "Bass Proxy");

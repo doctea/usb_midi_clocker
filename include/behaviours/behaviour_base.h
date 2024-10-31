@@ -14,7 +14,7 @@
 #include "parameters/MIDICCParameter.h"
 #include "ParameterManager.h"
 
-#include "behaviours/SaveableParameters.h"
+#include "SaveableParameters.h"
 
 #include "file_manager/file_manager_interfaces.h"
 
@@ -192,7 +192,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         return parameters;
     }
     virtual bool has_parameters() {
-        return this->get_parameters()->size()>0;
+        LinkedList<FloatParameter*> *test_p = this->get_parameters();
+        return test_p!=nullptr && test_p->size()>0;
     }
     virtual FloatParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
@@ -251,6 +252,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         return false;
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
+        this->setup_saveable_parameters();
         for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             Debug_printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
             if (saveable_parameters->get(i)->is_save_enabled()) {
@@ -274,7 +276,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     }
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
-        Debug_println("save_sequence_add_lines_parameters..");
+        Debug_printf("save_sequence_add_lines_parameters in %s..\n", this->get_label());
         if (this->has_parameters()) {
             LinkedList<FloatParameter*> *parameters = this->get_parameters();
             for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
@@ -283,7 +285,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 parameter->save_pattern_add_lines(lines);
             }
         }
-        if (debug) Serial.println("finished save_sequence_add_lines_parameters.");
+        Debug_println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
@@ -306,7 +308,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))
                 return true;
         }
-        ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a parameter!\n"));
+        ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
         return false;
     }
 
@@ -315,6 +317,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
         //FLASHMEM
+        // make menu items for the underlying device type (ie usb, usbserial, serial, virtual)
         virtual LinkedList<MenuItem*> *make_menu_items_device() {
             // dummy device menuitems
             return this->menuitems;

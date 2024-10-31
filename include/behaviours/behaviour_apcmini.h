@@ -147,7 +147,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                     // button between Clip Stop -> Solo -> Rec arm -> Mute buttons
                     // change divisions/multiplier of corresponding clock
                     byte clock_number = inNumber - APCMINI_BUTTON_CLIP_STOP;  
-                    byte old_clock_selected = clock_selected;
+                    //byte old_clock_selected = clock_selected;
                     clock_selected = clock_number;
                     
                     if (apcmini_shift_held) {

@@ -26,7 +26,7 @@ class DeviceBehaviour_CVInput;
 
 // todo: move this to Parameter library, or midihelpers scale library..?
 template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
-class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
+class ChordTypeParameter : /*virtual*/ public DataParameter<TargetClass, DataType> {
     public:
         ChordTypeParameter(const char *label, TargetClass *target, void(TargetClass::*setter_func)(DataType), DataType(TargetClass::*getter_func)()) 
         : DataParameter<TargetClass, DataType>(label, target, setter_func, getter_func, 0, NUMBER_CHORDS-1) {}
@@ -62,7 +62,7 @@ class ChordTypeParameter : public DataParameter<TargetClass, DataType> {
 #include "chord_player.h"
 #include "functional-vlpp.h"
 
-class DeviceBehaviour_CVInput : /* virtual */ public virtual DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
+class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
         ChordPlayer chord_player = ChordPlayer(
             [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_on(channel, note, velocity); },
@@ -102,12 +102,6 @@ class DeviceBehaviour_CVInput : /* virtual */ public virtual DeviceBehaviourUlti
             return this->velocity_input;
         }
 
-        #ifdef ENABLE_SCREEN
-            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
-            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
-            virtual LinkedList<MenuItem *> *make_menu_items() override;
-        #endif
-
         //void on_tick(unsigned long ticks) override {
         // if we send this during tick then the notes never get received, for some reason.  sending during on_pre_clock seems to work ok for now.
         // TODO: see if this is solved now and we can revert back to using on_tick, now that we have updated to newer version of USBHost_t36 library?
@@ -118,11 +112,13 @@ class DeviceBehaviour_CVInput : /* virtual */ public virtual DeviceBehaviourUlti
                 new_note = voltage_source_input->get_voltage_pitch();
                 if (this->debug) Serial.printf("setting pitch to %i (%2.2f)\n", new_note, this->pitch_input->get_normal_value_unipolar());
             }
+
             int velocity = MIDI_MAX_VELOCITY;
             if (this->velocity_input!=nullptr) {
                 velocity = constrain(((float)MIDI_MAX_VELOCITY)*(float)this->velocity_input->get_normal_value_unipolar(), 0, MIDI_MAX_VELOCITY);
                 if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value_unipolar());
             }
+
             this->chord_player.on_pre_clock(ticks, new_note, velocity);
         }
 
@@ -202,30 +198,47 @@ class DeviceBehaviour_CVInput : /* virtual */ public virtual DeviceBehaviourUlti
             return false;
         }
 
-        bool already_initialised = false;
-        //FLASHMEM 
-        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
-            //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
-            if (already_initialised && this->parameters!=nullptr)
-                return this->parameters;
+        #ifdef ENABLE_PARAMETERS
+            bool already_initialised = false;
+            //FLASHMEM 
+            virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+                //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
+                if (already_initialised && this->parameters!=nullptr)
+                    return this->parameters;
 
-            DeviceBehaviourUltimateBase::initialise_parameters();
-            
-            // these two don't work?  and probably don't make too much sense to allow to be modulated anyway...
-            //parameters->add(new DataParameter<DeviceBehaviour_CVInput,int8_t>("Scale Root", this, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, 0, 12));
-            //parameters->add(new DataParameter<DeviceBehaviour_CVInput,SCALE>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, (SCALE)0, (SCALE)NUMBER_SCALES));
+                DeviceBehaviourUltimateBase::initialise_parameters();
+                
+                // these two don't work?  and probably don't make too much sense to allow to be modulated anyway...
+                //parameters->add(new DataParameter<DeviceBehaviour_CVInput,int8_t>("Scale Root", this, &DeviceBehaviour_CVInput::set_scale_root, &DeviceBehaviour_CVInput::get_scale_root, 0, 12));
+                //parameters->add(new DataParameter<DeviceBehaviour_CVInput,SCALE>("Scale", this, &DeviceBehaviour_CVInput::set_scale, &DeviceBehaviour_CVInput::get_scale, (SCALE)0, (SCALE)NUMBER_SCALES));
 
-            // these probably work, but we don't have enough flash to add this right now!
-            //parameters->add(new DataParameter<DeviceBehaviour_CVInput,bool>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
-            //parameters->add(new DataParameter<DeviceBehaviour_CVInput,bool>("Play Chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
+                // these probably work, but we don't have enough flash to add this right now!
+                //parameters->add(new DataParameter<DeviceBehaviour_CVInput,bool>("Quantise", this, &DeviceBehaviour_CVInput::set_quantise, &DeviceBehaviour_CVInput::is_quantise));
+                //parameters->add(new DataParameter<DeviceBehaviour_CVInput,bool>("Play Chords", this, &DeviceBehaviour_CVInput::set_play_chords, &DeviceBehaviour_CVInput::is_play_chords));
 
-            parameters->add(new ChordTypeParameter<ChordPlayer>("Chord Type", &this->chord_player, &ChordPlayer::set_selected_chord, &ChordPlayer::get_selected_chord));
-            parameters->add(new DataParameter<ChordPlayer,int8_t>("Inversion", &this->chord_player, &ChordPlayer::set_inversion, &ChordPlayer::get_inversion, 0, MAXIMUM_INVERSIONS));
+                parameters->add(new ChordTypeParameter<ChordPlayer>("Chord Type", &this->chord_player, &ChordPlayer::set_selected_chord, &ChordPlayer::get_selected_chord));
+                parameters->add(
+                    new LDataParameter<int8_t>(
+                        "Inversion", 
+                        [=](int8_t v) -> void { this->chord_player.set_inversion(v); }, 
+                        [=](void) -> int8_t { return this->chord_player.get_inversion(); }, 
+                        0, 
+                        MAXIMUM_INVERSIONS
+                    )
+                );
 
-            //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
+                //Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
-            return parameters;
-        }
+                return parameters;
+            }
+        #endif
+
+        #ifdef ENABLE_SCREEN
+            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
+            ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
+            //FLASHMEM
+            virtual LinkedList<MenuItem *> *make_menu_items() override;
+        #endif
 
 };
 

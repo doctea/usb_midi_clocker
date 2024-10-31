@@ -1,7 +1,6 @@
 #ifdef ENABLE_MIDILIGHTS_DEDICATED
 
-#ifndef BEHAVIOUR_MIDILIGHTS__INCLUDED
-#define BEHAVIOUR_MIDILIGHTS__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
@@ -123,6 +122,4 @@ class DeviceBehaviour_MIDILights : virtual public DeviceBehaviourUSBBase, virtua
 extern DeviceBehaviour_MIDILights *behaviour_midilights;
 
 #endif
-#endif
-
 #endif

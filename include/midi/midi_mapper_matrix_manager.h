@@ -142,17 +142,18 @@ class MIDIMatrixManager {
             this->get_target_id_for_handle(target_handle)
         );
     }
-    void connect(source_id_t source_id, target_id_t target_id) {
+    bool connect(source_id_t source_id, target_id_t target_id) {
         if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
-            return;
+            return false;
         if (!is_allowed(source_id, target_id))
-            return;
+            return false;
         if (!source_to_targets[source_id][target_id]) {
             // increment count if not already connected
             sources[source_id].connection_count++;
             targets[target_id].connection_count++;
         }
         source_to_targets[source_id][target_id] = true;
+        return true;
     }
 
     void disconnect(const char *source_handle, const char *target_handle) {

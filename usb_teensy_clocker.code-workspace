@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "../my_libraries/midihelpers"
+		},
+		{
+			"path": "../my_libraries/seqlib"
 		}
 	],
 	"settings": {
