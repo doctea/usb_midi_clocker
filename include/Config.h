@@ -167,7 +167,7 @@
     #ifndef ENABLE_EUCLIDIAN
         #define ENABLE_MICROLIDIAN
     #endif
-    //#define ENABLE_MIDILIGHTS
+    #define ENABLE_MIDILIGHTS
 #endif
 
 #ifdef PCB_STUDIO
