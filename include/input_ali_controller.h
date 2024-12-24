@@ -129,6 +129,9 @@
             case KEYPAD_A_1:
                 tapper->clock_tempo_tap();
                 break;
+            case KEYPAD_A_2:
+                tapper->set_continue_locking(!tapper->continue_locking());
+                break;
         }
 
         return;
