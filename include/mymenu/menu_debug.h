@@ -51,7 +51,12 @@ class DebugPanel : public MenuItem {
                 tft->printf("  MCP23S17 version: %s\n", (char*)MCP23S17_LIB_VERSION);
             #endif
             #ifdef ENABLE_CV_INPUT
-                tft->printf("  ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
+                tft->printf("  ADS1X15  version: %s", (char*)ADS1X15_LIB_VERSION);
+                tft->printf(" @ 0x%2x", ENABLE_CV_INPUT);
+                #ifdef ENABLE_CV_INPUT_2
+                    tft->printf(",0x%2x\n", ENABLE_CV_INPUT_2);
+                #endif
+                tft->println();
             #endif
             #ifdef ENABLE_CV_OUTPUT
                 tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
