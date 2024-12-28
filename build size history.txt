@@ -52,3 +52,18 @@ teensy_size: Memory Usage on Teensy 4.1:
 teensy_size:   FLASH: code:353068, data:102996, headers:8828   free for files:7661572
 teensy_size:    RAM1: variables:154880, code:329240, padding:31208   free for local variables:8960
 teensy_size:    RAM2: variables:17664  free for malloc/new:506624
+
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:356196, data:110992, headers:8968   free for files:7650308
+teensy_size:    RAM1: variables:162528, code:331992, padding:28456   free for local variables:1312
+teensy_size:    RAM2: variables:17568  free for malloc/new:506720
+
+^^ pcb_go build with CV input, before alternate linker script
+
+teensy_size: Memory Usage on Teensy 4.1:
+teensy_size:   FLASH: code:354492, data:110992, headers:8624   free for files:7652356
+teensy_size:    RAM1: variables:162528, code:1208, padding:31560   free for local variables:328992
+teensy_size:    RAM2: variables:17568  free for malloc/new:506720
+
+^^ pcb_go build with CV input, after alternate linker script!

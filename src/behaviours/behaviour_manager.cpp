@@ -23,6 +23,8 @@
 #include "behaviours/behaviour_drumkit.h"
 
 #include "behaviours/behaviour_cvinput.h"
+#include "behaviours/behaviour_cvoutput.h"
+
 #include "behaviours/behaviour_dptlooper.h"
 #include "behaviours/behaviour_midimuso.h"
 #include "behaviours/behaviour_midimuso_4pv.h"
@@ -154,6 +156,12 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_cvinput_1);
         behaviour_manager->registerBehaviour(behaviour_cvinput_2);
         behaviour_manager->registerBehaviour(behaviour_cvinput_3);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+
+    #if defined(ENABLE_CV_OUTPUT)
+        Serial.println(F("about to register behaviour_cvoutput...")); Serial_flush();
+        behaviour_manager->registerBehaviour(behaviour_cvoutput_1);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 

@@ -23,6 +23,7 @@
 #include "behaviours/behaviour_microlidian.h"
 
 #include "behaviours/behaviour_cvinput.h"
+#include "behaviours/behaviour_cvoutput.h"
 
 #include "behaviours/behaviour_opentheremin.h"
 #include "behaviours/behaviour_midibassproxy.h"
@@ -275,6 +276,10 @@ void setup_midi_mapper_matrix_manager() {
         //#ifdef ENABLE_CRAFTSYNTH_USB
         //    midi_matrix_manager->connect("CV input", "USB : CraftSynth : ch 1");
         //#endif
+    #endif
+
+    #if defined(ENABLE_CV_OUTPUT)
+        midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_1->label, behaviour_cvoutput_1));
     #endif
 
     #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)

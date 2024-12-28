@@ -18,6 +18,7 @@
     // these are now defined in build flags platformio.ini
 #else
     #define ENABLE_CV_INPUT 0x49
+    #define ENABLE_CV_OUTPUT 0x4C
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
 #ifndef FAST_VOLTAGE_READS

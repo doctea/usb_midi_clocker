@@ -23,11 +23,15 @@
 #endif
 #include "project.h"
 
-//#ifdef ENABLE_CV_INPUT
-  // todo: separate cv-only stuff from parameters stuff
+#ifdef ENABLE_PARAMETERS
+  // todo: probably rename cv_input.h to something else?
   #include "cv_input.h"
-//#endif
+#endif
 #include "ParameterManager.h"
+
+#ifdef ENABLE_CV_OUTPUT
+    #include "cv_output.h"
+#endif
 
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
@@ -198,8 +202,13 @@ void setup() {
     setup_cv_input();
     Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
   #endif
-  setup_parameters();
-  Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
+  #ifdef ENABLE_PARAMETERS
+    setup_parameters();
+    Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
+  #endif
+  /*#ifdef ENABLE_CV_OUTPUT
+      setup_cv_output();
+  #endif*/
   #ifdef ENABLE_SCREEN
     setup_parameter_menu();
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
