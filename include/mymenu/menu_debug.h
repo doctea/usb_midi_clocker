@@ -54,7 +54,7 @@ class DebugPanel : public MenuItem {
                 tft->printf("  ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
             #endif
             #ifdef ENABLE_CV_OUTPUT
-                tft->printf("DAC8574 version: %s", (char*)DAC8574_LIB_VERSION);
+                tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
                 tft->printf(" @ 0x%2x\n", ENABLE_CV_OUTPUT);
             #endif
 

@@ -61,6 +61,22 @@ SECTIONS
         *(interrupt.c.o .text*)
         *(memcpy-armv7m.S.o .text*)
         *(memset.S.o .text*)
+        *(Display* .text*) /* this increases FPS from 9 to 13 */
+        /* the rest of these made no noticeable difference */
+        *(ILI9341_t3n* .text*)
+        *(*arameter* .text*)
+        *(*cv_input* .text*)
+        *(*USBHost* .text*)
+        *(*midi* .text*)
+        *(*MIDI* .text*)
+        *(*nvelope* .text*)
+        *(uClock* .text*)
+        *(*menu* .text*)
+        *(*handlers* .text*)
+        *(*Spi* .text*)
+        *(*Voltage* .text*)
+        *(MCP23S17* .text*)
+        *(*Wire* .text*)
         . = ALIGN(16);
     } > ITCM  AT> FLASH
     .data : {
