@@ -214,8 +214,6 @@ void setup() {
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
-  //behaviour_manager->setup_saveable_parameters();
-
   #ifdef ENABLE_SCREEN
     Serial_println(F("...starting behaviour_manager#make_menu_items...")); Serial_flush();
     behaviour_manager->create_all_behaviour_menu_items(menu);

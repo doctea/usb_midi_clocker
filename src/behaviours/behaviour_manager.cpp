@@ -161,6 +161,7 @@ void setup_behaviour_manager() {
 
     #if defined(ENABLE_CV_OUTPUT)
         Serial.println(F("about to register behaviour_cvoutput...")); Serial_flush();
+        behaviour_cvoutput_1 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 1", ENABLE_CV_OUTPUT);
         behaviour_manager->registerBehaviour(behaviour_cvoutput_1);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif

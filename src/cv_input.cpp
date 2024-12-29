@@ -29,10 +29,8 @@ void setup_cv_input() {
     tft_print("...setup_cv_input...\n");
 
     parameter_manager->init();
-
-    Wire.begin();
-
     #ifdef ENABLE_CV_INPUT
+        Wire.begin();
         tft_print("...adding ADCPimoroni24v #1!\n");
         parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, &Wire, 5.0));
     #endif
