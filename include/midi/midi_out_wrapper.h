@@ -199,7 +199,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 //this->actual_sendNoteOff(this->current_transposed_note,0,default_channel);
             }
             sendControlChange(midi::AllNotesOff, MIDI_MAX_VELOCITY);
-            for (int pitch = 0 ; pitch < MIDI_MAX_NOTE ; pitch++) {
+            for (uint_fast8_t pitch = 0 ; pitch < MIDI_NUM_NOTES ; pitch++) {
                 //int pitch = recalculate_pitch(i);
                 //if (is_note_playing(pitch)) {
                     //if (this->debug) 

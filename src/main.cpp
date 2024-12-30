@@ -127,6 +127,8 @@ void setup() {
   delay(1);
   #ifdef DUMP_CRASHLOG_AT_STARTUP
     while (!Serial);
+    delay(500);
+    setup_storage();
     dump_crashreport_log();
   #endif
 

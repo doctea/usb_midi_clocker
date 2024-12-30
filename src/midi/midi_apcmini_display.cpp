@@ -21,7 +21,7 @@
 
 apc_gate_page_t apc_gate_page = CLOCKS;
 
-int8_t apc_note_last_sent[MIDI_MAX_NOTE+1] = {};
+int8_t apc_note_last_sent[MIDI_NUM_NOTES] = {};
 
 // cached send note on
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
@@ -38,7 +38,7 @@ void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel, bool for
   apcdisplay_sendNoteOn(pitch, 0 /*value*/, channel, force);
 }
 void apcdisplay_initialise_last_sent() {
-  for(int_fast8_t i = 0 ; i < MIDI_MAX_NOTE ; i++)
+  for(uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++)
     apc_note_last_sent[i] = -1;
 }
 

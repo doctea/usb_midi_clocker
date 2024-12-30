@@ -100,7 +100,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
 
 
         // todo: use a more user-friendly and less memory-hungry way of doing this
-        for (int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+        for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
             //for (int i = GM_NOTE_MINIMUM ; i < GM_NOTE_MAXIMUM ; i++) {
             char label[MENU_C_MAX] = "";
             snprintf(label, MENU_C_MAX, "Gate for %3s: ", get_note_name_c(i, GM_CHANNEL_DRUMS));
@@ -122,7 +122,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     }
 
     int8_t *map_note_to_gate = nullptr;
-    /*int8_t map_note_to_gate[MIDI_MAX_NOTE+1] = {
+    /*int8_t map_note_to_gate[MIDI_NUM_NOTES] = {
         NOTE_OFF,  // 0
         NOTE_OFF,  // 1
         NOTE_OFF,  // 2
@@ -248,9 +248,15 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     };*/
 
     void initialise_note_to_gate_map() {
-        this->map_note_to_gate = (int8_t*)calloc(sizeof(int8_t), MIDI_MAX_NOTE+1);
-        for(int8_t i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+        this->map_note_to_gate = (int8_t*)calloc(sizeof(int8_t), MIDI_NUM_NOTES+1);
+        //Serial.printf("initialise_note_to_gate_map starting with map_note_to_gate @%p - MIDI_NUM_NOTES is %i\n", this->map_note_to_gate, MIDI_NUM_NOTES);
+        for (uint8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
+            //Serial.printf("initialise_note_to_gate_map setting map for element %i\n", i);
             this->map_note_to_gate[i] = get_default_gate_number_for_note(i);
+            /*if (i>MIDI_MAX_NOTE) {
+                Serial.println("ERROR: i>MIDI_MAX_NOTE");
+                while(1);
+            }*/
         }
     }
 
@@ -385,7 +391,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
 
     virtual void save_project_add_lines(LinkedList<String> *lines) override {
         DeviceBehaviourUltimateBase::save_project_add_lines(lines);
-        for (int i = 0 ; i < MIDI_MAX_NOTE+1 ; i++) {
+        for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
             lines->add(String("map_note_to_gate=")+String(i)+'|'+String(this->map_note_to_gate[i]));
         }
     }
