@@ -4,6 +4,7 @@
 #include "behaviour_base.h"
 #include "midi/midi_mapper_matrix_manager.h"
 
+// TODO: rename this into DroneBehaviour or something
 class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
 

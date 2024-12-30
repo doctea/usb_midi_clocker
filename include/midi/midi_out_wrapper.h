@@ -27,6 +27,7 @@ class MIDITrack;
 // DONE: handle currently_playing_note / last_played_note stuff here too?
 // TODO: differentiate between different sources, so that we can eg kill recorded notes when recording stopped while not cutting off any notes that are being played in live
 //          ^^ think this is better handled by the midi matrix manager..?
+// TODO: probably can use templating to implement the different wrapper types and make this more generic
 
 #ifdef DEBUG_MIDI_WRAPPER
     struct message_history_t {
@@ -48,7 +49,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
         int8_t default_channel = 0;
         char label[MAX_LENGTH_OUTPUT_WRAPPER_LABEL];
 
-        int8_t playing_notes[MIDI_MAX_NOTE+1];
+        int8_t playing_notes[MIDI_NUM_NOTES];
 
         int last_note = -1, current_note = -1;
         //int last_transposed_note = -1, current_transposed_note = -1;

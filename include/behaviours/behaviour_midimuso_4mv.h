@@ -2,7 +2,7 @@
 
 #include "Config.h"
 
-// MIDI MUSO CV12 4 voice mono mode (handle voice allocation ourselves)
+// MIDI MUSO CV12 4-voice monophonic mode (handle voice allocation ourselves - allow automatic and manual allocation)
 
 #ifdef ENABLE_MIDIMUSO_4MV
 
@@ -22,6 +22,8 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
 
     using DividedClockedBehaviour::on_tick;
     using DividedClockedBehaviour::send_clock;
+
+    const int8_t CHANNEL_ROUND_ROBIN = 5;
 
     Behaviour_MIDIMuso_4MV () : DeviceBehaviourSerialBase () {
         this->TUNING_OFFSET = -3;   // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
@@ -49,7 +51,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
 
     int8_t find_slot_for(int8_t note) {
         int8_t note_slot = -1;
-        for (int i = 0 ; i < max_voice_count ; i++) {
+        for (int_fast8_t i = 0 ; i < max_voice_count ; i++) {
             if (!allow_voice_for_auto[i])
                 continue;
             if (voices[i]==note) {
@@ -62,7 +64,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
-        if (channel==5) {
+        if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(-1);
             if (note_slot>=0) {
@@ -80,7 +82,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
 
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
-        if (channel==5) {
+        if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(note);
             if (note_slot>=0) {
