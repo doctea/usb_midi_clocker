@@ -50,32 +50,50 @@ void setup_parameters() {
     //Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
     //tft_print("..setup_parameters...");
 
+    int8_t used_sources = 0;
+
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
     #ifdef ENABLE_CV_INPUT
         tft_print("...adding VoltageParameterInputs for ADC1 CV source!\n");
-        VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(0));
-        VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(1));
-        VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(2));
+        #ifndef ENABLE_CV_INPUT_ORDER
+            #define ENABLE_CV_INPUT_ORDER {0,1,2} 
+        #endif
+        {
+        int8_t input_orders[3] = ENABLE_CV_INPUT_ORDER;
+        VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(input_orders[0]+used_sources));
+        VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(input_orders[1]+used_sources));
+        VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(input_orders[2]+used_sources));
         //vpi3->input_type = UNIPOLAR;
 
         // tell the parameter manager about them
         parameter_manager->addInput(vpi1);
         parameter_manager->addInput(vpi2);
         parameter_manager->addInput(vpi3);
+
+        used_sources += 3;
+        }
     #endif
 
     #ifdef ENABLE_CV_INPUT_2
         tft_print("...adding VoltageParameterInputs for ADC2 CV source!\n");
-        VoltageParameterInput *vpi4 = new VoltageParameterInput((char*)"D", "ADC2", parameter_manager->voltage_sources->get(3));
-        VoltageParameterInput *vpi5 = new VoltageParameterInput((char*)"E", "ADC2", parameter_manager->voltage_sources->get(4));
-        VoltageParameterInput *vpi6 = new VoltageParameterInput((char*)"F", "ADC2", parameter_manager->voltage_sources->get(5));
+        #ifndef ENABLE_CV_INPUT_2_ORDER
+            #define ENABLE_CV_INPUT_2_ORDER {0,1,2}
+        #endif
+        {
+        int8_t input_orders[3] = ENABLE_CV_INPUT_2_ORDER;
+        VoltageParameterInput *vpi4 = new VoltageParameterInput((char*)"D", "ADC2", parameter_manager->voltage_sources->get(input_orders[0]+used_sources));
+        VoltageParameterInput *vpi5 = new VoltageParameterInput((char*)"E", "ADC2", parameter_manager->voltage_sources->get(input_orders[1]+used_sources));
+        VoltageParameterInput *vpi6 = new VoltageParameterInput((char*)"F", "ADC2", parameter_manager->voltage_sources->get(input_orders[2]+used_sources));
         //vpi3->input_type = UNIPOLAR;
 
         // tell the parameter manager about them
         parameter_manager->addInput(vpi4);
         parameter_manager->addInput(vpi5);
         parameter_manager->addInput(vpi6);
+
+        used_sources += 3;
+        }
     #endif
 
     VirtualParameterInput *virtpi1 = new VirtualParameterInput((char*)"LFO sync", "LFOs", LFO_LOCKED);
