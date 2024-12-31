@@ -60,7 +60,17 @@ class DebugPanel : public MenuItem {
             #endif
             #ifdef ENABLE_CV_OUTPUT
                 tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
-                tft->printf(" @ 0x%2x\n", ENABLE_CV_OUTPUT);
+                tft->printf(" @ 0x%2x", ENABLE_CV_OUTPUT);
+                tft->printf(" bank %i", ENABLE_CV_OUTPUT_BANK);
+                #ifdef ENABLE_CV_OUTPUT_2
+                    tft->printf("\n                          @ 0x%2x", ENABLE_CV_OUTPUT_2);
+                    tft->printf(" bank %i", ENABLE_CV_OUTPUT_2_BANK);
+                #endif
+                #ifdef ENABLE_CV_OUTPUT_3
+                    tft->printf("\n                          @ 0x%2x ", ENABLE_CV_OUTPUT_3);
+                    tft->printf(" bank %i", ENABLE_CV_OUTPUT_3_BANK);
+                #endif
+                tft->println();
             #endif
 
             #ifdef ENABLE_PARAMETERS

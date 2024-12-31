@@ -282,6 +282,12 @@ void setup_midi_mapper_matrix_manager() {
     #if defined(ENABLE_CV_OUTPUT)
         midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_1->label, behaviour_cvoutput_1));
     #endif
+    #if defined(ENABLE_CV_OUTPUT_2)
+        midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_2->label, behaviour_cvoutput_2));
+    #endif
+    #if defined(ENABLE_CV_OUTPUT_3)
+        midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_3->label, behaviour_cvoutput_3));
+    #endif
 
     #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)
         midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");

@@ -9,6 +9,16 @@
 
 // NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
 
+#if defined(ENABLE_CV_OUTPUT) && !defined(ENABLE_CV_OUTPUT_BANK)
+    #define ENABLE_CV_OUTPUT_BANK 0
+#endif
+#if defined(ENABLE_CV_OUTPUT_2) && !defined(ENABLE_CV_OUTPUT_2_BANK)
+    #define ENABLE_CV_OUTPUT_2_BANK 0
+#endif
+#if defined(ENABLE_CV_OUTPUT_3) && !defined(ENABLE_CV_OUTPUT_3_BANK)
+    #define ENABLE_CV_OUTPUT_3_BANK 0
+#endif
+
 //// CV input options
 #ifdef PCB_STUDIO
     // these are now defined in build flags platformio.ini
@@ -127,6 +137,10 @@
     //#define ENABLE_MIDIMUSO_4PV   MIDI4
     #define ENABLE_MIDIMUSO_4MV MIDI4
 #endif
+
+// so i can see how this is working while devving the cv output stuff
+// TODO: disable this when not needed
+#define ENABLE_MIDIMUSO_4MV MIDI4
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead

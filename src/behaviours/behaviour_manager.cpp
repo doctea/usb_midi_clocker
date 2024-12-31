@@ -160,9 +160,23 @@ void setup_behaviour_manager() {
     #endif
 
     #if defined(ENABLE_CV_OUTPUT)
-        Serial.println(F("about to register behaviour_cvoutput...")); Serial_flush();
-        behaviour_cvoutput_1 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 1", ENABLE_CV_OUTPUT);
+        Serial.println(F("about to register behaviour_cvoutput_1...")); Serial_flush();
+        behaviour_cvoutput_1 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 1", ENABLE_CV_OUTPUT, ENABLE_CV_OUTPUT_BANK);
         behaviour_manager->registerBehaviour(behaviour_cvoutput_1);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+
+    #if defined(ENABLE_CV_OUTPUT_2)
+        Serial.println(F("about to register behaviour_cvoutput_2...")); Serial_flush();
+        behaviour_cvoutput_2 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 2", ENABLE_CV_OUTPUT_2, ENABLE_CV_OUTPUT_2_BANK);
+        behaviour_manager->registerBehaviour(behaviour_cvoutput_2);
+        Serial.println(F("Finished registering")); Serial_flush();
+    #endif
+
+    #if defined(ENABLE_CV_OUTPUT_3)
+        Serial.println(F("about to register behaviour_cvoutput_3...")); Serial_flush();
+        behaviour_cvoutput_3 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 3", ENABLE_CV_OUTPUT_3, ENABLE_CV_OUTPUT_3_BANK);
+        behaviour_manager->registerBehaviour(behaviour_cvoutput_3);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 

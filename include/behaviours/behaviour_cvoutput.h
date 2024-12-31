@@ -29,15 +29,16 @@ class DeviceBehaviour_CVOutput : public DeviceBehaviourUltimateBase {
         CVOutputParameter<DACClass> *output_c = nullptr;
         CVOutputParameter<DACClass> *output_d = nullptr;
 
-        DeviceBehaviour_CVOutput(const char *label = nullptr, uint8_t address = ENABLE_CV_OUTPUT, TwoWire *wire = &Wire) : DeviceBehaviourUltimateBase() {
+        DeviceBehaviour_CVOutput(const char *label = nullptr, uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = new DACClass(address, wire);
+            this->dac_output->setExtendedAddress(bank);
             //this->debug = true;
             //this->init();
         }
             
-        DeviceBehaviour_CVOutput(const char *label = nullptr, DACClass *dac_output = nullptr) : DeviceBehaviourUltimateBase() {
+        DeviceBehaviour_CVOutput(const char *label, DACClass *dac_output) : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = dac_output;
@@ -212,7 +213,11 @@ class DeviceBehaviour_CVOutput : public DeviceBehaviourUltimateBase {
 };
 
 extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1;
-//extern DeviceBehaviour_CVOutput *behaviour_cvoutput_2;
-//extern DeviceBehaviour_CVOutput *behaviour_cvoutput_3;
+#ifdef ENABLE_CV_OUTPUT_2
+    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_2;
+#endif
+#ifdef ENABLE_CV_OUTPUT_3
+    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_3;
+#endif
 
 #endif
