@@ -20,7 +20,10 @@ extern ParameterManager *parameter_manager;
 #endif*/
 
 template<class DACClass>
-class DeviceBehaviour_CVOutput : public DeviceBehaviourUltimateBase {
+class DeviceBehaviour_CVOutput;
+
+template<class DACClass>
+class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, virtual public PolyphonicBehaviour<DeviceBehaviour_CVOutput<DACClass>> {
     public:
         DACClass *dac_output = nullptr;
 
@@ -115,45 +118,6 @@ class DeviceBehaviour_CVOutput : public DeviceBehaviourUltimateBase {
             if (output_d != nullptr) output_d->setValue(0);*/
         }
 
-        //BaseParameterInput *pitch_output = nullptr;
-        //BaseParameterInput *velocity_output = nullptr;
-
-        /*
-        virtual void set_selected_pitch_output(BaseParameterInput *output);
-        virtual void set_selected_velocity_output(BaseParameterInput *output);
-        
-        virtual BaseParameterInput *get_selected_pitch_output() {
-            return this->pitch_output;
-        }
-        virtual BaseParameterInput *get_selected_velocity_output() {
-            return this->velocity_output;
-        }
-        */
-
-        /*void on_pre_clock(unsigned long ticks) override {
-            int8_t new_note = NOTE_OFF;
-            if (this->pitch_output != nullptr && this->pitch_output->supports_pitch()) {
-                VoltageParameterInput *voltage_source_output = (VoltageParameterInput*)this->pitch_output;
-                new_note = voltage_source_output->get_voltage_pitch();
-                if (this->debug) Serial.printf("setting pitch to %i (%2.2f)\n", new_note, this->pitch_output->get_normal_value_unipolar());
-            }
-
-            int velocity = MIDI_MAX_VELOCITY;
-            if (this->velocity_output != nullptr) {
-                velocity = constrain(((float)MIDI_MAX_VELOCITY)*(float)this->velocity_output->get_normal_value_unipolar(), 0, MIDI_MAX_VELOCITY);
-                if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_output->get_normal_value_unipolar());
-            }
-
-            // Implement the logic to handle the pitch and velocity output
-        }*/
-
-        /*virtual void save_project_add_lines(LinkedList<String> *lines) override {
-            if (this->pitch_output != nullptr)
-                lines->add(String(F("pitch_output=")) + String(this->pitch_output->name));
-            if (this->velocity_output != nullptr)
-                lines->add(String(F("velocity_output=")) + String(this->velocity_output->name));
-        }*/
-
         virtual void setup_saveable_parameters() override {
             if (this->saveable_parameters == nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
@@ -183,6 +147,10 @@ class DeviceBehaviour_CVOutput : public DeviceBehaviourUltimateBase {
                 return true;
             } else
             */
+            if (PolyphonicBehaviour<DACClass>::load_parse_key_value(key, value)) {
+                return true;
+            }
+
             if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }
@@ -197,6 +165,8 @@ class DeviceBehaviour_CVOutput : public DeviceBehaviourUltimateBase {
                     return this->parameters;
 
                 DeviceBehaviourUltimateBase::initialise_parameters();
+
+                PolyphonicBehaviour::initialise_parameters();
 
                 // Add parameters specific to CVOutputBehaviour
                 this->init();
