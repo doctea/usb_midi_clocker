@@ -1,5 +1,8 @@
 #pragma once
 
+// todo: refactor this + input_ali_controller to use a common base class
+// todo: make easier to configure controls?
+
 // todo: something nicer where keys are abstracted from the triggered events
 // todo: ability to have multiple keyboards connected and to detect when one is the 'ali controller'
 // todo: control the RGB light to indicate modes?
