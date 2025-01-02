@@ -8,9 +8,14 @@
     #include "menuitems_lambda.h"
 #endif
 
-template<class ConcreteClass=DeviceBehaviourUltimateBase>
+//template<class ConcreteClass=DeviceBehaviourUltimateBase>
 class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
+
+    /*DeviceBehaviourUltimateBase *concrete_class = nullptr;
+    virtual void setConcreteClass(DeviceBehaviourUltimateBase *concrete_class) {
+        this->concrete_class = concrete_class;
+    }*/
 
     virtual bool transmits_midi_notes() override {
         return true;
@@ -53,6 +58,7 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
             //DeviceBehaviourSerialBase::sendNoteOn(note, velocity, channel);
             //ConcreteClass::sendNoteOn(note, velocity, channel);
             DeviceBehaviourUltimateBase::sendNoteOn(note, velocity, channel);
+            //this->concrete_class->sendNoteOn(note, velocity, channel);
         }
     }
 
@@ -75,6 +81,7 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
             //DeviceBehaviourSerialBase::sendNoteOff(note, velocity, channel);
             //ConcreteClass::sendNoteOff(note, velocity, channel);
             DeviceBehaviourUltimateBase::sendNoteOff(note, velocity, channel);
+            //this->concrete_class->sendNoteOff(note, velocity, channel);
         }
     }
 

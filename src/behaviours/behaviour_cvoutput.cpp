@@ -11,13 +11,15 @@ DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1 = nullptr; //new DeviceB
     DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_3 = nullptr; //
 #endif
 
-/*
-template<class DACClass>
+
+/*template<class DACClass>
 LinkedList<MenuItem*> *DeviceBehaviour_CVOutput<DACClass>::make_menu_items() {
     LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
+    PolyphonicBehaviour::make_menu_items();
+
     return menuitems;
-}
-*/
+}*/
+
 
 #endif

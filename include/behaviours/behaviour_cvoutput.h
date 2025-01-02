@@ -10,6 +10,9 @@
 #include "parameters/CVOutputParameter.h"
 #include "ParameterManager.h"
 
+
+#include "behaviours/behaviour_polyphonic.h"
+
 #include "Wire.h"
 
 extern ParameterManager *parameter_manager;
@@ -23,7 +26,7 @@ template<class DACClass>
 class DeviceBehaviour_CVOutput;
 
 template<class DACClass>
-class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, virtual public PolyphonicBehaviour<DeviceBehaviour_CVOutput<DACClass>> {
+class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, virtual public PolyphonicBehaviour {
     public:
         DACClass *dac_output = nullptr;
 
@@ -147,7 +150,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 return true;
             } else
             */
-            if (PolyphonicBehaviour<DACClass>::load_parse_key_value(key, value)) {
+            if (PolyphonicBehaviour::load_parse_key_value(key, value)) {
                 return true;
             }
 
@@ -179,6 +182,15 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             //ParameterInputSelectorControl<DeviceBehaviour_CVOutput> *pitch_parameter_selector = nullptr;
             //ParameterInputSelectorControl<DeviceBehaviour_CVOutput> *velocity_parameter_selector = nullptr;
             //virtual LinkedList<MenuItem *> *make_menu_items() override;
+            virtual LinkedList<MenuItem*> *make_menu_items() override {
+                LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+
+                PolyphonicBehaviour::make_menu_items();
+
+                //MIDIBassBehaviour::make_menu_items();
+
+                return menuitems;
+            }
         #endif
 };
 

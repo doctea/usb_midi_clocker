@@ -19,7 +19,7 @@
 // todo: send program controls to switch modes
 // todo: switch into 4A mode (extra gates, extra cv outs instead of velocity outs), or even 6 mode 
 
-class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public MIDIBassBehaviour, virtual public ModwheelReceiver, virtual public DividedClockedBehaviour, virtual public PolyphonicBehaviour<MIDIBassBehaviour> {
+class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public MIDIBassBehaviour, virtual public ModwheelReceiver, virtual public DividedClockedBehaviour, virtual public PolyphonicBehaviour {
     public:
 
     //using MIDIBassBehaviour::sendNoteOn;
@@ -34,6 +34,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public 
 
     Behaviour_MIDIMuso_4MV () : DeviceBehaviourSerialBase () {
         DeviceBehaviourUltimateBase::TUNING_OFFSET = -3;   // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
+        //setConcreteClass(this);
     }
 
     virtual bool transmits_midi_notes() override {
@@ -175,7 +176,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public 
     }
 
     #ifdef ENABLE_SCREEN
-        FLASHMEM
+        //FLASHMEM
         virtual LinkedList<MenuItem *> *make_menu_items() override;
     #endif
 
