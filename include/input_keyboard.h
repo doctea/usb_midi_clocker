@@ -1,13 +1,12 @@
 #pragma once
 
+// todo: refacotr this + input_ali_controller to use a common base class
+// todo: make easier to configure controls?
+
 #include "Config.h"
-
 #include "storage.h"
-
 #include <util/atomic.h>
-
 #include "project.h"
-
 #include "interfaces/interfaces.h"
 
 #ifdef ENABLE_TYPING_KEYBOARD
