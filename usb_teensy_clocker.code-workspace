@@ -42,7 +42,10 @@
 			"iosfwd": "cpp",
 			"interfaces": "cpp",
 			"ili9341_fonts.h": "c",
-			"utility": "cpp"
+			"utility": "cpp",
+			"exception": "cpp",
+			"new": "cpp",
+			"stdexcept": "cpp"
 		}
 	}
 }
