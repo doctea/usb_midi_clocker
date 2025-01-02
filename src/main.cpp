@@ -163,7 +163,7 @@ void setup() {
   tft_print("Git info: " COMMIT_INFO "\n");
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");
 
-  #ifdef ENABLE_CV_OUTPUT
+  #ifdef ENABLE_CV_GATE_OUTPUT
     tft_print((char*)"Setting up CV gates..\n");
     //setup_cv_output();
     setup_gate_manager();

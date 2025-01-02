@@ -79,7 +79,7 @@
 #endif
 
 #define ENABLE_USB          // USB host behaviours
-#define ENABLE_CV_OUTPUT    // clock and sequencer outputs
+#define ENABLE_CV_GATE_OUTPUT    // clock and sequencer outputs
 
 #ifdef ENABLE_USB
     // enable a generic USB typing keyboard as a control method (see include/input_keyboard.h)
