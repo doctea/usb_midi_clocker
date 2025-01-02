@@ -265,7 +265,7 @@
 
     void process_key_buffer() {
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            if (keyboard_queue->isReady()) {
+            while (keyboard_queue->isReady()) { // was if
                 keypress_t *current = keyboard_queue->pop();
                 process_key(current->key, current->modifiers);       
             }
