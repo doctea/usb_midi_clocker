@@ -19,7 +19,7 @@
 // todo: send program controls to switch modes
 // todo: switch into 4A mode (extra gates, extra cv outs instead of velocity outs), or even 6 mode 
 
-class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public MIDIBassBehaviour, virtual public ModwheelReceiver, virtual public DividedClockedBehaviour, virtual public PolyphonicBehaviour {
+class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*public MIDIBassBehaviour, */virtual public ModwheelReceiver, virtual public DividedClockedBehaviour, virtual public PolyphonicBehaviour {
     public:
 
     //using MIDIBassBehaviour::sendNoteOn;
@@ -53,7 +53,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public 
     bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };*/
 
     void on_bar(int bar) override {
-        MIDIBassBehaviour::on_bar(bar);
+        //MIDIBassBehaviour::on_bar(bar);
         DividedClockedBehaviour::on_bar(bar);
     }
 
@@ -107,13 +107,15 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public 
         }
     }*/
 
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+    using PolyphonicBehaviour::sendNoteOn;
+    using PolyphonicBehaviour::sendNoteOff;
+    /*virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         PolyphonicBehaviour::sendNoteOn(note, velocity, channel);
     }
 
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         PolyphonicBehaviour::sendNoteOff(note, velocity, channel);
-    }
+    }*/
 
     virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) override {
         //if (this->debug) Serial.printf(F("%s#sendControlChange(cc=%i, value=%i, channel=%i)\n"), this->get_label(), cc_number, value, channel);
@@ -129,7 +131,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public 
         if (this->saveable_parameters==nullptr)
             DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
-        MIDIBassBehaviour::setup_saveable_parameters();
+        //MIDIBassBehaviour::setup_saveable_parameters();
 
         DividedClockedBehaviour::setup_saveable_parameters();
 
@@ -150,7 +152,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, public 
         //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
         DeviceBehaviourSerialBase::initialise_parameters();
         
-        MIDIBassBehaviour::initialise_parameters();
+        //MIDIBassBehaviour::initialise_parameters();
         //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
         DividedClockedBehaviour::initialise_parameters();
 

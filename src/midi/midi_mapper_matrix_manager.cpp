@@ -280,10 +280,18 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #if defined(ENABLE_CV_OUTPUT)
-        midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_1->label, behaviour_cvoutput_1));
+        //behaviour_midimuso_4mv->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 A", behaviour_cvoutput_1, 1));
+        //behaviour_midimuso_4mv->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 B", behaviour_cvoutput_1, 2));
+        //behaviour_midimuso_4mv->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 C", behaviour_cvoutput_1, 3));
+        //behaviour_midimuso_4mv->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 D", behaviour_cvoutput_1, 4));
+        // todo: make the behaviour create its own targets, so that polyphonicbehaviour can create multiple targets
+        behaviour_cvoutput_1->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 Auto", behaviour_cvoutput_1, behaviour_cvoutput_1->CHANNEL_ROUND_ROBIN));
+        //midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_1->label, behaviour_cvoutput_1));
     #endif
     #if defined(ENABLE_CV_OUTPUT_2)
-        midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_2->label, behaviour_cvoutput_2));
+        //midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_2->label, behaviour_cvoutput_2));
+        // todo: make the behaviour create its own targets, so that polyphonicbehaviour can create multiple targets
+        behaviour_cvoutput_2->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 2 Auto", behaviour_cvoutput_2, behaviour_cvoutput_2->CHANNEL_ROUND_ROBIN));
     #endif
     #if defined(ENABLE_CV_OUTPUT_3)
         midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_3->label, behaviour_cvoutput_3));

@@ -40,7 +40,7 @@
             PolyphonicBehaviour::make_menu_items();
 
             DividedClockedBehaviour::make_menu_items();
-            MIDIBassBehaviour::make_menu_items();
+            //MIDIBassBehaviour::make_menu_items();
 
             return menuitems;
         }

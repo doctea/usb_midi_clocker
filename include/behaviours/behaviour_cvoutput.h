@@ -30,12 +30,11 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
     public:
         DACClass *dac_output = nullptr;
 
-        CVOutputParameter<DACClass> *output_a = nullptr;
-        CVOutputParameter<DACClass> *output_b = nullptr;
-        CVOutputParameter<DACClass> *output_c = nullptr;
-        CVOutputParameter<DACClass> *output_d = nullptr;
+        static const int8_t channel_count = 4;
+        CVOutputParameter<DACClass> *outputs[channel_count] = { nullptr, nullptr, nullptr, nullptr };
 
-        DeviceBehaviour_CVOutput(const char *label = nullptr, uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) : DeviceBehaviourUltimateBase() {
+        DeviceBehaviour_CVOutput(const char *label = nullptr, uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) 
+            : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = new DACClass(address, wire);
@@ -63,26 +62,26 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 Wire.begin();
                 dac_output->begin();
 
-                output_a = new CVOutputParameter<DAC8574,float>("CVO-A", dac_output, 0, VALUE_TYPE::UNIPOLAR, true);
-                output_b = new CVOutputParameter<DAC8574,float>("CVO-B", dac_output, 1, VALUE_TYPE::UNIPOLAR, true);
-                output_c = new CVOutputParameter<DAC8574,float>("CVO-C", dac_output, 2, VALUE_TYPE::UNIPOLAR, true);
-                output_d = new CVOutputParameter<DAC8574,float>("CVO-D", dac_output, 3, VALUE_TYPE::UNIPOLAR, true);
+                outputs[0] = new CVOutputParameter<DAC8574,float>("CVO-A", dac_output, 0, VALUE_TYPE::UNIPOLAR, true);
+                outputs[1] = new CVOutputParameter<DAC8574,float>("CVO-B", dac_output, 1, VALUE_TYPE::UNIPOLAR, true);
+                outputs[2] = new CVOutputParameter<DAC8574,float>("CVO-C", dac_output, 2, VALUE_TYPE::UNIPOLAR, true);
+                outputs[3] = new CVOutputParameter<DAC8574,float>("CVO-D", dac_output, 3, VALUE_TYPE::UNIPOLAR, true);
 
-                if (this->debug) this->output_a->debug = true;
+                if (this->debug) this->outputs[0]->debug = true;
 
-                output_a->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("A"));
-                output_b->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("B"));
-                output_c->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("C"));
+                outputs[0]->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("A"));
+                outputs[1]->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("B"));
+                outputs[2]->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("C"));
 
                 // hardwire the LFO sync to the first slot of first output, for testing...
                 // TODO: remove this from here (and bake it into configuration instead..)
-                output_a->set_slot_input(0, "LFO sync");
-                output_a->set_slot_0_amount(1.0);
+                outputs[0]->set_slot_input(0, "LFO sync");
+                outputs[0]->set_slot_0_amount(1.0);
 
-                this->parameters->add(output_a);
-                this->parameters->add(output_b);
-                this->parameters->add(output_c);
-                this->parameters->add(output_d);
+                this->parameters->add(outputs[0]);
+                this->parameters->add(outputs[1]);
+                this->parameters->add(outputs[2]);
+                this->parameters->add(outputs[3]);
                 if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput#init() finished setting up the parameters.");
             } else {
                 if (debug && Serial) Serial.printf("WARNING: DeviceBehaviour_CVOutput '%s' has null dac_output!\n", this->label);
@@ -103,23 +102,42 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             return true;
         }
 
-        virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actual_sendNoteOn(%i, %i, %i)\n", note, velocity, channel);
+            if (channel > channel_count) {
+                // this shouldn't happen?
+                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actual_sendNoteOn(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
+            } else {
+                if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOn(note, velocity, channel);
+            }
+        }
+
+        virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actual_sendNoteOff(%i, %i, %i)\n", note, velocity, channel);
+            if (channel > channel_count) {
+                // this shouldn't happen?
+                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actual_sendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
+            } else {
+                if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOff(note, velocity, channel);
+            }
+        }
+
+        using PolyphonicBehaviour::sendNoteOn;
+        using PolyphonicBehaviour::sendNoteOff;
+
+        /*virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             // TODO: logic to round-robin the outputs and track notes that are playing etc
             //          unison mode...?
             //          ensure that the note is only sent to the output if it's not already playing
-            if (output_a != nullptr) output_a->sendNoteOn(note, velocity, channel);
-            if (output_b != nullptr) output_b->sendNoteOn(note, velocity, channel);
-            if (output_c != nullptr) output_c->sendNoteOn(note, velocity, channel);
-            if (output_d != nullptr) output_d->sendNoteOn(note, velocity, channel);
+            if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOn(note, velocity, channel);
+            //if (outputs[1] != nullptr) outputs[1]->sendNoteOn(note, velocity, channel);
+            //if (output_c != nullptr) output_c->sendNoteOn(note, velocity, channel);
+            //if (output_d != nullptr) output_d->sendNoteOn(note, velocity, channel);
         }
 
         virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
             // TODO: logic to round-robin the outputs and track notes that are playing etc
-            /*if (output_a != nullptr) output_a->setValue(0);
-            if (output_b != nullptr) output_b->setValue(0);
-            if (output_c != nullptr) output_c->setValue(0);
-            if (output_d != nullptr) output_d->setValue(0);*/
-        }
+        }*/
 
         virtual void setup_saveable_parameters() override {
             if (this->saveable_parameters == nullptr)
