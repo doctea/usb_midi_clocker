@@ -211,6 +211,10 @@ void setup() {
   /*#ifdef ENABLE_CV_OUTPUT
       setup_cv_output();
   #endif*/
+  #ifdef ENABLE_CV_OUTPUT
+    setup_cv_output_parameter_inputs();
+    Debug_printf(F("after setup_cv_output_parameter_inputs(), free RAM is %u\n"), freeRam());
+  #endif
   #ifdef ENABLE_SCREEN
     setup_parameter_menu();
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
@@ -396,8 +400,7 @@ void loop() {
     #ifdef ENABLE_SCREEN
       ///Serial_println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
-      bool screen_was_drawn = false;
-      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+      bool screen_was_drawn = false;      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
       {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
         static bool first_run = true;
@@ -618,6 +621,12 @@ void do_tick(uint32_t in_ticks) {
   #ifdef DEBUG_TICKS
     Serial_println(F(" ]"));
   #endif 
+
+  if (parameter_manager->pending_calibration()) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      parameter_manager->process_calibration();
+    }
+  }
 
   //last_processed_tick = ticks;
   //ticks++;

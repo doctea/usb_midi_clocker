@@ -40,7 +40,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             this->dac_output = new DACClass(address, wire);
             this->dac_output->setExtendedAddress(bank);
             //this->debug = true;
-            //this->init();
+            this->init();
         }
             
         DeviceBehaviour_CVOutput(const char *label, DACClass *dac_output) : DeviceBehaviourUltimateBase() {
@@ -48,7 +48,20 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = dac_output;
             //this->debug = true;
-            //this->init();
+            this->init();
+        }
+
+        virtual void set_calibration_parameter_input(int channel, VoltageParameterInput *input) {
+            if (channel < channel_count) {
+                if (outputs[channel] != nullptr) outputs[channel]->set_calibration_parameter_input(input);
+            }
+        }
+
+        virtual void set_calibration_parameter_input(int channel, const char *input_name) {
+            Serial.printf("DeviceBehaviour_CVOutput#set_calibration_parameter_input(%i, %s)\n", channel, input_name);
+            if (channel < channel_count) {
+                if (outputs[channel] != nullptr) outputs[channel]->set_calibration_parameter_input(input_name);
+            }
         }
 
         virtual void init() override {
@@ -68,10 +81,6 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 outputs[3] = new CVOutputParameter<DAC8574,float>("CVO-D", dac_output, 3, VALUE_TYPE::UNIPOLAR, true);
 
                 if (this->debug) this->outputs[0]->debug = true;
-
-                outputs[0]->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("A"));
-                outputs[1]->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("B"));
-                outputs[2]->set_parameter_input_for_calibration((VoltageParameterInput*)parameter_manager->getInputForName("C"));
 
                 // hardwire the LFO sync to the first slot of first output, for testing...
                 // TODO: remove this from here (and bake it into configuration instead..)
@@ -190,7 +199,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 PolyphonicBehaviour::initialise_parameters();
 
                 // Add parameters specific to CVOutputBehaviour
-                this->init();
+                //this->init();
 
                 return parameters;
             }

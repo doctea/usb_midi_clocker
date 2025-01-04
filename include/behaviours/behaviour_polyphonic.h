@@ -21,13 +21,14 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
         return true;
     }
 
-    const int8_t CHANNEL_ROUND_ROBIN = 5;
     static const int8_t max_voice_count = 4;
     int voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };   // ideally int8_t, but int is compatible with HarmonyStatus menuitem
     int last_voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
     target_id_t voice_target_id[max_voice_count] = { -1, -1, -1, -1 };
 
     bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };
+
+    const int8_t CHANNEL_ROUND_ROBIN = max_voice_count + 1;
 
     int8_t find_slot_for(int8_t note) {
         int8_t note_slot = -1;
@@ -47,7 +48,7 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
         if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(-1);
-            if (note_slot>=0) {
+            if (note_slot>=0) { // find empty slot to use
                 this->sendNoteOn(note, velocity, note_slot+1);
             }
         } else {

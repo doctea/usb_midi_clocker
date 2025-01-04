@@ -105,7 +105,7 @@
     uint32_t last_retriggered = 0;  
 
     void OnPress(int key) {
-        Serial.printf("OnPress key=%04x\n", key);
+        //Serial.printf("OnPress key=%04x\n", key);
 
         switch (key) {
             case KNOB_BIG_LEFT: case KNOB_SMALL_2_LEFT:
