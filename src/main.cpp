@@ -135,8 +135,18 @@ void setup() {
   /*while (1) {
     Serial_printf(".");
   }*/
-
   Serial_printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
+
+  // this crashes when run from here...?  but kinda need it activated before setup_behaviour_manager() so that we can load cvoutputparameter calibration?
+  // TODO: so: we need to be able to run something like "post-setup initialisation" on parameters at the end of setup, after everything else is set 
+  //    this would load calibration for cvoutputparameters; and maybe also set up the default connections for parameters; and maybe also send the initial values to the cv outputs
+  //    ..maybe we can do this at the end of setup_parameters()?
+  //    1:30am WAIT WUT its actually loading the calibration values for the cvoutputparameters successfully now?!
+  //    next day: wasn't working again so implemented load_all_parameters() in parameter_manager
+  /*tft_print((char*)"..storage..\n");
+  storage::setup_storage();
+  Serial_printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
+  */
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
@@ -293,6 +303,10 @@ void setup() {
 
   #ifdef ENABLE_SCREEN
     snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
+  #endif
+
+  #ifdef LOAD_CALIBRATION_ON_BOOT
+    parameter_manager->load_all_calibrations();
   #endif
 
   #ifdef USE_UCLOCK

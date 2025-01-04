@@ -33,12 +33,16 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         static const int8_t channel_count = 4;
         CVOutputParameter<DACClass> *outputs[channel_count] = { nullptr, nullptr, nullptr, nullptr };
 
-        DeviceBehaviour_CVOutput(const char *label = nullptr, uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) 
+        const char *parameter_label_prefix = "CVO-";
+
+        DeviceBehaviour_CVOutput(const char *label = nullptr, const char *parameter_label_prefix = "CVO-", uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) 
             : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = new DACClass(address, wire);
             this->dac_output->setExtendedAddress(bank);
+
+            this->parameter_label_prefix = parameter_label_prefix;
             //this->debug = true;
             this->init();
         }
@@ -75,17 +79,19 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 Wire.begin();
                 dac_output->begin();
 
-                outputs[0] = new CVOutputParameter<DAC8574,float>("CVO-A", dac_output, 0, VALUE_TYPE::UNIPOLAR, true);
-                outputs[1] = new CVOutputParameter<DAC8574,float>("CVO-B", dac_output, 1, VALUE_TYPE::UNIPOLAR, true);
-                outputs[2] = new CVOutputParameter<DAC8574,float>("CVO-C", dac_output, 2, VALUE_TYPE::UNIPOLAR, true);
-                outputs[3] = new CVOutputParameter<DAC8574,float>("CVO-D", dac_output, 3, VALUE_TYPE::UNIPOLAR, true);
+                outputs[0] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("A")).c_str(), dac_output, 0, VALUE_TYPE::UNIPOLAR, true);
+                outputs[1] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("B")).c_str(), dac_output, 1, VALUE_TYPE::UNIPOLAR, true);
+                outputs[2] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("C")).c_str(), dac_output, 2, VALUE_TYPE::UNIPOLAR, true);
+                outputs[3] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("D")).c_str(), dac_output, 3, VALUE_TYPE::UNIPOLAR, true);
 
                 if (this->debug) this->outputs[0]->debug = true;
 
                 // hardwire the LFO sync to the first slot of first output, for testing...
-                // TODO: remove this from here (and bake it into configuration instead..)
-                outputs[0]->set_slot_input(0, "LFO sync");
-                outputs[0]->set_slot_0_amount(1.0);
+                // TODO: remove this from here (and bake it into configuration/sequence/project saves instead..)
+                // hmmm, so, currently init() is called before the parameterinputs are created, so this doesn't work
+                // BUT we need the outputs set up before set_calibration_parameter_input() is called 
+                //outputs[0]->set_slot_input(0, "LFO sync");
+                //outputs[0]->set_slot_0_amount(1.0);
 
                 this->parameters->add(outputs[0]);
                 this->parameters->add(outputs[1]);
@@ -221,7 +227,9 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         #endif
 };
 
-extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1;
+#ifdef ENABLE_CV_OUTPUT
+    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1;
+#endif
 #ifdef ENABLE_CV_OUTPUT_2
     extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_2;
 #endif
