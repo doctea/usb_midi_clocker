@@ -125,6 +125,8 @@ namespace storage {
     if (storage_initialised) 
       return;
     SD.begin(chipSelect);
+    //SD.setMediaDetectPin(0xFF); // disable media detect
+    Serial.printf("setup_storage() SD card initialised, media present: %i\n", SD.mediaPresent());
     storage_initialised = true;
 
     /*if (!SD.exists("sequences")) {
