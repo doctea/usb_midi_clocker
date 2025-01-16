@@ -169,6 +169,9 @@ void setup_parameter_menu() {
     // ask ParameterManager to add all the menu items for the Voltage Sources
     parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu, true);
 
+    // ask ParameterManager to add all the menu items for the CVOutputs
+    parameter_manager->addAllCVOutputCalibrationMenuItems(menu);
+
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
 
