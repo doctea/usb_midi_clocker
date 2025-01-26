@@ -274,7 +274,10 @@ void setup_menu_midi() {
         [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
         [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
-        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
+        [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
+        false, true, true
     );
     global_quantise_bar->add(new LambdaToggleControl("Quantise",
         [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },

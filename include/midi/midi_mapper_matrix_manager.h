@@ -41,6 +41,7 @@ class MIDIMatrixManager {
     bool    global_quantise_on = false;
     int8_t  global_scale_root = SCALE_ROOT_C;
     SCALE   global_scale_type = SCALE::MAJOR;
+    int8_t  global_chord_degree = -1;
 
     // so we wanna do something like:-
     //      for each source
@@ -398,6 +399,14 @@ class MIDIMatrixManager {
     bool is_global_quantise_on() {
         return this->global_quantise_on;
     }
+
+    int8_t get_global_chord_degree() {
+        return this->global_chord_degree;
+    }
+    void set_global_chord_degree(int8_t degree) {
+        this->global_chord_degree = degree;
+    }
+
     void save_project_add_lines(LinkedList<String> *lines) {
         for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
             for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
@@ -464,6 +473,7 @@ class MIDIMatrixManager {
 
             set_global_scale_root_target(&this->global_scale_root);
             set_global_scale_type_target(&this->global_scale_type);
+            set_global_chord_degree_target(&this->global_chord_degree);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);
