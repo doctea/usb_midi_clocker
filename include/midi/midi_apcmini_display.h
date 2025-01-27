@@ -41,7 +41,11 @@ enum apc_gate_page_t {
   CLOCKS,
   SEQUENCES,
   PATTERNS,
-  PADS
+  #ifdef ENABLE_APCMINI_PADS
+    PADS,
+  #elif defined(ENABLE_APCMINI_PROGRESSIONS)
+    PROGRESSIONS,
+  #endif
 };
 extern apc_gate_page_t apc_gate_page;
 
@@ -68,6 +72,10 @@ void redraw_sequence_row(byte c, bool force = false);
 
 void redraw_patterns_row(byte row, bool force = false);
 void redraw_pads_row(byte row, bool force = false);
+
+#ifdef ENABLE_APCMINI_PROGRESSIONS
+  void redraw_progressions_row(byte row, bool force = false);
+#endif
 
 #ifdef ENABLE_APCMINI_DISPLAY
 void apcmini_clear_display(bool force = true);

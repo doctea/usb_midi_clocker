@@ -19,6 +19,12 @@
     #define ENABLE_CV_OUTPUT_3_BANK 0
 #endif
 
+#define ENABLE_PROGRESSION
+
+#ifdef ENABLE_PROGRESSION
+    #define ENABLE_APCMINI_PROGRESSIONS
+#endif
+
 //// CV input options
 #ifdef PCB_STUDIO
     // these are now defined in build flags platformio.ini

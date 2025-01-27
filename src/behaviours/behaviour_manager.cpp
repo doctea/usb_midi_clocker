@@ -38,6 +38,8 @@
 
 #include "behaviours/behaviour_euclidianrhythms.h"
 
+#include "behaviours/behaviour_progression.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -56,6 +58,11 @@ void behaviour_manager_kill_all_current_notes () {
 //FLASHMEM
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
+
+    #ifdef ENABLE_PROGRESSION
+        behaviour_progression = new VirtualBehaviour_Progression();
+        behaviour_manager->registerBehaviour(behaviour_progression);
+    #endif
 
     #ifdef ENABLE_CLOCKS
         behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);

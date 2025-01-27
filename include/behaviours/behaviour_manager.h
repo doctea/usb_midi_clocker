@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_MANAGER__INCLUDED
-#define BEHAVIOUR_MANAGER__INCLUDED
+#pragma once
 
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_base_usb.h"
@@ -428,5 +427,3 @@ class DeviceBehaviourManager {
 extern DeviceBehaviourManager *behaviour_manager;
 
 void setup_behaviour_manager();
-
-#endif

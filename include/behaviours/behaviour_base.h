@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_BASE__INCLUDED
-#define BEHAVIOUR_BASE__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
@@ -462,5 +461,3 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     
 };
-
-#endif

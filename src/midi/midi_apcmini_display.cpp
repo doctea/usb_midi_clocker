@@ -213,6 +213,7 @@ void redraw_patterns_row(byte row, bool force) {
   }
 }
 
+#ifdef ENABLE_ACPMINI_PADS
 void redraw_pads_row(byte row, bool force) {
   if (behaviour_apcmini->device==nullptr) return;
 
@@ -228,6 +229,26 @@ void redraw_pads_row(byte row, bool force) {
     }
   }
 }
+#endif
+
+#ifdef ENABLE_APCMINI_PROGRESSIONS
+
+#include "behaviours/behaviour_progression.h"
+
+int get_progression_cell_apc_colour(byte row, byte column) {
+  return behaviour_progression->grid[row][column];
+}
+
+void redraw_progressions_row(byte row, bool force) {
+  if (behaviour_apcmini->device==nullptr) return;
+
+  int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
+  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+    //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
+    apcdisplay_sendNoteOn(start_row+x, get_progression_cell_apc_colour(row,x), 1, force);
+  }
+}
+#endif
 
 #ifdef ENABLE_APCMINI_DISPLAY
   void apcmini_clear_display(bool force) {
@@ -291,8 +312,14 @@ void redraw_pads_row(byte row, bool force) {
         redraw_sequence_row(row_to_draw);
       else if (get_apc_gate_page()==PATTERNS)
         redraw_patterns_row(row_to_draw);
+      #ifdef ENABLE_APCMINI_PADS
       else if (get_apc_gate_page()==PADS)
         redraw_pads_row(row_to_draw);
+      #endif
+      #ifdef ENABLE_APCMINI_PROGRESSIONS
+      else if (get_apc_gate_page()==PROGRESSIONS)
+        redraw_progressions_row(row_to_draw);
+      #endif
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;
