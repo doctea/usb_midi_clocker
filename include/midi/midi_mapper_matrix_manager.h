@@ -29,6 +29,8 @@ void behaviour_manager_kill_all_current_notes();
 
 #include "midi/midi_mapper_matrix_types.h"
 
+#include "scales.h"
+
 class MIDITrack;
 class DeviceBehaviourUltimateBase;
 
@@ -38,10 +40,12 @@ class MIDIMatrixManager {
 
     bool debug = false;
 
-    bool    global_quantise_on = false;
+    bool    global_quantise_on = false, global_quantise_chord_on = false;
     int8_t  global_scale_root = SCALE_ROOT_C;
     SCALE   global_scale_type = SCALE::MAJOR;
     int8_t  global_chord_degree = -1;
+    CHORD::Type global_chord_type = CHORD::TRIAD;
+    int8_t global_chord_inversion = 0;
 
     // so we wanna do something like:-
     //      for each source
@@ -191,6 +195,7 @@ class MIDIMatrixManager {
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (!is_valid_note(pitch)) return;
         if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+        if (this->global_quantise_chord_on) pitch = quantise_chord(pitch);
         if (!is_valid_note(pitch)) return;
 
         if (source_id<0) {
@@ -214,6 +219,7 @@ class MIDIMatrixManager {
             return;
         }
         if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+        if (this->global_quantise_chord_on) pitch = quantise_chord(pitch);
         if (!is_valid_note(pitch)) return;
 
         if (source_id<0) {
@@ -400,11 +406,40 @@ class MIDIMatrixManager {
         return this->global_quantise_on;
     }
 
+    void set_global_quantise_chord_on(bool v) {
+        this->global_quantise_chord_on = v;
+    }
+    bool is_global_quantise_chord_on() {
+        return this->global_quantise_chord_on;
+    }
+
     int8_t get_global_chord_degree() {
         return this->global_chord_degree;
     }
     void set_global_chord_degree(int8_t degree) {
         this->global_chord_degree = degree;
+    }
+
+    CHORD::Type get_global_chord_type() {
+        return this->global_chord_type;
+    }
+
+    void set_global_chord_type(CHORD::Type chord_type) {
+        if (chord_type != global_chord_type) {
+            behaviour_manager_kill_all_current_notes();
+        }
+        this->global_chord_type = chord_type;
+    }
+
+    int8_t get_global_chord_inversion() {
+        return this->global_chord_inversion;
+    }
+
+    void set_global_chord_inversion(int8_t inversion) {
+        if (inversion != global_chord_inversion) {
+            behaviour_manager_kill_all_current_notes();
+        }
+        this->global_chord_inversion = inversion;
     }
 
     void save_project_add_lines(LinkedList<String> *lines) {
