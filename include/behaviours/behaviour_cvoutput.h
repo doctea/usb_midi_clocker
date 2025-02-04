@@ -39,12 +39,12 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         GateManager *gate_manager = nullptr;
         int8_t gate_bank = -1, gate_offset = 0;
 
-        DeviceBehaviour_CVOutput(const char *label = nullptr, const char *parameter_label_prefix = "CVO-", uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) 
+        DeviceBehaviour_CVOutput(const char *label = nullptr, const char *parameter_label_prefix = "CVO-", uint8_t address = ENABLE_CV_OUTPUT, uint8_t dac_extended_address = ENABLE_CV_OUTPUT_EXTENDED_ADDRESS, TwoWire *wire = &Wire) 
             : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = new DACClass(address, wire);
-            this->dac_output->setExtendedAddress(bank);
+            this->dac_output->setExtendedAddress(dac_extended_address);
 
             this->parameter_label_prefix = parameter_label_prefix;
             //this->debug = true;

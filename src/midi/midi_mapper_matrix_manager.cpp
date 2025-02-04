@@ -266,7 +266,7 @@ void setup_midi_mapper_matrix_manager() {
         midi_matrix_manager->connect(behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
     #endif
 
-    #ifdef ENABLE_APCMINI
+    #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_PADS)
         midi_matrix_manager->register_source(behaviour_apcmini, "APCMini Pads");
     #endif
 

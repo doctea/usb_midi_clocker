@@ -11,10 +11,14 @@
 
 #include "midi_helpers.h"
 
-#define BANK_CLOCK  0
-#define BANK_SEQ    1
-#define BANK_EXTRA  2
-#define NUM_GATE_BANKS 3    // clock and seq and extra
+enum GATEBANKS {
+    BANK_CLOCK,
+    BANK_SEQ,
+    #if defined(ENABLE_CV_OUTPUT_1_GATE) || defined(ENABLE_CV_OUTPUT_2_GATE) || defined(ENABLE_CV_OUTPUT_3_GATE)
+        BANK_EXTRA,
+    #endif
+    NUM_GATE_BANKS
+};
 
 class BankInterface {
     public:
