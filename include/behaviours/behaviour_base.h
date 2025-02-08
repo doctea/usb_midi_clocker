@@ -102,6 +102,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     // called when new bar starts
     virtual void on_bar(int bar_number) {};
     virtual void on_end_bar(int bar_number) {};
+    virtual void on_end_beat(int beat_number) {};
     // called when the clock is restarted
     virtual void on_restart() {};
     // called when we change phrase

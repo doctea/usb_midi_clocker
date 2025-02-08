@@ -236,7 +236,7 @@ void redraw_pads_row(byte row, bool force) {
 #include "behaviours/behaviour_progression.h"
 
 int get_progression_cell_apc_colour(byte row, byte column) {
-  return behaviour_progression->grid[row][column];
+  return behaviour_progression->grid[column][row];
 }
 
 void redraw_progressions_row(byte row, bool force) {

@@ -40,7 +40,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     );
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
-
+        memset(grid, 0, 64);
     }
 
     virtual const char *get_label() override {
@@ -55,6 +55,12 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     //  //this->process_clocks(ticks);
     //};
 
+    virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
+    }
+    virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+        midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
+    }
 
     virtual LinkedList<MenuItem*> *make_menu_items() override {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
@@ -133,6 +139,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
             */
             midi_matrix_manager->set_global_chord_degree(degree);
         } else {
+            this->chord_player->stop_chord();
             Serial.printf("invalid degree %i\n", degree);
             //this->chord_player->trigger_off_for_pitch_because_length(-1);
         }
@@ -150,26 +157,96 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         */
     }
 
-    virtual void on_end_bar(int bar_number) override {
-        //this->process_clocks(step);
-        //if (is_bpm_on_bar(tick)) {
-        //bar_number++;
-        bar_number = BPM_CURRENT_BAR + 1;
-        bar_number %= 8;
-        for (int i = 8 ; i > 0 ; i--) {
-            int d = 8 - i;
-            if (grid[bar_number][i]>0) {
-                Serial.printf(
-                    "on_end_bar %2i: Progression starting bar %i: found active degree %i at grid column %i\n", 
-                    BPM_CURRENT_BAR, 
-                    bar_number, 
-                    d,
-                    bar_number
-                );
-                this->set_degree(d+1);
+    // untested, but this should fire the tick before a beat happens; use this to change chords outside of a bar change..
+    /*virtual void on_end_beat(int beat_number) override {
+        beat_number = BPM_CURRENT_BEAT + 1;
+        beat_number %= 4;
+        int bar_number = BPM_CURRENT_BAR;
+        if (beat_number==BEATS_PER_BAR/2) {
+            int found_bars = 0;
+            for (int i = 8 ; i > 0 ; i--) {
+                int d = 8 - i;
+                if (grid[bar_number][i]>0) {
+                    Serial.printf(
+                        "on_end_beat %2i: Progression starting beat %i: found active degree %i at grid column %i\n", 
+                        BPM_CURRENT_BEAT, 
+                        beat_number, 
+                        d,
+                        beat_number
+                    );
+                    this->set_degree(d+1);
+                }
             }
         }
         //}
+    }*/
+
+    int8_t get_degree_from_grid(int8_t bar_number) {
+        int8_t retval = -1;
+
+        Serial.printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
+
+        for (int i = 8 ; i > 0 ; i--) {
+            if (grid[bar_number][i]>0) {
+                int d = 7 - i;
+                d += 1;
+                Serial.printf(
+                    "get_degree_from_grid %2i: Progression starting bar_number=%i: found active degree %i at grid column %i, row %i\n", 
+                    BPM_CURRENT_BAR, 
+                    bar_number, 
+                    d,
+                    bar_number,
+                    i
+                );
+                retval = d;
+            }
+        }
+        return retval;
+    }
+
+    void dump_grid() {
+        if (!Serial) return;
+
+        Serial.println("dump_grid:");
+        for (int y = 0 ; y < 8 ; y++) {
+            Serial.printf("Grid row %i: [ ", y);
+            for (int x = 0 ; x < 8 ; x++) {
+                Serial.printf("%i ", grid[x][y]);
+            }
+            Serial.println("]");
+        }
+        Serial.println("------");
+    }
+
+    virtual void on_end_bar(int bar_number) override {
+        this->chord_player->stop_chord();
+
+        bar_number = BPM_CURRENT_BAR + 1;
+        bar_number %= 8;
+        //bar_number %= BARS_PER_PHRASE;// * 2;
+
+        Serial.printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
+        dump_grid();
+
+        int8_t degree = this->get_degree_from_grid(bar_number);
+        if (degree>0) {
+            Serial.printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
+            this->set_degree(degree);
+        } else {
+            this->set_degree(-1);
+            Serial.printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
+        }
+        Serial.printf("=======\n");
+    }
+
+    virtual void on_bar(int bar_number) override {
+        // send the chord for the current degree
+        if (this->degree>0)
+            this->chord_player->play_chord(
+                quantise_get_root_pitch_for_degree(this->degree), 
+                midi_matrix_manager->get_global_chord_type(), 
+                midi_matrix_manager->get_global_chord_inversion()
+            );        
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {
@@ -177,14 +254,14 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         byte col = inNumber - (((8-1)-row)*APCMINI_DISPLAY_WIDTH);
 
         if (shifted)
-            grid[row][col]--;
+            grid[col][row]--;
         else
-            grid[row][col]++;
+            grid[col][row]++;
 
-        if (grid[row][col]>6)
-            grid[row][col] = 0;
-        else if (grid[row][col]<0)
-            grid[row][col] = 6;
+        if (grid[col][row]>6)
+            grid[col][row] = 0;
+        else if (grid[col][row]<0)
+            grid[col][row] = 6;
 
         return true;
     }

@@ -248,6 +248,12 @@ class DeviceBehaviourManager {
                 behaviours->get(i)->on_end_bar(bar);
             }
         }
+        void do_end_beat(int beat) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
+                behaviours->get(i)->on_end_beat(beat);
+            }
+        }
 
         void do_loops() {       // replaces behaviours_loop
             unsigned long temp_tick;

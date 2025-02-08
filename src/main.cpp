@@ -581,11 +581,14 @@ void do_tick(uint32_t in_ticks) {
 
   // drone / machinegun works when do_end_bar here !
   // do this after everything else because of problems with machinegun mode..?
-  if (is_bpm_on_bar(ticks+1)) {
-    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (is_bpm_on_phrase(ticks+1)) {
-      behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
-    }
+  if (is_bpm_on_beat(ticks+1)) {
+    behaviour_manager->do_end_beat(BPM_CURRENT_BEAT);
+    if (is_bpm_on_bar(ticks+1)) {
+      behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
+      if (is_bpm_on_phrase(ticks+1)) {
+        behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+      }
+    } 
   }
 
   #ifdef ENABLE_DRUM_LOOPER

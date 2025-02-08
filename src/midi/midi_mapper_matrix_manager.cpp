@@ -34,6 +34,8 @@
 
 #include "behaviours/behaviour_euclidianrhythms.h"
 
+#include "behaviours/behaviour_progression.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -173,6 +175,9 @@ void setup_midi_mapper_matrix_manager() {
         behaviour_bamble->self_register_midi_matrix_sources(midi_matrix_manager);
     #endif
 
+    #ifdef ENABLE_PROGRESSION
+        behaviour_progression->source_id = midi_matrix_manager->register_source("Progression");
+    #endif
 
     #ifdef ENABLE_USB
         // add the sources - these are *from* PC *to* Teensy
@@ -310,6 +315,8 @@ void setup_midi_mapper_matrix_manager() {
     behaviour_midibassproxy->setLowestNote(1*12);
     behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
 
+    // todo: remove after testing
+    midi_matrix_manager->connect(behaviour_progression, "CV Output 1 Auto");
 
     // connect default mappings
     #ifdef ENABLE_MAMMB33
