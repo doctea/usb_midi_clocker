@@ -41,6 +41,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         memset(grid, 0, 64);
+        this->chord_player->debug = true;
     }
 
     virtual const char *get_label() override {
@@ -204,6 +205,11 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         return retval;
     }
 
+    virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
+        if (x>=8 || y>=8) return 0;
+        return grid[x][y];
+    }
+
     void dump_grid() {
         if (!Serial) return;
 
@@ -237,6 +243,8 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
             Serial.printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
         }
         Serial.printf("=======\n");
+
+        this->chord_player->stop_chord();
     }
 
     virtual void on_bar(int bar_number) override {
@@ -246,7 +254,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
                 quantise_get_root_pitch_for_degree(this->degree), 
                 midi_matrix_manager->get_global_chord_type(), 
                 midi_matrix_manager->get_global_chord_inversion()
-            );        
+            );
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {

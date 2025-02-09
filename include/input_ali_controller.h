@@ -117,6 +117,10 @@
             case KNOB_BIG_CLICK: case KNOB_SMALL_2_CLICK:
                 keyboard_queue->push({KEYD_ENTER, keyboard1.getModifiers()});
                 break;
+            // midi panic hard
+            case KEYPAD_A_2: keyboard_queue->push({'P', keyboard1.getModifiers()}); break;
+            // toggle playing
+            case KEYPAD_A_3: keyboard_queue->push({'~', keyboard1.getModifiers()}); break;
             case KEYPAD_A_4:
                 // trigger 'restart'
                 keyboard_queue->push({'r', keyboard1.getModifiers()});
@@ -261,6 +265,13 @@
             case 'r'            : 
                 Serial_println(F("Setting (r)estart_on_next_bar"));
                 set_restart_on_next_bar(true); 
+                break;
+            case '~': 
+                Serial_println(F("Toggling (~p)laying"));
+                if (playing)
+                    clock_stop();
+                else
+                    clock_continue();
                 break;
             // take screenshot
             #if defined(ENABLE_SCREEN) && defined(ENABLE_SD) && defined(ENABLE_SCREENSHOT)

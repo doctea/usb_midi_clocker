@@ -12,6 +12,8 @@
 #include "midi_helpers.h"
 #include "midi/midi_looper.h"
 
+#include "Drums.h"
+
 #include "LinkedList.h"
 
 void setup_midi_mapper_matrix_manager();
@@ -194,15 +196,17 @@ class MIDIMatrixManager {
 
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
-        if (!is_valid_note(pitch)) return;
-        if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-        if (this->global_quantise_chord_on) pitch = quantise_chord(pitch);
-        if (!is_valid_note(pitch)) return;
-
         if (source_id<0) {
             if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
+        if (!is_valid_note(pitch)) return;
+        if (channel!=GM_CHANNEL_DRUMS) {
+            if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+            if (this->global_quantise_chord_on) pitch = quantise_chord(pitch, 3);
+        }
+        if (!is_valid_note(pitch)) return;
+
         if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
 
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
@@ -215,18 +219,20 @@ class MIDIMatrixManager {
         }
     }
     void processNoteOff(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
-        if (!is_valid_note(pitch)) {
-            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
-            return;
-        }
-        if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-        if (this->global_quantise_chord_on) pitch = quantise_chord(pitch);
-        if (!is_valid_note(pitch)) return;
-
         if (source_id<0) {
             if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
+        if (!is_valid_note(pitch)) {
+            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
+            return;
+        }
+        if (channel!=GM_CHANNEL_DRUMS) {
+            if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+            if (this->global_quantise_chord_on) pitch = quantise_chord(pitch, 3);
+        }
+        if (!is_valid_note(pitch)) return;
+
         if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
 
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {

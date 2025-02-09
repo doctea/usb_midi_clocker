@@ -573,8 +573,6 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
-  gate_manager->update(); 
-
   #ifdef ENABLE_LOOPER
     midi_loop_track.process_tick(ticks);
   #endif
@@ -598,6 +596,8 @@ void do_tick(uint32_t in_ticks) {
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
   behaviour_manager->send_clocks();
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+
+  gate_manager->update(); 
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
