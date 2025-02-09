@@ -26,7 +26,15 @@ extern MIDIMatrixManager *midi_matrix_manager;
 class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase {
     public:
 
-    int8_t grid[8][8];
+    enum MODE {
+        DEGREE,
+        QUALITY,
+        INVERSION
+    };
+
+    MODE current_mode = DEGREE;
+
+    chord_identity_t grid[8];
     int8_t degree = 0;
     //int8_t current_degree = 0;
 
@@ -40,8 +48,8 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     );
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
-        memset(grid, 0, 64);
-        this->chord_player->debug = true;
+        //memset(grid, 0, 64);
+        //this->chord_player->debug = true;
     }
 
     virtual const char *get_label() override {
@@ -183,12 +191,14 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     }*/
 
     int8_t get_degree_from_grid(int8_t bar_number) {
-        int8_t retval = -1;
+        //int8_t retval = -1;
 
         Serial.printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
+        return grid[bar_number].chord_degree;
 
-        for (int i = 8 ; i > 0 ; i--) {
-            if (grid[bar_number][i]>0) {
+        /*for (int i = 8 ; i > 0 ; i--) {
+            if (grid[bar_number].chord_degree>0) {
+                return grid[bar_number].chord_degree;
                 int d = 7 - i;
                 d += 1;
                 Serial.printf(
@@ -201,13 +211,13 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
                 );
                 retval = d;
             }
-        }
-        return retval;
+        }*/
+        //return retval;
     }
 
     virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
-        if (x>=8 || y>=8) return 0;
-        return grid[x][y];
+        if (y==0 || x>=8 || y>=8) return 0;
+        return grid[x].chord_degree == (8-y);
     }
 
     void dump_grid() {
@@ -217,7 +227,9 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         for (int y = 0 ; y < 8 ; y++) {
             Serial.printf("Grid row %i: [ ", y);
             for (int x = 0 ; x < 8 ; x++) {
-                Serial.printf("%i ", grid[x][y]);
+                //Serial.printf("%i ", grid[x].chord_degree);
+                //Serial.printf("%i ", get_cell_colour_for(x, y));
+                Serial.printf("%i ", grid[x].chord_degree);
             }
             Serial.println("]");
         }
@@ -258,18 +270,29 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {
-        byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
-        byte col = inNumber - (((8-1)-row)*APCMINI_DISPLAY_WIDTH);
+        //byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
+        byte row = inNumber / APCMINI_DISPLAY_WIDTH;
+        byte col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
 
-        if (shifted)
-            grid[col][row]--;
-        else
-            grid[col][row]++;
+        Serial.printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
 
-        if (grid[col][row]>6)
-            grid[col][row] = 0;
-        else if (grid[col][row]<0)
-            grid[col][row] = 6;
+        if (current_mode==MODE::DEGREE) {
+            int new_degree = row + 1;
+            if (new_degree>0 && new_degree<=7) {
+                grid[col].chord_degree = new_degree;
+                return true;
+            }
+            //grid[col].chord_degree = new_degree;
+            /*if (shifted)
+                grid[col][row]--;
+            else
+                grid[col][row]++;
+
+            if (grid[col][row]>6)
+                grid[col][row] = 0;
+            else if (grid[col][row]<0)
+                grid[col][row] = 6;*/
+        }
 
         return true;
     }
