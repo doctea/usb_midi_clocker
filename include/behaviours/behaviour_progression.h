@@ -50,6 +50,14 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         //memset(grid, 0, 64);
         //this->chord_player->debug = true;
+        grid[0].degree = 1;
+        grid[1].degree = 2;
+        grid[2].degree = 5;
+        grid[3].degree = 4;
+        grid[4].degree = 3;
+        grid[5].degree = 2;
+        grid[6].degree = 6;
+        grid[7].degree = 3;
     }
 
     virtual const char *get_label() override {
@@ -194,7 +202,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         //int8_t retval = -1;
 
         Serial.printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
-        return grid[bar_number].chord_degree;
+        return grid[bar_number].degree;
 
         /*for (int i = 8 ; i > 0 ; i--) {
             if (grid[bar_number].chord_degree>0) {
@@ -217,22 +225,22 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
 
     virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
         if (y==0 || x>=8 || y>=8) return 0;
-        return grid[x].chord_degree == (8-y);
+        return grid[x].degree == (8-y);
     }
 
     void dump_grid() {
         if (!Serial) return;
 
-        Serial.println("dump_grid:");
-        for (int y = 0 ; y < 8 ; y++) {
-            Serial.printf("Grid row %i: [ ", y);
+        Serial.printf("dump_grid:");
+        //for (int y = 0 ; y < 8 ; y++) {
+            //Serial.printf("Grid row %i: [ ", y);
             for (int x = 0 ; x < 8 ; x++) {
                 //Serial.printf("%i ", grid[x].chord_degree);
                 //Serial.printf("%i ", get_cell_colour_for(x, y));
-                Serial.printf("%i ", grid[x].chord_degree);
+                Serial.printf("{ %i %i %i %i }, ", grid[x].degree, grid[x].type, grid[x].inversion);
             }
             Serial.println("]");
-        }
+        //}
         Serial.println("------");
     }
 
@@ -279,7 +287,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         if (current_mode==MODE::DEGREE) {
             int new_degree = row + 1;
             if (new_degree>0 && new_degree<=7) {
-                grid[col].chord_degree = new_degree;
+                grid[col].degree = new_degree;
                 return true;
             }
             //grid[col].chord_degree = new_degree;

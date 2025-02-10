@@ -47,7 +47,9 @@
 			"new": "cpp",
 			"stdexcept": "cpp",
 			"iostream": "cpp",
-			"cinttypes": "cpp"
+			"cinttypes": "cpp",
+			"cmath": "cpp",
+			"cstdlib": "cpp"
 		}
 	}
 }

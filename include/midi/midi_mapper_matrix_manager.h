@@ -45,9 +45,10 @@ class MIDIMatrixManager {
     bool    global_quantise_on = false, global_quantise_chord_on = false;
     int8_t  global_scale_root = SCALE_ROOT_C;
     SCALE   global_scale_type = SCALE::MAJOR;
-    int8_t  global_chord_degree = -1;
+    chord_identity_t global_chord_identity = {CHORD::TRIAD, -1, 0};
+    /*int8_t  global_chord_degree = -1;
     CHORD::Type global_chord_type = CHORD::TRIAD;
-    int8_t global_chord_inversion = 0;
+    int8_t global_chord_inversion = 0;*/
 
     // so we wanna do something like:-
     //      for each source
@@ -421,32 +422,30 @@ class MIDIMatrixManager {
     }
 
     int8_t get_global_chord_degree() {
-        return this->global_chord_degree;
+        return this->global_chord_identity.degree;
     }
     void set_global_chord_degree(int8_t degree) {
-        this->global_chord_degree = degree;
+        this->global_chord_identity.degree = degree;
     }
-
     CHORD::Type get_global_chord_type() {
-        return this->global_chord_type;
+        return this->global_chord_identity.type;
     }
-
     void set_global_chord_type(CHORD::Type chord_type) {
-        if (chord_type != global_chord_type) {
+        if (chord_type != get_global_chord_type()) {
             behaviour_manager_kill_all_current_notes();
         }
-        this->global_chord_type = chord_type;
+        this->global_chord_identity.type = chord_type;
     }
 
     int8_t get_global_chord_inversion() {
-        return this->global_chord_inversion;
+        return this->global_chord_identity.inversion;
     }
 
     void set_global_chord_inversion(int8_t inversion) {
-        if (inversion != global_chord_inversion) {
+        if (inversion != get_global_chord_inversion()) {
             behaviour_manager_kill_all_current_notes();
         }
-        this->global_chord_inversion = inversion;
+        this->global_chord_identity.inversion = inversion;
     }
 
     void save_project_add_lines(LinkedList<String> *lines) {
@@ -515,7 +514,7 @@ class MIDIMatrixManager {
 
             set_global_scale_root_target(&this->global_scale_root);
             set_global_scale_type_target(&this->global_scale_type);
-            set_global_chord_degree_target(&this->global_chord_degree);
+            set_global_chord_identity_target(&this->global_chord_identity);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);
