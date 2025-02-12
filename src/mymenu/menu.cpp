@@ -263,12 +263,33 @@ void setup_menu_transport() {
     }
 #endif
 
+#include "behaviours/behaviour_cvoutput.h"
+#include "mymenu/menuitems_notedisplay.h"
+
 void setup_menu_midi() {
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
+
+    menu->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
+    menu->add(new NoteHarmonyDisplay(
+        (const char*)"CV Output 1 harmony", 
+        &midi_matrix_manager->global_scale_type, 
+        &midi_matrix_manager->global_scale_root, 
+        &behaviour_cvoutput_1->note_tracker,
+        &midi_matrix_manager->global_quantise_on
+    ));
+    menu->add(new NoteDisplay("CV Output 2 notes", &behaviour_cvoutput_2->note_tracker));
+    menu->add(new NoteHarmonyDisplay(
+        (const char*)"CV Output 2 harmony", 
+        &midi_matrix_manager->global_scale_type, 
+        &midi_matrix_manager->global_scale_root, 
+        &behaviour_cvoutput_2->note_tracker,
+        &midi_matrix_manager->global_quantise_on
+    ));
+
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
         [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
@@ -300,6 +321,7 @@ void setup_menu_midi() {
     menu->add(global_chord_bar);
 
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
+
 }
 
 #ifdef ENABLE_SEQUENCER

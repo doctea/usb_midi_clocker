@@ -20,6 +20,8 @@ void setup_midi_mapper_matrix_manager();
 
 void behaviour_manager_kill_all_current_notes();
 
+void behaviour_manager_requantise_all_notes();
+
 //#include "behaviours/behaviour_bamble.h"
 
 #define MAX_NUM_SOURCES 30
@@ -195,6 +197,21 @@ class MIDIMatrixManager {
         return targets[target_id].connection_count;
     }
 
+    // process quantisation
+    /*int8_t quantise_pitch(int8_t pitch) {
+        return ::quantise_pitch(pitch);
+    }
+    int8_t quantise_chord(int8_t pitch, int8_t distance_threshold) {
+        return ::quantise_chord(pitch, distance_threshold);
+    }*/
+    int8_t do_quant(int8_t pitch, int8_t channel) {
+        if (channel!=GM_CHANNEL_DRUMS) {
+            if (this->global_quantise_on) pitch = quantise_pitch(pitch);
+            if (this->global_quantise_chord_on) pitch = quantise_chord(pitch, 3);
+        }
+        return pitch;
+    }
+
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (source_id<0) {
@@ -202,10 +219,7 @@ class MIDIMatrixManager {
             return;
         }
         if (!is_valid_note(pitch)) return;
-        if (channel!=GM_CHANNEL_DRUMS) {
-            if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-            if (this->global_quantise_chord_on) pitch = quantise_chord(pitch, 3);
-        }
+        pitch = do_quant(pitch, channel);
         if (!is_valid_note(pitch)) return;
 
         if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
@@ -228,10 +242,7 @@ class MIDIMatrixManager {
             if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
             return;
         }
-        if (channel!=GM_CHANNEL_DRUMS) {
-            if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-            if (this->global_quantise_chord_on) pitch = quantise_chord(pitch, 3);
-        }
+        pitch = do_quant(pitch, channel);
         if (!is_valid_note(pitch)) return;
 
         if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
@@ -387,28 +398,33 @@ class MIDIMatrixManager {
         return this->global_scale_root;
     }
     void set_global_scale_root(int8_t scale_root) {
-        if (scale_root!=global_scale_root) {
+        bool changed = scale_root!=global_scale_root;
+        /*if (scale_root!=global_scale_root) {
             // force note off for anything currently playing, in theory so that notes don't get stuck on...
             // but in fact, we may prefer to change things around so that all quantisation is done inside midi_mapper_matrix_manager, 
             // instead of in the behaviour or wrapper..?
             //this->stop_all_notes();
-            behaviour_manager_kill_all_current_notes();
-        }
+            //behaviour_manager_kill_all_current_notes();
+        }*/
         this->global_scale_root = scale_root;
+        if (changed) behaviour_manager_requantise_all_notes();
     }
     SCALE get_global_scale_type() {
         return this->global_scale_type;
     }
     void set_global_scale_type(SCALE scale_type) {
-        if (scale_type!=global_scale_type) {
+        bool changed = scale_type!=global_scale_type;
+        /*if (scale_type!=global_scale_type) {
             // force note off for anything currently playing, so that notes don't get stuck on
             //this->stop_all_notes();
-            behaviour_manager_kill_all_current_notes();
-        }
+            //behaviour_manager_kill_all_current_notes();
+        }*/
         this->global_scale_type = scale_type;
+        if (changed) behaviour_manager_requantise_all_notes();
     }
     void set_global_quantise_on(bool v) {
         this->global_quantise_on = v;
+        if (v) behaviour_manager_requantise_all_notes();
     }
     bool is_global_quantise_on() {
         return this->global_quantise_on;
@@ -416,6 +432,7 @@ class MIDIMatrixManager {
 
     void set_global_quantise_chord_on(bool v) {
         this->global_quantise_chord_on = v;
+        if (v) behaviour_manager_requantise_all_notes();
     }
     bool is_global_quantise_chord_on() {
         return this->global_quantise_chord_on;
@@ -431,9 +448,12 @@ class MIDIMatrixManager {
         return this->global_chord_identity.type;
     }
     void set_global_chord_type(CHORD::Type chord_type) {
-        if (chord_type != get_global_chord_type()) {
-            behaviour_manager_kill_all_current_notes();
-        }
+        bool changed = chord_type != get_global_chord_type();
+        /*if (chord_type != get_global_chord_type()) {
+            //behaviour_manager_kill_all_current_notes();
+            behaviour_manager_requantise_all_notes();
+        }*/
+        if (changed) behaviour_manager_requantise_all_notes();
         this->global_chord_identity.type = chord_type;
     }
 
@@ -442,9 +462,12 @@ class MIDIMatrixManager {
     }
 
     void set_global_chord_inversion(int8_t inversion) {
-        if (inversion != get_global_chord_inversion()) {
-            behaviour_manager_kill_all_current_notes();
-        }
+        bool changed = inversion != get_global_chord_inversion();
+        /*if (inversion != get_global_chord_inversion()) {
+            //behaviour_manager_kill_all_current_notes();
+            behaviour_manager_requantise_all_notes();
+        }*/
+        if (changed) behaviour_manager_requantise_all_notes();
         this->global_chord_identity.inversion = inversion;
     }
 

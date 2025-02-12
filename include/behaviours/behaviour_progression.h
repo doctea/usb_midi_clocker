@@ -237,7 +237,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
             for (int x = 0 ; x < 8 ; x++) {
                 //Serial.printf("%i ", grid[x].chord_degree);
                 //Serial.printf("%i ", get_cell_colour_for(x, y));
-                Serial.printf("{ %i %i %i %i }, ", grid[x].degree, grid[x].type, grid[x].inversion);
+                Serial.printf("{ %i %i=%5s %i }, ", grid[x].degree, grid[x].type, chords[grid[x].type].label, grid[x].inversion);
             }
             Serial.println("]");
         //}

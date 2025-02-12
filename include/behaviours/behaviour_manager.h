@@ -413,6 +413,13 @@ class DeviceBehaviourManager {
             }
         }
 
+        void requantise_all_notes() {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
+                behaviours->get(i)->requantise_all_notes();
+            }
+        }
+
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {

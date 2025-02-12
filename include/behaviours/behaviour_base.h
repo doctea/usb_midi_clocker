@@ -9,6 +9,9 @@
 
 #include "midi/midi_mapper_matrix_types.h"
 
+#include "notetracker.h"
+#include "Drums.h"
+
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
 #include "ParameterManager.h"
@@ -56,6 +59,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     int current_channel = 0;
     int8_t TUNING_OFFSET = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
+
+    NoteTracker note_tracker;
 
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
@@ -118,11 +123,17 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     virtual void init() {};
 
+    virtual void requantise_all_notes();
+
     virtual void killCurrentNote() {
         if (is_valid_note(current_transposed_note)) {
             this->actualSendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
             current_transposed_note = NOTE_OFF;
         }
+        note_tracker.foreach_note([=](int8_t note) {
+            this->actualSendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            note_tracker.held_note_off(note);
+        });
     }
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
@@ -135,6 +146,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
         note += this->TUNING_OFFSET;
         if (!is_valid_note(note)) return;
+
+        note_tracker.held_note_on(note);
 
         this->actualSendNoteOn(note, velocity, channel);
     };
@@ -150,6 +163,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
         note += this->TUNING_OFFSET;
         if (!is_valid_note(note)) return;
+
+        note_tracker.held_note_off(note);
 
         this->actualSendNoteOff(note, velocity, channel);
     };

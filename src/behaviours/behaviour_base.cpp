@@ -72,3 +72,25 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
         this->force_octave = octave;
     }
 }*/
+
+void DeviceBehaviourUltimateBase::requantise_all_notes() {
+    if (this->current_channel==GM_CHANNEL_DRUMS)
+        return;
+
+    note_tracker.foreach_note([=](int8_t note) {
+        int8_t new_note = midi_matrix_manager->do_quant(note, this->current_channel);
+        this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+        if (!is_valid_note(new_note)) {
+            Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to %i (%s) (invalid note, stopping)\n", this->get_label(), note, get_note_name_c(note), new_note, get_note_name_c(new_note)); 
+            //note_tracker.held_note_off(note);
+            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            return;
+        }
+        if (new_note!=note) {
+            Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to %i (%s) (stopping then starting)\n", this->get_label(), note, get_note_name_c(note), new_note, get_note_name_c(new_note)); 
+            //note_tracker.held_note_off(note);
+            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            this->sendNoteOn(new_note, MIDI_MAX_VELOCITY, this->current_channel);
+        }
+    });
+}

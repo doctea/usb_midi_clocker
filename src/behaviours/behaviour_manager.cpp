@@ -53,6 +53,12 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
 // convenience function
 void behaviour_manager_kill_all_current_notes () {
     behaviour_manager->kill_all_current_notes();
+    Serial.printf("!!!! behaviour_manager_kill_all_current_notes\n");
+}
+
+void behaviour_manager_requantise_all_notes() {
+    behaviour_manager->requantise_all_notes();
+    Serial.printf("!!!! behaviour_manager_requantise_all_notes\n");
 }
 
 //FLASHMEM
