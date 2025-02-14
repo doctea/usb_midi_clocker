@@ -281,6 +281,7 @@ void setup_menu_midi() {
         &behaviour_cvoutput_1->note_tracker,
         &midi_matrix_manager->global_quantise_on
     ));
+    menu->add(new HarmonyStatus("CV Output 1 harmony (oldskool)", &behaviour_cvoutput_1->last_transposed_note, &behaviour_cvoutput_1->current_transposed_note));
     menu->add(new NoteDisplay("CV Output 2 notes", &behaviour_cvoutput_2->note_tracker));
     menu->add(new NoteHarmonyDisplay(
         (const char*)"CV Output 2 harmony", 
@@ -289,6 +290,7 @@ void setup_menu_midi() {
         &behaviour_cvoutput_2->note_tracker,
         &midi_matrix_manager->global_quantise_on
     ));
+    menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
 
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 

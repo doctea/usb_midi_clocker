@@ -77,20 +77,61 @@ void DeviceBehaviourUltimateBase::requantise_all_notes() {
     if (this->current_channel==GM_CHANNEL_DRUMS)
         return;
 
+    if (note_tracker.count_held()==0) {
+        Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: no notes to requantise\n", this->get_label());
+        return;
+    }
+    Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting with\t%i held notes (%s)\n", this->get_label(), note_tracker.count_held(), note_tracker.get_held_notes_c());
+
+    bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
+    bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;
+
+    /*midi_matrix_manager->global_quantise_on = false;
+    midi_matrix_manager->global_quantise_chord_on = false;
+    this->killCurrentNote();
+    //return;
+    midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
+    midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;*/
+
     note_tracker.foreach_note([=](int8_t note) {
         int8_t new_note = midi_matrix_manager->do_quant(note, this->current_channel);
-        this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
-        if (!is_valid_note(new_note)) {
-            Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to %i (%s) (invalid note, stopping)\n", this->get_label(), note, get_note_name_c(note), new_note, get_note_name_c(new_note)); 
-            //note_tracker.held_note_off(note);
-            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+        //this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+        // possible states:-
+        //      old note is still valid -- don't do anything
+        if (new_note==note) {
+            Serial.printf("\t%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) doesn't need to be stopped\n", this->get_label(), note, get_note_name_c(note)); 
             return;
         }
-        if (new_note!=note) {
-            Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to %i (%s) (stopping then starting)\n", this->get_label(), note, get_note_name_c(note), new_note, get_note_name_c(new_note)); 
+        // old note is invalid, and no new note to quantise to - kill old note
+        if (!is_valid_note(new_note)) {
+            Serial.printf("\t%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to %i (%s) (invalid note, stopping)\n", this->get_label(), note, get_note_name_c(note), new_note, get_note_name_c(new_note)); 
             //note_tracker.held_note_off(note);
+            midi_matrix_manager->global_quantise_on = false;
+            midi_matrix_manager->global_quantise_chord_on = false;
             this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
+            midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
+            return;
+        } /*else {
+            Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) doesn't need to be stopped\n", this->get_label(), note, get_note_name_c(note)); 
+        }*/
+
+        // old note is invalid, and new note is valid - kill old note, start new one
+        if (is_valid_note(new_note)) {
+            Serial.printf("\t%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to %i (%s) (stopping then starting)\n", this->get_label(), note, get_note_name_c(note), new_note, get_note_name_c(new_note)); 
+            //note_tracker.held_note_off(note);
+            //this->actualSendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            midi_matrix_manager->global_quantise_on = false;
+            midi_matrix_manager->global_quantise_chord_on = false;
+            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
+            midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
             this->sendNoteOn(new_note, MIDI_MAX_VELOCITY, this->current_channel);
+        } else {
+            Serial.printf("\t%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) doesn't need to be stopped\n", this->get_label(), note, get_note_name_c(note)); 
         }
     });
+
+    Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes finishing with\t%i held notes (%s)\n", this->get_label(), note_tracker.count_held(), note_tracker.get_held_notes_c());
+
 }

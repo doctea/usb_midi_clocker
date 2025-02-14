@@ -406,6 +406,13 @@ class MIDIMatrixManager {
             //this->stop_all_notes();
             //behaviour_manager_kill_all_current_notes();
         }*/
+        // todo: okay, so killing all notes before changing scales seems to work; 
+        // so problem with stuck notes is probably because the quantisation of the new scale is not allowing the note-offs to be sent?
+        // althouughhh, we could also just be sending the note-offs to the wrong channel?
+        // (and also, we could be sending the note-offs to the wrong pitch, if the quantisation is changing the pitch?)
+        // beatstep/cvoutput2 does still glitch out with a stuck note sometimes even with this tho?
+        //      a stuck note that doesn't even get reset after a full midi panic, either!
+        //behaviour_manager_kill_all_current_notes();
         this->global_scale_root = scale_root;
         if (changed) behaviour_manager_requantise_all_notes();
     }
@@ -442,7 +449,9 @@ class MIDIMatrixManager {
         return this->global_chord_identity.degree;
     }
     void set_global_chord_degree(int8_t degree) {
+        bool changed = degree != get_global_chord_degree();
         this->global_chord_identity.degree = degree;
+        if (changed) behaviour_manager_requantise_all_notes();
     }
     CHORD::Type get_global_chord_type() {
         return this->global_chord_identity.type;

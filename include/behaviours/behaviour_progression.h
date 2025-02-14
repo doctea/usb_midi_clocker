@@ -18,12 +18,15 @@
 #include "behaviour_apcmini.h"  // so that we can use apcmini for UI
 
 #include "mymenu/menuitems_scale.h"
+#include "mymenu/menuitems_notedisplay.h"
 
 #include "chord_player.h"
 
+#include "behaviours/behaviour_cvoutput.h"
+
 extern MIDIMatrixManager *midi_matrix_manager;
 
-class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase {
+class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
 
     enum MODE {
@@ -38,6 +41,8 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     int8_t degree = 0;
     //int8_t current_degree = 0;
 
+    bool advance_progression = true;
+
     ChordPlayer *chord_player = new ChordPlayer(
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
             this->sendNoteOn(note, velocity, channel);
@@ -49,7 +54,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         //memset(grid, 0, 64);
-        //this->chord_player->debug = true;
+        this->chord_player->debug = true;
         grid[0].degree = 1;
         grid[1].degree = 2;
         grid[2].degree = 5;
@@ -140,7 +145,31 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
             true
         ));
 
+        bar->add(new LambdaToggleControl("Advance progression", 
+            [=] (bool v) -> void { this->advance_progression = v; },
+            [=] (void) -> bool { return this->advance_progression; }
+        ));
+
         menuitems->add(bar);
+
+        menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
+        menuitems->add(new NoteHarmonyDisplay(
+            (const char*)"Progression harmony", 
+            &midi_matrix_manager->global_scale_type, 
+            &midi_matrix_manager->global_scale_root, 
+            &this->note_tracker,
+            &midi_matrix_manager->global_quantise_on
+        ));
+
+        menuitems->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
+        menuitems->add(new NoteHarmonyDisplay(
+            (const char*)"CV Output 1 harmony", 
+            &midi_matrix_manager->global_scale_type, 
+            &midi_matrix_manager->global_scale_root, 
+            &behaviour_cvoutput_1->note_tracker,
+            &midi_matrix_manager->global_quantise_on
+        ));
+   
 
         return menuitems;
     }
@@ -201,7 +230,7 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     int8_t get_degree_from_grid(int8_t bar_number) {
         //int8_t retval = -1;
 
-        Serial.printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
+        if (debug) Serial.printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
         return grid[bar_number].degree;
 
         /*for (int i = 8 ; i > 0 ; i--) {
@@ -247,22 +276,24 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
     virtual void on_end_bar(int bar_number) override {
         this->chord_player->stop_chord();
 
-        bar_number = BPM_CURRENT_BAR + 1;
-        bar_number %= 8;
-        //bar_number %= BARS_PER_PHRASE;// * 2;
+        if (advance_progression) {
+            bar_number = BPM_CURRENT_BAR + 1;
+            bar_number %= 8;
+            //bar_number %= BARS_PER_PHRASE;// * 2;
 
-        Serial.printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
-        dump_grid();
+            if (debug) Serial.printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
+            if (debug) dump_grid();
 
-        int8_t degree = this->get_degree_from_grid(bar_number);
-        if (degree>0) {
-            Serial.printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
-            this->set_degree(degree);
-        } else {
-            this->set_degree(-1);
-            Serial.printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
+            int8_t degree = this->get_degree_from_grid(bar_number);
+            if (degree>0) {
+                if (debug) Serial.printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
+                this->set_degree(degree);
+            } else {
+                this->set_degree(-1);
+                if (debug) Serial.printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
+            }
+            if (debug) Serial.printf("=======\n");
         }
-        Serial.printf("=======\n");
 
         this->chord_player->stop_chord();
     }
@@ -308,6 +339,23 @@ class VirtualBehaviour_Progression : virtual public DeviceBehaviourUltimateBase 
         byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
         byte col = inNumber - (((8-1)-row)*APCMINI_DISPLAY_WIDTH);
         return false;
+    }
+
+    virtual void requantise_all_notes() override {
+
+        bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
+        bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
+        midi_matrix_manager->global_quantise_on = false;
+        midi_matrix_manager->global_quantise_chord_on = false;
+        this->chord_player->stop_chord();
+        midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
+        midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
+
+        this->chord_player->play_chord(
+            quantise_get_root_pitch_for_degree(this->degree), 
+            midi_matrix_manager->get_global_chord_type(), 
+            midi_matrix_manager->get_global_chord_inversion()
+        );
     }
 
 };
