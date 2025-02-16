@@ -239,8 +239,16 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }*/
 
     virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
-        if (y==0 || x>=8 || y>=8) return 0;
+        if (/*y==0 ||*/ x>=8 || y>=8) return 0;
         if (current_mode==MODE::DEGREE) {
+            if (y==0) { // top row
+                if (x==BPM_CURRENT_BAR%8) {
+                    // indicate the current bar
+                    return APCMINI_YELLOW_BLINK;
+                } else {
+                    return APCMINI_OFF;
+                }
+            }
             return grid[x].degree == (8-y);
         } else if (current_mode==MODE::QUALITY) {
             return grid[x].type == (7-y);
@@ -266,10 +274,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         Serial_println("------");
     }
 
-    void set_current_chord(chord_identity_t chord) {
+    void set_current_chord(chord_identity_t chord, bool requantise_immediately = true) {
         this->current_chord = chord;
         if (chord.degree>0)
-            midi_matrix_manager->set_global_chord(current_chord);
+            midi_matrix_manager->set_global_chord(current_chord, requantise_immediately);
         else
             this->chord_player->stop_chord();
     }
@@ -277,8 +285,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     virtual void on_end_bar(int bar_number) override {
         this->chord_player->stop_chord();
 
+        //this->chord_player->stop_chord();
+    }
+
+    virtual void on_bar(int bar_number) override {
         if (advance_progression) {
-            bar_number = BPM_CURRENT_BAR + 1;
+            bar_number = BPM_CURRENT_BAR;
             bar_number %= 8;
             //bar_number %= BARS_PER_PHRASE;// * 2;
 
@@ -286,6 +298,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (debug) dump_grid();
 
             this->set_current_chord(grid[bar_number]);
+
+            // send the chord for the current degree
+            if (this->current_chord.valid_chord())
+                this->chord_player->play_chord(this->current_chord);
 
             /*int8_t degree = this->get_degree_from_grid(bar_number);
             if (degree>0) {
@@ -299,14 +315,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             }*/
             if (debug) Serial_printf("=======\n");
         }
-
-        this->chord_player->stop_chord();
-    }
-
-    virtual void on_bar(int bar_number) override {
-        // send the chord for the current degree
-        if (this->current_chord.valid_chord())
-            this->chord_player->play_chord(this->current_chord);
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {
@@ -320,7 +328,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             if (current_mode==MODE::DEGREE) {
                 int new_degree = row + 1;
-                if (new_degree>0 && new_degree<=7) {
+                if (new_degree>0 && new_degree<=PITCHES_PER_SCALE) {
                     grid[col].degree = new_degree;
                     return true;
                 }
