@@ -132,7 +132,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             this->sendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
             //current_transposed_note = NOTE_OFF;
         }
-        note_tracker.foreach_note([=](int8_t note) {
+        note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
             //this->actualSendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
             Serial.printf("%20s: killCurrentNote() killing TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
             this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
@@ -140,32 +140,21 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         });
         if (current_transposed_note!=NOTE_OFF)
             Serial.printf("%20s: killCurrentNote() still have current_transposed_note=%i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
-        note_tracker.foreach_note([=](int8_t note) {
+        note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
             Serial.printf("%20s: killCurrentNote() still have TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
         });
         //Serial.println("-=-=-");
     }
     // tell the device to play a note on
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
-        // TODO: this is where ForceOctave check should go..?
-        note = this->recalculate_pitch(note);
-        if (!is_valid_note(note)) return;
-        this->current_transposed_note = note;
-        this->current_channel = channel;
-
-        note += this->TUNING_OFFSET;
-        if (!is_valid_note(note)) return;
-
-        note_tracker.held_note_on(note);
-
-        this->actualSendNoteOn(note, velocity, channel);
-    };
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel);
     // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         // TODO: this is where ForceOctave check should go..?
-        note = this->recalculate_pitch(note);
+
+        int8_t quantised_note = note_tracker.get_transposed_note_for(note);
+
+        //quantised_note = this->recalculate_pitch(quantised_note);
         if (!is_valid_note(note)) return;
         this->last_transposed_note = note;
         if (this->current_transposed_note==note)
@@ -176,7 +165,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
         note_tracker.held_note_off(note);
 
-        this->actualSendNoteOff(note, velocity, channel);
+        this->actualSendNoteOff(quantised_note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
     virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {

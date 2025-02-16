@@ -131,20 +131,20 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         }
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actual_sendNoteOn(%i, %i, %i)\n", note, velocity, channel);
+            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOn (%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
             if (channel > channel_count) {
                 // this shouldn't happen?
-                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actual_sendNoteOn(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
+                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOn (%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
                 if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOn(note, velocity, channel);
             }
         }
 
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
-            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actual_sendNoteOff(%i, %i, %i)\n", note, velocity, channel);
+            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOff(%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
             if (channel > channel_count) {
                 // this shouldn't happen?
-                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actual_sendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
+                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
                 if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOff(note, velocity, channel);
             }

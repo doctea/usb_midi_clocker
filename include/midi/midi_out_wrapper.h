@@ -142,12 +142,14 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             if (this->debug) 
                 Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", in_pitch, velocity, channel, playing_notes[in_pitch]);
 
+            
             if (playing_notes[in_pitch]>0) playing_notes[in_pitch]--;
-            if (playing_notes[in_pitch]!=0) {
+            if (playing_notes[in_pitch]<0) playing_notes[in_pitch] = 0;
+            if (playing_notes[in_pitch]>0) {
                 if (this->debug) Serial.printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", in_pitch, playing_notes[in_pitch]);
                 return;
             }
-
+            
             //this->last_transposed_note = in_pitch;
             //if (this->current_transposed_note==in_pitch)
             //    current_transposed_note = -1;

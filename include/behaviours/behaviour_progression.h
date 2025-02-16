@@ -41,7 +41,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     int8_t degree = 0;
     //int8_t current_degree = 0;
 
-    bool advance_progression = true;
+    bool advance_progression = false;   // todo: set this to true by default
 
     ChordPlayer *chord_player = new ChordPlayer(
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void {

@@ -214,43 +214,57 @@ class MIDIMatrixManager {
 
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
+        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i (%s),\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i)\n"), source_id, this->sources[source_id].handle, pitch, get_note_name_c(pitch), velocity, channel);
+
         if (source_id<0) {
             if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (!is_valid_note(pitch)) return;
-        pitch = do_quant(pitch, channel);
-        if (!is_valid_note(pitch)) return;
+        if (!is_valid_note(pitch)) { 
+            if (this->debug) Serial_printf("!! midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %s (%i) - ignoring\n", get_note_name_c(pitch), pitch);
+            return;
+        }
 
-        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+        /*if (debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i) "), source_id, pitch, get_note_name_c(pitch), velocity, channel);
+        pitch = do_quant(pitch, channel);
+        if (debug) Serial_printf(F("=> quantised to %i (%s)\n"), pitch, get_note_name_c(pitch));
+        if (!is_valid_note(pitch)) return;*/
 
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(source_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send ON  to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
         }
     }
     void processNoteOff(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
+        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+
         if (source_id<0) {
-            if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
+            if (this->debug) Serial_printf(F("\t!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
         if (!is_valid_note(pitch)) {
-            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
+            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %s (%i) - ignoring\n", get_note_name_c(pitch), pitch);
             return;
         }
-        pitch = do_quant(pitch, channel);
-        if (!is_valid_note(pitch)) return;
 
-        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+        /*if (debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i) "), source_id, pitch, get_note_name_c(pitch), velocity, channel);
+        pitch = do_quant(pitch, channel);
+        if (debug) Serial_printf(F("=> quantised to %i (%s)\n"), pitch, get_note_name_c(pitch));*/
+
+        if (!is_valid_note(pitch)) {
+            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() requantised pitch to %s (%i) - so is now invalid - so ignoring!\n", get_note_name_c(pitch), pitch);
+            return;
+        }
 
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug/* || targets[target_id].wrapper->debug || source_id==12*/) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
@@ -399,6 +413,13 @@ class MIDIMatrixManager {
     }
     void set_global_scale_root(int8_t scale_root) {
         bool changed = scale_root!=global_scale_root;
+        if (changed) {
+            Serial.printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
+            Serial.printf("Current scale:\t");
+            print_scale(global_scale_root, global_scale_type);
+            Serial.printf("New scale:\t");
+            print_scale(scale_root, global_scale_type);
+        }
         /*if (scale_root!=global_scale_root) {
             // force note off for anything currently playing, in theory so that notes don't get stuck on...
             // but in fact, we may prefer to change things around so that all quantisation is done inside midi_mapper_matrix_manager, 
@@ -414,7 +435,10 @@ class MIDIMatrixManager {
         //      a stuck note that doesn't even get reset after a full midi panic, either!
         //behaviour_manager_kill_all_current_notes();
         this->global_scale_root = scale_root;
-        if (changed) behaviour_manager_requantise_all_notes();
+        if (changed) { 
+            behaviour_manager_requantise_all_notes();
+            Serial.printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
+        }
     }
     SCALE get_global_scale_type() {
         return this->global_scale_type;

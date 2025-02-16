@@ -273,6 +273,8 @@ void setup_menu_midi() {
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
 
+    // debuggery stuff ...
+    behaviour_cvoutput_2->debug = true;
     menu->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
     menu->add(new NoteHarmonyDisplay(
         (const char*)"CV Output 1 harmony", 
