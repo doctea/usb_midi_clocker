@@ -199,15 +199,15 @@ class MIDIMatrixManager {
 
     // process quantisation
     /*int8_t quantise_pitch(int8_t pitch) {
-        return ::quantise_pitch(pitch);
+        return ::quantise_pitch_to_scale(pitch);
     }
     int8_t quantise_chord(int8_t pitch, int8_t distance_threshold) {
-        return ::quantise_chord(pitch, distance_threshold);
+        return ::quantise_pitch_to_chord(pitch, distance_threshold);
     }*/
     int8_t do_quant(int8_t pitch, int8_t channel) {
         if (channel!=GM_CHANNEL_DRUMS) {
-            if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-            if (this->global_quantise_chord_on) pitch = quantise_chord(pitch, 3);
+            if (this->global_quantise_on)       pitch = ::quantise_pitch_to_scale(pitch);
+            if (this->global_quantise_chord_on) pitch = ::quantise_pitch_to_chord(pitch, 3);
         }
         return pitch;
     }
@@ -226,7 +226,7 @@ class MIDIMatrixManager {
         }
 
         /*if (debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i) "), source_id, pitch, get_note_name_c(pitch), velocity, channel);
-        pitch = do_quant(pitch, channel);
+        pitch = do_quant(pitch, channel); 
         if (debug) Serial_printf(F("=> quantised to %i (%s)\n"), pitch, get_note_name_c(pitch));
         if (!is_valid_note(pitch)) return;*/
 
@@ -351,11 +351,6 @@ class MIDIMatrixManager {
     uint8_t targets_count = 0;
     target_entry targets[MAX_NUM_TARGETS] = {};
 
-    /*target_id_t register_target(DeviceBehaviourUltimateBase *target_behaviour, const char *handle) {
-        target_id_t t = this->register_target(make_midioutputwrapper(handle, target_behaviour));
-        target_behaviour->target_id = t;
-        return t;
-    }*/
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
@@ -372,11 +367,6 @@ class MIDIMatrixManager {
         }
         return NUM_REGISTERED_TARGETS++;
     }
-    /*target_id_t register_target(DeviceBehaviourUltimateBase *target, const char *handle) {
-        Serial_printf("midi_mapper_matrix_manager#register_target(DeviceBehaviour) registering handle '%s'\n", handle);
-        MIDIOutputWrapper_Behaviour wrapper = make_midioutputwrapper(handle, target, )
-        target->target_id = targets_count;
-    }*/
 
     target_id_t get_target_id_for_handle(const char *handle) {
         //Serial_printf(F("get_target_id_for_handle(%s)\n"), handle);
@@ -408,51 +398,8 @@ class MIDIMatrixManager {
         return -1;
     }
 
-    int8_t get_global_scale_root() {
-        return this->global_scale_root;
-    }
-    void set_global_scale_root(int8_t scale_root) {
-        bool changed = scale_root!=global_scale_root;
-        if (changed) {
-            Serial.printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
-            Serial.printf("Current scale:\t");
-            print_scale(global_scale_root, global_scale_type);
-            Serial.printf("New scale:\t");
-            print_scale(scale_root, global_scale_type);
-        }
-        /*if (scale_root!=global_scale_root) {
-            // force note off for anything currently playing, in theory so that notes don't get stuck on...
-            // but in fact, we may prefer to change things around so that all quantisation is done inside midi_mapper_matrix_manager, 
-            // instead of in the behaviour or wrapper..?
-            //this->stop_all_notes();
-            //behaviour_manager_kill_all_current_notes();
-        }*/
-        // todo: okay, so killing all notes before changing scales seems to work; 
-        // so problem with stuck notes is probably because the quantisation of the new scale is not allowing the note-offs to be sent?
-        // althouughhh, we could also just be sending the note-offs to the wrong channel?
-        // (and also, we could be sending the note-offs to the wrong pitch, if the quantisation is changing the pitch?)
-        // beatstep/cvoutput2 does still glitch out with a stuck note sometimes even with this tho?
-        //      a stuck note that doesn't even get reset after a full midi panic, either!
-        //behaviour_manager_kill_all_current_notes();
-        this->global_scale_root = scale_root;
-        if (changed) { 
-            behaviour_manager_requantise_all_notes();
-            Serial.printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
-        }
-    }
-    SCALE get_global_scale_type() {
-        return this->global_scale_type;
-    }
-    void set_global_scale_type(SCALE scale_type) {
-        bool changed = scale_type!=global_scale_type;
-        /*if (scale_type!=global_scale_type) {
-            // force note off for anything currently playing, so that notes don't get stuck on
-            //this->stop_all_notes();
-            //behaviour_manager_kill_all_current_notes();
-        }*/
-        this->global_scale_type = scale_type;
-        if (changed) behaviour_manager_requantise_all_notes();
-    }
+    /////// scale and quantisation functions
+    // getters & setters for quantisation on/offs
     void set_global_quantise_on(bool v) {
         this->global_quantise_on = v;
         if (v) behaviour_manager_requantise_all_notes();
@@ -469,6 +416,35 @@ class MIDIMatrixManager {
         return this->global_quantise_chord_on;
     }
 
+    // getters & setters for global scale + global chord settings
+    int8_t get_global_scale_root() {
+        return this->global_scale_root;
+    }
+    void set_global_scale_root(int8_t scale_root) {
+        bool changed = scale_root!=global_scale_root;
+        if (changed && debug) {
+            Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
+            Serial_printf("Current scale:\t");
+            print_scale(global_scale_root, global_scale_type);
+            Serial_printf("New scale:\t");
+            print_scale(scale_root, global_scale_type);
+        }
+        this->global_scale_root = scale_root;
+        if (changed) { 
+            behaviour_manager_requantise_all_notes();
+            if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
+        }
+    }
+
+    SCALE get_global_scale_type() {
+        return this->global_scale_type;
+    }
+    void set_global_scale_type(SCALE scale_type) {
+        bool changed = scale_type!=global_scale_type;
+        this->global_scale_type = scale_type;
+        if (changed) behaviour_manager_requantise_all_notes();
+    }
+
     int8_t get_global_chord_degree() {
         return this->global_chord_identity.degree;
     }
@@ -477,33 +453,26 @@ class MIDIMatrixManager {
         this->global_chord_identity.degree = degree;
         if (changed) behaviour_manager_requantise_all_notes();
     }
+
     CHORD::Type get_global_chord_type() {
         return this->global_chord_identity.type;
     }
     void set_global_chord_type(CHORD::Type chord_type) {
         bool changed = chord_type != get_global_chord_type();
-        /*if (chord_type != get_global_chord_type()) {
-            //behaviour_manager_kill_all_current_notes();
-            behaviour_manager_requantise_all_notes();
-        }*/
-        if (changed) behaviour_manager_requantise_all_notes();
         this->global_chord_identity.type = chord_type;
+        if (changed) behaviour_manager_requantise_all_notes();
     }
 
     int8_t get_global_chord_inversion() {
         return this->global_chord_identity.inversion;
     }
-
     void set_global_chord_inversion(int8_t inversion) {
         bool changed = inversion != get_global_chord_inversion();
-        /*if (inversion != get_global_chord_inversion()) {
-            //behaviour_manager_kill_all_current_notes();
-            behaviour_manager_requantise_all_notes();
-        }*/
-        if (changed) behaviour_manager_requantise_all_notes();
         this->global_chord_identity.inversion = inversion;
+        if (changed) behaviour_manager_requantise_all_notes();
     }
 
+    ////////// save and load 
     void save_project_add_lines(LinkedList<String> *lines) {
         for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
             for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {

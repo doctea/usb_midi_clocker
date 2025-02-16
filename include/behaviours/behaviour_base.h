@@ -128,25 +128,28 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     virtual void killCurrentNote() {
         //Serial.println("-=-=-");
         if (is_valid_note(current_transposed_note)) {
-            Serial.printf("%20s: killCurrentNote() killing TRANSPOSED note %i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
+            if (debug) Serial_printf("%20s: killCurrentNote() killing TRANSPOSED note %i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
             this->sendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
             //current_transposed_note = NOTE_OFF;
         }
         note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
             //this->actualSendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
-            Serial.printf("%20s: killCurrentNote() killing TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
+            if (debug) Serial_printf("%20s: killCurrentNote() killing TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
             this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
             //note_tracker.held_note_off(note);
         });
-        if (current_transposed_note!=NOTE_OFF)
-            Serial.printf("%20s: killCurrentNote() still have current_transposed_note=%i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
-        note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
-            Serial.printf("%20s: killCurrentNote() still have TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
-        });
+        if (current_transposed_note!=NOTE_OFF) {
+            if (debug) Serial_printf("%20s: killCurrentNote() still have current_transposed_note=%i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
+        }
+        if (debug) {
+            note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
+                Serial_printf("%20s: killCurrentNote() still have TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
+            });
+        }
         //Serial.println("-=-=-");
     }
     // tell the device to play a note on
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel);
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override;
     // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
@@ -184,7 +187,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     // implements IMIDIProxiedCCTarget
     virtual void sendProxiedControlChange(byte cc_number, byte value, byte channel = 0) {
-        if (this->debug) Serial.printf(F("%s#sendProxiedControlChange(%i, %i, %i)\n"), this->get_label(), cc_number, value, channel);
+        if (this->debug) Serial_printf(F("%s#sendProxiedControlChange(%i, %i, %i)\n"), this->get_label(), cc_number, value, channel);
         this->actualSendControlChange(cc_number, value, channel);
     }
 
@@ -216,7 +219,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             if (strcmp(parameters->get(i)->label, label)==0) 
                 return parameters->get(i);
         }
-        Serial.printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
+        Serial_printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
         return nullptr;
     }
 
@@ -428,11 +431,11 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }*/
         if (!is_valid_note(note)) return NOTE_OFF;
 
-        if (debug && (getLowestNote()>0 || getHighestNote()<127)) 
-            Serial.printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
+        if (debug && (getLowestNote()>0 || getHighestNote()<MIDI_NUM_NOTES)) 
+            Serial_printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
             
         if (note < getLowestNote()) {
-            if (this->debug) Serial.printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
+            if (this->debug) Serial_printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
             if (getLowestNoteMode()==NOTE_MODE::IGNORE) {
                 if (this->debug) Serial.println("\tignoring!");
                 note = NOTE_OFF;
@@ -446,12 +449,12 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 while (is_valid_note(note) && note < getLowestNote()) {
                     note += 12;
                 }
-                if (this->debug) Serial.printf("\ttransposed from %i (%s) up to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
+                if (this->debug) Serial_printf("\ttransposed from %i (%s) up to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
             }
         } else if (note > getHighestNote()) {
-            if (this->debug) Serial.printf("\tnote\t%i (%s)\tis higher than highest note\t%i (%s)\n", note, get_note_name_c(note), getHighestNote(), get_note_name_c(getHighestNote()));
+            if (this->debug) Serial_printf("\tnote\t%i (%s)\tis higher than highest note\t%i (%s)\n", note, get_note_name_c(note), getHighestNote(), get_note_name_c(getHighestNote()));
             if (getHighestNoteMode()==NOTE_MODE::IGNORE) {
-                if (this->debug) Serial.println("\tignoring!");
+                if (this->debug) Serial_println("\tignoring!");
                 note = NOTE_OFF;
             } else if (getHighestNoteMode()==NOTE_MODE::TRANSPOSE) {
                 //int8_t octave = note / 12;
@@ -463,12 +466,12 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 while (is_valid_note(note) && note > getHighestNote()) {
                     note -= 12;
                 }
-                if (this->debug) Serial.printf("\ttransposed from %i (%s) down to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
+                if (this->debug) Serial_printf("\ttransposed from %i (%s) down to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
                 //Serial.printf("\t\t(highest_octave =\t%i, chromatic_pitch =\t%i (%s))\n", highest_octave, chromatic_pitch, note_names[chromatic_pitch]);
             }
         }
         if (!is_valid_note(note) || note < getLowestNote() || note > getHighestNote()) {
-            if (this->debug) Serial.printf("\t%i (%s) isn't valid or out of bounds\n", note, get_note_name_c(note));
+            if (this->debug) Serial_printf("\t%i (%s) isn't valid or out of bounds\n", note, get_note_name_c(note));
             return NOTE_OFF;
         }
         return note;

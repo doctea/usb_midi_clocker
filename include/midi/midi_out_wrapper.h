@@ -78,7 +78,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             }
 
             virtual void log_message(int8_t type, int8_t pitch, int8_t velocity, int8_t channel) {
-                if (this->debug) Serial.printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
+                if (this->debug) Serial_printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
 
                 if (this->message_history!=nullptr) {
                     this->message_history[next_message_history_index].ticks = ticks;
@@ -108,19 +108,19 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             current_note = in_pitch;
             //int pitch = recalculate_pitch(in_pitch);
 
-            if (this->debug) { Serial.printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush(); }
+            if (this->debug) { Serial_printf(F("MIDIOutputWrapper#sendNoteOn\t(p=%3i, v=%3i, c=%2i) in %s...\n"), current_note, velocity, channel, label); Serial_flush(); }
 
             if (playing_notes[current_note]<8) {
-                //if (this->debug) Serial.printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
+                //if (this->debug) Serial_printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
                 playing_notes[current_note]++;
             } else {
-                //if (this->debug) Serial.printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
+                //if (this->debug) Serial_printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
             }
 
             //current_transposed_note = current_note;
 
             if (channel==0) {
-                if (this->debug) Serial.printf(F("\t(swapping channel %i for default_channel %i)\n"), channel, default_channel);
+                if (this->debug) Serial_printf(F("\t(swapping channel %i for default_channel %i)\n"), channel, default_channel);
                 channel = default_channel;
             }
 
@@ -140,13 +140,13 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             //int pitch = recalculate_pitch(in_pitch);
 
             if (this->debug) 
-                Serial.printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", in_pitch, velocity, channel, playing_notes[in_pitch]);
+                Serial_printf("MIDIOutputWrapper#sendNoteOff\t(p=%3i, v=%3i, c=%2i)\tcurrent count is\t%i\n", in_pitch, velocity, channel, playing_notes[in_pitch]);
 
             
             if (playing_notes[in_pitch]>0) playing_notes[in_pitch]--;
             if (playing_notes[in_pitch]<0) playing_notes[in_pitch] = 0;
             if (playing_notes[in_pitch]>0) {
-                if (this->debug) Serial.printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", in_pitch, playing_notes[in_pitch]);
+                if (this->debug) Serial_printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", in_pitch, playing_notes[in_pitch]);
                 return;
             }
             
@@ -155,7 +155,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             //    current_transposed_note = -1;
 
             if (channel==0) {
-                if (this->debug) Serial.printf(F("\t(swapping channel %2i for default_channel %2i)\n"), channel, default_channel);
+                if (this->debug) Serial_printf(F("\t(swapping channel %2i for default_channel %2i)\n"), channel, default_channel);
                 channel = default_channel;
             }
 
@@ -195,7 +195,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             if (this->always_force_stop_all) 
                 force = true;
             //this->debug = true;
-            if (this->debug) Serial.printf(F("stop_all_notes in %s...\n"), label);
+            if (this->debug) Serial_printf(F("stop_all_notes in %s...\n"), label);
             if (is_valid_note(this->current_note)) {
                 this->actual_sendNoteOff(this->current_note,0,default_channel);
                 //this->actual_sendNoteOff(this->current_transposed_note,0,default_channel);
@@ -205,9 +205,9 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 //int pitch = recalculate_pitch(i);
                 //if (is_note_playing(pitch)) {
                     //if (this->debug) 
-                if (this->debug) Serial.printf("\tGot %i notes of pitch %i to stop on channel %i\t\n", playing_notes[pitch], pitch, default_channel);
+                if (this->debug) Serial_printf("\tGot %i notes of pitch %i to stop on channel %i\t\n", playing_notes[pitch], pitch, default_channel);
                 if(force /*|| is_note_playing(pitch)*/) {
-                    if (this->debug) Serial.printf("\t\tforce, so actually sending...\n");
+                    if (this->debug) Serial_printf("\t\tforce, so actually sending...\n");
                     sendNoteOff(pitch, 0, default_channel);
                 }
                 playing_notes[pitch] = 0;
@@ -279,7 +279,7 @@ class MIDIOutputWrapper_MIDIUSB : public MIDIOutputWrapper {
         }
 
         virtual void actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) override {
-            if (this->debug) Serial.printf("MIDIOutputWrapper_MIDIUSB\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->product(), velocity, channel);
+            if (this->debug) Serial_printf("MIDIOutputWrapper_MIDIUSB\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->product(), velocity, channel);
             output->sendNoteOn(pitch, velocity, channel);
         }
 
@@ -328,7 +328,7 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
         }
 
         virtual void actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) override {
-            if (this->debug) Serial.printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
+            if (this->debug) Serial_printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
             output->sendNoteOn(pitch, velocity, channel);
         }
 
