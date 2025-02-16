@@ -315,8 +315,8 @@ void setup_midi_mapper_matrix_manager() {
     behaviour_midibassproxy->setLowestNote(1*12);
     behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
 
-    // todo: remove after testing
-    midi_matrix_manager->connect(behaviour_progression, "CV Output 1 Auto");
+    // this default connection doesn't actually work, i think because cos its overridden by loading project settings
+    //midi_matrix_manager->connect(behaviour_progression, "CV Output 1 Auto");
 
     // connect default mappings
     #ifdef ENABLE_MAMMB33

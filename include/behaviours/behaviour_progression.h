@@ -41,7 +41,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     int8_t degree = 0;
     //int8_t current_degree = 0;
 
-    bool advance_progression = false;   // todo: set this to true by default
+    bool advance_progression = true;
 
     ChordPlayer *chord_player = new ChordPlayer(
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
@@ -161,6 +161,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             &midi_matrix_manager->global_quantise_on
         ));
 
+        /*
         menuitems->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
         menuitems->add(new NoteHarmonyDisplay(
             (const char*)"CV Output 1 harmony", 
@@ -169,7 +170,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             &behaviour_cvoutput_1->note_tracker,
             &midi_matrix_manager->global_quantise_on
         ));
-   
+        */   
 
         return menuitems;
     }
@@ -186,13 +187,20 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             midi_matrix_manager->set_global_chord_degree(degree);
         } else {
             this->chord_player->stop_chord();
-            Serial.printf("invalid degree %i\n", degree);
+            Serial_printf("invalid degree %i\n", degree);
             //this->chord_player->trigger_off_for_pitch_because_length(-1);
         }
     }
 
     virtual void setup_saveable_parameters() override {
         DeviceBehaviourUltimateBase::setup_saveable_parameters();
+
+        this->saveable_parameters->add(new LSaveableParameter<bool>(
+            "Advance progression",
+            "Progression", 
+            &advance_progression
+        ));
+
         //this->sequencer->setup_saveable_parameters();
 
         // todo: better way of 'nesting' a sequencer/child object's saveableparameters within a host object's
@@ -230,7 +238,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     int8_t get_degree_from_grid(int8_t bar_number) {
         //int8_t retval = -1;
 
-        if (debug) Serial.printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
+        if (debug) Serial_printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
         return grid[bar_number].degree;
 
         /*for (int i = 8 ; i > 0 ; i--) {
@@ -260,17 +268,17 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     void dump_grid() {
         if (!Serial) return;
 
-        Serial.printf("dump_grid:");
+        Serial_printf("dump_grid:");
         //for (int y = 0 ; y < 8 ; y++) {
             //Serial.printf("Grid row %i: [ ", y);
             for (int x = 0 ; x < 8 ; x++) {
                 //Serial.printf("%i ", grid[x].chord_degree);
                 //Serial.printf("%i ", get_cell_colour_for(x, y));
-                Serial.printf("{ %i %i=%5s %i }, ", grid[x].degree, grid[x].type, chords[grid[x].type].label, grid[x].inversion);
+                Serial_printf("{ %i %i=%5s %i }, ", grid[x].degree, grid[x].type, chords[grid[x].type].label, grid[x].inversion);
             }
-            Serial.println("]");
+            Serial_println("]");
         //}
-        Serial.println("------");
+        Serial_println("------");
     }
 
     virtual void on_end_bar(int bar_number) override {
@@ -281,18 +289,18 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             bar_number %= 8;
             //bar_number %= BARS_PER_PHRASE;// * 2;
 
-            if (debug) Serial.printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
+            if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
             if (debug) dump_grid();
 
             int8_t degree = this->get_degree_from_grid(bar_number);
             if (degree>0) {
-                if (debug) Serial.printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
+                if (debug) Serial_printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
                 this->set_degree(degree);
             } else {
                 this->set_degree(-1);
-                if (debug) Serial.printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
+                if (debug) Serial_printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
             }
-            if (debug) Serial.printf("=======\n");
+            if (debug) Serial_printf("=======\n");
         }
 
         this->chord_player->stop_chord();
@@ -313,7 +321,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         byte row = inNumber / APCMINI_DISPLAY_WIDTH;
         byte col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
 
-        Serial.printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
+        Serial_printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
 
         if (current_mode==MODE::DEGREE) {
             int new_degree = row + 1;
@@ -336,13 +344,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         return true;
     }
     virtual bool apcmini_release(int inNumber, bool shifted) {
-        byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
-        byte col = inNumber - (((8-1)-row)*APCMINI_DISPLAY_WIDTH);
+        //byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
+        //byte col = inNumber - (((8-1)-row)*APCMINI_DISPLAY_WIDTH);
         return false;
     }
 
     virtual void requantise_all_notes() override {
-
         bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
         bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
         midi_matrix_manager->global_quantise_on = false;
