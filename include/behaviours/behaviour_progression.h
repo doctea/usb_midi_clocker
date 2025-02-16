@@ -29,6 +29,33 @@ extern MIDIMatrixManager *midi_matrix_manager;
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
 
+    struct song_section_t {
+        chord_identity_t grid[8];
+        virtual void add_section_add_lines(LinkedList<String> *lines) {
+            for (int i = 0 ; i < 8 ; i++) {
+                lines->add(String("grid_")+String(i)+String("_degree=")+String(grid[i].degree));
+                lines->add(String("grid_")+String(i)+String("_type=")+String(grid[i].type));
+                lines->add(String("grid_")+String(i)+String("_inversion=")+String(grid[i].inversion));
+            }
+        };
+        virtual void parse_section_line(String key, String value) {
+            if (key.startsWith("grid_")) {
+                int8_t grid_index = key.substring(5,6).toInt();
+                if (grid_index>=0 && grid_index<8) {
+                    if (key.endsWith("_degree")) {
+                        grid[grid_index].degree = value.toInt();
+                    } else if (key.endsWith("_type")) {
+                        grid[grid_index].type = (CHORD::Type)value.toInt();
+                    } else if (key.endsWith("_inversion")) {
+                        grid[grid_index].inversion = value.toInt();
+                    }
+                }
+            }
+        };
+    };
+
+    song_section_t song_sections[4];
+
     enum MODE {
         DEGREE,
         QUALITY,
@@ -37,11 +64,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     };
 
     MODE current_mode = DEGREE;
-
-    chord_identity_t grid[8];
     chord_identity_t current_chord;
-    //int8_t degree = 0;
-    //int8_t current_degree = 0;
+    int8_t current_section = 0;
 
     bool advance_progression = true;
 
@@ -57,14 +81,14 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         //memset(grid, 0, 64);
         //this->chord_player->debug = true;
-        grid[0].degree = 1;
-        grid[1].degree = 2;
-        grid[2].degree = 5;
-        grid[3].degree = 4;
-        grid[4].degree = 3;
-        grid[5].degree = 2;
-        grid[6].degree = 6;
-        grid[7].degree = 3;
+        song_sections[0].grid[0].degree = 1;
+        song_sections[0].grid[1].degree = 2;
+        song_sections[0].grid[2].degree = 5;
+        song_sections[0].grid[3].degree = 4;
+        song_sections[0].grid[4].degree = 3;
+        song_sections[0].grid[5].degree = 2;
+        song_sections[0].grid[6].degree = 6;
+        song_sections[0].grid[7].degree = 3;
     }
 
     virtual const char *get_label() override {
@@ -172,7 +196,22 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             &behaviour_cvoutput_1->note_tracker,
             &midi_matrix_manager->global_quantise_on
         ));
-        */   
+        */
+        
+        SubMenuItemBar *section_bar = new SubMenuItemBar("Section", false, true);
+        section_bar->add(new LambdaActionConfirmItem(
+            "Load", 
+            [=] () -> void {
+                this->load_section(-1, current_section);
+            }
+        ));
+        section_bar->add(new LambdaActionConfirmItem(
+            "Save", 
+            [=] () -> void {
+                this->save_section(-1, current_section);
+            }
+        ));
+        menuitems->add(section_bar);
 
         return menuitems;
     }
@@ -249,11 +288,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     return APCMINI_OFF;
                 }
             }
-            return grid[x].degree == (8-y);
+            return song_sections[current_section].grid[x].degree == (8-y);
         } else if (current_mode==MODE::QUALITY) {
-            return grid[x].type == (7-y);
+            return song_sections[current_section].grid[x].type == (7-y);
         } else if (current_mode==MODE::INVERSION) {
-            return grid[x].inversion == (7-y);
+            return song_sections[current_section].grid[x].inversion == (7-y);
         }
         return 0;
     }
@@ -267,7 +306,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             for (int x = 0 ; x < 8 ; x++) {
                 //Serial.printf("%i ", grid[x].chord_degree);
                 //Serial.printf("%i ", get_cell_colour_for(x, y));
-                Serial_printf("{ %i %i=%5s %i }, ", grid[x].degree, grid[x].type, chords[grid[x].type].label, grid[x].inversion);
+                Serial_printf("{ %i %i=%5s %i }, ", song_sections[current_section].grid[x].degree, song_sections[current_section].grid[x].type, chords[song_sections[current_section].grid[x].type].label, song_sections[current_section].grid[x].inversion);
             }
             Serial_println("]");
         //}
@@ -297,7 +336,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
             if (debug) dump_grid();
 
-            this->set_current_chord(grid[bar_number]);
+            this->set_current_chord(song_sections[current_section].grid[bar_number]);
 
             // send the chord for the current degree
             if (this->current_chord.valid_chord())
@@ -329,19 +368,19 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (current_mode==MODE::DEGREE) {
                 int new_degree = row + 1;
                 if (new_degree>0 && new_degree<=PITCHES_PER_SCALE) {
-                    grid[col].degree = new_degree;
+                    song_sections[current_section].grid[col].degree = new_degree;
                     return true;
                 }
             } else if (current_mode==MODE::QUALITY) {
                 int new_quality = row;
                 if (new_quality>=0 && new_quality<CHORD::NONE) {
-                    grid[col].type = (CHORD::Type)new_quality;
+                    song_sections[current_section].grid[col].type = (CHORD::Type)new_quality;
                     return true;
                 }
             } else if (current_mode==MODE::INVERSION) {
                 int new_inversion = row;
                 if (new_inversion>=0 && new_inversion<=MAX_INVERSIONS) {
-                    grid[col].inversion = new_inversion;
+                    song_sections[current_section].grid[col].inversion = new_inversion;
                     return true;
                 }
             }
@@ -370,6 +409,79 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
 
         this->chord_player->play_chord(this->current_chord);
+    }
+
+
+    virtual bool save_section(int section_number = -1, int project_number = -1) {
+        if (section_number<0) section_number = current_section;
+        if (project_number<0) project_number = project->current_project_number;
+
+        LinkedList<String> section_lines = LinkedList<String>();
+        section_lines.add(String("current_section=")+String(section_number));
+        if (section_number>=0 && section_number<4) {
+            song_sections[section_number].add_section_add_lines(&section_lines);
+        }
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            File myFile;
+
+            make_project_folders(project_number);
+
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
+            if (debug) Serial.printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, section_number, filename);
+            if (SD.exists(filename)) {
+              //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
+              SD.remove(filename);
+              //Serial.println("deleted"); Serial.flush();
+            }
+
+            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
+            if (!myFile) {    
+              if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+              //if (irqs_enabled) __enable_irq();
+              return false;
+            }
+            if (debug) Serial.println("Starting data write.."); Serial_flush();
+
+            myFile.println(F("; begin section"));
+            for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
+                myFile.println(section_lines.get(i));
+            }
+            myFile.println(F("; end section"));
+            myFile.close();
+
+            messages_log_add(String("Saved to project : section ") + String(project_number) + " : " + String(section_number));
+        }
+        return true;
+    }
+
+    virtual bool load_section(int section_number = -1, int project_number = -1) {
+        if (section_number<0) section_number = current_section;
+        if (project_number<0) project_number = project->current_project_number;
+
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            File myFile;
+
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
+            if (debug) Serial.printf(F("load_section(%i, %i) opening %s\n"), project_number, section_number, filename);
+            myFile = SD.open(filename, FILE_READ);
+            if (!myFile) {
+                if (debug) Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+                return false;
+            }
+            myFile.setTimeout(0);
+
+            String line;
+            while (line = myFile.readStringUntil('\n')) {
+                if (line.startsWith(";")) continue;
+                if (debug) Serial.printf("load_section: parsing line %s\n", line.c_str());
+                song_sections[section_number].parse_section_line(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
+            }
+            myFile.close();
+        }
+
+        return true;
     }
 
 };
