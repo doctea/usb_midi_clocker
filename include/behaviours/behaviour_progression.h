@@ -32,7 +32,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     enum MODE {
         DEGREE,
         QUALITY,
-        INVERSION
+        INVERSION,
+        NUM_MODES
     };
 
     MODE current_mode = DEGREE;
@@ -55,7 +56,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         //memset(grid, 0, 64);
-        this->chord_player->debug = true;
+        //this->chord_player->debug = true;
         grid[0].degree = 1;
         grid[1].degree = 2;
         grid[2].degree = 5;
@@ -239,7 +240,14 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
         if (y==0 || x>=8 || y>=8) return 0;
-        return grid[x].degree == (8-y);
+        if (current_mode==MODE::DEGREE) {
+            return grid[x].degree == (8-y);
+        } else if (current_mode==MODE::QUALITY) {
+            return grid[x].type == (7-y);
+        } else if (current_mode==MODE::INVERSION) {
+            return grid[x].inversion == (7-y);
+        }
+        return 0;
     }
 
     void dump_grid() {
@@ -302,31 +310,41 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {
-        //byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
-        byte row = inNumber / APCMINI_DISPLAY_WIDTH;
-        byte col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
+        if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+            //byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
+            byte row = inNumber / APCMINI_DISPLAY_WIDTH;
+            byte col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
 
-        Serial_printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
+            Serial_printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
+            Serial.flush();
 
-        if (current_mode==MODE::DEGREE) {
-            int new_degree = row + 1;
-            if (new_degree>0 && new_degree<=7) {
-                grid[col].degree = new_degree;
-                return true;
+            if (current_mode==MODE::DEGREE) {
+                int new_degree = row + 1;
+                if (new_degree>0 && new_degree<=7) {
+                    grid[col].degree = new_degree;
+                    return true;
+                }
+            } else if (current_mode==MODE::QUALITY) {
+                int new_quality = row;
+                if (new_quality>=0 && new_quality<CHORD::NONE) {
+                    grid[col].type = (CHORD::Type)new_quality;
+                    return true;
+                }
+            } else if (current_mode==MODE::INVERSION) {
+                int new_inversion = row;
+                if (new_inversion>=0 && new_inversion<=MAX_INVERSIONS) {
+                    grid[col].inversion = new_inversion;
+                    return true;
+                }
             }
-            //grid[col].chord_degree = new_degree;
-            /*if (shifted)
-                grid[col][row]--;
-            else
-                grid[col][row]++;
-
-            if (grid[col][row]>6)
-                grid[col][row] = 0;
-            else if (grid[col][row]<0)
-                grid[col][row] = 6;*/
+        } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber < APCMINI_BUTTON_CLIP_STOP + VirtualBehaviour_Progression::MODE::NUM_MODES) {
+            Serial_printf("apcmini_press(%i, %i) => mode=%i\n", inNumber, shifted, inNumber - APCMINI_BUTTON_CLIP_STOP);
+            Serial.flush();
+            this->current_mode = (VirtualBehaviour_Progression::MODE)(inNumber - APCMINI_BUTTON_CLIP_STOP);
+            return true;
         }
 
-        return true;
+        return false;
     }
     virtual bool apcmini_release(int inNumber, bool shifted) {
         //byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);

@@ -27,6 +27,8 @@ int8_t apc_note_last_sent[MIDI_NUM_NOTES] = {};
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
   if (!behaviour_apcmini->is_connected()) return;
 
+  if (!is_valid_note(pitch)) return;
+
   if (force || value != apc_note_last_sent[pitch]) {
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
 
@@ -246,6 +248,13 @@ void redraw_progressions_row(byte row, bool force) {
   for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
     //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
     apcdisplay_sendNoteOn(start_row+x, get_progression_cell_apc_colour(row,x), 1, force);
+  }
+
+  for (int i = 0 ; i < VirtualBehaviour_Progression::MODE::NUM_MODES ; i++) {
+    apcdisplay_sendNoteOn(
+      APCMINI_BUTTON_CLIP_STOP + i, 
+      behaviour_progression->current_mode==i ? APCMINI_ON : APCMINI_OFF
+    );
   }
 }
 #endif
