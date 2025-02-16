@@ -38,7 +38,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     MODE current_mode = DEGREE;
 
     chord_identity_t grid[8];
-    int8_t degree = 0;
+    chord_identity_t current_chord;
+    //int8_t degree = 0;
     //int8_t current_degree = 0;
 
     bool advance_progression = true;
@@ -137,7 +138,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             [=] (int8_t degree) -> void {
                 this->set_degree(degree);
             },
-            [=] (void) -> int8_t { return this->degree; },
+            [=] (void) -> int8_t { return this->current_chord.degree; },
             nullptr,
             0, 
             7, 
@@ -177,17 +178,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     // degrees should be 1-7; 0 implies no chord, -1 implies 'use global'?
     void set_degree(int8_t degree) {
-        this->degree = degree;
+        this->current_chord.degree = degree;
         if (degree>=-1 && degree<PITCHES_PER_SCALE+1) {
-            /*// get the pitch for this degree in the current scale 
-            int8_t pitch = quantise_get_root_pitch_for_degree(degree);
-            pitch += (3*12);    // add octaves
-            this->chord_player->trigger_on_for_pitch(pitch);
-            */
             midi_matrix_manager->set_global_chord_degree(degree);
         } else {
             this->chord_player->stop_chord();
-            Serial_printf("invalid degree %i\n", degree);
+            //Serial_printf("invalid degree %i\n", degree);
             //this->chord_player->trigger_off_for_pitch_because_length(-1);
         }
     }
@@ -235,30 +231,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         //}
     }*/
 
-    int8_t get_degree_from_grid(int8_t bar_number) {
+    /*int8_t get_degree_from_grid(int8_t bar_number) {
         //int8_t retval = -1;
-
         if (debug) Serial_printf("get_degree_from_grid passed bar_number=%2i\n", bar_number);
         return grid[bar_number].degree;
-
-        /*for (int i = 8 ; i > 0 ; i--) {
-            if (grid[bar_number].chord_degree>0) {
-                return grid[bar_number].chord_degree;
-                int d = 7 - i;
-                d += 1;
-                Serial.printf(
-                    "get_degree_from_grid %2i: Progression starting bar_number=%i: found active degree %i at grid column %i, row %i\n", 
-                    BPM_CURRENT_BAR, 
-                    bar_number, 
-                    d,
-                    bar_number,
-                    i
-                );
-                retval = d;
-            }
-        }*/
-        //return retval;
-    }
+    }*/
 
     virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
         if (y==0 || x>=8 || y>=8) return 0;
@@ -281,6 +258,14 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         Serial_println("------");
     }
 
+    void set_current_chord(chord_identity_t chord) {
+        this->current_chord = chord;
+        if (chord.degree>0)
+            midi_matrix_manager->set_global_chord(current_chord);
+        else
+            this->chord_player->stop_chord();
+    }
+
     virtual void on_end_bar(int bar_number) override {
         this->chord_player->stop_chord();
 
@@ -292,14 +277,18 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
             if (debug) dump_grid();
 
-            int8_t degree = this->get_degree_from_grid(bar_number);
+            this->set_current_chord(grid[bar_number]);
+
+            /*int8_t degree = this->get_degree_from_grid(bar_number);
             if (degree>0) {
                 if (debug) Serial_printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
-                this->set_degree(degree);
+                //this->set_degree(degree);
+                this->set_current_chord(grid[bar_number]);
             } else {
-                this->set_degree(-1);
+                //this->set_degree(-1);
+                this->set_current_chord(grid[bar_number]);
                 if (debug) Serial_printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
-            }
+            }*/
             if (debug) Serial_printf("=======\n");
         }
 
@@ -308,12 +297,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void on_bar(int bar_number) override {
         // send the chord for the current degree
-        if (this->degree>0)
-            this->chord_player->play_chord(
-                quantise_get_root_pitch_for_degree(this->degree), 
-                midi_matrix_manager->get_global_chord_type(), 
-                midi_matrix_manager->get_global_chord_inversion()
-            );
+        if (this->current_chord.valid_chord())
+            this->chord_player->play_chord(this->current_chord);
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {
@@ -358,11 +343,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
         midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
 
-        this->chord_player->play_chord(
-            quantise_get_root_pitch_for_degree(this->degree), 
-            midi_matrix_manager->get_global_chord_type(), 
-            midi_matrix_manager->get_global_chord_inversion()
-        );
+        this->chord_player->play_chord(this->current_chord);
     }
 
 };
