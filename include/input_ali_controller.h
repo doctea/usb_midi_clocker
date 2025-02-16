@@ -104,6 +104,22 @@
     volatile bool held = false;
     uint32_t last_retriggered = 0;  
 
+    uint32_t back_held_at = 0;
+
+    void OnRelease(int key) {
+        //Serial.printf("OnRelease key=%04x\n", key);
+        switch (key) {
+            case KEYPAD_C_4:
+                /*if (back_held_at > 0 && millis() - back_held_at >= LONGPRESS_MILLIS) {
+                    keyboard_queue->push({'-', keyboard1.getModifiers()});
+                    back_held_at = 0;
+                }*/
+                back_held_at = 0;
+                break;
+        }
+        held = false;
+    }
+
     void OnPress(int key) {
         //Serial.printf("OnPress key=%04x\n", key);
 
@@ -129,6 +145,7 @@
                 keyboard_queue->push({KEYD_HASH, keyboard1.getModifiers()});
                 break;
             case KEYPAD_C_4:
+                back_held_at = millis();
                 keyboard_queue->push({KEYD_LEFT, keyboard1.getModifiers()});
                 break;
         }
@@ -197,10 +214,6 @@
     /*void OnRawPress(uint8_t keycode) {
         Serial.printf("OnRawPress with keycode %i (%c), modifiers %i\n", keycode, keycode, keyboard1.getModifiers());
     }*/
-
-    void OnRelease(int key) {
-        held = false;
-    }
 
     /*void OnRawPress(uint8_t keycode) {
         Serial.printf("OnRawPress: %02x\n", keycode);
@@ -336,6 +349,10 @@
 
     void process_key_buffer() {
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            if (back_held_at > 0 && millis() - back_held_at >= LONGPRESS_MILLIS) {
+                keyboard_queue->push({'-', keyboard1.getModifiers()});
+                back_held_at = 0;
+            }
             while (keyboard_queue->isReady()) { // was if
                 keypress_t *current = keyboard_queue->pop();
                 process_key(current->key, current->modifiers);       
