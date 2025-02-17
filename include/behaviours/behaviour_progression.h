@@ -26,19 +26,24 @@
 
 extern MIDIMatrixManager *midi_matrix_manager;
 
+#define NUM_SONG_SECTIONS 4
+
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
 
     struct song_section_t {
         chord_identity_t grid[8];
+        int repeats = 1;    // number of repeats until moving to next section
+        
         virtual void add_section_add_lines(LinkedList<String> *lines) {
+            lines->add(String("repeats=")+String(repeats));
             for (int i = 0 ; i < 8 ; i++) {
                 lines->add(String("grid_")+String(i)+String("_degree=")+String(grid[i].degree));
                 lines->add(String("grid_")+String(i)+String("_type=")+String(grid[i].type));
                 lines->add(String("grid_")+String(i)+String("_inversion=")+String(grid[i].inversion));
             }
         };
-        virtual void parse_section_line(String key, String value) {
+        virtual bool parse_section_line(String key, String value) {
             if (key.startsWith("grid_")) {
                 int8_t grid_index = key.substring(5,6).toInt();
                 if (grid_index>=0 && grid_index<8) {
@@ -50,11 +55,16 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                         grid[grid_index].inversion = value.toInt();
                     }
                 }
+                return true;
+            } else if (key.equals("repeats")) {
+                repeats = value.toInt();
+                return true;
             }
+            return false;
         };
     };
 
-    song_section_t song_sections[4];
+    song_section_t song_sections[NUM_SONG_SECTIONS];
 
     enum MODE {
         DEGREE,
@@ -66,6 +76,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     MODE current_mode = DEGREE;
     chord_identity_t current_chord;
     int8_t current_section = 0;
+    int8_t current_section_plays = 0;
 
     bool advance_progression = true;
 
@@ -198,20 +209,48 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         ));
         */
         
-        SubMenuItemBar *section_bar = new SubMenuItemBar("Section", false, true);
-        section_bar->add(new LambdaActionConfirmItem(
+        SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);
+        section_bar->add(new LambdaNumberControl<int8_t>(
+            "Section", 
+            [=] (int8_t section) -> void {
+                change_section(section);
+            },
+            [=] () -> int8_t { return this->current_section; },
+            nullptr,
+            0, 
+            NUM_SONG_SECTIONS-1, 
+            true, 
+            false
+        ));
+        section_bar->add(new LambdaNumberControl<int8_t>(
+            "Max repeats", 
+            [=] (int8_t repeats) -> void {
+                this->song_sections[current_section].repeats = repeats;
+            },
+            [=] () -> int8_t { return this->song_sections[current_section].repeats; },
+            nullptr,
+            0,
+            8,
+            true,
+            true
+        ));
+        section_bar->add(new NumberControl<int8_t>("Plays", &this->current_section_plays, 0, 8, true, true));
+        menuitems->add(section_bar);
+
+        SubMenuItemBar *save_bar = new SubMenuItemBar("Section", false, true);
+        save_bar->add(new LambdaActionConfirmItem(
             "Load", 
             [=] () -> void {
                 this->load_section(-1, current_section);
             }
         ));
-        section_bar->add(new LambdaActionConfirmItem(
+        save_bar->add(new LambdaActionConfirmItem(
             "Save", 
             [=] () -> void {
                 this->save_section(-1, current_section);
             }
         ));
-        menuitems->add(section_bar);
+        menuitems->add(save_bar);
 
         return menuitems;
     }
@@ -321,10 +360,26 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             this->chord_player->stop_chord();
     }
 
+    virtual void on_end_phrase(uint32_t phrase_number) override {
+        if (debug) Serial_printf("on_end_phrase %2i\n", phrase_number);
+        //if (debug) dump_grid();
+        // todo: this should only move the section on every 2 phrases, not every phrase
+        current_section_plays++;
+        if (current_section_plays >= song_sections[current_section].repeats) {
+            Serial.printf("reached %i of %i plays; changing section from %i to %i\n", current_section_plays, song_sections[current_section].repeats, current_section, current_section+1);
+            current_section_plays = 0;
+            // todo: crashes?!
+            change_section(current_section+1);
+
+            this->chord_player->stop_chord();
+            // trying to start chords here seems to cause intermittent crashes when changing sections..?
+            //if (this->current_chord.is_valid_chord())
+            //    this->chord_player->play_chord(song_sections[current_section].grid[BPM_CURRENT_BAR]);
+        }
+    }
+
     virtual void on_end_bar(int bar_number) override {
         this->chord_player->stop_chord();
-
-        //this->chord_player->stop_chord();
     }
 
     virtual void on_bar(int bar_number) override {
@@ -339,7 +394,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             this->set_current_chord(song_sections[current_section].grid[bar_number]);
 
             // send the chord for the current degree
-            if (this->current_chord.valid_chord())
+            if (this->current_chord.is_valid_chord())
                 this->chord_player->play_chord(this->current_chord);
 
             /*int8_t degree = this->get_degree_from_grid(bar_number);
@@ -411,6 +466,25 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         this->chord_player->play_chord(this->current_chord);
     }
 
+    virtual void change_section(int section_number) {
+        Serial.printf("change_section(%i)\n", section_number); Serial.flush();
+        if (section_number==NUM_SONG_SECTIONS) section_number = 0;
+
+        if (section_number>=0 && section_number<NUM_SONG_SECTIONS) {
+            if (current_section!=section_number) {
+                this->current_section_plays = 0;
+            }
+
+            current_section = section_number;
+            Serial.printf("changing to section %i\n", current_section);
+
+            Serial.printf("stopping chord, etc\n"); Serial.flush();
+            /*this->chord_player->stop_chord();
+            if (this->current_chord.is_valid_chord())
+                this->chord_player->play_chord(song_sections[current_section].grid[BPM_CURRENT_BAR]);*/
+            Serial.printf("done\n"); Serial.flush();
+        }
+    }
 
     virtual bool save_section(int section_number = -1, int project_number = -1) {
         if (section_number<0) section_number = current_section;
@@ -418,7 +492,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
         LinkedList<String> section_lines = LinkedList<String>();
         section_lines.add(String("current_section=")+String(section_number));
-        if (section_number>=0 && section_number<4) {
+        if (section_number>=0 && section_number<NUM_SONG_SECTIONS) {
             song_sections[section_number].add_section_add_lines(&section_lines);
         }
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
