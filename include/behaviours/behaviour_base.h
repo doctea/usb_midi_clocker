@@ -285,6 +285,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     virtual bool parse_project_key_value(String key, String value) {
         return false;
     }
+    // call this when the project changes so behaviour can update its settings
+    virtual void notify_project_changed(int project_number) {
+
+    }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
     virtual void save_pattern_add_lines(LinkedList<String> *lines) {

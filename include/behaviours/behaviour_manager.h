@@ -420,6 +420,13 @@ class DeviceBehaviourManager {
             }
         }
 
+        void notify_behaviours_for_project_change(int8_t project_number) {
+            const unsigned int size = behaviours->size();
+            for (unsigned int i = 0 ; i < size ; i++) {
+                behaviours->get(i)->notify_project_changed(project_number);
+            }
+        }
+
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {

@@ -10,6 +10,7 @@ namespace storage {
   #define FILEPATH_PROJECT_FOLDER_FORMAT    "project%i"
   #define FILEPATH_PATTERN_FORMAT           "project%i/sequences/sequence%i.txt"
   #define FILEPATH_SECTION_FORMAT           "project%i/sections/section%i.txt"
+  #define FILEPATH_PLAYLIST_FORMAT          "project%i/playlist.txt"
   #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
   #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
   #define FILEPATH_CALIBRATION_FORMAT       "calibration_voltage_source_%i.txt"

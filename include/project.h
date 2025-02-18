@@ -126,6 +126,10 @@ class Project {
             return this->load_behaviour_options;
         }
 
+        void notify_behaviours_for_project_change(int8_t project_number) {
+            behaviour_manager->notify_behaviours_for_project_change(project_number);
+        }
+
         void setProjectNumber(int number) {
             if (this->debug) Serial_printf(F("Project#setProjectNumber(%i)...\n"), number);
             //if (this->current_project_number!=number) {
@@ -137,6 +141,7 @@ class Project {
                 this->initialise_loop_slots();
                 #endif
                 this->initialise_pattern_slots();
+                this->notify_behaviours_for_project_change(number);
             //}
         }
         int getProjectNumber() {

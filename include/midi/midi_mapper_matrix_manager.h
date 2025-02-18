@@ -504,6 +504,7 @@ class MIDIMatrixManager {
         lines->add(String("global_scale_type=")+String(get_global_scale_type()));
         lines->add(String("global_scale_root=")+String(get_global_scale_root()));
         lines->add(String("global_quantise_on=")+String(is_global_quantise_on()?"true":"false"));
+        lines->add(String("global_quantise_chord_on=")+String(is_global_quantise_chord_on()?"true":"false"));
     }
 
     bool load_parse_line(String line) {
@@ -537,6 +538,9 @@ class MIDIMatrixManager {
             return true;
         } else if (key.equals("global_quantise_on")) {
             this->set_global_quantise_on(value.equals("true") || value.equals("on") || value.equals("1"));
+            return true;
+        } else if (key.equals("global_quantise_chord_on")) {
+            this->set_global_quantise_chord_on(value.equals("true") || value.equals("on") || value.equals("1"));
             return true;
         }
         return false;

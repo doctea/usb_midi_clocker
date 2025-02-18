@@ -27,16 +27,17 @@
 extern MIDIMatrixManager *midi_matrix_manager;
 
 #define NUM_SONG_SECTIONS 4
+#define NUM_PLAYLIST_SLOTS 8
 
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
 
     struct song_section_t {
         chord_identity_t grid[8];
-        int repeats = 1;    // number of repeats until moving to next section
+        //int repeats = 1;    // number of repeats until moving to next section
         
         virtual void add_section_add_lines(LinkedList<String> *lines) {
-            lines->add(String("repeats=")+String(repeats));
+            //lines->add(String("repeats=")+String(repeats));
             for (int i = 0 ; i < 8 ; i++) {
                 lines->add(String("grid_")+String(i)+String("_degree=")+String(grid[i].degree));
                 lines->add(String("grid_")+String(i)+String("_type=")+String(grid[i].type));
@@ -56,20 +57,62 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     }
                 }
                 return true;
-            } else if (key.equals("repeats")) {
+            } /* else if (key.equals("repeats")) {
                 repeats = value.toInt();
                 return true;
-            }
+            }*/
             return false;
         };
     };
 
     song_section_t song_sections[NUM_SONG_SECTIONS];
 
+    struct playlist_entry_t {
+        int8_t section;
+        int8_t repeats;
+    };
+    struct playlist_t {
+        playlist_entry_t entries[NUM_PLAYLIST_SLOTS] = { 
+            { 0, 2 },
+            { 1, 2 },
+            { 2, 2 },
+            { 3, 2 },
+            { 0, 2 },
+            { 1, 2 },
+            { 2, 2 },
+            { 3, 2 },
+        };
+        virtual void save_project_add_lines(LinkedList<String> *lines) {
+            for (int i = 0 ; i < NUM_PLAYLIST_SLOTS ; i++) {
+                lines->add(String("section_")+String(i)+String("=")+String(entries[i].section));
+                lines->add(String("repeats_")+String(i)+String("=")+String(entries[i].repeats));
+            }
+        };
+        virtual bool parse_key_value(String key, String value) {
+            if (key.startsWith("section_")) {
+                int8_t slot = key.substring(8,9).toInt();
+                if (slot>=0 && slot<NUM_PLAYLIST_SLOTS) {
+                    entries[slot].section = value.toInt();
+                    return true;
+                }
+            } else if (key.startsWith("repeats_")) {
+                int8_t slot = key.substring(8,9).toInt();
+                if (slot>=0 && slot<NUM_PLAYLIST_SLOTS) {
+                    entries[slot].repeats = value.toInt();
+                    return true;
+                }
+            }
+            return false;
+        };
+    };
+    playlist_t playlist;
+    int8_t playlist_position = 0;
+
     enum MODE {
         DEGREE,
         QUALITY,
         INVERSION,
+        PLAYLIST,
         NUM_MODES
     };
 
@@ -78,7 +121,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     int8_t current_section = 0;
     int8_t current_section_plays = 0;
 
-    bool advance_progression = true;
+    bool advance_progression_playlist = true;
+    bool advance_progression_bar = true;
 
     ChordPlayer *chord_player = new ChordPlayer(
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
@@ -169,6 +213,16 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             [=] (int8_t) -> void { chord_player_}
         ));*/
 
+
+        bar->add(new LambdaToggleControl("Advance bar", 
+            [=] (bool v) -> void { this->advance_progression_bar = v; },
+            [=] (void) -> bool { return this->advance_progression_bar; }
+        ));
+        bar->add(new LambdaToggleControl("Advance playlist", 
+            [=] (bool v) -> void { this->advance_progression_playlist = v; },
+            [=] (void) -> bool { return this->advance_progression_playlist; }
+        ));
+
         bar->add(new LambdaNumberControl<int8_t>(
             "Degree", 
             [=] (int8_t degree) -> void {
@@ -180,11 +234,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             7, 
             true, 
             true
-        ));
-
-        bar->add(new LambdaToggleControl("Advance progression", 
-            [=] (bool v) -> void { this->advance_progression = v; },
-            [=] (void) -> bool { return this->advance_progression; }
         ));
 
         menuitems->add(bar);
@@ -211,6 +260,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         
         SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);
         section_bar->add(new LambdaNumberControl<int8_t>(
+            "PlaylistPos", 
+            [=] (int8_t pos) -> void { move_playlist(pos); },
+            [=] () -> int8_t { return this->playlist_position; },
+            nullptr
+        ));
+        section_bar->add(new LambdaNumberControl<int8_t>(
             "Section", 
             [=] (int8_t section) -> void {
                 change_section(section);
@@ -222,7 +277,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             true, 
             false
         ));
-        section_bar->add(new LambdaNumberControl<int8_t>(
+        /*section_bar->add(new LambdaNumberControl<int8_t>(
             "Max repeats", 
             [=] (int8_t repeats) -> void {
                 this->song_sections[current_section].repeats = repeats;
@@ -233,24 +288,31 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             8,
             true,
             true
-        ));
+        ));*/
         section_bar->add(new NumberControl<int8_t>("Plays", &this->current_section_plays, 0, 8, true, true));
         menuitems->add(section_bar);
 
-        SubMenuItemBar *save_bar = new SubMenuItemBar("Section", false, true);
-        save_bar->add(new LambdaActionConfirmItem(
+        SubMenuItemBar *save_section_bar = new SubMenuItemBar("Section", false, true);
+        save_section_bar->add(new LambdaActionConfirmItem(
             "Load", 
-            [=] () -> void {
-                this->load_section(-1, current_section);
-            }
+            [=] () -> void { this->load_section(current_section); }
         ));
-        save_bar->add(new LambdaActionConfirmItem(
+        save_section_bar->add(new LambdaActionConfirmItem(
             "Save", 
-            [=] () -> void {
-                this->save_section(-1, current_section);
-            }
+            [=] () -> void { this->save_section(current_section); }
         ));
-        menuitems->add(save_bar);
+        menuitems->add(save_section_bar);
+
+        SubMenuItemBar *save_playlist_bar = new SubMenuItemBar("Playlist", false, true);
+        save_playlist_bar->add(new LambdaActionConfirmItem(
+            "Load", 
+            [=] () -> void { this->load_playlist(-1); }
+        ));
+        save_playlist_bar->add(new LambdaActionConfirmItem(
+            "Save", 
+            [=] () -> void { this->save_playlist(-1); }
+        ));
+        menuitems->add(save_playlist_bar);
 
         return menuitems;
     }
@@ -273,7 +335,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         this->saveable_parameters->add(new LSaveableParameter<bool>(
             "Advance progression",
             "Progression", 
-            &advance_progression
+            &advance_progression_bar
+        ));
+        this->saveable_parameters->add(new LSaveableParameter<bool>(
+            "Advance playlist",
+            "Progression", 
+            &advance_progression_playlist
         ));
 
         //this->sequencer->setup_saveable_parameters();
@@ -316,26 +383,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         return grid[bar_number].degree;
     }*/
 
-    virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
-        if (/*y==0 ||*/ x>=8 || y>=8) return 0;
-        if (current_mode==MODE::DEGREE) {
-            if (y==0) { // top row
-                if (x==BPM_CURRENT_BAR%8) {
-                    // indicate the current bar
-                    return APCMINI_YELLOW_BLINK;
-                } else {
-                    return APCMINI_OFF;
-                }
-            }
-            return song_sections[current_section].grid[x].degree == (8-y);
-        } else if (current_mode==MODE::QUALITY) {
-            return song_sections[current_section].grid[x].type == (7-y);
-        } else if (current_mode==MODE::INVERSION) {
-            return song_sections[current_section].grid[x].inversion == (7-y);
-        }
-        return 0;
-    }
-
     void dump_grid() {
         if (!Serial) return;
 
@@ -360,21 +407,35 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             this->chord_player->stop_chord();
     }
 
+    void move_next_playlist() {
+        move_playlist(playlist_position+1);
+    }
+    void move_playlist(int8_t pos) {
+        playlist_position = pos;
+        if (playlist_position>=NUM_PLAYLIST_SLOTS) playlist_position = 0;
+        if (playlist_position<0) playlist_position = NUM_PLAYLIST_SLOTS-1;
+        change_section(playlist.entries[playlist_position].section);
+    }
+
     virtual void on_end_phrase(uint32_t phrase_number) override {
         if (debug) Serial_printf("on_end_phrase %2i\n", phrase_number);
         //if (debug) dump_grid();
         // todo: this should only move the section on every 2 phrases, not every phrase
-        current_section_plays++;
-        if (current_section_plays >= song_sections[current_section].repeats) {
-            Serial.printf("reached %i of %i plays; changing section from %i to %i\n", current_section_plays, song_sections[current_section].repeats, current_section, current_section+1);
-            current_section_plays = 0;
-            // todo: crashes?!
-            change_section(current_section+1);
+        if (advance_progression_bar && advance_progression_playlist) {
+            current_section_plays++;
 
-            this->chord_player->stop_chord();
-            // trying to start chords here seems to cause intermittent crashes when changing sections..?
-            //if (this->current_chord.is_valid_chord())
-            //    this->chord_player->play_chord(song_sections[current_section].grid[BPM_CURRENT_BAR]);
+            if (current_section_plays >= playlist.entries[playlist_position].repeats) {
+                Serial_printf("Reached %i of %i plays; changing section from %i to %i\n", current_section_plays, playlist.entries[playlist_position].repeats, current_section, current_section+1);
+                current_section_plays = 0;
+                // todo: crashes?!
+                //change_section(current_section+1);
+                move_next_playlist();
+
+                this->chord_player->stop_chord();
+                // trying to start chords here seems to cause intermittent crashes when changing sections..?
+                //if (this->current_chord.is_valid_chord())
+                //    this->chord_player->play_chord(song_sections[current_section].grid[BPM_CURRENT_BAR]);
+            }
         }
     }
 
@@ -382,40 +443,79 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         this->chord_player->stop_chord();
     }
 
+    virtual void on_restart() override {
+        playlist_position = 0;
+        current_bar = -1;
+    }
+
+    void move_bar(int new_bar) {
+        if (new_bar>=8) {
+            new_bar = 0;
+        }
+        current_bar = new_bar;
+        if (debug) Serial_printf("move_bar(%i)\n", new_bar);
+        this->set_current_chord(song_sections[current_section].grid[current_bar]);
+    }
+
+    int8_t current_bar = 0;
     virtual void on_bar(int bar_number) override {
-        if (advance_progression) {
-            bar_number = BPM_CURRENT_BAR;
-            bar_number %= 8;
+        //if (advance_progression_bar) {
+            //bar_number = BPM_CURRENT_BAR;
+            //bar_number %= 8;
             //bar_number %= BARS_PER_PHRASE;// * 2;
+            if (advance_progression_bar) {
+                move_bar(current_bar+1);
+            }
 
-            if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, bar_number);
+            if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, current_bar);
             if (debug) dump_grid();
-
-            this->set_current_chord(song_sections[current_section].grid[bar_number]);
 
             // send the chord for the current degree
             if (this->current_chord.is_valid_chord())
                 this->chord_player->play_chord(this->current_chord);
 
-            /*int8_t degree = this->get_degree_from_grid(bar_number);
-            if (degree>0) {
-                if (debug) Serial_printf("on_end_bar %2i (going into %i): got degree %i\n", BPM_CURRENT_BAR % 8, bar_number, degree);
-                //this->set_degree(degree);
-                this->set_current_chord(grid[bar_number]);
-            } else {
-                //this->set_degree(-1);
-                this->set_current_chord(grid[bar_number]);
-                if (debug) Serial_printf("on_end_bar %2i (going into %i): no degree found\n", BPM_CURRENT_BAR % 8, bar_number);
-            }*/
             if (debug) Serial_printf("=======\n");
+        //}
+    }
+
+
+
+    virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
+        if (/*y==0 ||*/ x>=8 || y>=8) return 0;
+        if (current_mode==MODE::DEGREE) {
+            if (y==0) { // top row
+                if (x==current_bar) {
+                    // indicate the current bar
+                    return APCMINI_YELLOW_BLINK;
+                } else {
+                    return APCMINI_OFF;
+                }
+            }
+            return song_sections[current_section].grid[x].degree == (8-y);
+        } else if (current_mode==MODE::QUALITY) {
+            return song_sections[current_section].grid[x].type == (7-y);
+        } else if (current_mode==MODE::INVERSION) {
+            return song_sections[current_section].grid[x].inversion == (7-y);
+        } else if (current_mode==MODE::PLAYLIST) {
+            if (playlist.entries[x].section == (7-y)) {
+                if (playlist.entries[x].repeats == 2) {
+                    return APCMINI_GREEN  + (playlist_position==x ? 1 : 0);
+                } else if (playlist.entries[x].repeats == 4) {
+                    return APCMINI_YELLOW + (playlist_position==x ? 1 : 0);
+                } else if (playlist.entries[x].repeats == 8) {
+                    return APCMINI_RED    + (playlist_position==x ? 1 : 0);
+                }
+            }
+            return APCMINI_OFF;
         }
+        return APCMINI_OFF;
     }
 
     virtual bool apcmini_press(int inNumber, bool shifted) {
         if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
             //byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
-            byte row = inNumber / APCMINI_DISPLAY_WIDTH;
-            byte col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
+            int8_t row = inNumber / APCMINI_DISPLAY_WIDTH;
+            int8_t col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
 
             Serial_printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
             Serial.flush();
@@ -438,12 +538,42 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     song_sections[current_section].grid[col].inversion = new_inversion;
                     return true;
                 }
+            } else if (current_mode==MODE::PLAYLIST) {
+                if (row>=NUM_SONG_SECTIONS) {
+                    //playlist.entries[col].section = row;
+                    return false;
+                }
+                if (playlist.entries[col].section==row) {
+                    playlist.entries[col].repeats*=2;
+                    if (playlist.entries[col].repeats>16) playlist.entries[col].repeats = 2;
+                } else {
+                    playlist.entries[col] = { row, playlist.entries[col].repeats };
+                }
+                return true;
             }
         } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber < APCMINI_BUTTON_CLIP_STOP + VirtualBehaviour_Progression::MODE::NUM_MODES) {
             Serial_printf("apcmini_press(%i, %i) => mode=%i\n", inNumber, shifted, inNumber - APCMINI_BUTTON_CLIP_STOP);
             Serial.flush();
             this->current_mode = (VirtualBehaviour_Progression::MODE)(inNumber - APCMINI_BUTTON_CLIP_STOP);
             return true;
+        } else if (inNumber==APCMINI_BUTTON_LEFT || inNumber==APCMINI_BUTTON_RIGHT) {
+            if (current_mode==MODE::DEGREE) {
+                if (inNumber==APCMINI_BUTTON_LEFT) {
+                    current_bar--;
+                    if (current_bar<0) current_bar = 7;
+                } else {
+                    current_bar++;
+                    if (current_bar>=8) current_bar = 0;
+                }
+                return true;
+            } else if (current_mode==MODE::PLAYLIST) {
+                if (inNumber==APCMINI_BUTTON_LEFT) {
+                    move_playlist(playlist_position-1);
+                } else {
+                    move_playlist(playlist_position+1);
+                }
+                return true;
+            }
         }
 
         return false;
@@ -455,15 +585,19 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual void requantise_all_notes() override {
-        bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
-        bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
-        midi_matrix_manager->global_quantise_on = false;
-        midi_matrix_manager->global_quantise_chord_on = false;
-        this->chord_player->stop_chord();
-        midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
-        midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
+        bool already_playing = this->chord_player->is_playing;
 
-        this->chord_player->play_chord(this->current_chord);
+        if (already_playing) {
+            bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
+            bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
+            midi_matrix_manager->global_quantise_on = false;
+            midi_matrix_manager->global_quantise_chord_on = false;
+            this->chord_player->stop_chord();
+            midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
+            midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
+
+            this->chord_player->play_chord(this->current_chord);
+        }
     }
 
     virtual void change_section(int section_number) {
@@ -486,9 +620,80 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         }
     }
 
+    virtual bool save_playlist(int project_number = -1) {
+        if (project_number<0) project_number = project->current_project_number;
+
+        LinkedList<String> section_lines = LinkedList<String>();
+        playlist.save_project_add_lines(&section_lines);
+
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            File myFile;
+
+            make_project_folders(project_number);
+
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
+            if (debug) Serial.printf(F("save_playlist(%i) writing to %s\n"), project_number, filename);
+            if (SD.exists(filename)) {
+              //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
+              SD.remove(filename);
+              //Serial.println("deleted"); Serial.flush();
+            }
+
+            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
+            if (!myFile) {    
+              if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+              //if (irqs_enabled) __enable_irq();
+              return false;
+            }
+            if (debug) Serial.println("Starting data write.."); Serial_flush();
+
+            myFile.println(F("; begin playlist"));
+            for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
+                myFile.println(section_lines.get(i));
+            }
+            myFile.println(F("; end playlist"));
+            myFile.close();
+
+            messages_log_add(String("Saved to project : playlist ") + String(project_number));
+        }
+
+        return true;
+    }
+
+    virtual bool load_playlist(int project_number = -1) {
+        if (project_number<0) project_number = project->getProjectNumber();
+
+        Serial.printf("Progression#load_playlist(%i)\n", project_number);
+
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            File myFile;
+
+            char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
+            if (debug) Serial.printf(F("load_playlist(%i) opening %s\n"), project_number, filename);
+            myFile = SD.open(filename, FILE_READ);
+            if (!myFile) {
+                if (debug) Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+                return false;
+            }
+            myFile.setTimeout(0);
+
+            String line;
+            while (line = myFile.readStringUntil('\n')) {
+                if (line.startsWith(";")) continue;
+                if (debug) Serial.printf("load_playlist: parsing line %s\n", line.c_str());
+                playlist.parse_key_value(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
+            }
+            myFile.close();
+        }
+
+        return true;
+    }
+
     virtual bool save_section(int section_number = -1, int project_number = -1) {
         if (section_number<0) section_number = current_section;
-        if (project_number<0) project_number = project->current_project_number;
+        if (project_number<0) project_number = project->getProjectNumber();
 
         LinkedList<String> section_lines = LinkedList<String>();
         section_lines.add(String("current_section=")+String(section_number));
@@ -529,9 +734,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         return true;
     }
 
+
     virtual bool load_section(int section_number = -1, int project_number = -1) {
         if (section_number<0) section_number = current_section;
-        if (project_number<0) project_number = project->current_project_number;
+        if (project_number<0) project_number = project->getProjectNumber();
+
+        Serial.printf("Progression#load_section(section_number=%i, project_number=%i)\n", section_number, project_number);
+        //debug = true;
 
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             File myFile;
@@ -554,8 +763,17 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             }
             myFile.close();
         }
+        //debug = false;
 
         return true;
+    }
+
+    virtual void notify_project_changed(int project_number) override {
+        // todo: load the playlist and section data for the new project
+        load_playlist(project_number);
+        for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+            load_section(i, project_number);
+        }
     }
 
 };
