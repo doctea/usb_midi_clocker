@@ -19,6 +19,7 @@
 
 #include "mymenu/menuitems_scale.h"
 #include "mymenu/menuitems_notedisplay.h"
+#include "mymenu/menuitems_progression.h"
 
 #include "chord_player.h"
 
@@ -167,6 +168,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual LinkedList<MenuItem*> *make_menu_items() override {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+
+        menu->add_pinned(new ProgressionPinnedMenuItem("Progression"));
 
         //this->sequencer->make_menu_items(menu, true);
         //this->output_processor->create_menu_items(true);
