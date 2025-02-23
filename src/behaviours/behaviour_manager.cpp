@@ -179,7 +179,7 @@ void setup_behaviour_manager() {
         Serial.println(F("about to register behaviour_cvoutput_1...")); Serial_flush();
         behaviour_cvoutput_1 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 1", "CVPO1-", ENABLE_CV_OUTPUT, ENABLE_CV_OUTPUT_EXTENDED_ADDRESS);
         #ifdef ENABLE_CV_OUTPUT_1_GATE
-            behaviour_cvoutput_1->set_gate_outputter(gate_manager, BANK_EXTRA, 0);
+            behaviour_cvoutput_1->set_gate_outputter(gate_manager, ENABLE_CV_OUTPUT_1_GATE_BANK/*BANK_EXTRA*/, ENABLE_CV_OUTPUT_1_GATE_BANK_OFFSET/*0*/);
         #endif
         behaviour_manager->registerBehaviour(behaviour_cvoutput_1);
         Serial.println(F("Finished registering")); Serial_flush();
@@ -189,7 +189,9 @@ void setup_behaviour_manager() {
         Serial.println(F("about to register behaviour_cvoutput_2...")); Serial_flush();
         behaviour_cvoutput_2 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 2", "CVPO2-", ENABLE_CV_OUTPUT_2, ENABLE_CV_OUTPUT_2_EXTENDED_ADDRESS);
         #ifdef ENABLE_CV_OUTPUT_2_GATE
-            behaviour_cvoutput_2->set_gate_outputter(gate_manager, BANK_EXTRA, 4);
+            //behaviour_cvoutput_2->set_gate_outputter(gate_manager, BANK_EXTRA, 4);
+            behaviour_cvoutput_2->set_gate_outputter(gate_manager, ENABLE_CV_OUTPUT_2_GATE_BANK, ENABLE_CV_OUTPUT_2_GATE_BANK_OFFSET);
+            
         #endif
         behaviour_manager->registerBehaviour(behaviour_cvoutput_2);
         Serial.println(F("Finished registering")); Serial_flush();
