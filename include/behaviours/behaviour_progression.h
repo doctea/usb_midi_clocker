@@ -225,20 +225,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             [=] (bool v) -> void { this->advance_progression_playlist = v; },
             [=] (void) -> bool { return this->advance_progression_playlist; }
         ));
-
-        bar->add(new LambdaNumberControl<int8_t>(
-            "Degree", 
-            [=] (int8_t degree) -> void {
-                this->set_degree(degree);
-            },
-            [=] (void) -> int8_t { return this->current_chord.degree; },
-            nullptr,
-            0, 
-            7, 
-            true, 
-            true
-        ));
-
         menuitems->add(bar);
 
         menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
@@ -454,28 +440,33 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     void move_bar(int new_bar) {
         if (new_bar>=8) {
             new_bar = 0;
+        } else if (new_bar<0) {
+            new_bar = 7;
         }
         current_bar = new_bar;
         if (debug) Serial_printf("move_bar(%i)\n", new_bar);
         this->set_current_chord(song_sections[current_section].grid[current_bar]);
+
+        // send the chord for the current degree
+        if (this->current_chord.is_valid_chord())
+            this->chord_player->play_chord(this->current_chord);
     }
 
     int8_t current_bar = 0;
     virtual void on_bar(int bar_number) override {
+        Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, current_bar);
         //if (advance_progression_bar) {
             //bar_number = BPM_CURRENT_BAR;
             //bar_number %= 8;
             //bar_number %= BARS_PER_PHRASE;// * 2;
             if (advance_progression_bar) {
                 move_bar(current_bar+1);
+            } else {
+                move_bar(current_bar);
             }
 
             if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, current_bar);
             if (debug) dump_grid();
-
-            // send the chord for the current degree
-            if (this->current_chord.is_valid_chord())
-                this->chord_player->play_chord(this->current_chord);
 
             if (debug) Serial_printf("=======\n");
         //}
@@ -559,14 +550,18 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             Serial.flush();
             this->current_mode = (VirtualBehaviour_Progression::MODE)(inNumber - APCMINI_BUTTON_CLIP_STOP);
             return true;
+        } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
+            this->advance_progression_bar = !this->advance_progression_bar;
+            return true;
+        } else if (inNumber==APCMINI_BUTTON_UNLABELED_2) {
+            this->advance_progression_playlist = !this->advance_progression_playlist;
+            return true;
         } else if (inNumber==APCMINI_BUTTON_LEFT || inNumber==APCMINI_BUTTON_RIGHT) {
-            if (current_mode==MODE::DEGREE) {
+            if (current_mode==MODE::DEGREE || current_mode==MODE::QUALITY || current_mode==MODE::INVERSION) {
                 if (inNumber==APCMINI_BUTTON_LEFT) {
-                    current_bar--;
-                    if (current_bar<0) current_bar = 7;
+                    move_bar(current_bar-1);
                 } else {
-                    current_bar++;
-                    if (current_bar>=8) current_bar = 0;
+                    move_bar(current_bar+1);
                 }
                 return true;
             } else if (current_mode==MODE::PLAYLIST) {
@@ -604,23 +599,16 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual void change_section(int section_number) {
-        Serial.printf("change_section(%i)\n", section_number); Serial.flush();
-        if (section_number==NUM_SONG_SECTIONS) section_number = 0;
+        //Serial.printf("change_section(%i)\n", section_number); Serial.flush();
+        if (section_number==NUM_SONG_SECTIONS) 
+            section_number = 0;
+        else if (section_number<0) 
+            section_number = NUM_SONG_SECTIONS-1;
 
-        if (section_number>=0 && section_number<NUM_SONG_SECTIONS) {
-            if (current_section!=section_number) {
-                this->current_section_plays = 0;
-            }
+        this->current_section_plays = 0;
+        current_section = section_number;
 
-            current_section = section_number;
-            Serial.printf("changing to section %i\n", current_section);
-
-            Serial.printf("stopping chord, etc\n"); Serial.flush();
-            /*this->chord_player->stop_chord();
-            if (this->current_chord.is_valid_chord())
-                this->chord_player->play_chord(song_sections[current_section].grid[BPM_CURRENT_BAR]);*/
-            Serial.printf("done\n"); Serial.flush();
-        }
+        move_bar(0);
     }
 
     virtual bool save_playlist(int project_number = -1) {

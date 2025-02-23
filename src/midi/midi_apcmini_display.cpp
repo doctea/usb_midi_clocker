@@ -256,6 +256,9 @@ void redraw_progressions_row(byte row, bool force) {
       behaviour_progression->current_mode==i ? APCMINI_ON : APCMINI_OFF
     );
   }
+
+  apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, behaviour_progression->advance_progression_bar ? APCMINI_ON : APCMINI_OFF);
+  apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, behaviour_progression->advance_progression_playlist ? APCMINI_ON : APCMINI_OFF);
 }
 #endif
 
