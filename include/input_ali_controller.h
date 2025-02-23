@@ -141,6 +141,10 @@
                 // trigger 'restart'
                 keyboard_queue->push({'r', keyboard1.getModifiers()});
                 break;
+            case KEYPAD_B_1:
+                // toggle debug mode
+                keyboard_queue->push({'h', keyboard1.getModifiers()});
+                break;
             case KEYPAD_C_3:
                 keyboard_queue->push({KEYD_HASH, keyboard1.getModifiers()});
                 break;
@@ -248,6 +252,9 @@
                 }
                 break;
             #endif
+            case 'h':
+                menu->set_hide_pinned(!menu->get_hide_pinned());
+                break;
             case 'T':
                 debug_stress_sequencer_load = true;
                 break;

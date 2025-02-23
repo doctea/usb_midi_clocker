@@ -18,10 +18,13 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     tft->setCursor(0, y);
 
     // make bar numbers bigger if we're in a scrollable menu
-    if (menu->get_selected_page()->scrollable) 
-        tft->setTextSize(2);
-    else 
-        tft->setTextSize(1);
+    if (menu->expand_pinned_level()>0) {
+        tft->setTextSize(2); //menu->expand_pinned_level());
+    } else {
+        tft->setTextSize(0);
+        tft->println("^^^^^^^^^^^^^^^^^^^^^^^^^");
+        return tft->getCursorY()-12;
+    }
 
     tft->setTextColor(C_WHITE, BLACK);
     
