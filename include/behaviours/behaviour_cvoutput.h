@@ -16,6 +16,8 @@
 
 #include "interfaces/interfaces.h"
 
+#include "submenuitem_bar.h"
+
 extern ParameterManager *parameter_manager;
 
 /*#ifdef ENABLE_SCREEN
@@ -232,6 +234,19 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
                 PolyphonicBehaviour::make_menu_items();
+
+                // make slew controls for the outputs
+                SubMenuItemBar *slew_menu = new SubMenuItemBar("Slew", true, true);
+                for (int i=0; i<channel_count; i++) {
+                    if (outputs[i] != nullptr) {
+                        slew_menu->add(new LambdaToggleControl(
+                            (String("Output ") + String(i+1)).c_str(),
+                            [=](bool v) -> void { outputs[i]->slew_enabled = v; },
+                            [=]() -> bool { return outputs[i]->slew_enabled; }
+                        ));
+                    }
+                }
+                menuitems->add(slew_menu);
 
                 //MIDIBassBehaviour::make_menu_items();
 
