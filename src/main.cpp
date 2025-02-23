@@ -99,6 +99,10 @@ void do_tick(uint32_t ticks);
   #define DEBUG_MAIN_PRINTLN(X) {}
 #endif
 
+// todo: probably move this elsewhere?  maybe into the midihelpers library to be a 'default tapper'?
+#include "taptempo.h"
+TapTempoTracker *tapper = new TapTempoTracker();
+
 #ifndef GDB_DEBUG
 //FLASHMEM 
 #endif
@@ -481,6 +485,11 @@ void loop() {
     behaviour_manager->do_loops();
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_loops()")); Serial_flush(); }
   }
+
+  // do tap tempo update 
+  tapper->clock_tempo_update();
+  if (ticked)
+    tapper->tick(ticks);
 
   #ifdef ENABLE_USB
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
