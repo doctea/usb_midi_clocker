@@ -154,12 +154,12 @@
                 back_held_at = millis();
                 keyboard_queue->push({KEYD_LEFT, keyboard1.getModifiers()});
                 break;
-            case KEYPAD_A_1:
+            case KEYPAD_C_1:
                 tapper->clock_tempo_tap();
                 break;
-            case KEYPAD_A_2:
+            /*case KEYPAD_C_2:
                 tapper->set_continue_locking(!tapper->continue_locking());
-                break;
+                break;*/
         }
 
         return;

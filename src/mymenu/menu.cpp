@@ -269,6 +269,7 @@ void setup_menu_taptempo() {
 
 void setup_menu_midi() {
     menu->add_page("MIDI");
+    menu->remember_opened_page();
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));

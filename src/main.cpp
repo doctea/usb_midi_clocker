@@ -488,8 +488,8 @@ void loop() {
 
   // do tap tempo update 
   tapper->clock_tempo_update();
-  if (ticked)
-    tapper->tick(ticks);
+  //if (ticked)
+  //  tapper->tick(ticks);
 
   #ifdef ENABLE_USB
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
