@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_MIDIBASS_PROXY__INCLUDED
-#define BEHAVIOUR_MIDIBASS_PROXY__INCLUDED
+#pragma once
 
 #include "behaviour_midibass.h"
 
@@ -35,5 +34,3 @@ class MIDIBassBehaviourProxy : virtual public MIDIBassBehaviour {
 };
 
 extern MIDIBassBehaviourProxy *behaviour_midibassproxy;
-
-#endif
