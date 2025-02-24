@@ -173,7 +173,18 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             if (this->saveable_parameters == nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
+            PolyphonicBehaviour::setup_saveable_parameters();
+
             // Add saveable parameters specific to CVOutputBehaviour
+            for (int i = 0 ; i < channel_count; i++) {
+                if (outputs[i] != nullptr) {
+                    this->saveable_parameters->add(new LSaveableParameter<bool>(
+                        (String("Slew ") + String(/*'A'+*/i)).c_str(),
+                        "Slews",
+                        &outputs[i]->slew_enabled
+                    ));
+                }
+            }
         }
 
         virtual bool load_parse_key_value(String key, String value) override {
