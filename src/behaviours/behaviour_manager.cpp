@@ -35,6 +35,7 @@
 #include "behaviours/behaviour_opentheremin.h"
 
 #include "behaviours/behaviour_midibassproxy.h"
+#include "behaviours/behaviour_arpeggiator.h"
 
 #include "behaviours/behaviour_euclidianrhythms.h"
 
@@ -218,6 +219,9 @@ void setup_behaviour_manager() {
 
     behaviour_midibassproxy = new MIDIBassBehaviourProxy();
     behaviour_manager->registerBehaviour(behaviour_midibassproxy);
+
+    behaviour_arpeggiator = new VirtualBehaviour_Arpeggiator();
+    behaviour_manager->registerBehaviour(behaviour_arpeggiator);
 
     #ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
