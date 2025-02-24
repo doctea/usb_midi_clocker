@@ -117,6 +117,15 @@ namespace storage {
       } else {
         //Serial.println(F("exists!\n"));
       }
+
+      snprintf(path, MAX_FILEPATH, "project%i/sections", project_number);
+      //Serial.printf("Checking exists %s..", path);
+      if (!SD.exists(path)) {
+        //Serial.println(F("making!\n"));
+        SD.mkdir(path);
+      } else {
+        //Serial.println(F("exists!\n"));
+      }
     }
   }
 

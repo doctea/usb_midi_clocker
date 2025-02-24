@@ -263,25 +263,71 @@ void setup_menu_transport() {
     }
 #endif
 
+#include "behaviours/behaviour_cvoutput.h"
+#include "mymenu/menuitems_notedisplay.h"
+
 void setup_menu_midi() {
     menu->add_page("MIDI");
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
+
+    // debuggery stuff ...
+    //behaviour_cvoutput_2->debug = true;
+    /*
+    menu->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
+    menu->add(new NoteHarmonyDisplay(
+        (const char*)"CV Output 1 harmony", 
+        &midi_matrix_manager->global_scale_type, 
+        &midi_matrix_manager->global_scale_root, 
+        &behaviour_cvoutput_1->note_tracker,
+        &midi_matrix_manager->global_quantise_on
+    ));
+    menu->add(new HarmonyStatus("CV Output 1 harmony (oldskool)", &behaviour_cvoutput_1->last_transposed_note, &behaviour_cvoutput_1->current_transposed_note));
+    menu->add(new NoteDisplay("CV Output 2 notes", &behaviour_cvoutput_2->note_tracker));
+    menu->add(new NoteHarmonyDisplay(
+        (const char*)"CV Output 2 harmony", 
+        &midi_matrix_manager->global_scale_type, 
+        &midi_matrix_manager->global_scale_root, 
+        &behaviour_cvoutput_2->note_tracker,
+        &midi_matrix_manager->global_quantise_on
+    ));
+    menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
+    */
+
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
         [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
         [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
-        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
+        false, true, true
     );
     global_quantise_bar->add(new LambdaToggleControl("Quantise",
         [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
         [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
     ));
     menu->add(global_quantise_bar);
+
+    LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
+        "Global Chord", 
+        [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
+        [=](CHORD::Type chord_type) -> void { midi_matrix_manager->set_global_chord_type(chord_type); }, 
+        [=]() -> CHORD::Type { return midi_matrix_manager->get_global_chord_type(); },
+        [=](int8_t inversion) -> void { midi_matrix_manager->set_global_chord_inversion(inversion); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_inversion(); },
+        false, true, true
+    );
+    global_chord_bar->add(new LambdaToggleControl("Quantise",
+        [=](bool v) -> void { midi_matrix_manager->set_global_quantise_chord_on(v); },
+        [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
+    ));
+    menu->add(global_chord_bar);
+
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
+
 }
 
 #ifdef ENABLE_SEQUENCER

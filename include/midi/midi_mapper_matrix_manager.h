@@ -12,11 +12,15 @@
 #include "midi_helpers.h"
 #include "midi/midi_looper.h"
 
+#include "Drums.h"
+
 #include "LinkedList.h"
 
 void setup_midi_mapper_matrix_manager();
 
 void behaviour_manager_kill_all_current_notes();
+
+void behaviour_manager_requantise_all_notes();
 
 //#include "behaviours/behaviour_bamble.h"
 
@@ -29,6 +33,8 @@ void behaviour_manager_kill_all_current_notes();
 
 #include "midi/midi_mapper_matrix_types.h"
 
+#include "scales.h"
+
 class MIDITrack;
 class DeviceBehaviourUltimateBase;
 
@@ -38,9 +44,13 @@ class MIDIMatrixManager {
 
     bool debug = false;
 
-    bool    global_quantise_on = false;
+    bool    global_quantise_on = false, global_quantise_chord_on = false;
     int8_t  global_scale_root = SCALE_ROOT_C;
     SCALE   global_scale_type = SCALE::MAJOR;
+    chord_identity_t global_chord_identity = {CHORD::TRIAD, -1, 0};
+    /*int8_t  global_chord_degree = -1;
+    CHORD::Type global_chord_type = CHORD::TRIAD;
+    int8_t global_chord_inversion = 0;*/
 
     // so we wanna do something like:-
     //      for each source
@@ -142,6 +152,7 @@ class MIDIMatrixManager {
             this->get_target_id_for_handle(target_handle)
         );
     }
+
     bool connect(source_id_t source_id, target_id_t target_id) {
         if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
             return false;
@@ -186,45 +197,74 @@ class MIDIMatrixManager {
         return targets[target_id].connection_count;
     }
 
+    // process quantisation
+    /*int8_t quantise_pitch(int8_t pitch) {
+        return ::quantise_pitch_to_scale(pitch);
+    }
+    int8_t quantise_chord(int8_t pitch, int8_t distance_threshold) {
+        return ::quantise_pitch_to_chord(pitch, distance_threshold);
+    }*/
+    int8_t do_quant(int8_t pitch, int8_t channel) {
+        if (channel!=GM_CHANNEL_DRUMS) {
+            if (this->global_quantise_on)       pitch = ::quantise_pitch_to_scale(pitch);
+            if (this->global_quantise_chord_on) pitch = ::quantise_pitch_to_chord(pitch, 3);
+        }
+        return pitch;
+    }
+
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
-        if (!is_valid_note(pitch)) return;
-        if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-        if (!is_valid_note(pitch)) return;
+        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i (%s),\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i)\n"), source_id, this->sources[source_id].handle, pitch, get_note_name_c(pitch), velocity, channel);
 
         if (source_id<0) {
             if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+        if (!is_valid_note(pitch)) { 
+            if (this->debug) Serial_printf("!! midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %s (%i) - ignoring\n", get_note_name_c(pitch), pitch);
+            return;
+        }
+
+        /*if (debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn(source_id=%i,\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i) "), source_id, pitch, get_note_name_c(pitch), velocity, channel);
+        pitch = do_quant(pitch, channel); 
+        if (debug) Serial_printf(F("=> quantised to %i (%s)\n"), pitch, get_note_name_c(pitch));
+        if (!is_valid_note(pitch)) return;*/
 
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(source_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send ON  to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
         }
     }
     void processNoteOff(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
-        if (!is_valid_note(pitch)) {
-            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %i - ignoring\n", pitch);
-            return;
-        }
-        if (this->global_quantise_on) pitch = quantise_pitch(pitch);
-        if (!is_valid_note(pitch)) return;
+        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
 
         if (source_id<0) {
-            if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
+            if (this->debug) Serial_printf(F("\t!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
-        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
+        if (!is_valid_note(pitch)) {
+            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %s (%i) - ignoring\n", get_note_name_c(pitch), pitch);
+            return;
+        }
+
+        /*if (debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i) "), source_id, pitch, get_note_name_c(pitch), velocity, channel);
+        pitch = do_quant(pitch, channel);
+        if (debug) Serial_printf(F("=> quantised to %i (%s)\n"), pitch, get_note_name_c(pitch));*/
+
+        if (!is_valid_note(pitch)) {
+            if (this->debug) Serial_printf("midi_mapper_matrix_manager#processNoteOff() requantised pitch to %s (%i) - so is now invalid - so ignoring!\n", get_note_name_c(pitch), pitch);
+            return;
+        }
 
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug/* || targets[target_id].wrapper->debug || source_id==12*/) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
             }
@@ -311,11 +351,6 @@ class MIDIMatrixManager {
     uint8_t targets_count = 0;
     target_entry targets[MAX_NUM_TARGETS] = {};
 
-    /*target_id_t register_target(DeviceBehaviourUltimateBase *target_behaviour, const char *handle) {
-        target_id_t t = this->register_target(make_midioutputwrapper(handle, target_behaviour));
-        target_behaviour->target_id = t;
-        return t;
-    }*/
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
@@ -332,11 +367,6 @@ class MIDIMatrixManager {
         }
         return NUM_REGISTERED_TARGETS++;
     }
-    /*target_id_t register_target(DeviceBehaviourUltimateBase *target, const char *handle) {
-        Serial_printf("midi_mapper_matrix_manager#register_target(DeviceBehaviour) registering handle '%s'\n", handle);
-        MIDIOutputWrapper_Behaviour wrapper = make_midioutputwrapper(handle, target, )
-        target->target_id = targets_count;
-    }*/
 
     target_id_t get_target_id_for_handle(const char *handle) {
         //Serial_printf(F("get_target_id_for_handle(%s)\n"), handle);
@@ -368,36 +398,96 @@ class MIDIMatrixManager {
         return -1;
     }
 
-    int8_t get_global_scale_root() {
-        return this->global_scale_root;
-    }
-    void set_global_scale_root(int8_t scale_root) {
-        if (scale_root!=global_scale_root) {
-            // force note off for anything currently playing, in theory so that notes don't get stuck on...
-            // but in fact, we may prefer to change things around so that all quantisation is done inside midi_mapper_matrix_manager, 
-            // instead of in the behaviour or wrapper..?
-            //this->stop_all_notes();
-            behaviour_manager_kill_all_current_notes();
-        }
-        this->global_scale_root = scale_root;
-    }
-    SCALE get_global_scale_type() {
-        return this->global_scale_type;
-    }
-    void set_global_scale_type(SCALE scale_type) {
-        if (scale_type!=global_scale_type) {
-            // force note off for anything currently playing, so that notes don't get stuck on
-            //this->stop_all_notes();
-            behaviour_manager_kill_all_current_notes();
-        }
-        this->global_scale_type = scale_type;
-    }
-    void set_global_quantise_on(bool v) {
+    /////// scale and quantisation functions
+    // getters & setters for quantisation on/offs
+    void set_global_quantise_on(bool v, bool requantise_immediately = true) {
+        bool changed = v != this->global_quantise_on;
         this->global_quantise_on = v;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
     }
     bool is_global_quantise_on() {
         return this->global_quantise_on;
     }
+
+    void set_global_quantise_chord_on(bool v, bool requantise_immediately = true) {
+        bool changed = v != this->global_quantise_chord_on;
+        this->global_quantise_chord_on = v;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+    }
+    bool is_global_quantise_chord_on() {
+        return this->global_quantise_chord_on;
+    }
+
+    // getters & setters for global scale + global chord settings
+    chord_identity_t get_global_chord() {
+        return chord_identity_t {
+            this->global_chord_identity.type,
+            this->global_chord_identity.degree,
+            this->global_chord_identity.inversion
+        };
+    }
+    void set_global_chord(chord_identity_t chord, bool requantise_immediately = true) {
+        bool changed = chord.diff(this->global_chord_identity);
+        this->global_chord_identity = chord;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+    }
+
+    int8_t get_global_scale_root() {
+        return this->global_scale_root;
+    }
+    void set_global_scale_root(int8_t scale_root, bool requantise_immediately = true) {
+        bool changed = scale_root!=global_scale_root;
+        if (changed && debug) {
+            Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
+            Serial_printf("Current scale:\t");
+            print_scale(global_scale_root, global_scale_type);
+            Serial_printf("New scale:\t");
+            print_scale(scale_root, global_scale_type);
+        }
+        this->global_scale_root = scale_root;
+        if (changed && requantise_immediately) {
+            behaviour_manager_requantise_all_notes();
+            if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
+        }
+    }
+
+    SCALE get_global_scale_type() {
+        return this->global_scale_type;
+    }
+    void set_global_scale_type(SCALE scale_type, bool requantise_immediately = true) {
+        bool changed = scale_type!=global_scale_type;
+        this->global_scale_type = scale_type;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+    }
+
+    int8_t get_global_chord_degree() {
+        return this->global_chord_identity.degree;
+    }
+    void set_global_chord_degree(int8_t degree, bool requantise_immediately = true) {
+        bool changed = degree != get_global_chord_degree();
+        this->global_chord_identity.degree = degree;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+    }
+
+    CHORD::Type get_global_chord_type() {
+        return this->global_chord_identity.type;
+    }
+    void set_global_chord_type(CHORD::Type chord_type, bool requantise_immediately = true) {
+        bool changed = chord_type != get_global_chord_type();
+        this->global_chord_identity.type = chord_type;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+    }
+
+    int8_t get_global_chord_inversion() {
+        return this->global_chord_identity.inversion;
+    }
+    void set_global_chord_inversion(int8_t inversion, bool requantise_immediately = true) {
+        bool changed = inversion != get_global_chord_inversion();
+        this->global_chord_identity.inversion = inversion;
+        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+    }
+
+    ////////// save and load 
     void save_project_add_lines(LinkedList<String> *lines) {
         for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
             for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
@@ -414,6 +504,7 @@ class MIDIMatrixManager {
         lines->add(String("global_scale_type=")+String(get_global_scale_type()));
         lines->add(String("global_scale_root=")+String(get_global_scale_root()));
         lines->add(String("global_quantise_on=")+String(is_global_quantise_on()?"true":"false"));
+        lines->add(String("global_quantise_chord_on=")+String(is_global_quantise_chord_on()?"true":"false"));
     }
 
     bool load_parse_line(String line) {
@@ -448,6 +539,9 @@ class MIDIMatrixManager {
         } else if (key.equals("global_quantise_on")) {
             this->set_global_quantise_on(value.equals("true") || value.equals("on") || value.equals("1"));
             return true;
+        } else if (key.equals("global_quantise_chord_on")) {
+            this->set_global_quantise_chord_on(value.equals("true") || value.equals("on") || value.equals("1"));
+            return true;
         }
         return false;
     }
@@ -464,6 +558,7 @@ class MIDIMatrixManager {
 
             set_global_scale_root_target(&this->global_scale_root);
             set_global_scale_type_target(&this->global_scale_type);
+            set_global_chord_identity_target(&this->global_chord_identity);
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

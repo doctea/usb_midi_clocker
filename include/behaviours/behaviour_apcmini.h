@@ -96,6 +96,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                         redraw_immediately = false;
                     }
                     last_processed_tick = ticks;
+
                 }
             #endif
             //Serial.println(F("finished apcmini_loop"));
@@ -233,6 +234,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             return false;
         }
 
+        #ifdef ENABLE_APCMINI_PADS
         bool process_note_on_pads_page(byte inChannel, byte inNumber, byte inVelocity) {
             if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
                 // process drum pad
@@ -271,6 +273,12 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             }
             return false;
         }
+        #endif
+        
+        #ifdef ENABLE_APCMINI_PROGRESSIONS
+            bool process_note_on_progressions_page(byte inChannel, byte inNumber, byte inVelocity);
+            bool process_note_off_progressions_page(byte inChannel, byte inNumber, byte inVelocity);
+        #endif
 
         /*bool process_note_on_defaults(byte inChannel, byte inNumber, byte inVelocity) {
             return false;
@@ -288,9 +296,17 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             } else if (get_apc_gate_page()==PATTERNS && process_note_on_patterns_page(inChannel, inNumber, inVelocity)) {
                 // on PATTERNS page and processed value
                 return;
+            #ifdef ENABLE_APCMINI_PADS
             } else if (get_apc_gate_page()==PADS && process_note_on_pads_page(inChannel, inNumber, inVelocity)) {
                 return;
-            } /* else {
+            #endif
+            #ifdef ENABLE_APCMINI_PROGRESSIONS
+            } else if (get_apc_gate_page()==PROGRESSIONS && process_note_on_progressions_page(inChannel, inNumber, inVelocity)) {
+                // process progression page
+                return;   
+            #endif
+            } 
+            /* else {
                 process_note_on_defaults(inChannel, inNumber, inVelocity);
             }*/
 
@@ -330,7 +346,11 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 set_apc_gate_page(PATTERNS);
             } else if (inNumber==APCMINI_BUTTON_DEVICE) {
                 apcmini_clear_display(false);
-                set_apc_gate_page(PADS);
+                #ifdef ENABLE_APCMINI_PADS
+                    set_apc_gate_page(PADS);
+                #elif defined(ENABLE_APCMINI_PROGRESSIONS)
+                    set_apc_gate_page(PROGRESSIONS);
+                #endif
             } else if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = true;
                 /*  } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
@@ -372,9 +392,12 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             if (inNumber==APCMINI_BUTTON_SHIFT) {
                 apcmini_shift_held = false;
             }
-            if (get_apc_gate_page()==PADS && process_note_off_pads_page(inChannel, inNumber, inVelocity)) {
-                return;
-            }
+
+            #ifdef ENABLE_APCMINI_PADS
+                if (get_apc_gate_page()==PADS && process_note_off_pads_page(inChannel, inNumber, inVelocity)) {
+                    return;
+                }
+            #endif
         }
 
         virtual void receive_control_change(uint8_t channel, uint8_t number, uint8_t value) override {

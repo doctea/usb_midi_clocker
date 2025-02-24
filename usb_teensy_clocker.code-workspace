@@ -46,7 +46,10 @@
 			"exception": "cpp",
 			"new": "cpp",
 			"stdexcept": "cpp",
-			"iostream": "cpp"
+			"iostream": "cpp",
+			"cinttypes": "cpp",
+			"cmath": "cpp",
+			"cstdlib": "cpp"
 		}
 	}
 }

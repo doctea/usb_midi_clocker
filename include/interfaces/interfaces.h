@@ -9,9 +9,16 @@
 
 #include "debug.h"
 
-#define BANK_CLOCK  0
-#define BANK_SEQ    1
-#define NUM_GATE_BANKS 2    // clock and seq
+#include "midi_helpers.h"
+
+enum GATEBANKS {
+    BANK_CLOCK,
+    BANK_SEQ,
+    #if defined(ENABLE_CV_OUTPUT_1_GATE) || defined(ENABLE_CV_OUTPUT_2_GATE) || defined(ENABLE_CV_OUTPUT_3_GATE)
+        BANK_EXTRA,
+    #endif
+    NUM_GATE_BANKS
+};
 
 class BankInterface {
     public:
@@ -148,7 +155,7 @@ class DigitalPinBankInterface : public BankInterface {
     class MenuItem;
 #endif
 
-class GateManager {
+class GateManager : virtual public IGateTarget {
     public:
     uint_least8_t num_banks = 0;
 
@@ -168,13 +175,13 @@ class GateManager {
         num_banks++;    // TODO: handle more than 2 banks...!!
     }
 
-    void send_gate_on(int bank, int gate) {
+    /*void send_gate_on(int8_t bank, int8_t gate) override {
         this->send_gate(bank, gate, true);
     }
-    void send_gate_off(int bank, int gate) {
+    void send_gate_off(int8_t bank, int8_t gate) override {
         this->send_gate(bank, gate, false);
-    }
-    void send_gate(int bank, int gate, bool state) {
+    }*/
+    virtual void send_gate(int8_t bank, int8_t gate, bool state) {
         if (bank>=num_banks) {
             messages_log_add(String("Attempted to send to invalid bank ") + String(bank) + String(" : ") + String(gate));            
             return;            

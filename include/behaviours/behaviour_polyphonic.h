@@ -48,18 +48,20 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
         if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(-1);
-            if (note_slot>=0) { // find empty slot to use
+            if (NOTE_OFF==this->find_slot_for(note) && note_slot>=0) { // find empty slot to use
                 this->sendNoteOn(note, velocity, note_slot+1);
+                this->current_channel = channel;
             }
         } else {
             // assign to given channel/pass through
-            if (voices[channel-1]!=note)
+            if (voices[channel-1]!=note) {
                 this->sendNoteOff(note, 0, channel);
-            voices[channel-1] = note;
-            //DeviceBehaviourSerialBase::sendNoteOn(note, velocity, channel);
-            //ConcreteClass::sendNoteOn(note, velocity, channel);
-            DeviceBehaviourUltimateBase::sendNoteOn(note, velocity, channel);
-            //this->concrete_class->sendNoteOn(note, velocity, channel);
+                voices[channel-1] = note;
+                //DeviceBehaviourSerialBase::sendNoteOn(note, velocity, channel);
+                //ConcreteClass::sendNoteOn(note, velocity, channel);
+                DeviceBehaviourUltimateBase::sendNoteOn(note, velocity, channel);
+                //this->concrete_class->sendNoteOn(note, velocity, channel);
+            }
         }
     }
 
@@ -68,8 +70,9 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
         if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(note);
-            if (note_slot>=0) {
+            while (note_slot>=0) {
                 this->sendNoteOff(note, velocity, note_slot+1);
+                note_slot = this->find_slot_for(note);
             } /*else {
                 Serial.printf("MV4 auto: didn't find note %i at all?!!\n", note);
             }*/

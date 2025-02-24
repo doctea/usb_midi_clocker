@@ -35,8 +35,11 @@
 #include "behaviours/behaviour_opentheremin.h"
 
 #include "behaviours/behaviour_midibassproxy.h"
+#include "behaviours/behaviour_arpeggiator.h"
 
 #include "behaviours/behaviour_euclidianrhythms.h"
+
+#include "behaviours/behaviour_progression.h"
 
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
@@ -51,15 +54,29 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
 // convenience function
 void behaviour_manager_kill_all_current_notes () {
     behaviour_manager->kill_all_current_notes();
+    Serial.printf("!!!! behaviour_manager_kill_all_current_notes\n");
+}
+
+void behaviour_manager_requantise_all_notes() {
+    behaviour_manager->requantise_all_notes();
+    Serial.printf("!!!! behaviour_manager_requantise_all_notes\n");
 }
 
 //FLASHMEM
 void setup_behaviour_manager() {
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
+    #ifdef ENABLE_PROGRESSION
+        behaviour_progression = new VirtualBehaviour_Progression();
+        behaviour_manager->registerBehaviour(behaviour_progression);
+    #endif
+
     #ifdef ENABLE_CLOCKS
         behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);
         behaviour_manager->registerBehaviour(behaviour_clock_gates);
+
+        //VirtualBehaviour_ClockGates *behaviour_clock_gates_2 = new VirtualBehaviour_ClockGates(gate_manager, BANK_EXTRA);
+        //behaviour_manager->registerBehaviour(behaviour_clock_gates_2);
     #endif
     #ifdef ENABLE_SEQUENCER
         behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
@@ -161,21 +178,31 @@ void setup_behaviour_manager() {
 
     #if defined(ENABLE_CV_OUTPUT)
         Serial.println(F("about to register behaviour_cvoutput_1...")); Serial_flush();
-        behaviour_cvoutput_1 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 1", "CVPO1-", ENABLE_CV_OUTPUT, ENABLE_CV_OUTPUT_BANK);
+        behaviour_cvoutput_1 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 1", "CVPO1-", ENABLE_CV_OUTPUT, ENABLE_CV_OUTPUT_EXTENDED_ADDRESS);
+        #ifdef ENABLE_CV_OUTPUT_1_GATE
+            behaviour_cvoutput_1->set_gate_outputter(gate_manager, BANK_EXTRA, 0);
+        #endif
         behaviour_manager->registerBehaviour(behaviour_cvoutput_1);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #if defined(ENABLE_CV_OUTPUT_2)
         Serial.println(F("about to register behaviour_cvoutput_2...")); Serial_flush();
-        behaviour_cvoutput_2 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 2", "CVPO2-", ENABLE_CV_OUTPUT_2, ENABLE_CV_OUTPUT_2_BANK);
+        behaviour_cvoutput_2 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 2", "CVPO2-", ENABLE_CV_OUTPUT_2, ENABLE_CV_OUTPUT_2_EXTENDED_ADDRESS);
+        #ifdef ENABLE_CV_OUTPUT_2_GATE
+            behaviour_cvoutput_2->set_gate_outputter(gate_manager, BANK_EXTRA, 4);
+        #endif
         behaviour_manager->registerBehaviour(behaviour_cvoutput_2);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
 
     #if defined(ENABLE_CV_OUTPUT_3)
         Serial.println(F("about to register behaviour_cvoutput_3...")); Serial_flush();
-        behaviour_cvoutput_3 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 3", "CVPO3-", ENABLE_CV_OUTPUT_3, ENABLE_CV_OUTPUT_3_BANK);
+        behaviour_cvoutput_3 = new DeviceBehaviour_CVOutput<DAC8574>("CV Pitch Output 3", "CVPO3-", ENABLE_CV_OUTPUT_3, ENABLE_CV_OUTPUT_3_EXTENDED_ADDRESS);
+        #ifdef ENABLE_CV_OUTPUT_2_GATE
+            // todo: make this a separate bank?
+            behaviour_cvoutput_2->set_gate_outputter(gate_manager, BANK_EXTRA, 8);
+        #endif
         behaviour_manager->registerBehaviour(behaviour_cvoutput_3);
         Serial.println(F("Finished registering")); Serial_flush();
     #endif
@@ -192,6 +219,9 @@ void setup_behaviour_manager() {
 
     behaviour_midibassproxy = new MIDIBassBehaviourProxy();
     behaviour_manager->registerBehaviour(behaviour_midibassproxy);
+
+    behaviour_arpeggiator = new VirtualBehaviour_Arpeggiator();
+    behaviour_manager->registerBehaviour(behaviour_arpeggiator);
 
     #ifdef ENABLE_CRAFTSYNTH_USB
         Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();

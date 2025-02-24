@@ -27,6 +27,8 @@ int8_t apc_note_last_sent[MIDI_NUM_NOTES] = {};
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
   if (!behaviour_apcmini->is_connected()) return;
 
+  if (!is_valid_note(pitch)) return;
+
   if (force || value != apc_note_last_sent[pitch]) {
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
 
@@ -213,6 +215,7 @@ void redraw_patterns_row(byte row, bool force) {
   }
 }
 
+#ifdef ENABLE_ACPMINI_PADS
 void redraw_pads_row(byte row, bool force) {
   if (behaviour_apcmini->device==nullptr) return;
 
@@ -228,6 +231,33 @@ void redraw_pads_row(byte row, bool force) {
     }
   }
 }
+#endif
+
+#ifdef ENABLE_APCMINI_PROGRESSIONS
+
+#include "behaviours/behaviour_progression.h"
+
+int get_progression_cell_apc_colour(byte row, byte column) {
+  return behaviour_progression->get_cell_colour_for(column,row); //grid[column][row];
+}
+
+void redraw_progressions_row(byte row, bool force) {
+  if (behaviour_apcmini->device==nullptr) return;
+
+  int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
+  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+    //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
+    apcdisplay_sendNoteOn(start_row+x, get_progression_cell_apc_colour(row,x), 1, force);
+  }
+
+  for (int i = 0 ; i < VirtualBehaviour_Progression::MODE::NUM_MODES ; i++) {
+    apcdisplay_sendNoteOn(
+      APCMINI_BUTTON_CLIP_STOP + i, 
+      behaviour_progression->current_mode==i ? APCMINI_ON : APCMINI_OFF
+    );
+  }
+}
+#endif
 
 #ifdef ENABLE_APCMINI_DISPLAY
   void apcmini_clear_display(bool force) {
@@ -291,8 +321,14 @@ void redraw_pads_row(byte row, bool force) {
         redraw_sequence_row(row_to_draw);
       else if (get_apc_gate_page()==PATTERNS)
         redraw_patterns_row(row_to_draw);
+      #ifdef ENABLE_APCMINI_PADS
       else if (get_apc_gate_page()==PADS)
         redraw_pads_row(row_to_draw);
+      #endif
+      #ifdef ENABLE_APCMINI_PROGRESSIONS
+      else if (get_apc_gate_page()==PROGRESSIONS)
+        redraw_progressions_row(row_to_draw);
+      #endif
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;

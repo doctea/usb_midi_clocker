@@ -573,19 +573,20 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
-  gate_manager->update(); 
-
   #ifdef ENABLE_LOOPER
     midi_loop_track.process_tick(ticks);
   #endif
 
   // drone / machinegun works when do_end_bar here !
   // do this after everything else because of problems with machinegun mode..?
-  if (is_bpm_on_bar(ticks+1)) {
-    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (is_bpm_on_phrase(ticks+1)) {
-      behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
-    }
+  if (is_bpm_on_beat(ticks+1)) {
+    behaviour_manager->do_end_beat(BPM_CURRENT_BEAT);
+    if (is_bpm_on_bar(ticks+1)) {
+      behaviour_manager->do_end_bar(restart_on_next_bar ? -1 : BPM_CURRENT_BAR_OF_PHRASE);
+      if (is_bpm_on_phrase(ticks+1)) {
+        behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+      }
+    } 
   }
 
   #ifdef ENABLE_DRUM_LOOPER
@@ -595,6 +596,8 @@ void do_tick(uint32_t in_ticks) {
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
   behaviour_manager->send_clocks();
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+
+  gate_manager->update(); 
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 

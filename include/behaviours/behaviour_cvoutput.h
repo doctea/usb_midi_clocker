@@ -10,10 +10,11 @@
 #include "parameters/CVOutputParameter.h"
 #include "ParameterManager.h"
 
-
 #include "behaviours/behaviour_polyphonic.h"
 
 #include "Wire.h"
+
+#include "interfaces/interfaces.h"
 
 extern ParameterManager *parameter_manager;
 
@@ -35,12 +36,15 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
         const char *parameter_label_prefix = "CVO-";
 
-        DeviceBehaviour_CVOutput(const char *label = nullptr, const char *parameter_label_prefix = "CVO-", uint8_t address = ENABLE_CV_OUTPUT, uint8_t bank = ENABLE_CV_OUTPUT_BANK, TwoWire *wire = &Wire) 
+        GateManager *gate_manager = nullptr;
+        int8_t gate_bank = -1, gate_offset = 0;
+
+        DeviceBehaviour_CVOutput(const char *label = nullptr, const char *parameter_label_prefix = "CVO-", uint8_t address = ENABLE_CV_OUTPUT, uint8_t dac_extended_address = ENABLE_CV_OUTPUT_EXTENDED_ADDRESS, TwoWire *wire = &Wire) 
             : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = new DACClass(address, wire);
-            this->dac_output->setExtendedAddress(bank);
+            this->dac_output->setExtendedAddress(dac_extended_address);
 
             this->parameter_label_prefix = parameter_label_prefix;
             //this->debug = true;
@@ -53,6 +57,15 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             this->dac_output = dac_output;
             //this->debug = true;
             this->init();
+        }
+
+        virtual void set_gate_outputter(GateManager *gate_manager, int8_t gate_bank = 0, int8_t gate_offset = 0) {
+            this->gate_manager = gate_manager;
+            this->gate_bank = gate_bank;
+            this->gate_offset = gate_offset;
+            for (int i=0; i<channel_count; i++) {
+                if (outputs[i] != nullptr) outputs[i]->set_gate_outputter(gate_manager, gate_bank, gate_offset + i);
+            }
         }
 
         virtual void set_calibration_parameter_input(int channel, VoltageParameterInput *input) {
@@ -118,20 +131,20 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         }
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actual_sendNoteOn(%i, %i, %i)\n", note, velocity, channel);
+            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOn (%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
             if (channel > channel_count) {
                 // this shouldn't happen?
-                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actual_sendNoteOn(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
+                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOn (%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
                 if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOn(note, velocity, channel);
             }
         }
 
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
-            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actual_sendNoteOff(%i, %i, %i)\n", note, velocity, channel);
+            if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOff(%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
             if (channel > channel_count) {
                 // this shouldn't happen?
-                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actual_sendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
+                Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
                 if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOff(note, velocity, channel);
             }

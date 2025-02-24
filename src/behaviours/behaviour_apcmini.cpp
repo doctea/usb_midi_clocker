@@ -49,5 +49,23 @@ void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
 
 #endif
 
+#ifdef ENABLE_APCMINI_PROGRESSIONS
+    #include "behaviours/behaviour_progression.h"
+
+    bool DeviceBehaviour_APCMini::process_note_on_progressions_page(byte inChannel, byte inNumber, byte inVelocity) {
+        //Serial.printf("process_note_on_progressions_page(%i, %i, %i)\n", inChannel, inNumber, inVelocity);
+        return behaviour_progression->apcmini_press(inNumber, apcmini_shift_held);
+        //if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+        //}
+        //return false;
+    }
+
+    bool DeviceBehaviour_APCMini::process_note_off_progressions_page(byte inChannel, byte inNumber, byte inVelocity) {
+        return behaviour_progression->apcmini_release(inNumber, apcmini_shift_held);
+        //if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
+        //}
+        //return false;
+    }
+#endif
 
 #endif
