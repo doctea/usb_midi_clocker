@@ -22,12 +22,12 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
 
     virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //if (this->debug) 
-        Serial.printf("%s#actualSendNoteOn(%i, %i, %i) (calling receive_note_on!)\n", this->get_label(), note, velocity, channel);
+        //Serial.printf("%s#actualSendNoteOn(%i, %i, %i) (calling receive_note_on!)\n", this->get_label(), note, velocity, channel);
         //this->receive_note_on(channel, note, velocity);
     }
     virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //if (this->debug) 
-        Serial.printf("%s#actualSendNoteOff(%i, %i, %i)  (calling receive_note_off!)\n", this->get_label(), note, velocity, channel);
+        //Serial.printf("%s#actualSendNoteOff(%i, %i, %i)  (calling receive_note_off!)\n", this->get_label(), note, velocity, channel);
         //this->receive_note_off(channel, note, velocity);
     }
     /*virtual void actualSendControlChange(uint8_t cc, uint8_t value, uint8_t channel) override {
@@ -50,23 +50,23 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
     int8_t current_note = NOTE_OFF;
     virtual void on_tick(uint32_t ticks) {
         if (is_bpm_on_beat(ticks)) {
-            Serial.println("Arpeggiator#on_tick: on beat");
+            if (debug) Serial.println("Arpeggiator#on_tick: on beat");
             // do the arpeggiation
             int8_t note = note_tracker.get_held_note_index(current_index);
             if (is_valid_note(note)) {
                 current_index++;
-                Serial.printf("Arpeggiator#on_tick: note is valid - playing %i (%s)\n", note, get_note_name_c(note));
+                if (debug) Serial.printf("Arpeggiator#on_tick: note is valid - playing %i (%s)\n", note, get_note_name_c(note));
                 //this->sendNoteOn(note, MIDI_MAX_VELOCITY, 1);
-                midi_matrix_manager->processNoteOn(this->source_id, note, MIDI_MAX_VELOCITY, 1);
+                midi_matrix_manager->processNoteOn(this->source_id, note, MIDI_MAX_VELOCITY, 0);
                 current_note = note;
             }
         } else if (is_bpm_on_beat(ticks, PPQN/2)) {
-            Serial.println("Arpeggiator#on_tick: on off-beat - stopping note");
+            if (debug) Serial.println("Arpeggiator#on_tick: on off-beat - stopping note");
             //this->actualSendNoteOn(62, 127, 1);
             //this->actualSendNoteOff(62, 127, 1);
             if (is_valid_note(current_note)) {
                 //this->sendNoteOff(current_note, 0, 1);
-                midi_matrix_manager->processNoteOff(this->source_id, current_note, MIDI_MAX_VELOCITY, 1);
+                midi_matrix_manager->processNoteOff(this->source_id, current_note, MIDI_MAX_VELOCITY, 0);
                 current_note = NOTE_OFF;
             }
         }

@@ -454,7 +454,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     int8_t current_bar = 0;
     virtual void on_bar(int bar_number) override {
-        Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, current_bar);
+        if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, current_bar);
         //if (advance_progression_bar) {
             //bar_number = BPM_CURRENT_BAR;
             //bar_number %= 8;
@@ -567,8 +567,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             } else if (current_mode==MODE::PLAYLIST) {
                 if (inNumber==APCMINI_BUTTON_LEFT) {
                     move_playlist(playlist_position-1);
+                    //move_bar(0);
                 } else {
                     move_playlist(playlist_position+1);
+                    //move_bar(0);
                 }
                 return true;
             }
@@ -598,6 +600,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         }
     }
 
+    // changes section, but leaves reseting the bar to the caller to deal with (or not)
     virtual void change_section(int section_number) {
         //Serial.printf("change_section(%i)\n", section_number); Serial.flush();
         if (section_number==NUM_SONG_SECTIONS) 
@@ -607,8 +610,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
         this->current_section_plays = 0;
         current_section = section_number;
-
-        move_bar(0);
     }
 
     virtual bool save_playlist(int project_number = -1) {
