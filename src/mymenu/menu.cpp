@@ -32,6 +32,7 @@
 #include "behaviours/behaviour_subclocker.h"
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_neutron.h"
+#include "behaviours/behaviour_progression.h"
 
 #include "midi/midi_out_wrapper.h"
 #include "midi/midi_outs.h"
@@ -254,6 +255,18 @@ void setup_menu_taptempo() {
                     &DeviceBehaviour_Beatstep::is_auto_advance_pattern
                 ));
             #endif
+        #endif
+        #ifdef ENABLE_PROGRESSION
+            project_multi_autoadvance->addItem(new MultiToggleItemLambda (
+                "Prog.Pls",
+                [=] (bool v) -> void { behaviour_progression->advance_progression_playlist = v; },
+                [=] () -> bool { return behaviour_progression->advance_progression_playlist; }
+            ));
+            project_multi_autoadvance->addItem(new MultiToggleItemLambda (
+                "Prog.Bar",
+                [=] (bool v) -> void { behaviour_progression->advance_progression_bar = v; },
+                [=] () -> bool { return behaviour_progression->advance_progression_bar; }
+            ));
         #endif
         menu->add(project_multi_autoadvance);
 
