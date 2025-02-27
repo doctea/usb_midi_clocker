@@ -33,6 +33,8 @@ extern MIDIMatrixManager *midi_matrix_manager;
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
 
+    virtual bool transmits_midi_notes() { return true; }
+
     struct song_section_t {
         chord_identity_t grid[8];
         //int repeats = 1;    // number of repeats until moving to next section
