@@ -302,6 +302,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             LinkedList<FloatParameter*> *parameters = this->get_parameters();
             for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
                 FloatParameter *parameter = parameters->get(i);
+                if (debug) Serial.printf("%s#save_sequence_add_lines_parameters(): saving parameter %s\n", this->get_label(), parameter->label);
 
                 parameter->save_pattern_add_lines(lines);
             }
@@ -311,7 +312,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
-        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        if (debug) Serial.printf("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
 
         // first check the behaviour's custom project key values
         if (this->parse_project_key_value(key, value)) {
@@ -326,10 +327,12 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         // then check the 'modulatable parameters' (ie those from parameters library))
         const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))
+            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters)) {
+                if (debug) Serial.printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
                 return true;
+            }
         }
-        ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
+        if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
         return false;
     }
 

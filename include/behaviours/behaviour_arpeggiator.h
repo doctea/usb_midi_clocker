@@ -13,7 +13,7 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
     bool receives_midi_notes()  override { return true; };
 
     VirtualBehaviour_Arpeggiator() : DeviceBehaviourUltimateBase() {
-        this->debug = true;
+        //this->debug = true;
     }
 
     virtual const char *get_label() override {
