@@ -311,14 +311,15 @@ void setup_behaviour_manager() {
 
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-            Serial_printf("about to create_single_behaviour_menu_items() for behaviour %i/%i...", i+1, behaviours->size());
+            Serial_printf("about to create_single_behaviour_menu_items() for behaviour %i/%i", i+1, behaviours->size());
             Serial_flush();
             if (behaviour==nullptr) {
-                Serial.println("\tgot a nullptr behaviour!");
+                Serial_println("\tgot a nullptr behaviour!");
                 continue;
             } else {
-                Serial.printf(" ('%s')\n", behaviour->get_label());
+                Serial_printf(" ('%s')\n", behaviour->get_label());
             }
+            Serial_flush();
             this->create_single_behaviour_menu_items(menu, behaviour);
 
             // add page to behaviour quickjump, so long as isn't itself
@@ -335,14 +336,14 @@ void setup_behaviour_manager() {
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-            Serial_printf("about to set up Recall parameters () for behaviour %i/%i\n", i+1, behaviours->size());
+            Serial_printf("about to set up Recall parameters () for behaviour %i/%i ", i+1, behaviours->size());
             Serial_flush();
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
             if (behaviour==nullptr) {
-                //Serial.println("\tgot a nullptr behaviour!");
+                Serial_println("\t -- got a nullptr behaviour!");
                 continue;
             } else {
-                //Serial.printf("\tdoing for %s\n", behaviour->get_label());
+                Serial_printf("\t(named %s)\n", behaviour->get_label());
             }
             LinkedList<SaveableParameterBase*> *saveables = behaviour->saveable_parameters;
             if(saveables==nullptr || saveables->size()==0) 
@@ -352,18 +353,25 @@ void setup_behaviour_manager() {
                 behaviour->colour
             );
             const char *last_category = nullptr;
+            ObjectMultiToggleControl *recall_selector = nullptr; //new ObjectMultiToggleControl(behaviour->get_label(), saveables);
             for (unsigned int i = 0 ; i < saveables->size() ; i++) {
+                debug_free_ram();
                 SaveableParameterBase *p = saveables->get(i);
+                Serial_printf("\t\tadding menus for recall parameter %i/%i: %s\n", i+1, saveables->size(), p->niceify()); Serial_flush();
                 if (last_category!=p->category_name) {
-                    menu->add(new SeparatorMenuItem(p->category_name), behaviour->colour);
+                    //menu->add(new SeparatorMenuItem(p->category_name), behaviour->colour);
+                    recall_selector = new ObjectMultiToggleControl(p->category_name, true);
+                    menu->add(recall_selector, behaviour->colour);
                 }
-                menu->add(
+                recall_selector->addItem(new SaveableParameterOptionToggle(p));
+                /*menu->add(
                     new LambdaToggleControl(p->niceify(), 
                         [p](bool v) -> void { p->set_recall_enabled(v); },
                         [p]() -> bool { return p->is_recall_enabled(); }
                     ),
                     behaviour->colour
-                );
+                );*/
+
                 last_category = p->category_name;
             }
         }
