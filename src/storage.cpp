@@ -148,9 +148,9 @@ namespace storage {
     }*/
   }
 
-  bool save_pattern(int project_number, uint8_t pattern_number, savestate *input) {
+  bool save_pattern(int project_number, uint8_t pattern_number, savestate *input, bool debug = false) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-      bool debug = false;
+      //bool debug = false;
       #ifdef ENABLE_SD
       File myFile;
 
@@ -173,7 +173,7 @@ namespace storage {
         //if (irqs_enabled) __enable_irq();
         return false;
       }
-      if (debug) Serial.println("Starting data write.."); Serial_flush();
+      if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
 
       // save clock + sequence data
       myFile.println(F("; begin sequence"));
@@ -200,7 +200,7 @@ namespace storage {
       LinkedList<String> behaviour_lines = LinkedList<String>();
       if (debug) Serial.println("calling save_pattern_add_lines..");
       behaviour_manager->save_pattern_add_lines(&behaviour_lines);
-      if (debug) Serial.println("got behaviour_lines to save.."); Serial.flush();
+      if (debug) { Serial.println("got behaviour_lines to save.."); Serial.flush(); }
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
         //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
         if (debug) Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
@@ -215,12 +215,15 @@ namespace storage {
       //if (irqs_enabled) __enable_irq();
       //Serial.println(F("Finished saving."));
 
+      //sequence_fileviewer->debug = debug;
       update_pattern_filename(String(filename));
 
       messages_log_add(String("Saved to project : pattern ") + String(project_number) + " : " + String(pattern_number));
 
       #endif
     }
+    if (debug) Serial.println("finishing save_pattern");
+
     return true;
   }
 
@@ -342,7 +345,7 @@ namespace storage {
 
   //void update_pattern_filename(String filename);
 
-  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output) {
+  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug = false) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       #ifdef ENABLE_SD
       static volatile bool already_loading = false;

@@ -187,7 +187,7 @@ class Project {
         }
 
         bool load_pattern(int selected_pattern_number) {
-            if (debug) Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush();
+            if (debug) { Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
             bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state);
             if (result)
                 loaded_pattern_number = selected_pattern_number;
@@ -195,8 +195,9 @@ class Project {
             return result;
         }
         bool save_pattern(int selected_pattern_number) {
-            if (debug) Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush();
-            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state);
+            //this->debug = true;
+            if (debug) { Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
+            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state, this->debug);
             if (result) {
                 pattern_slot_has_file[selected_pattern_number] = true;
                 loaded_pattern_number = selected_pattern_number;

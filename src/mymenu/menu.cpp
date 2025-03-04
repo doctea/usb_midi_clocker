@@ -361,8 +361,8 @@ void setup_menu_midi() {
         //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD
-            sequence_fileviewer = new FileViewerMenuItem("Sequence");
-            menu->add(sequence_fileviewer);
+            //sequence_fileviewer = new FileViewerMenuItem("Sequence");
+            //menu->add(sequence_fileviewer);
         #endif
     }
 #endif

@@ -640,7 +640,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
               //if (irqs_enabled) __enable_irq();
               return false;
             }
-            if (debug) Serial.println("Starting data write.."); Serial_flush();
+            if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
 
             myFile.println(F("; begin playlist"));
             for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
@@ -714,7 +714,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
               //if (irqs_enabled) __enable_irq();
               return false;
             }
-            if (debug) Serial.println("Starting data write.."); Serial_flush();
+            if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
 
             myFile.println(F("; begin section"));
             for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
