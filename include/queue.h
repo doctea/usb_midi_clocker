@@ -9,7 +9,6 @@ template<class DataType, int max_queue_size>
 class Queue {
     public:
 
-
     DataType head_data; // a copy of the current head data, to be kept in scope
 
     bool queue_delay_mode = QUEUE_DELAY_ABSOLUTE;
@@ -30,8 +29,17 @@ class Queue {
     Queue(bool queue_delay_mode = QUEUE_DELAY_ABSOLUTE) {
         //queue     = (DataType*)calloc(max_queue_size, sizeof(DataType));  // for some reason dynamically allocating this causes crash on boot?
                                                                             // also, it seems that NOT dynamically allocating it frees up ~2k?!
-        timeout   = (uint32_t*)CALLOC_FUNC(max_queue_size, sizeof(uint32_t));
-        delay_at  = (uint32_t*)CALLOC_FUNC(max_queue_size, sizeof(uint32_t));
+        timeout   = (uint32_t*)calloc(max_queue_size, sizeof(uint32_t));
+        delay_at  = (uint32_t*)calloc(max_queue_size, sizeof(uint32_t));
+
+        // HUH... using extmem_calloc here instead of just calloc causes keyboard to be non-functional..?!
+        //      is because extmem_calloc just uses extmem_malloc under the hood, so memory never actually gets cleared, so timeout+delay is set to garbage
+        //      only in platform = teensy@4.17.0 - seems fixed in later versions https://forum.pjrc.com/index.php?threads/teensyduino-1-59-beta-2.72572/post-324473
+        //                                         but we're not using that yet due to increased flash usage and just outright failure to start!
+        // so... let's clear this memory manually             
+        // WTFHUH..... still doesn't work even if we memset the memory here!
+        //memset(timeout, 0, max_queue_size*sizeof(uint32_t));
+        //memset(delay_at, 0, max_queue_size*sizeof(uint32_t));
 
         this->queue_delay_mode = queue_delay_mode;
     }
