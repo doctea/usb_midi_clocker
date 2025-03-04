@@ -552,7 +552,7 @@ class MIDIMatrixManager {
         MIDIMatrixManager() {
             //setup_midi_output_wrapper_manager();
             //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
-            sources = (source_entry*)calloc(MAX_NUM_SOURCES, sizeof(source_entry));
+            sources = (source_entry*)CALLOC_FUNC(MAX_NUM_SOURCES, sizeof(source_entry));
             //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
             memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
 

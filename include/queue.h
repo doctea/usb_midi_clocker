@@ -30,8 +30,8 @@ class Queue {
     Queue(bool queue_delay_mode = QUEUE_DELAY_ABSOLUTE) {
         //queue     = (DataType*)calloc(max_queue_size, sizeof(DataType));  // for some reason dynamically allocating this causes crash on boot?
                                                                             // also, it seems that NOT dynamically allocating it frees up ~2k?!
-        timeout   = (uint32_t*)calloc(max_queue_size, sizeof(uint32_t));
-        delay_at  = (uint32_t*)calloc(max_queue_size, sizeof(uint32_t));
+        timeout   = (uint32_t*)CALLOC_FUNC(max_queue_size, sizeof(uint32_t));
+        delay_at  = (uint32_t*)CALLOC_FUNC(max_queue_size, sizeof(uint32_t));
 
         this->queue_delay_mode = queue_delay_mode;
     }

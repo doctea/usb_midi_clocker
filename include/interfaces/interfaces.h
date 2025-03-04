@@ -44,7 +44,7 @@ class VirtualRemapBankInterface : public BankInterface {
 
         VirtualRemapBankInterface(BankInterface *iface, int *remap_pins, int pin_count) {
             this->pin_count = pin_count;
-            this->remap_pins = (int*)calloc(pin_count, sizeof(int));
+            this->remap_pins = (int*)CALLOC_FUNC(pin_count, sizeof(int));
             for (uint_least8_t i = 0 ; i < pin_count ; i++) {
                 this->remap_pins[i] = remap_pins[i];
             }
@@ -113,7 +113,7 @@ class DigitalPinBankInterface : public BankInterface {
 
         uint8_t *pin_numbers = nullptr;
         DigitalPinBankInterface(const byte *pin_numbers, int num_pins, byte mode = OUTPUT) {
-            this->pin_numbers = (uint8_t*)calloc(num_pins, sizeof(uint8_t));
+            this->pin_numbers = (uint8_t*)CALLOC_FUNC(num_pins, sizeof(uint8_t));
             this->mode = mode;
             num_gates = num_pins;
             //memcpy(this->pin_numbers, pin_numbers, sizeof(uint8_t)*num_pins);
@@ -121,7 +121,7 @@ class DigitalPinBankInterface : public BankInterface {
                 this->pin_numbers[i] = pin_numbers[i];
                 pinMode(pin_numbers[i], mode);
             }
-            this->current_states = (bool*)calloc(num_gates, sizeof(bool));
+            this->current_states = (bool*)CALLOC_FUNC(num_gates, sizeof(bool));
         }
 
         virtual void set_gate(int gate_number, bool state) override {

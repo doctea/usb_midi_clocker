@@ -10,7 +10,7 @@
     #include "mymenu/menuitems_scale.h"
     #include "mymenu/menuitems_harmony.h"
 
-    //FLASHMEM 
+    FLASHMEM 
     LinkedList<MenuItem*> *DeviceBehaviourUltimateBase::make_menu_items() {
         if (this->menuitems == nullptr) {
             this->menuitems = new LinkedList<MenuItem*>();

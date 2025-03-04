@@ -73,7 +73,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                     free(this->message_history);
                     this->message_history = nullptr;
                 } else {
-                    this->message_history = (message_history_t*)calloc(sizeof(message_history_t), message_history_size);
+                    this->message_history = (message_history_t*)CALLOC_FUNC(sizeof(message_history_t), message_history_size);
                 }
             }
 

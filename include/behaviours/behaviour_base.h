@@ -325,7 +325,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
 
         // then check the 'modulatable parameters' (ie those from parameters library))
-        const char *prefix = "parameter_";
+        static const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
             if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters)) {
                 if (debug) Serial.printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());

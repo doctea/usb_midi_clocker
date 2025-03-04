@@ -248,7 +248,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     };*/
 
     void initialise_note_to_gate_map() {
-        this->map_note_to_gate = (int8_t*)calloc(sizeof(int8_t), MIDI_NUM_NOTES+1);
+        this->map_note_to_gate = (int8_t*)CALLOC_FUNC(sizeof(int8_t), MIDI_NUM_NOTES+1);
         //Serial.printf("initialise_note_to_gate_map starting with map_note_to_gate @%p - MIDI_NUM_NOTES is %i\n", this->map_note_to_gate, MIDI_NUM_NOTES);
         for (uint8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
             //Serial.printf("initialise_note_to_gate_map setting map for element %i\n", i);

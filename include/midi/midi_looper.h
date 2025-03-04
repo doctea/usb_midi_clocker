@@ -499,7 +499,7 @@ class MIDITrack {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)extmem_calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
+                this->piano_roll_bitmap = (loop_bitmap*)CALLOC_FUNC(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(this->piano_roll_held, 0, MIDI_MAX_NOTE);
             memset(this->pitch_contains_notes, 0, MIDI_MAX_NOTE);
