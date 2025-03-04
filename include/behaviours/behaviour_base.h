@@ -269,7 +269,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         return false;
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
-        this->setup_saveable_parameters();
+        if (this->saveable_parameters==nullptr) {
+            Debug_println("WARNING: save_sequence_add_lines_saveable_parameters() called, but saveable_parameters isn't initialised yet!");
+            this->setup_saveable_parameters();
+        }
         for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             Debug_printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
             if (saveable_parameters->get(i)->is_save_enabled()) {
