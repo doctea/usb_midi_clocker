@@ -133,29 +133,32 @@ void setup_parameters() {
     tft_print("done.\n");
 }
 
-#include "behaviours/behaviour_cvoutput.h"
-extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1, *behaviour_cvoutput_2, *behaviour_cvoutput_3;
+#ifdef ENABLE_CV_OUTPUT
+    // todo: move this to its own file out of cv_input.cpp?
+    #include "behaviours/behaviour_cvoutput.h"
+    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1, *behaviour_cvoutput_2, *behaviour_cvoutput_3;
 
-void setup_cv_output_parameter_inputs() {
-    #if defined(ENABLE_CV_OUTPUT)
-        #ifdef ENABLE_CV_OUTPUT_CALIBRATION_INPUT_NAMES
-            const char *CV_OUTPUT_CALIBRATION_INPUT_NAMES[] = ENABLE_CV_OUTPUT_CALIBRATION_INPUT_NAMES;
-            behaviour_cvoutput_1->set_calibration_parameter_input(0, CV_OUTPUT_CALIBRATION_INPUT_NAMES[0]);
-            behaviour_cvoutput_1->set_calibration_parameter_input(1, CV_OUTPUT_CALIBRATION_INPUT_NAMES[1]);
-            behaviour_cvoutput_1->set_calibration_parameter_input(2, CV_OUTPUT_CALIBRATION_INPUT_NAMES[2]);
-            behaviour_cvoutput_1->set_calibration_parameter_input(3, CV_OUTPUT_CALIBRATION_INPUT_NAMES[3]);
+    void setup_cv_output_parameter_inputs() {
+        #if defined(ENABLE_CV_OUTPUT)
+            #ifdef ENABLE_CV_OUTPUT_CALIBRATION_INPUT_NAMES
+                const char *CV_OUTPUT_CALIBRATION_INPUT_NAMES[] = ENABLE_CV_OUTPUT_CALIBRATION_INPUT_NAMES;
+                behaviour_cvoutput_1->set_calibration_parameter_input(0, CV_OUTPUT_CALIBRATION_INPUT_NAMES[0]);
+                behaviour_cvoutput_1->set_calibration_parameter_input(1, CV_OUTPUT_CALIBRATION_INPUT_NAMES[1]);
+                behaviour_cvoutput_1->set_calibration_parameter_input(2, CV_OUTPUT_CALIBRATION_INPUT_NAMES[2]);
+                behaviour_cvoutput_1->set_calibration_parameter_input(3, CV_OUTPUT_CALIBRATION_INPUT_NAMES[3]);
+            #endif
         #endif
-    #endif
-    #if defined(ENABLE_CV_OUTPUT_2)
-        #ifdef ENABLE_CV_OUTPUT_2_CALIBRATION_INPUT_NAMES
-            const char *CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[] = ENABLE_CV_OUTPUT_2_CALIBRATION_INPUT_NAMES;
-            behaviour_cvoutput_2->set_calibration_parameter_input(0, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[0]);
-            behaviour_cvoutput_2->set_calibration_parameter_input(1, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[1]);
-            behaviour_cvoutput_2->set_calibration_parameter_input(2, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[2]);
-            behaviour_cvoutput_2->set_calibration_parameter_input(3, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[3]);
+        #if defined(ENABLE_CV_OUTPUT_2)
+            #ifdef ENABLE_CV_OUTPUT_2_CALIBRATION_INPUT_NAMES
+                const char *CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[] = ENABLE_CV_OUTPUT_2_CALIBRATION_INPUT_NAMES;
+                behaviour_cvoutput_2->set_calibration_parameter_input(0, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[0]);
+                behaviour_cvoutput_2->set_calibration_parameter_input(1, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[1]);
+                behaviour_cvoutput_2->set_calibration_parameter_input(2, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[2]);
+                behaviour_cvoutput_2->set_calibration_parameter_input(3, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[3]);
+            #endif
         #endif
-    #endif
-}
+    }
+#endif
 
 #ifdef ENABLE_SCREEN
 // set up the menus to provide control over the ParameterInputs and VoltageSources
@@ -169,8 +172,11 @@ void setup_parameter_menu() {
     // ask ParameterManager to add all the menu items for the Voltage Sources
     parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu, true);
 
-    // ask ParameterManager to add all the menu items for the CVOutputs
-    parameter_manager->addAllCVOutputCalibrationMenuItems(menu);
+    #ifdef ENABLE_CV_OUTPUT
+        setup_cv_output_parameter_inputs();
+        // ask ParameterManager to add all the menu items for the CVOutputs
+        parameter_manager->addAllCVOutputCalibrationMenuItems(menu);
+    #endif
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
