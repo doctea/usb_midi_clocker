@@ -69,8 +69,10 @@ GateManager *gate_manager = new GateManager();
         // use outputs 8-15 of the underlying MCP object, and reverse them
         gate_manager->add_bank_interface(BANK_CLOCK,   new VirtualBankInterface(mcp_interface, num_gates, num_gates, false));
 
-        MCP23S17BankInterface *mcp_interface_2 = new MCP23S17BankInterface(MCP23S17_SPI_CS2_PIN, 0, &SPI1);
-        gate_manager->add_bank_interface(BANK_EXTRA,   new VirtualBankInterface(mcp_interface_2, num_gates, num_gates, false));
+        #if defined(ENABLE_CV_OUTPUT_1_GATE) || defined(ENABLE_CV_OUTPUT_2_GATE) || defined(ENABLE_CV_OUTPUT_3_GATE)
+            MCP23S17BankInterface *mcp_interface_2 = new MCP23S17BankInterface(MCP23S17_SPI_CS2_PIN, 0, &SPI1);
+            gate_manager->add_bank_interface(BANK_EXTRA,   new VirtualBankInterface(mcp_interface_2, num_gates, num_gates, false));
+        #endif
         
         Serial.println("returning from setup_gate_manager().");
     }
