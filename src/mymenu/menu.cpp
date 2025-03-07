@@ -79,13 +79,14 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-TapTempoControl *tapper_control = nullptr;
+#ifdef ENABLE_TAPTEMPO
+    TapTempoControl *tapper_control = nullptr;
+    extern TapTempoTracker *tapper;
+#endif
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
 ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
-
-extern TapTempoTracker *tapper;
 
 #ifdef ENABLE_SEQUENCER
     #include "mymenu/menu_gatedisplay.h"
@@ -151,10 +152,12 @@ void setup_menu_transport() {
     menu->add(project_startstop);
 }
 
-void setup_menu_taptempo() {
-    tapper_control = new TapTempoControl("Tap tempo", tapper);
-    menu->add(tapper_control);   
-}
+#ifdef ENABLE_TAPTEMPO
+    void setup_menu_taptempo() {
+        tapper_control = new TapTempoControl("Tap tempo", tapper);
+        menu->add(tapper_control);   
+    }
+#endif
 
 #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
     void setup_menu_project() {
@@ -420,7 +423,9 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
 
     setup_menu_transport();
-    setup_menu_taptempo();
+    #ifdef ENABLE_TAPTEMPO
+        setup_menu_taptempo();
+    #endif
     setup_menu_project();
     setup_menu_midi();
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
