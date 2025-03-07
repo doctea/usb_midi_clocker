@@ -108,14 +108,16 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         return parameters;
     }
 
-    virtual LinkedList<MenuItem*> *make_menu_items() override {
-        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    #ifdef ENABLE_SCREEN
+        virtual LinkedList<MenuItem*> *make_menu_items() override {
+            LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
-        this->sequencer->make_menu_items(menu, true);
-        this->output_processor->create_menu_items(true);
+            this->sequencer->make_menu_items(menu, true);
+            this->output_processor->create_menu_items(true);
 
-        return menuitems;
-    }
+            return menuitems;
+        }
+    #endif
 
     virtual void setup_saveable_parameters() override {
         DeviceBehaviourUltimateBase::setup_saveable_parameters();

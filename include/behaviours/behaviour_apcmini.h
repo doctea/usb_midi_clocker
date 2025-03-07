@@ -441,7 +441,9 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
         }
 
         //FLASHMEM // causes a section type conflict with virtual void DeviceBehaviour_APCMini::setup_callbacks() 
-        LinkedList<MenuItem*> *make_menu_items() override;
+        #ifdef ENABLE_SCREEN
+            LinkedList<MenuItem*> *make_menu_items() override;
+        #endif
 
 };
 

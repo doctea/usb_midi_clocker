@@ -50,17 +50,23 @@ class ChordTypeParameter : /*virtual*/ public DataParameter<TargetClass, DataTyp
             //      min = -100, max = 100, actual = -100 - >    (-100 - -100) / (100 - -100)    = 0
         }*/
 
-        virtual const char* parseFormattedDataType(DataType value) {
-            static char fmt[MENU_C_MAX] = "              ";
-            snprintf(fmt, MENU_C_MAX, chords[value].label);
-            return fmt;
-            //return "??";
-        };
+        #ifdef ENABLE_SCREEN
+            virtual const char* parseFormattedDataType(DataType value) {
+                static char fmt[MENU_C_MAX] = "              ";
+                snprintf(fmt, MENU_C_MAX, chords[value].label);
+                return fmt;
+                //return "??";
+            };
+        #endif
 };
 
 
 #include "chord_player.h"
 #include "functional-vlpp.h"
+
+#ifndef MAX_LABEL_LENGTH
+    #define MAX_LABEL_LENGTH 40
+#endif
 
 class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
@@ -72,6 +78,10 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
         DeviceBehaviour_CVInput(const char *label = nullptr) : DeviceBehaviourUltimateBase () {
             if (label!=nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
+        }
+        virtual ~DeviceBehaviour_CVInput() {
+            if (this->pitch_input!=nullptr) delete this->pitch_input;
+            if (this->velocity_input!=nullptr) delete this->velocity_input;
         }
 
         char label[MAX_LABEL_LENGTH] = "Pitch CV Input";

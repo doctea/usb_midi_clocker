@@ -183,7 +183,9 @@ void setup() {
     tft_print((char*)"Setting up CV gates..\n");
     //setup_cv_output();
     setup_gate_manager();
-    setup_gate_manager_menus();
+    #ifdef ENABLE_SCREEN
+      setup_gate_manager_menus();
+    #endif
   #endif
   Debug_printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 
@@ -320,10 +322,12 @@ void setup() {
   #endif
 
   debug_free_ram();
-
-  pushButtonA.resetStateChange();
-  pushButtonB.resetStateChange();
-  pushButtonC.resetStateChange();
+  
+  #ifdef ENABLE_SCREEN
+    pushButtonA.resetStateChange();
+    pushButtonB.resetStateChange();
+    pushButtonC.resetStateChange();
+  #endif
   
   Serial_println("Finished setup()!");
 }

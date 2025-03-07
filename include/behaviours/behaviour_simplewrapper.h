@@ -16,10 +16,12 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
         this->can_receive_midi_notes = can_receive_midi_notes;
     }
 
-    virtual LinkedList<MenuItem*> *make_menu_items() override {
-        DeviceClass::make_menu_items();
-        return BaseClass::make_menu_items();
-    }
+    #ifdef ENABLE_SCREEN
+        virtual LinkedList<MenuItem*> *make_menu_items() override {
+            DeviceClass::make_menu_items();
+            return BaseClass::make_menu_items();
+        }
+    #endif
 
     const char *get_label() override {
         return label;

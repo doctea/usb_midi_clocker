@@ -9,15 +9,7 @@
 
 extern bool debug_flag;
 
-#ifdef ENABLE_SCREEN
-    #include "menu.h"
-    #include "menuitems.h"
-    #include "menuitems_object.h"
-    #include "menuitems_lambda_selector.h"
-    #include "submenuitem_bar.h"
-    #include "ParameterManager.h"
-    #include "mymenu_items/ParameterInputMenuItems.h"
-    #include "mymenu/menuitems_harmony.h"
+#include "ParameterManager.h"
 
     extern ParameterManager *parameter_manager;
  
@@ -60,6 +52,15 @@ extern bool debug_flag;
         //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
     }
 
+    
+#ifdef ENABLE_SCREEN
+    #include "menu.h"
+    #include "menuitems.h"
+    #include "menuitems_object.h"
+    #include "menuitems_lambda_selector.h"
+    #include "submenuitem_bar.h"
+    #include "mymenu_items/ParameterInputMenuItems.h"
+    #include "mymenu/menuitems_harmony.h"
     //FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();

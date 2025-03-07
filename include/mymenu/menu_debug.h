@@ -115,7 +115,9 @@ void setup_debug_menu() {
     bar->add(profiler_control);
 
     bar->add(new NumberControl<bool>("Extra", (bool*)&debug_flag, debug_flag, false, true));
-    bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug_flag, false, true));
+    #if defined(ENABLE_CONTROLLER_KEYBOARD) || defined(ENABLE_TYPING_KEYBOARD)
+        bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug_flag, false, true));
+    #endif
     menu->add(bar);
 
     menu->add(new DebugPanel());

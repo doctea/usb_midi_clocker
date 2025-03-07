@@ -12,7 +12,9 @@
 
 #include "Drums.h"
 
-#include "menuitems_lambda.h"
+#ifdef ENABLE_SCREEN
+    #include "menuitems_lambda.h"
+#endif
 
 // todo: save/load mappings to patterns? (currrently saves to project)
 // todo: use a more user-friendly and less memory-hungry way of presenting the UI
@@ -76,6 +78,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
       this->process_sequencer(ticks);
     };
 
+    #ifdef ENABLE_SCREEN
     virtual LinkedList<MenuItem*> *make_menu_items() override {
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
@@ -120,6 +123,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
 
         return menuitems;
     }
+    #endif
 
     int8_t *map_note_to_gate = nullptr;
     /*int8_t map_note_to_gate[MIDI_NUM_NOTES] = {

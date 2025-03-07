@@ -168,145 +168,147 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
     }
 
-    virtual LinkedList<MenuItem*> *make_menu_items() override {
-        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    #ifdef ENABLE_SCREEN
+        virtual LinkedList<MenuItem*> *make_menu_items() override {
+            LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
-        menu->add_pinned(new ProgressionPinnedMenuItem("Progression"));
+            menu->add_pinned(new ProgressionPinnedMenuItem("Progression"));
 
-        //this->sequencer->make_menu_items(menu, true);
-        //this->output_processor->create_menu_items(true);
+            //this->sequencer->make_menu_items(menu, true);
+            //this->output_processor->create_menu_items(true);
 
-        // todo: this was cribbed from menu.cpp setup_menu_midi() -- can probably re-use the same controls here to save some memory!
-        LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
-            "Global Scale", 
-            [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
-            [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
-            [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
-            [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
-            false, true, true
-        );
-        global_quantise_bar->add(new LambdaToggleControl("Quantise",
-            [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
-            [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
-        ));
-        menuitems->add(global_quantise_bar);
+            // todo: this was cribbed from menu.cpp setup_menu_midi() -- can probably re-use the same controls here to save some memory!
+            LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
+                "Global Scale", 
+                [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+                [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+                [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
+                [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
+                false, true, true
+            );
+            global_quantise_bar->add(new LambdaToggleControl("Quantise",
+                [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
+                [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
+            ));
+            menuitems->add(global_quantise_bar);
 
-        LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
-            "Global Chord", 
-            [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
-            [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
-            [=](CHORD::Type chord_type) -> void { midi_matrix_manager->set_global_chord_type(chord_type); }, 
-            [=]() -> CHORD::Type { return midi_matrix_manager->get_global_chord_type(); },
-            [=](int8_t inversion) -> void { midi_matrix_manager->set_global_chord_inversion(inversion); },
-            [=]() -> int8_t { return midi_matrix_manager->get_global_chord_inversion(); },
-            false, true, true
-        );
-        global_chord_bar->add(new LambdaToggleControl("Quantise",
-            [=](bool v) -> void { midi_matrix_manager->set_global_quantise_chord_on(v); },
-            [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
-        ));
-        menuitems->add(global_chord_bar);
+            LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
+                "Global Chord", 
+                [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
+                [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
+                [=](CHORD::Type chord_type) -> void { midi_matrix_manager->set_global_chord_type(chord_type); }, 
+                [=]() -> CHORD::Type { return midi_matrix_manager->get_global_chord_type(); },
+                [=](int8_t inversion) -> void { midi_matrix_manager->set_global_chord_inversion(inversion); },
+                [=]() -> int8_t { return midi_matrix_manager->get_global_chord_inversion(); },
+                false, true, true
+            );
+            global_chord_bar->add(new LambdaToggleControl("Quantise",
+                [=](bool v) -> void { midi_matrix_manager->set_global_quantise_chord_on(v); },
+                [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
+            ));
+            menuitems->add(global_chord_bar);
 
-        //chord_player->make_menu_items(menuitems);
+            //chord_player->make_menu_items(menuitems);
 
-        SubMenuItemBar *bar = new SubMenuItemBar("Chord controller", true, true);
-        
-        /*menuitems->add(new LambdaScaleMenuItemBar(
-            "Chord controller", 
-            [=] (SCALE s) -> void { chord_player->set_scale(s); },
-            [=] (void) -> SCALE { return chord_player->get_scale(); },
-            [=] (int8_t) -> void { chord_player_}
-        ));*/
+            SubMenuItemBar *bar = new SubMenuItemBar("Chord controller", true, true);
+            
+            /*menuitems->add(new LambdaScaleMenuItemBar(
+                "Chord controller", 
+                [=] (SCALE s) -> void { chord_player->set_scale(s); },
+                [=] (void) -> SCALE { return chord_player->get_scale(); },
+                [=] (int8_t) -> void { chord_player_}
+            ));*/
 
 
-        bar->add(new LambdaToggleControl("Advance bar", 
-            [=] (bool v) -> void { this->advance_progression_bar = v; },
-            [=] (void) -> bool { return this->advance_progression_bar; }
-        ));
-        bar->add(new LambdaToggleControl("Advance playlist", 
-            [=] (bool v) -> void { this->advance_progression_playlist = v; },
-            [=] (void) -> bool { return this->advance_progression_playlist; }
-        ));
-        menuitems->add(bar);
+            bar->add(new LambdaToggleControl("Advance bar", 
+                [=] (bool v) -> void { this->advance_progression_bar = v; },
+                [=] (void) -> bool { return this->advance_progression_bar; }
+            ));
+            bar->add(new LambdaToggleControl("Advance playlist", 
+                [=] (bool v) -> void { this->advance_progression_playlist = v; },
+                [=] (void) -> bool { return this->advance_progression_playlist; }
+            ));
+            menuitems->add(bar);
 
-        menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
-        menuitems->add(new NoteHarmonyDisplay(
-            (const char*)"Progression harmony", 
-            &midi_matrix_manager->global_scale_type, 
-            &midi_matrix_manager->global_scale_root, 
-            &this->note_tracker,
-            &midi_matrix_manager->global_quantise_on
-        ));
+            menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
+            menuitems->add(new NoteHarmonyDisplay(
+                (const char*)"Progression harmony", 
+                &midi_matrix_manager->global_scale_type, 
+                &midi_matrix_manager->global_scale_root, 
+                &this->note_tracker,
+                &midi_matrix_manager->global_quantise_on
+            ));
 
-        /*
-        menuitems->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
-        menuitems->add(new NoteHarmonyDisplay(
-            (const char*)"CV Output 1 harmony", 
-            &midi_matrix_manager->global_scale_type, 
-            &midi_matrix_manager->global_scale_root, 
-            &behaviour_cvoutput_1->note_tracker,
-            &midi_matrix_manager->global_quantise_on
-        ));
-        */
-        
-        SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);
-        section_bar->add(new LambdaNumberControl<int8_t>(
-            "PlaylistPos", 
-            [=] (int8_t pos) -> void { move_playlist(pos); },
-            [=] () -> int8_t { return this->playlist_position; },
-            nullptr
-        ));
-        section_bar->add(new LambdaNumberControl<int8_t>(
-            "Section", 
-            [=] (int8_t section) -> void {
-                change_section(section);
-            },
-            [=] () -> int8_t { return this->current_section; },
-            nullptr,
-            0, 
-            NUM_SONG_SECTIONS-1, 
-            true, 
-            false
-        ));
-        /*section_bar->add(new LambdaNumberControl<int8_t>(
-            "Max repeats", 
-            [=] (int8_t repeats) -> void {
-                this->song_sections[current_section].repeats = repeats;
-            },
-            [=] () -> int8_t { return this->song_sections[current_section].repeats; },
-            nullptr,
-            0,
-            8,
-            true,
-            true
-        ));*/
-        section_bar->add(new NumberControl<int8_t>("Plays", &this->current_section_plays, 0, 8, true, true));
-        menuitems->add(section_bar);
+            /*
+            menuitems->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
+            menuitems->add(new NoteHarmonyDisplay(
+                (const char*)"CV Output 1 harmony", 
+                &midi_matrix_manager->global_scale_type, 
+                &midi_matrix_manager->global_scale_root, 
+                &behaviour_cvoutput_1->note_tracker,
+                &midi_matrix_manager->global_quantise_on
+            ));
+            */
+            
+            SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);
+            section_bar->add(new LambdaNumberControl<int8_t>(
+                "PlaylistPos", 
+                [=] (int8_t pos) -> void { move_playlist(pos); },
+                [=] () -> int8_t { return this->playlist_position; },
+                nullptr
+            ));
+            section_bar->add(new LambdaNumberControl<int8_t>(
+                "Section", 
+                [=] (int8_t section) -> void {
+                    change_section(section);
+                },
+                [=] () -> int8_t { return this->current_section; },
+                nullptr,
+                0, 
+                NUM_SONG_SECTIONS-1, 
+                true, 
+                false
+            ));
+            /*section_bar->add(new LambdaNumberControl<int8_t>(
+                "Max repeats", 
+                [=] (int8_t repeats) -> void {
+                    this->song_sections[current_section].repeats = repeats;
+                },
+                [=] () -> int8_t { return this->song_sections[current_section].repeats; },
+                nullptr,
+                0,
+                8,
+                true,
+                true
+            ));*/
+            section_bar->add(new NumberControl<int8_t>("Plays", &this->current_section_plays, 0, 8, true, true));
+            menuitems->add(section_bar);
 
-        SubMenuItemBar *save_section_bar = new SubMenuItemBar("Section", false, true);
-        save_section_bar->add(new LambdaActionConfirmItem(
-            "Load", 
-            [=] () -> void { this->load_section(current_section); }
-        ));
-        save_section_bar->add(new LambdaActionConfirmItem(
-            "Save", 
-            [=] () -> void { this->save_section(current_section); }
-        ));
-        menuitems->add(save_section_bar);
+            SubMenuItemBar *save_section_bar = new SubMenuItemBar("Section", false, true);
+            save_section_bar->add(new LambdaActionConfirmItem(
+                "Load", 
+                [=] () -> void { this->load_section(current_section); }
+            ));
+            save_section_bar->add(new LambdaActionConfirmItem(
+                "Save", 
+                [=] () -> void { this->save_section(current_section); }
+            ));
+            menuitems->add(save_section_bar);
 
-        SubMenuItemBar *save_playlist_bar = new SubMenuItemBar("Playlist", false, true);
-        save_playlist_bar->add(new LambdaActionConfirmItem(
-            "Load", 
-            [=] () -> void { this->load_playlist(-1); }
-        ));
-        save_playlist_bar->add(new LambdaActionConfirmItem(
-            "Save", 
-            [=] () -> void { this->save_playlist(-1); }
-        ));
-        menuitems->add(save_playlist_bar);
+            SubMenuItemBar *save_playlist_bar = new SubMenuItemBar("Playlist", false, true);
+            save_playlist_bar->add(new LambdaActionConfirmItem(
+                "Load", 
+                [=] () -> void { this->load_playlist(-1); }
+            ));
+            save_playlist_bar->add(new LambdaActionConfirmItem(
+                "Save", 
+                [=] () -> void { this->save_playlist(-1); }
+            ));
+            menuitems->add(save_playlist_bar);
 
-        return menuitems;
-    }
+            return menuitems;
+        }
+    #endif
 
     // degrees should be 1-7; 0 implies no chord, -1 implies 'use global'?
     void set_degree(int8_t degree) {
