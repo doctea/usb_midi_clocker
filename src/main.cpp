@@ -218,7 +218,7 @@ void setup() {
   project->setup_project();
   Debug_printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
-  #ifdef ENABLE_CV_INPUT
+  #if defined(ENABLE_PARAMETERS) && defined(ENABLE_CV_INPUT)
     setup_cv_input();
     Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
   #endif

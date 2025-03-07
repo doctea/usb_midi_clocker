@@ -123,7 +123,9 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     virtual void init() {};
 
-    virtual void requantise_all_notes();
+    #ifdef ENABLE_SCALES
+        virtual void requantise_all_notes();
+    #endif
 
     virtual void killCurrentNote() {
         //Serial.println("-=-=-");

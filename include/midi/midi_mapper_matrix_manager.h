@@ -20,7 +20,9 @@ void setup_midi_mapper_matrix_manager();
 
 void behaviour_manager_kill_all_current_notes();
 
-void behaviour_manager_requantise_all_notes();
+#ifdef ENABLE_SCALES
+    void behaviour_manager_requantise_all_notes();
+#endif
 
 //#include "behaviours/behaviour_bamble.h"
 
@@ -44,10 +46,12 @@ class MIDIMatrixManager {
 
     bool debug = false;
 
-    bool    global_quantise_on = false, global_quantise_chord_on = false;
-    int8_t  global_scale_root = SCALE_ROOT_C;
-    SCALE   global_scale_type = SCALE::MAJOR;
-    chord_identity_t global_chord_identity = {CHORD::TRIAD, -1, 0};
+    #ifdef ENABLE_SCALES
+        bool    global_quantise_on = false, global_quantise_chord_on = false;
+        int8_t  global_scale_root = SCALE_ROOT_C;
+        SCALE   global_scale_type = SCALE::MAJOR;
+        chord_identity_t global_chord_identity = {CHORD::TRIAD, -1, 0};
+    #endif
     /*int8_t  global_chord_degree = -1;
     CHORD::Type global_chord_type = CHORD::TRIAD;
     int8_t global_chord_inversion = 0;*/
@@ -204,13 +208,15 @@ class MIDIMatrixManager {
     int8_t quantise_chord(int8_t pitch, int8_t distance_threshold) {
         return ::quantise_pitch_to_chord(pitch, distance_threshold);
     }*/
-    int8_t do_quant(int8_t pitch, int8_t channel) {
-        if (channel!=GM_CHANNEL_DRUMS) {
-            if (this->global_quantise_on)       pitch = ::quantise_pitch_to_scale(pitch);
-            if (this->global_quantise_chord_on) pitch = ::quantise_pitch_to_chord(pitch, 3);
+    #ifdef ENABLE_SCALES
+        int8_t do_quant(int8_t pitch, int8_t channel) {
+            if (channel!=GM_CHANNEL_DRUMS) {
+                if (this->global_quantise_on)       pitch = ::quantise_pitch_to_scale(pitch);
+                if (this->global_quantise_chord_on) pitch = ::quantise_pitch_to_chord(pitch, 3);
+            }
+            return pitch;
         }
-        return pitch;
-    }
+    #endif
 
     ///// handle incoming or generated events (from a midi device, looper, etc) and route to connected outputs
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
@@ -398,94 +404,96 @@ class MIDIMatrixManager {
         return -1;
     }
 
-    /////// scale and quantisation functions
-    // getters & setters for quantisation on/offs
-    void set_global_quantise_on(bool v, bool requantise_immediately = true) {
-        bool changed = v != this->global_quantise_on;
-        this->global_quantise_on = v;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
-    bool is_global_quantise_on() {
-        return this->global_quantise_on;
-    }
-
-    void set_global_quantise_chord_on(bool v, bool requantise_immediately = true) {
-        bool changed = v != this->global_quantise_chord_on;
-        this->global_quantise_chord_on = v;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
-    bool is_global_quantise_chord_on() {
-        return this->global_quantise_chord_on;
-    }
-
-    // getters & setters for global scale + global chord settings
-    chord_identity_t get_global_chord() {
-        return chord_identity_t {
-            this->global_chord_identity.type,
-            this->global_chord_identity.degree,
-            this->global_chord_identity.inversion
-        };
-    }
-    void set_global_chord(chord_identity_t chord, bool requantise_immediately = true) {
-        bool changed = chord.diff(this->global_chord_identity);
-        this->global_chord_identity = chord;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
-
-    int8_t get_global_scale_root() {
-        return this->global_scale_root;
-    }
-    void set_global_scale_root(int8_t scale_root, bool requantise_immediately = true) {
-        bool changed = scale_root!=global_scale_root;
-        if (changed && debug) {
-            Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
-            Serial_printf("Current scale:\t");
-            print_scale(global_scale_root, global_scale_type);
-            Serial_printf("New scale:\t");
-            print_scale(scale_root, global_scale_type);
+    #ifdef ENABLE_SCALES
+        /////// scale and quantisation functions
+        // getters & setters for quantisation on/offs
+        void set_global_quantise_on(bool v, bool requantise_immediately = true) {
+            bool changed = v != this->global_quantise_on;
+            this->global_quantise_on = v;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
         }
-        this->global_scale_root = scale_root;
-        if (changed && requantise_immediately) {
-            behaviour_manager_requantise_all_notes();
-            if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
+        bool is_global_quantise_on() {
+            return this->global_quantise_on;
         }
-    }
 
-    SCALE get_global_scale_type() {
-        return this->global_scale_type;
-    }
-    void set_global_scale_type(SCALE scale_type, bool requantise_immediately = true) {
-        bool changed = scale_type!=global_scale_type;
-        this->global_scale_type = scale_type;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
+        void set_global_quantise_chord_on(bool v, bool requantise_immediately = true) {
+            bool changed = v != this->global_quantise_chord_on;
+            this->global_quantise_chord_on = v;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+        }
+        bool is_global_quantise_chord_on() {
+            return this->global_quantise_chord_on;
+        }
 
-    int8_t get_global_chord_degree() {
-        return this->global_chord_identity.degree;
-    }
-    void set_global_chord_degree(int8_t degree, bool requantise_immediately = true) {
-        bool changed = degree != get_global_chord_degree();
-        this->global_chord_identity.degree = degree;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
+        // getters & setters for global scale + global chord settings
+        chord_identity_t get_global_chord() {
+            return chord_identity_t {
+                this->global_chord_identity.type,
+                this->global_chord_identity.degree,
+                this->global_chord_identity.inversion
+            };
+        }
+        void set_global_chord(chord_identity_t chord, bool requantise_immediately = true) {
+            bool changed = chord.diff(this->global_chord_identity);
+            this->global_chord_identity = chord;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+        }
 
-    CHORD::Type get_global_chord_type() {
-        return this->global_chord_identity.type;
-    }
-    void set_global_chord_type(CHORD::Type chord_type, bool requantise_immediately = true) {
-        bool changed = chord_type != get_global_chord_type();
-        this->global_chord_identity.type = chord_type;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
+        int8_t get_global_scale_root() {
+            return this->global_scale_root;
+        }
+        void set_global_scale_root(int8_t scale_root, bool requantise_immediately = true) {
+            bool changed = scale_root!=global_scale_root;
+            if (changed && debug) {
+                Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
+                Serial_printf("Current scale:\t");
+                print_scale(global_scale_root, global_scale_type);
+                Serial_printf("New scale:\t");
+                print_scale(scale_root, global_scale_type);
+            }
+            this->global_scale_root = scale_root;
+            if (changed && requantise_immediately) {
+                behaviour_manager_requantise_all_notes();
+                if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
+            }
+        }
 
-    int8_t get_global_chord_inversion() {
-        return this->global_chord_identity.inversion;
-    }
-    void set_global_chord_inversion(int8_t inversion, bool requantise_immediately = true) {
-        bool changed = inversion != get_global_chord_inversion();
-        this->global_chord_identity.inversion = inversion;
-        if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
-    }
+        SCALE get_global_scale_type() {
+            return this->global_scale_type;
+        }
+        void set_global_scale_type(SCALE scale_type, bool requantise_immediately = true) {
+            bool changed = scale_type!=global_scale_type;
+            this->global_scale_type = scale_type;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+        }
+
+        int8_t get_global_chord_degree() {
+            return this->global_chord_identity.degree;
+        }
+        void set_global_chord_degree(int8_t degree, bool requantise_immediately = true) {
+            bool changed = degree != get_global_chord_degree();
+            this->global_chord_identity.degree = degree;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+        }
+
+        CHORD::Type get_global_chord_type() {
+            return this->global_chord_identity.type;
+        }
+        void set_global_chord_type(CHORD::Type chord_type, bool requantise_immediately = true) {
+            bool changed = chord_type != get_global_chord_type();
+            this->global_chord_identity.type = chord_type;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+        }
+
+        int8_t get_global_chord_inversion() {
+            return this->global_chord_identity.inversion;
+        }
+        void set_global_chord_inversion(int8_t inversion, bool requantise_immediately = true) {
+            bool changed = inversion != get_global_chord_inversion();
+            this->global_chord_identity.inversion = inversion;
+            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+        }
+    #endif
 
     ////////// save and load 
     void save_project_add_lines(LinkedList<String> *lines) {
@@ -501,10 +509,12 @@ class MIDIMatrixManager {
                 }
             }
         }
-        lines->add(String("global_scale_type=")+String(get_global_scale_type()));
-        lines->add(String("global_scale_root=")+String(get_global_scale_root()));
-        lines->add(String("global_quantise_on=")+String(is_global_quantise_on()?"true":"false"));
-        lines->add(String("global_quantise_chord_on=")+String(is_global_quantise_chord_on()?"true":"false"));
+        #ifdef ENABLE_SCALES
+            lines->add(String("global_scale_type=")+String(get_global_scale_type()));
+            lines->add(String("global_scale_root=")+String(get_global_scale_root()));
+            lines->add(String("global_quantise_on=")+String(is_global_quantise_on()?"true":"false"));
+            lines->add(String("global_quantise_chord_on=")+String(is_global_quantise_chord_on()?"true":"false"));
+        #endif
     }
 
     bool load_parse_line(String line) {
@@ -530,19 +540,22 @@ class MIDIMatrixManager {
             String target_label = value.substring(split+1,value.length());
             this->connect(source_label.c_str(), target_label.c_str());
             return true;
-        } else if (key.equals("global_scale_type")) {
-            this->set_global_scale_type((SCALE)value.toInt());
-            return true;
-        } else if (key.equals("global_scale_root")) {
-            this->set_global_scale_root(value.toInt());
-            return true;
-        } else if (key.equals("global_quantise_on")) {
-            this->set_global_quantise_on(value.equals("true") || value.equals("on") || value.equals("1"));
-            return true;
-        } else if (key.equals("global_quantise_chord_on")) {
-            this->set_global_quantise_chord_on(value.equals("true") || value.equals("on") || value.equals("1"));
-            return true;
         }
+        #ifdef ENABLE_SCALES
+            else if (key.equals("global_scale_type")) {
+                this->set_global_scale_type((SCALE)value.toInt());
+                return true;
+            } else if (key.equals("global_scale_root")) {
+                this->set_global_scale_root(value.toInt());
+                return true;
+            } else if (key.equals("global_quantise_on")) {
+                this->set_global_quantise_on(value.equals("true") || value.equals("on") || value.equals("1"));
+                return true;
+            } else if (key.equals("global_quantise_chord_on")) {
+                this->set_global_quantise_chord_on(value.equals("true") || value.equals("on") || value.equals("1"));
+                return true;
+            }
+        #endif
         return false;
     }
 
@@ -556,9 +569,11 @@ class MIDIMatrixManager {
             //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
             memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
 
-            set_global_scale_root_target(&this->global_scale_root);
-            set_global_scale_type_target(&this->global_scale_type);
-            set_global_chord_identity_target(&this->global_chord_identity);
+            #ifdef ENABLE_SCALES
+                set_global_scale_root_target(&this->global_scale_root);
+                set_global_scale_type_target(&this->global_scale_type);
+                set_global_chord_identity_target(&this->global_chord_identity);
+            #endif
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

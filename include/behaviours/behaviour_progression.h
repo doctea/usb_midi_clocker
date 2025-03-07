@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "Config.h"
 
-#ifdef ENABLE_PROGRESSION
+#if defined(ENABLE_PROGRESSION) && defined(ENABLE_SCALES)
 
 #include "bpm.h"
 

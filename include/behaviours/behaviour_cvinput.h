@@ -24,42 +24,43 @@ extern ParameterManager *parameter_manager;
 
 class DeviceBehaviour_CVInput;
 
-// todo: move this to Parameter library, or midihelpers scale library..?
-template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
-class ChordTypeParameter : /*virtual*/ public DataParameter<TargetClass, DataType> {
-    public:
-        ChordTypeParameter(const char *label, TargetClass *target, void(TargetClass::*setter_func)(DataType), DataType(TargetClass::*getter_func)()) 
-        : DataParameter<TargetClass, DataType>(label, target, setter_func, getter_func, 0, NUMBER_CHORDS-1) {}
+#ifdef ENABLE_SCALES
+    // todo: move this to Parameter library, or midihelpers scale library..?
+    template<class TargetClass=DeviceBehaviour_CVInput, class DataType=CHORD::Type>
+    class ChordTypeParameter : /*virtual*/ public DataParameter<TargetClass, DataType> {
+        public:
+            ChordTypeParameter(const char *label, TargetClass *target, void(TargetClass::*setter_func)(DataType), DataType(TargetClass::*getter_func)()) 
+            : DataParameter<TargetClass, DataType>(label, target, setter_func, getter_func, 0, NUMBER_CHORDS-1) {}
 
-        /*virtual DataType normalToData(float value) override {
-            value = this->constrainNormal(value);
-            //DataType data = this->minimumDataValue + (value * (float)(this->maximumDataValue - this->minimumDataValue));
-            DataType data = value * (float)NUMBER_CHORDS;
-            if (this->debug && value>=0.0f) Serial.printf(" => %i\n", data);
-            return data;
-        }
-        virtual float dataToNormal(DataType value) override {
-            //if (this->debug) Serial.printf(F("dataToNormal(%i) "), value);
-            //float normal = (float)(value - minimumDataValue) / (float)(maximumDataValue - minimumDataValue);
-            //if (this->debug) Serial.printf(F(" => %f\n"), normal);
-            float normal = value / (float)NUMBER_CHORDS;
-            return normal;
-            // eg   min = 0, max = 100, actual = 50 ->          ( 50 - 0 ) / (100-0)            = 0.5
-            //      min = 0, max = 100, actual = 75 ->          ( 75 - 0 ) / (100-0)            = 0.75
-            //      min = -100, max = 100, actual = 0 ->        (0 - -100) / (100--100)         = 0.5
-            //      min = -100, max = 100, actual = -100 - >    (-100 - -100) / (100 - -100)    = 0
-        }*/
+            /*virtual DataType normalToData(float value) override {
+                value = this->constrainNormal(value);
+                //DataType data = this->minimumDataValue + (value * (float)(this->maximumDataValue - this->minimumDataValue));
+                DataType data = value * (float)NUMBER_CHORDS;
+                if (this->debug && value>=0.0f) Serial.printf(" => %i\n", data);
+                return data;
+            }
+            virtual float dataToNormal(DataType value) override {
+                //if (this->debug) Serial.printf(F("dataToNormal(%i) "), value);
+                //float normal = (float)(value - minimumDataValue) / (float)(maximumDataValue - minimumDataValue);
+                //if (this->debug) Serial.printf(F(" => %f\n"), normal);
+                float normal = value / (float)NUMBER_CHORDS;
+                return normal;
+                // eg   min = 0, max = 100, actual = 50 ->          ( 50 - 0 ) / (100-0)            = 0.5
+                //      min = 0, max = 100, actual = 75 ->          ( 75 - 0 ) / (100-0)            = 0.75
+                //      min = -100, max = 100, actual = 0 ->        (0 - -100) / (100--100)         = 0.5
+                //      min = -100, max = 100, actual = -100 - >    (-100 - -100) / (100 - -100)    = 0
+            }*/
 
-        #ifdef ENABLE_SCREEN
-            virtual const char* parseFormattedDataType(DataType value) {
-                static char fmt[MENU_C_MAX] = "              ";
-                snprintf(fmt, MENU_C_MAX, chords[value].label);
-                return fmt;
-                //return "??";
-            };
-        #endif
-};
-
+            #ifdef ENABLE_SCREEN
+                virtual const char* parseFormattedDataType(DataType value) {
+                    static char fmt[MENU_C_MAX] = "              ";
+                    snprintf(fmt, MENU_C_MAX, chords[value].label);
+                    return fmt;
+                    //return "??";
+                };
+            #endif
+    };
+#endif
 
 #include "chord_player.h"
 #include "functional-vlpp.h"
@@ -70,10 +71,12 @@ class ChordTypeParameter : /*virtual*/ public DataParameter<TargetClass, DataTyp
 
 class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase {  // making virtual increases code usage by about 500 bytes!
     public:
-        ChordPlayer chord_player = ChordPlayer(
-            [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_on(channel, note, velocity); },
-            [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_off(channel, note, velocity); }
-        );
+        #ifdef ENABLE_SCALES
+            ChordPlayer chord_player = ChordPlayer(
+                [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_on(channel, note, velocity); },
+                [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_off(channel, note, velocity); }
+            );
+        #endif
 
         DeviceBehaviour_CVInput(const char *label = nullptr) : DeviceBehaviourUltimateBase () {
             if (label!=nullptr)
@@ -129,7 +132,9 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 if (this->debug) Serial.printf("setting velocity to %i (%2.2f)\n", velocity, this->velocity_input->get_normal_value_unipolar());
             }
 
-            this->chord_player.on_pre_clock(ticks, new_note, velocity);
+            #ifdef ENABLE_SCALES
+                this->chord_player.on_pre_clock(ticks, new_note, velocity);
+            #endif
         }
 
         // todo: do we like, want a 'save_global_add_lines' sorta thing for global configs?  or should this be project config?
@@ -142,36 +147,40 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
 
         virtual void save_pattern_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_pattern_add_lines(lines);
-            lines->add(String(F("scale=")) + String(this->chord_player.get_scale()));    // add this here because SCALE won't cast to Int implicitly TODO: solve this
+            #ifdef ENABLE_SCALES
+                lines->add(String(F("scale=")) + String(this->chord_player.get_scale()));    // add this here because SCALE won't cast to Int implicitly TODO: solve this
+            #endif
         }
 
         virtual void setup_saveable_parameters() override {
             if (this->saveable_parameters==nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
-            // key centre + scale
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>    
-                ("scale_root", "CV", &this->chord_player.scale_root, [=](int8_t v) -> void { this->chord_player.set_scale_root(v); }, [=]() -> int8_t { return this->chord_player.get_scale_root(); } ));
-            // scale number (key) is handled in load_parse_key_value/save_pattern_add_lines because SCALE type breaks SaveableParameter
-            //this->saveable_parameters->add(new LSaveableParameter<SCALE>("scale_number", "CV", &this->scale, [=](SCALE v) -> void { this->set_scale(v); }, [=]() -> SCALE { return this->get_scale(); }));
+            #ifdef ENABLE_SCALES
+                // key centre + scale
+                this->saveable_parameters->add(new LSaveableParameter<int8_t>    
+                    ("scale_root", "CV", &this->chord_player.scale_root, [=](int8_t v) -> void { this->chord_player.set_scale_root(v); }, [=]() -> int8_t { return this->chord_player.get_scale_root(); } ));
+                // scale number (key) is handled in load_parse_key_value/save_pattern_add_lines because SCALE type breaks SaveableParameter
+                //this->saveable_parameters->add(new LSaveableParameter<SCALE>("scale_number", "CV", &this->scale, [=](SCALE v) -> void { this->set_scale(v); }, [=]() -> SCALE { return this->get_scale(); }));
 
-            // note duration and triggers
-            this->saveable_parameters->add(new LSaveableParameter<int32_t>
-                ("note_length_ticks", "CV", &this->chord_player.note_length_ticks, [=](int32_t v) -> void{ this->chord_player.set_note_length(v); }, [=]() -> int32_t { return this->chord_player.get_note_length(); } ));
-            this->saveable_parameters->add(new LSaveableParameter<int32_t>
-                ("trigger_each", "CV", &this->chord_player.trigger_on_ticks, [=](int32_t v) -> void{ this->chord_player.set_trigger_on_ticks(v); }, [=]() -> int32_t { return this->chord_player.get_trigger_on_ticks(); } ));
-            this->saveable_parameters->add(new LSaveableParameter<int32_t>
-                ("trigger_delay_ticks", "CV", &this->chord_player.trigger_delay_ticks, [=](int32_t v) -> void { this->chord_player.set_trigger_delay_ticks(v); }, [=]() -> int32_t { return this->chord_player.get_trigger_delay_ticks(); } ));
+                // note duration and triggers
+                this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                    ("note_length_ticks", "CV", &this->chord_player.note_length_ticks, [=](int32_t v) -> void{ this->chord_player.set_note_length(v); }, [=]() -> int32_t { return this->chord_player.get_note_length(); } ));
+                this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                    ("trigger_each", "CV", &this->chord_player.trigger_on_ticks, [=](int32_t v) -> void{ this->chord_player.set_trigger_on_ticks(v); }, [=]() -> int32_t { return this->chord_player.get_trigger_on_ticks(); } ));
+                this->saveable_parameters->add(new LSaveableParameter<int32_t>
+                    ("trigger_delay_ticks", "CV", &this->chord_player.trigger_delay_ticks, [=](int32_t v) -> void { this->chord_player.set_trigger_delay_ticks(v); }, [=]() -> int32_t { return this->chord_player.get_trigger_delay_ticks(); } ));
 
-            // quantisation settings
-            this->saveable_parameters->add(new LSaveableParameter<bool>   
-                ("quantise_enable", "CV", &this->chord_player.quantise, [=](bool v) -> void { this->chord_player.set_quantise(v); }, [=]() -> bool { return this->chord_player.is_quantise(); } ));
-            this->saveable_parameters->add(new LSaveableParameter<bool>   
-                ("play_chords", "CV", &this->chord_player.play_chords, [=](bool v) -> void{ this->chord_player.set_play_chords(v); }, [=]() -> bool { return this->chord_player.is_play_chords(); } ));
-            this->saveable_parameters->add(new LSaveableParameter<CHORD::Type>
-                ("Chord", "CV", &this->chord_player.selected_chord_number, [=](CHORD::Type v) -> void { this->chord_player.set_selected_chord(v); }, [=]() -> CHORD::Type { return this->chord_player.get_selected_chord(); } ));
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>
-                ("inversion", "CV", &this->chord_player.inversion, [=](int8_t v) -> void { this->chord_player.set_inversion(v); }, [=]() -> int8_t { return this->chord_player.get_inversion(); } ));
+                // quantisation settings
+                this->saveable_parameters->add(new LSaveableParameter<bool>   
+                    ("quantise_enable", "CV", &this->chord_player.quantise, [=](bool v) -> void { this->chord_player.set_quantise(v); }, [=]() -> bool { return this->chord_player.is_quantise(); } ));
+                this->saveable_parameters->add(new LSaveableParameter<bool>   
+                    ("play_chords", "CV", &this->chord_player.play_chords, [=](bool v) -> void{ this->chord_player.set_play_chords(v); }, [=]() -> bool { return this->chord_player.is_play_chords(); } ));
+                this->saveable_parameters->add(new LSaveableParameter<CHORD::Type>
+                    ("Chord", "CV", &this->chord_player.selected_chord_number, [=](CHORD::Type v) -> void { this->chord_player.set_selected_chord(v); }, [=]() -> CHORD::Type { return this->chord_player.get_selected_chord(); } ));
+                this->saveable_parameters->add(new LSaveableParameter<int8_t>
+                    ("inversion", "CV", &this->chord_player.inversion, [=](int8_t v) -> void { this->chord_player.set_inversion(v); }, [=]() -> int8_t { return this->chord_player.get_inversion(); } ));
+            #endif
 
         }
 
@@ -198,9 +207,11 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                     messages_log_add(warning_message + value + "'");
                 }
                 return true;
-            } else if (key.equals(F("scale"))) {           // do this here because SCALE won't cast to Int implicitly TODO: solve this
-                this->chord_player.set_scale((SCALE)value.toInt());
-                return true;
+            #ifdef ENABLE_SCALES
+                } else if (key.equals(F("scale"))) {           // do this here because SCALE won't cast to Int implicitly TODO: solve this
+                    this->chord_player.set_scale((SCALE)value.toInt());
+                    return true;
+            #endif
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }

@@ -1,9 +1,6 @@
-#include "behaviours/behaviour_progression.h"
+#include "Config.h"
 
-VirtualBehaviour_Progression *behaviour_progression = nullptr;
-
-
-/*void VirtualBehaviour_Progression::requantise_all_notes() {
-
-
-}*/
+#ifdef ENABLE_PROGRESSIONS
+    #include "behaviours/behaviour_progression.h"
+    VirtualBehaviour_Progression *behaviour_progression = nullptr;
+#endif

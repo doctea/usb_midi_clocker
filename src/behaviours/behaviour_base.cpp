@@ -71,6 +71,7 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
     }
 }*/
 
+#ifdef ENABLE_SCALES
 void DeviceBehaviourUltimateBase::requantise_all_notes() {
     if (this->current_channel==GM_CHANNEL_DRUMS)
         return;
@@ -128,13 +129,18 @@ void DeviceBehaviourUltimateBase::requantise_all_notes() {
     if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes finishing with\t%i held notes (%s)\n", this->get_label(), note_tracker.count_held(), note_tracker.get_held_notes_c());
 
 }
+#endif
 
 
 void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
     //if (debug) Serial_printf("DeviceBehaviourUltimateBase#sendNoteOn");
     // TODO: this is where ForceOctave check should go..?
 
-    int8_t quantised_note = midi_matrix_manager->do_quant(note, channel);
+    #ifdef ENABLE_SCALES
+        int8_t quantised_note = midi_matrix_manager->do_quant(note, channel);
+    #else
+        int8_t quantised_note = note;
+    #endif
 
     quantised_note = this->recalculate_pitch(quantised_note);
     if (!is_valid_note(quantised_note)) return;

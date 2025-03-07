@@ -413,12 +413,14 @@ class DeviceBehaviourManager {
             }
         }
 
-        void requantise_all_notes() {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
-                behaviours->get(i)->requantise_all_notes();
+        #ifdef ENABLE_SCALES
+            void requantise_all_notes() {
+                const unsigned int size = behaviours->size();
+                for (unsigned int i = 0 ; i < size ; i++) {
+                    behaviours->get(i)->requantise_all_notes();
+                }
             }
-        }
+        #endif
 
         void notify_behaviours_for_project_change(int8_t project_number) {
             const unsigned int size = behaviours->size();

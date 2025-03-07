@@ -20,9 +20,12 @@
 #endif
 
 #define ENABLE_PROGRESSION
-
-#ifdef ENABLE_PROGRESSION
+#if defined(ENABLE_PROGRESSION) && defined(ENABLE_SCALES)
     #define ENABLE_APCMINI_PROGRESSIONS
+#else
+    #warning "ENABLE_PROGRESSION is defined but ENABLE_SCALES is not, disabling ENABLE_PROGRESSION and APCMINI_PROGRESSIONS"
+    #undef ENABLE_PROGRESSION
+    #undef ENABLE_APCMINI_PROGRESSIONS
 #endif
 
 //// CV input options

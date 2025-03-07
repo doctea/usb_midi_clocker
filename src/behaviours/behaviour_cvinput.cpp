@@ -25,9 +25,11 @@ extern bool debug_flag;
         }*/
         this->pitch_input = input;
 
-        if (is_valid_note(this->chord_player.current_note)) {
-            chord_player.trigger_off_for_pitch_because_changed(this->chord_player.current_note);
-        }
+        #ifdef ENABLE_SCALES
+            if (is_valid_note(this->chord_player.current_note)) {
+                chord_player.trigger_off_for_pitch_because_changed(this->chord_player.current_note);
+            }
+        #endif
         //Serial.println(F("finished in set_selected_paramter_input"));
         //else
         //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);

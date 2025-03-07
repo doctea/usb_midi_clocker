@@ -234,32 +234,31 @@ void redraw_pads_row(byte row, bool force) {
 #endif
 
 #ifdef ENABLE_APCMINI_PROGRESSIONS
+  #include "behaviours/behaviour_progression.h"
 
-#include "behaviours/behaviour_progression.h"
-
-int get_progression_cell_apc_colour(byte row, byte column) {
-  return behaviour_progression->get_cell_colour_for(column,row); //grid[column][row];
-}
-
-void redraw_progressions_row(byte row, bool force) {
-  if (behaviour_apcmini->device==nullptr) return;
-
-  int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
-  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
-    //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
-    apcdisplay_sendNoteOn(start_row+x, get_progression_cell_apc_colour(row,x), 1, force);
+  int get_progression_cell_apc_colour(byte row, byte column) {
+    return behaviour_progression->get_cell_colour_for(column,row); //grid[column][row];
   }
 
-  for (int i = 0 ; i < VirtualBehaviour_Progression::MODE::NUM_MODES ; i++) {
-    apcdisplay_sendNoteOn(
-      APCMINI_BUTTON_CLIP_STOP + i, 
-      behaviour_progression->current_mode==i ? APCMINI_ON : APCMINI_OFF
-    );
-  }
+  void redraw_progressions_row(byte row, bool force) {
+    if (behaviour_apcmini->device==nullptr) return;
 
-  apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, behaviour_progression->advance_progression_bar ? APCMINI_ON : APCMINI_OFF);
-  apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, behaviour_progression->advance_progression_playlist ? APCMINI_ON : APCMINI_OFF);
-}
+    int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
+    for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+      //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
+      apcdisplay_sendNoteOn(start_row+x, get_progression_cell_apc_colour(row,x), 1, force);
+    }
+
+    for (int i = 0 ; i < VirtualBehaviour_Progression::MODE::NUM_MODES ; i++) {
+      apcdisplay_sendNoteOn(
+        APCMINI_BUTTON_CLIP_STOP + i, 
+        behaviour_progression->current_mode==i ? APCMINI_ON : APCMINI_OFF
+      );
+    }
+
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, behaviour_progression->advance_progression_bar ? APCMINI_ON : APCMINI_OFF);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, behaviour_progression->advance_progression_playlist ? APCMINI_ON : APCMINI_OFF);
+  }
 #endif
 
 #ifdef ENABLE_APCMINI_DISPLAY

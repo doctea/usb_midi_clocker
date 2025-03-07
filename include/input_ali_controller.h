@@ -261,19 +261,19 @@
                     menu->select_next_page();
                 }
                 break;
-            #endif
             case 'h':
                 menu->set_hide_pinned(!menu->get_hide_pinned());
                 break;
+            case '-':
+                menu->select_page_quickjump();
+                Serial_println(F("------------------------")); break;
+            #endif
             case 'T':
                 debug_stress_sequencer_load = true;
                 break;
             case 't':
                 debug_stress_sequencer_load = false;
                 break;
-            case '-':
-                menu->select_page_quickjump();
-                Serial_println(F("------------------------")); break;
             case 'p': case 'P':
                 Serial_println(F("MIDI (p)ANIC AT THE DISCO"));
                 if (key=='P')   // hard panic

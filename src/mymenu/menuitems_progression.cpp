@@ -1,7 +1,6 @@
-
+#if defined(ENABLE_SCREEN) && defined(ENABLE_PROGRESSIONS)
 
 #include "behaviours/behaviour_progression.h"
-
 #include "midi/midi_apcmini_display.h"
 
 // todo: make a widget that indicates graphically the song structure
@@ -102,3 +101,5 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     // show current key, chord, inversion
 }
 */
+
+#endif
