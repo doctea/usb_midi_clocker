@@ -112,9 +112,9 @@ extern TapTempoTracker *tapper;
 MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
 
 #ifdef ENABLE_SD
-    #include "menuitems_fileviewer.h"
-    extern FileViewerMenuItem *sequence_fileviewer;
-    extern FileViewerMenuItem *project_fileviewer;
+    #include "menuitems_pageviewer.h"
+    extern PageFileViewerMenuItem *sequence_fileviewer;
+    extern PageFileViewerMenuItem *project_fileviewer;
 #endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
@@ -271,7 +271,7 @@ void setup_menu_taptempo() {
         menu->add(project_multi_autoadvance);
 
         #ifdef ENABLE_SD
-            project_fileviewer = new FileViewerMenuItem("Project");
+            project_fileviewer = new PageFileViewerMenuItem("Project");
             menu->add(project_fileviewer);
         #endif
     }
@@ -361,8 +361,8 @@ void setup_menu_midi() {
         //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD
-            //sequence_fileviewer = new FileViewerMenuItem("Sequence");
-            //menu->add(sequence_fileviewer);
+            sequence_fileviewer = new PageFileViewerMenuItem("Sequence");
+            menu->add(sequence_fileviewer);
         #endif
     }
 #endif

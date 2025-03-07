@@ -1,17 +1,14 @@
-#ifndef MENU_SEQUENCE_FILEVIEWER__INCLUDEDf
-#define MENU_SEQUENCE_FILEVIEWER__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
 //#include "menuitems.h"
 //#include "menuitems_fileviewer.h"
 
-class FileViewerMenuItem;
+class PageFileViewerMenuItem;
 
-extern FileViewerMenuItem *sequence_fileviewer;
-extern FileViewerMenuItem *project_fileviewer;
+extern PageFileViewerMenuItem *sequence_fileviewer;
+extern PageFileViewerMenuItem *project_fileviewer;
 
 void update_pattern_filename(String filename);
 void update_project_filename(String filename);
-
-#endif

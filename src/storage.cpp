@@ -362,7 +362,7 @@ namespace storage {
       char filename[MAX_FILEPATH] = "";
       snprintf(filename, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, project_number, pattern_number);
 
-      //update_pattern_filename(String(filename));
+      update_pattern_filename(String(filename));
       // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
       File myFile;   
