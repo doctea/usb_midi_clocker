@@ -10,9 +10,28 @@
   int freeRam() {
     return (char *)&_heap_end - __brkval;
   }
+  #ifdef ARDUINO_TEENSY41
+    // cribbed from https://forum.pjrc.com/index.php?threads/how-to-display-free-ram.33443/post-312421
+    extern char _extram_start[], _extram_end[];
+    extern uint8_t external_psram_size;
+    int freeExtRam() {
+      auto psram = _extram_start + (external_psram_size << 20) - _extram_end;
+      return psram;
+    }
+  #endif
 
   void debug_free_ram() {
-    Serial.printf(F("debug_free_ram: %i\n"), freeRam());
+    /*char * ptr = (char*)extmem_malloc(1024 << 10);
+    if (!ptr)
+      Serial.println("failed to allocate from extmem!");
+    else
+      sprintf(ptr, "hello");*/
+
+    Serial.printf(F("debug_free_ram: %i RAM2"), freeRam());
+    #ifdef ARDUINO_TEENSY41
+      Serial.printf(F(", %i EXTRAM"), freeExtRam());
+    #endif
+    Serial.println();
   }
 
   FLASHMEM void reset_teensy() {
@@ -32,7 +51,12 @@
     return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
   }
   void debug_free_ram() {
-    Serial.print(F("Free RAM is "));
-    Serial.println(freeRam());
+    Serial.print(F("Free RAM2 is "));
+    Serial.print(freeRam());
+    #ifdef ARDUINO_TEENSY41
+      Serial.print(F(", free EXTRAM is "));
+      Serial.print(freeExtRam());
+    #endif
+    Serial.println();
   }
 #endif

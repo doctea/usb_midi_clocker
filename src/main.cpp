@@ -306,7 +306,7 @@ void setup() {
   Serial_printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_SCREEN
-    snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
+    snprintf(menu->last_message, MENU_C_MAX, "started up, %uK RAM2 free, %uK EXT free", freeRam()/1024, freeExtRam()/1024);
   #endif
 
   #ifdef LOAD_CALIBRATION_ON_BOOT

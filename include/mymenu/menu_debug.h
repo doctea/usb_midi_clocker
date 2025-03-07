@@ -37,6 +37,9 @@ class DebugPanel : public MenuItem {
 
             pos.y = header("Status:", pos, selected, opened);
             tft->printf("  Free RAM: %u bytes\n", freeRam());
+            #ifdef ARDUINO_TEENSY41
+                tft->printf("  Free extRAM: %u bytes\n", freeExtRam());
+            #endif
             tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
             tft->printf("  Tick:   %i\n", ticks);
             tft->print("\nSerial: ");
