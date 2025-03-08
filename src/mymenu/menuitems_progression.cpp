@@ -1,4 +1,6 @@
-#if defined(ENABLE_SCREEN) && defined(ENABLE_PROGRESSIONS)
+#include "Config.h"
+
+#if defined(ENABLE_SCREEN) && defined(ENABLE_PROGRESSION)
 
 #include "behaviours/behaviour_progression.h"
 #include "midi/midi_apcmini_display.h"

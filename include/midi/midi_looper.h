@@ -668,6 +668,7 @@ class MIDITrack {
 
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
+            #ifdef ENABLE_SD
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             //Serial.println("save_pattern not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
@@ -734,12 +735,16 @@ class MIDITrack {
             loaded_recording_number = recording_number;
             }
             return true;
+            #else
+            return false;
+            #endif
         }
 
         //#define DEBUG_LOOP_LOADER
 
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
+            #ifdef ENABLE_SD
             //this->debug = true;
             Serial.println("load_loop: top of load_loop()"); Serial_flush();
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -862,6 +867,9 @@ class MIDITrack {
             //this->debug = false;
 
             return true;
+            #else
+            return false;
+            #endif
         }       
 
         #ifdef ENABLE_SCREEN

@@ -122,10 +122,10 @@ void setup() {
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
   if (CrashReport) {
-    /*while (!Serial);
-    Serial_println("CRASHREPORT!");
-    Serial_print(CrashReport);
-    while(Serial.available()==0);
+    while (!Serial);
+    //Serial_println("CRASHREPORT!");
+    //Serial_print(CrashReport);
+    /*while(Serial.available()==0);
     Serial.clear();*/
     setup_storage();
     log_crashreport();
@@ -233,7 +233,7 @@ void setup() {
     setup_cv_output_parameter_inputs();
     Debug_printf(F("after setup_cv_output_parameter_inputs(), free RAM is %u\n"), freeRam());
   #endif
-  #ifdef ENABLE_SCREEN
+  #if defined(ENABLE_SCREEN) && defined(ENABLE_PARAMETERS)
     setup_parameter_menu();
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
@@ -326,9 +326,15 @@ void setup() {
   debug_free_ram();
   
   #ifdef ENABLE_SCREEN
-    pushButtonA.resetStateChange();
-    pushButtonB.resetStateChange();
-    pushButtonC.resetStateChange();
+    #ifdef PIN_BUTTON_A
+      pushButtonA.resetStateChange();
+    #endif
+    #ifdef PIN_BUTTON_B
+      pushButtonB.resetStateChange();
+    #endif
+    #ifdef PIN_BUTTON_C
+      pushButtonC.resetStateChange();
+    #endif
   #endif
   
   Serial_println("Finished setup()!");

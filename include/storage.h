@@ -3,7 +3,9 @@
 #include <Arduino.h>
 #include "Config.h"
 
-#include "SD.h"
+#ifdef ENABLE_SD
+  #include "SD.h"
+#endif
 
 namespace storage {
 

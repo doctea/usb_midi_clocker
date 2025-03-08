@@ -617,6 +617,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual bool save_playlist(int project_number = -1) {
+        #ifdef ENABLE_SD
         if (project_number<0) project_number = project->current_project_number;
 
         LinkedList<String> section_lines = LinkedList<String>();
@@ -655,9 +656,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         }
 
         return true;
+        #else
+        return false;
+        #endif
     }
 
     virtual bool load_playlist(int project_number = -1) {
+        #ifdef ENABLE_SD
         if (project_number<0) project_number = project->getProjectNumber();
 
         Serial.printf("Progression#load_playlist(%i)\n", project_number);
@@ -685,9 +690,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         }
 
         return true;
+        #else
+        return false;
+        #endif
     }
 
     virtual bool save_section(int section_number = -1, int project_number = -1) {
+        #ifdef ENABLE_SD
         if (section_number<0) section_number = current_section;
         if (project_number<0) project_number = project->getProjectNumber();
 
@@ -728,10 +737,14 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             messages_log_add(String("Saved to project : section ") + String(project_number) + " : " + String(section_number));
         }
         return true;
+        #else
+        return false;
+        #endif
     }
 
 
     virtual bool load_section(int section_number = -1, int project_number = -1) {
+        #ifdef ENABLE_SD
         if (section_number<0) section_number = current_section;
         if (project_number<0) project_number = project->getProjectNumber();
 
@@ -762,6 +775,9 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         //debug = false;
 
         return true;
+        #else
+        return false;
+        #endif
     }
 
     virtual void notify_project_changed(int project_number) override {

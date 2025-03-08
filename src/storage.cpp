@@ -9,7 +9,10 @@
 
 #include <util/atomic.h>
 
-#include "SD.h"
+#ifdef ENABLE_SD
+  #include "SD.h"
+#endif
+
 //#include "SdFat.h"
 #include <SPI.h>
 namespace storage {
@@ -39,43 +42,55 @@ namespace storage {
   }
 
   void log_crashreport() {
-    if (SD.mediaPresent()) {
-      File f = SD.open("crashreport.log", O_WRONLY | O_CREAT);
-      if (f) {
-        f.println("-----");
-        f.print(CrashReport);
-        f.println("-----");
-        f.close();
+    #ifdef ENABLE_SD
+      if (SD.mediaPresent()) {
+        File f = SD.open("crashreport.log", O_WRONLY | O_CREAT);
+        if (f) {
+          f.println("-----");
+          f.print(CrashReport);
+          f.println("-----");
+          f.close();
+        }
       }
-    }
+    #endif
   }
 
   void dump_crashreport_log() {
-    File f = SD.open("crashreport.log", FILE_READ);
-    f.setTimeout(0);
-    if (f) {
-      while (String line = f.readStringUntil('\n')) {
-        f.println(line);
-        Serial.print(line);
-        Serial.print("\r\n");
+    #ifdef ENABLE_SD
+      File f = SD.open("crashreport.log", FILE_READ);
+      f.setTimeout(0);
+      if (f) {
+        while (String line = f.readStringUntil('\n')) {
+          f.println(line);
+          Serial.print(line);
+          Serial.print("\r\n");
+        }
+      } else {
+        Serial.println("dump_crashreport_log: crashreport.log not found");
+        messages_log_add("crashreport.log not found");
       }
-    } else {
-      Serial.println("dump_crashreport_log: crashreport.log not found");
-      messages_log_add("crashreport.log not found");
-    }
+    #else
+      Serial.println("dump_crashreport_log: SD not enabled");
+      messages_log_add("SD not enabled");
+    #endif
   }
 
   void clear_crashreport_log() {
-    if (!SD.mediaPresent()) {
-      messages_log_add("No media present");
-      return;
-    } else {
-      if (SD.remove("crashreport.log")) {
-        messages_log_add("Deleted crashreport.log");
+    #ifdef ENABLE_SD
+      if (!SD.mediaPresent()) {
+        messages_log_add("No media present");
+        return;
       } else {
-        messages_log_add("Failed to remove crashreport.log");
+        if (SD.remove("crashreport.log")) {
+          messages_log_add("Deleted crashreport.log");
+        } else {
+          messages_log_add("Failed to remove crashreport.log");
+        }
       }
-    }
+    #else
+      Serial.println("clear_crashreport_log: SD not enabled");
+      messages_log_add("SD not enabled");
+    #endif
   }
 
   // force a crash, for testing CrashReport purposes
@@ -85,10 +100,13 @@ namespace storage {
     *(volatile uint32_t *)0x30000000 = 0;
   }
 
+  #ifdef ENABLE_SD
   const int chipSelect = BUILTIN_SDCARD;
+  #endif
 
   FLASHMEM
   void make_project_folders(int project_number) {
+    #ifdef ENABLE_SD
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       char path[MAX_FILEPATH];
       snprintf(path, MAX_FILEPATH, "project%i", project_number);
@@ -127,28 +145,25 @@ namespace storage {
         //Serial.println(F("exists!\n"));
       }
     }
+    #endif
   }
 
   FLASHMEM void setup_storage() {
     static bool storage_initialised = false;
     if (storage_initialised) 
       return;
-    SD.begin(chipSelect);
-    //SD.setMediaDetectPin(0xFF); // disable media detect
-    Serial.printf("setup_storage() SD card initialised, media present: %i\n", SD.mediaPresent());
-    storage_initialised = true;
-
-    /*if (!SD.exists("sequences")) {
-      Serial.println(F("Folder 'sequences' doesn't exist on SD, creating!"));
-      SD.mkdir("sequences");
-    }
-    if (!SD.exists("loops")) {
-      Serial.println(F("Folder 'loops' doesn't exist on SD, creating!"));
-      SD.mkdir("loops");
-    }*/
+    #ifdef ENABLE_SD
+      SD.begin(chipSelect);
+      //SD.setMediaDetectPin(0xFF); // disable media detect
+      Serial.printf("setup_storage() SD card initialised, media present: %i\n", SD.mediaPresent());
+      storage_initialised = true;
+    #else
+      Serial.println("setup_storage() SD not enabled");
+    #endif
   }
 
-  bool save_pattern(int project_number, uint8_t pattern_number, savestate *input, bool debug = false) {
+  bool save_pattern(int project_number, uint8_t pattern_number, savestate *input, bool debug) {
+    #ifdef ENABLE_SD
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       //bool debug = false;
       #ifdef ENABLE_SD
@@ -225,6 +240,8 @@ namespace storage {
     if (debug) Serial.println("finishing save_pattern");
 
     return true;
+    #endif
+    return false;
   }
 
   enum load_states {

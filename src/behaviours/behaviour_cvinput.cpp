@@ -104,7 +104,9 @@ extern bool debug_flag;
 
         menuitems->add(bar);
 
-        this->chord_player.make_menu_items(menuitems);
+        #ifdef ENABLE_SCALES
+            this->chord_player.make_menu_items(menuitems);
+        #endif
 
         //Serial.println(F("returning..")); Serial_flush();
         return menuitems;
