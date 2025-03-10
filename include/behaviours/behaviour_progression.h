@@ -791,7 +791,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 const scale_pattern_t *scale_pattern = make_scale_pattern_t_from_string("w w h w w w h", "Major");
                 for (int i = 0 ; i < PITCHES_PER_SCALE ; i++) {
                     Serial.printf("Creating scale with rotation %i\n", i);
-                    const scale_t scale = { "Major", scale_pattern, i};
+                    //const scale_t scale = { "Major", scale_pattern, i};
+                    const scale_t scale = make_scale_t_from_pattern(scale_pattern, "test", i);
                     print_scale(0, scale);    
                 }
 
@@ -828,7 +829,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     chord_identity_t chord;
                     chord.degree = i+1;
                     chord.inversion = 0;
-                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()].pattern->valid_chromatic_pitches[i]));
+                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()].valid_chromatic_pitches[i]));
                     for (CHORD::Type t = 0 ; t < CHORD::NONE ; t++) {
                         chord.type = t;
 
