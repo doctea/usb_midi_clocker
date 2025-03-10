@@ -712,8 +712,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
             menuitems->add(new NoteHarmonyDisplay(
                 (const char*)"Progression harmony", 
-                &midi_matrix_manager->global_scale_type, 
-                &midi_matrix_manager->global_scale_root, 
+                &midi_matrix_manager->global_scale_identity.scale_number, 
+                &midi_matrix_manager->global_scale_identity.root_note, 
                 &this->note_tracker,
                 &midi_matrix_manager->global_quantise_on
             ));
@@ -788,18 +788,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             // test menu item to generate a new scale
             menuitems->add(new LambdaActionItem("Generate new scale", [=] () -> void {
                 Serial.printf("Testing 'Major' scale 'w w h w w w h'...\n");
-                scale_t *scale = make_scale_t_from_string("w w h w w w h", "Major");
-                print_scale(0, *scale);
-                Serial.printf("Testing 'Major' scale 'w w h w w w h' rotated 1 times...\n");
-                scale = make_scale_t_from_string("w w h w w w h", "Major", 1);
-                print_scale(0, *scale);
-                Serial.printf("Testing 'Major' scale 'w w h w w w h' rotated 2 times...\n");
-                scale = make_scale_t_from_string("w w h w w w h", "Major", 2);
-                print_scale(0, *scale);
-                Serial.printf("Testing 'Major' scale 'w w h w w w h' rotated 3 times...\n");
-                scale = make_scale_t_from_string("w w h w w w h", "Major", 3);
-                print_scale(0, *scale);
-                Serial.println("----");
+                const scale_pattern_t *scale_pattern = make_scale_pattern_t_from_string("w w h w w w h", "Major");
+                for (int i = 0 ; i < PITCHES_PER_SCALE ; i++) {
+                    Serial.printf("Creating scale with rotation %i\n", i);
+                    const scale_t scale = { "Major", scale_pattern, i};
+                    print_scale(0, scale);    
+                }
+
                 /*
                 Serial.printf("Testing 'Minor (Hungarian)' scale 'w h + h h + h'...\n");
                 scale = make_scale_t_from_string("w h + h h + h", "Minor (Hungarian)");
@@ -807,18 +802,20 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 scale = make_scale_t_from_string("w + h h h + h", "test3");
                 */
                 Serial.printf("Testing 'test4' scale 'h h h h h h h'...\n");
-                scale = make_scale_t_from_string("h h h h h h h", "test4");
+                const scale_pattern_t *scale_pattern_test = make_scale_pattern_t_from_string("h h h h h h h", "Invalid scale");
+                const scale_t scale = { "test4", scale_pattern_test, 0};
+                print_scale(0, scale);
             }));
 
             // test menu item to output all scales
-            menuitems->add(new LambdaActionItem("Output scales", [=] () -> void {
+            menuitems->add(new LambdaActionItem("Output all scales", [=] () -> void {
                 Serial.printf("Outputting all scales...\n");
                 for (int root = 0 ; root < 12 ; root++) {
                     Serial.printf("For root %s:\n", get_note_name_c(root));
                     for (SCALE i = (SCALE)0 ; i < SCALE::GLOBAL-1 ; i++) {
                         const scale_t *scale = &scales[i];
                         Serial.printf("----");
-                        print_scale(root, i);
+                        print_scale(root, *scale);
                     }
                     Serial.printf("----\n");
                 }
@@ -831,7 +828,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     chord_identity_t chord;
                     chord.degree = i+1;
                     chord.inversion = 0;
-                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()].valid_chromatic_pitches[i]));
+                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()].pattern->valid_chromatic_pitches[i]));
                     for (CHORD::Type t = 0 ; t < CHORD::NONE ; t++) {
                         chord.type = t;
 
@@ -842,11 +839,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                             instance.set_from_chord_identity(chord, get_global_scale_root(), get_global_scale_type());
 
                             int n;
-                            for (size_t x = 0 ; x < PITCHES_PER_CHORD && ((n = get_quantise_pitch_chord_note(instance.chord_root, chord.type, x, get_global_scale_root(), get_global_scale_type(), instance.inversion, this->debug)) >= 0) ; x++) {
+                            for (size_t x = 0 ; x < PITCHES_PER_CHORD && ((n = get_quantise_pitch_chord_note(instance.chord_root, instance.chord.type, x, get_global_scale_root(), get_global_scale_type(), instance.chord.inversion, this->debug)) >= 0) ; x++) {
                                 instance.set_pitch(x, n);
                             }
 
-                            Serial.printf("\tChord %i:\t %s, inversion %i\t", i+1, chords[chord.type].label, chord.inversion);
+                            Serial.printf("\tChord %i:\t %s, inversion %i\t", i+1, chords[instance.chord.type].label, chord.inversion);
                             Serial.printf("\tNotes:\t%s\n", instance.get_pitch_string());
                         }
                     }

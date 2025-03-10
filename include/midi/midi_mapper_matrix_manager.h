@@ -48,8 +48,7 @@ class MIDIMatrixManager {
 
     #ifdef ENABLE_SCALES
         bool    global_quantise_on = false, global_quantise_chord_on = false;
-        int8_t  global_scale_root = SCALE_ROOT_C;
-        SCALE   global_scale_type = SCALE::MAJOR;
+        scale_identity_t global_scale_identity = {SCALE::MAJOR, SCALE_ROOT_C};
         chord_identity_t global_chord_identity = {CHORD::TRIAD, -1, 0};
     #endif
     /*int8_t  global_chord_degree = -1;
@@ -440,18 +439,18 @@ class MIDIMatrixManager {
         }
 
         int8_t get_global_scale_root() {
-            return this->global_scale_root;
+            return this->global_scale_identity.root_note;
         }
         void set_global_scale_root(int8_t scale_root, bool requantise_immediately = true) {
-            bool changed = scale_root!=global_scale_root;
+            bool changed = scale_root!=global_scale_identity.root_note;
             if (changed && debug) {
-                Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_root), global_scale_root, get_note_name_c(scale_root), scale_root);
+                Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_identity.root_note), global_scale_identity.root_note, get_note_name_c(scale_root), scale_root);
                 Serial_printf("Current scale:\t");
-                print_scale(global_scale_root, global_scale_type);
+                print_scale(global_scale_identity.root_note, global_scale_identity.scale_number);
                 Serial_printf("New scale:\t");
-                print_scale(scale_root, global_scale_type);
+                print_scale(global_scale_identity.root_note, global_scale_identity.scale_number);
             }
-            this->global_scale_root = scale_root;
+            this->global_scale_identity.root_note = scale_root;
             if (changed && requantise_immediately) {
                 behaviour_manager_requantise_all_notes();
                 if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
@@ -459,11 +458,11 @@ class MIDIMatrixManager {
         }
 
         SCALE get_global_scale_type() {
-            return this->global_scale_type;
+            return this->global_scale_identity.scale_number;
         }
         void set_global_scale_type(SCALE scale_type, bool requantise_immediately = true) {
-            bool changed = scale_type!=global_scale_type;
-            this->global_scale_type = scale_type;
+            bool changed = scale_type!=global_scale_identity.scale_number;
+            this->global_scale_identity.scale_number = scale_type;
             if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
         }
 
@@ -570,8 +569,7 @@ class MIDIMatrixManager {
             memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
 
             #ifdef ENABLE_SCALES
-                set_global_scale_root_target(&this->global_scale_root);
-                set_global_scale_type_target(&this->global_scale_type);
+                set_global_scale_identity_target(&this->global_scale_identity);
                 set_global_chord_identity_target(&this->global_chord_identity);
             #endif
         }
