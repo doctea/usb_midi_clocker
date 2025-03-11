@@ -136,27 +136,17 @@ void setup_parameters() {
 #ifdef ENABLE_CV_OUTPUT
     // todo: move this to its own file out of cv_input.cpp?
     #include "behaviours/behaviour_cvoutput.h"
-    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1, *behaviour_cvoutput_2, *behaviour_cvoutput_3;
 
     void setup_cv_output_parameter_inputs() {
-        #if defined(ENABLE_CV_OUTPUT)
-            #ifdef ENABLE_CV_OUTPUT_CALIBRATION_INPUT_NAMES
-                const char *CV_OUTPUT_CALIBRATION_INPUT_NAMES[] = ENABLE_CV_OUTPUT_CALIBRATION_INPUT_NAMES;
-                behaviour_cvoutput_1->set_calibration_parameter_input(0, CV_OUTPUT_CALIBRATION_INPUT_NAMES[0]);
-                behaviour_cvoutput_1->set_calibration_parameter_input(1, CV_OUTPUT_CALIBRATION_INPUT_NAMES[1]);
-                behaviour_cvoutput_1->set_calibration_parameter_input(2, CV_OUTPUT_CALIBRATION_INPUT_NAMES[2]);
-                behaviour_cvoutput_1->set_calibration_parameter_input(3, CV_OUTPUT_CALIBRATION_INPUT_NAMES[3]);
-            #endif
-        #endif
-        #if defined(ENABLE_CV_OUTPUT_2)
-            #ifdef ENABLE_CV_OUTPUT_2_CALIBRATION_INPUT_NAMES
-                const char *CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[] = ENABLE_CV_OUTPUT_2_CALIBRATION_INPUT_NAMES;
-                behaviour_cvoutput_2->set_calibration_parameter_input(0, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[0]);
-                behaviour_cvoutput_2->set_calibration_parameter_input(1, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[1]);
-                behaviour_cvoutput_2->set_calibration_parameter_input(2, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[2]);
-                behaviour_cvoutput_2->set_calibration_parameter_input(3, CV_OUTPUT_2_CALIBRATION_INPUT_NAMES[3]);
-            #endif
-        #endif
+        // loop the cvoutput_configs and set the calibration parameter inputs
+        for (size_t i = 0 ; i < cvoutput_configs_size ; i++) {
+            cvoutput_config_t config = cvoutput_configs[i];
+            DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = cvoutput_configs[i].behaviour;
+            behaviour_cvoutput->set_calibration_parameter_input(0, config.calibration_input_names[0]);
+            behaviour_cvoutput->set_calibration_parameter_input(1, config.calibration_input_names[1]);
+            behaviour_cvoutput->set_calibration_parameter_input(2, config.calibration_input_names[2]);
+            behaviour_cvoutput->set_calibration_parameter_input(3, config.calibration_input_names[3]);
+        }
     }
 #endif
 

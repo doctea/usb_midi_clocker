@@ -238,17 +238,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 &this->note_tracker,
                 &midi_matrix_manager->global_quantise_on
             ));
-
-            /*
-            menuitems->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
-            menuitems->add(new NoteHarmonyDisplay(
-                (const char*)"CV Output 1 harmony", 
-                &midi_matrix_manager->global_scale_type, 
-                &midi_matrix_manager->global_scale_root, 
-                &behaviour_cvoutput_1->note_tracker,
-                &midi_matrix_manager->global_quantise_on
-            ));
-            */
             
             SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);
             section_bar->add(new LambdaNumberControl<int8_t>(

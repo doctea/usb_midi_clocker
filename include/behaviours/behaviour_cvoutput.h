@@ -3,8 +3,8 @@
 //#define ENABLE_CV_OUTPUT 0x4C
 #include "Config.h"
 
-#ifdef ENABLE_CV_OUTPUT
-
+#if defined(CONFIG_CV_OUTPUT_1) || defined(CONFIG_CV_OUTPUT_2) || defined(CONFIG_CV_OUTPUT_3)
+    
 #include "behaviour_base.h"
 #include "parameter_inputs/VoltageParameterInput.h"
 #include "parameters/CVOutputParameter.h"
@@ -17,6 +17,8 @@
 #include "interfaces/interfaces.h"
 
 #include "submenuitem_bar.h"
+
+#include "cv_output.h"
 
 extern ParameterManager *parameter_manager;
 
@@ -41,7 +43,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         GateManager *gate_manager = nullptr;
         int8_t gate_bank = -1, gate_offset = 0;
 
-        DeviceBehaviour_CVOutput(const char *label = nullptr, const char *parameter_label_prefix = "CVO-", uint8_t address = ENABLE_CV_OUTPUT, uint8_t dac_extended_address = ENABLE_CV_OUTPUT_EXTENDED_ADDRESS, TwoWire *wire = &Wire) 
+        DeviceBehaviour_CVOutput(const char *label, uint8_t address, uint8_t dac_extended_address, const char *parameter_label_prefix = "CVO-", TwoWire *wire = &Wire)
             : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
@@ -265,15 +267,5 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             }
         #endif
 };
-
-#ifdef ENABLE_CV_OUTPUT
-    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_1;
-#endif
-#ifdef ENABLE_CV_OUTPUT_2
-    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_2;
-#endif
-#ifdef ENABLE_CV_OUTPUT_3
-    extern DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput_3;
-#endif
 
 #endif

@@ -285,34 +285,21 @@ void setup_midi_mapper_matrix_manager() {
         //#endif
     #endif
 
-    #if defined(ENABLE_CV_OUTPUT)
-        //behaviour_midimuso_4mv->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 A", behaviour_cvoutput_1, 1));
-        //behaviour_midimuso_4mv->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 B", behaviour_cvoutput_1, 2));
-        //behaviour_midimuso_4mv->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 C", behaviour_cvoutput_1, 3));
-        //behaviour_midimuso_4mv->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 D", behaviour_cvoutput_1, 4));
-        // todo: make the behaviour create its own targets, so that polyphonicbehaviour can create multiple targets
-        behaviour_cvoutput_1->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 Auto", behaviour_cvoutput_1, behaviour_cvoutput_1->CHANNEL_ROUND_ROBIN));
-        behaviour_cvoutput_1->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 A", behaviour_cvoutput_1, 1));
-        behaviour_cvoutput_1->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 B", behaviour_cvoutput_1, 2));
-        behaviour_cvoutput_1->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 C", behaviour_cvoutput_1, 3));
-        behaviour_cvoutput_1->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 1 D", behaviour_cvoutput_1, 4));
-        //midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_1->label, behaviour_cvoutput_1));
-    #endif
-    #if defined(ENABLE_CV_OUTPUT_2)
-        //midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_2->label, behaviour_cvoutput_2));
-        // todo: make the behaviour create its own targets, so that polyphonicbehaviour can create multiple targets
-        behaviour_cvoutput_2->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 2 Auto", behaviour_cvoutput_2, behaviour_cvoutput_2->CHANNEL_ROUND_ROBIN));
-        behaviour_cvoutput_2->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 2 A", behaviour_cvoutput_2, 1));
-        behaviour_cvoutput_2->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 2 B", behaviour_cvoutput_2, 2));
-        behaviour_cvoutput_2->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 2 C", behaviour_cvoutput_2, 3));
-        behaviour_cvoutput_2->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper("CV Output 2 D", behaviour_cvoutput_2, 4));
-    #endif
-    #if defined(ENABLE_CV_OUTPUT_3)
-        midi_matrix_manager->register_target(make_midioutputwrapper(behaviour_cvoutput_3->label, behaviour_cvoutput_3));
-    #endif
-
     #if defined(ENABLE_USB) && defined(ENABLE_OPENTHEREMIN)
         midi_matrix_manager->register_source(behaviour_opentheremin, "OpenTheremin");
+    #endif
+
+    #ifdef ENABLE_CV_OUTPUT
+        // add the CV output midi targets
+        for (size_t i = 0 ; i < cvoutput_configs_size ; i++) {
+            cvoutput_config_t config = cvoutput_configs[i];
+            DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = cvoutput_configs[i].behaviour;
+            behaviour_cvoutput->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" Auto")).c_str(), behaviour_cvoutput, behaviour_cvoutput->CHANNEL_ROUND_ROBIN));
+            behaviour_cvoutput->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" A")).c_str(), behaviour_cvoutput, 1));
+            behaviour_cvoutput->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" B")).c_str(), behaviour_cvoutput, 2));
+            behaviour_cvoutput->voice_target_id[2] = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" C")).c_str(), behaviour_cvoutput, 3));
+            behaviour_cvoutput->voice_target_id[3] = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" D")).c_str(), behaviour_cvoutput, 4));
+        }
     #endif
 
     // set up 'Bass Proxy' behaviour
