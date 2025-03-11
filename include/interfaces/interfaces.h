@@ -14,7 +14,7 @@
 enum GATEBANKS {
     BANK_CLOCK,
     BANK_SEQ,
-    #if defined(ENABLE_CV_OUTPUT_1_GATE) || defined(ENABLE_CV_OUTPUT_2_GATE) || defined(ENABLE_CV_OUTPUT_3_GATE)
+    #if defined(ENABLE_GATES_BANK_EXTRA)
         BANK_EXTRA,
     #endif
     NUM_GATE_BANKS

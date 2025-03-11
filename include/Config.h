@@ -9,7 +9,11 @@
 
 // NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
 
-#if defined(ENABLE_CV_OUTPUT) && !defined(ENABLE_CV_OUTPUT_EXTENDED_ADDRESS)
+#if defined(CONFIG_CV_OUTPUT_1) || defined(CONFIG_CV_OUTPUT_2) || defined(CONFIG_CV_OUTPUT_3)
+    #define ENABLE_CV_OUTPUT
+#endif
+
+/*#if defined(ENABLE_CV_OUTPUT) && !defined(ENABLE_CV_OUTPUT_EXTENDED_ADDRESS)
     #define ENABLE_CV_OUTPUT_EXTENDED_ADDRESS 0
 #endif
 #if defined(ENABLE_CV_OUTPUT_2) && !defined(ENABLE_CV_OUTPUT_2_EXTENDED_ADDRESS)
@@ -17,7 +21,7 @@
 #endif
 #if defined(ENABLE_CV_OUTPUT_3) && !defined(ENABLE_CV_OUTPUT_3_EXTENDED_ADDRESS)
     #define ENABLE_CV_OUTPUT_3_EXTENDED_ADDRESS 0
-#endif
+#endif*/
 
 #define ENABLE_PROGRESSION
 #if defined(ENABLE_PROGRESSION) && defined(ENABLE_SCALES)
