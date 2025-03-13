@@ -659,8 +659,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             // todo: this was cribbed from menu.cpp setup_menu_midi() -- can probably re-use the same controls here to save some memory!
             LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
                 "Global Scale", 
-                [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
-                [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+                [=](scale_index_t scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+                [=]() -> scale_index_t { return midi_matrix_manager->get_global_scale_type(); },
                 [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
                 [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
                 false, true, true
@@ -693,8 +693,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             
             /*menuitems->add(new LambdaScaleMenuItemBar(
                 "Chord controller", 
-                [=] (SCALE s) -> void { chord_player->set_scale(s); },
-                [=] (void) -> SCALE { return chord_player->get_scale(); },
+                [=] (scale_index_t s) -> void { chord_player->set_scale(s); },
+                [=] (void) -> scale_index_t { return chord_player->get_scale(); },
                 [=] (int8_t) -> void { chord_player_}
             ));*/
 
@@ -785,51 +785,54 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             ));
             menuitems->add(save_playlist_bar);
 
-            // test menu item to generate a new scale
+            /*
+            // test menu items to test generating new scales
             menuitems->add(new LambdaActionItem("Generate new scale", [=] () -> void {
                 Serial.printf("Testing 'Major' scale 'w w h w w w h'...\n");
-                const scale_pattern_t *scale_pattern = make_scale_pattern_t_from_string("w w h w w w h", "Major");
+                const scale_pattern_t scale_pattern = *make_scale_pattern_t_from_string("w w h w w w h", "Major");
                 for (int i = 0 ; i < PITCHES_PER_SCALE ; i++) {
                     Serial.printf("Creating scale with rotation %i\n", i);
                     //const scale_t scale = { "Major", scale_pattern, i};
-                    const scale_t scale = make_scale_t_from_pattern(scale_pattern, "test", i);
+                    const scale_t scale = *make_scale_t_from_pattern(&scale_pattern, "test", i);
                     print_scale(0, scale);    
                 }
 
-                /*
-                Serial.printf("Testing 'Minor (Hungarian)' scale 'w h + h h + h'...\n");
-                scale = make_scale_t_from_string("w h + h h + h", "Minor (Hungarian)");
-                Serial.printf("Testing 'test3' scale 'w + h h h + h'...\n");
-                scale = make_scale_t_from_string("w + h h h + h", "test3");
-                */
                 Serial.printf("Testing 'test4' scale 'h h h h h h h'...\n");
-                const scale_pattern_t *scale_pattern_test = make_scale_pattern_t_from_string("h h h h h h h", "Invalid scale");
-                const scale_t scale = { "test4", scale_pattern_test, 0};
+                scale_pattern_t scale_pattern_test = *make_scale_pattern_t_from_string("h h h h h h h", "Invalid scale");
+                scale_t scale = { "test4", &scale_pattern_test, 0};
                 print_scale(0, scale);
+
+                Serial.printf("Testing 'test5' scale 'Lydian.aug' rotated 2...\n");
+                //const scale_pattern_t *scale_pattern_test2 = make_scale_pattern_t_from_string("w w w w w w w", "Invalid scale");
+                const scale_t scale2 = *make_scale_t_from_pattern(scale_patterns[1], "??Lydian.aug", 2);
+                print_scale(0, scale2);
+                
             }));
+            */
 
             // test menu item to output all scales
             menuitems->add(new LambdaActionItem("Output all scales", [=] () -> void {
                 Serial.printf("Outputting all scales...\n");
-                for (int root = 0 ; root < 12 ; root++) {
+                for (unsigned int root = 0 ; root < 12 ; root++) {
                     Serial.printf("For root %s:\n", get_note_name_c(root));
-                    for (SCALE i = (SCALE)0 ; i < SCALE::GLOBAL-1 ; i++) {
-                        const scale_t *scale = &scales[i];
-                        Serial.printf("----");
+                    for (unsigned int i = 0 ; i < NUMBER_SCALES ; i++) {
+                        const scale_t *scale = scales[(scale_index_t)i];
+                        Serial.printf("----\nOutputting scale %s - %s (%s) at %p...\n", get_note_name_c(root), scale->label, scale->pattern->label, scale);
                         print_scale(root, *scale);
                     }
                     Serial.printf("----\n");
                 }
+                Serial.printf("Done.");
             }));
 
             // test menu item to output all chords in the current scale
             menuitems->add(new LambdaActionItem("Output chords", [=] () -> void {
-                Serial.printf("Outputting all chords in the current scale %s - %s...\n", get_note_name_c(get_global_scale_root()), scales[get_global_scale_type()].label);
+                Serial.printf("Outputting all chords in the current scale %s - %s...\n", get_note_name_c(get_global_scale_root()), scales[get_global_scale_type()]->label);
                 for (int i = 0 ; i < PITCHES_PER_SCALE ; i++) {
                     chord_identity_t chord;
                     chord.degree = i+1;
                     chord.inversion = 0;
-                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()].valid_chromatic_pitches[i]));
+                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()]->valid_chromatic_pitches[i]));
                     for (CHORD::Type t = 0 ; t < CHORD::NONE ; t++) {
                         chord.type = t;
 
@@ -851,6 +854,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     Serial.println("----");
                 }
             }));
+            */
 
             return menuitems;
         }

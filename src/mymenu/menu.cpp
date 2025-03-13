@@ -316,8 +316,8 @@ void setup_menu_midi() {
 
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
-        [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
-        [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+        [=](scale_index_t scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+        [=]() -> scale_index_t { return midi_matrix_manager->get_global_scale_type(); },
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
         [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
         false, true, true

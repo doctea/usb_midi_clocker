@@ -48,7 +48,7 @@ class MIDIMatrixManager {
 
     #ifdef ENABLE_SCALES
         bool    global_quantise_on = false, global_quantise_chord_on = false;
-        scale_identity_t global_scale_identity = {SCALE::MAJOR, SCALE_ROOT_C};
+        scale_identity_t global_scale_identity = {SCALE_MAJOR, SCALE_ROOT_C};
         chord_identity_t global_chord_identity = {CHORD::TRIAD, -1, 0};
     #endif
     /*int8_t  global_chord_degree = -1;
@@ -457,10 +457,10 @@ class MIDIMatrixManager {
             }
         }
 
-        SCALE get_global_scale_type() {
+        scale_index_t get_global_scale_type() {
             return this->global_scale_identity.scale_number;
         }
-        void set_global_scale_type(SCALE scale_type, bool requantise_immediately = true) {
+        void set_global_scale_type(scale_index_t scale_type, bool requantise_immediately = true) {
             bool changed = scale_type!=global_scale_identity.scale_number;
             this->global_scale_identity.scale_number = scale_type;
             if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
@@ -542,7 +542,7 @@ class MIDIMatrixManager {
         }
         #ifdef ENABLE_SCALES
             else if (key.equals("global_scale_type")) {
-                this->set_global_scale_type((SCALE)value.toInt());
+                this->set_global_scale_type((scale_index_t)value.toInt());
                 return true;
             } else if (key.equals("global_scale_root")) {
                 this->set_global_scale_root(value.toInt());

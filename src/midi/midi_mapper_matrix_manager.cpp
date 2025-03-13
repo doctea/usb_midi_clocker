@@ -293,7 +293,7 @@ void setup_midi_mapper_matrix_manager() {
         // add the CV output midi targets
         for (size_t i = 0 ; i < cvoutput_configs_size ; i++) {
             cvoutput_config_t config = cvoutput_configs[i];
-            DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = cvoutput_configs[i].behaviour;
+            DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = config.behaviour;
             behaviour_cvoutput->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" Auto")).c_str(), behaviour_cvoutput, behaviour_cvoutput->CHANNEL_ROUND_ROBIN));
             behaviour_cvoutput->voice_target_id[0] = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" A")).c_str(), behaviour_cvoutput, 1));
             behaviour_cvoutput->voice_target_id[1] = midi_matrix_manager->register_target(make_midioutputwrapper((String("CV Output ")+String(i)+String(" B")).c_str(), behaviour_cvoutput, 2));

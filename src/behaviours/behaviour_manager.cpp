@@ -180,7 +180,7 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_CV_OUTPUT
         // loop over the cvoutput_configs and add behaviours for each
-        for (int i=0; i < cvoutput_configs_size ; i++) {
+        for (size_t i=0; i < cvoutput_configs_size ; i++) {
             cvoutput_config_t config = cvoutput_configs[i];
             Serial.printf("[%i/%i]: about to register behaviour_cvoutput_%i...\n", i+1, cvoutput_configs_size, i+1); Serial_flush();
             DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = new DeviceBehaviour_CVOutput<DAC8574>(

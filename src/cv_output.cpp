@@ -22,4 +22,4 @@ cvoutput_config_t cvoutput_configs[] = {
     #endif
 };
 
-int cvoutput_configs_size = sizeof(cvoutput_configs)/sizeof(cvoutput_config_t);
+unsigned int cvoutput_configs_size = sizeof(cvoutput_configs)/sizeof(cvoutput_config_t);

@@ -209,7 +209,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 return true;
             #ifdef ENABLE_SCALES
                 } else if (key.equals(F("scale"))) {           // do this here because SCALE won't cast to Int implicitly TODO: solve this
-                    this->chord_player.set_scale((SCALE)value.toInt());
+                    this->chord_player.set_scale((scale_index_t)value.toInt());
                     return true;
             #endif
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {

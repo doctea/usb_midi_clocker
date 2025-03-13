@@ -29,6 +29,6 @@
     };
 
     extern cvoutput_config_t cvoutput_configs[];
-    extern int cvoutput_configs_size;
+    extern unsigned int cvoutput_configs_size;
 
 #endif
