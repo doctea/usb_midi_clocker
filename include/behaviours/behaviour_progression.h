@@ -854,7 +854,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     Serial.println("----");
                 }
             }));
-            */
 
             return menuitems;
         }
