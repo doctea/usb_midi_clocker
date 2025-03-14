@@ -27,8 +27,10 @@ extern ParameterManager *parameter_manager;
     class ParameterInputSelectorControl;
 #endif*/
 
-template<class DACClass>
-class DeviceBehaviour_CVOutput;
+// todo: make CVOutputParameter more agnostic about underlying library so it can support other DACs
+// todo: including a 'dummy' DAC for testing purposes
+// todo: and a generic base class for CVOutputParameters of different types to inherit from so that 
+//       cvoutput_config_t (in cv_output.h) doesn't have to know the DAC type
 
 template<class DACClass>
 class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, virtual public PolyphonicBehaviour {

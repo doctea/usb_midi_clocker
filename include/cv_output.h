@@ -2,15 +2,10 @@
 
 #include "Config.h"
 
-#if defined(ENABLE_CV_OUTPUT) || defined(ENABLE_CV_OUTPUT_2) || defined(ENABLE_CV_OUTPUT_3)
-    #include "DAC8574.h"
-
-    //extern DAC8574 *dac_output;
-
-    //extern bool calibrating;
-    //extern bool cv_output_enabled;
-
-    //void setup_cv_output();
+#if defined(ENABLE_CV_OUTPUT) || defined(ENABLE_CV_OUTPUT_2) || defined(ENABLE_CV_OUTPUT_3) || defined(ENABLE_CV_OUTPUT_4) 
+    #if __has_include("DAC8574.h")
+        #include "DAC8574.h"
+    #endif
 
     #include "parameters/calibration.h"
 
