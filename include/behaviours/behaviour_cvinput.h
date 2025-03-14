@@ -147,9 +147,6 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
 
         virtual void save_pattern_add_lines(LinkedList<String> *lines) override {
             DeviceBehaviourUltimateBase::save_pattern_add_lines(lines);
-            #ifdef ENABLE_SCALES
-                lines->add(String(F("scale=")) + String(this->chord_player.get_scale()));    // add this here because SCALE won't cast to Int implicitly TODO: solve this
-            #endif
         }
 
         virtual void setup_saveable_parameters() override {
@@ -160,8 +157,8 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 // key centre + scale
                 this->saveable_parameters->add(new LSaveableParameter<int8_t>    
                     ("scale_root", "CV", &this->chord_player.scale_root, [=](int8_t v) -> void { this->chord_player.set_scale_root(v); }, [=]() -> int8_t { return this->chord_player.get_scale_root(); } ));
-                // scale number (key) is handled in load_parse_key_value/save_pattern_add_lines because SCALE type breaks SaveableParameter
-                //this->saveable_parameters->add(new LSaveableParameter<SCALE>("scale_number", "CV", &this->scale, [=](SCALE v) -> void { this->set_scale(v); }, [=]() -> SCALE { return this->get_scale(); }));
+                this->saveable_parameters->add(new LSaveableParameter<scale_index_t>
+                    ("scale_number", "CV", &this->chord_player.scale, [=](scale_index_t v) -> void { this->chord_player.set_scale(v); }, [=]() -> scale_index_t { return this->chord_player.get_scale(); }));
 
                 // note duration and triggers
                 this->saveable_parameters->add(new LSaveableParameter<int32_t>
@@ -207,11 +204,6 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                     messages_log_add(warning_message + value + "'");
                 }
                 return true;
-            #ifdef ENABLE_SCALES
-                } else if (key.equals(F("scale"))) {           // do this here because SCALE won't cast to Int implicitly TODO: solve this
-                    this->chord_player.set_scale((scale_index_t)value.toInt());
-                    return true;
-            #endif
             } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
                 return true;
             }
