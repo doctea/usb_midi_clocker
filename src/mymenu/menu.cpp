@@ -291,6 +291,8 @@ void setup_menu_midi() {
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
 
+    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
+
     // debuggery stuff ...
     //behaviour_cvoutput_2->debug = true;
     /*
@@ -313,6 +315,9 @@ void setup_menu_midi() {
     ));
     menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
     */
+
+    menu->add_page("Quantiser");
+    menu->remember_opened_page();
 
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
@@ -343,9 +348,6 @@ void setup_menu_midi() {
         [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
     ));
     menu->add(global_chord_bar);
-
-    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
-
 }
 
 #ifdef ENABLE_SEQUENCER
