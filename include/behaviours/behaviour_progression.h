@@ -37,10 +37,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     struct song_section_t {
         chord_identity_t grid[8];
-        //int repeats = 1;    // number of repeats until moving to next section
         
         virtual void add_section_add_lines(LinkedList<String> *lines) {
-            //lines->add(String("repeats=")+String(repeats));
             for (int i = 0 ; i < 8 ; i++) {
                 lines->add(String("grid_")+String(i)+String("_degree=")+String(grid[i].degree));
                 lines->add(String("grid_")+String(i)+String("_type=")+String(grid[i].type));
@@ -60,10 +58,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     }
                 }
                 return true;
-            } /* else if (key.equals("repeats")) {
-                repeats = value.toInt();
-                return true;
-            }*/
+            } 
             return false;
         };
     };
@@ -314,7 +309,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             this->chord_player->play_chord(this->current_chord);
     }
 
-    int8_t current_bar = 0;
+    int8_t current_bar = -1; // initialise to -1 so that the first bar is 0
     virtual void on_bar(int bar_number) override {
         if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, current_bar);
         //if (advance_progression_bar) {
