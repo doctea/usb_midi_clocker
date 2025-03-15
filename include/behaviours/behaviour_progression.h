@@ -145,11 +145,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual const char *get_label() override {
-      return (const char*)"Progression";
+        return (const char*)"Progression";
     }
 
     virtual int getType() override {
-      return BehaviourType::virt;
+        return BehaviourType::virt;
     }
 
     //virtual void on_tick(uint32_t ticks) override {
@@ -693,7 +693,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 [=] (int8_t) -> void { chord_player_}
             ));*/
 
-
             bar->add(new LambdaToggleControl("Advance bar", 
                 [=] (bool v) -> void { this->advance_progression_bar = v; },
                 [=] (void) -> bool { return this->advance_progression_bar; }
@@ -733,9 +732,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             ));
             section_bar->add(new LambdaNumberControl<int8_t>(
                 "Section", 
-                [=] (int8_t section) -> void {
-                    change_section(section);
-                },
+                [=] (int8_t section) -> void { change_section(section); },
                 [=] () -> int8_t { return this->current_section; },
                 nullptr,
                 0, 
@@ -759,25 +756,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             menuitems->add(section_bar);
 
             SubMenuItemBar *save_section_bar = new SubMenuItemBar("Section", false, true);
-            save_section_bar->add(new LambdaActionConfirmItem(
-                "Load", 
-                [=] () -> void { this->load_section(current_section); }
-            ));
-            save_section_bar->add(new LambdaActionConfirmItem(
-                "Save", 
-                [=] () -> void { this->save_section(current_section); }
-            ));
+            save_section_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_section(current_section); }));
+            save_section_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_section(current_section); }));
             menuitems->add(save_section_bar);
 
             SubMenuItemBar *save_playlist_bar = new SubMenuItemBar("Playlist", false, true);
-            save_playlist_bar->add(new LambdaActionConfirmItem(
-                "Load", 
-                [=] () -> void { this->load_playlist(-1); }
-            ));
-            save_playlist_bar->add(new LambdaActionConfirmItem(
-                "Save", 
-                [=] () -> void { this->save_playlist(-1); }
-            ));
+            save_playlist_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_playlist(-1); }));
+            save_playlist_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_playlist(-1); }));
             menuitems->add(save_playlist_bar);
 
             /*
