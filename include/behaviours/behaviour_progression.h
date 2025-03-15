@@ -271,7 +271,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             current_section_plays++;
 
             if (current_section_plays >= playlist.entries[playlist_position].repeats) {
-                Serial_printf("Reached %i of %i plays; changing section from %i to %i\n", current_section_plays, playlist.entries[playlist_position].repeats, current_section, current_section+1);
+                if (this->debug) Serial_printf("Reached %i of %i plays; changing section from %i to %i\n", current_section_plays, playlist.entries[playlist_position].repeats, current_section, current_section+1);
                 current_section_plays = 0;
                 // todo: crashes?!
                 //change_section(current_section+1);
@@ -792,47 +792,17 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             // test menu item to output all scales
             menuitems->add(new LambdaActionItem("Output all scales", [=] () -> void {
-                Serial.printf("Outputting all scales...\n");
-                for (unsigned int root = 0 ; root < 12 ; root++) {
-                    Serial.printf("For root %s:\n", get_note_name_c(root));
-                    for (unsigned int i = 0 ; i < NUMBER_SCALES ; i++) {
-                        const scale_t *scale = scales[(scale_index_t)i];
-                        Serial.printf("----\nOutputting scale %s - %s (%s) at %p...\n", get_note_name_c(root), scale->label, scale->pattern->label, scale);
-                        print_scale(root, *scale);
-                    }
-                    Serial.printf("----\n");
-                }
-                Serial.printf("Done.");
+                dump_all_scales();
             }));
 
             // test menu item to output all chords in the current scale
             menuitems->add(new LambdaActionItem("Output chords", [=] () -> void {
-                Serial.printf("Outputting all chords in the current scale %s - %s...\n", get_note_name_c(get_global_scale_root()), scales[get_global_scale_type()]->label);
-                for (int i = 0 ; i < PITCHES_PER_SCALE ; i++) {
-                    chord_identity_t chord;
-                    chord.degree = i+1;
-                    chord.inversion = 0;
-                    Serial.printf("For scale degree %i: %s\n", i+1, get_note_name_c(scales[get_global_scale_type()]->valid_chromatic_pitches[i]));
-                    for (CHORD::Type t = 0 ; t < CHORD::NONE ; t++) {
-                        chord.type = t;
+                dump_all_chords();
+            }));
 
-                        for (int inversion = 0 ; inversion <= MAX_INVERSIONS ; inversion++) {
-                            chord.inversion = inversion;
-
-                            chord_instance_t instance;
-                            instance.set_from_chord_identity(chord, get_global_scale_root(), get_global_scale_type());
-
-                            int n;
-                            for (size_t x = 0 ; x < PITCHES_PER_CHORD && ((n = get_quantise_pitch_chord_note(instance.chord_root, instance.chord.type, x, get_global_scale_root(), get_global_scale_type(), instance.chord.inversion, this->debug)) >= 0) ; x++) {
-                                instance.set_pitch(x, n);
-                            }
-
-                            Serial.printf("\tChord %i:\t %s, inversion %i\t", i+1, chords[instance.chord.type].label, chord.inversion);
-                            Serial.printf("\tNotes:\t%s\n", instance.get_pitch_string());
-                        }
-                    }
-                    Serial.println("----");
-                }
+            // test menu item to output all scales and all chords
+            menuitems->add(new LambdaActionItem("Output all scales and chords", [=] () -> void {
+                dump_all_scales_and_chords();
             }));
 
             return menuitems;
