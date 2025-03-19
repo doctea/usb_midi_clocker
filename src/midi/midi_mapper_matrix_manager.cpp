@@ -268,6 +268,8 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_EUCLIDIAN
         behaviour_euclidianrhythms->source_id   = midi_matrix_manager->register_source("EucRhythms ch10");
         behaviour_euclidianrhythms->source_id_2 = midi_matrix_manager->register_source("EucRhythms ch1");
+        behaviour_euclidianrhythms->source_id_3 = midi_matrix_manager->register_source("EucRhythms ch8");
+        behaviour_euclidianrhythms->source_id_4 = midi_matrix_manager->register_source("EucRhythms ch9");
         //Serial.printf("ENABLE_EUCLIDIAN: connecting source_id=%i to target_id=%i\n", behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
         midi_matrix_manager->connect(behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
     #endif
@@ -312,8 +314,15 @@ void setup_midi_mapper_matrix_manager() {
     behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
 
     midi_matrix_manager->register_source(behaviour_arpeggiator, "Arpeggiator");
-    MIDIOutputWrapper *arp_wrapper = make_midioutputwrapper("Arpeggiator", behaviour_arpeggiator);
-    behaviour_arpeggiator->target_id = midi_matrix_manager->register_target(arp_wrapper, "Arpeggiator");
+    //MIDIOutputWrapper *arp_wrapper = make_midioutputwrapper("Arp Chords", behaviour_arpeggiator);
+    behaviour_arpeggiator->target_id = midi_matrix_manager->register_target(
+        make_midioutputwrapper("Arp Chords", behaviour_arpeggiator),
+        "Arp Chords"
+    );
+    behaviour_arpeggiator->target_id_trigger = midi_matrix_manager->register_target(
+        make_midioutputwrapper("Arp Trigger", behaviour_arpeggiator, 2), 
+        "Arp Trigger"
+    );
 
     // this default connection doesn't actually work, i think because cos its overridden by loading project settings
     //midi_matrix_manager->connect(behaviour_progression, "CV Output 1 Auto");
