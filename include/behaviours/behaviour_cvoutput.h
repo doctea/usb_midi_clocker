@@ -112,10 +112,11 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 //outputs[0]->set_slot_input(0, "LFO sync");
                 //outputs[0]->set_slot_0_amount(1.0);
 
-                this->parameters->add(outputs[0]);
+                /*this->parameters->add(outputs[0]);
                 this->parameters->add(outputs[1]);
                 this->parameters->add(outputs[2]);
                 this->parameters->add(outputs[3]);
+                */
                 if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput#init() finished setting up the parameters.");
             } else {
                 if (debug && Serial) Serial.printf("WARNING: DeviceBehaviour_CVOutput '%s' has null dac_output!\n", this->label);
@@ -226,16 +227,37 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
         #ifdef ENABLE_PARAMETERS
             bool already_initialised = false;
-            virtual LinkedList<FloatParameter*> *initialise_parameters() override {
-                if (already_initialised && this->parameters != nullptr)
-                    return this->parameters;
+            virtual LinkedList<FloatParameter*> *initialise_parameters() {
+                //if (already_initialised && this->parameters != nullptr)
+                //    return this->parameters;
+                //already_initialised = true;
+                /*while (1) {
+                    Serial.println("DeviceBehaviour_CVOutput#initialise_parameters()..");
+                }*/
 
                 DeviceBehaviourUltimateBase::initialise_parameters();
-
                 PolyphonicBehaviour::initialise_parameters();
+
+                this->parameters->add(outputs[0]);
+                this->parameters->add(outputs[1]);
+                this->parameters->add(outputs[2]);
+                this->parameters->add(outputs[3]);
 
                 // Add parameters specific to CVOutputBehaviour
                 //this->init();
+
+                // add parameters for controlling the slew rate of the outputs
+                for (int i = 0 ; i < channel_count; i++) {
+                    if (outputs[i] != nullptr) {
+                        this->parameters->add(new LDataParameter<float>(
+                            (String("Slew Rate ") + String(/*'A'+*/i)).c_str(),
+                            [=](float v) -> void { outputs[i]->set_slew_rate_normal(v); },
+                            [=]() -> float { return outputs[i]->get_slew_rate_normal(); },
+                            0.0, 
+                            1.0
+                        ));
+                    }
+                }
 
                 return parameters;
             }
@@ -262,6 +284,25 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                     }
                 }
                 menuitems->add(slew_menu);
+
+                // make slew controls to set the slew rate for the outputs
+                SubMenuItemBar *slew_rate_menu = new SubMenuItemBar("Slew Rate", true, true);
+                for (int i=0; i<channel_count; i++) {
+                    if (outputs[i] != nullptr) {
+                        slew_rate_menu->add(new LambdaNumberControl<float>(
+                            //(String("Output ") + String(i+1)).c_str(),
+                            outputs[i]->label,
+                            [=](float v) -> void { outputs[i]->set_slew_rate_normal(v); },
+                            [=]() -> float { return outputs[i]->get_slew_rate_normal(); },
+                            nullptr,
+                            0.0, 
+                            1.0, 
+                            0.01,
+                            true
+                        ));
+                    }
+                }
+                menuitems->add(slew_rate_menu);
 
                 //MIDIBassBehaviour::make_menu_items();
 
