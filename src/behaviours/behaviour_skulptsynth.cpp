@@ -2,7 +2,7 @@
 
 #include "Config.h"
 
-#ifdef ENABLE_SKULPTSYNTH_USB
+#ifdef ENABLE_SKULPTSYNTH
 
 #include "behaviours/behaviour_skulptsynth.h"
 

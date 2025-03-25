@@ -372,7 +372,7 @@ class MIDIMatrixManager {
         }
         return NUM_REGISTERED_TARGETS++;
     }
-
+    
     target_id_t get_target_id_for_handle(const char *handle) {
         //Serial_printf(F("get_target_id_for_handle(%s)\n"), handle);
         for (unsigned int i = 0 ; i < NUM_REGISTERED_TARGETS ; i++) {

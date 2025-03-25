@@ -19,13 +19,15 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual bool transmits_midi_clock() override {
-            return true;
+            return isClockEnabled();
         }
 
         virtual void send_clock(uint32_t ticks) override {
             if (!is_connected()) return;
-            this->sendRealTime(midi::Clock);
-            this->sendNow();
+            if (this->isClockEnabled()) {
+                this->sendRealTime(midi::Clock);
+                this->sendNow();
+            }
         }
 
         virtual void on_bar(int bar_number) override {

@@ -86,6 +86,28 @@ void do_tick(uint32_t ticks);
 
 #include "__version.h"
 
+void setup_psram_overclock() {
+  // from https://github.com/PaulStoffregen/teensy41_psram_memtest/issues/3
+
+  const float clocks[4] = {396.0f, 720.0f, 664.62f, 528.0f};
+
+  // set clock speed for PSRAM to 132 MHz
+  // select clock PLL2 with 528 Mhz
+  // set clock divider to 4
+  CCM_CBCMR &= ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK); // clear settings
+  CCM_CBCMR |= (CCM_CBCMR_FLEXSPI2_PODF(3) | CCM_CBCMR_FLEXSPI2_CLK_SEL(3)); // 132 MHz
+  //CCM_CBCMR &= ~(0b111 << 29);
+  //CCM_CBCMR |= (0b011 << 29);
+
+  Serial.print(" FLEXSPI2_CLK_SEL = ");
+  Serial.println(((CCM_CBCMR >> 8) & 3),BIN);
+  Serial.print(" LPSPI_PODF = ");
+  Serial.println(((CCM_CBCMR >> 29) & 7),BIN);
+
+  const float frequency = clocks[(CCM_CBCMR >> 8) & 3] / (float)(((CCM_CBCMR >> 29) & 7) + 1);
+  Serial.printf(" CCM_CBCMR=%08X (%.1f MHz)\n", CCM_CBCMR, frequency);
+}
+
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
   uint32_t *main_loop_length_averages; //[NUMBER_AVERAGES];
@@ -121,6 +143,10 @@ void setup() {
     //tft_print("Connected serial!\n");
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
+
+  Serial.println("Overclocking PSRAM...");
+  setup_psram_overclock();
+
   if (CrashReport) {
     while (!Serial);
     //Serial_println("CRASHREPORT!");
@@ -142,6 +168,7 @@ void setup() {
     Serial_printf(".");
   }*/
   Serial_printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
+
 
   // this crashes when run from here...?  but kinda need it activated before setup_behaviour_manager() so that we can load cvoutputparameter calibration?
   // TODO: so: we need to be able to run something like "post-setup initialisation" on parameters at the end of setup, after everything else is set 

@@ -7,9 +7,9 @@
 #include "midi/midi_out_wrapper.h"
 
 #ifdef ENABLE_BITBOX
-extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox;//      = &ENABLE_BITBOX;
-//extern MIDIOutputWrapper midi_out_bitbox_wrapper;
-#define BITBOX_MIDI_CHANNEL 3
+    extern midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_bitbox;//      = &ENABLE_BITBOX;
+    //extern MIDIOutputWrapper midi_out_bitbox_wrapper;
+    #define BITBOX_MIDI_CHANNEL 3
 #endif
 //midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *midi_out_cv12_poly   = &MIDI2;     // output 
 

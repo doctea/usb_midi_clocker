@@ -12,6 +12,7 @@
   }
   #ifdef ARDUINO_TEENSY41
     // cribbed from https://forum.pjrc.com/index.php?threads/how-to-display-free-ram.33443/post-312421
+    // but it doesn't seem to work? always reports all the RAM as free
     extern char _extram_start[], _extram_end[];
     extern uint8_t external_psram_size;
     int freeExtRam() {

@@ -54,13 +54,13 @@ DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
 // convenience function
 void behaviour_manager_kill_all_current_notes () {
     behaviour_manager->kill_all_current_notes();
-    //Serial.printf("!!!! behaviour_manager_kill_all_current_notes\n");
+    //Serial_printf("!!!! behaviour_manager_kill_all_current_notes\n");
 }
 
 #ifdef ENABLE_SCALES
     void behaviour_manager_requantise_all_notes() {
         behaviour_manager->requantise_all_notes();
-        //Serial.printf("!!!! behaviour_manager_requantise_all_notes\n");
+        //Serial_printf("!!!! behaviour_manager_requantise_all_notes\n");
     }
 #endif
 
@@ -149,40 +149,40 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_CHOCOLATEFEET_USB
-        Serial.println(F("about to register DeviceBehaviour_Chocolate...")); Serial_flush();
+        Serial_println(F("about to register DeviceBehaviour_Chocolate...")); Serial_flush();
         behaviour_chocolate = new DeviceBehaviour_Chocolate();
         behaviour_manager->registerBehaviour(behaviour_chocolate);
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_LESTRUM
-        Serial.println(F("about to register behaviour_lestrum...")); Serial_flush();
+        Serial_println(F("about to register behaviour_lestrum...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_lestrum);
-        Serial.println(F("Finished registering - connecting!")); Serial_flush();
+        Serial_println(F("Finished registering - connecting!")); Serial_flush();
         behaviour_lestrum->connect_device_input(&ENABLE_LESTRUM);
-        Serial.println(F("Finished connect_device_input")); Serial_flush();
+        Serial_println(F("Finished connect_device_input")); Serial_flush();
     #endif
     
     #ifdef ENABLE_DRUMKIT
-        Serial.println(F("about to register behaviour_drumkit...")); Serial_flush();
+        Serial_println(F("about to register behaviour_drumkit...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_drumkit);
         behaviour_drumkit->connect_device_input(&ENABLE_DRUMKIT);
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
 
     #if defined(ENABLE_CV_INPUT) && defined(ENABLE_CV_INPUT_PITCH)
-        Serial.println(F("about to register behaviour_cvinput...")); Serial_flush();
+        Serial_println(F("about to register behaviour_cvinput...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_cvinput_1);
         behaviour_manager->registerBehaviour(behaviour_cvinput_2);
         behaviour_manager->registerBehaviour(behaviour_cvinput_3);
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_CV_OUTPUT
         // loop over the cvoutput_configs and add behaviours for each
         for (size_t i=0; i < cvoutput_configs_size ; i++) {
             cvoutput_config_t config = cvoutput_configs[i];
-            Serial.printf("[%i/%i]: about to register behaviour_cvoutput_%i...\n", i+1, cvoutput_configs_size, i+1); Serial_flush();
+            Serial_printf("[%i/%i]: about to register behaviour_cvoutput_%i...\n", i+1, cvoutput_configs_size, i+1); Serial_flush();
             DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = new DeviceBehaviour_CVOutput<DAC8574>(
                 (String("CV Pitch Output ") + String(i+1)).c_str(),
                 config.address,
@@ -193,7 +193,7 @@ void setup_behaviour_manager() {
                 behaviour_cvoutput->set_gate_outputter(gate_manager, config.gate_bank, config.gate_offset);
             cvoutput_configs[i].behaviour = behaviour_cvoutput;
             behaviour_manager->registerBehaviour(behaviour_cvoutput);
-            Serial.println(F("Finished registering")); Serial_flush();
+            Serial_println(F("Finished registering")); Serial_flush();
         }
     #endif
 
@@ -214,19 +214,22 @@ void setup_behaviour_manager() {
     behaviour_manager->registerBehaviour(behaviour_arpeggiator);
 
     #ifdef ENABLE_CRAFTSYNTH_USB
-        Serial.println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
+        Serial_println(F("about to register DeviceBehaviour_CraftSynth...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_craftsynth);
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
 
-    #ifdef ENABLE_SKULPTSYNTH_USB
-        Serial.println(F("about to register DeviceBehaviour_SkulptSynth...")); Serial_flush();
+    #ifdef ENABLE_SKULPTSYNTH
+        Serial_println(F("about to register DeviceBehaviour_SkulptSynth...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_skulptsynth);
-        Serial.println(F("Finished registering")); Serial_flush();
+        #ifdef ENABLE_SKULPTSYNTH_SERIAL
+            behaviour_skulptsynth->connect_device_output(&ENABLE_SKULPTSYNTH_SERIAL);
+        #endif
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
     
     #ifdef ENABLE_BITBOX
-        Serial.println(F("about to register behaviour_bitbox...")); Serial_flush();
+        Serial_println(F("about to register behaviour_bitbox...")); Serial_flush();
         //behaviour_manager->registerBehaviour(behaviour_bitbox);
         #ifdef ENABLE_BITBOX_DEDICATED
             //
@@ -234,16 +237,16 @@ void setup_behaviour_manager() {
             behaviour_bitbox = new Behaviour_SimpleWrapper<DeviceBehaviourSerialBase,DividedClockedBehaviour>("BitBox", false, true);
         #endif
         behaviour_manager->registerBehaviour(behaviour_bitbox);
-        Serial.println(F("Bitbox: connecting device output..")); Serial_flush();
+        Serial_println(F("Bitbox: connecting device output..")); Serial_flush();
         behaviour_bitbox->connect_device_output(&ENABLE_BITBOX);
-        Serial.println(F("Bitbox: Finished registering.")); Serial_flush();
+        Serial_println(F("Bitbox: Finished registering.")); Serial_flush();
     #endif
 
     #ifdef ENABLE_NEUTRON
-        Serial.println(F("about to register behaviour_neutron...")); Serial_flush();
+        Serial_println(F("about to register behaviour_neutron...")); Serial_flush();
         behaviour_manager->registerBehaviour(behaviour_neutron);
         behaviour_neutron->connect_device_output(&ENABLE_NEUTRON);
-        Serial.println(F("Finished registering")); Serial_flush();
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_MIDIMUSO
@@ -276,7 +279,7 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_bedge);            
     #endif
     
-    Serial.println(F("Exiting setup_behaviour_manager()"));
+    Serial_println(F("Exiting setup_behaviour_manager()"));
 }
 
 
@@ -317,7 +320,7 @@ void setup_behaviour_manager() {
                 //quickjump->add_page(started_page+1);
                 //started_page = menu->get_selected_page();
             }
-            Serial_println("...created.");
+            Serial_printf("...created, free ram is now %u\n", freeRam());
             //started_page = menu->get_selected_page();
         }
 
@@ -396,6 +399,7 @@ void setup_behaviour_manager() {
             // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
             if (behaviour->has_parameters()) {
                 Serial_print("doing addParameterSubMenuItems.."); Serial_flush(); 
+                debug_free_ram();
                 parameter_manager->addParameterSubMenuItems(
                     menu, 
                     behaviour->get_label(), 

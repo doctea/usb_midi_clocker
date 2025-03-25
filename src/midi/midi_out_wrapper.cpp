@@ -69,6 +69,7 @@ FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDevice
     return new MIDIOutputWrapper_MIDIUSB(label, output, channel);
 }
 FLASHMEM MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, int8_t channel) {
+    Serial.printf("before making a new serial midi wrapper, free ram: %i\n", freeRam());
     return new MIDIOutputWrapper_MIDISerial(label, output, channel);
 }
 FLASHMEM MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, int8_t cable_number, int8_t channel) {
