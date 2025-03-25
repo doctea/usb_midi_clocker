@@ -31,7 +31,8 @@
 // with thanks to KurtE and Beermat 
 // https://forum.pjrc.com/index.php?threads/putting-objects-instantiated-with-new-into-extmem-instead-of-ram2.76731/
 
-#define RESERVE_RAM2 65536        // keep 64k of RAM2 reserved
+//#define RESERVE_RAM2 65536        // keep 64k of RAM2 reserved
+#define RESERVE_RAM2 32768        // keep 32k of RAM2 reserved
 extern unsigned long _heap_start;
 extern unsigned long _heap_end;
 extern char *__brkval;

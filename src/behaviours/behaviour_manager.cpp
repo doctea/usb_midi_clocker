@@ -301,6 +301,7 @@ void setup_behaviour_manager() {
         menu->remember_opened_page(menu->get_page_index_for_name(menu->get_selected_page()->title));
 
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+            tft_print(".");
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
             Serial_printf("about to create_single_behaviour_menu_items() for behaviour %i/%i", i+1, behaviours->size());
             Serial_flush();
@@ -323,10 +324,12 @@ void setup_behaviour_manager() {
             Serial_printf("...created, free ram is now %u\n", freeRam());
             //started_page = menu->get_selected_page();
         }
+        tft_print("\n");
 
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+            tft_print("!");
             Serial_printf("about to set up Recall parameters () for behaviour %i/%i ", i+1, behaviours->size());
             Serial_flush();
             DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
@@ -366,6 +369,7 @@ void setup_behaviour_manager() {
                 last_category = p->category_name;
             }
         }
+        tft_print("\n");
 
         Serial_println("Finished in create_all_behaviour_menu_items"); Serial_flush();
     }

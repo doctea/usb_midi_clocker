@@ -86,27 +86,43 @@ void do_tick(uint32_t ticks);
 
 #include "__version.h"
 
-void setup_psram_overclock() {
-  // from https://github.com/PaulStoffregen/teensy41_psram_memtest/issues/3
+// thanks to beermat again (and originally KurtE) for this code
+// at 198mhz this runs and gives an approx 25% FPS speed up - from ~14fps up to ~19fps!
+const float flexspi2_clock_speeds[4] = {396.0f, 720.0f, 664.62f, 528.0f};
+FLASHMEM void setPSRamSpeed(int mhz) {
+  //See what the closest setting might be:
+  uint8_t clk_save = 0, divider_save = 0;
+  int min_delta = mhz;
+  for (uint8_t clk = 0; clk < 4; clk++) {
+      uint8_t divider = (flexspi2_clock_speeds[clk] + (mhz / 2)) / mhz;
+      int delta = abs(mhz - flexspi2_clock_speeds[clk] / divider);
+      if ((delta < min_delta) && (divider < 8)) {
+          min_delta = delta;
+          clk_save = clk;
+          divider_save = divider;
+      }
+  }
+  //First turn off FLEXSPI2
+  CCM_CCGR7 &= ~CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
+  divider_save--; // 0 biased
+  //Set the clock settings.
+  CCM_CBCMR = (CCM_CBCMR & ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK))
+              | CCM_CBCMR_FLEXSPI2_PODF(divider_save) | CCM_CBCMR_FLEXSPI2_CLK_SEL(clk_save);
+  //Turn FlexSPI2 clock back on
+  CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
 
-  const float clocks[4] = {396.0f, 720.0f, 664.62f, 528.0f};
-
-  // set clock speed for PSRAM to 132 MHz
-  // select clock PLL2 with 528 Mhz
-  // set clock divider to 4
-  CCM_CBCMR &= ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK); // clear settings
-  CCM_CBCMR |= (CCM_CBCMR_FLEXSPI2_PODF(3) | CCM_CBCMR_FLEXSPI2_CLK_SEL(3)); // 132 MHz
-  //CCM_CBCMR &= ~(0b111 << 29);
-  //CCM_CBCMR |= (0b011 << 29);
-
-  Serial.print(" FLEXSPI2_CLK_SEL = ");
-  Serial.println(((CCM_CBCMR >> 8) & 3),BIN);
-  Serial.print(" LPSPI_PODF = ");
-  Serial.println(((CCM_CBCMR >> 29) & 7),BIN);
-
-  const float frequency = clocks[(CCM_CBCMR >> 8) & 3] / (float)(((CCM_CBCMR >> 29) & 7) + 1);
-  Serial.printf(" CCM_CBCMR=%08X (%.1f MHz)\n", CCM_CBCMR, frequency);
+  Serial.printf("Update FLEXSPI2 speed: %u clk:%u div:%u Actual:%u\n", mhz, clk_save, divider_save,
+      flexspi2_clock_speeds[clk_save] / (divider_save + 1));
 }
+
+void setup_psram_overclock() {
+  /*setPSRamSpeed(88);
+  setPSRamSpeed(133);
+  setPSRamSpeed(144);
+  setPSRamSpeed(180);*/
+  setPSRamSpeed(198);
+}
+
 
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
@@ -131,6 +147,8 @@ void setup_psram_overclock() {
 //FLASHMEM 
 #endif
 void setup() {
+  setup_psram_overclock();
+
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif
@@ -143,10 +161,7 @@ void setup() {
     //tft_print("Connected serial!\n");
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
-
-  Serial.println("Overclocking PSRAM...");
-  setup_psram_overclock();
-
+  
   if (CrashReport) {
     while (!Serial);
     //Serial_println("CRASHREPORT!");
@@ -164,9 +179,9 @@ void setup() {
     dump_crashreport_log();
   #endif
 
-  /*while (1) {
-    Serial_printf(".");
-  }*/
+
+  uint32_t start_millis = millis();
+
   Serial_printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
 
 
@@ -246,10 +261,12 @@ void setup() {
   Debug_printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
   #if defined(ENABLE_PARAMETERS) && defined(ENABLE_CV_INPUT)
+  tft_print((char*)"..setup cv input..\n");
     setup_cv_input();
     Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
   #endif
   #ifdef ENABLE_PARAMETERS
+    tft_print((char*)"..setup parameters..\n");
     setup_parameters();
     Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
   #endif
@@ -257,16 +274,19 @@ void setup() {
       setup_cv_output();
   #endif*/
   #ifdef ENABLE_CV_OUTPUT
+    tft_print((char*)"..setup cv output..\n");
     setup_cv_output_parameter_inputs();
     Debug_printf(F("after setup_cv_output_parameter_inputs(), free RAM is %u\n"), freeRam());
   #endif
   #if defined(ENABLE_SCREEN) && defined(ENABLE_PARAMETERS)
+    tft_print((char*)"..setup parameter menu..\n");
     setup_parameter_menu();
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
   #ifdef ENABLE_SCREEN
     Serial_println(F("...starting behaviour_manager#make_menu_items...")); Serial_flush();
+    tft_print((char*)"..setup behaviour menu..\n");
     behaviour_manager->create_all_behaviour_menu_items(menu);
     Serial_println(F("...finished behaviour_manager#make_menu_items...")); Serial_flush();
   #endif
@@ -364,6 +384,10 @@ void setup() {
     #endif
   #endif
   
+  tft_print("Setup took ");
+  tft_print(String(millis()-start_millis-2500).c_str());
+  tft_print("ms\n");
+
   Serial_println("Finished setup()!");
 }
 
