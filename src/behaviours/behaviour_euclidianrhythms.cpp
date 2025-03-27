@@ -5,9 +5,8 @@
 #endif
 
 void shuffled_track_callback(uint8_t track, uint32_t step) {
-    Serial.printf("at tick %i, shuffled_track_callback(%i, %i)\n", ticks, track, step);
+    //Serial.printf("at tick %i, shuffled_track_callback(%i, %i)\n", ticks, track, step);
     if (behaviour_euclidianrhythms!=nullptr) {
-        if (track==1)
             behaviour_euclidianrhythms->on_step_shuffled(track, step);
     }
 }

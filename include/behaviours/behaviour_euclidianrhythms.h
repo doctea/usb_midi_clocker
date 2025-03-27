@@ -67,8 +67,8 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
     virtual void on_step_shuffled(uint8_t track, uint32_t step) {
         if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
-        if (step>0)
-            sequencer->on_step_end_shuffled(track, step);
+        //if (step>0)
+        //    sequencer->on_step_end_shuffled(track, step);
         sequencer->on_step_shuffled(track, step);
     }
 
@@ -94,7 +94,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_on ...
         //if (this->debug) 
-        if (this->debug || note==GM_NOTE_CLOSED_HI_HAT) Serial.printf(F("at tick %i, behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), ticks, channel, note, velocity, source_id);
+        if (this->debug) Serial.printf(F("at tick %i, behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), ticks, channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOn(this->source_id, note, MIDI_MAX_VELOCITY, channel);
         } else if (channel==MISC_CHANNEL_8) {
@@ -108,7 +108,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_off !
         //if (this->debug) Serial.printf(F("!! behaviour_lestrum#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i)with source_id %i: \n"), channel, note, velocity, source_id_2);
-        if (this->debug || note==GM_NOTE_CLOSED_HI_HAT) Serial.printf(F("at tick %i, behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), ticks, channel, note, velocity, source_id);
+        if (this->debug) Serial.printf(F("at tick %i, behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), ticks, channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOff(this->source_id, note, MIDI_MIN_VELOCITY, channel);
         } else if (channel==MISC_CHANNEL_8) {
