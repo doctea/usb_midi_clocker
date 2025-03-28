@@ -191,7 +191,6 @@ class DeviceBehaviour_SkulptSynth : virtual public SkulptDeviceBehaviourBase, vi
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     
     public:
-        //uint16_t vid = 0x09e8, pid = 0x0028;
         #ifdef ENABLE_SKULPTSYNTH_USB
             uint16_t vid = 0x04D8, pid = 0xEEFE;
             virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
