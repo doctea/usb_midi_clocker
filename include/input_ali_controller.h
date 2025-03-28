@@ -298,9 +298,9 @@
                 break;
             case '~': 
                 Serial_println(F("Toggling (~p)laying"));
-                if (playing)
-                    clock_stop();
-                else
+                //if (playing)
+                //    clock_stop();
+                //else
                     clock_continue();
                 break;
             // take screenshot
