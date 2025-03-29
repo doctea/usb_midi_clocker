@@ -21,7 +21,7 @@ void setup_midi_mapper_matrix_manager();
 void behaviour_manager_kill_all_current_notes();
 
 #ifdef ENABLE_SCALES
-    void behaviour_manager_requantise_all_notes();
+    void behaviour_manager_requantise_all_notes(bool force = false);
 #endif
 
 //#include "behaviours/behaviour_bamble.h"
@@ -268,7 +268,7 @@ class MIDIMatrixManager {
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug/* || targets[target_id].wrapper->debug || source_id==12*/) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;

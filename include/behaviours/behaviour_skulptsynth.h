@@ -194,16 +194,14 @@ class DeviceBehaviour_SkulptSynth : virtual public SkulptDeviceBehaviourBase, vi
         #ifdef ENABLE_SKULPTSYNTH_USB
             uint16_t vid = 0x04D8, pid = 0xEEFE;
             virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
-
-            DeviceBehaviour_SkulptSynth() : DeviceBehaviourUSB() {
-        #else
-            DeviceBehaviour_SkulptSynth() : DeviceBehaviourSerialBase() {
         #endif
-                this->setClockEnabled(false);
-                this->setLowestNote(3 * 12); // C3
-                this->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
-                this->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
-            }
+
+        DeviceBehaviour_SkulptSynth() : SkulptDeviceBehaviourBase() {
+            this->setClockEnabled(false);
+            this->setLowestNote(3 * 12); // C3
+            this->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+            this->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+        }
 
         virtual const char *get_label() override {
             return "SkulptSynth";
@@ -224,6 +222,7 @@ class DeviceBehaviour_SkulptSynth : virtual public SkulptDeviceBehaviourBase, vi
             ));
         }
 
+        
 
         /*virtual void setup_callbacks() override {
             //behaviour_apcmini = this;

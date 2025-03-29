@@ -124,7 +124,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     virtual void init() {};
 
     #ifdef ENABLE_SCALES
-        virtual void requantise_all_notes();
+        virtual int requantise_all_notes();
     #endif
 
     virtual void killCurrentNote() {
@@ -157,7 +157,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         // TODO: this is where ForceOctave check should go..?
 
+        if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
+
         int8_t quantised_note = note_tracker.get_transposed_note_for(note);
+        if (debug) Serial_printf("\t\t note_tracker.get_transposed_note_for(%i) = %i (%s)\n", note, quantised_note, get_note_name_c(quantised_note));
 
         //quantised_note = this->recalculate_pitch(quantised_note);
         if (!is_valid_note(note)) return;
@@ -170,6 +173,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
         note_tracker.held_note_off(note);
 
+        if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i) -> quantised_note %i, about to call actualSendNoteOff(%i..)\n", this->get_label(), note, velocity, channel, quantised_note, quantised_note);
         this->actualSendNoteOff(quantised_note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget

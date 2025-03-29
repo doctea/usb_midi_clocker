@@ -15,7 +15,7 @@
 
 int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     int y = pos.y;
-    int x = 0;
+    //int x = 0;
     tft->setCursor(0, y);
 
     // make bar numbers bigger if we're in a scrollable menu

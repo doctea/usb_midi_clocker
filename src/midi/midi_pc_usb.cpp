@@ -18,14 +18,14 @@
 source_id_t pc_usb_sources[NUM_PC_SOURCES];
 
 void pc_usb_handle_note_on(byte channel, byte note, byte velocity) { //, byte cable) {
-  //Serial.printf("pc_usb_handle_note_on (%i, %i, %i, %i)!\n", channel, note, velocity, cable);
   byte cable = usbMIDI.getCable();
+  //Serial.printf("pc_usb_handle_note_on (%i, %i, %i, %i)!\n", channel, note, velocity, cable);
 
   midi_matrix_manager->processNoteOn(pc_usb_sources[cable], note, velocity, channel = 0);
 }
 void pc_usb_handle_note_off(byte channel, byte note, byte velocity) { //, byte cable) {
-  //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
   byte cable = usbMIDI.getCable();
+  //Serial.printf("pc_usb_handle_note_off(%i, %i, %i, %i)!\n", channel, note, velocity, cable);
 
   midi_matrix_manager->processNoteOff(pc_usb_sources[cable], note, velocity, channel = 0);
 }
