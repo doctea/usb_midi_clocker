@@ -26,8 +26,8 @@ void behaviour_manager_kill_all_current_notes();
 
 //#include "behaviours/behaviour_bamble.h"
 
-#define MAX_NUM_SOURCES 30
-#define MAX_NUM_TARGETS 30
+#define MAX_NUM_SOURCES 50
+#define MAX_NUM_TARGETS 50
 #define NUM_REGISTERED_TARGETS targets_count
 #define NUM_REGISTERED_SOURCES sources_count
 
