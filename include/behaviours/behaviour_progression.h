@@ -32,11 +32,12 @@ extern MIDIMatrixManager *midi_matrix_manager;
 
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
-    source_id_t source_id_5th_octave = -1;
+    source_id_t source_id_chord_octave = -1;
     source_id_t source_id_bass = -1;
+    source_id_t source_id_topline = -1;
 
-    uint8_t BASS_CHANNEL = 2;
-    uint8_t bass_octave = 2;
+    uint8_t BASS_CHANNEL = 2,   TOPLINE_CHANNEL = 3;
+    uint8_t bass_octave = 2,    topline_octave = 3, chord_octave = 5;
 
     virtual bool transmits_midi_notes() { return true; }
 
@@ -128,19 +129,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     bool advance_progression_bar = true;
 
     ChordPlayer *chord_player = new ChordPlayer(
-        [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
-            this->sendNoteOn(note, velocity, channel);
-        },
-        [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
-            this->sendNoteOff(note, velocity, channel);
-        },
-        [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
-
-            this->sendNoteOn(note, velocity, BASS_CHANNEL);
-        },
-        [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
-            this->sendNoteOff(note, velocity, BASS_CHANNEL);
-        }
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOn (note, velocity, channel); },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOff(note, velocity, channel); },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOn (note, velocity, BASS_CHANNEL); },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOff(note, velocity, BASS_CHANNEL); },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOn (note, velocity, TOPLINE_CHANNEL); },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOff(note, velocity, TOPLINE_CHANNEL); }
     );
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
@@ -172,27 +166,34 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         if (channel==BASS_CHANNEL) {
-            if (debug) Serial_printf("sendNoteOn to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            if (debug) Serial_printf("actualSendNoteOn to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
             midi_matrix_manager->processNoteOn(this->source_id_bass, (bass_octave*12) + note, velocity, 1);
+        } else if (channel==TOPLINE_CHANNEL) {
+            //if (debug) 
+            Serial_printf("actualSendNoteOn to topline: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            midi_matrix_manager->processNoteOn(this->source_id_topline, (topline_octave*12) + note, velocity, 1);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
             // send the same chord sequence to the second source_id 5 octaves up
-            note += 12 * 5;
+            note += 12 * chord_octave;
             if (is_valid_note(note)) {
-                midi_matrix_manager->processNoteOn(this->source_id_5th_octave, note, velocity, channel);
+                midi_matrix_manager->processNoteOn(this->source_id_chord_octave, note, velocity, channel);
             }
         }
     }
     virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         if (channel==BASS_CHANNEL) {
-            if (debug) Serial_printf("sendNoteOff to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            if (debug) Serial_printf("actualSendNoteOff to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
             midi_matrix_manager->processNoteOff(this->source_id_bass, (bass_octave*12) + note, velocity, 1);
+        } else if (channel==TOPLINE_CHANNEL) {
+            if (debug) Serial_printf("actualSendNoteOff to topline: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            midi_matrix_manager->processNoteOff(this->source_id_topline, (topline_octave*12) + note, velocity, 1);
         } else {
             midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
             // send the same chord sequence to the second source_id 5 octaves up
-            note += 12 * 5;
+            note += 12 * chord_octave;
             if (is_valid_note(note)) {
-                midi_matrix_manager->processNoteOff(this->source_id_5th_octave, note, velocity, channel);
+                midi_matrix_manager->processNoteOff(this->source_id_chord_octave, note, velocity, channel);
             }
         }
     }
@@ -221,6 +222,22 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             "Advance playlist",
             "Progression", 
             &advance_progression_playlist
+        ));
+
+        this->saveable_parameters->add(new LSaveableParameter<uint8_t>(
+            "Chord octave",
+            "Progression", 
+            &chord_octave
+        ));
+        this->saveable_parameters->add(new LSaveableParameter<uint8_t>(
+            "Bass octave",
+            "Progression", 
+            &bass_octave
+        ));
+        this->saveable_parameters->add(new LSaveableParameter<uint8_t>(
+            "Topline octave",
+            "Progression", 
+            &topline_octave
         ));
 
         //this->sequencer->setup_saveable_parameters();
@@ -685,6 +702,31 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
             menu->add_pinned(new ProgressionPinnedMenuItem("Progression"));
+
+            SubMenuItemBar *limit_ranges_bar = new SubMenuItemBar("Octave offsets", true, true);
+            // TODO: properly stop chord player or bass/topline when changing octaves
+            limit_ranges_bar->add(new LambdaNumberControl<int8_t>(
+                "Chord octave", 
+                [=] (int8_t octave) -> void { this->chord_player->stop_chord(); this->chord_octave = octave; },
+                [=] () -> int8_t { return this->chord_octave; },
+                nullptr,
+                0, 10, true, false
+            ));
+            limit_ranges_bar->add(new LambdaNumberControl<int8_t>(
+                "Bass octave", 
+                [=] (int8_t octave) -> void { this->chord_player->stop_chord(); this->bass_octave = octave; },
+                [=] () -> int8_t { return this->bass_octave; },
+                nullptr,
+                0, 10, true, false
+            ));
+            limit_ranges_bar->add(new LambdaNumberControl<int8_t>(
+                "Topline octave", 
+                [=] (int8_t octave) -> void { this->chord_player->stop_chord(); this->topline_octave = octave; },
+                [=] () -> int8_t { return this->topline_octave; },
+                nullptr,
+                0, 10, true, false
+            ));
+            menuitems->add(limit_ranges_bar);
 
             //this->sequencer->make_menu_items(menu, true);
             //this->output_processor->create_menu_items(true);

@@ -87,8 +87,9 @@ void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_PROGRESSION
         behaviour_progression->source_id            = midi_matrix_manager->register_source("Progression");
-        behaviour_progression->source_id_5th_octave = midi_matrix_manager->register_source("Prog.5thOct");
+        behaviour_progression->source_id_chord_octave = midi_matrix_manager->register_source("Prog.chord");
         behaviour_progression->source_id_bass       = midi_matrix_manager->register_source("Prog.Bass");
+        behaviour_progression->source_id_topline    = midi_matrix_manager->register_source("Prog.Top");
     #endif
 
     // for remembering which serial midi connections are mapped to defined devices
