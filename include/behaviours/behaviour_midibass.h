@@ -66,7 +66,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
         virtual void send_drone_note() {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
-            if (last_drone_note>=0) {
+            if (is_valid_note(last_drone_note)) {
                 if (this->debug) Serial.printf(F("\t\tsend_drone_note sending (p=%s, v=%i, c=%i)\n"), get_note_name_c(last_drone_note), 127, drone_channel);
                 DeviceBehaviourUltimateBase::sendNoteOn(last_drone_note, MIDI_MAX_VELOCITY, drone_channel);
             }

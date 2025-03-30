@@ -66,6 +66,9 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             selected_source_index = new_value;
             actual_value_index = new_value;
             selected_value_index = actual_value_index;
+            if (selected_value_index>=midi_matrix_manager->targets_count) {
+                selected_value_index = midi_matrix_manager->targets_count-1;
+            }
         } else {
             // toggle selected for this source + target combo
             char msg[MENU_MESSAGE_MAX];

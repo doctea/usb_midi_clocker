@@ -84,7 +84,12 @@ void setup_midi_mapper_matrix_manager() {
     //Serial.println(F("##### setup_midi_mapper_matrix_manager..")); Serial_flush();
     midi_matrix_manager = MIDIMatrixManager::getInstance();
 
-    // first, add all the output options that will exist
+
+    #ifdef ENABLE_PROGRESSION
+        behaviour_progression->source_id            = midi_matrix_manager->register_source("Progression");
+        behaviour_progression->source_id_5th_octave = midi_matrix_manager->register_source("Prog.5thOct");
+        behaviour_progression->source_id_bass       = midi_matrix_manager->register_source("Prog.Bass");
+    #endif
 
     // for remembering which serial midi connections are mapped to defined devices
     bool midi_out_used[NUM_MIDI_OUTS] = {false, false, false, false, false, false, false, false};
@@ -226,10 +231,6 @@ void setup_midi_mapper_matrix_manager() {
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_INPUT)
         behaviour_bamble->self_register_midi_matrix_sources(midi_matrix_manager);
-    #endif
-
-    #ifdef ENABLE_PROGRESSION
-        behaviour_progression->source_id = midi_matrix_manager->register_source("Progression");
     #endif
 
     #ifdef ENABLE_USB

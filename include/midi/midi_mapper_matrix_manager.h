@@ -21,13 +21,13 @@ void setup_midi_mapper_matrix_manager();
 void behaviour_manager_kill_all_current_notes();
 
 #ifdef ENABLE_SCALES
-    void behaviour_manager_requantise_all_notes();
+    void behaviour_manager_requantise_all_notes(bool force = false);
 #endif
 
 //#include "behaviours/behaviour_bamble.h"
 
-#define MAX_NUM_SOURCES 30
-#define MAX_NUM_TARGETS 30
+#define MAX_NUM_SOURCES 50
+#define MAX_NUM_TARGETS 50
 #define NUM_REGISTERED_TARGETS targets_count
 #define NUM_REGISTERED_SOURCES sources_count
 
@@ -268,7 +268,7 @@ class MIDIMatrixManager {
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
-                if (this->debug/* || targets[target_id].wrapper->debug || source_id==12*/) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
+                if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
                 //targets[target_id].wrapper->debug = false;
@@ -409,7 +409,10 @@ class MIDIMatrixManager {
         void set_global_quantise_on(bool v, bool requantise_immediately = true) {
             bool changed = v != this->global_quantise_on;
             this->global_quantise_on = v;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                //Serial_println(F("set_global_quantise_on() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
         bool is_global_quantise_on() {
             return this->global_quantise_on;
@@ -418,7 +421,10 @@ class MIDIMatrixManager {
         void set_global_quantise_chord_on(bool v, bool requantise_immediately = true) {
             bool changed = v != this->global_quantise_chord_on;
             this->global_quantise_chord_on = v;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                //Serial_println(F("set_global_quantise_chord_on() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
         bool is_global_quantise_chord_on() {
             return this->global_quantise_chord_on;
@@ -435,7 +441,10 @@ class MIDIMatrixManager {
         void set_global_chord(chord_identity_t chord, bool requantise_immediately = true) {
             bool changed = chord.diff(this->global_chord_identity);
             this->global_chord_identity = chord;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                //Serial_println(F("set_global_chord() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
 
         int8_t get_global_scale_root() {
@@ -452,6 +461,7 @@ class MIDIMatrixManager {
             }
             this->global_scale_identity.root_note = scale_root;
             if (changed && requantise_immediately) {
+                //Serial_println(F("set_global_scale_root() about to call behaviour_manager_requantise_all_notes()"));
                 behaviour_manager_requantise_all_notes();
                 if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
             }
@@ -463,7 +473,10 @@ class MIDIMatrixManager {
         void set_global_scale_type(scale_index_t scale_type, bool requantise_immediately = true) {
             bool changed = scale_type!=global_scale_identity.scale_number;
             this->global_scale_identity.scale_number = scale_type;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                //Serial_println(F("set_global_scale_type() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
 
         int8_t get_global_chord_degree() {
@@ -472,7 +485,10 @@ class MIDIMatrixManager {
         void set_global_chord_degree(int8_t degree, bool requantise_immediately = true) {
             bool changed = degree != get_global_chord_degree();
             this->global_chord_identity.degree = degree;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                Serial_println(F("set_global_chord_degree() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
 
         CHORD::Type get_global_chord_type() {
@@ -481,7 +497,10 @@ class MIDIMatrixManager {
         void set_global_chord_type(CHORD::Type chord_type, bool requantise_immediately = true) {
             bool changed = chord_type != get_global_chord_type();
             this->global_chord_identity.type = chord_type;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                Serial_println(F("set_global_chord_type() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
 
         int8_t get_global_chord_inversion() {
@@ -490,7 +509,10 @@ class MIDIMatrixManager {
         void set_global_chord_inversion(int8_t inversion, bool requantise_immediately = true) {
             bool changed = inversion != get_global_chord_inversion();
             this->global_chord_identity.inversion = inversion;
-            if (changed && requantise_immediately) behaviour_manager_requantise_all_notes();
+            if (changed && requantise_immediately) {
+                Serial_println(F("set_global_chord_inversion() about to call behaviour_manager_requantise_all_notes()"));
+                behaviour_manager_requantise_all_notes();
+            }
         }
     #endif
 

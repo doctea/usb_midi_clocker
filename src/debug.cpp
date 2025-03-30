@@ -22,17 +22,11 @@
   #endif
 
   void debug_free_ram() {
-    /*char * ptr = (char*)extmem_malloc(1024 << 10);
-    if (!ptr)
-      Serial.println("failed to allocate from extmem!");
-    else
-      sprintf(ptr, "hello");*/
-
-    Serial.printf(F("debug_free_ram: %i RAM2"), freeRam());
+    Serial_printf(F("debug_free_ram: %i RAM2"), freeRam());
     #ifdef ARDUINO_TEENSY41
-      Serial.printf(F(", %i EXTRAM"), freeExtRam());
+      Serial_printf(F(", %i EXTRAM"), freeExtRam());
     #endif
-    Serial.println();
+    Serial_println();
   }
 
   FLASHMEM void reset_teensy() {
@@ -52,12 +46,12 @@
     return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
   }
   void debug_free_ram() {
-    Serial.print(F("Free RAM2 is "));
-    Serial.print(freeRam());
+    Serial_print(F("Free RAM2 is "));
+    Serial_print(freeRam());
     #ifdef ARDUINO_TEENSY41
-      Serial.print(F(", free EXTRAM is "));
-      Serial.print(freeExtRam());
+      Serial_print(F(", free EXTRAM is "));
+      Serial_print(freeExtRam());
     #endif
-    Serial.println();
+    Serial_println();
   }
 #endif
