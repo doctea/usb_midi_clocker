@@ -384,7 +384,7 @@ void setup() {
     #endif
   #endif
   
-  tft_print("Setup took ");
+  tft_print("Setup (minus waiting for USB setup) took ");
   tft_print(String(millis()-start_millis-2500).c_str());
   tft_print("ms\n");
 
@@ -726,5 +726,5 @@ void do_tick(uint32_t in_ticks) {
   //}
   uint32_t time_to_tick = micros() - start_time;
   if (time_to_tick>=micros_per_tick)
-    Serial_printf("WARNING: Took %ius to tick, needs to be <%ius!\n", time_to_tick, micros_per_tick);
+    Serial_printf("WARNING: Took %uus to tick on tick %i, needs to be <%3.3fus!\n", time_to_tick, ticks, micros_per_tick);
 }

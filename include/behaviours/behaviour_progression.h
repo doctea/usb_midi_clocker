@@ -32,6 +32,11 @@ extern MIDIMatrixManager *midi_matrix_manager;
 
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
+    source_id_t source_id_5th_octave = -1;
+    source_id_t source_id_bass = -1;
+
+    uint8_t BASS_CHANNEL = 2;
+    uint8_t bass_octave = 2;
 
     virtual bool transmits_midi_notes() { return true; }
 
@@ -128,20 +133,29 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         },
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
             this->sendNoteOff(note, velocity, channel);
+        },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
+
+            this->sendNoteOn(note, velocity, BASS_CHANNEL);
+        },
+        [=] (int8_t channel, int8_t note, int8_t velocity) -> void {
+            this->sendNoteOff(note, velocity, BASS_CHANNEL);
         }
     );
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         //memset(grid, 0, 64);
         //this->chord_player->debug = true;
-        song_sections[0].grid[0].degree = 1;
+        /*song_sections[0].grid[0].degree = 1;
         song_sections[0].grid[1].degree = 2;
         song_sections[0].grid[2].degree = 5;
         song_sections[0].grid[3].degree = 4;
         song_sections[0].grid[4].degree = 3;
         song_sections[0].grid[5].degree = 2;
         song_sections[0].grid[6].degree = 6;
-        song_sections[0].grid[7].degree = 3;
+        song_sections[0].grid[7].degree = 3;*/
+
+        //this->debug = this->chord_player->debug = true;
     }
 
     virtual const char *get_label() override {
@@ -157,10 +171,30 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     //};
 
     virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
+        if (channel==BASS_CHANNEL) {
+            if (debug) Serial_printf("sendNoteOn to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            midi_matrix_manager->processNoteOn(this->source_id_bass, (bass_octave*12) + note, velocity, 1);
+        } else {
+            midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
+            // send the same chord sequence to the second source_id 5 octaves up
+            note += 12 * 5;
+            if (is_valid_note(note)) {
+                midi_matrix_manager->processNoteOn(this->source_id_5th_octave, note, velocity, channel);
+            }
+        }
     }
     virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
+        if (channel==BASS_CHANNEL) {
+            if (debug) Serial_printf("sendNoteOff to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            midi_matrix_manager->processNoteOff(this->source_id_bass, (bass_octave*12) + note, velocity, 1);
+        } else {
+            midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
+            // send the same chord sequence to the second source_id 5 octaves up
+            note += 12 * 5;
+            if (is_valid_note(note)) {
+                midi_matrix_manager->processNoteOff(this->source_id_5th_octave, note, velocity, channel);
+            }
+        }
     }
 
     // degrees should be 1-7; 0 implies no chord, -1 implies 'use global'?
@@ -441,7 +475,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         return false;
     }
 
-    virtual void requantise_all_notes() override {
+    virtual int requantise_all_notes() override {
         bool already_playing = this->chord_player->is_playing;
 
         if (already_playing) {
@@ -454,7 +488,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
 
             this->chord_player->play_chord(this->current_chord);
+
+            return 4;   // assume there were 4 notes to requantise in this chord
         }
+
+        return 0;   
     }
 
     // changes section, but leaves reseting the bar to the caller to deal with (or not)

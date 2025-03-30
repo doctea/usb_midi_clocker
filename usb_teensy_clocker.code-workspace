@@ -14,6 +14,9 @@
 		},
 		{
 			"path": "../my_libraries/seqlib"
+		},
+		{
+			"path": ".pio/libdeps/pcb_go/uClock"
 		}
 	],
 	"settings": {

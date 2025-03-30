@@ -298,10 +298,7 @@
                 break;
             case '~': 
                 Serial_println(F("Toggling (~p)laying"));
-                //if (playing)
-                //    clock_stop();
-                //else
-                    clock_continue();
+                clock_continue();
                 break;
             // take screenshot
             #if defined(ENABLE_SCREEN) && defined(ENABLE_SD) && defined(ENABLE_SCREENSHOT)
