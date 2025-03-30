@@ -430,9 +430,7 @@ class DeviceBehaviourManager {
                         }
                     }
                 }
-                if (debug) {
-                    Serial_printf("..requantise_all_notes took %i ms to process %i behaviours with %i notes.\n", millis()-time, size, requantised_notes); Serial_flush();
-                }
+                if (debug) { Serial_printf("..requantise_all_notes took %i ms to process %i behaviours with %i notes.\n", millis()-time, size, requantised_notes); Serial_flush(); }
             }
         #endif
 

@@ -43,14 +43,14 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
         #ifdef USE_UCLOCK
             uClock.setTrackOnStep(shuffled_track_callback);
-            /*int8_t shuff[] = { 
+            int8_t shuff[] = { 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
-            };*/
-            int8_t shuff[] = { 
+            };
+            /*int8_t shuff[] = { 
                 (int8_t)-2, (int8_t)2, (int8_t)3, (int8_t)3, (int8_t)3, (int8_t)-3, (int8_t)-2, (int8_t)3, 
                 (int8_t)1, (int8_t)3, (int8_t)3, (int8_t)1, (int8_t)-2, (int8_t)-2, (int8_t)-1, (int8_t)0
-            };
+            };*/
             //uClock.setTrackShuffleTemplate(1, shuff, 16);
             //uClock.setTrackShuffle(1, true);
             shuffle_pattern_wrapper[1]->set_steps(shuff, 16);

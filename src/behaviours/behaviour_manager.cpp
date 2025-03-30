@@ -59,6 +59,8 @@ void behaviour_manager_kill_all_current_notes () {
 
 #ifdef ENABLE_SCALES
     void behaviour_manager_requantise_all_notes(bool force) {
+        //Serial_println(F("!!!! behaviour_manager_requantise_all_notes")); Serial_flush();
+
         if (force ||
             midi_matrix_manager->is_global_quantise_on() ||
             midi_matrix_manager->is_global_quantise_chord_on()
