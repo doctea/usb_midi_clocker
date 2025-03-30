@@ -15,11 +15,6 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
-#ifdef USE_UCLOCK
-    #include "uclock.h"
-#endif
-
-void shuffled_track_callback(uint8_t track, uint32_t step);
 
 class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
@@ -40,23 +35,6 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         sequencer->reset_patterns();
         output_processor->configure_sequencer(sequencer);
         output_processor->setup_parameters();
-
-        #ifdef USE_UCLOCK
-            uClock.setTrackOnStep(shuffled_track_callback);
-            int8_t shuff[] = { 
-                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
-                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
-            };
-            /*int8_t shuff[] = { 
-                (int8_t)-2, (int8_t)2, (int8_t)3, (int8_t)3, (int8_t)3, (int8_t)-3, (int8_t)-2, (int8_t)3, 
-                (int8_t)1, (int8_t)3, (int8_t)3, (int8_t)1, (int8_t)-2, (int8_t)-2, (int8_t)-1, (int8_t)0
-            };*/
-            //uClock.setTrackShuffleTemplate(1, shuff, 16);
-            //uClock.setTrackShuffle(1, true);
-            shuffle_pattern_wrapper[1]->set_steps(shuff, 16);
-            shuffle_pattern_wrapper[1]->set_active(true);
-        #endif
-
     }
 
     virtual const char *get_label() override {
@@ -65,13 +43,6 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
     virtual int getType() override {
         return BehaviourType::virt;
-    }
-
-    virtual void on_step_shuffled(uint8_t track, uint32_t step) {
-        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
-        //if (step>0)
-        //    sequencer->on_step_end_shuffled(track, step);
-        sequencer->on_step_shuffled(track, step);
     }
 
     virtual void on_tick(uint32_t ticks) override {
@@ -96,7 +67,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_on ...
         //if (this->debug) 
-        if (this->debug) Serial.printf(F("at tick %i, behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), ticks, channel, note, velocity, source_id);
+        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOn(this->source_id, note, MIDI_MAX_VELOCITY, channel);
         } else if (channel==MISC_CHANNEL_8) {
@@ -110,7 +81,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_off !
         //if (this->debug) Serial.printf(F("!! behaviour_lestrum#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i)with source_id %i: \n"), channel, note, velocity, source_id_2);
-        if (this->debug) Serial.printf(F("at tick %i, behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), ticks, channel, note, velocity, source_id);
+        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOff(this->source_id, note, MIDI_MIN_VELOCITY, channel);
         } else if (channel==MISC_CHANNEL_8) {
