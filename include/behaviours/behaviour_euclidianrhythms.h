@@ -15,6 +15,11 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+#ifdef USE_UCLOCK
+    #include "uclock.h"
+#endif
+
+void shuffled_track_callback(uint8_t track, uint32_t step);
 
 class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
@@ -35,6 +40,20 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         sequencer->reset_patterns();
         output_processor->configure_sequencer(sequencer);
         output_processor->setup_parameters();
+
+        #ifdef USE_UCLOCK
+            uClock.setTrackOnStep(shuffled_track_callback);
+            /*int8_t shuff[] = { 
+                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
+                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
+            };*/
+            int8_t shuff[] = { 
+                (int8_t)-2, (int8_t)2, (int8_t)3, (int8_t)3, (int8_t)3, (int8_t)-3, (int8_t)-2, (int8_t)3, 
+                (int8_t)1, (int8_t)3, (int8_t)3, (int8_t)1, (int8_t)-2, (int8_t)-2, (int8_t)-1, (int8_t)0
+            };
+            uClock.setTrackShuffleTemplate(1, shuff, 16);
+            uClock.setTrackShuffle(1, true);
+        #endif
     }
 
     virtual const char *get_label() override {
@@ -43,6 +62,13 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
     virtual int getType() override {
         return BehaviourType::virt;
+    }
+
+    virtual void on_step_shuffled(uint8_t track, uint32_t step) {
+        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
+        //if (step>0)
+        //    sequencer->on_step_end_shuffled(track, step);
+        sequencer->on_step_shuffled(track, step);
     }
 
     virtual void on_tick(uint32_t ticks) override {
