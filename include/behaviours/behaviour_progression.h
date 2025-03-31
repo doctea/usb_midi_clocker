@@ -149,7 +149,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         song_sections[0].grid[6].degree = 6;
         song_sections[0].grid[7].degree = 3;*/
 
-        //this->debug = this->chord_player->debug = true;
+        this->debug = this->chord_player->debug = true;
     }
 
     virtual const char *get_label() override {
@@ -496,6 +496,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         bool already_playing = this->chord_player->is_playing;
 
         if (already_playing) {
+            if (debug) Serial.printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", this->get_label(), this->current_chord.degree);
             bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
             bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
             midi_matrix_manager->global_quantise_on = false;
@@ -503,8 +504,9 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             this->chord_player->stop_chord();
             midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
             midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
-
+            if (debug) Serial.printf("behaviour_progression#requantise_all_notes: now gonna play chord %i!\n", this->get_label(), this->current_chord.degree);
             this->chord_player->play_chord(this->current_chord);
+            if (debug) Serial.printf("behaviour_progression#requantise_all_notes: played chord %i!\n", this->get_label(), this->current_chord.degree);
 
             return 4;   // assume there were 4 notes to requantise in this chord
         }
