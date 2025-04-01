@@ -72,7 +72,9 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
 }*/
 
 #ifdef ENABLE_SCALES
+//PROGMEM
 int DeviceBehaviourUltimateBase::requantise_all_notes() {
+    // don't requantise drum notes
     if (this->current_channel==GM_CHANNEL_DRUMS)
         return 0;
 
@@ -87,6 +89,7 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
 
     int requantised_notes = 0;
     
+    uint32_t start_foreach = micros();
     requantised_notes = note_tracker.foreach_note([this,initial_global_quantise_chord_on,initial_global_quantise_on](int8_t note, int8_t old_transposed_note) {
         int8_t new_transposed_note = midi_matrix_manager->do_quant(note, this->current_channel);
         if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes in foreach_requantised_note: note=%i (%s), old_transposed_note=%i (%s), new_transposed_note=%i (%s)\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), new_transposed_note, get_note_name_c(new_transposed_note));
@@ -130,7 +133,7 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
         }
         if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: NOTE SURE WHAT TO DO!  note %i (%s) re-quantised to %i (%s) (stopping then starting on channel %i)\n", this->get_label(), note, get_note_name_c(note), new_transposed_note, get_note_name_c(new_transposed_note), this->current_channel);
     });
-
+    if (debug) if (requantised_notes>0) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes 'foreach' took %i us to process %i notes\n", this->get_label(), micros()-start_foreach, requantised_notes);
     if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes finishing with\t%i held notes (%s)\n", this->get_label(), note_tracker.count_held(), note_tracker.get_held_notes_c());
 
     return requantised_notes;

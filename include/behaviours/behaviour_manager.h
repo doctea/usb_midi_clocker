@@ -414,20 +414,22 @@ class DeviceBehaviourManager {
         }
 
         #ifdef ENABLE_SCALES
+            //PROGMEM
             void requantise_all_notes() {
                 uint32_t time = millis();
                 const uint_fast8_t size = behaviours->size();
                 int requantised_notes = 0;
                 if (debug) { Serial_printf("requantise_all_notes() processing %i behaviours...\n", size); Serial_flush(); }
                 for (uint_fast8_t i = 0 ; i < size ; i++) {
-                    int behaviour_time = millis();
-                    int notes = behaviours->get(i)->requantise_all_notes();
+                    int behaviour_time = micros();
+                    DeviceBehaviourUltimateBase *device = behaviours->get(i);
+                    int notes = device->requantise_all_notes();
                     if (notes>0) {
                         requantised_notes += notes;
-                        if (debug) {
-                            Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, behaviours->get(i)->get_label()); Serial_flush();
-                            Serial_printf("\trequantise_all_notes() took %i ms for behaviour %i (%s) to process %i notes\n", millis()-behaviour_time, i, behaviours->get(i)->get_label(), notes); Serial_flush();
-                        }
+                    }
+                    if ((debug && micros()-behaviour_time>0) || device->debug) {
+                        Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, behaviours->get(i)->get_label()); Serial_flush();
+                        Serial_printf("\trequantise_all_notes() took %i us for behaviour %i (%s) to process %i notes\n", micros()-behaviour_time, i, behaviours->get(i)->get_label(), notes); Serial_flush();
                     }
                 }
                 if (debug) { Serial_printf("..requantise_all_notes took %i ms to process %i behaviours with %i notes.\n", millis()-time, size, requantised_notes); Serial_flush(); }

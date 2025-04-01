@@ -149,7 +149,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         song_sections[0].grid[6].degree = 6;
         song_sections[0].grid[7].degree = 3;*/
 
-        this->debug = this->chord_player->debug = true;
+        //this->debug = this->chord_player->debug = true;
     }
 
     virtual const char *get_label() override {
@@ -169,8 +169,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (debug) Serial_printf("actualSendNoteOn to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
             midi_matrix_manager->processNoteOn(this->source_id_bass, (bass_octave*12) + note, velocity, 1);
         } else if (channel==TOPLINE_CHANNEL) {
-            //if (debug) 
-            Serial_printf("actualSendNoteOn to topline: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            if (debug) Serial_printf("actualSendNoteOn to topline: channel %i, note %i, velocity %i\n", channel, note, velocity);
             midi_matrix_manager->processNoteOn(this->source_id_topline, (topline_octave*12) + note, velocity, 1);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
@@ -494,9 +493,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual int requantise_all_notes() override {
         bool already_playing = this->chord_player->is_playing;
+        if (debug) Serial_println("behaviour_progression#requantise_all_notes()...");
 
         if (already_playing) {
-            if (debug) Serial.printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", this->get_label(), this->current_chord.degree);
+            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", this->get_label(), this->current_chord.degree);
+            if (debug) Serial_println("behaviour_progression#requantise_all_notes() is playing...");
             bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
             bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
             midi_matrix_manager->global_quantise_on = false;
@@ -504,13 +505,15 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             this->chord_player->stop_chord();
             midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
             midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
-            if (debug) Serial.printf("behaviour_progression#requantise_all_notes: now gonna play chord %i!\n", this->get_label(), this->current_chord.degree);
+            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: now gonna play chord %i!\n", this->get_label(), this->current_chord.degree);
             this->chord_player->play_chord(this->current_chord);
-            if (debug) Serial.printf("behaviour_progression#requantise_all_notes: played chord %i!\n", this->get_label(), this->current_chord.degree);
+            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: played chord %i!\n", this->get_label(), this->current_chord.degree);
+            if (debug) Serial_println("behaviour_progression#requantise_all_notes() done.");
 
             return 4;   // assume there were 4 notes to requantise in this chord
         }
 
+        if (debug) Serial_println("behaviour_progression#requantise_all_notes() isn't playing...");
         return 0;   
     }
 
@@ -540,7 +543,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
-            if (debug) Serial.printf(F("save_playlist(%i) writing to %s\n"), project_number, filename);
+            if (debug) Serial_printf(F("save_playlist(%i) writing to %s\n"), project_number, filename);
             if (SD.exists(filename)) {
               //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
               SD.remove(filename);
@@ -549,11 +552,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
             if (!myFile) {    
-              if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+              if (debug) Serial_printf(F("Error: couldn't open %s for writing\n"), filename);
               //if (irqs_enabled) __enable_irq();
               return false;
             }
-            if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
+            if (debug) { Serial_println("Starting data write.."); Serial_flush(); }
 
             myFile.println(F("; begin playlist"));
             for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
@@ -582,10 +585,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
-            if (debug) Serial.printf(F("load_playlist(%i) opening %s\n"), project_number, filename);
+            if (debug) Serial_printf(F("load_playlist(%i) opening %s\n"), project_number, filename);
             myFile = SD.open(filename, FILE_READ);
             if (!myFile) {
-                if (debug) Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+                if (debug) Serial_printf(F("Error: Couldn't open %s for reading!\n"), filename);
                 return false;
             }
             myFile.setTimeout(0);
@@ -593,7 +596,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             String line;
             while (line = myFile.readStringUntil('\n')) {
                 if (line.startsWith(";")) continue;
-                if (debug) Serial.printf("load_playlist: parsing line %s\n", line.c_str());
+                if (debug) Serial_printf("load_playlist: parsing line %s\n", line.c_str());
                 playlist.parse_key_value(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
             }
             myFile.close();
@@ -622,7 +625,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
-            if (debug) Serial.printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, section_number, filename);
+            if (debug) Serial_printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, section_number, filename);
             if (SD.exists(filename)) {
               //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
               SD.remove(filename);
@@ -631,11 +634,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
             if (!myFile) {    
-              if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
+              if (debug) Serial_printf(F("Error: couldn't open %s for writing\n"), filename);
               //if (irqs_enabled) __enable_irq();
               return false;
             }
-            if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
+            if (debug) { Serial_println("Starting data write.."); Serial_flush(); }
 
             myFile.println(F("; begin section"));
             for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
