@@ -22,3 +22,4 @@ hexes/*
 include/__version.h
 scraps
 __unused/*
+__notes/*

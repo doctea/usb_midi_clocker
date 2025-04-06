@@ -64,12 +64,12 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         return BehaviourType::virt;
     }
 
-    virtual void on_step_shuffled(uint8_t track, uint32_t step) {
-        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
-        //if (step>0)
-        //    sequencer->on_step_end_shuffled(track, step);
-        sequencer->on_step_shuffled(track, step);
-    }
+    #ifdef ENABLE_SHUFFLE
+        virtual void on_step_shuffled(uint8_t track, uint32_t step) {
+            if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
+            sequencer->on_step_shuffled(track, step);
+        }
+    #endif
 
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 
