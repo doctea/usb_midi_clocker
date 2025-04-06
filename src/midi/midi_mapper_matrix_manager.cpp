@@ -87,8 +87,9 @@ void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_PROGRESSION
         behaviour_progression->source_id            = midi_matrix_manager->register_source("Progression");
-        behaviour_progression->source_id_5th_octave = midi_matrix_manager->register_source("Prog.5thOct");
+        behaviour_progression->source_id_chord_octave = midi_matrix_manager->register_source("Prog.chord");
         behaviour_progression->source_id_bass       = midi_matrix_manager->register_source("Prog.Bass");
+        behaviour_progression->source_id_topline    = midi_matrix_manager->register_source("Prog.Top");
     #endif
 
     // for remembering which serial midi connections are mapped to defined devices
@@ -127,7 +128,7 @@ void setup_midi_mapper_matrix_manager() {
         #ifdef ENABLE_DISTING
             if (&ENABLE_DISTING==midi_out_serial[i]) {
                 midi_out_used[i] = true;
-                midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", ENABLE_DISTING, 1));
+                midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"S4 : Disting : ch 1", &ENABLE_DISTING, 1));
             }
         #endif
         #ifdef ENABLE_BEHRINGER_EDGE_SERIAL
@@ -236,23 +237,29 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_USB
         // add the sources - these are *from* PC *to* Teensy
         pc_usb_sources[0] = midi_matrix_manager->register_source((const char*)"pc_usb_1");
-        pc_usb_sources[1] = midi_matrix_manager->register_source((const char*)"pc_usb_2");
-        pc_usb_sources[2] = midi_matrix_manager->register_source((const char*)"pc_usb_3");
-        pc_usb_sources[3] = midi_matrix_manager->register_source((const char*)"pc_usb_4");
+        #ifdef USB_MIDI4_SERIAL
+            pc_usb_sources[1] = midi_matrix_manager->register_source((const char*)"pc_usb_2");
+            pc_usb_sources[2] = midi_matrix_manager->register_source((const char*)"pc_usb_3");
+            pc_usb_sources[3] = midi_matrix_manager->register_source((const char*)"pc_usb_4");
+        #endif
 
         #ifdef ENABLE_BAMBLE
             // then, set the output wrapper pointers to the default wrappers (again, from PC to teensy)
             midi_matrix_manager->connect("pc_usb_1", "USB : Bamble : ch 1");
-            midi_matrix_manager->connect("pc_usb_2", "USB : Bamble : ch 2");
-            midi_matrix_manager->connect("pc_usb_3", "USB : Bamble : drums");
-            midi_matrix_manager->connect("pc_usb_4", "USB : Bamble : ch 4");
+            #ifdef USB_MIDI4_SERIAL
+                midi_matrix_manager->connect("pc_usb_2", "USB : Bamble : ch 2");
+                midi_matrix_manager->connect("pc_usb_3", "USB : Bamble : drums");
+                midi_matrix_manager->connect("pc_usb_4", "USB : Bamble : ch 4");
+            #endif
         #endif
 
         // other direction -- from Teensy to PC
         midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 1", 0, 1));
-        midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 2", 1, 1));
-        midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 3", 2, 1));
-        midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 4", 3, 1));
+        #ifdef USB_MIDI4_SERIAL
+            midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 2", 1, 1));
+            midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 3", 2, 1));
+            midi_matrix_manager->register_target(new MIDIOutputWrapper_PC((const char*)"PC : Host : 4", 3, 1));
+        #endif
 
         #ifdef ENABLE_BEATSTEP
             behaviour_beatstep->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Beatstep trans", behaviour_beatstep, 1));

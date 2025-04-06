@@ -180,14 +180,13 @@
         //#define ENABLE_SKULPTSYNTH_USB
         #define ENABLE_CHOCOLATEFEET_USB
         #define ENABLE_MIDILIGHTS
-        //#define ENABLE_MIDILIGHTS_DEDICATED
-        //#define ENABLE_BEHRINGER_EDGE_USB
-        //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
     #endif
 
     #ifdef PCB_GO
         #define ENABLE_KEYSTEP
+        //#define ENABLE_SKULPTSYNTH_USB
         //#define ENABLE_MIDILIGHTS
+        //#define ENABLE_BEHRINGER_EDGE_USB
     #endif
     
     #ifndef ENABLE_EUCLIDIAN
@@ -197,8 +196,12 @@
 #endif
 
 #ifdef PCB_STUDIO
+    #define ENABLE_SKULPTSYNTH_SERIAL       MIDI2
     #define ENABLE_BEHRINGER_EDGE_SERIAL    MIDI5
-    //#define ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED    MIDI5
+#endif
+
+#if defined(ENABLE_SKULPTSYNTH_USB) || defined(ENABLE_SKULPTSYNTH_SERIAL)
+    #define ENABLE_SKULPTSYNTH
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)

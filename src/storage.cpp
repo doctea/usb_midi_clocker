@@ -362,7 +362,7 @@ namespace storage {
 
   //void update_pattern_filename(String filename);
 
-  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug = false) {
+  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       #ifdef ENABLE_SD
       static volatile bool already_loading = false;

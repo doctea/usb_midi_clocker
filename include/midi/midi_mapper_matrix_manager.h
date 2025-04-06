@@ -208,6 +208,7 @@ class MIDIMatrixManager {
         return ::quantise_pitch_to_chord(pitch, distance_threshold);
     }*/
     #ifdef ENABLE_SCALES
+        PROGMEM
         int8_t do_quant(int8_t pitch, int8_t channel) {
             if (channel!=GM_CHANNEL_DRUMS) {
                 if (this->global_quantise_on)       pitch = ::quantise_pitch_to_scale(pitch);
@@ -451,7 +452,8 @@ class MIDIMatrixManager {
             return this->global_scale_identity.root_note;
         }
         void set_global_scale_root(int8_t scale_root, bool requantise_immediately = true) {
-            bool changed = scale_root!=global_scale_identity.root_note;
+            if (debug) Serial_printf("midi_mapper_matrix_manager#set_global_scale_root(%i) currently has global_scale_identity.root_note=%i\n", scale_root, this->global_scale_identity.root_note);
+            bool changed = scale_root != global_scale_identity.root_note;
             if (changed && debug) {
                 Serial_printf("======== midi_mapper_matrix_manager#set_global_scale_root() changing %s (%i) to %s (%i)\n", get_note_name_c(global_scale_identity.root_note), global_scale_identity.root_note, get_note_name_c(scale_root), scale_root);
                 Serial_printf("Current scale:\t");
@@ -461,7 +463,7 @@ class MIDIMatrixManager {
             }
             this->global_scale_identity.root_note = scale_root;
             if (changed && requantise_immediately) {
-                //Serial_println(F("set_global_scale_root() about to call behaviour_manager_requantise_all_notes()"));
+                if (debug) Serial_println(F("set_global_scale_root() about to call behaviour_manager_requantise_all_notes()"));
                 behaviour_manager_requantise_all_notes();
                 if (debug) Serial_printf("======= midi_mapper_matrix_manager#set_global_scale_root() done requantising all notes\n");
             }
