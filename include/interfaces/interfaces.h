@@ -15,7 +15,8 @@ enum GATEBANKS {
     BANK_CLOCK,
     BANK_SEQ,
     #if defined(ENABLE_GATES_BANK_EXTRA)
-        BANK_EXTRA,
+        BANK_EXTRA_1,
+        BANK_EXTRA_2,
     #endif
     NUM_GATE_BANKS
 };

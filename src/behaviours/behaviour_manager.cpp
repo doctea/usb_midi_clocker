@@ -85,9 +85,6 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_CLOCKS
         behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);
         behaviour_manager->registerBehaviour(behaviour_clock_gates);
-
-        //VirtualBehaviour_ClockGates *behaviour_clock_gates_2 = new VirtualBehaviour_ClockGates(gate_manager, BANK_EXTRA);
-        //behaviour_manager->registerBehaviour(behaviour_clock_gates_2);
     #endif
     #ifdef ENABLE_SEQUENCER
         behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
