@@ -55,11 +55,8 @@ void do_tick(uint32_t ticks);
 #include "bpm.h"
 #include "clock.h"
 
-#ifdef ENABLE_SEQUENCER
-  #include "sequencer.h"
-#endif
 #include "interfaces/interfaces.h"
-#include "cv_outs.h"
+#include "cv_gate_outs.h"
 
 #ifdef ENABLE_USB
   #include "usb/multi_usb_handlers.h"

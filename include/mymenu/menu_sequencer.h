@@ -4,7 +4,6 @@
 
 #include "mymenu/menu_slotcontroller.h"
 
-#include "sequencer.h"
 #include "storage.h"
 #include "project.h"
 extern Menu *menu;
