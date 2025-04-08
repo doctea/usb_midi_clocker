@@ -7,7 +7,6 @@
 #include "midi/midi_apcmini.h"
 #include "midi/midi_apcmini_display.h"
 
-#include "sequencer.h"
 #include "storage.h"
 #include "project.h"
 extern Menu *menu;
