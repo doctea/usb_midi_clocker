@@ -27,7 +27,8 @@ class GatesDisplay : public MenuItem {
             int x = 0;
             tft->setCursor(x, pos.y);
             tft->printf("Bank %i: %i ", i, gate_manager->banks[i]->num_gates);
-            tft->printf(i == BANK_CLOCK ? "clocks" : "sequences");
+            //tft->printf(i == BANK_CLOCK ? "clocks" : "sequences");
+            tft->printf(gate_manager->banks[i]->get_label());
             tft->println();
             pos.y += tft->getRowHeight(); //= tft->getCursorY();
             for (int g = 0 ; g < gate_manager->banks[i]->num_gates ; g++) {

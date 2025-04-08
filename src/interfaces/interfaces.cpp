@@ -31,7 +31,7 @@ GateManager *gate_manager = new GateManager();
         #ifdef TEST_MCP23s17_INPUT
             MCP23S17InputBankInterface *mcp_interface = new MCP23S17InputBankInterface();
         #else
-            MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface(MCP23S17_SPI_CS1_PIN, 0, &SPI1);
+            MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface("MCP1", MCP23S17_SPI_CS1_PIN, 0, &SPI1);
         #endif
         Serial.println("\tdid mcp_interface");
         byte num_gates = 8;
@@ -55,24 +55,42 @@ GateManager *gate_manager = new GateManager();
             0 -> 0 -> 7
         */
         int remap_clocks[num_gates] = { 2, 5, 3, 6, 4, 7, 1, 0 };
-        gate_manager->add_bank_interface(BANK_SEQ, 
-            new VirtualRemapBankInterface(                              // remap the output-gate mappings because
-                new VirtualBankInterface(mcp_interface, 0, num_gates, true)  // use outputs 0-7 of underlying MCP object
-                , remap_clocks, 
+        gate_manager->add_bank_interface(
+            BANK_SEQ, 
+            new VirtualRemapBankInterface(
+                "sequences",                            // remap the output-gate mappings because
+                new VirtualBankInterface("sequences", mcp_interface, 0, num_gates, true),  // use outputs 0-7 of underlying MCP object
+                remap_clocks, 
                 num_gates
             )
         );
         
         // use outputs 8-15 of the underlying MCP object, and reverse them
-        gate_manager->add_bank_interface(BANK_CLOCK,   new VirtualBankInterface(mcp_interface, num_gates, num_gates, false));
+        gate_manager->add_bank_interface(
+            BANK_CLOCK,   
+            new VirtualBankInterface("clocks", mcp_interface, num_gates, num_gates, false)
+        );
 
         #ifdef ENABLE_GATES_BANK_EXTRA
-            MCP23S17BankInterface *mcp_interface_2 = new MCP23S17BankInterface(MCP23S17_SPI_CS2_PIN, 0, &SPI1);
-            gate_manager->add_bank_interface(BANK_EXTRA_1, new VirtualBankInterface(mcp_interface_2, num_gates, num_gates, false));
-            //gate_manager->add_bank_interface(BANK_EXTRA_2, new VirtualBankInterface(new MCP23S17InputBankInterface(), num_gates, num_gates, false));
+            MCP23S17BankInterface *mcp_interface_2 = new MCP23S17BankInterface("MCP2", MCP23S17_SPI_CS2_PIN, 0, &SPI1);
+            gate_manager->add_bank_interface(
+                BANK_EXTRA_1, 
+                new VirtualBankInterface("gates", mcp_interface_2, num_gates, num_gates, false)
+            );
+            //gate_manager->add_bank_interface(BANK_EXTRA_2, new VirtualBankInterface(mcp_interface_2, 0, num_gates, false));
+            gate_manager->add_bank_interface(BANK_EXTRA_2, 
+                new VirtualRemapBankInterface("inputs",
+                    new MCP23S17SharedInputBankInterface("inputs", mcp_interface_2, 0, 8), 
+                    remap_clocks, 
+                    num_gates  
+                )
+            );
+            //, 0, num_gates, false));
         #endif
         
         Serial.println("returning from setup_gate_manager().");
+        Serial.flush();
+
     }
 #else
     void setup_gate_manager() {
@@ -130,11 +148,15 @@ void set_sequence_gate(int gate_number, bool state) {
 
         byte gate_count = 0;
 
+        Serial.println("GateManager::create_controls("); Serial_flush();
+        debug_free_ram();
+        
         char label[MENU_C_MAX];
         for (int bank = 0 ; bank < this->num_banks ; bank++) {
             snprintf(label, MENU_C_MAX, "Bank %i: %s", bank, bank==BANK_CLOCK ? "Clocks" : "Sequences");
             ObjectMultiToggleControl *gate_toggles = new ObjectMultiToggleControl(label, true);
 
+            Serial.printf("Creating gate toggles for bank %i (%s)\n", bank, label); Serial_flush();
             for (int gate = 0 ; gate < this->banks[bank]->num_gates ; gate++) {
                 //snprintf(label, MENU_C_MAX, "G%2i", gate);
                 gate_toggles->addItem(new GateMultiToggleItem(gate_labels[gate_count++], bank, gate));

@@ -22,9 +22,11 @@ class MCP23S17BankInterface : public BankInterface {
 
         bool dirty = false;
 
-        MCP23S17BankInterface(int cs_pin = MCP23S17_SPI_CS1_PIN, int address = 0, SPIClass *spi = &SPI1) {
+        MCP23S17BankInterface(const char *label, int cs_pin = MCP23S17_SPI_CS1_PIN, int address = 0, SPIClass *spi = &SPI1, int num_gates = 16) {
             Serial.println("MCP23S17BankInterface() constructor");
+            this->label = label;
             //SPI1.setCS(MCP23S17_SPI_CS1_PIN);
+            this->num_gates = num_gates;
 
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
@@ -105,6 +107,51 @@ class MCP23S17BankInterface : public BankInterface {
 };
 
 
+class MCP23S17SharedInputBankInterface : public BankInterface {
+    public:
+        MCP23S17 *mcp = nullptr;
+        int start_gate = 0;
+
+        MCP23S17SharedInputBankInterface(const char *label, MCP23S17BankInterface *parent, int start_gate, int num_gates) {
+            this->label = label;
+            Serial.println("MCP23S17SharedInputBankInterface() constructor");
+
+            mcp = parent->mcp;
+            this->start_gate = start_gate;
+            this->num_gates = num_gates;
+            
+            for(int i = 0 ; i < num_gates ; i++) {
+                Serial.printf("\tSetting up pin %i!..\n", i);
+                if (parent->mcp->pinMode1(start_gate+i, INPUT)) {
+                    parent->mcp->setPullup(start_gate+i, true);
+                } else {
+                    Serial.printf("MCP23s17BankInterface: Error setting pinMode %i\n", i);
+                }
+                Serial.flush();
+            }
+            Serial.flush();
+            Serial.println("finished constructor");
+        }
+
+        virtual void set_gate(int gate_number, bool state) override {
+            return; // input only
+        }
+        virtual bool check_gate(int gate_number) override {
+            //return this->current_states[gate_number];
+            bool v = mcp->read1(start_gate + gate_number);
+            if (v) {
+                Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
+            } else {
+                //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
+            }
+            return v;
+        }
+        virtual void update() override {
+
+        }
+};
+
+
 // experimental -- actually seems to be working on a code level, but the hardware behaves strangely..
 // todo: make an interface that can support mixed ins/outs 
 // todo: make this use batched reads
@@ -115,7 +162,8 @@ class MCP23S17InputBankInterface : public BankInterface {
         MCP23S17 *mcp = nullptr;
         bool *current_states = nullptr;
 
-        MCP23S17InputBankInterface(int cs_pin = MCP23S17_SPI_CS1_PIN, int address = 0, SPIClass *spi = &SPI1) {
+        MCP23S17InputBankInterface(const char *label, int cs_pin = MCP23S17_SPI_CS1_PIN, int address = 0, SPIClass *spi = &SPI1) {
+            this->label = label;
             Serial.println("MCP23S17InputBankInterface() constructor");
             /*SPI1.setCS(38);
             SPI1.setMISO(39);

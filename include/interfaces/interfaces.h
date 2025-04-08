@@ -26,6 +26,11 @@ class BankInterface {
 
     uint_least8_t num_gates = 8;
     bool dirty = true;
+    const char *label = "gates";
+
+    virtual const char *get_label() {
+        return label;
+    }
 
     virtual void set_gate(int gate, bool state) = 0;
     virtual void update() = 0;
@@ -43,7 +48,8 @@ class VirtualRemapBankInterface : public BankInterface {
         int *remap_pins = nullptr;
         int pin_count = 0;
 
-        VirtualRemapBankInterface(BankInterface *iface, int *remap_pins, int pin_count) {
+        VirtualRemapBankInterface(const char *label, BankInterface *iface, int *remap_pins, int pin_count) {
+            this->label = label;
             this->pin_count = pin_count;
             this->remap_pins = (int*)CALLOC_FUNC(pin_count, sizeof(int));
             for (uint_least8_t i = 0 ; i < pin_count ; i++) {
@@ -70,7 +76,8 @@ class VirtualBankInterface : public BankInterface {
         int_least8_t gate_offset = 0;
         bool reverse = false;   // reverse the order of the gate-output mapping
 
-        VirtualBankInterface(BankInterface *iface, int gate_offset, int num_gates, bool reverse = false) {
+        VirtualBankInterface(const char *label, BankInterface *iface, int gate_offset, int num_gates, bool reverse = false) {
+            this->label = label;
             this->underlying = iface;
             this->gate_offset = gate_offset;
             this->num_gates = num_gates;
@@ -113,7 +120,8 @@ class DigitalPinBankInterface : public BankInterface {
         byte mode = OUTPUT;
 
         uint8_t *pin_numbers = nullptr;
-        DigitalPinBankInterface(const byte *pin_numbers, int num_pins, byte mode = OUTPUT) {
+        DigitalPinBankInterface(const char *label, const byte *pin_numbers, int num_pins, byte mode = OUTPUT) {
+            this->label = label;
             this->pin_numbers = (uint8_t*)CALLOC_FUNC(num_pins, sizeof(uint8_t));
             this->mode = mode;
             num_gates = num_pins;
@@ -168,8 +176,10 @@ class GateManager : virtual public IGateTarget {
 
     void add_bank_interface(int bank, BankInterface *iface) {
         //banks[bank].add(iface);
-        if (num_banks>=NUM_GATE_BANKS)
+        if (num_banks>=NUM_GATE_BANKS) {
+            Serial.printf("ERROR: attempted to add too many banks (%i of %i)!", bank+1, NUM_GATE_BANKS);
             messages_log_add(String("ERROR: attempted to add too many banks!"));
+        }
 
         banks[bank] = iface;
         iface->stop_all_gates();
