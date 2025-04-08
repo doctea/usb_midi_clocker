@@ -72,6 +72,7 @@ GateManager *gate_manager = new GateManager();
         #ifdef ENABLE_GATES_BANK_EXTRA
             MCP23S17BankInterface *mcp_interface_2 = new MCP23S17BankInterface(MCP23S17_SPI_CS2_PIN, 0, &SPI1);
             gate_manager->add_bank_interface(BANK_EXTRA_1, new VirtualBankInterface(mcp_interface_2, num_gates, num_gates, false));
+            //gate_manager->add_bank_interface(BANK_EXTRA_2, new VirtualBankInterface(new MCP23S17InputBankInterface(), num_gates, num_gates, false));
         #endif
         
         Serial.println("returning from setup_gate_manager().");
