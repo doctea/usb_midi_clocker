@@ -79,13 +79,7 @@ GateManager *gate_manager = new GateManager();
             );
             //gate_manager->add_bank_interface(BANK_EXTRA_2, new VirtualBankInterface(mcp_interface_2, 0, num_gates, false));
             gate_manager->add_bank_interface(BANK_EXTRA_2, 
-                //new VirtualRemapBankInterface("inputs",
-                    new MCP23S17SharedInputBankInterface("inputs", mcp_interface_2, 0, 8)
-                //, 
-                //    remap_clocks, 
-                //    num_gates  
-                //)
-            );
+                new MCP23S17SharedInputBankInterface("inputs", mcp_interface_2, remap_clocks, 0, num_gates));
             //, 0, num_gates, false));
         #endif
         
