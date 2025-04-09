@@ -123,7 +123,7 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             for(int i = 0 ; i < num_gates ; i++) {
                 Serial.printf("\tSetting up pin %i!..\n", i);
                 if (parent->mcp->pinMode1(start_gate+i, INPUT)) {
-                    parent->mcp->setPullup(start_gate+i, true);
+                    parent->mcp->setPullup(start_gate+i, false);
                 } else {
                     Serial.printf("MCP23s17BankInterface: Error setting pinMode %i\n", i);
                 }
@@ -139,15 +139,54 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
         virtual bool check_gate(int gate_number) override {
             //return this->current_states[gate_number];
             bool v = mcp->read1(start_gate + gate_number);
-            if (v) {
+            if (v && gate_number==7) {
                 Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             } else {
                 //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             }
+            if (v != last_state[gate_number]) {
+                Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) state changed to %i\n", gate_number, v);
+                state_changed[gate_number] = true;
+            } 
+            last_state[gate_number] = v;
             return v;
         }
+        bool ticked_flag = false;
+        
+        bool last_state[8] = { false };
+        bool state_changed[8] = { false };
+        
         virtual void update() override {
-
+            //Serial.printf("MCP23S17SharedInputBankInterface::update() called!\n");
+            for (int i = 0 ; i < num_gates ; i++) {
+                check_gate(i);
+            }
+            if (last_state[7] && state_changed[7]) {
+                Serial.println("last_state[7] is true and state_changed[7] is true - setting ticked flag!");
+                // do a uClock external clock trigger
+                this->ticked_flag = true;
+            }
+            /*if (this->ticked_flag) {
+                Serial.println("MCP23S17SharedInputBankInterface::update() ticked flag is set!");
+            } else {
+                Serial.println("MCP23S17SharedInputBankInterface::update() ticked flag is NOT set!");
+            }*/
+            for (int i = 0 ; i < num_gates ; i++) {
+                if (state_changed[i]) {
+                    //Serial.printf("MCP23S17SharedInputBankInterface::update() gate %i changed to %i\n", i, last_state[i]);
+                    state_changed[i] = false;
+                }
+            }
+        }
+        virtual bool has_ticked() {
+            //Serial.print("CHECKING HAS_TICKED!: ");
+            if (this->ticked_flag) {
+                Serial.println("HAS TICKED FLAG SET! returning true and setting unticked!");
+                this->ticked_flag = false;
+                return true;
+            }
+            //Serial.println("HAS TICKED FLAG NOT SET! returning false!");
+            return false;
         }
 };
 

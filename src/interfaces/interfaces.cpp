@@ -79,11 +79,12 @@ GateManager *gate_manager = new GateManager();
             );
             //gate_manager->add_bank_interface(BANK_EXTRA_2, new VirtualBankInterface(mcp_interface_2, 0, num_gates, false));
             gate_manager->add_bank_interface(BANK_EXTRA_2, 
-                new VirtualRemapBankInterface("inputs",
-                    new MCP23S17SharedInputBankInterface("inputs", mcp_interface_2, 0, 8), 
-                    remap_clocks, 
-                    num_gates  
-                )
+                //new VirtualRemapBankInterface("inputs",
+                    new MCP23S17SharedInputBankInterface("inputs", mcp_interface_2, 0, 8)
+                //, 
+                //    remap_clocks, 
+                //    num_gates  
+                //)
             );
             //, 0, num_gates, false));
         #endif
@@ -165,3 +166,12 @@ void set_sequence_gate(int gate_number, bool state) {
         }
     }
 #endif
+
+
+bool check_gate_cv_clock_ticked() {
+    //Serial.println("check_gate_cv_clock_ticked().."); Serial_flush();
+    MCP23S17SharedInputBankInterface* bank = (MCP23S17SharedInputBankInterface*)gate_manager->banks[BANK_EXTRA_2];
+    bool v = bank->has_ticked();
+    if (v) Serial.println("!!!!!!!!!!!!!!! has ticked!"); else Serial.println("has not ticked!");
+    return v;
+}

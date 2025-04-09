@@ -140,6 +140,8 @@ void setup_psram_overclock() {
   TapTempoTracker *tapper = new TapTempoTracker();
 #endif
 
+bool check_gate_cv_clock_ticked();
+
 #ifndef GDB_DEBUG
 //FLASHMEM 
 #endif
@@ -243,6 +245,10 @@ void setup() {
           Debug_printf("after setup_sequencer_menu, free RAM is %u\n", freeRam());
       #endif
   #endif*/
+
+  #ifdef ENABLE_CLOCK_INPUT_CV
+    set_check_cv_clock_ticked_callback(check_gate_cv_clock_ticked);
+  #endif
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
@@ -448,7 +454,9 @@ void loop() {
   bool ticked = false;
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
-    if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
+    //if (debug_flag) { 
+      Serial_println(F("about to update_clock_ticks")); Serial_flush(); 
+    //}
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
   
@@ -525,7 +533,7 @@ void loop() {
   // only update from main loop if we're paused, so that we can still see effect of manual updating of gates etc
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
-    if (!playing) {
+    if (!playing || clock_mode==CLOCK_EXTERNAL_CV) {
       if (debug_flag) { Serial_println(F("about to gate_manager->update();")); Serial_flush(); }
       gate_manager->update(); 
       if (debug_flag) { Serial_println(F("just did gate_manager->update();")); Serial_flush(); }

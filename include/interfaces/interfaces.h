@@ -1,7 +1,6 @@
 // Gate output interfaces
 
-#ifndef GATE_MANAGER__INCLUDED
-#define GATE_MANAGER__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
@@ -242,5 +241,3 @@ void set_clock_gate(int gate_number, bool state);
 
 // convenience function for setting sequencer gate states
 void set_sequence_gate(int gate_number, bool state);
-
-#endif
