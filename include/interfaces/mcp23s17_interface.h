@@ -110,11 +110,17 @@ class MCP23S17BankInterface : public BankInterface {
 class MCP23S17SharedInputBankInterface : public BankInterface {
     public:
         MCP23S17 *mcp = nullptr;
+        int *remap_pins = nullptr;
         int start_gate = 0;
 
-        MCP23S17SharedInputBankInterface(const char *label, MCP23S17BankInterface *parent, int start_gate, int num_gates) {
+        MCP23S17SharedInputBankInterface(const char *label, MCP23S17BankInterface *parent, int *remap_pins, int start_gate, int num_gates) {
             this->label = label;
             Serial.println("MCP23S17SharedInputBankInterface() constructor");
+
+            this->remap_pins = (int*)CALLOC_FUNC(num_gates, sizeof(int));
+            for (uint_least8_t i = 0 ; i < num_gates ; i++) {
+                this->remap_pins[i] = remap_pins[i];
+            }
 
             mcp = parent->mcp;
             this->start_gate = start_gate;
@@ -122,8 +128,8 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             
             for(int i = 0 ; i < num_gates ; i++) {
                 Serial.printf("\tSetting up pin %i!..\n", i);
-                if (parent->mcp->pinMode1(start_gate+i, INPUT)) {
-                    parent->mcp->setPullup(start_gate+i, true);
+                if (parent->mcp->pinMode1(start_gate+this->remap_pins[i], INPUT)) {
+                    parent->mcp->setPullup(start_gate+this->remap_pins[i], true);
                 } else {
                     Serial.printf("MCP23s17BankInterface: Error setting pinMode %i\n", i);
                 }
@@ -138,7 +144,7 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
         }
         virtual bool check_gate(int gate_number) override {
             //return this->current_states[gate_number];
-            bool v = mcp->read1(start_gate + gate_number);
+            bool v = mcp->read1(start_gate + this->remap_pins[gate_number]);
             if (v) {
                 Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             } else {
