@@ -4,11 +4,21 @@
 #include "MCP23S17.h"   //RobTillaart/MCP23S17
 #include "SPI.h"
 
+#include <uClock.h>
+#include "clock.h"
+
 #define MCP23S17_SPI_CS1_PIN    38
 #define MCP23S17_SPI_CS2_PIN    37
 #define MCP23S17_SPI_MISO       39
 #define MCP23S17_SPI_MOSI       26
 #define MCP23S17_SPI_SCK        27
+
+//#define USE_INTERRUPTS
+
+#ifdef USE_INTERRUPTS
+    #define TEENSY_INT_1_PIN    40
+    #define TEENSY_INT_2_PIN    41
+#endif
 
 // todo: accept config (SPI and CS number) in constructor
 class MCP23S17BankInterface : public BankInterface {
@@ -107,6 +117,10 @@ class MCP23S17BankInterface : public BankInterface {
 };
 
 
+void interrupt_event();
+void interrupt_event_off();
+
+
 class MCP23S17SharedInputBankInterface : public BankInterface {
     public:
         MCP23S17 *mcp = nullptr;
@@ -135,6 +149,21 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
                 }
                 Serial.flush();
             }
+
+            #ifdef USE_INTERRUPTS
+                mcp->enableInterrupt(start_gate+this->remap_pins[7], RISING);   // possible interrupt modes are CHANGE or FALLING
+                mcp->setInterruptPolarity(HIGH);
+
+                attachInterrupt(digitalPinToInterrupt(TEENSY_INT_1_PIN), interrupt_event, CHANGE);
+                //attachInterrupt(digitalPinToInterrupt(TEENSY_INT_1_PIN), interrupt_event_off, FALLING);
+                /*attachInterrupt(digitalPinToInterrupt(TEENSY_INT_2_PIN), []() {
+                    Serial.println("INTERRUPT 2 TRIGGERED!");
+                    //mcp->readGPIOAB();   // read the GPIO state
+                    //mcp->readGPIOAB();   // read the GPIO state
+                    //update();
+                }, RISING);   // possible interrupt modes are CHANGE or FALLING or FALLING*/
+            #endif
+
             Serial.flush();
             Serial.println("finished constructor");
         }
@@ -146,12 +175,12 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             //return this->current_states[gate_number];
             bool v = mcp->read1(start_gate + this->remap_pins[gate_number]);
             if (v) {
-                Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
+                //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             } else {
                 //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             }
             if (v != last_state[gate_number]) {
-                Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) state changed to %i\n", gate_number, v);
+                //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) state changed to %i\n", gate_number, v);
                 state_changed[gate_number] = true;
             } 
             last_state[gate_number] = v;
@@ -167,11 +196,13 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             for (int i = 0 ; i < num_gates ; i++) {
                 check_gate(i);
             }
-            if (last_state[7] && state_changed[7]) {
-                Serial.println("last_state[7] is true and state_changed[7] is true - setting ticked flag!");
-                // do a uClock external clock trigger
-                this->ticked_flag = true;
-            }
+            #ifndef USE_INTERRUPTS
+                if (last_state[7] && state_changed[7]) {
+                    Serial.println("last_state[7] is true and state_changed[7] is true - setting ticked flag!");
+                    // do a uClock external clock trigger
+                    this->ticked_flag = true;
+                }
+            #endif
             /*if (this->ticked_flag) {
                 Serial.println("MCP23S17SharedInputBankInterface::update() ticked flag is set!");
             } else {
@@ -194,8 +225,46 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             //Serial.println("HAS TICKED FLAG NOT SET! returning false!");
             return false;
         }
+
+        #ifdef USE_INTERRUPTS
+            bool latched_on = false;
+            virtual void interrupt_event_received(){
+                if (!latched_on && mcp->read1(start_gate + remap_pins[7])) {
+                    latched_on = true;
+                    Serial.println("INTERRUPT 1 TRIGGERED! - clocking uClock!");
+                    if (clock_mode==CLOCK_EXTERNAL_CV)
+                        uClock.clockMe();
+                } else if (latched_on && !mcp->read1(start_gate + remap_pins[7])) {
+                    latched_on = false;
+                } else {
+                    Serial.println("INTERRUPT 1 TRIGGERED! - NOT clocking uClock!");
+                }        
+            }
+
+            virtual void interrupt_event_received_off(){
+                latched_on = false;
+            }
+        #endif
 };
 
+#ifdef USE_INTERRUPTS
+    void interrupt_event() {
+        Serial.println("INTERRUPT 1 TRIGGERED!");
+        //mcp->readGPIOAB();   // read the GPIO state
+        //mcp->readGPIOAB();   // read the GPIO state
+        //update();
+        
+        if (playing) {
+            MCP23S17SharedInputBankInterface* a = (MCP23S17SharedInputBankInterface*)gate_manager->banks[BANK_EXTRA_2];
+            a->interrupt_event_received(); 
+            //uClock.clockMe();
+        }
+    };   // possible interrupt modes are CHANGE or FALLING or FALLING
+    void interrupt_event_off() {
+        MCP23S17SharedInputBankInterface* a = (MCP23S17SharedInputBankInterface*)gate_manager->banks[BANK_EXTRA_2];
+        a->interrupt_event_received_off();
+    }
+#endif
 
 // experimental -- actually seems to be working on a code level, but the hardware behaves strangely..
 // todo: make an interface that can support mixed ins/outs 

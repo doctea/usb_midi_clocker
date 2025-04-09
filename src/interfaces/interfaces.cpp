@@ -166,6 +166,6 @@ bool check_gate_cv_clock_ticked() {
     //Serial.println("check_gate_cv_clock_ticked().."); Serial_flush();
     MCP23S17SharedInputBankInterface* bank = (MCP23S17SharedInputBankInterface*)gate_manager->banks[BANK_EXTRA_2];
     bool v = bank->has_ticked();
-    if (v) Serial.println("!!!!!!!!!!!!!!! has ticked!"); else Serial.println("has not ticked!");
+    //if (v) Serial.println("!!!!!!!!!!!!!!! has ticked!"); else Serial.println("has not ticked!");
     return v;
 }

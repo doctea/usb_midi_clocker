@@ -454,9 +454,7 @@ void loop() {
   bool ticked = false;
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
-    //if (debug_flag) { 
-      Serial_println(F("about to update_clock_ticks")); Serial_flush(); 
-    //}
+    if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
   
