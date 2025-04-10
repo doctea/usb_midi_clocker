@@ -198,6 +198,9 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             }
             #ifndef USE_INTERRUPTS
                 if (last_state[7] && state_changed[7]) {
+                    static uint32_t last_ticked;
+                    Serial.printf("Time since last CV tick=%uus\n", micros()-last_ticked);
+                    last_ticked = micros();
                     Serial.println("last_state[7] is true and state_changed[7] is true - setting ticked flag!");
                     // do a uClock external clock trigger
                     this->ticked_flag = true;
