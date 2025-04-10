@@ -140,6 +140,10 @@ void setup_psram_overclock() {
   TapTempoTracker *tapper = new TapTempoTracker();
 #endif
 
+IntervalTimer myTimer;
+void checkClock();
+bool has_cv_clock_ticked();
+
 #ifndef GDB_DEBUG
 //FLASHMEM 
 #endif
@@ -386,6 +390,11 @@ void setup() {
   tft_print("ms\n");
 
   Serial_println("Finished setup()!");
+
+  set_check_cv_clock_ticked_callback(has_cv_clock_ticked);
+
+  myTimer.begin(checkClock, 250); 
+
 }
 
 //long loop_counter = 0;
