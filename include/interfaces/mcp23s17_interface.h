@@ -146,7 +146,7 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
             //return this->current_states[gate_number];
             bool v = mcp->read1(start_gate + this->remap_pins[gate_number]);
             if (v) {
-                Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
+                //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             } else {
                 //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             }

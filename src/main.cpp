@@ -725,6 +725,12 @@ void do_tick(uint32_t in_ticks) {
     }
   }
 
+  #ifdef ENABLE_CLOCK_INPUT_CV
+    // update the menus with ticks if we're in external clock mode, since otherwise doesn't get called often enough?
+    if (clock_mode==CLOCK_EXTERNAL_CV)
+      menu->update_ticks(ticks);
+  #endif
+
   //last_processed_tick = ticks;
   //ticks++;
   //last_ticked_at_micros = millis();
