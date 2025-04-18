@@ -54,6 +54,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
             uClock.setTrackShuffleTemplate(1, shuff, 16);
             uClock.setTrackShuffle(1, true);
             */
+            //uClock.setShuffle(true);
         #endif
     }
 
