@@ -61,7 +61,7 @@ struct tracked_note {
 class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKeyValueSource {
     LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
 
-    tracked_note recorded_hanging_notes[MIDI_MAX_NOTE+1];
+    tracked_note recorded_hanging_notes[MIDI_NUM_NOTES];
     int loaded_recording_number = -1;
 
     int quantization_value = 4; // 4th of a quarter-note, ie 1 step, ie 6 pulses
@@ -240,7 +240,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
 
         // clear any notes that we're recording
         void clear_hanging() {
-            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+            for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 recorded_hanging_notes[i] = (tracked_note) {
                     .playing        = false,
                     .velocity       = MIDI_MIN_VELOCITY
@@ -312,7 +312,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
         void play_events(unsigned long time) {
             //time = time % LOOP_LENGTH;
             time = ticks_to_sequence_step(time);
-            for (int8_t i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+            for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 int transposed_pitch = i + transpose_amount;
                 if (!is_valid_note(transposed_pitch)) {
                     if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
@@ -358,7 +358,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             static uint32_t last_cleared_tick = -1;
             if (tick!=last_cleared_tick) {
                 if (this->bitmap_enabled) 
-                    for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+                    for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                         (*piano_roll_bitmap)[tick][i] = false;
                     }
                 frames[tick]->clear();
@@ -437,7 +437,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             Serial.println(F("looper stopped recording"));
             recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
-            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+            for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     this->sendNoteOff(i, 0);
                     store_event(ticks_to_sequence_step(ticks), midi::NoteOff, i, MIDI_MIN_VELOCITY);
@@ -449,30 +449,30 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
 
 
     /* bitmap processing stuff */
-        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];    // velocity of note at this moment
+        //int8_t piano_roll_bitmap[LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];    // velocity of note at this moment
         //int8_t (*piano_roll_bitmap)[LOOP_:];    // velocity of note at this moment
-        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
+        //typedef int8_t track_note_bitmap[LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];
         //track_note_bitmap *piano_roll_bitmap;
-        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
+        //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];
 
-        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_MAX_NOTE+1];
+        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];
         loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
 
-        int8_t piano_roll_held[MIDI_MAX_NOTE+1];
-        bool pitch_contains_notes[MIDI_MAX_NOTE+1];
+        int8_t piano_roll_held[MIDI_NUM_NOTES];
+        bool pitch_contains_notes[MIDI_NUM_NOTES];
         int piano_roll_highest = MIDI_MIN_NOTE;
         int piano_roll_lowest = MIDI_MAX_NOTE;
 
         // what's the lowest pitch that we've got a note for?
         int first_pitch() {
-            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+            for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 if (pitch_contains_notes[i]) return i;
             }
             return 0;
         }
         // what's the highest pitch that we've got a note for?
         int last_pitch() {
-            for (unsigned int i = MIDI_MAX_NOTE ; i > 0 ; i--) {
+            for (uint_fast8_t i = MIDI_MAX_NOTE ; i > 0 ; i--) {
                 if (pitch_contains_notes[i]) return i;
             }
             return 0;
@@ -486,7 +486,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
         void update_bitmap(uint32_t ticks) {
             if (!this->bitmap_enabled) return;
             
-            for (unsigned int i = 0 ; i < MIDI_MAX_NOTE ; i++) {
+            for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 if (recorded_hanging_notes[i].playing) {
                     (*piano_roll_bitmap)[ticks_to_sequence_step(ticks)][i] = recorded_hanging_notes[i].velocity;
                     pitch_contains_notes[i] = true;
@@ -501,7 +501,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)extmem_calloc(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
+                this->piano_roll_bitmap = (loop_bitmap*)CALLOC_FUNC(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(this->piano_roll_held, 0, MIDI_MAX_NOTE);
             memset(this->pitch_contains_notes, 0, MIDI_MAX_NOTE);
@@ -533,7 +533,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
                         piano_roll_held[message.pitch] = 0;
                     }
                 }
-                for (int p = 0 ; p < MIDI_MAX_NOTE ; p++) {
+                for (uint_fast8_t p = 0 ; p < MIDI_NUM_NOTES ; p++) {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
@@ -574,7 +574,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             this->overwrite = false;
         }
 
-        tracked_note track_playing[MIDI_MAX_NOTE];
+        tracked_note track_playing[MIDI_NUM_NOTES];
 
         // track when a playing note began
         void track_playing_on(uint32_t ticks, int8_t pitch, int8_t velocity) {
@@ -615,7 +615,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             int previous_quant = this->quantization_value;  
             this->quantization_value = 0;
 
-            bool held_state[MIDI_MAX_NOTE+1];   // for tracking what notes are held
+            bool held_state[MIDI_NUM_NOTES];   // for tracking what notes are held
             int note_on_count = 0, note_off_count = 0;
 
             memset(held_state, false, MIDI_MAX_NOTE);
@@ -628,7 +628,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             for (int t = 0 ; t < LOOP_LENGTH_STEPS ; t++) {
                 //Serial.printf(F("doing time %i:\n"), t);
                 frames[t]->clear();
-                for (int p = 0 ; p < MIDI_MAX_NOTE ; p++) {
+                for (uint_fast8_t p = 0 ; p < MIDI_NUM_NOTES ; p++) {
                     if ((*piano_roll_bitmap)[t][p]>0           && !held_state[p]) { // note on
                     //if (piano_roll_bitmap[t][p]>0           && piano_roll_bitmap[(t-1)%LOOP_LENGTH][p]==0) { // note on
                         //if (this->debug) Serial.printf(F("Found note on with\tpitch %i\t"), p);
@@ -700,6 +700,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
 
         /* save+load stuff to filesystem - linkedlist-of-message format */
         bool save_loop(int project_number, int recording_number) {
+            #ifdef ENABLE_SD
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             //Serial.println("save_pattern not implemented on teensy");
             //bool irqs_enabled = __irq_enabled();
@@ -742,6 +743,9 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             loaded_recording_number = recording_number;
             }
             return true;
+            #else
+            return false;
+            #endif
         }
 
         struct load_state_t {
@@ -799,6 +803,7 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
 
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
+            #ifdef ENABLE_SD
             //this->debug = true;
             Serial.println("load_loop: top of load_loop()"); Serial_flush();
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -843,6 +848,9 @@ class MIDITrack : public virtual IParseKeyValueReceiver, public virtual ISaveKey
             //this->debug = false;
 
             return true;
+            #else
+            return false;
+            #endif
         }       
 
         #ifdef ENABLE_SCREEN

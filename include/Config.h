@@ -9,17 +9,41 @@
 
 // NOTE that some of these options, especially ones that affect library functionality, need to be set in build_flags in platformio.ini!
 
+#if defined(CONFIG_CV_OUTPUT_1) || defined(CONFIG_CV_OUTPUT_2) || defined(CONFIG_CV_OUTPUT_3)
+    #define ENABLE_CV_OUTPUT
+#endif
+
+/*#if defined(ENABLE_CV_OUTPUT) && !defined(ENABLE_CV_OUTPUT_EXTENDED_ADDRESS)
+    #define ENABLE_CV_OUTPUT_EXTENDED_ADDRESS 0
+#endif
+#if defined(ENABLE_CV_OUTPUT_2) && !defined(ENABLE_CV_OUTPUT_2_EXTENDED_ADDRESS)
+    #define ENABLE_CV_OUTPUT_2_EXTENDED_ADDRESS 0
+#endif
+#if defined(ENABLE_CV_OUTPUT_3) && !defined(ENABLE_CV_OUTPUT_3_EXTENDED_ADDRESS)
+    #define ENABLE_CV_OUTPUT_3_EXTENDED_ADDRESS 0
+#endif*/
+
+#define ENABLE_PROGRESSION
+#if defined(ENABLE_PROGRESSION) && defined(ENABLE_SCALES)
+    #define ENABLE_APCMINI_PROGRESSIONS
+#else
+    #warning "ENABLE_PROGRESSION is defined but ENABLE_SCALES is not, disabling ENABLE_PROGRESSION and APCMINI_PROGRESSIONS"
+    #undef ENABLE_PROGRESSION
+    #undef ENABLE_APCMINI_PROGRESSIONS
+#endif
+
 //// CV input options
 #ifdef PCB_STUDIO
-    #define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
-    #define ENABLE_CV_INPUT_2   0x49
+    // these are now defined in build flags platformio.ini
+    //#define ENABLE_CV_INPUT     0x48                // specify the i2c address of the input board
+    //#define ENABLE_CV_INPUT_2   0x49
 #elif defined(PCB_GO)
-    // disalbe for PCB_GO
+    // these are now defined in build flags platformio.ini
 #else
-    #define ENABLE_CV_INPUT 0x49
+    //#define ENABLE_CV_INPUT 0x49
+    //#define ENABLE_CV_OUTPUT 0x4C
 #endif
 #define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
-#define FAST_VOLTAGE_READS                  // disabling averaging of voltage reading
 
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
@@ -76,16 +100,22 @@
 #endif
 
 #define ENABLE_USB          // USB host behaviours
-#define ENABLE_CV_OUTPUT    // clock and sequencer outputs
+#define ENABLE_CV_GATE_OUTPUT    // clock and sequencer outputs
 
 #ifdef ENABLE_USB
-    // enable a USB typing keyboard as a control method (see include/input_keyboard.h)
-    #define ENABLE_TYPING_KEYBOARD
+    // enable a generic USB typing keyboard as a control method (see include/input_keyboard.h)
+    //#define ENABLE_TYPING_KEYBOARD
 
-    // enable USB devices that present as serial interfaces but support MIDI
-    #define ENABLE_USBSERIAL    
-    #ifdef ENABLE_USBSERIAL
-        #define ENABLE_OPENTHEREMIN
+    // enable a USB AliExpress keyboard eg https://www.aliexpress.com/item/1005006353228764.html
+    // todo: automatic detection of appropriate device
+    #define ENABLE_CONTROLLER_KEYBOARD
+
+    #if defined(PCB_STUDIO)
+        // enable USB devices that present as serial interfaces but support MIDI
+        #define ENABLE_USBSERIAL
+        #ifdef ENABLE_USBSERIAL
+            #define ENABLE_OPENTHEREMIN
+        #endif
     #endif
 #endif
 
@@ -122,6 +152,10 @@
     #define ENABLE_MIDIMUSO_4MV MIDI4
 #endif
 
+// so i can see how this is working while devving the cv output stuff
+// TODO: disable this when not needed
+//#define ENABLE_MIDIMUSO_4MV MIDI4
+
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
 
@@ -138,23 +172,36 @@
     ////#define ENABLE_MPK49
     ////#define ENABLE_SUBCLOCKER
     ////#define ENABLE_SUBCLOCKER_DEDICATED
+    #define ENABLE_KEYSTEP
+
     #ifdef PCB_STUDIO
-        #define ENABLE_KEYSTEP
+        //#define ENABLE_KEYSTEP
         //#define ENABLE_CRAFTSYNTH_USB
         //#define ENABLE_SKULPTSYNTH_USB
         #define ENABLE_CHOCOLATEFEET_USB
         #define ENABLE_MIDILIGHTS
-        //#define ENABLE_MIDILIGHTS_DEDICATED
+    #endif
+
+    #ifdef PCB_GO
+        #define ENABLE_KEYSTEP
+        //#define ENABLE_SKULPTSYNTH_USB
+        //#define ENABLE_MIDILIGHTS
         //#define ENABLE_BEHRINGER_EDGE_USB
-        //#define ENABLE_BEHRINGER_EDGE_USB_DEDICATED
     #endif
     
-    #define ENABLE_MICROLIDIAN
+    #ifndef ENABLE_EUCLIDIAN
+        #define ENABLE_MICROLIDIAN
+    #endif
+    #define ENABLE_MIDILIGHTS
 #endif
 
 #ifdef PCB_STUDIO
+    #define ENABLE_SKULPTSYNTH_SERIAL       MIDI2
     #define ENABLE_BEHRINGER_EDGE_SERIAL    MIDI5
-    //#define ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED    MIDI5
+#endif
+
+#if defined(ENABLE_SKULPTSYNTH_USB) || defined(ENABLE_SKULPTSYNTH_SERIAL)
+    #define ENABLE_SKULPTSYNTH
 #endif
 
 #if defined(ENABLE_CRAFTSYNTH) && defined(ENABLE_CRAFTSYNTH_USB)
@@ -224,5 +271,3 @@
 // turn off IRQs while checking changed USB devices 
 // seems to prevent crashes on reconnection, but causes pipes to freeze up, it seems
 #define IRQ_PROTECT_USB_CHANGES
-
-//#define FloatParameter FloatParameter

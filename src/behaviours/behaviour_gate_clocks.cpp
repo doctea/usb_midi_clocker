@@ -3,8 +3,6 @@
 #include <Arduino.h>
 #include "Config.h"
 #include "storage.h"
-//#include "cv_outs.h"
-#include "sequencer.h"
 #include "project.h"
 #include "interfaces/interfaces.h"
 
@@ -61,10 +59,6 @@ bool VirtualBehaviour_ClockGates::should_trigger_clock(unsigned long ticks, byte
       offset
     );
 }
-
-#ifdef ENABLE_SEQUENCER
-#include "sequencer.h"
-#endif
 
 #ifndef SEPARATE_SEQUENCER_AND_CLOCKS
   void process_clocks(unsigned long ticks) {

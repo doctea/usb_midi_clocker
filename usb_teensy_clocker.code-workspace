@@ -11,6 +11,16 @@
 		},
 		{
 			"path": "../my_libraries/midihelpers"
+		},
+		{
+			"path": "../my_libraries/seqlib"
+		},
+		{
+			"path": ".pio/libdeps/pcb_go/uClock"
+		},
+		{
+			"name": "usb_teensy_clocker @ a1745fb",
+			"uri": "gitlens://7b22726566223a2261313734356662303039353331346330616461303065656537393639613734616166383762386632222c227265706f50617468223a22633a2f55736572732f646f637465612f446f63756d656e74732f41726475696e6f2f7573625f7465656e73795f636c6f636b6572227d/c:/Users/doctea/Documents/Arduino/usb_teensy_clocker?{\"ref\":\"a1745fb\"}"
 		}
 	],
 	"settings": {
@@ -38,7 +48,16 @@
 			"tuple": "cpp",
 			"iosfwd": "cpp",
 			"interfaces": "cpp",
-			"ili9341_fonts.h": "c"
+			"ili9341_fonts.h": "c",
+			"utility": "cpp",
+			"exception": "cpp",
+			"new": "cpp",
+			"stdexcept": "cpp",
+			"iostream": "cpp",
+			"cinttypes": "cpp",
+			"cmath": "cpp",
+			"cstdlib": "cpp",
+			"string_view": "cpp"
 		}
 	}
 }

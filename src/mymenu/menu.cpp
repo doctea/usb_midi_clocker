@@ -10,9 +10,12 @@
 #include "mymenu/menu_looper.h"
 #include "mymenu/menu_sequencer.h"
 #include "mymenu/menu_bpm.h"
+#include "mymenu/menu_taptempo.h"
 #include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
 #include "mymenu/menuitems_scale.h"
+
+#include "mymenu/menu_taptempo.h"
 
 #include "menuitems_pinned.h"
 
@@ -29,6 +32,7 @@
 #include "behaviours/behaviour_subclocker.h"
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_neutron.h"
+#include "behaviours/behaviour_progression.h"
 
 #include "midi/midi_out_wrapper.h"
 #include "midi/midi_outs.h"
@@ -75,16 +79,10 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
-//uint16_t *framebuffers[2];
-//bool buffer_number = 0;
-/*
-void swap_framebuffer() {
-    //buffer_number = !buffer_number;
-    //tft->tft->setFrameBuffer(framebuffers[buffer_number]);
-    tft->framebuffer_ready = true;
-    //tft->ready_for_frame = 
-}
-*/
+#ifdef ENABLE_TAPTEMPO
+    TapTempoControl *tapper_control = nullptr;
+    extern TapTempoTracker *tapper;
+#endif
 
 // make these global so that we can toggle it from input_keyboard
 ObjectMultiToggleControl *project_multi_recall_options = nullptr;
@@ -115,9 +113,9 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
 MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
 
 #ifdef ENABLE_SD
-    #include "menuitems_fileviewer.h"
-    extern FileViewerMenuItem *sequence_fileviewer;
-    extern FileViewerMenuItem *project_fileviewer;
+    #include "menuitems_pageviewer.h"
+    extern PageFileViewerMenuItem *sequence_fileviewer;
+    extern PageFileViewerMenuItem *project_fileviewer;
 #endif
 
 /*MenuItem test_item_1 = MenuItem("test 1");
@@ -153,6 +151,13 @@ void setup_menu_transport() {
     project_startstop->add(new ActionFeedbackItem("Restart", set_restart_on_next_bar_on, is_restart_on_next_bar, "Restarting..", "Restart"));
     menu->add(project_startstop);
 }
+
+#ifdef ENABLE_TAPTEMPO
+    void setup_menu_taptempo() {
+        tapper_control = new TapTempoControl("Tap tempo", tapper);
+        menu->add(tapper_control);   
+    }
+#endif
 
 #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
     void setup_menu_project() {
@@ -254,34 +259,95 @@ void setup_menu_transport() {
                 ));
             #endif
         #endif
+        #ifdef ENABLE_PROGRESSION
+            project_multi_autoadvance->addItem(new MultiToggleItemLambda (
+                "Prog.Pls",
+                [=] (bool v) -> void { behaviour_progression->advance_progression_playlist = v; },
+                [=] () -> bool { return behaviour_progression->advance_progression_playlist; }
+            ));
+            project_multi_autoadvance->addItem(new MultiToggleItemLambda (
+                "Prog.Bar",
+                [=] (bool v) -> void { behaviour_progression->advance_progression_bar = v; },
+                [=] () -> bool { return behaviour_progression->advance_progression_bar; }
+            ));
+        #endif
         menu->add(project_multi_autoadvance);
 
         #ifdef ENABLE_SD
-            project_fileviewer = new FileViewerMenuItem("Project");
+            project_fileviewer = new PageFileViewerMenuItem("Project");
             menu->add(project_fileviewer);
         #endif
     }
 #endif
 
+#include "behaviours/behaviour_cvoutput.h"
+#include "mymenu/menuitems_notedisplay.h"
+
 void setup_menu_midi() {
     menu->add_page("MIDI");
+    menu->remember_opened_page();
     menu->add(new SeparatorMenuItem("MIDI"));
     menu->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     menu->add(new LambdaActionConfirmItem("{HARD PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     menu->add(&midi_matrix_selector);
+
+    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
+
+    // debuggery stuff ...
+    //behaviour_cvoutput_2->debug = true;
+    /*
+    menu->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
+    menu->add(new NoteHarmonyDisplay(
+        (const char*)"CV Output 1 harmony", 
+        &midi_matrix_manager->global_scale_type, 
+        &midi_matrix_manager->global_scale_root, 
+        &behaviour_cvoutput_1->note_tracker,
+        &midi_matrix_manager->global_quantise_on
+    ));
+    menu->add(new HarmonyStatus("CV Output 1 harmony (oldskool)", &behaviour_cvoutput_1->last_transposed_note, &behaviour_cvoutput_1->current_transposed_note));
+    menu->add(new NoteDisplay("CV Output 2 notes", &behaviour_cvoutput_2->note_tracker));
+    menu->add(new NoteHarmonyDisplay(
+        (const char*)"CV Output 2 harmony", 
+        &midi_matrix_manager->global_scale_type, 
+        &midi_matrix_manager->global_scale_root, 
+        &behaviour_cvoutput_2->note_tracker,
+        &midi_matrix_manager->global_quantise_on
+    ));
+    menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
+    */
+
+    menu->add_page("Quantiser");
+    menu->remember_opened_page();
+
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
-        [=](SCALE scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
-        [=]() -> SCALE { return midi_matrix_manager->get_global_scale_type(); },
+        [=](scale_index_t scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
+        [=]() -> scale_index_t { return midi_matrix_manager->get_global_scale_type(); },
         [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
-        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); }
+        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
+        false, true, true
     );
     global_quantise_bar->add(new LambdaToggleControl("Quantise",
         [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
         [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
     ));
     menu->add(global_quantise_bar);
-    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
+
+    LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
+        "Global Chord", 
+        [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
+        [=](CHORD::Type chord_type) -> void { midi_matrix_manager->set_global_chord_type(chord_type); }, 
+        [=]() -> CHORD::Type { return midi_matrix_manager->get_global_chord_type(); },
+        [=](int8_t inversion) -> void { midi_matrix_manager->set_global_chord_inversion(inversion); },
+        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_inversion(); },
+        false, true, true
+    );
+    global_chord_bar->add(new LambdaToggleControl("Quantise",
+        [=](bool v) -> void { midi_matrix_manager->set_global_quantise_chord_on(v); },
+        [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
+    ));
+    menu->add(global_chord_bar);
 }
 
 #ifdef ENABLE_SEQUENCER
@@ -296,11 +362,11 @@ void setup_menu_midi() {
         menu->add(new ObjectActionConfirmItem<VirtualBehaviour_SequencerGates>("Clear sequencer pattern", behaviour_sequencer_gates, &VirtualBehaviour_SequencerGates::sequencer_clear_pattern));
         menu->add(&trigger_sequencer_display);
         
-        //menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
+        menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
         //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
 
         #ifdef ENABLE_SD
-            sequence_fileviewer = new FileViewerMenuItem("Sequence");
+            sequence_fileviewer = new PageFileViewerMenuItem("Sequence");
             menu->add(sequence_fileviewer);
         #endif
     }
@@ -359,6 +425,9 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
 
     setup_menu_transport();
+    #ifdef ENABLE_TAPTEMPO
+        setup_menu_taptempo();
+    #endif
     setup_menu_project();
     setup_menu_midi();
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)

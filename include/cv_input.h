@@ -34,4 +34,8 @@ void setup_parameters();
 void setup_parameter_menu();
 #endif
 
+#if defined(ENABLE_CV_OUTPUT) && defined(ENABLE_CV_INPUT)
+    void setup_cv_output_parameter_inputs();
+#endif
+
 extern ParameterManager *parameter_manager;

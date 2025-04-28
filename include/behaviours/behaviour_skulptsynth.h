@@ -1,19 +1,23 @@
-#ifndef BEHAVIOUR_SKULPTSYNTH__INCLUDED
-#define BEHAVIOUR_SKULPTSYNTH__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
 #include "Config.h"
 
-#ifdef ENABLE_SKULPTSYNTH_USB
+#ifdef ENABLE_SKULPTSYNTH
 
-#include "behaviours/behaviour_base_usb.h"
+#ifdef ENABLE_SKULPTSYNTH_USB
+    #include "behaviours/behaviour_base_usb.h"
+    #include "usb/multi_usb_handlers.h"
+    #define SkulptDeviceBehaviourBase DeviceBehaviourUSB
+#elif defined(ENABLE_SKULPTSYNTH_SERIAL)
+    #include "behaviours/behaviour_base_serial.h"
+    #define SkulptDeviceBehaviourBase DeviceBehaviourSerialBase
+#endif
 #include "behaviours/behaviour_clocked.h"
 #include "behaviours/behaviour_modwheelreceiver.h"
 #include "project.h"
 #include "clock.h"
-
-#include "usb/multi_usb_handlers.h"
 
 #include "parameters/MIDICCParameter.h"
 
@@ -22,7 +26,7 @@
 //void skulptsynth_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 
 // customised parameter control widget for the Spread parameter that shows the equivalent value
-class SkulptSynthSpreadParameter : public MIDICCParameter<> {
+class SkulptSynthSpreadParameter : virtual public MIDICCParameter<> {
     public:
         SkulptSynthSpreadParameter (const char *label, DeviceBehaviourUltimateBase *target) 
             : MIDICCParameter<>(label, target, (byte)20, (byte)1) {
@@ -58,7 +62,7 @@ class SkulptSynthSpreadParameter : public MIDICCParameter<> {
 };
 
 
-class SkulptSynthOsc1Parameter : public MIDICCParameter<> {
+class SkulptSynthOsc1Parameter : virtual public MIDICCParameter<> {
     public:
         SkulptSynthOsc1Parameter (const char *label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel = 1) 
             : MIDICCParameter<>(label, target, (byte)cc_number, (byte)channel) {
@@ -81,7 +85,7 @@ class SkulptSynthOsc1Parameter : public MIDICCParameter<> {
         };
 };
 
-class SkulptSynthOsc2Parameter : public MIDICCParameter<> {
+class SkulptSynthOsc2Parameter : virtual public MIDICCParameter<> {
     public:
         SkulptSynthOsc2Parameter (const char *label, DeviceBehaviourUltimateBase *target, byte cc_number, byte channel = 1) 
             : MIDICCParameter<>(label, target, (byte)cc_number, (byte)channel) {
@@ -106,7 +110,7 @@ class SkulptSynthOsc2Parameter : public MIDICCParameter<> {
         };
 };
 
-class SkulptSynthVoiceModeParameter : public MIDICCParameter<> {
+class SkulptSynthVoiceModeParameter : virtual public MIDICCParameter<> {
     public:
         SkulptSynthVoiceModeParameter (const char *label, DeviceBehaviourUltimateBase *target) 
             : MIDICCParameter<>(label, target, (byte)9, (byte)1) {
@@ -127,7 +131,7 @@ class SkulptSynthVoiceModeParameter : public MIDICCParameter<> {
         };
 };
 
-class SkulptSynthOnOffParameter : public MIDICCParameter<> {
+class SkulptSynthOnOffParameter : virtual public MIDICCParameter<> {
     public:
         SkulptSynthOnOffParameter (const char *label, DeviceBehaviourUltimateBase *target, byte cc_number) 
             : MIDICCParameter<>(label, target, (byte)cc_number, (byte)1) {
@@ -146,7 +150,7 @@ class SkulptSynthOnOffParameter : public MIDICCParameter<> {
         };
 };
 
-class SkulptSynthCenteredParameter : public MIDICCParameter<> {
+class SkulptSynthCenteredParameter : virtual public MIDICCParameter<> {
     public:
         SkulptSynthCenteredParameter (const char *label, DeviceBehaviourUltimateBase *target, byte cc_number) 
             : MIDICCParameter<>(label, target, (byte)cc_number, (byte)1) {
@@ -182,19 +186,43 @@ SYNC: 0-7 = 1/16 / 8-15 = 1/8 / 16-23 =1/4 / 24-31 =1/2 / 32-39
 /* 0-32 Sine to Triangle / 33-64 - Triangle to Sawtooth / 65-96 -
 Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
-class DeviceBehaviour_SkulptSynth : virtual public DeviceBehaviourUSBBase, virtual public ClockedBehaviour, virtual public ModwheelReceiver {
+class DeviceBehaviour_SkulptSynth : virtual public SkulptDeviceBehaviourBase, virtual public ClockedBehaviour, virtual public ModwheelReceiver {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
     
     public:
-        //uint16_t vid = 0x09e8, pid = 0x0028;
-        uint16_t vid = 0x04D8, pid = 0xEEFE;
-        virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
+        #ifdef ENABLE_SKULPTSYNTH_USB
+            uint16_t vid = 0x04D8, pid = 0xEEFE;
+            virtual uint32_t get_packed_id() override { return (this->vid<<16 | this->pid); }
+        #endif
+
+        DeviceBehaviour_SkulptSynth() : SkulptDeviceBehaviourBase() {
+            this->setClockEnabled(false);
+            this->setLowestNote(3 * 12); // C3
+            this->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+            this->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+        }
 
         virtual const char *get_label() override {
             return "SkulptSynth";
         }
         virtual bool transmits_midi_notes() { return true; }
+
+        virtual void setup_saveable_parameters() override {
+            if (this->saveable_parameters==nullptr)
+                DeviceBehaviourUltimateBase::setup_saveable_parameters();
+            ClockedBehaviour::setup_saveable_parameters();
+            ModwheelReceiver::setup_saveable_parameters();
+
+            this->saveable_parameters->add(new LSaveableParameter<bool>(
+                "Clock Enabled",
+                "Clock",
+                &this->clock_enabled,
+                [=](bool v) -> void { this->clock_enabled = v; }
+            ));
+        }
+
+        
 
         /*virtual void setup_callbacks() override {
             //behaviour_apcmini = this;
@@ -230,15 +258,14 @@ class DeviceBehaviour_SkulptSynth : virtual public DeviceBehaviourUSBBase, virtu
 
         bool already_initialised = false;
         FLASHMEM virtual LinkedList<FloatParameter*> *initialise_parameters() override {
-            Serial.printf(F("DeviceBehaviour_SkulptSynth#initialise_parameters()..."));
+            Serial_printf(F("DeviceBehaviour_SkulptSynth#initialise_parameters()..."));
             if (already_initialised)
                 return this->parameters;
 
             already_initialised = true;
 
-            DeviceBehaviourUSBBase::initialise_parameters();
+            SkulptDeviceBehaviourBase::initialise_parameters();
             ClockedBehaviour::initialise_parameters();
-
             ModwheelReceiver::initialise_parameters();
 
             // todo: read these from a configuration file
@@ -258,7 +285,7 @@ class DeviceBehaviour_SkulptSynth : virtual public DeviceBehaviourUSBBase, virtu
             parameters->add(new MIDICCParameter<>("Filter Cutoff", this,   (byte)34,   (byte)1));
             parameters->add(new MIDICCParameter<>("Filter Reso",   this,   (byte)35,   (byte)1));
 
-            /*parameters->add(new MIDICCParameter<>("FM amt",        this,   (byte)19,   (byte)1));
+            parameters->add(new MIDICCParameter<>("FM amt",        this,   (byte)19,   (byte)1));
             parameters->add(new SkulptSynthSpreadParameter((char*)"Spread",        this)); //,   (byte)20,   (byte)1));
             parameters->add(new SkulptSynthOnOffParameter("Chord mode", this, 21));
 
@@ -269,17 +296,37 @@ class DeviceBehaviour_SkulptSynth : virtual public DeviceBehaviourUSBBase, virtu
             parameters->add(new SkulptSynthCenteredParameter("Velo depth", this, 62));
             parameters->add(new SkulptSynthCenteredParameter("Note depth", this, 63));
             parameters->add(new SkulptSynthOnOffParameter("Sustain pedal", this, 64));
-            parameters->add(new SkulptSynthCenteredParameter("Aft depth", this, 65));*/
+            parameters->add(new SkulptSynthCenteredParameter("Aft depth", this, 65));
 
-            Serial.printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
+            Serial_printf(F("Finished initialise_parameters() in %s\n"), this->get_label());
 
             return parameters;
         }
+
+        #ifdef ENABLE_SCREEN
+            virtual LinkedList<MenuItem*> *make_menu_items() override {
+                LinkedList<MenuItem *> *menuitems = SkulptDeviceBehaviourBase::make_menu_items();
+                
+                ClockedBehaviour::make_menu_items();
+                ModwheelReceiver::make_menu_items();
+
+                menuitems->add(new LambdaToggleControl("Clock Enabled", 
+                    [this](bool v) -> void { 
+                        this->clock_enabled = v; 
+                        if (!isClockEnabled())
+                            this->sendRealTime((uint8_t)(midi::Stop));
+                        /*else
+                            this->sendRealTime((uint8_t)(midi::Start));*/
+                    },
+                    [this]() -> bool { return this->clock_enabled; }
+                ));
+
+                return menuitems;
+            }
+        #endif
 };
 
 //void skulptsynth_setOutputWrapper(MIDIOutputWrapper *);
 extern DeviceBehaviour_SkulptSynth *behaviour_skulptsynth;
-
-#endif
 
 #endif

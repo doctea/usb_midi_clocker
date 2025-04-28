@@ -3,12 +3,16 @@
 #include <Arduino.h>
 #include "Config.h"
 
-#include "SD.h"
+#ifdef ENABLE_SD
+  #include "SD.h"
+#endif
 
 namespace storage {
 
   #define FILEPATH_PROJECT_FOLDER_FORMAT    "project%i"
   #define FILEPATH_PATTERN_FORMAT           "project%i/sequences/sequence%i.txt"
+  #define FILEPATH_SECTION_FORMAT           "project%i/sections/section%i.txt"
+  #define FILEPATH_PLAYLIST_FORMAT          "project%i/playlist.txt"
   #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
   #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
   #define FILEPATH_CALIBRATION_FORMAT       "calibration_voltage_source_%i.txt"
@@ -66,8 +70,8 @@ namespace storage {
     };
   } savestate;
 
-  bool save_pattern(int project_number, uint8_t preset_number, savestate *input);
-  bool load_pattern(int project_number, uint8_t preset_number, savestate *input);
+  bool save_pattern(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
+  bool load_pattern(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/
   void load_pattern_parse_line(String line, savestate *output);

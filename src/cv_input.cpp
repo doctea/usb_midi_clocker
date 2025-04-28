@@ -18,6 +18,7 @@
 #include "behaviours/behaviour_manager.h"
 
 #include "parameter_inputs/VirtualParameterInput.h"
+#include "parameter_inputs/MixerParameterInput.h"
 
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
 
@@ -28,10 +29,8 @@ void setup_cv_input() {
     tft_print("...setup_cv_input...\n");
 
     parameter_manager->init();
-
-    Wire.begin();
-
     #ifdef ENABLE_CV_INPUT
+        Wire.begin();
         tft_print("...adding ADCPimoroni24v #1!\n");
         parameter_manager->addADCDevice(new ADCPimoroni24v(ENABLE_CV_INPUT, &Wire, 5.0));
     #endif
@@ -51,32 +50,50 @@ void setup_parameters() {
     //Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
     //tft_print("..setup_parameters...");
 
+    int8_t used_sources = 0;
+
     // initialise the voltage source inputs
     // todo: improve this bit, maybe name the voltage sources?
     #ifdef ENABLE_CV_INPUT
         tft_print("...adding VoltageParameterInputs for ADC1 CV source!\n");
-        VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(0));
-        VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(1));
-        VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(2));
+        #ifndef ENABLE_CV_INPUT_ORDER
+            #define ENABLE_CV_INPUT_ORDER {0,1,2} 
+        #endif
+        {
+        int8_t input_orders[3] = ENABLE_CV_INPUT_ORDER;
+        VoltageParameterInput *vpi1 = new VoltageParameterInput((char*)"A", "ADC1", parameter_manager->voltage_sources->get(input_orders[0]+used_sources));
+        VoltageParameterInput *vpi2 = new VoltageParameterInput((char*)"B", "ADC1", parameter_manager->voltage_sources->get(input_orders[1]+used_sources));
+        VoltageParameterInput *vpi3 = new VoltageParameterInput((char*)"C", "ADC1", parameter_manager->voltage_sources->get(input_orders[2]+used_sources));
         //vpi3->input_type = UNIPOLAR;
 
         // tell the parameter manager about them
         parameter_manager->addInput(vpi1);
         parameter_manager->addInput(vpi2);
         parameter_manager->addInput(vpi3);
+
+        used_sources += 3;
+        }
     #endif
 
     #ifdef ENABLE_CV_INPUT_2
         tft_print("...adding VoltageParameterInputs for ADC2 CV source!\n");
-        VoltageParameterInput *vpi4 = new VoltageParameterInput((char*)"D", "ADC2", parameter_manager->voltage_sources->get(3));
-        VoltageParameterInput *vpi5 = new VoltageParameterInput((char*)"E", "ADC2", parameter_manager->voltage_sources->get(4));
-        VoltageParameterInput *vpi6 = new VoltageParameterInput((char*)"F", "ADC2", parameter_manager->voltage_sources->get(5));
+        #ifndef ENABLE_CV_INPUT_2_ORDER
+            #define ENABLE_CV_INPUT_2_ORDER {0,1,2}
+        #endif
+        {
+        int8_t input_orders[3] = ENABLE_CV_INPUT_2_ORDER;
+        VoltageParameterInput *vpi4 = new VoltageParameterInput((char*)"D", "ADC2", parameter_manager->voltage_sources->get(input_orders[0]+used_sources));
+        VoltageParameterInput *vpi5 = new VoltageParameterInput((char*)"E", "ADC2", parameter_manager->voltage_sources->get(input_orders[1]+used_sources));
+        VoltageParameterInput *vpi6 = new VoltageParameterInput((char*)"F", "ADC2", parameter_manager->voltage_sources->get(input_orders[2]+used_sources));
         //vpi3->input_type = UNIPOLAR;
 
         // tell the parameter manager about them
         parameter_manager->addInput(vpi4);
         parameter_manager->addInput(vpi5);
         parameter_manager->addInput(vpi6);
+
+        used_sources += 3;
+        }
     #endif
 
     VirtualParameterInput *virtpi1 = new VirtualParameterInput((char*)"LFO sync", "LFOs", LFO_LOCKED);
@@ -85,6 +102,13 @@ void setup_parameters() {
     parameter_manager->addInput(virtpi1);
     parameter_manager->addInput(virtpi2);
     parameter_manager->addInput(virtpi3);
+
+    VirtualMixerParameterInput *mixerpi1 = new VirtualMixerParameterInput((char*)"Mix 1", "Mixers");
+    VirtualMixerParameterInput *mixerpi2 = new VirtualMixerParameterInput((char*)"Mix 2", "Mixers");
+    VirtualMixerParameterInput *mixerpi3 = new VirtualMixerParameterInput((char*)"Mix 3", "Mixers");
+    parameter_manager->addInput(mixerpi1);
+    parameter_manager->addInput(mixerpi2);
+    parameter_manager->addInput(mixerpi3);
 
     // get the available target parameters
     // todo: dynamically pull them from other things that could have parameters available
@@ -109,6 +133,23 @@ void setup_parameters() {
     tft_print("done.\n");
 }
 
+#ifdef ENABLE_CV_OUTPUT
+    // todo: move this to its own file out of cv_input.cpp?
+    #include "behaviours/behaviour_cvoutput.h"
+
+    void setup_cv_output_parameter_inputs() {
+        // loop the cvoutput_configs and set the calibration parameter inputs
+        for (size_t i = 0 ; i < cvoutput_configs_size ; i++) {
+            cvoutput_config_t config = cvoutput_configs[i];
+            DeviceBehaviour_CVOutput<DAC8574> *behaviour_cvoutput = cvoutput_configs[i].behaviour;
+            behaviour_cvoutput->set_calibration_parameter_input(0, config.calibration_input_names[0]);
+            behaviour_cvoutput->set_calibration_parameter_input(1, config.calibration_input_names[1]);
+            behaviour_cvoutput->set_calibration_parameter_input(2, config.calibration_input_names[2]);
+            behaviour_cvoutput->set_calibration_parameter_input(3, config.calibration_input_names[3]);
+        }
+    }
+#endif
+
 #ifdef ENABLE_SCREEN
 // set up the menus to provide control over the ParameterInputs and VoltageSources
 //FLASHMEM 
@@ -120,6 +161,12 @@ void setup_parameter_menu() {
 
     // ask ParameterManager to add all the menu items for the Voltage Sources
     parameter_manager->addAllVoltageSourceCalibrationMenuItems(menu, true);
+
+    #ifdef ENABLE_CV_OUTPUT
+        setup_cv_output_parameter_inputs();
+        // ask ParameterManager to add all the menu items for the CVOutputs
+        parameter_manager->addAllCVOutputCalibrationMenuItems(menu);
+    #endif
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);

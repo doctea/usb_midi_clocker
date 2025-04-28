@@ -1,8 +1,5 @@
 #include "interfaces/interfaces.h"
-
-#include "cv_outs.h"
-#include "sequencer.h"
-
+#include "cv_gate_outs.h"
 #include "SPI.h"
 
 GateManager *gate_manager = new GateManager();
@@ -21,10 +18,20 @@ GateManager *gate_manager = new GateManager();
 
     void setup_gate_manager() {
         Serial.println("setup_gate_manager..");
+
+        SPI1.setMISO(MCP23S17_SPI_MISO);
+        SPI1.setMOSI(MCP23S17_SPI_MOSI);
+        SPI1.setSCK(MCP23S17_SPI_SCK);
+        //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
+        //SPI1.beginTransaction(SPISettings(3000000, LSBFIRST, SPI_MODE3));
+        //SPI1.setClockDivider(SPI_CLOCK_DIV4);
+        SPI1.begin();
+
+
         #ifdef TEST_MCP23s17_INPUT
             MCP23S17InputBankInterface *mcp_interface = new MCP23S17InputBankInterface();
         #else
-            MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface();
+            MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface(MCP23S17_SPI_CS1_PIN, 0, &SPI1);
         #endif
         Serial.println("\tdid mcp_interface");
         byte num_gates = 8;
@@ -58,6 +65,12 @@ GateManager *gate_manager = new GateManager();
         
         // use outputs 8-15 of the underlying MCP object, and reverse them
         gate_manager->add_bank_interface(BANK_CLOCK,   new VirtualBankInterface(mcp_interface, num_gates, num_gates, false));
+
+        #ifdef ENABLE_GATES_BANK_EXTRA
+            MCP23S17BankInterface *mcp_interface_2 = new MCP23S17BankInterface(MCP23S17_SPI_CS2_PIN, 0, &SPI1);
+            gate_manager->add_bank_interface(BANK_EXTRA_1, new VirtualBankInterface(mcp_interface_2, num_gates, num_gates, false));
+            //gate_manager->add_bank_interface(BANK_EXTRA_2, new VirtualBankInterface(new MCP23S17InputBankInterface(), num_gates, num_gates, false));
+        #endif
         
         Serial.println("returning from setup_gate_manager().");
     }

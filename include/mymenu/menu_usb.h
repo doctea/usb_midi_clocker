@@ -4,7 +4,7 @@
     #ifdef ENABLE_USBSERIAL
         #include "usb/multi_usbserial_handlers.h"
     #endif
-    #ifdef ENABLE_TYPING_KEYBOARD
+    #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
         //#include "input_keyboard.h"
         #include "USBHost_t36.h"
         extern KeyboardController keyboard1;
@@ -40,7 +40,7 @@
                         }
                     }
                 #endif
-                #ifdef ENABLE_TYPING_KEYBOARD
+                #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
                     if (keyboard1)
                         tft->printf("K %19s\n", (char*)keyboard1.product());
                     else

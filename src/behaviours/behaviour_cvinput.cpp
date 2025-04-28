@@ -9,15 +9,7 @@
 
 extern bool debug_flag;
 
-#ifdef ENABLE_SCREEN
-    #include "menu.h"
-    #include "menuitems.h"
-    #include "menuitems_object.h"
-    #include "menuitems_lambda_selector.h"
-    #include "submenuitem_bar.h"
-    #include "ParameterManager.h"
-    #include "mymenu_items/ParameterInputMenuItems.h"
-    #include "mymenu/menuitems_harmony.h"
+#include "ParameterManager.h"
 
     extern ParameterManager *parameter_manager;
  
@@ -33,9 +25,11 @@ extern bool debug_flag;
         }*/
         this->pitch_input = input;
 
-        if (is_valid_note(this->chord_player.current_note)) {
-            chord_player.trigger_off_for_pitch_because_changed(this->chord_player.current_note);
-        }
+        #ifdef ENABLE_SCALES
+            if (is_valid_note(this->chord_player.current_note)) {
+                chord_player.trigger_off_for_pitch_because_changed(this->chord_player.current_note);
+            }
+        #endif
         //Serial.println(F("finished in set_selected_paramter_input"));
         //else
         //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
@@ -60,7 +54,16 @@ extern bool debug_flag;
         //Serial.printf(F("WARNING in %s: set_selected_parameter_input() not passed a VoltageParameterInput in '%c'!\n"), this->get_label(), input->name);
     }
 
-    FLASHMEM
+    
+#ifdef ENABLE_SCREEN
+    #include "menu.h"
+    #include "menuitems.h"
+    #include "menuitems_object.h"
+    #include "menuitems_lambda_selector.h"
+    #include "submenuitem_bar.h"
+    #include "mymenu_items/ParameterInputMenuItems.h"
+    #include "mymenu/menuitems_harmony.h"
+    //FLASHMEM
     LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();
         LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
@@ -101,7 +104,9 @@ extern bool debug_flag;
 
         menuitems->add(bar);
 
-        this->chord_player.make_menu_items(menuitems);
+        #ifdef ENABLE_SCALES
+            this->chord_player.make_menu_items(menuitems);
+        #endif
 
         //Serial.println(F("returning..")); Serial_flush();
         return menuitems;

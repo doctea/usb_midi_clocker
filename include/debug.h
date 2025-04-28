@@ -10,6 +10,10 @@ extern bool debug_flag;
 int freeRam();
 void debug_free_ram();
 
+#ifdef ARDUINO_TEENSY41
+    int freeExtRam();
+#endif
+
 void reset_teensy();
 
 // need these because we get stuck in a race condition if printing to Serial when Serial isn't connected?

@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_BASE__INCLUDED
-#define BEHAVIOUR_BASE__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
@@ -10,11 +9,14 @@
 
 #include "midi/midi_mapper_matrix_types.h"
 
+#include "notetracker.h"
+#include "Drums.h"
+
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
 #include "ParameterManager.h"
 
-#include "behaviours/SaveableParameters.h"
+#include "SaveableParameters.h"
 
 #include "file_manager/file_manager_interfaces.h"
 
@@ -57,6 +59,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     int current_channel = 0;
     int8_t TUNING_OFFSET = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
+
+    NoteTracker note_tracker;
 
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
@@ -103,6 +107,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     // called when new bar starts
     virtual void on_bar(int bar_number) {};
     virtual void on_end_bar(int bar_number) {};
+    virtual void on_end_beat(int beat_number) {};
     // called when the clock is restarted
     virtual void on_restart() {};
     // called when we change phrase
@@ -118,31 +123,46 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     virtual void init() {};
 
+    #ifdef ENABLE_SCALES
+        virtual int requantise_all_notes();
+    #endif
+
     virtual void killCurrentNote() {
+        //Serial.println("-=-=-");
         if (is_valid_note(current_transposed_note)) {
-            this->actualSendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
-            current_transposed_note = NOTE_OFF;
+            if (debug) Serial_printf("%20s: killCurrentNote() killing TRANSPOSED note %i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
+            this->sendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
+            //current_transposed_note = NOTE_OFF;
         }
+        note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
+            //this->actualSendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            if (debug) Serial_printf("%20s: killCurrentNote() killing TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
+            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+            //note_tracker.held_note_off(note);
+        });
+        if (current_transposed_note!=NOTE_OFF) {
+            if (debug) Serial_printf("%20s: killCurrentNote() still have current_transposed_note=%i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
+        }
+        if (debug) {
+            note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
+                Serial_printf("%20s: killCurrentNote() still have TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
+            });
+        }
+        //Serial.println("-=-=-");
     }
     // tell the device to play a note on
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        //Serial.println("DeviceBehaviourUltimateBase#sendNoteOn");
-        // TODO: this is where ForceOctave check should go..?
-        note = this->recalculate_pitch(note);
-        if (!is_valid_note(note)) return;
-        this->current_transposed_note = note;
-        this->current_channel = channel;
-
-        note += this->TUNING_OFFSET;
-        if (!is_valid_note(note)) return;
-
-        this->actualSendNoteOn(note, velocity, channel);
-    };
+    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override;
     // tell the device to play a note off
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
         // TODO: this is where ForceOctave check should go..?
-        note = this->recalculate_pitch(note);
+
+        if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
+
+        int8_t quantised_note = note_tracker.get_transposed_note_for(note);
+        if (debug) Serial_printf("\t\t note_tracker.get_transposed_note_for(%i) = %i (%s)\n", note, quantised_note, get_note_name_c(quantised_note));
+
+        //quantised_note = this->recalculate_pitch(quantised_note);
         if (!is_valid_note(note)) return;
         this->last_transposed_note = note;
         if (this->current_transposed_note==note)
@@ -151,7 +171,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         note += this->TUNING_OFFSET;
         if (!is_valid_note(note)) return;
 
-        this->actualSendNoteOff(note, velocity, channel);
+        note_tracker.held_note_off(note);
+
+        if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i) -> quantised_note %i, about to call actualSendNoteOff(%i..)\n", this->get_label(), note, velocity, channel, quantised_note, quantised_note);
+        this->actualSendNoteOff(quantised_note, velocity, channel);
     };
     // tell the device to send a control change - implements IMIDIProxiedCCTarget
     virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
@@ -170,7 +193,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     // implements IMIDIProxiedCCTarget
     virtual void sendProxiedControlChange(byte cc_number, byte value, byte channel = 0) {
-        if (this->debug) Serial.printf(F("%s#sendProxiedControlChange(%i, %i, %i)\n"), this->get_label(), cc_number, value, channel);
+        if (this->debug) Serial_printf(F("%s#sendProxiedControlChange(%i, %i, %i)\n"), this->get_label(), cc_number, value, channel);
         this->actualSendControlChange(cc_number, value, channel);
     }
 
@@ -192,7 +215,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         return parameters;
     }
     virtual bool has_parameters() {
-        return this->get_parameters()->size()>0;
+        LinkedList<FloatParameter*> *test_p = this->get_parameters();
+        return test_p!=nullptr && test_p->size()>0;
     }
     virtual FloatParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
@@ -201,7 +225,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             if (strcmp(parameters->get(i)->label, label)==0) 
                 return parameters->get(i);
         }
-        Serial.printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
+        Serial_printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
         return nullptr;
     }
 
@@ -251,6 +275,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         return false;
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
+        if (this->saveable_parameters==nullptr) {
+            Debug_println("WARNING: save_sequence_add_lines_saveable_parameters() called, but saveable_parameters isn't initialised yet!");
+            this->setup_saveable_parameters();
+        }
         for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             Debug_printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
             if (saveable_parameters->get(i)->is_save_enabled()) {
@@ -266,6 +294,10 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     virtual bool parse_project_key_value(String key, String value) {
         return false;
     }
+    // call this when the project changes so behaviour can update its settings
+    virtual void notify_project_changed(int project_number) {
+
+    }
 
     // save all the parameter mapping settings; override in subclasses, which should call back up the chain
     virtual void add_save_lines(LinkedList<String> *lines) override {
@@ -274,21 +306,22 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     }
 
     virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
-        Debug_println("save_sequence_add_lines_parameters..");
+        Debug_printf("save_sequence_add_lines_parameters in %s..\n", this->get_label());
         if (this->has_parameters()) {
             LinkedList<FloatParameter*> *parameters = this->get_parameters();
             for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
                 FloatParameter *parameter = parameters->get(i);
+                if (debug) Serial.printf("%s#save_sequence_add_lines_parameters(): saving parameter %s\n", this->get_label(), parameter->label);
 
                 parameter->save_pattern_add_lines(lines);
             }
         }
-        if (debug) Serial.println("finished save_sequence_add_lines_parameters.");
+        Debug_println("finished save_sequence_add_lines_parameters.");
     }
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) override {
-        Debug_printf(F("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n"), key.c_str(), value.c_str());
+        if (debug) Serial.printf("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
 
         // first check the behaviour's custom project key values
         if (this->parse_project_key_value(key, value)) {
@@ -301,12 +334,14 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
 
         // then check the 'modulatable parameters' (ie those from parameters library))
-        const char *prefix = "parameter_";
+        static const char *prefix = "parameter_";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters))
+            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters)) {
+                if (debug) Serial.printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
                 return true;
+            }
         }
-        ///Serial.printf(F("...load_parse_key_value(%s, %s) isn't a parameter!\n"));
+        if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
         return false;
     }
 
@@ -315,6 +350,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         FLASHMEM
         virtual LinkedList<MenuItem*> *make_menu_items();
         //FLASHMEM
+        // make menu items for the underlying device type (ie usb, usbserial, serial, virtual)
         virtual LinkedList<MenuItem*> *make_menu_items_device() {
             // dummy device menuitems
             return this->menuitems;
@@ -411,11 +447,11 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }*/
         if (!is_valid_note(note)) return NOTE_OFF;
 
-        if (debug && (getLowestNote()>0 || getHighestNote()<127)) 
-            Serial.printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
+        if (debug && (getLowestNote()>0 || getHighestNote()<MIDI_NUM_NOTES)) 
+            Serial_printf("Incoming note is\t%i (%s), bounds are\t%i (%s) to\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()), getHighestNote(), get_note_name_c(getHighestNote()));
             
         if (note < getLowestNote()) {
-            if (this->debug) Serial.printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
+            if (this->debug) Serial_printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
             if (getLowestNoteMode()==NOTE_MODE::IGNORE) {
                 if (this->debug) Serial.println("\tignoring!");
                 note = NOTE_OFF;
@@ -429,12 +465,12 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 while (is_valid_note(note) && note < getLowestNote()) {
                     note += 12;
                 }
-                if (this->debug) Serial.printf("\ttransposed from %i (%s) up to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
+                if (this->debug) Serial_printf("\ttransposed from %i (%s) up to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
             }
         } else if (note > getHighestNote()) {
-            if (this->debug) Serial.printf("\tnote\t%i (%s)\tis higher than highest note\t%i (%s)\n", note, get_note_name_c(note), getHighestNote(), get_note_name_c(getHighestNote()));
+            if (this->debug) Serial_printf("\tnote\t%i (%s)\tis higher than highest note\t%i (%s)\n", note, get_note_name_c(note), getHighestNote(), get_note_name_c(getHighestNote()));
             if (getHighestNoteMode()==NOTE_MODE::IGNORE) {
-                if (this->debug) Serial.println("\tignoring!");
+                if (this->debug) Serial_println("\tignoring!");
                 note = NOTE_OFF;
             } else if (getHighestNoteMode()==NOTE_MODE::TRANSPOSE) {
                 //int8_t octave = note / 12;
@@ -446,12 +482,12 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 while (is_valid_note(note) && note > getHighestNote()) {
                     note -= 12;
                 }
-                if (this->debug) Serial.printf("\ttransposed from %i (%s) down to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
+                if (this->debug) Serial_printf("\ttransposed from %i (%s) down to\t%i (%s)\n", note2, get_note_name_c(note2), note, get_note_name_c(note));
                 //Serial.printf("\t\t(highest_octave =\t%i, chromatic_pitch =\t%i (%s))\n", highest_octave, chromatic_pitch, note_names[chromatic_pitch]);
             }
         }
         if (!is_valid_note(note) || note < getLowestNote() || note > getHighestNote()) {
-            if (this->debug) Serial.printf("\t%i (%s) isn't valid or out of bounds\n", note, get_note_name_c(note));
+            if (this->debug) Serial_printf("\t%i (%s) isn't valid or out of bounds\n", note, get_note_name_c(note));
             return NOTE_OFF;
         }
         return note;
@@ -460,4 +496,13 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     
 };
 
-#endif
+
+
+class VirtualBehaviourBase : public virtual DeviceBehaviourUltimateBase {
+    public:
+    virtual void sendControlChange(uint8_t number, uint8_t value, uint8_t channel) override {
+        if (number==MIDI_CC_ALL_NOTES_OFF) {
+            this->killCurrentNote();
+        }
+    }
+};

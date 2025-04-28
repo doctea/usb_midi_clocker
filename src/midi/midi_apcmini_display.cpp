@@ -12,8 +12,7 @@
 #include "midi_helpers.h"
 
 #include "Config.h"
-#include "cv_outs.h"
-#include "sequencer.h"
+#include "cv_gate_outs.h"
 #include "storage.h"
 #include "project.h"
 
@@ -21,11 +20,13 @@
 
 apc_gate_page_t apc_gate_page = CLOCKS;
 
-int8_t apc_note_last_sent[MIDI_MAX_NOTE+1] = {};
+int8_t apc_note_last_sent[MIDI_NUM_NOTES] = {};
 
 // cached send note on
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
   if (!behaviour_apcmini->is_connected()) return;
+
+  if (!is_valid_note(pitch)) return;
 
   if (force || value != apc_note_last_sent[pitch]) {
     behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
@@ -38,7 +39,7 @@ void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel, bool for
   apcdisplay_sendNoteOn(pitch, 0 /*value*/, channel, force);
 }
 void apcdisplay_initialise_last_sent() {
-  for(int i = 0 ; i < MIDI_MAX_NOTE ; i++)
+  for(uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++)
     apc_note_last_sent[i] = -1;
 }
 
@@ -193,18 +194,18 @@ void redraw_patterns_row(byte row, bool force) {
   int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
   //start_row = APCMINI_NUM_ROWS - start_row;
 
-  for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+  for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
     //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
     if (row==0) {
       // only draw on the first row
         byte colour = APCMINI_OFF;
         if (!project->is_selected_pattern_number_empty(x))
           colour = APCMINI_GREEN;
-        if (project->loaded_pattern_number==x)
+        if (project->loaded_pattern_number==(int)x)
           colour = APCMINI_YELLOW;
-        if (project->selected_pattern_number==x && project->is_selected_pattern_number_empty(x))
+        if (project->selected_pattern_number==(int)x && project->is_selected_pattern_number_empty(x))
           colour = APCMINI_GREEN_BLINK;
-        else if (project->selected_pattern_number==x)
+        else if (project->selected_pattern_number==(int)x)
           colour += 1;
         apcdisplay_sendNoteOn(start_row+x, colour);
     } else {
@@ -213,12 +214,60 @@ void redraw_patterns_row(byte row, bool force) {
   }
 }
 
-#ifdef ENABLE_APCMINI_DISPLAY
-  void apcmini_clear_display() {
+#ifdef ENABLE_ACPMINI_PADS
+void redraw_pads_row(byte row, bool force) {
+  if (behaviour_apcmini->device==nullptr) return;
+
+  #define PADS_WIDTH 4
+  #define PADS_HEIGHT 4
+
+  if (row>=0 && row < APCMINI_NUM_ROWS) {
+    for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+      if (row < PADS_WIDTH && x < PADS_HEIGHT)
+        apcdisplay_sendNoteOn((row * APCMINI_DISPLAY_WIDTH) + x, APCMINI_ON, 1, force);    
+      else
+        apcdisplay_sendNoteOn((row * APCMINI_DISPLAY_WIDTH) + x, APCMINI_OFF, 1, force);    
+    }
+  }
+}
+#endif
+
+#ifdef ENABLE_APCMINI_PROGRESSIONS
+  #include "behaviours/behaviour_progression.h"
+
+  int get_progression_cell_apc_colour(byte row, byte column) {
+    return behaviour_progression->get_cell_colour_for(column,row); //grid[column][row];
+  }
+
+  void redraw_progressions_row(byte row, bool force) {
     if (behaviour_apcmini->device==nullptr) return;
-    
+
+    int start_row = (NUM_SEQUENCES*APCMINI_DISPLAY_WIDTH)-((row+1)*APCMINI_DISPLAY_WIDTH);
+    for (unsigned int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
+      //apcdisplay_sendNoteOn(start_row+x, APCMINI_OFF);
+      apcdisplay_sendNoteOn(start_row+x, get_progression_cell_apc_colour(row,x), 1, force);
+    }
+
+    for (int i = 0 ; i < VirtualBehaviour_Progression::MODE::NUM_MODES ; i++) {
+      apcdisplay_sendNoteOn(
+        APCMINI_BUTTON_CLIP_STOP + i, 
+        behaviour_progression->current_mode==i ? APCMINI_ON : APCMINI_OFF
+      );
+    }
+
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, behaviour_progression->advance_progression_bar ? APCMINI_ON : APCMINI_OFF);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, behaviour_progression->advance_progression_playlist ? APCMINI_ON : APCMINI_OFF);
+  }
+#endif
+
+#ifdef ENABLE_APCMINI_DISPLAY
+  void apcmini_clear_display(bool force) {
+    if (behaviour_apcmini->device==nullptr) return;
     Serial_println(F("Clearing APC display..")); Serial_flush();
 
+    if (force) 
+      apcdisplay_initialise_last_sent();
+  
     /*for (int y = 0 ; y < APCMINI_NUM_ROWS ; y++) {
       for (int x = 0 ; x < APCMINI_DISPLAY_WIDTH ; x++) {
           //apcdisplay_initialise_last_sent();
@@ -227,31 +276,34 @@ void redraw_patterns_row(byte row, bool force) {
       }
     }*/
 
-    if (get_apc_gate_page()==CLOCKS)
-      for (int i = 0 ; i < NUM_CLOCKS ; i++)
-        redraw_clock_row(i,true);
-
-    if (get_apc_gate_page()==SEQUENCES) 
-      for (int i = 0 ; i < NUM_SEQUENCES ; i++)
-        redraw_sequence_row(i,true);
-
     // clear the beat position indicator
     for (int x = START_BEAT_INDICATOR ; x < START_BEAT_INDICATOR + (BEATS_PER_BAR*2) ; x++) {
-      apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, true);
+      apcdisplay_sendNoteOn(x, APCMINI_OFF, 1, force);
     }
     // clear the 'selected clock row' indicator lights
     // todo: can replace this with a loop around 0 -> APCMINI_BUTTON_CLIP_STOP+NUM_CLOCKS
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_SELECT, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, APCMINI_OFF, 1, true);
-    apcdisplay_sendNoteOn(APCMINI_BUTTON_STOP_ALL_CLIPS, APCMINI_OFF, 1, true);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_CLIP_STOP, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_SOLO, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_REC_ARM, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_MUTE, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_SELECT, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_1, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_UNLABELED_2, APCMINI_OFF, 1, force);
+    apcdisplay_sendNoteOn(APCMINI_BUTTON_STOP_ALL_CLIPS, APCMINI_OFF, 1, force);
 
+    /*
+    if (get_apc_gate_page()==CLOCKS)
+      for (int i = 0 ; i < NUM_CLOCKS ; i++)
+        redraw_clock_row(i,force);
+    else if (get_apc_gate_page()==SEQUENCES) 
+      for (int i = 0 ; i < NUM_SEQUENCES ; i++)
+        redraw_sequence_row(i,force);
+    else if (get_apc_gate_page()==PADS)
+      for (int i = 0 ; i < APCMINI_NUM_ROWS ; i++)
+        redraw_pads_row(i,force);
+    */
+   
     //delay(1000);
-    apcdisplay_initialise_last_sent();
     Serial_println(F("Leaving APC display")); Serial_flush();
     // 
   }
@@ -270,6 +322,14 @@ void redraw_patterns_row(byte row, bool force) {
         redraw_sequence_row(row_to_draw);
       else if (get_apc_gate_page()==PATTERNS)
         redraw_patterns_row(row_to_draw);
+      #ifdef ENABLE_APCMINI_PADS
+      else if (get_apc_gate_page()==PADS)
+        redraw_pads_row(row_to_draw);
+      #endif
+      #ifdef ENABLE_APCMINI_PROGRESSIONS
+      else if (get_apc_gate_page()==PROGRESSIONS)
+        redraw_progressions_row(row_to_draw);
+      #endif
       row_to_draw++;
       if (row_to_draw >= NUM_CLOCKS) {
         row_to_draw = 0;
@@ -298,7 +358,7 @@ void redraw_patterns_row(byte row, bool force) {
 #endif
 
 void set_apc_gate_page(apc_gate_page_t page) {
-  Serial.printf("Switched to page %i\n", page);
+  //Serial.printf("Switched to page %i\n", page);
   apc_gate_page = page;
 }
 apc_gate_page_t get_apc_gate_page() {

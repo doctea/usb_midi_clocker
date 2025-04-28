@@ -19,13 +19,15 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
         }
 
         virtual bool transmits_midi_clock() override {
-            return true;
+            return isClockEnabled();
         }
 
         virtual void send_clock(uint32_t ticks) override {
             if (!is_connected()) return;
-            this->sendRealTime(midi::Clock);
-            this->sendNow();
+            if (this->isClockEnabled()) {
+                this->sendRealTime(midi::Clock);
+                this->sendNow();
+            }
         }
 
         virtual void on_bar(int bar_number) override {
@@ -259,8 +261,8 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         virtual void setup_saveable_parameters() {
             if (this->saveable_parameters==nullptr)
                 DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            Serial.println("DividedClockedBehaviour::setup_saveable_parameters");
-            Serial.printf("saveable_parameters is @%p\n", this->saveable_parameters);
+            Serial_println("DividedClockedBehaviour::setup_saveable_parameters");
+            Serial_printf("saveable_parameters is @%p\n", this->saveable_parameters);
             this->saveable_parameters->add(new LSaveableParameter<uint32_t>("divisor", "Clocked", &this->clock_divisor, [=](uint32_t v) -> void { this->set_divisor(v); }, [=]() -> uint32_t { return this->get_divisor(); }));
             this->saveable_parameters->add(new LSaveableParameter<int32_t>("delay_ticks", "Clocked", &this->clock_delay_ticks, [=](int32_t v) -> void { this->set_delay_ticks(v); }, [=]() -> int32_t { return this->get_delay_ticks(); }));
             this->saveable_parameters->add(new LSaveableParameter<bool>("auto_restart_on_change","Clocked", &this->auto_restart_on_change, [=](bool v) -> void { this->set_auto_restart_on_change(v); }, [=]() -> bool { return this->should_auto_restart_on_change(); }));

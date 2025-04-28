@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_MANAGER__INCLUDED
-#define BEHAVIOUR_MANAGER__INCLUDED
+#pragma once
 
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_base_usb.h"
@@ -157,8 +156,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         #endif
 
         void do_reads() {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 //Serial_printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial_flush();
                 //Serial_printf("\t\t%s\n", behaviours->get(i)->get_label());
                 behaviours->get(i)->read();
@@ -211,8 +210,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         }*/
 
         void send_clocks() {    // replaces behaviours_send_clock
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 //Serial_printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial_flush();
                 behaviours->get(i)->send_clock(ticks);
                 //Serial_printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial_flush();
@@ -220,35 +219,41 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         }
 
         void do_phrase(int phrase) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_phrase(phrase);
             }
         }
         void do_end_phrase(int phrase) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_end_phrase(phrase);
             }
         }
 
         void do_end_phrase_pre_clock(int phrase) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_end_phrase_pre_clock(phrase);
             }
         }
 
         void do_bar(int bar) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_bar(bar);
             }
         }
         void do_end_bar(int bar) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 behaviours->get(i)->on_end_bar(bar);
+            }
+        }
+        void do_end_beat(int beat) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
+                behaviours->get(i)->on_end_beat(beat);
             }
         }
 
@@ -256,8 +261,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
                 if (behaviour!=nullptr) {
                     //Serial_printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial_flush();
@@ -268,8 +273,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 Debug_printf("About to on_pre_clock() for behaviour #%i at %p...\n", i, behaviours->get(i));
                 if (behaviours->get(i)!=nullptr) {
                     Debug_printf("\t\t(named %s)\n", behaviours->get(i)->get_label()); 
@@ -281,8 +286,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         }
 
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 //Serial_printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
                 if (behaviours->get(i)!=nullptr) {
                     behaviours->get(i)->on_tick(in_ticks);
@@ -292,8 +297,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         }
 
         void on_restart() {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 //Serial_printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
                 if (behaviours->get(i)!=nullptr) {
                     behaviours->get(i)->on_restart();
@@ -310,8 +315,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
-            const unsigned int size = this->behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
                 //Serial_printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
                 if (device!=nullptr && label.equals(device->get_label()))
@@ -361,8 +366,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
 
         // ask each behaviour to add option lines to save project file
         void save_project_add_lines(LinkedList<String> *lines) {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
                 device->save_project_add_lines(lines);
@@ -377,8 +382,8 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         // ask each behaviour to add option lines to save sequence file
         void add_save_lines(LinkedList<String> *lines) override {
             //LinkedList<String> lines = LinkedList<String>();
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 //Serial_printf(">>> behaviour_manager#save_pattern_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
                 unsigned int lines_before = lines->size();
@@ -403,10 +408,40 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
         }
 
         void kill_all_current_notes() {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
                 // todo: only kill if the behaviour is quantising
                 behaviours->get(i)->killCurrentNote();
+            }
+        }
+
+        #ifdef ENABLE_SCALES
+            //PROGMEM
+            void requantise_all_notes() {
+                uint32_t time = millis();
+                const uint_fast8_t size = behaviours->size();
+                int requantised_notes = 0;
+                if (debug) { Serial_printf("requantise_all_notes() processing %i behaviours...\n", size); Serial_flush(); }
+                for (uint_fast8_t i = 0 ; i < size ; i++) {
+                    int behaviour_time = micros();
+                    DeviceBehaviourUltimateBase *device = behaviours->get(i);
+                    int notes = device->requantise_all_notes();
+                    if (notes>0) {
+                        requantised_notes += notes;
+                    }
+                    if ((debug && micros()-behaviour_time>0) || device->debug) {
+                        Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, behaviours->get(i)->get_label()); Serial_flush();
+                        Serial_printf("\trequantise_all_notes() took %i us for behaviour %i (%s) to process %i notes\n", micros()-behaviour_time, i, behaviours->get(i)->get_label(), notes); Serial_flush();
+                    }
+                }
+                if (debug) { Serial_printf("..requantise_all_notes took %i ms to process %i behaviours with %i notes.\n", millis()-time, size, requantised_notes); Serial_flush(); }
+            }
+        #endif
+
+        void notify_behaviours_for_project_change(int8_t project_number) {
+            const uint_fast8_t size = behaviours->size();
+            for (uint_fast8_t i = 0 ; i < size ; i++) {
+                behaviours->get(i)->notify_project_changed(project_number);
             }
         }
 
@@ -430,5 +465,3 @@ class DeviceBehaviourManager : public virtual ISaveKeyValueSource, public virtua
 extern DeviceBehaviourManager *behaviour_manager;
 
 void setup_behaviour_manager();
-
-#endif

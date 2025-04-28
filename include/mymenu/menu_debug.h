@@ -17,6 +17,9 @@
 #ifdef ENABLE_CV_INPUT
     #include "ADS1X15.h"
 #endif
+#ifdef ENABLE_CV_OUTPUT
+    #include "cv_output.h"
+#endif
 
 #include "__version.h"
 
@@ -34,6 +37,9 @@ class DebugPanel : public MenuItem {
 
             pos.y = header("Status:", pos, selected, opened);
             tft->printf("  Free RAM: %u bytes\n", freeRam());
+            #ifdef ARDUINO_TEENSY41
+                tft->printf("  Free extRAM: %u bytes\n", freeExtRam());
+            #endif
             tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
             tft->printf("  Tick:   %i\n", ticks);
             tft->print("\nSerial: ");
@@ -48,7 +54,27 @@ class DebugPanel : public MenuItem {
                 tft->printf("  MCP23S17 version: %s\n", (char*)MCP23S17_LIB_VERSION);
             #endif
             #ifdef ENABLE_CV_INPUT
-                tft->printf("  ADS1X15  version: %s\n", (char*)ADS1X15_LIB_VERSION);
+                tft->printf("  ADS1X15  version: %s", (char*)ADS1X15_LIB_VERSION);
+                tft->printf(" @ 0x%2x", ENABLE_CV_INPUT);
+                #ifdef ENABLE_CV_INPUT_2
+                    tft->printf(",0x%2x\n", ENABLE_CV_INPUT_2);
+                #endif
+                tft->println();
+            #endif
+            #ifdef ENABLE_CV_OUTPUT
+                tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
+                // loop over the cvoutput_configs array
+                for (size_t i = 0; i < cvoutput_configs_size ; i++) {
+                    cvoutput_config_t config = cvoutput_configs[i];
+                    tft->printf("\n                          @ 0x%2x", config.address);
+                    tft->printf(" bank %i", config.dac_extended_address);
+                }
+                tft->println();
+            #endif
+
+            #ifdef ENABLE_PARAMETERS
+                tft->println("\nStats:");
+                tft->printf("  Parameters: %i\n", parameter_manager->available_parameters->size());
             #endif
 
             return tft->getCursorY();
@@ -85,7 +111,9 @@ void setup_debug_menu() {
     bar->add(profiler_control);
 
     bar->add(new NumberControl<bool>("Extra", (bool*)&debug_flag, debug_flag, false, true));
-    bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug_flag, false, true));
+    #if defined(ENABLE_CONTROLLER_KEYBOARD) || defined(ENABLE_TYPING_KEYBOARD)
+        bar->add(new NumberControl<bool>("InSaNe", (bool*)&debug_stress_sequencer_load, debug_flag, false, true));
+    #endif
     menu->add(bar);
 
     menu->add(new DebugPanel());

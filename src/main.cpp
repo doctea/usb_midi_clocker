@@ -23,10 +23,15 @@
 #endif
 #include "project.h"
 
-//#ifdef ENABLE_CV_INPUT
+#ifdef ENABLE_PARAMETERS
+  // todo: probably rename cv_input.h to something else?
   #include "cv_input.h"
-//#endif
+#endif
 #include "ParameterManager.h"
+
+#ifdef ENABLE_CV_OUTPUT
+    #include "cv_output.h"
+#endif
 
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
@@ -50,11 +55,8 @@ void do_tick(uint32_t ticks);
 #include "bpm.h"
 #include "clock.h"
 
-#ifdef ENABLE_SEQUENCER
-  #include "sequencer.h"
-#endif
 #include "interfaces/interfaces.h"
-#include "cv_outs.h"
+#include "cv_gate_outs.h"
 
 #ifdef ENABLE_USB
   #include "usb/multi_usb_handlers.h"
@@ -63,15 +65,61 @@ void do_tick(uint32_t ticks);
   #include "usb/multi_usbserial_handlers.h"
 #endif
 
+#ifdef ENABLE_EUCLIDIAN
+  #include "sequencer/Euclidian.h"
+  #include "outputs/output.h"
+  #include "outputs/output_processor.h"
+  #include "sequencer/sequencing.h"
+#endif
+
 #include "ParameterManager.h"
 
 #include "behaviours/behaviour_manager.h"
 
 #include "input_keyboard.h"
+#include "input_ali_controller.h"
 
 #include "profiler.h"
 
 #include "__version.h"
+
+// thanks to beermat again (and originally KurtE) for this code
+// at 198mhz this runs and gives an approx 25% FPS speed up - from ~14fps up to ~19fps!
+const float flexspi2_clock_speeds[4] = {396.0f, 720.0f, 664.62f, 528.0f};
+FLASHMEM void setPSRamSpeed(int mhz) {
+  //See what the closest setting might be:
+  uint8_t clk_save = 0, divider_save = 0;
+  int min_delta = mhz;
+  for (uint8_t clk = 0; clk < 4; clk++) {
+      uint8_t divider = (flexspi2_clock_speeds[clk] + (mhz / 2)) / mhz;
+      int delta = abs(mhz - flexspi2_clock_speeds[clk] / divider);
+      if ((delta < min_delta) && (divider < 8)) {
+          min_delta = delta;
+          clk_save = clk;
+          divider_save = divider;
+      }
+  }
+  //First turn off FLEXSPI2
+  CCM_CCGR7 &= ~CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
+  divider_save--; // 0 biased
+  //Set the clock settings.
+  CCM_CBCMR = (CCM_CBCMR & ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK))
+              | CCM_CBCMR_FLEXSPI2_PODF(divider_save) | CCM_CBCMR_FLEXSPI2_CLK_SEL(clk_save);
+  //Turn FlexSPI2 clock back on
+  CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
+
+  Serial.printf("Update FLEXSPI2 speed: %u clk:%u div:%u Actual:%u\n", mhz, clk_save, divider_save,
+      flexspi2_clock_speeds[clk_save] / (divider_save + 1));
+}
+
+void setup_psram_overclock() {
+  /*setPSRamSpeed(88);
+  setPSRamSpeed(133);
+  setPSRamSpeed(144);
+  setPSRamSpeed(180);*/
+  setPSRamSpeed(198);
+}
+
 
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
@@ -86,10 +134,18 @@ void do_tick(uint32_t ticks);
   #define DEBUG_MAIN_PRINTLN(X) {}
 #endif
 
+#ifdef ENABLE_TAPTEMPO
+  // todo: probably move this elsewhere?  maybe into the midihelpers library to be a 'default tapper'?
+  #include "taptempo.h"
+  TapTempoTracker *tapper = new TapTempoTracker();
+#endif
+
 #ifndef GDB_DEBUG
 //FLASHMEM 
 #endif
 void setup() {
+  setup_psram_overclock();
+
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
   #endif
@@ -102,22 +158,40 @@ void setup() {
     //tft_print("Connected serial!\n");
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
+  
   if (CrashReport) {
-    /*while (!Serial);
-    Serial_println("CRASHREPORT!");
-    Serial_print(CrashReport);
-    while(Serial.available()==0);
+    while (!Serial);
+    //Serial_println("CRASHREPORT!");
+    //Serial_print(CrashReport);
+    /*while(Serial.available()==0);
     Serial.clear();*/
     setup_storage();
     log_crashreport();
   }
   delay(1);
+  #ifdef DUMP_CRASHLOG_AT_STARTUP
+    while (!Serial);
+    delay(500);
+    setup_storage();
+    dump_crashreport_log();
+  #endif
 
-  /*while (1) {
-    Serial_printf(".");
-  }*/
+
+  uint32_t start_millis = millis();
 
   Serial_printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
+
+
+  // this crashes when run from here...?  but kinda need it activated before setup_behaviour_manager() so that we can load cvoutputparameter calibration?
+  // TODO: so: we need to be able to run something like "post-setup initialisation" on parameters at the end of setup, after everything else is set 
+  //    this would load calibration for cvoutputparameters; and maybe also set up the default connections for parameters; and maybe also send the initial values to the cv outputs
+  //    ..maybe we can do this at the end of setup_parameters()?
+  //    1:30am WAIT WUT its actually loading the calibration values for the cvoutputparameters successfully now?!
+  //    next day: wasn't working again so implemented load_all_parameters() in parameter_manager
+  /*tft_print((char*)"..storage..\n");
+  storage::setup_storage();
+  Serial_printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
+  */
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
@@ -146,15 +220,29 @@ void setup() {
   tft_print("Git info: " COMMIT_INFO "\n");
   tft_print("Built at " __TIME__ " on " __DATE__ "\n");
 
-  #ifdef ENABLE_CV_OUTPUT
+  #ifdef ENABLE_CV_GATE_OUTPUT
     tft_print((char*)"Setting up CV gates..\n");
     //setup_cv_output();
     setup_gate_manager();
-    setup_gate_manager_menus();
+    #ifdef ENABLE_SCREEN
+      setup_gate_manager_menus();
+    #endif
   #endif
   Debug_printf(F("after setup_gate_manager(), free RAM is %u\n"), freeRam());
 
   delay( 100 );
+
+  /*#ifdef ENABLE_EUCLIDIAN
+      tft_print("setting up EUCLIDIAN..!");
+      delay(1000);
+      setup_sequencer();
+      output_processor->configure_sequencer(sequencer);
+      #ifdef ENABLE_SCREEN
+          setup_menu_euclidian(sequencer);
+          setup_sequencer_menu();
+          Debug_printf("after setup_sequencer_menu, free RAM is %u\n", freeRam());
+      #endif
+  #endif*/
 
   tft_print((char*)"..serial MIDI..\n");
   setup_midi_serial_devices();
@@ -169,21 +257,33 @@ void setup() {
   project->setup_project();
   Debug_printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
-  #ifdef ENABLE_CV_INPUT
+  #if defined(ENABLE_PARAMETERS) && defined(ENABLE_CV_INPUT)
+  tft_print((char*)"..setup cv input..\n");
     setup_cv_input();
     Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
   #endif
-  setup_parameters();
-  Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
-  #ifdef ENABLE_SCREEN
+  #ifdef ENABLE_PARAMETERS
+    tft_print((char*)"..setup parameters..\n");
+    setup_parameters();
+    Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
+  #endif
+  /*#ifdef ENABLE_CV_OUTPUT
+      setup_cv_output();
+  #endif*/
+  #ifdef ENABLE_CV_OUTPUT
+    tft_print((char*)"..setup cv output..\n");
+    setup_cv_output_parameter_inputs();
+    Debug_printf(F("after setup_cv_output_parameter_inputs(), free RAM is %u\n"), freeRam());
+  #endif
+  #if defined(ENABLE_SCREEN) && defined(ENABLE_PARAMETERS)
+    tft_print((char*)"..setup parameter menu..\n");
     setup_parameter_menu();
     Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
   #endif
 
-  //behaviour_manager->setup_saveable_parameters();
-
   #ifdef ENABLE_SCREEN
     Serial_println(F("...starting behaviour_manager#make_menu_items...")); Serial_flush();
+    tft_print((char*)"..setup behaviour menu..\n");
     behaviour_manager->create_all_behaviour_menu_items(menu);
     Serial_println(F("...finished behaviour_manager#make_menu_items...")); Serial_flush();
   #endif
@@ -215,7 +315,7 @@ void setup() {
     Debug_printf(F("after setup_multi_usb(), free RAM is %u\n"), freeRam());
   #endif
 
-  #ifdef ENABLE_TYPING_KEYBOARD
+  #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
     tft_print((char*)"Setting up typing keyboard..\n"); Serial_flush();
     setup_typing_keyboard();
   #endif
@@ -254,22 +354,38 @@ void setup() {
   Serial_printf(F("at end of setup(), free RAM is %u\n"), freeRam());
 
   #ifdef ENABLE_SCREEN
-    snprintf(menu->last_message, MENU_C_MAX, "...started up, %u bytes free...", freeRam());
+    snprintf(menu->last_message, MENU_C_MAX, "started up, %uK RAM2 free, %uK EXT free", freeRam()/1024, freeExtRam()/1024);
+  #endif
+
+  #ifdef LOAD_CALIBRATION_ON_BOOT
+    parameter_manager->load_all_calibrations();
   #endif
 
   #ifdef USE_UCLOCK
-    Serial_println("Starting uClock...");
-    Serial_flush();
+    Serial_println("Starting uClock..."); Serial_flush();
     clock_start();
-    Serial_println("Started uClock!");
-    Serial_flush();
+    Serial_println("Started uClock!"); Serial_flush();
   #endif
 
   debug_free_ram();
+  
+  #ifdef ENABLE_SCREEN
+    #ifdef PIN_BUTTON_A
+      pushButtonA.resetStateChange();
+    #endif
+    #ifdef PIN_BUTTON_B
+      pushButtonB.resetStateChange();
+    #endif
+    #ifdef PIN_BUTTON_C
+      pushButtonC.resetStateChange();
+    #endif
+  #endif
+  
+  tft_print("Setup (minus waiting for USB setup) took ");
+  tft_print(String(millis()-start_millis-2500).c_str());
+  tft_print("ms\n");
 
-  pushButtonA.resetStateChange();
-  pushButtonB.resetStateChange();
-  pushButtonC.resetStateChange();
+  Serial_println("Finished setup()!");
 }
 
 //long loop_counter = 0;
@@ -289,7 +405,7 @@ void loop() {
     }
   }
 
-  #ifdef ENABLE_TYPING_KEYBOARD
+  #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
   if (debug_stress_sequencer_load && ticks % 6 == 1)  {
     OnPress(':');
     OnPress('L');
@@ -362,8 +478,7 @@ void loop() {
     #ifdef ENABLE_SCREEN
       ///Serial_println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
-      bool screen_was_drawn = false;
-      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+      bool screen_was_drawn = false;      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
       {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
         static bool first_run = true;
@@ -431,6 +546,13 @@ void loop() {
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_loops()")); Serial_flush(); }
   }
 
+  #ifdef ENABLE_TAPTEMPO
+    // do tap tempo update 
+    tapper->clock_tempo_update();
+    //if (ticked)
+    //  tapper->tick(ticks);
+  #endif
+
   #ifdef ENABLE_USB
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
@@ -454,7 +576,7 @@ void loop() {
     }
   #endif
 
-  #ifdef ENABLE_TYPING_KEYBOARD
+  #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
     // process any events that are waiting from the usb keyboard handler
     if (debug_flag) { Serial_println(F("about to process_key_buffer();..")); Serial_flush(); }
     process_key_buffer();
@@ -522,19 +644,20 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
 
-  gate_manager->update(); 
-
   #ifdef ENABLE_LOOPER
     midi_loop_track.process_tick(ticks);
   #endif
 
   // drone / machinegun works when do_end_bar here !
   // do this after everything else because of problems with machinegun mode..?
-  if (is_bpm_on_bar(ticks+1)) {
-    behaviour_manager->do_end_bar(BPM_CURRENT_BAR_OF_PHRASE);
-    if (is_bpm_on_phrase(ticks+1)) {
-      behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
-    }
+  if (is_bpm_on_beat(ticks+1)) {
+    behaviour_manager->do_end_beat(BPM_CURRENT_BEAT);
+    if (is_bpm_on_bar(ticks+1)) {
+      behaviour_manager->do_end_bar(restart_on_next_bar ? -1 : BPM_CURRENT_BAR_OF_PHRASE);
+      if (is_bpm_on_phrase(ticks+1)) {
+        behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+      }
+    } 
   }
 
   #ifdef ENABLE_DRUM_LOOPER
@@ -544,6 +667,8 @@ void do_tick(uint32_t in_ticks) {
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
   behaviour_manager->send_clocks();
   if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+
+  gate_manager->update(); 
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
@@ -585,6 +710,12 @@ void do_tick(uint32_t in_ticks) {
     Serial_println(F(" ]"));
   #endif 
 
+  if (parameter_manager->pending_calibration()) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      parameter_manager->process_calibration();
+    }
+  }
+
   //last_processed_tick = ticks;
   //ticks++;
   //last_ticked_at_micros = millis();
@@ -592,5 +723,5 @@ void do_tick(uint32_t in_ticks) {
   //}
   uint32_t time_to_tick = micros() - start_time;
   if (time_to_tick>=micros_per_tick)
-    Serial_printf("WARNING: Took %ius to tick, needs to be <%ius!\n", time_to_tick, micros_per_tick);
+    Serial_printf("WARNING: Took %uus to tick on tick %i, needs to be <%3.3fus!\n", time_to_tick, ticks, micros_per_tick);
 }

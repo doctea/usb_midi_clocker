@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_SIMPLEWRAPPER__INCLUDED
-#define BEHAVIOUR_SIMPLEWRAPPER__INCLUDED
+#pragma once
 
 #include "behaviour_clocked.h"
 #include "behaviour_base_usb.h"
@@ -17,10 +16,12 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
         this->can_receive_midi_notes = can_receive_midi_notes;
     }
 
-    virtual LinkedList<MenuItem*> *make_menu_items() override {
-        DeviceClass::make_menu_items();
-        return BaseClass::make_menu_items();
-    }
+    #ifdef ENABLE_SCREEN
+        virtual LinkedList<MenuItem*> *make_menu_items() override {
+            DeviceClass::make_menu_items();
+            return BaseClass::make_menu_items();
+        }
+    #endif
 
     const char *get_label() override {
         return label;
@@ -139,5 +140,3 @@ class Behaviour_USBSimpleDividedClockedWrapper : public BaseClass, public Divide
     virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
 };
 */
-
-#endif

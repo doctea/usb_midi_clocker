@@ -14,7 +14,7 @@
 
 #include "queue.h"
 
-#include "behaviours/SaveableParameters.h"
+#include "SaveableParameters.h"
 
 extern MIDIOutputWrapper *beatstep_output;
 
@@ -110,7 +110,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
     using DividedClockedBehaviour::on_restart;
     
     public:
-        #define NUM_PATTERNS 16
+        #define BEATSTEP_NUM_PATTERNS 16
         bool auto_advance_pattern = false;   // todo: make configurable!
         bool wait_before_changing = true;    // for quantising pattern parameters that otherwise force untimely pattern restarts
 
@@ -229,7 +229,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
                 if (this->device==nullptr) return;
 
                 if (this->auto_advance_pattern) {
-                    int phrase_number = (phrase % NUM_PATTERNS);
+                    int phrase_number = (phrase % BEATSTEP_NUM_PATTERNS);
                     this->send_preset_change(phrase_number);
                     //this->on_restart(); 
                     this->set_restart_on_bar(true);
@@ -259,10 +259,10 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % NUM_PATTERNS);
+                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % BEATSTEP_NUM_PATTERNS);
 
                 uint8_t data[] = {
-                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % NUM_PATTERNS), 0xF7
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % BEATSTEP_NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
 
@@ -271,10 +271,10 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             void send_preset_save(int preset_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf(F("beatstep#send_preset_save(%i)\n"), preset_number % NUM_PATTERNS);
+                Serial.printf(F("beatstep#send_preset_save(%i)\n"), preset_number % BEATSTEP_NUM_PATTERNS);
 
                 uint8_t data[] = {
-                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x06, (uint8_t)/*1+*/(preset_number % NUM_PATTERNS), 0xF7
+                    0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x06, (uint8_t)/*1+*/(preset_number % BEATSTEP_NUM_PATTERNS), 0xF7
                 };
                 this->device->sendSysEx(sizeof(data), data, true);
 

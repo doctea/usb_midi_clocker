@@ -42,20 +42,27 @@ class Project : public IParseKeyValueReceiver {
     #endif
 
     void initialise_pattern_slots() {
-        Serial.println(F("initialise_pattern_slots starting.."));
-        for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
-            char filepath[MAX_FILEPATH];
-            snprintf(filepath, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, this->current_project_number, i);
-            pattern_slot_has_file[i] = SD.exists(filepath);
-            Serial_printf(F("\tpattern_slot_has_file[i] = %i for %s\n"), pattern_slot_has_file[i], filepath);
-        }
-        Serial_println(F("initialise_pattern_slots finished"));
+        #ifdef ENABLE_SD
+            Serial.println(F("initialise_pattern_slots starting.."));
+            for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
+                char filepath[MAX_FILEPATH];
+                snprintf(filepath, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, this->current_project_number, i);
+                pattern_slot_has_file[i] = SD.exists(filepath);
+                Serial_printf(F("\tpattern_slot_has_file[i] = %i for %s\n"), pattern_slot_has_file[i], filepath);
+            }
+            Serial_println(F("initialise_pattern_slots finished"));
+        #else
+            for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
+                pattern_slot_has_file[i] = false;
+            }
+            Serial.println("ENABLE_SD not defined, so pattern slots not initialised");
+        #endif
     }
     #ifdef ENABLE_LOOPER
     void initialise_loop_slots(bool quick = true) {
         //MIDITrack temp_track = MIDITrack(&MIDIOutputWrapper(midi_out_bitbox, BITBOX_MIDI_CHANNEL));
         temp_loop->bitmap_enabled = false;
-
+        #ifdef ENABLE_SD
         for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
             char filepath[MAX_FILEPATH];
             snprintf(filepath, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, this->current_project_number, i);
@@ -71,6 +78,12 @@ class Project : public IParseKeyValueReceiver {
             Serial_printf(F("initialise_loop_slots: loop_slot_has_file[i] = %i for %s\n"), loop_slot_has_file[i], filepath);
         }
         temp_loop->clear_all();
+        #else
+            for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
+                loop_slot_has_file[i] = false;
+            }
+            Serial.println("ENABLE_SD not defined, so loop slots not initialised");
+        #endif
     }
     #endif
     public:
@@ -129,6 +142,10 @@ class Project : public IParseKeyValueReceiver {
             return this->load_behaviour_options;
         }
 
+        void notify_behaviours_for_project_change(int8_t project_number) {
+            behaviour_manager->notify_behaviours_for_project_change(project_number);
+        }
+
         void setProjectNumber(int number) {
             if (this->debug) Serial_printf(F("Project#setProjectNumber(%i)...\n"), number);
             //if (this->current_project_number!=number) {
@@ -140,6 +157,7 @@ class Project : public IParseKeyValueReceiver {
                 this->initialise_loop_slots();
                 #endif
                 this->initialise_pattern_slots();
+                this->notify_behaviours_for_project_change(number);
             //}
         }
         int getProjectNumber() {
@@ -185,7 +203,7 @@ class Project : public IParseKeyValueReceiver {
         }
 
         bool load_pattern(int selected_pattern_number) {
-            if (debug) Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush();
+            if (debug) { Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
             bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state);
             if (result)
                 loaded_pattern_number = selected_pattern_number;
@@ -193,8 +211,9 @@ class Project : public IParseKeyValueReceiver {
             return result;
         }
         bool save_pattern(int selected_pattern_number) {
-            if (debug) Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush();
-            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state);
+            //this->debug = true;
+            if (debug) { Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
+            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state, this->debug);
             if (result) {
                 pattern_slot_has_file[selected_pattern_number] = true;
                 loaded_pattern_number = selected_pattern_number;

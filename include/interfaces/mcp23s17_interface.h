@@ -22,20 +22,13 @@ class MCP23S17BankInterface : public BankInterface {
 
         bool dirty = false;
 
-        MCP23S17BankInterface() {
+        MCP23S17BankInterface(int cs_pin = MCP23S17_SPI_CS1_PIN, int address = 0, SPIClass *spi = &SPI1) {
             Serial.println("MCP23S17BankInterface() constructor");
             //SPI1.setCS(MCP23S17_SPI_CS1_PIN);
-            SPI1.setMISO(MCP23S17_SPI_MISO);
-            SPI1.setMOSI(MCP23S17_SPI_MOSI);
-            SPI1.setSCK(MCP23S17_SPI_SCK);
-            //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
-            //SPI1.beginTransaction(SPISettings(3000000, LSBFIRST, SPI_MODE3));
-            //SPI1.setClockDivider(SPI_CLOCK_DIV4);
-            SPI1.begin();
 
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
-            mcp = new MCP23S17(MCP23S17_SPI_CS1_PIN, 0, &SPI1);
+            mcp = new MCP23S17(cs_pin, address, spi);
             mcp->setSPIspeed(10000000);
             
             Serial.println("\tconstructed!... calling begin()");
@@ -122,19 +115,19 @@ class MCP23S17InputBankInterface : public BankInterface {
         MCP23S17 *mcp = nullptr;
         bool *current_states = nullptr;
 
-        MCP23S17InputBankInterface() {
+        MCP23S17InputBankInterface(int cs_pin = MCP23S17_SPI_CS1_PIN, int address = 0, SPIClass *spi = &SPI1) {
             Serial.println("MCP23S17InputBankInterface() constructor");
-            SPI1.setCS(38);
+            /*SPI1.setCS(38);
             SPI1.setMISO(39);
             SPI1.setMOSI(26);
             SPI1.setSCK(27);
             //SPI1.beginTransaction(SPISettings(100000, MSBFIRST, SPI_MODE0));
             SPI1.setClockDivider(SPI_CLOCK_DIV4);
-            SPI1.begin();
+            SPI1.begin();*/
 
             this->current_states = (bool*)calloc(num_gates, sizeof(bool));
 
-            mcp = new MCP23S17(38, 0, &SPI1);
+            mcp = new MCP23S17(cs_pin, address, spi);
             Serial.println("\tconstructed!... calling begin()");
             if (!mcp->begin()) {
                 Serial.println("\tbegin() return false!");

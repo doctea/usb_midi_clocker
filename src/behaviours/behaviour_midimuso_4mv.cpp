@@ -11,7 +11,7 @@
         #include "menuitems_lambda.h"
         #include "mymenu/menuitems_harmony.h"
 
-        FLASHMEM
+        //FLASHMEM
         LinkedList<MenuItem *> *Behaviour_MIDIMuso_4MV::make_menu_items() {
             LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
@@ -19,7 +19,7 @@
 
             // todo: remove the sort-of useless default HarmonyStatus from the menuitems...?
 
-            SubMenuItemBar *allow_voice_toggles = new SubMenuItemBar("Allowed by Auto");
+            /*SubMenuItemBar *allow_voice_toggles = new SubMenuItemBar("Allowed by Auto");
 
             for (int i = 0 ; i < max_voice_count ; i++) {
                 char label[MENU_C_MAX];
@@ -36,10 +36,11 @@
                 ));
             }
 
-            menuitems->add(allow_voice_toggles);
+            menuitems->add(allow_voice_toggles);*/
+            PolyphonicBehaviour::make_menu_items();
 
             DividedClockedBehaviour::make_menu_items();
-            MIDIBassBehaviour::make_menu_items();
+            //MIDIBassBehaviour::make_menu_items();
 
             return menuitems;
         }

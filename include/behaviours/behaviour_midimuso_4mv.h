@@ -2,13 +2,15 @@
 
 #include "Config.h"
 
-// MIDI MUSO CV12 4 voice mono mode (handle voice allocation ourselves)
+// MIDI MUSO CV12 4-voice monophonic mode (handle voice allocation ourselves - allow automatic and manual allocation)
 
 #ifdef ENABLE_MIDIMUSO_4MV
 
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_base_serial.h"
 #include "behaviours/behaviour_simplewrapper.h"
+
+#include "behaviours/behaviour_polyphonic.h"
 
 #include "behaviour_midibass.h"
 
@@ -17,14 +19,22 @@
 // todo: send program controls to switch modes
 // todo: switch into 4A mode (extra gates, extra cv outs instead of velocity outs), or even 6 mode 
 
-class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual public MIDIBassBehaviour, virtual public ModwheelReceiver, virtual public DividedClockedBehaviour {
+class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*public MIDIBassBehaviour, */virtual public ModwheelReceiver, virtual public DividedClockedBehaviour, virtual public PolyphonicBehaviour {
     public:
+
+    //using MIDIBassBehaviour::sendNoteOn;
+    //using MIDIBassBehaviour::sendNoteOff;
 
     using DividedClockedBehaviour::on_tick;
     using DividedClockedBehaviour::send_clock;
 
+    using DeviceBehaviourSerialBase::sendProxiedControlChange;
+
+    const int8_t CHANNEL_ROUND_ROBIN = 5;
+
     Behaviour_MIDIMuso_4MV () : DeviceBehaviourSerialBase () {
-        this->TUNING_OFFSET = -3;   // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
+        DeviceBehaviourUltimateBase::TUNING_OFFSET = -3;   // because MIDI MUSO CV12's tuning is based on 1V=A, not 1V=C
+        //setConcreteClass(this);
     }
 
     virtual bool transmits_midi_notes() override {
@@ -35,21 +45,21 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
         return "MIDIMuso 4MV";
     }
 
-    static const int8_t max_voice_count = 4;
+    /*static const int8_t max_voice_count = 4;
     int voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };   // ideally int8_t, but int is compatible with HarmonyStatus menuitem
     int last_voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
     target_id_t voice_target_id[max_voice_count] = { -1, -1, -1, -1 };
 
-    bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };
+    bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };*/
 
     void on_bar(int bar) override {
-        MIDIBassBehaviour::on_bar(bar);
+        //MIDIBassBehaviour::on_bar(bar);
         DividedClockedBehaviour::on_bar(bar);
     }
 
-    int8_t find_slot_for(int8_t note) {
+    /*int8_t find_slot_for(int8_t note) {
         int8_t note_slot = -1;
-        for (int i = 0 ; i < max_voice_count ; i++) {
+        for (int_fast8_t i = 0 ; i < max_voice_count ; i++) {
             if (!allow_voice_for_auto[i])
                 continue;
             if (voices[i]==note) {
@@ -62,7 +72,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
-        if (channel==5) {
+        if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(-1);
             if (note_slot>=0) {
@@ -80,14 +90,12 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
 
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
-        if (channel==5) {
+        if (channel==CHANNEL_ROUND_ROBIN) {
             // do auto-assigning of notes schtick
             int note_slot = this->find_slot_for(note);
             if (note_slot>=0) {
                 this->sendNoteOff(note, velocity, note_slot+1);
-            } /*else {
-                Serial.printf("MV4 auto: didn't find note %i at all?!!\n", note);
-            }*/
+            } 
         } else {
             // assign to given channel/pass through
             if (voices[channel-1]==note) {
@@ -97,7 +105,17 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
             //DeviceBehaviourSerialBase::sendNoteOff(note, velocity, channel);
             MIDIBassBehaviour::sendNoteOff(note, velocity, channel);
         }
+    }*/
+
+    using PolyphonicBehaviour::sendNoteOn;
+    using PolyphonicBehaviour::sendNoteOff;
+    /*virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+        PolyphonicBehaviour::sendNoteOn(note, velocity, channel);
     }
+
+    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+        PolyphonicBehaviour::sendNoteOff(note, velocity, channel);
+    }*/
 
     virtual void sendControlChange(byte cc_number, byte value, byte channel = 0) override {
         //if (this->debug) Serial.printf(F("%s#sendControlChange(cc=%i, value=%i, channel=%i)\n"), this->get_label(), cc_number, value, channel);
@@ -113,16 +131,11 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
         if (this->saveable_parameters==nullptr)
             DeviceBehaviourUltimateBase::setup_saveable_parameters();
 
-        MIDIBassBehaviour::setup_saveable_parameters();
+        //MIDIBassBehaviour::setup_saveable_parameters();
 
         DividedClockedBehaviour::setup_saveable_parameters();
 
-        //ModwheelReceiver::setup_saveable_parameters();
-
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0], [=](bool v) -> void { this->allow_voice_for_auto[0] = v; }, [=]() -> bool { return this->allow_voice_for_auto[0]; }));
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1], [=](bool v) -> void { this->allow_voice_for_auto[1] = v; }, [=]() -> bool { return this->allow_voice_for_auto[1]; }));
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) -> void { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }));
-        this->saveable_parameters->add(new LSaveableParameter<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) -> void { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }));
+        PolyphonicBehaviour::setup_saveable_parameters();
     }
 
 
@@ -139,11 +152,13 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
         //Serial.println(F("\tcalling DeviceBehaviourUSBBase::initialise_parameters()")); 
         DeviceBehaviourSerialBase::initialise_parameters();
         
-        MIDIBassBehaviour::initialise_parameters();
+        //MIDIBassBehaviour::initialise_parameters();
         //Serial.println(F("\tcalling ClockedBehaviour::initialise_parameters()"));
         DividedClockedBehaviour::initialise_parameters();
 
         ModwheelReceiver::initialise_parameters();
+
+        PolyphonicBehaviour::initialise_parameters();
 
         //Serial.println(F("\tAdding parameters..."));
         //parameters->clear();
@@ -163,7 +178,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, virtual
     }
 
     #ifdef ENABLE_SCREEN
-        FLASHMEM
+        //FLASHMEM
         virtual LinkedList<MenuItem *> *make_menu_items() override;
     #endif
 

@@ -11,7 +11,7 @@ const char *DeviceBehaviourSerialBase::get_indicator() {
         strncpy(this->indicator_text, s.c_str(), 10);*/
         String s = String(
             (receives_midi_notes() ? String(this->input_midi_number+1) :" ") + " " +
-            (transmits_midi_notes()? String(this->output_midi_number+1):" ") + " " + 
+            (transmits_midi_notes() || transmits_midi_clock()? String(this->output_midi_number+1):" ") + " " + 
             String(transmits_midi_clock()? "C" : " ")
         );
         strncpy(this->indicator_text, s.c_str(), 8);

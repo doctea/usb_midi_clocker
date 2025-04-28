@@ -1,29 +1,27 @@
-#ifndef KEYBOARD__INCLUDED
-#define KEYBOARD__INCLUDED
+#pragma once
+
+// todo: refacotr this + input_ali_controller to use a common base class
+// todo: make easier to configure controls?
 
 #include "Config.h"
-
 #include "storage.h"
-
 #include <util/atomic.h>
-
-#ifdef ENABLE_SCREEN
-    void toggle_autoadvance(bool on = false);
-    void toggle_recall(bool on = false);
-    #include "screenshot.h"
-    #include "mymenu.h"
-    #include "midi/midi_mapper_matrix_manager.h"
-    extern DisplayTranslator_Configured *display_translator;
-#endif
-
 #include "project.h"
-
 #include "interfaces/interfaces.h"
-
-bool debug_stress_sequencer_load = false;
 
 #ifdef ENABLE_TYPING_KEYBOARD
     #include "USBHost_t36.h"
+
+    #ifdef ENABLE_SCREEN
+        void toggle_autoadvance(bool on = false);
+        void toggle_recall(bool on = false);
+        #include "screenshot.h"
+        #include "mymenu.h"
+        #include "midi/midi_mapper_matrix_manager.h"
+        extern DisplayTranslator_Configured *display_translator;
+    #endif
+
+    bool debug_stress_sequencer_load = false;
 
     #ifdef ENABLE_SCREEN
         #include "menu.h"
@@ -266,7 +264,7 @@ bool debug_stress_sequencer_load = false;
 
     void process_key_buffer() {
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            if (keyboard_queue->isReady()) {
+            while (keyboard_queue->isReady()) { // was if
                 keypress_t *current = keyboard_queue->pop();
                 process_key(current->key, current->modifiers);       
             }
@@ -285,6 +283,4 @@ bool debug_stress_sequencer_load = false;
         //keyboard1.attachRawPress(OnRawPress);
         keyboard1.attachRelease(OnRelease);
     }
-#endif
-
 #endif
