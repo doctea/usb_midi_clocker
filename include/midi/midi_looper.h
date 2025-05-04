@@ -310,7 +310,7 @@ class MIDITrack {
         void play_events(unsigned long time) {
             //time = time % LOOP_LENGTH;
             time = ticks_to_sequence_step(time);
-            for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
+            for (int_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 int transposed_pitch = i + transpose_amount;
                 if (!is_valid_note(transposed_pitch)) {
                     if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
