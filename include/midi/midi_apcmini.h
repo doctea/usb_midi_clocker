@@ -2,7 +2,6 @@
 //#ifdef ENABLE_APCMINI
 
 #include "bpm.h"
-#include "sequencer.h"
 //#include "usb/multi_usb_handlers.h"
 //#include <MIDI.h>
 //#include "USBHost_t36.h"

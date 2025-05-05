@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "Config.h"
+#include "Config.h" 
 
 #ifdef ENABLE_EUCLIDIAN
 
@@ -34,11 +34,13 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     const int MISC_CHANNEL_9 = 9;
 
     VirtualBehaviour_EuclidianRhythms() : DeviceBehaviourUltimateBase () {
-        this->output_processor = new MIDIOutputProcessor(this);
+        this->output_processor = new FullDrumKitMIDIOutputProcessor(this);
         this->sequencer = new EuclidianSequencer(output_processor->nodes);
+        this->output_processor->addNode(new MIDIDrumOutput("Misc8", 0, MISC_CHANNEL_8, this));
+        this->output_processor->addNode(new MIDIDrumOutput("Misc9", 0, MISC_CHANNEL_9, this));
+        output_processor->configure_sequencer(sequencer);
         sequencer->initialise_patterns();
         sequencer->reset_patterns();
-        output_processor->configure_sequencer(sequencer);
         output_processor->setup_parameters();
 
         #ifdef USE_UCLOCK

@@ -1,7 +1,6 @@
 // this is for the cv gate sequencer, that is controlled by the APCMini
 
 #include "storage.h"
-#include "sequencer.h"
 #include "bpm.h"
 #include "project.h"
 

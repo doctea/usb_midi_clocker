@@ -12,8 +12,7 @@
 #include "midi_helpers.h"
 
 #include "Config.h"
-#include "cv_outs.h"
-#include "sequencer.h"
+#include "cv_gate_outs.h"
 #include "storage.h"
 #include "project.h"
 
