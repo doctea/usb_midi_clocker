@@ -23,6 +23,8 @@
 
 #include "__version.h"
 
+#include "ram_stuff.h"
+
 extern bool debug_flag, debug_stress_sequencer_load;
 
 class DebugPanel : public MenuItem {
@@ -39,6 +41,7 @@ class DebugPanel : public MenuItem {
             tft->printf("  Free RAM: %u bytes\n", freeRam());
             #ifdef ARDUINO_TEENSY41
                 tft->printf("  Free extRAM: %u bytes\n", freeExtRam());
+                tft->printf("  PSRAM clock: %i MHz\n", psram_clocked_at);
             #endif
             tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
             tft->printf("  Tick:   %i\n", ticks);
@@ -62,12 +65,15 @@ class DebugPanel : public MenuItem {
                 tft->println();
             #endif
             #ifdef ENABLE_CV_OUTPUT
-                tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
                 // loop over the cvoutput_configs array
-                for (size_t i = 0; i < cvoutput_configs_size ; i++) {
+                for (size_t i = 0 ; i < cvoutput_configs_size ; i++) {
+                    if (i==0) {
+                        tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
+                    } else {
+                        tft->print ("\n                          ");
+                    }
                     cvoutput_config_t config = cvoutput_configs[i];
-                    tft->printf("\n                          @ 0x%2x", config.address);
-                    tft->printf(" bank %i", config.dac_extended_address);
+                    tft->printf("@ 0x%2x bank %i", config.address, config.dac_extended_address);
                 }
                 tft->println();
             #endif
