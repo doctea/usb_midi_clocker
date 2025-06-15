@@ -19,7 +19,13 @@
     #include "uclock.h"
 #endif
 
-void shuffled_track_callback(uint8_t track, uint32_t step);
+#ifdef ENABLE_SHUFFLE
+    #if defined(SHUFFLE_MULTIPLE_TRACKS)
+        void shuffled_track_callback(uint8_t track, uint32_t step);
+    #else
+        void shuffled_callback(uint32_t step);
+    #endif
+#endif
 
 class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
@@ -44,7 +50,11 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         output_processor->setup_parameters();
 
         #ifdef USE_UCLOCK
-            uClock.setTrackOnStep(shuffled_track_callback);
+            #if defined(ENABLE_SHUFFLE) && defined(SHUFFLE_MULTIPLE_TRACKS)
+                uClock.setTrackOnStep(shuffled_track_callback);
+            #else
+                uClock.setOnStep(shuffled_callback);
+            #endif
             /*int8_t shuff[] = { 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0

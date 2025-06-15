@@ -142,7 +142,6 @@ void setup_behaviour_manager() {
             behaviour_midilights = new DeviceBehaviour_MIDILights();
             behaviour_manager->registerBehaviour(behaviour_midilights);
         #else
-            //behaviour_manager->registerBehaviour(new Behaviour_USBSimpleClockedWrapper<>("MIDILights", 0x1337, 0x117e));
             behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("MIDILights", 0x1337, 0x117e));
         #endif
     #endif
@@ -284,7 +283,12 @@ void setup_behaviour_manager() {
         behaviour_bedge = new DeviceBehaviour_Bedge();
         behaviour_manager->registerBehaviour(behaviour_bedge);            
     #endif
-    
+
+    #ifdef ENABLE_WORKSHOP_COMPUTER
+        Behaviour_SimpleWrapperUSB<DividedClockedBehaviour> *behaviour_workshop_computer = new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("Workshop Computer", 0x2E8A, 0x10C1);
+        behaviour_manager->registerBehaviour(behaviour_workshop_computer);
+    #endif
+
     Serial_println(F("Exiting setup_behaviour_manager()"));
 }
 
