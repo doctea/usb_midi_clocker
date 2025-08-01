@@ -20,11 +20,7 @@
 #endif
 
 #ifdef ENABLE_SHUFFLE
-    #if defined(SHUFFLE_MULTIPLE_TRACKS)
-        void shuffled_track_callback(uint8_t track, uint32_t step);
-    #else
-        void shuffled_callback(uint32_t step);
-    #endif
+    void shuffled_callback(uint32_t step, uint8_t track);
 #endif
 
 class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimateBase {
@@ -50,11 +46,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         output_processor->setup_parameters();
 
         #ifdef USE_UCLOCK
-            #if defined(ENABLE_SHUFFLE) && defined(SHUFFLE_MULTIPLE_TRACKS)
-                uClock.setTrackOnStep(shuffled_track_callback);
-            #else
-                uClock.setOnStep(shuffled_callback);
-            #endif
+            uClock.setOnStep(shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
             /*int8_t shuff[] = { 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
