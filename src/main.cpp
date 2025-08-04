@@ -93,7 +93,7 @@ void do_tick(uint32_t ticks);
 
 //#define DEBUG_MAIN_LOOP
 #ifdef DEBUG_MAIN_LOOP
-  #define DEBUG_MAIN_PRINTLN(X) Serial_printf(X)
+  #define DEBUG_MAIN_PRINTLN(X) Serial_println(X); Serial_flush();
 #else
   #define DEBUG_MAIN_PRINTLN(X) {}
 #endif
@@ -262,7 +262,7 @@ void setup() {
 
   #ifdef USE_UCLOCK
     tft_print((char*)"Initialising uClock..\n");
-    setup_uclock(&do_tick);
+    setup_uclock(do_tick);
   #else
     tft_print((char*)"..Cheap clock..\n");
     setup_cheapclock();
@@ -607,19 +607,28 @@ void do_tick(uint32_t in_ticks) {
 
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
+  DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_pre_clock()"));
 
   #ifdef ENABLE_LOOPER
+    DEBUG_MAIN_PRINTLN(F("in do_tick() about to midi_loop_track.process_tick()")); 
     midi_loop_track.process_tick(ticks);
+    DEBUG_MAIN_PRINTLN(F("in do_tick() just did midi_loop_track.process_tick()"));
   #endif
 
   // drone / machinegun works when do_end_bar here !
   // do this after everything else because of problems with machinegun mode..?
   if (is_bpm_on_beat(ticks+1)) {
+    DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_end_beat()"));
     behaviour_manager->do_end_beat(BPM_CURRENT_BEAT);
+    DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_end_beat()"));
     if (is_bpm_on_bar(ticks+1)) {
+      DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_end_bar()"));
       behaviour_manager->do_end_bar(restart_on_next_bar ? -1 : BPM_CURRENT_BAR_OF_PHRASE);
+      DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_end_bar()"));
       if (is_bpm_on_phrase(ticks+1)) {
+        DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_end_phrase()"));
         behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+        DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_end_phrase()"));
       }
     } 
   }
@@ -628,11 +637,13 @@ void do_tick(uint32_t in_ticks) {
     drums_loop_track.process_tick(ticks);
   #endif
 
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush();
   behaviour_manager->send_clocks();
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush();
 
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to gate_manager->update()")); Serial_flush();
   gate_manager->update(); 
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did gate_manager->update()")); Serial_flush();
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
@@ -648,9 +659,9 @@ void do_tick(uint32_t in_ticks) {
     }
   #endif*/
 
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush();
   behaviour_manager->do_ticks(in_ticks);
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush();
 
   //parameter_manager->update_mixers();
 
