@@ -46,7 +46,9 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         output_processor->setup_parameters();
 
         #ifdef USE_UCLOCK
-            uClock.setOnStep(shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
+            #ifdef ENABLE_SHUFFLE
+                uClock.setOnStep(shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
+            #endif
             /*int8_t shuff[] = { 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
                 (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
