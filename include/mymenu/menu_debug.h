@@ -21,6 +21,10 @@
     #include "cv_output.h"
 #endif
 
+#ifdef USE_UCLOCK
+    #include "uClock.h"
+#endif
+
 #include "__version.h"
 
 #include "ram_stuff.h"
@@ -45,6 +49,11 @@ class DebugPanel : public MenuItem {
             #endif
             tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
             tft->printf("  Tick:   %i\n", ticks);
+            #ifdef USE_UCLOCK
+                tft->printf("  uClock int overflow: %u\n", uClock.getIntOverflowCounter());
+                tft->printf("  uClock ext overflow: %u\n", uClock.getExtOverflowCounter());
+            #endif
+            
             tft->print("\nSerial: ");
             tft->print(Serial?"connected\n":"not connected\n");
 
@@ -78,8 +87,8 @@ class DebugPanel : public MenuItem {
                 tft->println();
             #endif
 
+            tft->println("\nStats:");
             #ifdef ENABLE_PARAMETERS
-                tft->println("\nStats:");
                 tft->printf("  Parameters: %i\n", parameter_manager->available_parameters->size());
             #endif
 

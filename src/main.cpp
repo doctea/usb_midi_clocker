@@ -415,7 +415,7 @@ void loop() {
     if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
-  
+
     #ifdef USE_UCLOCK
       // do_tick is called from interrupt via uClock, so we don't need to do it manually here
       // do, however, tell the menu to update stuff if a new tick has happend
@@ -580,8 +580,16 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
   //Serial_println("ticked");
 
+  static uint32_t last_processed_tick = -1337;
+  if (last_processed_tick == in_ticks) {
+    //if (debug) { 
+      Serial_println(F("do_tick(): already done this tick, returning")); Serial_flush(); 
+    //}
+    return;   // already did this tick
+  }
+
   ::ticks = in_ticks;
-  
+
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to global_on_restart"));
@@ -699,4 +707,6 @@ void do_tick(uint32_t in_ticks) {
   uint32_t time_to_tick = micros() - start_time;
   if (time_to_tick>=micros_per_tick)
     Serial_printf("WARNING: Took %uus to tick on tick %i, needs to be <%3.3fus!\n", time_to_tick, ticks, micros_per_tick);
+
+  last_processed_tick = in_ticks;
 }

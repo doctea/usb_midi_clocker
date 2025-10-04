@@ -82,9 +82,8 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 
             sequencer->on_tick(ticks);
-        if (is_bpm_on_sixteenth(ticks) && output_processor->is_enabled()) {
+        if (is_bpm_on_sixteenth(ticks) && output_processor->is_enabled())
             output_processor->process();
-        }
         /*if (is_bpm_on_sixteenth(ticks)) 
             this->sequencer->on_step(BPM_CURRENT_STEP_OF_PHRASE);
         if (is_bpm_on_sixteenth(ticks),PPQN-1) 
