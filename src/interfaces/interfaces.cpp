@@ -117,6 +117,7 @@ void checkClock() {
         Serial.println("cv clock ticked!");
         cv_clock_ticked_flag = true;
         has_gone_off = false;
+        uClock.clockMe();
     } else if (clock_mode==CLOCK_EXTERNAL_CV && !mcp_interface->check_gate(7) && !has_gone_off) {
         cv_clock_ticked_flag = false;
         has_gone_off = true;
