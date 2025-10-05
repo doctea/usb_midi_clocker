@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "Config.h"
+#include "Config.h" 
 
 #ifdef ENABLE_EUCLIDIAN
 
@@ -15,6 +15,13 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+#ifdef USE_UCLOCK
+    #include "uclock.h"
+#endif
+
+#ifdef ENABLE_SHUFFLE
+    void shuffled_callback(uint32_t step, uint8_t track);
+#endif
 
 class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
@@ -29,12 +36,32 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     const int MISC_CHANNEL_9 = 9;
 
     VirtualBehaviour_EuclidianRhythms() : DeviceBehaviourUltimateBase () {
-        this->output_processor = new MIDIOutputProcessor(this);
+        this->output_processor = new FullDrumKitAndBassMIDIOutputProcessor(this);
         this->sequencer = new EuclidianSequencer(output_processor->nodes);
+        this->output_processor->addNode(new MIDIDrumOutput("Misc8", 0, MISC_CHANNEL_8, this));
+        this->output_processor->addNode(new MIDIDrumOutput("Misc9", 0, MISC_CHANNEL_9, this));
+        output_processor->configure_sequencer(sequencer);
         sequencer->initialise_patterns();
         sequencer->reset_patterns();
-        output_processor->configure_sequencer(sequencer);
         output_processor->setup_parameters();
+
+        #ifdef USE_UCLOCK
+            #ifdef ENABLE_SHUFFLE
+                uClock.setOnStep(shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
+            #endif
+            /*int8_t shuff[] = { 
+                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
+                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
+            };*/
+            /*int8_t shuff[] = { 
+                (int8_t)-2, (int8_t)2, (int8_t)3, (int8_t)3, (int8_t)3, (int8_t)-3, (int8_t)-2, (int8_t)3, 
+                (int8_t)1, (int8_t)3, (int8_t)3, (int8_t)1, (int8_t)-2, (int8_t)-2, (int8_t)-1, (int8_t)0
+            };
+            uClock.setTrackShuffleTemplate(1, shuff, 16);
+            uClock.setTrackShuffle(1, true);
+            */
+            //uClock.setShuffle(true);
+        #endif
     }
 
     virtual const char *get_label() override {
@@ -45,12 +72,18 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         return BehaviourType::virt;
     }
 
+    #ifdef ENABLE_SHUFFLE
+        virtual void on_step_shuffled(uint8_t track, uint32_t step) {
+            if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
+            sequencer->on_step_shuffled(track, step);
+        }
+    #endif
+
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 
             sequencer->on_tick(ticks);
-        if (is_bpm_on_sixteenth(ticks) && output_processor->is_enabled()) {
+        if (is_bpm_on_sixteenth(ticks) && output_processor->is_enabled())
             output_processor->process();
-        }
         /*if (is_bpm_on_sixteenth(ticks)) 
             this->sequencer->on_step(BPM_CURRENT_STEP_OF_PHRASE);
         if (is_bpm_on_sixteenth(ticks),PPQN-1) 
@@ -121,7 +154,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         virtual LinkedList<MenuItem*> *make_menu_items() override {
             LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
-            this->sequencer->make_menu_items(menu, true);
+            this->sequencer->make_menu_items(menu, 2);
             this->output_processor->create_menu_items(true);
 
             return menuitems;

@@ -80,6 +80,16 @@ class DeviceBehaviourManager {
             this->behaviours->add(behaviour);
         }
 
+        DeviceBehaviourUltimateBase *get_behaviour_for_label(const char *label) {
+            for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+                DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+                if (strcmp(behaviour->get_label(), label)==0) {
+                    return behaviour;
+                }
+            }
+            return nullptr;
+        }
+
         #ifdef ENABLE_USB
             bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
                 #ifdef IRQ_PROTECT_USB_CHANGES

@@ -13,6 +13,8 @@
   #pragma GCC optimize ("O0")
 #endif
 
+#include "ram_stuff.h"
+
 #include "debug.h"
 #include "storage.h"
 
@@ -83,44 +85,6 @@ void do_tick(uint32_t ticks);
 
 #include "__version.h"
 
-// thanks to beermat again (and originally KurtE) for this code
-// at 198mhz this runs and gives an approx 25% FPS speed up - from ~14fps up to ~19fps!
-const float flexspi2_clock_speeds[4] = {396.0f, 720.0f, 664.62f, 528.0f};
-FLASHMEM void setPSRamSpeed(int mhz) {
-  //See what the closest setting might be:
-  uint8_t clk_save = 0, divider_save = 0;
-  int min_delta = mhz;
-  for (uint8_t clk = 0; clk < 4; clk++) {
-      uint8_t divider = (flexspi2_clock_speeds[clk] + (mhz / 2)) / mhz;
-      int delta = abs(mhz - flexspi2_clock_speeds[clk] / divider);
-      if ((delta < min_delta) && (divider < 8)) {
-          min_delta = delta;
-          clk_save = clk;
-          divider_save = divider;
-      }
-  }
-  //First turn off FLEXSPI2
-  CCM_CCGR7 &= ~CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
-  divider_save--; // 0 biased
-  //Set the clock settings.
-  CCM_CBCMR = (CCM_CBCMR & ~(CCM_CBCMR_FLEXSPI2_PODF_MASK | CCM_CBCMR_FLEXSPI2_CLK_SEL_MASK))
-              | CCM_CBCMR_FLEXSPI2_PODF(divider_save) | CCM_CBCMR_FLEXSPI2_CLK_SEL(clk_save);
-  //Turn FlexSPI2 clock back on
-  CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
-
-  Serial.printf("Update FLEXSPI2 speed: %u clk:%u div:%u Actual:%u\n", mhz, clk_save, divider_save,
-      flexspi2_clock_speeds[clk_save] / (divider_save + 1));
-}
-
-void setup_psram_overclock() {
-  /*setPSRamSpeed(88);
-  setPSRamSpeed(133);
-  setPSRamSpeed(144);
-  setPSRamSpeed(180);*/
-  setPSRamSpeed(198);
-}
-
-
 #ifdef ENABLE_PROFILER
   #define NUMBER_AVERAGES 1024
   uint32_t *main_loop_length_averages; //[NUMBER_AVERAGES];
@@ -129,7 +93,7 @@ void setup_psram_overclock() {
 
 //#define DEBUG_MAIN_LOOP
 #ifdef DEBUG_MAIN_LOOP
-  #define DEBUG_MAIN_PRINTLN(X) Serial_printf(X)
+  #define DEBUG_MAIN_PRINTLN(X) Serial_println(X); Serial_flush();
 #else
   #define DEBUG_MAIN_PRINTLN(X) {}
 #endif
@@ -302,7 +266,7 @@ void setup() {
 
   #ifdef USE_UCLOCK
     tft_print((char*)"Initialising uClock..\n");
-    setup_uclock(&do_tick);
+    setup_uclock(do_tick);
   #else
     tft_print((char*)"..Cheap clock..\n");
     setup_cheapclock();
@@ -460,7 +424,7 @@ void loop() {
     if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
-  
+
     #ifdef USE_UCLOCK
       // do_tick is called from interrupt via uClock, so we don't need to do it manually here
       // do, however, tell the menu to update stuff if a new tick has happend
@@ -625,8 +589,16 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
   //Serial_println("ticked");
 
+  static uint32_t last_processed_tick = -1337;
+  if (last_processed_tick == in_ticks) {
+    //if (debug) { 
+      Serial_println(F("do_tick(): already done this tick, returning")); Serial_flush(); 
+    //}
+    return;   // already did this tick
+  }
+
   ::ticks = in_ticks;
-  
+
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to global_on_restart"));
@@ -652,19 +624,28 @@ void do_tick(uint32_t in_ticks) {
 
   DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_pre_clock()"));
   behaviour_manager->do_pre_clock(in_ticks);
+  DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_pre_clock()"));
 
   #ifdef ENABLE_LOOPER
+    DEBUG_MAIN_PRINTLN(F("in do_tick() about to midi_loop_track.process_tick()")); 
     midi_loop_track.process_tick(ticks);
+    DEBUG_MAIN_PRINTLN(F("in do_tick() just did midi_loop_track.process_tick()"));
   #endif
 
   // drone / machinegun works when do_end_bar here !
   // do this after everything else because of problems with machinegun mode..?
   if (is_bpm_on_beat(ticks+1)) {
+    DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_end_beat()"));
     behaviour_manager->do_end_beat(BPM_CURRENT_BEAT);
+    DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_end_beat()"));
     if (is_bpm_on_bar(ticks+1)) {
+      DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_end_bar()"));
       behaviour_manager->do_end_bar(restart_on_next_bar ? -1 : BPM_CURRENT_BAR_OF_PHRASE);
+      DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_end_bar()"));
       if (is_bpm_on_phrase(ticks+1)) {
+        DEBUG_MAIN_PRINTLN(F("do_tick(): about to behaviour_manager->do_end_phrase()"));
         behaviour_manager->do_end_phrase(BPM_CURRENT_PHRASE);
+        DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_end_phrase()"));
       }
     } 
   }
@@ -673,11 +654,13 @@ void do_tick(uint32_t in_ticks) {
     drums_loop_track.process_tick(ticks);
   #endif
 
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush();
   behaviour_manager->send_clocks();
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush();
 
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to gate_manager->update()")); Serial_flush();
   gate_manager->update(); 
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did gate_manager->update()")); Serial_flush();
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
@@ -693,9 +676,9 @@ void do_tick(uint32_t in_ticks) {
     }
   #endif*/
 
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush();
   behaviour_manager->do_ticks(in_ticks);
-  if (debug) { DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush(); }
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush();
 
   //parameter_manager->update_mixers();
 
@@ -739,4 +722,6 @@ void do_tick(uint32_t in_ticks) {
   uint32_t time_to_tick = micros() - start_time;
   if (time_to_tick>=micros_per_tick)
     Serial_printf("WARNING: Took %uus to tick on tick %i, needs to be <%3.3fus!\n", time_to_tick, ticks, micros_per_tick);
+
+  last_processed_tick = in_ticks;
 }
