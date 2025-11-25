@@ -20,7 +20,6 @@
 #include "mymenu/menuitems_scale.h"
 #include "mymenu/menuitems_notedisplay.h"
 #include "mymenu/menuitems_progression.h"
-
 #include "chord_player.h"
 
 #include "behaviours/behaviour_cvoutput.h"
@@ -29,6 +28,7 @@ extern MIDIMatrixManager *midi_matrix_manager;
 
 #define NUM_SONG_SECTIONS 4
 #define NUM_PLAYLIST_SLOTS 8
+#define CHORDS_PER_SECTION 8
 
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
@@ -42,10 +42,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     virtual bool transmits_midi_notes() { return true; }
 
     struct song_section_t {
-        chord_identity_t grid[8];
+        chord_identity_t grid[CHORDS_PER_SECTION];
         
         virtual void add_section_add_lines(LinkedList<String> *lines) {
-            for (int i = 0 ; i < 8 ; i++) {
+            for (int i = 0 ; i < CHORDS_PER_SECTION ; i++) {
                 lines->add(String("grid_")+String(i)+String("_degree=")+String(grid[i].degree));
                 lines->add(String("grid_")+String(i)+String("_type=")+String(grid[i].type));
                 lines->add(String("grid_")+String(i)+String("_inversion=")+String(grid[i].inversion));
@@ -54,7 +54,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         virtual bool parse_section_line(String key, String value) {
             if (key.startsWith("grid_")) {
                 int8_t grid_index = key.substring(5,6).toInt();
-                if (grid_index>=0 && grid_index<8) {
+                if (grid_index>=0 && grid_index<CHORDS_PER_SECTION) {
                     if (key.endsWith("_degree")) {
                         grid[grid_index].degree = value.toInt();
                     } else if (key.endsWith("_type")) {
@@ -957,10 +957,46 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
+            this->create_menu_items_playlist();
+
             return menuitems;
         }
-    #endif
 
+        
+        //void create_menu_items_playlist();
+        virtual void create_menu_items_playlist() {
+            //LinkedList<MenuItem *> *menuitems = new LinkedList<MenuItem *>();
+
+            // SubMenuItemBar *playlist_bar = new SubMenuItemBar("Playlist controls", false, true);
+            // playlist_bar->add(new LambdaActionItem("Next section", [=] () -> void { move_next_playlist(); }));
+            // menuitems->add(playlist_bar);
+
+            // one page per song section
+            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+                menu->add_page((String("Section ") + String(i)).c_str(), this->colour, false);
+
+                // header row
+                menu->add(new MenuItem("Degree      Type        Inversion", false, true));
+
+                // then one row per bar
+                for (int j = 0 ; j < CHORDS_PER_SECTION ; j++) {
+                    LambdaChordSubMenuItemBarWithIndicator *section_bar = new LambdaChordSubMenuItemBarWithIndicator(
+                        (String("Bar ") + String(j)).c_str(),
+                        [=](int8_t degree) -> void { song_sections[i].grid[j].degree = degree; },
+                        [=]() -> int8_t { return song_sections[i].grid[j].degree; },
+                        [=](CHORD::Type chord_type) -> void { song_sections[i].grid[j].type = chord_type; },
+                        [=]() -> CHORD::Type { return song_sections[i].grid[j].type; },
+                        [=](int8_t inversion) -> void { song_sections[i].grid[j].inversion = inversion; },
+                        [=]() -> int8_t { return song_sections[i].grid[j].inversion; },
+                        i, j, &this->current_section, &this->current_bar,
+                        false, false, false
+                    );
+                    menu->add(section_bar);
+                }
+            }
+        }
+
+    #endif
 };
 
 extern VirtualBehaviour_Progression *behaviour_progression;
