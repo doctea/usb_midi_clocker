@@ -79,6 +79,10 @@ LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN,
 BPMPositionIndicator posbar = BPMPositionIndicator();
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
+#ifdef ENABLE_CLOCK_INPUT_CV
+    ExternalPPQNSelectorControl external_ppqn_selector = ExternalPPQNSelectorControl("Ext Clock PPQN", external_cv_ppqn);
+#endif
+
 #ifdef ENABLE_TAPTEMPO
     TapTempoControl *tapper_control = nullptr;
     extern TapTempoTracker *tapper;
@@ -135,6 +139,9 @@ void setup_menu_transport() {
     menu->add(&posbar);     // bpm and position indicator
 
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
+    #ifdef ENABLE_CLOCK_INPUT_CV
+        menu->add(&external_ppqn_selector); // external clock ppqn selector
+    #endif
 
     // todo: support midi clock shuffle, when possible to do so..
     //menu->add(new DirectNumberControl<int8_t>("Shuffle", &shuffle_data, 0, (int8_t)0, (int8_t)255));

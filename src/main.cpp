@@ -355,9 +355,10 @@ void setup() {
 
   Serial_println("Finished setup()!");
 
-  set_check_cv_clock_ticked_callback(has_cv_clock_ticked);
-
-  myTimer.begin(checkClock, 250); 
+  #ifdef ENABLE_CLOCK_INPUT_CV
+    set_check_cv_clock_ticked_callback(has_cv_clock_ticked);
+    myTimer.begin(checkClock, 250); 
+  #endif
 
 }
 

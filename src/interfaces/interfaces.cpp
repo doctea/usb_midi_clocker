@@ -98,6 +98,7 @@ GateManager *gate_manager = new GateManager();
     }
 #endif
 
+#ifdef ENABLE_CLOCK_INPUT_CV
 #include "clock.h"
 #include <uClock.h>
 volatile bool cv_clock_ticked_flag;
@@ -123,7 +124,7 @@ void checkClock() {
         has_gone_off = true;
     }
 }
-
+#endif
 
 void set_clock_gate(int gate_number, bool state) {
     gate_manager->send_gate(BANK_CLOCK, gate_number, state);
