@@ -27,8 +27,17 @@
 extern MIDIMatrixManager *midi_matrix_manager;
 
 #define NUM_SONG_SECTIONS 4
+#define MAX_REPEATS 64
 #define NUM_PLAYLIST_SLOTS 8
 #define CHORDS_PER_SECTION 8
+
+/*
+Song structure is:-
+    - Playlist has NUM_PLAYLIST_SLOTS slots
+    - Each playlist slot points to a section, and has a number of repeats
+    - Song has NUM_SONG_SECTIONS possible sections
+    - Each section has CHORDS_PER_SECTION chords (ie bars per section)
+*/
 
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
@@ -38,6 +47,17 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     uint8_t BASS_CHANNEL = 2,   TOPLINE_CHANNEL = 3;
     uint8_t bass_octave = 2,    topline_octave = 3, chord_octave = 5;
+
+    bool modified_song_since_save = true;
+    virtual bool has_song_changes_to_save() {
+        return modified_song_since_save;
+    }
+    virtual void mark_song_save_done() {
+        modified_song_since_save = false;
+    }
+    virtual void mark_song_as_modified() {
+        modified_song_since_save = true;
+    }
 
     virtual bool transmits_midi_notes() { return true; }
 
@@ -431,24 +451,27 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             int8_t col = inNumber - (row*APCMINI_DISPLAY_WIDTH);
 
             Serial_printf("apcmini_press(%i, %i) => row=%i, col=%i\n", inNumber, shifted, row, col);
-            Serial.flush();
+            Serial_flush();
 
             if (current_mode==MODE::DEGREE) {
                 int new_degree = row + 1;
                 if (new_degree>0 && new_degree<=PITCHES_PER_SCALE) {
                     song_sections[current_section].grid[col].degree = new_degree;
+                    mark_song_as_modified();
                     return true;
                 }
             } else if (current_mode==MODE::QUALITY) {
                 int new_quality = row;
                 if (new_quality>=0 && new_quality<CHORD::NONE) {
                     song_sections[current_section].grid[col].type = (CHORD::Type)new_quality;
+                    mark_song_as_modified();
                     return true;
                 }
             } else if (current_mode==MODE::INVERSION) {
                 int new_inversion = row;
                 if (new_inversion>=0 && new_inversion<=MAX_INVERSIONS) {
                     song_sections[current_section].grid[col].inversion = new_inversion;
+                    mark_song_as_modified();
                     return true;
                 }
             } else if (current_mode==MODE::PLAYLIST) {
@@ -456,24 +479,31 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     //playlist.entries[col].section = row;
                     return false;
                 }
+                int8_t original_repeats = playlist.entries[col].repeats;
                 if (playlist.entries[col].section==row) {
                     playlist.entries[col].repeats*=2;
-                    if (playlist.entries[col].repeats>16) playlist.entries[col].repeats = 2;
+                    if (playlist.entries[col].repeats>16) 
+                        playlist.entries[col].repeats = 2;
                 } else {
                     playlist.entries[col] = { row, playlist.entries[col].repeats };
+                }
+                if (playlist.entries[col].repeats != original_repeats) {
+                    mark_song_as_modified();
                 }
                 return true;
             }
         } else if (inNumber>=APCMINI_BUTTON_CLIP_STOP && inNumber < APCMINI_BUTTON_CLIP_STOP + VirtualBehaviour_Progression::MODE::NUM_MODES) {
             Serial_printf("apcmini_press(%i, %i) => mode=%i\n", inNumber, shifted, inNumber - APCMINI_BUTTON_CLIP_STOP);
-            Serial.flush();
+            Serial_flush();
             this->current_mode = (VirtualBehaviour_Progression::MODE)(inNumber - APCMINI_BUTTON_CLIP_STOP);
             return true;
         } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
             this->advance_progression_bar = !this->advance_progression_bar;
+            mark_song_as_modified();
             return true;
         } else if (inNumber==APCMINI_BUTTON_UNLABELED_2) {
             this->advance_progression_playlist = !this->advance_progression_playlist;
+            mark_song_as_modified();
             return true;
         } else if (inNumber==APCMINI_BUTTON_LEFT || inNumber==APCMINI_BUTTON_RIGHT) {
             if (current_mode==MODE::DEGREE || current_mode==MODE::QUALITY || current_mode==MODE::INVERSION) {
@@ -486,10 +516,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             } else if (current_mode==MODE::PLAYLIST) {
                 if (inNumber==APCMINI_BUTTON_LEFT) {
                     move_playlist(playlist_position-1);
-                    //move_bar(0);
                 } else {
                     move_playlist(playlist_position+1);
-                    //move_bar(0);
                 }
                 return true;
             }
@@ -530,9 +558,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void change_chord_octave(int new_chord_octave) {
         bool was_playing = this->chord_player->is_playing;
-        chord_identity_t chord;// = this->chord_player->current_chord_data.chord;
+        chord_identity_t chord;
         memcpy(&chord, &this->current_chord, sizeof(chord_identity_t));
-        //int8_t note = this->chord_player->current_chord_data.chord_root;
         if (was_playing) {
             this->chord_player->stop_chord();
         }
@@ -621,6 +648,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             messages_log_add(String("Saved to project : playlist ") + String(project_number));
         }
 
+        mark_song_save_done();
+
         return true;
         #else
         return false;
@@ -654,6 +683,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             }
             myFile.close();
         }
+
+        mark_song_save_done();
 
         return true;
         #else
@@ -702,6 +733,9 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             messages_log_add(String("Saved to project : section ") + String(project_number) + " : " + String(section_number));
         }
+
+        mark_song_save_done();
+
         return true;
         #else
         return false;
@@ -740,6 +774,8 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         }
         //debug = false;
 
+        mark_song_save_done();
+
         return true;
         #else
         return false;
@@ -747,7 +783,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual void notify_project_changed(int project_number) override {
-        // todo: load the playlist and section data for the new project
         load_playlist(project_number);
         for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
             load_section(i, project_number);
@@ -844,11 +879,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             ));*/
 
             bar->add(new LambdaToggleControl("Advance bar", 
-                [=] (bool v) -> void { this->advance_progression_bar = v; },
+                [=] (bool v) -> void { this->advance_progression_bar = v; mark_song_as_modified();},
                 [=] (void) -> bool { return this->advance_progression_bar; }
             ));
             bar->add(new LambdaToggleControl("Advance playlist", 
-                [=] (bool v) -> void { this->advance_progression_playlist = v; },
+                [=] (bool v) -> void { this->advance_progression_playlist = v; mark_song_as_modified();},
                 [=] (void) -> bool { return this->advance_progression_playlist; }
             ));
             menuitems->add(bar);
@@ -862,17 +897,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 &midi_matrix_manager->global_quantise_on
             ));
 
-            /*
-            menuitems->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
-            menuitems->add(new NoteHarmonyDisplay(
-                (const char*)"CV Output 1 harmony", 
-                &midi_matrix_manager->global_scale_type, 
-                &midi_matrix_manager->global_scale_root, 
-                &behaviour_cvoutput_1->note_tracker,
-                &midi_matrix_manager->global_quantise_on
-            ));
-            */
-            
             SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);
             section_bar->add(new LambdaNumberControl<int8_t>(
                 "PlaylistPos", 
@@ -971,6 +995,54 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             // playlist_bar->add(new LambdaActionItem("Next section", [=] () -> void { move_next_playlist(); }));
             // menuitems->add(playlist_bar);
 
+            // create only one set of enable/advance buttons, and save/load buttons, and re-use them for all of the pages here
+            // add save/load buttons 
+            SubMenuItemBar *save_load_bar = new SubMenuItemBar("Section controls", false, true);
+            save_load_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_playlist(); }));
+            save_load_bar->add(
+                new CallbackMenuItem(
+                    "State", 
+                    [=] () -> const char* { return this->has_song_changes_to_save() ? "Unsaved" : "Saved"; }, 
+                    [=] () -> uint16_t { return this->has_song_changes_to_save() ? RED : GREEN; },
+                    false
+                )
+            );
+            save_load_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_playlist(); }));
+
+            // add controls to enable/disable advance of bars and section
+            SubMenuItemBar *advance_bar = new SubMenuItemBar("Advance controls", false, true);
+            advance_bar->add(new LambdaToggleControl("Advance bar", 
+                [=] (bool v) -> void { this->advance_progression_bar = v; },
+                [=] (void) -> bool { return this->advance_progression_bar; }
+            ));
+            advance_bar->add(new LambdaToggleControl("Advance playlist", 
+                [=] (bool v) -> void { this->advance_progression_playlist = v; },
+                [=] (void) -> bool { return this->advance_progression_playlist; }
+            ));
+
+            
+            // a page showing and allowing edit of the the song structure (playlist)
+            // header row
+            menu->add_page("Playlist", this->colour, false);
+            menu->add(new MenuItem("Section      Repeats        ", false, true));
+            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+                menu->add(new LambdaPlaylistSubMenuItemBarWithIndicator(
+                    (String("Slot ") + String(i)).c_str(),
+                    [=](int8_t section) -> void { playlist.entries[i].section = section; mark_song_as_modified(); },
+                    [=]() -> int8_t { return playlist.entries[i].section; },
+                    [=](int8_t repeats) -> void { playlist.entries[i].repeats = repeats; mark_song_as_modified(); },
+                    [=]() -> int8_t { return playlist.entries[i].repeats; },
+                    i,
+                    &this->current_section,
+                    NUM_SONG_SECTIONS, 
+                    MAX_REPEATS,
+                    false, false
+                ));
+            }
+
+            menu->add(save_load_bar);
+            menu->add(advance_bar);
+
             // one page per song section
             for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
                 menu->add_page((String("Section ") + String(i)).c_str(), this->colour, false);
@@ -982,17 +1054,34 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 for (int j = 0 ; j < CHORDS_PER_SECTION ; j++) {
                     LambdaChordSubMenuItemBarWithIndicator *section_bar = new LambdaChordSubMenuItemBarWithIndicator(
                         (String("Bar ") + String(j)).c_str(),
-                        [=](int8_t degree) -> void { song_sections[i].grid[j].degree = degree; },
-                        [=]() -> int8_t { return song_sections[i].grid[j].degree; },
-                        [=](CHORD::Type chord_type) -> void { song_sections[i].grid[j].type = chord_type; },
-                        [=]() -> CHORD::Type { return song_sections[i].grid[j].type; },
-                        [=](int8_t inversion) -> void { song_sections[i].grid[j].inversion = inversion; },
-                        [=]() -> int8_t { return song_sections[i].grid[j].inversion; },
+                        [=](int8_t degree) -> void { 
+                            song_sections[i].grid[j].degree = degree; 
+                            mark_song_as_modified(); 
+                        },
+                        [=]() -> int8_t { 
+                            return song_sections[i].grid[j].degree; 
+                        },
+                        [=](CHORD::Type chord_type) -> void { 
+                            song_sections[i].grid[j].type = chord_type; 
+                            mark_song_as_modified(); },
+                        [=]() -> CHORD::Type { 
+                            return song_sections[i].grid[j].type; 
+                        },
+                        [=](int8_t inversion) -> void { 
+                            song_sections[i].grid[j].inversion = inversion; 
+                            mark_song_as_modified(); 
+                        },
+                        [=]() -> int8_t { 
+                            return song_sections[i].grid[j].inversion; 
+                        },
                         i, j, &this->current_section, &this->current_bar,
                         false, false, false
                     );
                     menu->add(section_bar);
                 }
+
+                menu->add(save_load_bar);
+                menu->add(advance_bar);
             }
         }
 

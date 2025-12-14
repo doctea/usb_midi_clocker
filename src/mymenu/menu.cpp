@@ -364,6 +364,20 @@ void setup_menu_midi() {
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
+
+        SubMenuItemBar *save_load_bar = new SubMenuItemBar("Sequence load/save", false, true);
+        save_load_bar->add(new LambdaNumberControl<int>(
+            "Slot", 
+            [=](int slot_number) -> void { project->select_pattern_number(slot_number); },
+            [=]() -> int { return sequencer_status.get_selected_slot(); },
+            nullptr, 
+            0, 
+            NUM_SEQUENCES-1
+        ));
+        save_load_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { sequencer_status.save_to_slot_number(sequencer_status.get_selected_slot()); }));
+        save_load_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { sequencer_status.load_slot_number(sequencer_status.get_selected_slot()); }));
+        menu->add(save_load_bar);
+
         menu->add(&clock_sequencer_display);
 
         menu->add(new ObjectActionConfirmItem<VirtualBehaviour_SequencerGates>("Clear sequencer pattern", behaviour_sequencer_gates, &VirtualBehaviour_SequencerGates::sequencer_clear_pattern));
