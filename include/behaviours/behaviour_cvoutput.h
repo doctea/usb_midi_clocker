@@ -190,6 +190,32 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                     ));
                 }
             }
+
+            // Add saveable parameters for controlling the slew rate of the outputs
+            for (int i = 0 ; i < channel_count; i++) {
+                if (outputs[i] != nullptr) {
+                    this->saveable_parameters->add(new LSaveableParameter<float>(
+                        (String("Slew Rate ") + String(/*'A'+*/i)).c_str(),
+                        "Slews",
+                        nullptr,
+                        [=](float v) -> void { outputs[i]->set_slew_rate_normal(v); },
+                        [=]() -> float { return outputs[i]->get_slew_rate_normal(); }
+                    ));
+                }
+            }
+
+            // Add saveable parameters for controlling the gate output enabled status
+            for (int i = 0 ; i < channel_count; i++) {
+                if (outputs[i] != nullptr) {
+                    this->saveable_parameters->add(new LSaveableParameter<bool>(
+                        (String("Gate Output ") + String(/*'A'+*/i)).c_str(),
+                        "Gates",
+                        nullptr,
+                        [=](bool v) -> void { outputs[i]->set_gate_output_enabled(v); },
+                        [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }
+                    ));
+                }
+            }
         }
 
         virtual bool load_parse_key_value(String key, String value) override {
@@ -271,6 +297,22 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
                 PolyphonicBehaviour::make_menu_items();
+
+                // make controls for enabling/disabling gate outputs
+                SubMenuItemBar *gate_output_menu = new SubMenuItemBar("Gate Outputs", true, true);
+                for (int i=0; i<channel_count; i++) {
+                    if (outputs[i] != nullptr) {
+                        gate_output_menu->add(new LambdaToggleControl(
+                            (String("Output ") + String(i+1)).c_str(),
+                            [=](bool v) -> void { outputs[i]->set_gate_output_enabled(v); },
+                            [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }
+                        ));
+                    }
+                }
+                menuitems->add(gate_output_menu);
+
+                // add a Slew separator
+                menuitems->add(new SeparatorMenuItem("Slew Controls"));
 
                 // make slew controls for the outputs
                 SubMenuItemBar *slew_menu = new SubMenuItemBar("Slew", true, true);
