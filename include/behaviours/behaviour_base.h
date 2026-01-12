@@ -17,6 +17,7 @@
 #include "ParameterManager.h"
 
 #include "SaveableParameters.h"
+#include "Hashtable.h"
 
 #include "file_manager/file_manager_interfaces.h"
 
@@ -61,6 +62,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     //MIDIOutputWrapper *wrapper = nullptr;
 
     NoteTracker note_tracker;
+
+    Hashtable<String, SaveableParameterBase*> *saveable_parameters_hash = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
@@ -266,12 +269,52 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             Serial_printf("WARNING: load_parse_key_value_saveable_parameters(%s,%s) called for %s, but saveable_parameters isn't initialised yet!\n", key.c_str(), value.c_str(), this->get_label());
             return false;
         }
+
+        SaveableParameterBase *found_param = nullptr;
+
+        /*uint32_t start = micros();
+        // old style: lookup via list search
         for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
             if (!saveable_parameters->get(i)->is_recall_enabled())
                 continue;
-            if (saveable_parameters->get(i)->parse_key_value(key, value))
-                return true;
+            if (saveable_parameters->get(i)->parse_key_value(key, value)) {
+                //return true;
+                found_param = saveable_parameters->get(i);
+                break;
+            }
         }
+        uint32_t duration = micros() - start;
+        Serial.printf("load_parse_key_value_saveable_parameters(%s,%s) in %s took %i us via list lookup\n", key.c_str(), value.c_str(), this->get_label(), duration);
+        */
+
+        // lookup via hashtable
+        //uint32_t start2 = micros();
+        if (this->saveable_parameters_hash->containsKey(key)) {
+            SaveableParameterBase *param = *this->saveable_parameters_hash->get(key);
+            if (param->is_recall_enabled()) {
+                //param->parse_key_value(key, value);
+                //return true;
+                /*if (found_param!=param) {
+                    Serial_printf("DEBUG WARNING: load_parse_key_value_saveable_parameters(%s,%s) hashmap found different parameter than list lookup!\n", key.c_str(), value.c_str(), param->label);
+                    Serial_printf("DEBUG WARNING: hashmap found '%p'@'%s', list lookup found '%p'@'%s'\n", 
+                        param,
+                        param->label, 
+                        found_param,
+                        found_param!=nullptr?found_param->label:"<null>"
+                    );
+                    messages_log_add(F("WARNING: saveable_parameters_hash inconsistent with saveable_parameters list!"));
+                }*/
+                found_param = param;
+            }
+        }
+        //uint32_t duration2 = micros() - start2;
+        //Serial_printf("load_parse_key_value_saveable_parameters(%s,%s) in %s took %i us via hashtable lookup\n", key.c_str(), value.c_str(), this->get_label(), duration2);
+
+        if (found_param != nullptr) {
+            found_param->parse_key_value(key, value);
+            return true;
+        }
+
         return false;
     }
     virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
@@ -343,6 +386,20 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
         if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
         return false;
+    }
+
+    virtual void setup_saveable_parameters_hash() {
+        if (this->saveable_parameters_hash==nullptr) {
+            Debug_println("instantiating saveable_parameters_hash");
+            this->saveable_parameters_hash = new Hashtable<String, SaveableParameterBase*> ();
+
+            if(this->has_saveable_parameters()) {
+                for (unsigned int i = 0 ; i < this->saveable_parameters->size() ; i++) {
+                    SaveableParameterBase *param = this->saveable_parameters->get(i);
+                    this->saveable_parameters_hash->put(String(param->label), param);
+                }
+            }
+        }
     }
 
     #ifdef ENABLE_SCREEN

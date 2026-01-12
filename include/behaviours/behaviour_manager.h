@@ -12,6 +12,7 @@
 #include "mymenu.h"
 
 #include <LinkedList.h>
+#include <Hashtable.h>
 
 #ifdef IRQ_PROTECT_USB_CHANGES
     #include <util/atomic.h>
@@ -34,10 +35,13 @@ class DeviceBehaviourManager {
             LinkedList<DeviceBehaviourUSBSerialBase *> *behaviours_usbserial = nullptr;
         #endif
 
+        Hashtable<String, DeviceBehaviourUltimateBase*> *behaviours_label_hash = nullptr;
+
         void setup_saveable_parameters() {
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
                 Serial_printf("setup_saveable_parameters for %i: %s\n", i, behaviours->get(i)->get_label());
                 behaviours->get(i)->setup_saveable_parameters();
+                behaviours->get(i)->setup_saveable_parameters_hash();
             }
         }
 
@@ -80,14 +84,25 @@ class DeviceBehaviourManager {
             this->behaviours->add(behaviour);
         }
 
-        DeviceBehaviourUltimateBase *get_behaviour_for_label(const char *label) {
+        void setup_behaviours_label_hash() {
+            behaviours_label_hash = new Hashtable<String, DeviceBehaviourUltimateBase*>();
+
+            //while(!Serial);
+
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-                if (strcmp(behaviour->get_label(), label)==0) {
-                    return behaviour;
+                Serial_printf("setup_behaviours_label_hash: Adding behaviour '%s' at '%p' to behaviours_label_hash at index %i\n", behaviour->get_label(), behaviour, i);
+                behaviours_label_hash->put(String(behaviour->get_label()), behaviour);
+                Serial_printf("after adding, behaviours_label_hash size is %i\n", behaviours_label_hash->size());
+                Serial_printf("Retrieving '%s' from behaviours_label_hash...\n", behaviour->get_label());
+                DeviceBehaviourUltimateBase *retrieved = *behaviours_label_hash->get(String(behaviour->get_label()));
+                if (retrieved) {
+                    Serial_printf("\tSuccess! Retrieved '%s' at %p\n", retrieved->get_label(), retrieved);
+                } else {
+                    Serial_printf("\tFailure! Could not retrieve '%s'\n", behaviour->get_label());
                 }
+                Serial_flush();
             }
-            return nullptr;
         }
 
         #ifdef ENABLE_USB
@@ -323,15 +338,63 @@ class DeviceBehaviourManager {
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
+
+            /*
+            DeviceBehaviourUltimateBase *found = nullptr;
+            DeviceBehaviourUltimateBase *found_2 = nullptr;
+
+            // replace this with a hashmap lookup instead of a loop
+            uint32_t start = micros();
             const uint_fast8_t size = behaviours->size();
             for (uint_fast8_t i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
                 //Serial_printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
-                if (device!=nullptr && label.equals(device->get_label()))
-                    return device;
+                if (device!=nullptr && label.equals(device->get_label())) {
+                    found = device;
+                    break;
+                }
             }
+            uint32_t duration = micros() - start;
+            if (found==nullptr) {
+                Serial_printf("find_behaviour_for_label('%s') list loop failed after %i us\n", label.c_str(), duration);
+            } else {
+                Serial_printf("find_behaviour_for_label('%s') list loop succeeded after %i us\n", label.c_str(), duration);
+            }
+            //return found;
+
+            start = micros();
+            found_2 = *behaviours_label_hash->get(label);
+            duration = micros() - start;
+            if (found_2) {
+                Serial_printf("find_behaviour_for_label('%s') hashtable lookup succeeded after %i us\n", label.c_str(), duration);
+                Serial_flush();
+            } else {
+                Serial_printf("find_behaviour_for_label('%s') hashtable lookup failed after %i us\n", label.c_str(), duration);
+                Serial_flush();
+            }
+
+            if (found!=found_2) {
+                Serial_printf("WARNING: find_behaviour_for_label('%s') found different results between list loop (%p) and hashtable lookup (%p)!\n", label.c_str(), found, found_2);
+                if (found) {
+                    Serial_printf("\tlist loop found '%s'\n", found->get_label());
+                }
+                if (found_2) {
+                    Serial_printf("\thashtable lookup found '%s'\n", found_2->get_label());
+                }
+                Serial_flush();
+            }
+
+            if (found!=nullptr) {
+                Serial_printf("find_behaviour_for_label('%s') succeeded after %i us\n", label.c_str(), duration);
+                Serial_flush();
+            }*/
             //Serial_printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
-            return nullptr;
+            //return found;
+
+            if (behaviours_label_hash->containsKey(label))
+                return *behaviours_label_hash->get(label);
+            else
+                return nullptr;
         }
 
         bool load_parse_line(String line) {

@@ -265,14 +265,17 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_midimuso_4pv);        
     #endif
     #ifdef ENABLE_MIDIMUSO_4MV
+        Serial_println(F("about to register behaviour_midimuso_4mv...")); Serial_flush();
         behaviour_midimuso_4mv->connect_device_output(&ENABLE_MIDIMUSO_4MV);
         behaviour_manager->registerBehaviour(behaviour_midimuso_4mv);
+        Serial_println(F("Finished registering")); Serial_flush();
     #endif
 
     #ifdef ENABLE_BEHRINGER_EDGE_USB
         behaviour_manager->registerBehaviour(new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("BEdge", 0x1397, 0x125A));
     #elif defined(ENABLE_BEHRINGER_EDGE_SERIAL)
-        Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase> *bedge = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("Bedge", false, false);
+        Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase> *bedge 
+            = new Behaviour_SimpleWrapper<DividedClockedBehaviour,DeviceBehaviourSerialBase>("Bedge", false, false);
         bedge->connect_device_output(&ENABLE_BEHRINGER_EDGE_SERIAL);
         behaviour_manager->registerBehaviour(bedge);
     #elif defined(ENABLE_BEHRINGER_EDGE_SERIAL_DEDICATED)
@@ -285,9 +288,14 @@ void setup_behaviour_manager() {
     #endif
 
     #ifdef ENABLE_WORKSHOP_COMPUTER
-        Behaviour_SimpleWrapperUSB<DividedClockedBehaviour> *behaviour_workshop_computer = new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("Workshop Computer", 0x2E8A, 0x10C1);
+        Behaviour_SimpleWrapperUSB<DividedClockedBehaviour> *behaviour_workshop_computer 
+            = new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("Workshop Computer", 0x2E8A, 0x10C1);
         behaviour_manager->registerBehaviour(behaviour_workshop_computer);
     #endif
+
+    Serial_println(F("Setting up behaviours label hash...")); Serial_flush();
+    behaviour_manager->setup_behaviours_label_hash();
+    Serial_println(F("Finished setting up behaviours label hash...")); Serial_flush();
 
     Serial_println(F("Exiting setup_behaviour_manager()"));
 }

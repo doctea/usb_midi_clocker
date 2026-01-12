@@ -201,10 +201,13 @@ class Project {
 
         bool load_pattern(int selected_pattern_number) {
             if (debug) { Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
+            uint32_t micros_start = micros();
             bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state);
             if (result)
                 loaded_pattern_number = selected_pattern_number;
-            Serial.println(F("returning\n"));  Serial_flush();
+            uint32_t micros_end = micros();
+            Serial_printf(F("load_pattern took %lu microseconds - returning\n"), micros_end - micros_start);
+            Serial_flush();
             return result;
         }
         bool save_pattern(int selected_pattern_number) {

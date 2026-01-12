@@ -393,7 +393,7 @@ void setup_midi_mapper_matrix_manager() {
     midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);  // don't allow it to connect to itself
 
     #ifdef ENABLE_WORKSHOP_COMPUTER
-        midi_matrix_manager->register_source(behaviour_manager->get_behaviour_for_label("Workshop Computer"), "Workshop ch10");
+        midi_matrix_manager->register_source(behaviour_manager->find_behaviour_for_label("Workshop Computer"), "Workshop ch10");
     #endif
 
 
