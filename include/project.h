@@ -98,7 +98,8 @@ class Project {
         bool load_clock_settings = true;
         bool load_sequencer_settings = true;
         bool load_behaviour_options = true;
-        
+        bool load_parameter_input_options = true;
+
         Project() {
             //initialise_pattern_slots();
         }
@@ -137,6 +138,13 @@ class Project {
         }
         bool isLoadBehaviourOptions() {
             return this->load_behaviour_options;
+        }
+
+        void setLoadParameterInputOptions(bool value = true) {
+            this->load_parameter_input_options = value;
+        }
+        bool isLoadParameterInputOptions() {
+            return this->load_parameter_input_options;
         }
 
         void notify_behaviours_for_project_change(int8_t project_number) {

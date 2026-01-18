@@ -63,6 +63,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     NoteTracker note_tracker;
 
+    Hashtable<String, FloatParameter*> *parameters_hash = nullptr;
     Hashtable<String, SaveableParameterBase*> *saveable_parameters_hash = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
@@ -215,6 +216,13 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         return parameters;
     }
     virtual LinkedList<FloatParameter*> *initialise_parameters() {
+        // set up parameters hash
+        this->parameters_hash = new Hashtable<String, FloatParameter*>();
+        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+            FloatParameter *param = parameters->get(i);
+            this->parameters_hash->put(String(param->label), param);
+        }
+
         return parameters;
     }
     virtual bool has_parameters() {
@@ -377,12 +385,19 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
 
         // then check the 'modulatable parameters' (ie those from parameters library))
-        static const char *prefix = "parameter_";
+        static const char *prefix = "parameter/";
         if (this->has_parameters() && key.startsWith(prefix)) {
-            if (parameter_manager->fast_load_parse_key_value(key, value, this->parameters)) {
-                if (debug) Serial.printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
-                return true;
-            }
+            // its a parameter key, targeted for this behaviour
+            String stripped_key = key.substring(strlen(prefix));
+            String parameter_name = stripped_key.substring(0, stripped_key.indexOf('/'));
+
+            FloatParameter *parameter = *this->parameters_hash->get(parameter_name);
+            if (parameter!=nullptr) {
+                if (parameter->load_parse_key_value(key, value)) {
+                    if (debug) Serial.printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
+                    return true;
+                }
+            }              
         }
         if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
         return false;

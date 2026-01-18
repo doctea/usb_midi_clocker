@@ -215,6 +215,13 @@ void setup_menu_transport() {
             &Project::setLoadBehaviourOptions,
             &Project::isLoadBehaviourOptions
         };
+        MultiToggleItemClass<Project> *load_parameter_input_settings = new MultiToggleItemClass<Project> {
+            "Parameter Input Options",
+            project,
+            &Project::setLoadParameterInputOptions,
+            &Project::isLoadParameterInputOptions
+        };
+
         project_multi_recall_options->addItem(load_matrix);
         #ifdef ENABLE_CLOCKS
             project_multi_recall_options->addItem(load_clock);
