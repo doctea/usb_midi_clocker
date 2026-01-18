@@ -356,6 +356,8 @@ namespace storage {
       return;
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
       return;
+    } else if (project->isLoadParameterInputOptions() && parameter_manager->load_parse_line(line)) {
+      return;
     }
     messages_log_add(String("Ignoring line '") + line + String("'"));
   }
