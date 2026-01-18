@@ -85,23 +85,13 @@ class DeviceBehaviourManager {
         }
 
         void setup_behaviours_label_hash() {
-            behaviours_label_hash = new Hashtable<String, DeviceBehaviourUltimateBase*>();
-
-            //while(!Serial);
+            // create the label hash if it doesn't exist yet
+            if (this->behaviours_label_hash==nullptr)
+                this->behaviours_label_hash = new Hashtable<String, DeviceBehaviourUltimateBase*>();
 
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
                 DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-                Serial_printf("setup_behaviours_label_hash: Adding behaviour '%s' at '%p' to behaviours_label_hash at index %i\n", behaviour->get_label(), behaviour, i);
-                behaviours_label_hash->put(String(behaviour->get_label()), behaviour);
-                Serial_printf("after adding, behaviours_label_hash size is %i\n", behaviours_label_hash->size());
-                Serial_printf("Retrieving '%s' from behaviours_label_hash...\n", behaviour->get_label());
-                DeviceBehaviourUltimateBase *retrieved = *behaviours_label_hash->get(String(behaviour->get_label()));
-                if (retrieved) {
-                    Serial_printf("\tSuccess! Retrieved '%s' at %p\n", retrieved->get_label(), retrieved);
-                } else {
-                    Serial_printf("\tFailure! Could not retrieve '%s'\n", behaviour->get_label());
-                }
-                Serial_flush();
+                this->behaviours_label_hash->put(String(behaviour->get_label()), behaviour);
             }
         }
 

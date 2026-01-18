@@ -170,7 +170,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*publi
         //parameters->add(new MIDICCParameter<>("11 expr",       this,   (byte)11,   (byte)1));
         //parameters->add(new MIDICCParameter<>("73 attack",     this,   (byte)7,   (byte)1));
         //parameters->add(new MIDICCParameter<>("72 release",    this,   (byte)11,   (byte)1));
-        parameters->add(new MIDICCParameter<>("71 res/aft",    this,    (byte)71,   (byte)1));
+        parameters->add(new MIDICCParameter<>("71 res or aft",    this,    (byte)71,   (byte)1));
         parameters->add(new MIDICCParameter<>("74 cut off",    this,    (byte)74,   (byte)1));
         
         Serial_printf(F("DeviceBehaviour_CraftSynth#initialise_parameters() returning %p\n"), parameters); Serial_flush();

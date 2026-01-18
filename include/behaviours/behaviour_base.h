@@ -388,16 +388,27 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         static const char *prefix = "parameter/";
         if (this->has_parameters() && key.startsWith(prefix)) {
             // its a parameter key, targeted for this behaviour
+
             String stripped_key = key.substring(strlen(prefix));
             String parameter_name = stripped_key.substring(0, stripped_key.indexOf('/'));
 
-            FloatParameter *parameter = *this->parameters_hash->get(parameter_name);
-            if (parameter!=nullptr) {
-                if (parameter->load_parse_key_value(key, value)) {
-                    if (debug) Serial.printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
-                    return true;
+            // Serial.printf(
+            //     "behaviour_base#load_parse_key_value: looking up parameter '%s' in parameters hash @%p..\n", 
+            //     parameter_name.c_str(), 
+            //     this->parameters_hash
+            // );
+            // Serial_flush();
+
+            if (this->parameters_hash->containsKey(parameter_name)) {
+                FloatParameter *parameter = *this->parameters_hash->get(parameter_name);
+                if (parameter!=nullptr) {
+                    Serial_flush();
+                    if (parameter->load_parse_key_value(key, value)) {
+                        if (debug) Serial_printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
+                        return true;
+                    }
                 }
-            }              
+            }
         }
         if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
         return false;
