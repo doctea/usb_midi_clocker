@@ -163,6 +163,7 @@ namespace storage {
   }
 
   bool save_pattern(int project_number, uint8_t pattern_number, savestate *input, bool debug) {
+    uint32_t micros_start = micros();
     #ifdef ENABLE_SD
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       //bool debug = false;
@@ -211,6 +212,7 @@ namespace storage {
       }
 
       // save behaviour extensions
+      Serial_println(F("Saving behaviour extensions..")); Serial_flush();
       myFile.println(F("; behaviour extensions")); 
       LinkedList<String> behaviour_lines = LinkedList<String>();
       if (debug) Serial.println("calling save_pattern_add_lines..");
@@ -218,26 +220,46 @@ namespace storage {
       if (debug) { Serial.println("got behaviour_lines to save.."); Serial.flush(); }
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
         //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
-        if (debug) Serial.printf(F("\tsequence writing behaviour line '%s'\n"), behaviour_lines.get(i).c_str());
-        //Serial.flush();
-        myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
+        //if (debug) 
+        Serial_printf(F("\twriting behaviour line [%i/%i] '%s'\n"), i+1, behaviour_lines.size(), behaviour_lines.get(i).c_str());
+        Serial.flush(); Serial.flush(); Serial.flush();
+        //myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
+        myFile.println(behaviour_lines.get(i).c_str());
       }
-      if (debug) Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size());
+      //if (debug) 
+      Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size()); Serial_flush();
+      Serial.flush(); Serial.flush(); Serial.flush(); 
       myFile.println(F("; end sequence"));
 
+      // save parameter input states
+      Serial_println(F("Saving parameter inputs..")); Serial_flush();
+      myFile.println(F("; parameter inputs"));
+      LinkedList<String> parameter_input_lines = LinkedList<String>();
+      parameter_manager->save_pattern_parameter_inputs_add_lines(&parameter_input_lines);
+      for (unsigned int i = 0 ; i < parameter_input_lines.size() ; i++) {
+        //if (debug) 
+        Serial_printf(F("\twriting parameter input line [%i/%i] '%s'\n"), i+1, parameter_input_lines.size(), parameter_input_lines.get(i).c_str());
+        //myFile.printf(F("%s\n"), parameter_input_lines.get(i).c_str());
+        myFile.println(parameter_input_lines.get(i).c_str());
+      }
+      myFile.println(F("; end parameter inputs"));
+      Serial.println(F("Finished saving parameter inputs.")); Serial_flush();
+      
       // all done -- close the file
       myFile.close();
       //if (irqs_enabled) __enable_irq();
       //Serial.println(F("Finished saving."));
 
       //sequence_fileviewer->debug = debug;
-      update_pattern_filename(String(filename));
+      //update_pattern_filename(String(filename));
 
       messages_log_add(String("Saved to project : pattern ") + String(project_number) + " : " + String(pattern_number));
 
       #endif
     }
     if (debug) Serial.println("finishing save_pattern");
+
+    Serial.printf("save_pattern took %i micros\n", micros()-micros_start);
 
     return true;
     #endif
@@ -358,7 +380,10 @@ namespace storage {
       return;
     } else if (project->isLoadParameterInputOptions() && parameter_manager->load_parse_line(line)) {
       return;
-    }
+    } /*else {
+      // silently ignore for testing
+      return;
+    }*/
     messages_log_add(String("Ignoring line '") + line + String("'"));
   }
 
@@ -385,8 +410,12 @@ namespace storage {
       // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
       File myFile;   
-      Serial.printf(F("load_pattern: load_pattern(%i,%i) opening %s\n"), project_number, pattern_number, filename); Serial_flush();
+      Serial_printf(F("load_pattern: load_pattern(%i,%i) opening %s\n"), project_number, pattern_number, filename); Serial_flush();
+      uint32_t start_time = micros();
       myFile = SD.open(filename, FILE_READ);
+      uint32_t time_to_open = micros()-start_time;
+      Serial_printf(F("load_pattern: opened file in %i micros\n"), time_to_open); Serial_flush();
+     
       clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
       /*if(project.isLoadBehaviourOptions()) {
@@ -400,15 +429,48 @@ namespace storage {
         return false;
       }
       myFile.setTimeout(0);
+      /*char *file_contents = (char *)malloc(myFile.size()+1);
+      if (!file_contents) {
+        Serial_println(F("load_pattern: Error: couldn't allocate memory for file_contents")); Serial_flush();
+        myFile.close();
+        global_load_lock = already_loading = false;
+        return false;
+      }
+
+      myFile.readBytes(file_contents, myFile.size());
+      myFile.close();
+
+      char *line_start = file_contents;
+      char *line_end = nullptr;
+      while (line_start && *line_start) {
+        line_end = strchr(line_start, '\n');
+        if (line_end) {
+          *line_end = '\0';
+        }
+        String line = String(line_start);
+        //Serial.printf(F("load_pattern: parsing line: %s\n"), line.c_str()); Serial_flush();
+        load_pattern_parse_line(line, output);
+        //Serial.printf(F("load_pattern: finished load_pattern_parse_line\n")); Serial_flush();
+        if (line_end) {
+          line_start = line_end + 1;
+        } else {
+          line_start = nullptr;
+        }
+      }
+
+      free(file_contents);
+      */
 
       String line;
       while (line = myFile.readStringUntil('\n')) {
+        //Serial.printf(F("load_pattern: parsing line: %s\n"), line.c_str()); Serial_flush();
         load_pattern_parse_line(line, output);
+        //Serial.printf(F("load_pattern: finished load_pattern_parse_line\n")); Serial_flush(); Serial_flush();
       }
-      Serial.println(F("load_pattern: Closing file..")); Serial_flush();
+      Serial_println(F("load_pattern: Closing file..")); Serial_flush();
       myFile.close();
       //if (irqs_enabled) __enable_irq();
-      Serial.println(F("load_pattern: File closed")); Serial_flush();
+      Serial_println(F("load_pattern: File closed")); Serial_flush();
 
       #ifdef ENABLE_APCMINI_DISPLAY
         //redraw_immediately = true;

@@ -104,6 +104,7 @@ class DeviceBehaviourManager {
                 #endif
 
                 // loop over the registered behaviours and if the correct one is found, set it up
+                // todo: replace with hashmap lookup?
                 const unsigned int size = behaviours_usb->size();
                 for (unsigned int i = 0 ; i < size ; i++) {
                     DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);

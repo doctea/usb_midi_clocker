@@ -211,18 +211,21 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     // parameter handling shit
     LinkedList<FloatParameter*> *parameters = new LinkedList<FloatParameter*>();
     virtual LinkedList<FloatParameter*> *get_parameters () {
-        if (parameters==nullptr || parameters->size()==0)
+        if (parameters==nullptr || parameters->size()==0) {
             this->initialise_parameters();
+
+            // set up parameters hash
+            this->parameters_hash = new Hashtable<String, FloatParameter*>();
+            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
+                Serial.printf("behaviour_base#initialise_parameters for '%s': adding parameter '%s' to hash\n", this->get_label(), parameters->get(i)->label);
+                FloatParameter *param = parameters->get(i);
+                this->parameters_hash->put(String(param->label), param);
+            }            
+        }
         return parameters;
     }
     virtual LinkedList<FloatParameter*> *initialise_parameters() {
-        // set up parameters hash
-        this->parameters_hash = new Hashtable<String, FloatParameter*>();
-        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-            FloatParameter *param = parameters->get(i);
-            this->parameters_hash->put(String(param->label), param);
-        }
-
+        //Serial.printf("behaviour_base#initialise_parameters for '%s'..\n", this->get_label());
         return parameters;
     }
     virtual bool has_parameters() {
@@ -372,7 +375,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
-        if (debug) Serial.printf("PARAMETERS\tload_parse_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
+        if (debug) Serial.printf("DeviceBehaviourUltimateBase\tload_parse_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
 
         // first check the behaviour's custom project key values
         if (this->parse_project_key_value(key, value)) {
@@ -392,22 +395,24 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             String stripped_key = key.substring(strlen(prefix));
             String parameter_name = stripped_key.substring(0, stripped_key.indexOf('/'));
 
-            // Serial.printf(
-            //     "behaviour_base#load_parse_key_value: looking up parameter '%s' in parameters hash @%p..\n", 
-            //     parameter_name.c_str(), 
-            //     this->parameters_hash
-            // );
-            // Serial_flush();
+            if (debug) {
+                Serial_printf(
+                    "behaviour_base#load_parse_key_value: looking up parameter '%s' in parameters hash @%p..\n", 
+                    parameter_name.c_str(), 
+                    this->parameters_hash
+                );
+                Serial_flush();
+            }
 
             if (this->parameters_hash->containsKey(parameter_name)) {
+                if (debug) Serial_printf("behaviour_base#load_parse_key_value: parameter '%s' found in parameters hash!\n", parameter_name.c_str());
                 FloatParameter *parameter = *this->parameters_hash->get(parameter_name);
-                if (parameter!=nullptr) {
-                    Serial_flush();
-                    if (parameter->load_parse_key_value(key, value)) {
-                        if (debug) Serial_printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
-                        return true;
-                    }
+                if (parameter->load_parse_key_value(key, value)) {
+                    if (debug) Serial_printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
+                    return true;
                 }
+            } else {
+                if (debug) Serial.printf("WARNING: behaviour_base#load_parse_key_value: parameter '%s' not found in parameters hash!\n", parameter_name.c_str());
             }
         }
         if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));

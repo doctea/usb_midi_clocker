@@ -139,7 +139,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
         // initialises sequencer/pattern parameters and add them to the host object's parameters list so that they will get saved and reloaded
         LinkedList<FloatParameter*> *sequencer_parameters = sequencer->getParameters(); 
-        for (unsigned int i = 0 ; i <sequencer_parameters->size() ; i++) {
+        for (unsigned int i = 0 ; i < sequencer_parameters->size() ; i++) {
             this->parameters->add(sequencer_parameters->get(i));
         }
 

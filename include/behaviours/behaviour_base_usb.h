@@ -24,6 +24,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
         /*virtual bool matches_identifiers(uint16_t vid, uint16_t pid) {
             return vid==this->vid && pid==this->pid;
         }*/
+        // todo: replace with a hashmap
         virtual bool matches_identifiers(uint32_t packed_id) {
             return (this->get_packed_id()==packed_id);
         }
