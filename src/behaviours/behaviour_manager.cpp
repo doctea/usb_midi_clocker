@@ -21,6 +21,7 @@
 #include "behaviours/behaviour_neutron.h"
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
+#include "behaviours/behaviour_kawair50.h"
 
 #include "behaviours/behaviour_cvinput.h"
 #include "behaviours/behaviour_cvoutput.h"
@@ -114,6 +115,11 @@ void setup_behaviour_manager() {
             behaviour_manager->registerBehaviour(behaviour_beatstep_2);
         #endif
         //behaviour_beatstep->debug = true;
+    #endif
+
+    #ifdef ENABLE_KAWAI_R50
+        behaviour_kawair50 = new DeviceBehaviour_KawaiR50();
+        behaviour_manager->registerBehaviour(behaviour_kawair50);
     #endif
 
     #ifdef ENABLE_KEYSTEP

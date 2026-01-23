@@ -24,7 +24,8 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
   int bank = -1;
 
   bool sequencer_enabled = true;
-  bool midi_notes_enabled = true;   // enable reception of midi notes from midi mapper matrix
+  bool receive_midi_notes_enabled = true;   // enable reception of midi notes from midi mapper matrix
+  bool send_midi_notes_enabled = true;      // enable sending of midi notes to midi mapper matrix
 
   bool sequencer_track_active[NUM_SEQUENCES];   // all are set to true in constructor
 
@@ -60,17 +61,27 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
         }
     }
 
-    virtual bool is_midi_notes_enabled() {
-        return this->midi_notes_enabled;
+    virtual bool is_receive_midi_notes_enabled() {
+        return this->receive_midi_notes_enabled;
     }
-    virtual void set_midi_notes_enabled(bool v = true) {
-        this->midi_notes_enabled = v;
+    virtual void set_receive_midi_notes_enabled(bool v = true) {
+        this->receive_midi_notes_enabled = v;
         if (!v) {
             this->clear_all_outputs();
         }
     }
 
-    //virtual bool receives_midi_notes()  { return false; }
+    virtual bool is_send_midi_notes_enabled() {
+        return this->send_midi_notes_enabled;
+    }
+    virtual void set_send_midi_notes_enabled(bool v = true) {
+        this->send_midi_notes_enabled = v;
+        // if (v==false) {
+        //     this->all_notes_off();
+        // }
+    }
+
+    virtual bool receives_midi_notes() override{ return is_receive_midi_notes_enabled(); }
     virtual bool transmits_midi_notes() override { return true; }
     virtual bool transmits_midi_clock() override { return true; }
 
@@ -94,10 +105,10 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
         menuitems->add(new LambdaToggleControl(
             "Enable MIDI Notes",
             [=](bool v) -> void { 
-                this->set_midi_notes_enabled(v);
+                this->set_receive_midi_notes_enabled(v);
             },
             [=](void) -> bool { 
-                return this->is_midi_notes_enabled(); 
+                return this->is_receive_midi_notes_enabled(); 
             }
         ));
 
@@ -264,6 +275,15 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
         }
     }
 
+    int8_t get_midi_note_for_gate_number(int8_t gate_number) {
+        for (uint8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
+            if (map_note_to_gate[i] == gate_number) {
+                return i;
+            }
+        }
+        return NOTE_OFF;
+    }
+
     int8_t get_default_gate_number_for_note(int8_t note) {
         switch(note) {
             case GM_NOTE_ACOUSTIC_BASS_DRUM:
@@ -319,7 +339,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     }
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (!this->is_midi_notes_enabled()) return;
+        if (!this->is_receive_midi_notes_enabled()) return;
         // note: turns out that if the duration of a received note is very short -- ie 1 tick or less so the note on and off get received in the same tick -- then it can be effectively ignored, leading to missed hits...
         //          work around this by using minimum duration of 2 ticks; maybe can implement a more robust fix in gate interface code by latching to ensure that 'GATE ONs' always last at least 1 tick before going off..?
         // translate MIDI drum notes to gates
@@ -333,7 +353,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.printf("%s#sendNoteOff(note=%i, velocity=%i, channel=%i)\n", this->get_label(), note, velocity, channel);
-        if (!this->is_midi_notes_enabled()) return;
+        if (!this->is_receive_midi_notes_enabled()) return;
         // translate MIDI drum notes to gates
         if (channel==GM_CHANNEL_DRUMS) {
             int gate = midi_drum_note_to_gate_number(note);

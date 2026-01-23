@@ -201,6 +201,10 @@
     #define ENABLE_BEHRINGER_EDGE_SERIAL    MIDI5
 #endif
 
+#ifdef PCB_GO
+    #define ENABLE_KAWAI_R50         MIDI4
+#endif
+
 #if defined(ENABLE_SKULPTSYNTH_USB) || defined(ENABLE_SKULPTSYNTH_SERIAL)
     #define ENABLE_SKULPTSYNTH
 #endif

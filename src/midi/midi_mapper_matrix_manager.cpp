@@ -17,6 +17,7 @@
 #include "behaviours/behaviour_lestrum.h"
 #include "behaviours/behaviour_drumkit.h"
 #include "behaviours/behaviour_dptlooper.h"
+#include "behaviours/behaviour_kawair50.h"
 #include "behaviours/behaviour_midimuso_4pv.h"
 #include "behaviours/behaviour_midimuso_4mv.h"
 
@@ -93,8 +94,11 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     // for remembering which serial midi connections are mapped to defined devices
-    bool midi_out_used[NUM_MIDI_OUTS] = {false, false, false, false, false, false, false, false};
-    bool midi_in_used[NUM_MIDI_OUTS] = {false, false, false, false, false, false, false, false};
+    bool midi_out_used[NUM_MIDI_OUTS]; //= {false, false, false, false, false, false, false, false};
+    bool midi_in_used[NUM_MIDI_OUTS]; // = {false, false, false, false, false, false, false, false};
+    for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
+        midi_out_used[i] = midi_in_used[i] = false;
+    }
 
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         char label[30];
@@ -141,6 +145,12 @@ void setup_midi_mapper_matrix_manager() {
             if (&ENABLE_BEHRINGER_EDGE_DEDICATED==midi_out_serial[i]) {
                 midi_out_used[i] = true;
                 // clock only so don't register as a target
+            }
+        #endif
+        #ifdef ENABLE_KAWAI_R50
+            if (&ENABLE_KAWAI_R50==midi_out_serial[i]) {
+                midi_out_used[i] = true;
+                behaviour_kawair50->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("S4 : KR50 : ch10", behaviour_kawair50, 10));
             }
         #endif
         #ifdef ENABLE_MIDIMUSO_4MV
@@ -324,6 +334,8 @@ void setup_midi_mapper_matrix_manager() {
         //Serial.printf("ENABLE_EUCLIDIAN: connecting source_id=%i to target_id=%i\n", behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
         midi_matrix_manager->connect(behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
     #endif
+
+    behaviour_sequencer_gates->source_id = midi_matrix_manager->register_source("Gate Sequencer");
 
     #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_PADS)
         midi_matrix_manager->register_source(behaviour_apcmini, "APCMini Pads");

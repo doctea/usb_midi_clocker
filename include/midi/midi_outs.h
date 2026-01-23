@@ -7,7 +7,9 @@
 #include "midi/MidiMappings.h"
 
 // todo: make this configurable so that eg we can have pcb_go environment only using first 4 MIDI ports
-#define NUM_MIDI_OUTS   8
+#ifndef NUM_MIDI_OUTS
+    #define NUM_MIDI_OUTS   8
+#endif
 
 // Create the Serial MIDI ports
 #if NUM_MIDI_OUTS>0

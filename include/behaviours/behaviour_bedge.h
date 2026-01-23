@@ -9,7 +9,7 @@
 
 #include "behaviours/behaviour_clocked.h"
 
-class DeviceBehaviour_Bedge_Serial : virtual public DeviceBehaviourSerialBase,virtual  public DividedClockedBehaviour {
+class DeviceBehaviour_Bedge_Serial : virtual public DeviceBehaviourSerialBase, virtual  public DividedClockedBehaviour {
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;
 
     public:
