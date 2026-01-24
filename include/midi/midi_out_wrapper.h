@@ -343,6 +343,13 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
         virtual void actual_sendPitchBend(int bend, int8_t channel) override {
             output->sendPitchBend(bend, channel);
         }
+
+        virtual void stop_all_notes(bool force = false) {
+            // this added when ensuring that disconnecting CVOutput behaviour stops all notes - *might not actually be necessary*
+            if (this->debug) Serial_printf(F("MIDIOutputWrapper_Behaviour#stop_all_notes in %s...\n"), label);
+            MIDIOutputWrapper::stop_all_notes(force);
+            output->killCurrentNote();
+        }
 };
 
 MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, int8_t cable_number, int8_t channel = 1);

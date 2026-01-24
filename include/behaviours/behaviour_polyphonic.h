@@ -43,6 +43,15 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
         return note_slot;
     }
 
+    virtual void killCurrentNote() override {
+        for (int i = 0 ; i < max_voice_count ; i++) {
+            if (is_valid_note(voices[i])) {
+                this->sendNoteOff(voices[i], 0, i+1);
+                voices[i] = NOTE_OFF;
+            }
+        }        
+    }
+
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         if (!is_valid_note(note)) return;
         if (channel==CHANNEL_ROUND_ROBIN) {

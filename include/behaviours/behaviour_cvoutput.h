@@ -159,6 +159,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
         using PolyphonicBehaviour::sendNoteOn;
         using PolyphonicBehaviour::sendNoteOff;
+        using PolyphonicBehaviour::killCurrentNote;
 
         /*virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             // TODO: logic to round-robin the outputs and track notes that are playing etc
