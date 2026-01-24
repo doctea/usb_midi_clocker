@@ -40,7 +40,7 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
 
     class DrumMapEntry {
         public:
-            String name;
+            char name[32] = "Unknown";
 
             bool enabled = true;
 
@@ -50,12 +50,12 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
             uint8_t current_note_index = 0; // which of the possible notes are we currently using
 
             DrumMapEntry(
-                String name,
+                char *name,
                 uint8_t incoming_midi_note, 
                 uint8_t *possible_midi_notes, 
                 uint8_t num_possible_notes
             ) {
-                this->name = name;
+                strncpy(this->name, name, 31);
                 this->incoming_midi_note = incoming_midi_note;
                 this->possible_midi_notes = possible_midi_notes;
                 this->num_possible_notes = num_possible_notes;
@@ -66,7 +66,9 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
                 if (!this->enabled) return NOTE_OFF;
                 if (this->num_possible_notes == 0) return NOTE_OFF;
 
+                //Serial.printf("DrumMapEntry %s: mapping incoming note %i...", this->name, this->incoming_midi_note); Serial.flush();
                 uint8_t note = this->possible_midi_notes[this->current_note_index];
+                //Serial.printf(" mapped to note %i\n", note); Serial.flush();
                 // advance to next note in list TODO: make this configurable (eg random, round robin, etc)
                 //this->current_note_index = (this->current_note_index + 1) % this->num_possible_notes;
                 return note;
@@ -76,21 +78,39 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
     class DrumMapper {
         public:
             //Hashtable<uint8_t, DrumMapEntry*> drum_map;
-            DrumMapEntry *drum_map_storage[128] = { nullptr };
+            DrumMapEntry *drum_map_storage[MIDI_NUM_NOTES];
+
+            DrumMapper() {
+                for (int i = 0 ; i < MIDI_NUM_NOTES ; i++) {
+                    drum_map_storage[i] = nullptr;
+                }
+            }
 
             DrumMapEntry *get_mapped_entry_for_incoming_note(uint8_t incoming_note) {
+                //Serial.printf("DrumMapper: get_mapped_entry_for_incoming_note for incoming note %i\n", incoming_note); Serial.flush();
                 if (!is_valid_note(incoming_note)) {
                     return nullptr;
                 }
                 if (drum_map_storage[incoming_note] == nullptr) {
+                    // Serial.printf("DrumMapper: no mapping for incoming note %i\n", incoming_note); Serial.flush();
                     return nullptr;
                 }
+                /*Serial.flush();
+                Serial.printf("DrumMapper: get_mapped_entry_for_incoming_note found entry for incoming note %i\n", incoming_note);
+                Serial.flush();*/
                 return drum_map_storage[incoming_note];
             }
 
             int8_t get_mapped_note_for_incoming_note(uint8_t incoming_note) {
                 DrumMapEntry *entry = get_mapped_entry_for_incoming_note(incoming_note);
-                if (entry==nullptr) return NOTE_OFF;
+                //Serial.printf("DrumMapper: found mapping for incoming note %i at %p\n", incoming_note, entry); Serial.flush();
+
+                if (entry==nullptr) {
+                    //Serial.printf("DrumMapper: no mapping entry for incoming note %i, returning NOTE_OFF\n", incoming_note);                   Serial.flush();
+                    return NOTE_OFF;
+                }
+
+                //Serial.printf("DrumMapper: found mapping for incoming note %i at %p\n", incoming_note, entry);                Serial.flush();
 
                 return entry->get_mapped_note();
             }
@@ -213,12 +233,20 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
             GM_NOTE_ELECTRIC_BASS_DRUM, 
             new DrumMapEntry("Kick", GM_NOTE_ELECTRIC_BASS_DRUM, kick_notes, sizeof(kick_notes))
         );
+        drum_mapper.add_drum_map(
+            GM_NOTE_ACOUSTIC_BASS_DRUM, 
+            drum_mapper.drum_map_storage[GM_NOTE_ELECTRIC_BASS_DRUM] // share same mapping as electric bass drum
+        );
 
         // snare
         uint8_t *snare_notes = new uint8_t[6]{24, 26, 28, 39, 40, 41};
         drum_mapper.add_drum_map(
             GM_NOTE_ACOUSTIC_SNARE, 
             new DrumMapEntry("Snare", GM_NOTE_ACOUSTIC_SNARE, snare_notes, sizeof(snare_notes))
+        );
+        drum_mapper.add_drum_map(
+            GM_NOTE_ELECTRIC_SNARE, 
+            drum_mapper.drum_map_storage[GM_NOTE_ACOUSTIC_SNARE] // share same mapping as acoustic snare
         );
 
         // hand clap
@@ -302,28 +330,32 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
 
     int8_t get_kawai_note_for_gm_drum_note(int8_t gm_note) {
         // use drummapper to map incoming GM drum note to Kawai R50 note
-        DrumMapEntry *entry = drum_mapper.get_mapped_entry_for_incoming_note(gm_note);
-        return entry != nullptr ? entry->get_mapped_note() : NOTE_OFF;
+        return drum_mapper.get_mapped_note_for_incoming_note(gm_note);
     }
 
     // override SendNoteOn to translate GM_DRUM notes to Kawai R50 notes
     // and send via the DeviceBehaviourSerialBase output device
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // translate GM_DRUM note to Kawai R50 note
-        if (note >= 21 && note <= 108) {
+        if (note >= 21 && note <= 92) {
             // Kawai R50 uses a different note mapping
-            // we'll just pass through the note for now
+            //Serial.printf("KawaiR50: sendNoteOn GM note %i vel %i ch %i\n", note, velocity, channel); Serial.flush();
             note = get_kawai_note_for_gm_drum_note(note);
-            DeviceBehaviourSerialBase::actualSendNoteOn(note, velocity, channel);
+            if (!is_valid_note(note)) {
+                //Serial.printf("KawaiR50: mapped to invalid note %i, not sending\n", note); Serial.flush();
+                return;
+            }
+            //Serial.printf("KawaiR50: mapped to Kawai note %i (%s)\n", note, kawair50_note_names[note]); Serial.flush();
+            DeviceBehaviourSerialBase::actualSendNoteOn(note, velocity, GM_CHANNEL_DRUMS);
         }
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // translate GM_DRUM note to Kawai R50 note
-        if (note >= 21 && note <= 108) {
+        if (note >= 21 && note <= 92) {
             // Kawai R50 uses a different note mapping
             // we'll just pass through the note for now
             note = get_kawai_note_for_gm_drum_note(note);
-            DeviceBehaviourSerialBase::actualSendNoteOff(note, velocity, channel);
+            DeviceBehaviourSerialBase::actualSendNoteOff(note, velocity, GM_CHANNEL_DRUMS);
         }
     }
 

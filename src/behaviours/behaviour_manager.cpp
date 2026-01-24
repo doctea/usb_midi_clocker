@@ -120,6 +120,7 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_KAWAI_R50
         behaviour_kawair50 = new DeviceBehaviour_KawaiR50();
         behaviour_manager->registerBehaviour(behaviour_kawair50);
+        behaviour_kawair50->connect_device_output(&ENABLE_KAWAI_R50);
     #endif
 
     #ifdef ENABLE_KEYSTEP
