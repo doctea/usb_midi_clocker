@@ -68,7 +68,7 @@
         #define MENU_MS_BETWEEN_REDRAW  75
     #elif defined (TFT_BODMER)
         #define DisplayTranslator_Configured DisplayTranslator_Bodmer
-        #define MENU_MS_BETWEEN_REDRAW  75
+        #define MENU_MS_BETWEEN_REDRAW  20
     #elif defined(TFT_ILI9341_T3N)
         #define DisplayTranslator_Configured DisplayTranslator_ILI9341_T3N
         #define MENU_MS_BETWEEN_REDRAW  20
