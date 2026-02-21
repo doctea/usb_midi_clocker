@@ -186,23 +186,23 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         if (channel==BASS_CHANNEL) {
-            if (debug) Serial_printf("actualSendNoteOn to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            if (debug) Serial_printf("actualSendNoteOn to bass: channel %i, note %i, velocity %i (source_id_bass=%i)\n", channel, note, velocity, this->source_id_bass);
             note += 12 * bass_octave;
             if(is_valid_note(note)) {
-                midi_matrix_manager->processNoteOn(this->source_id_bass, note, velocity, 1);
+                midi_matrix_manager->processNoteOn(this->source_id_bass, note, velocity); //, 1);
             }
         } else if (channel==TOPLINE_CHANNEL) {
-            if (debug) Serial_printf("actualSendNoteOn to topline: channel %i, note %i, velocity %i\n", channel, note, velocity);
+            if (debug) Serial_printf("actualSendNoteOn to topline: channel %i, note %i, velocity %i (source_id_topline=%i)\n", channel, note, velocity, this->source_id_topline);
             note += 12 * topline_octave;
             if(is_valid_note(note)) {
-                midi_matrix_manager->processNoteOn(this->source_id_topline, note, velocity, 1);
+                midi_matrix_manager->processNoteOn(this->source_id_topline, note, velocity); //, 1);
             }
         } else {
-            midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
+            midi_matrix_manager->processNoteOn(this->source_id, note, velocity); //, channel);
             // send the same chord sequence to the second source_id 5 octaves up
             note += 12 * chord_octave;
             if (is_valid_note(note)) {
-                midi_matrix_manager->processNoteOn(this->source_id_chord_octave, note, velocity, channel);
+                midi_matrix_manager->processNoteOn(this->source_id_chord_octave, note, velocity); //, channel);
             }
         }
     }
@@ -211,20 +211,20 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             note += 12 * bass_octave;
             if (debug) Serial_printf("actualSendNoteOff to bass: channel %i, note %i, velocity %i\n", channel, note, velocity);
             if(is_valid_note(note)) {
-                midi_matrix_manager->processNoteOff(this->source_id_bass, note, velocity, 1);
+                midi_matrix_manager->processNoteOff(this->source_id_bass, note, velocity); //, 1);
             }
         } else if (channel==TOPLINE_CHANNEL) {
             if (debug) Serial_printf("actualSendNoteOff to topline: channel %i, note %i, velocity %i\n", channel, note, velocity);
             note += 12 * topline_octave;
             if(is_valid_note(note)) {
-                midi_matrix_manager->processNoteOff(this->source_id_topline, note, velocity, 1);
+                midi_matrix_manager->processNoteOff(this->source_id_topline, note, velocity); //, 1);
             }
         } else {
             midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
             // send the same chord sequence to the second source_id 5 octaves up
             note += 12 * chord_octave;
             if (is_valid_note(note)) {
-                midi_matrix_manager->processNoteOff(this->source_id_chord_octave, note, velocity, channel);
+                midi_matrix_manager->processNoteOff(this->source_id_chord_octave, note, velocity); //, channel);
             }
         }
     }

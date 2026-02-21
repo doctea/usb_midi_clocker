@@ -50,7 +50,7 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
             uint8_t current_note_index = 0; // which of the possible notes are we currently using
 
             DrumMapEntry(
-                char *name,
+                const char *name,
                 uint8_t incoming_midi_note, 
                 uint8_t *possible_midi_notes, 
                 uint8_t num_possible_notes
