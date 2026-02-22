@@ -70,11 +70,14 @@ namespace storage {
     };
   } savestate;
 
+  char *get_pattern_filename(int project_number, int pattern_number);
+  char *get_project_settings_filename(int project_number);
+
   bool save_pattern(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
   bool load_pattern(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/
-  void load_pattern_parse_line(String line, savestate *output);
+  bool load_pattern_parse_line(String line, savestate *output, bool debug = false);
   FLASHMEM void setup_storage();
 
   FLASHMEM void log_crashreport();

@@ -48,6 +48,8 @@ void do_tick(uint32_t ticks);
   #define ATOMIC(X) X
 #endif
 
+#include "debug_console.h"
+
 //#include "usb.h"
 #include "midi/midi_pc_usb.h"
 
@@ -378,6 +380,8 @@ void loop() {
         Serial.setTimeout(0);
     }
   }
+
+  update_serial();
 
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
   if (debug_stress_sequencer_load && ticks % 6 == 1)  {

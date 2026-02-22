@@ -42,10 +42,8 @@ class Project {
         #ifdef ENABLE_SD
             Serial.println(F("initialise_pattern_slots starting.."));
             for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
-                char filepath[MAX_FILEPATH];
-                snprintf(filepath, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, this->current_project_number, i);
-                pattern_slot_has_file[i] = SD.exists(filepath);
-                Serial_printf(F("\tpattern_slot_has_file[i] = %i for %s\n"), pattern_slot_has_file[i], filepath);
+                pattern_slot_has_file[i] = SD.exists(storage::get_pattern_filename(this->current_project_number, i));
+                Serial_printf(F("\tpattern_slot_has_file[i] = %i for %s\n"), pattern_slot_has_file[i], get_pattern_filename(this->current_project_number, i));
             }
             Serial_println(F("initialise_pattern_slots finished"));
         #else
@@ -197,8 +195,8 @@ class Project {
         bool save_selected_pattern() {
             return save_pattern(selected_pattern_number);
         }
-        bool load_pattern() {
-            return load_pattern(selected_pattern_number);
+        bool load_pattern(bool debug = false) {
+            return load_pattern(selected_pattern_number, debug);
         }
         bool save_pattern() {
             return save_pattern(selected_pattern_number);
@@ -207,10 +205,10 @@ class Project {
             return this->load_pattern(selected_pattern_number);
         }
 
-        bool load_pattern(int selected_pattern_number) {
+        bool load_pattern(int selected_pattern_number, bool debug = false) {
             if (debug) { Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
             uint32_t micros_start = micros();
-            bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state);
+            bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state, debug);
             if (result)
                 loaded_pattern_number = selected_pattern_number;
             uint32_t micros_end = micros();
@@ -218,10 +216,10 @@ class Project {
             Serial_flush();
             return result;
         }
-        bool save_pattern(int selected_pattern_number) {
+        bool save_pattern(int selected_pattern_number, bool debug = false) {
             //this->debug = true;
             if (debug) { Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
-            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state, this->debug);
+            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state, debug);
             if (result) {
                 pattern_slot_has_file[selected_pattern_number] = true;
                 loaded_pattern_number = selected_pattern_number;
@@ -441,9 +439,12 @@ class Project {
             return true;
         }
 
-        void load_project_parse_line(String line) {
+        void load_project_parse_line(String line, bool debug = false) {
             if (line.charAt(0)==';') 
                 return;  // skip comment lines
+
+            line = line.replace('\n',"");
+            line = line.replace('\r',"");
 
             String key = line.substring(0, line.indexOf('='));
             String value = line.substring(line.indexOf('=')+1);
@@ -453,7 +454,9 @@ class Project {
 
             if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
                 // legacy save format, pre-matrix
-                Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
+                if (debug) {
+                    Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
+                }
                 line = line.remove(0,String(F("midi_output_map=")).length());
                 int split = line.indexOf('|');
                 String source_label = line.substring(0,split);
@@ -468,6 +471,9 @@ class Project {
                 //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
                 //Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str()); Serial_flush();
                 return;
+            }
+            if (debug) {
+                Serial.printf(F("project read line '%s', but didn't know how to process it\n"), line.c_str());
             }
             messages_log_add(String("Unknown Project line '") + line + String("'"));
         }

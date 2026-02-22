@@ -214,7 +214,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         if (parameters==nullptr || parameters->size()==0) {
             this->initialise_parameters();
 
-            // set up parameters hash
+            // set up parameters hashload
             this->parameters_hash = new Hashtable<String, FloatParameter*>();
             for (unsigned int i = 0 ; i < parameters->size() ; i++) {
                 Serial.printf("behaviour_base#initialise_parameters for '%s': adding parameter '%s' to hash\n", this->get_label(), parameters->get(i)->label);
@@ -375,6 +375,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
     // ask behaviour to process the key/value pair
     virtual bool load_parse_key_value(String key, String value) {
+        //bool debug = true;
         if (debug) Serial.printf("DeviceBehaviourUltimateBase\tload_parse_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
 
         // first check the behaviour's custom project key values
@@ -388,12 +389,13 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
 
         // then check the 'modulatable parameters' (ie those from parameters library))
-        static const char *prefix = "parameter/";
+        static const char *prefix = "parameter~";
         if (this->has_parameters() && key.startsWith(prefix)) {
             // its a parameter key, targeted for this behaviour
+            if (debug) Serial.printf("behaviour_base#load_parse_key_value: key starts with '%s', looking for parameter..\n", prefix);
 
             String stripped_key = key.substring(strlen(prefix));
-            String parameter_name = stripped_key.substring(0, stripped_key.indexOf('/'));
+            String parameter_name = stripped_key.substring(0, stripped_key.indexOf('~'));
 
             if (debug) {
                 Serial_printf(

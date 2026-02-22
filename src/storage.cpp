@@ -212,7 +212,9 @@ namespace storage {
       }
 
       // save behaviour extensions
-      Serial_println(F("Saving behaviour extensions..")); Serial_flush();
+      if (debug) {
+        Serial_println(F("Saving behaviour extensions..")); Serial_flush();
+      }
       myFile.println(F("; behaviour extensions")); 
       LinkedList<String> behaviour_lines = LinkedList<String>();
       if (debug) Serial.println("calling save_pattern_add_lines..");
@@ -220,19 +222,23 @@ namespace storage {
       if (debug) { Serial.println("got behaviour_lines to save.."); Serial.flush(); }
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
         //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
-        //if (debug) 
-        Serial_printf(F("\twriting behaviour line [%i/%i] '%s'\n"), i+1, behaviour_lines.size(), behaviour_lines.get(i).c_str());
-        Serial.flush(); Serial.flush(); Serial.flush();
+        if (debug) {
+          Serial_printf(F("\twriting behaviour line [%i/%i] '%s'\n"), i+1, behaviour_lines.size(), behaviour_lines.get(i).c_str());
+          Serial.flush(); Serial.flush(); Serial.flush();
+        }
         //myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
         myFile.println(behaviour_lines.get(i).c_str());
       }
-      //if (debug) 
-      Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size()); Serial_flush();
-      Serial.flush(); Serial.flush(); Serial.flush(); 
+      if (debug) {
+        Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size()); Serial_flush();
+        Serial.flush(); Serial.flush(); Serial.flush(); 
+      }
       myFile.println(F("; end sequence"));
 
       // save parameter input states
-      Serial_println(F("Saving parameter inputs..")); Serial_flush();
+      if (debug) {
+        Serial_println(F("Saving parameter inputs..")); Serial_flush();
+      }
       myFile.println(F("; parameter inputs"));
       LinkedList<String> parameter_input_lines = LinkedList<String>();
       parameter_manager->save_pattern_parameter_inputs_add_lines(&parameter_input_lines);
@@ -319,48 +325,51 @@ namespace storage {
     load_state_output = output;
   }*/
 
-  void load_pattern_parse_line(String line, savestate *output) {
-    bool debug = false;
+  bool load_pattern_parse_line(String line, savestate *output, bool debug = false) {
+    line = line.replace('\n',"");
+    line = line.replace('\r',"");
+    
+    //bool debug = false;
     if (line.charAt(0)==';') {
-      return;  // skip comment lines
+      return true;  // skip comment lines
     } else if (line.startsWith(F("id="))) {
       output->id = (uint8_t) line.remove(0,String(F("id=")).length()).toInt();
       if (debug) Serial.printf(F("Read id %i\n"), output->id);
-      return;
+      return true;
     } else if (line.startsWith(F("size_clocks="))) {
       output->size_clocks = (uint8_t) line.remove(0,String(F("size_clocks=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_clocks %i\n"), output->size_clocks);
-      return;
+      return true;
     } else if (line.startsWith(F("size_sequences="))) {
       output->size_sequences = (uint8_t) line.remove(0,String(F("size_sequences=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_sequences %i\n"), output->size_sequences);
-      return;
+      return true;
     } else if (line.startsWith(F("size_steps="))) {
       output->size_steps = (uint8_t) line.remove(0,String(F("size_steps=")).length()).toInt();
       if (debug) Serial.printf(F("Read size_steps %i\n"), output->size_steps);
-      return;
+      return true;
     } else if (project->isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
       if (clock_multiplier_index>NUM_CLOCKS) {
         if (debug) Serial.println(F("Skipping clock_multiplier entry as exceeds NUM_CLOCKS"));
-        return;
+        return false;
       }
       output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String(F("clock_multiplier=")).length()).toInt();
       if (debug) Serial.printf(F("Read a clock_multiplier: %i\n"), output->clock_multiplier[clock_multiplier_index]);
       clock_multiplier_index++;
-      return;
+      return true;
     } else if (project->isLoadClockSettings() && line.startsWith(F("clock_delay="))) {
       if (clock_delay_index>NUM_CLOCKS) {
         if (debug) Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
-        return;
+        return false;
       }
       output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String(F("clock_delay=")).length()).toInt();      
       if (debug) Serial.printf(F("Read a clock_delay: %i\n"), output->clock_delay[clock_delay_index]);
       clock_delay_index++;
-      return;
+      return true;
     } else if (project->isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
       if (clock_delay_index>NUM_SEQUENCES) {
         if (debug) Serial.println(F("Skipping sequence_data entry as exceeds NUM_CLOCKS"));
-        return;
+        return false;
       }
       //output->clock_multiplier = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();      
       String data = line.remove(0,String(F("sequence_data=")).length());
@@ -375,21 +384,36 @@ namespace storage {
       }
       if (debug) Serial.println(']');
       sequence_data_index++;
-      return;
+      return true;
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      return;
+      if (debug) Serial_println(F("Parsed a line with behaviour_manager"));
+      return true;
     } else if (project->isLoadParameterInputOptions() && parameter_manager->load_parse_line(line)) {
-      return;
+      if (debug) Serial_println(F("Parsed a line with parameter_manager"));
+      return true;
     } /*else {
       // silently ignore for testing
       return;
     }*/
+    if (debug) Serial.printf(F("Unrecognised line in pattern file: '%s'\n"), line.c_str());
     messages_log_add(String("Ignoring line '") + line + String("'"));
+    return false;
   }
 
   //void update_pattern_filename(String filename);
 
-  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug) {
+  char *get_pattern_filename(int project_number, int pattern_number) {
+    static char filename[MAX_FILEPATH];
+    snprintf(filename, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, project_number, pattern_number);
+    return filename;
+  }
+  char *get_project_settings_filename(int project_number) {
+    static char filename[MAX_FILEPATH];
+    snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
+    return filename;
+  }
+
+  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug = false) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       #ifdef ENABLE_SD
       static volatile bool already_loading = false;
@@ -403,18 +427,17 @@ namespace storage {
       //bool irqs_enabled = __irq_enabled();
       //__disable_irq();
 
-      char filename[MAX_FILEPATH] = "";
-      snprintf(filename, MAX_FILEPATH, FILEPATH_PATTERN_FORMAT, project_number, pattern_number);
+      char *filename = get_pattern_filename(project_number, pattern_number);
 
       update_pattern_filename(String(filename));
       // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
       File myFile;   
-      Serial_printf(F("load_pattern: load_pattern(%i,%i) opening %s\n"), project_number, pattern_number, filename); Serial_flush();
+      if (debug) { Serial_printf(F("load_pattern: load_pattern(%i,%i) opening %s\n"), project_number, pattern_number, filename); Serial_flush(); }
       uint32_t start_time = micros();
       myFile = SD.open(filename, FILE_READ);
       uint32_t time_to_open = micros()-start_time;
-      Serial_printf(F("load_pattern: opened file in %i micros\n"), time_to_open); Serial_flush();
+      if (debug) { Serial_printf(F("load_pattern: opened file in %i micros\n"), time_to_open); Serial_flush(); }
      
       clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
 
@@ -423,7 +446,7 @@ namespace storage {
       }*/
 
       if (!myFile) {
-        Serial.printf(F("load_pattern: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
+        if (debug) Serial.printf(F("load_pattern: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
         //if (irqs_enabled) __enable_irq();
         global_load_lock = already_loading = false;
         return false;
@@ -462,21 +485,24 @@ namespace storage {
       */
 
       String line;
+      int line_count = 0;
+      int failed_line_count = 0;
       while (line = myFile.readStringUntil('\n')) {
-        //Serial.printf(F("load_pattern: parsing line: %s\n"), line.c_str()); Serial_flush();
-        load_pattern_parse_line(line, output);
-        //Serial.printf(F("load_pattern: finished load_pattern_parse_line\n")); Serial_flush(); Serial_flush();
+        if (debug) Serial.printf(F("load_pattern: parsing line %3i: '%s'\n"), line_count, line.c_str()); Serial_flush();
+        failed_line_count += load_pattern_parse_line(line, output, debug) ? 0 : 1;
+        if (debug) Serial.printf(F("load_pattern: finished load_pattern_parse_line %3i\n"), line_count); Serial_flush(); Serial_flush();
+        line_count++;
       }
-      Serial_println(F("load_pattern: Closing file..")); Serial_flush();
+      if (debug) Serial_printf(F("load_pattern: Closing file after %3i lines (%3i failed)\n"), line_count, failed_line_count); Serial_flush();
       myFile.close();
       //if (irqs_enabled) __enable_irq();
-      Serial_println(F("load_pattern: File closed")); Serial_flush();
+      if (debug) Serial_println(F("load_pattern: File closed")); Serial_flush();
 
       #ifdef ENABLE_APCMINI_DISPLAY
         //redraw_immediately = true;
       #endif
 
-      Serial.printf(F("load_pattern: Loaded pattern from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
+      if (debug) Serial_printf(F("load_pattern: Loaded pattern from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
       global_load_lock = already_loading = false;
       #endif
     }

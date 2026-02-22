@@ -389,8 +389,6 @@ class DeviceBehaviourManager {
         }
 
         bool load_parse_line(String line) {
-            line = line.replace('\n',"");
-            line = line.replace('\r',"");
             //Serial_printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
             int split = line.indexOf('=');
             if (split>=0) {
@@ -405,11 +403,11 @@ class DeviceBehaviourManager {
 
         bool load_parse_key_value(String key, String value) {
             static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
-            //Serial.printf("behaviour_manager#load_parse_key_value passed '%s','%s' while curerent_behaviour is @%p\n", key.c_str(), value.c_str(), current_behaviour);
+            //Serial.printf("behaviour_manager#load_parse_key_value passed '%s','%s' while current_behaviour is @%p\n", key.c_str(), value.c_str(), current_behaviour);
 
             if (key.equals(F("behaviour_start"))) {
                 DeviceBehaviourUltimateBase *d = this->find_behaviour_for_label(value);
-                //Serial_printf(F("found behaviour_start for '%s' with behaviour @%p\n"), value.c_str(), d); 
+                if (debug) Serial_printf(F("found behaviour_start for '%s' with behaviour @%p\n"), value.c_str(), d); 
                 current_behaviour = d;
                 return true;
             } else if (key.equals(F("behaviour_end"))) {
@@ -417,12 +415,14 @@ class DeviceBehaviourManager {
                 current_behaviour = nullptr;
                 return true;
             } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
-                //Serial_printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
+                if (debug) Serial_printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
                 return true;
             }
-            /*Serial_printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
-            if (current_behaviour==nullptr) Serial_printf("and not a behaviour ");
-            Serial_println();*/
+            if (debug) {
+                Serial_printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
+                if (current_behaviour==nullptr) Serial_printf("and no behaviour set");
+                Serial_println();
+            }
             return false;
         }
 

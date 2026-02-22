@@ -554,10 +554,12 @@ class MIDIMatrixManager {
         }
     }
 
-    bool load_parse_key_value(String key, String value) {
+    bool load_parse_key_value(String key, String value, bool debug_print = false) {
         if (key.equals(F("midi_matrix_map"))) {
             // midi matrix version
-            Serial_printf(F("----\nLoading midi_matrix_map line '%s=%s'\n"), key.c_str(), value.c_str());
+            if (debug_print) {
+                Serial_printf(F("----\nLoading midi_matrix_map line '%s=%s'\n"), key.c_str(), value.c_str());
+            }
             int split = value.indexOf('|');
             String source_label = value.substring(0,split);
             String target_label = value.substring(split+1,value.length());
