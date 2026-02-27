@@ -42,6 +42,8 @@
 
 #include "behaviours/behaviour_progression.h"
 
+#include "behaviours/behaviour_displayer.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -299,6 +301,8 @@ void setup_behaviour_manager() {
             = new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("Workshop Computer", 0x2E8A, 0x10C1);
         behaviour_manager->registerBehaviour(behaviour_workshop_computer);
     #endif
+
+    behaviour_manager->registerBehaviour(behaviour_displayer);
 
     Serial_println(F("Setting up behaviours label hash...")); Serial_flush();
     behaviour_manager->setup_behaviours_label_hash();

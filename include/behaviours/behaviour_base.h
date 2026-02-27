@@ -595,4 +595,8 @@ class VirtualBehaviourBase : public virtual DeviceBehaviourUltimateBase {
             this->killCurrentNote();
         }
     }
+
+    virtual int getType() override {
+        return BehaviourType::virt;
+    }
 };

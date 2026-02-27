@@ -1,6 +1,6 @@
 #include "midi/midi_out_wrapper.h"
 
-#ifdef DEBUG_MIDI_WRAPPER
+// #ifdef DEBUG_MIDI_WRAPPER
 
 #include "menuitems.h"
 
@@ -73,4 +73,4 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
         }
 };
 
-#endif
+// #endif

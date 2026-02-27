@@ -38,6 +38,8 @@
 
 #include "behaviours/behaviour_progression.h"
 
+#include "behaviours/behaviour_displayer.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -182,6 +184,7 @@ void setup_midi_mapper_matrix_manager() {
                 behaviour_dptlooper->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
             }
         #endif
+        
 
         // if MIDI slot not used, add the default output
         if (!midi_out_used[i]) {
@@ -212,17 +215,8 @@ void setup_midi_mapper_matrix_manager() {
 
     behaviour_sequencer_gates->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"Seq. Gate Drums", behaviour_sequencer_gates, 10));
 
-    /*for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
-        char label[30];
-        if (!midi_out_used[i]) {
-            snprintf(label, 30, "S%i : MIDIOUT : ch 1", i+1);
-            midi_matrix_manager->register_target(make_midioutputwrapper(label, midi_out_serial[i], 1));
-        }
-        if (!midi_in_used[i]) {
-            snprintf(label, 30, "midi_in_%i", i+1);
-            midi_matrix_manager->register_source(label);
-        }
-    }*/
+    behaviour_displayer->target_id = midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"Displayer", behaviour_displayer, 1));
+    behaviour_displayer->source_id = midi_matrix_manager->register_source("Displayer");
 
     #if defined(ENABLE_BAMBLE) && defined(ENABLE_BAMBLE_OUTPUT)
         behaviour_bamble->self_register_midi_matrix_targets(midi_matrix_manager);

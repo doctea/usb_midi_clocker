@@ -29,15 +29,15 @@ class MIDITrack;
 //          ^^ think this is better handled by the midi matrix manager..?
 // TODO: probably can use templating to implement the different wrapper types and make this more generic
 
-#ifdef DEBUG_MIDI_WRAPPER
-    struct message_history_t {
-        uint32_t ticks;
-        int8_t type;
-        int8_t channel;
-        int8_t pitch;
-        int8_t velocity;
-    };
-#endif
+// used by WithHistory subclass(es) for logging messages
+struct message_history_t {
+    uint32_t ticks;
+    int8_t type;
+    int8_t channel;
+    int8_t pitch;
+    int8_t velocity;
+};
+
 
 class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
 
@@ -54,50 +54,12 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
         int last_note = -1, current_note = -1;
         //int last_transposed_note = -1, current_transposed_note = -1;
 
-        #ifdef DEBUG_MIDI_WRAPPER
-            message_history_t *message_history = nullptr;
-            const int8_t message_history_size = 10;
-            int8_t next_message_history_index = 0;
-        #endif
-
         MIDIOutputWrapper(const char *label, int8_t channel = 1) {
             strncpy(this->label, label, MAX_LENGTH_OUTPUT_WRAPPER_LABEL);
             default_channel = channel;
             memset(playing_notes, 0, sizeof(playing_notes));
         }
         virtual ~MIDIOutputWrapper();
-
-        #ifdef DEBUG_MIDI_WRAPPER
-            virtual void set_log_message_mode(bool status) {
-                if (this->message_history!=nullptr) {
-                    free(this->message_history);
-                    this->message_history = nullptr;
-                } else {
-                    this->message_history = (message_history_t*)CALLOC_FUNC(sizeof(message_history_t), message_history_size);
-                }
-            }
-
-            virtual void log_message(int8_t type, int8_t pitch, int8_t velocity, int8_t channel) {
-                if (this->debug) Serial_printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
-
-                if (this->message_history!=nullptr) {
-                    this->message_history[next_message_history_index].ticks = ticks;
-                    this->message_history[next_message_history_index].type = type;
-                    this->message_history[next_message_history_index].pitch = pitch;
-                    this->message_history[next_message_history_index].velocity = velocity;
-                    this->message_history[next_message_history_index].channel = channel;
-                    next_message_history_index++;
-                    if (next_message_history_index>=message_history_size)
-                        next_message_history_index = 0;
-                }
-            }
-            virtual void log_message_on(int8_t pitch, int8_t velocity, int8_t channel) {
-                log_message(midi::NoteOn, pitch, velocity, channel);
-            }
-            virtual void log_message_off(int8_t pitch, int8_t velocity, int8_t channel) {
-                log_message(midi::NoteOff, pitch, velocity, channel);
-            }
-        #endif
 
         //virtual void sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel = 0);
         //virtual void sendNoteOff(int8_t pitch, int8_t velocity, int8_t channel = 0);
@@ -124,9 +86,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 channel = default_channel;
             }
 
-            #ifdef DEBUG_MIDI_WRAPPER
-                this->log_message_on(current_note, velocity, channel);
-            #endif
+            this->log_message_on(current_note, velocity, channel);
             this->actual_sendNoteOn(current_note, velocity, channel);
         }
 
@@ -159,9 +119,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 channel = default_channel;
             }
 
-            #ifdef DEBUG_MIDI_WRAPPER
-                this->log_message_off(in_pitch, velocity, channel);
-            #endif
+            this->log_message_off(current_note, velocity, channel);
             this->actual_sendNoteOff(in_pitch, velocity, channel);
 
             //this->last_transposed_note = in_pitch;
@@ -213,7 +171,46 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 playing_notes[pitch] = 0;
             }
         }
+
+
+        message_history_t *message_history = nullptr;
+        const int8_t message_history_size = 10;
+        int8_t next_message_history_index = 0;
+
+        virtual void set_log_message_mode(bool status) {
+            if (!status && this->message_history!=nullptr) {
+                free(this->message_history);
+                this->message_history = nullptr;
+            } else if (status && this->message_history==nullptr) {
+                this->message_history = (message_history_t*)CALLOC_FUNC(sizeof(message_history_t), message_history_size);
+            }
+        }
+
+        virtual void log_message(int8_t type, int8_t pitch, int8_t velocity, int8_t channel) {
+            if (this->debug) Serial_printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
+
+            Serial.printf("%s#log_message(type=%2x, pitch=%3i, velocity=%3i, channel=%2i)\n", this->label, type, pitch, velocity, channel);
+
+            if (this->message_history!=nullptr) {
+                this->message_history[next_message_history_index].ticks = ticks;
+                this->message_history[next_message_history_index].type = type;
+                this->message_history[next_message_history_index].pitch = pitch;
+                this->message_history[next_message_history_index].velocity = velocity;
+                this->message_history[next_message_history_index].channel = channel;
+                next_message_history_index++;
+                if (next_message_history_index>=message_history_size)
+                    next_message_history_index = 0;
+            }
+        }
+        virtual void log_message_on(int8_t pitch, int8_t velocity, int8_t channel) {
+            log_message(midi::NoteOn, pitch, velocity, channel);
+        }
+        virtual void log_message_off(int8_t pitch, int8_t velocity, int8_t channel) {
+            log_message(midi::NoteOff, pitch, velocity, channel);
+        }
+
 };
+
 
 class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
     public:
@@ -351,6 +348,7 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
             output->killCurrentNote();
         }
 };
+
 
 MIDIOutputWrapper *make_midioutputwrapper_pcusb(const char *label, int8_t cable_number, int8_t channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, int8_t channel = 1);
