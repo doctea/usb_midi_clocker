@@ -390,7 +390,7 @@ class MIDIMatrixManager {
         return this->get_target_for_id(this->get_target_id_for_handle(handle));
     }
     MIDIOutputWrapper *get_target_for_id(target_id_t target_id) {
-        if (target_id>=0 && targets[target_id].wrapper!=nullptr)
+        if (target_id>=0 && target_id < NUM_REGISTERED_TARGETS && targets[target_id].wrapper!=nullptr)
             return targets[target_id].wrapper;
         return nullptr;
     }

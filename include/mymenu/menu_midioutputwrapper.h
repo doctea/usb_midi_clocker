@@ -22,7 +22,7 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
             return false;
         }
         virtual bool button_select() override {
-            if (prompting) {
+            if (prompting && target->message_history!=nullptr) {
                 memset(target->message_history, 0, sizeof(message_history_t)*target->message_history_size);
                 prompting = false;
                 return false;
@@ -44,6 +44,7 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
 
             if (target->message_history==nullptr) {
                 tft->println("Debug not initialised");
+                return tft->getCursorY();
             }
 
             tft->printf("Tick : Type  Ch   Pitch   Vel   [%i/%i]\n", target->next_message_history_index, target->message_history_size);
@@ -52,16 +53,23 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
             int start_at = target->next_message_history_index - 1;
             if (start_at<0) 
                 start_at = target->message_history_size - 1;
+
+            //tft->printf("Starting at history index %i and moving through to %i\n", start_at, target->message_history_size-1);
+
             for (int i = 0 ; i < target->message_history_size ; i++) {
                 int actual = (start_at + i + 1) % target->message_history_size;
                 message_history_t *current = &target->message_history[actual];
+                //tft->printf("actual is %i, type is %02x\n", actual, current->type);
 
                 if (current->type>0) {
+                    //Serial.printf("Rendering message from history index %i/%i: ticks=%u, type=%02x, channel=%i, pitch=%i, velocity=%i\n", actual, target->message_history_size-1, current->ticks, current->type, current->channel, current->pitch, current->velocity);
                     char *type_name = "??";
                     if (current->type==midi::NoteOn)
                         type_name = "On";
                     else if (current->type==midi::NoteOff)
                         type_name = "Off";
+                    else 
+                        type_name = "??";
                     tft->printf("%5u: %3s   ", current->ticks, type_name);
                     tft->printf("%2i  ", current->channel);
                     tft->printf("%3i %3s", current->pitch, (char*)get_note_name_c(current->pitch));

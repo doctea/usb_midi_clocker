@@ -83,6 +83,12 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "free_ram") == 0) {
         debug_free_ram();
         return true;
+    } else if (strcmp(command, "crashlog") == 0) {
+        dump_crashreport_log();
+        return true;
+    } else if (strcmp(command, "clearcrashlog") == 0) {
+        clear_crashreport_log();
+        return true;    
     } else if (strcmp(command, "show") == 0) {
         if (arg1[0] == '\0') {
             Serial.println("Usage: show <type> <filename>");
@@ -248,6 +254,8 @@ bool execute_command(const char *command_line) {
         Serial.println("  status - Get the current status of the device");
         Serial.println("  reset - Reset the device");
         Serial.println("  free_ram - Check available RAM");
+        Serial.println("  crashlog - Dump the crash report log (if any)");
+        Serial.println("  clearcrashlog - Clear the crash report log (if any)");
         Serial.println("  show - Show contents of a file");
         Serial.println("  load - Load a pattern, project, etc from a file on the SD card");
         Serial.println("  save - Save a pattern, project, etc to a file on the SD card");

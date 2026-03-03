@@ -78,11 +78,11 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
     if (this->current_channel==GM_CHANNEL_DRUMS)
         return 0;
 
-    if (note_tracker.count_held()==0) {
+    if (note_tracker_count_held()==0) {
         //Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: no notes to requantise\n", this->get_label());
         return 0;
     }
-    if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting with\t%i held notes (%s)\n", this->get_label(), note_tracker.count_held(), note_tracker.get_held_notes_c());
+    if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c());
 
     bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
     bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;
@@ -90,7 +90,7 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
     int requantised_notes = 0;
     
     uint32_t start_foreach = micros();
-    requantised_notes = note_tracker.foreach_note([this,initial_global_quantise_chord_on,initial_global_quantise_on](int8_t note, int8_t old_transposed_note) {
+    requantised_notes = note_tracker_foreach_note([this,initial_global_quantise_chord_on,initial_global_quantise_on](int8_t note, int8_t old_transposed_note) {
         int8_t new_transposed_note = midi_matrix_manager->do_quant(note, this->current_channel);
         if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes in foreach_requantised_note: note=%i (%s), old_transposed_note=%i (%s), new_transposed_note=%i (%s)\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), new_transposed_note, get_note_name_c(new_transposed_note));
         // note is the original note, transposed_note is the note that the original note was transposed to
@@ -134,7 +134,7 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
         if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: NOTE SURE WHAT TO DO!  note %i (%s) re-quantised to %i (%s) (stopping then starting on channel %i)\n", this->get_label(), note, get_note_name_c(note), new_transposed_note, get_note_name_c(new_transposed_note), this->current_channel);
     });
     if (debug) if (requantised_notes>0) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes 'foreach' took %i us to process %i notes\n", this->get_label(), micros()-start_foreach, requantised_notes);
-    if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes finishing with\t%i held notes (%s)\n", this->get_label(), note_tracker.count_held(), note_tracker.get_held_notes_c());
+    if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes finishing with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c());
 
     return requantised_notes;
 
@@ -162,7 +162,7 @@ void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uin
     if (!is_valid_note(quantised_note)) return;
 
     if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i, about to call held_note_on(%i, %i..)\n", this->get_label(), note, velocity, channel, quantised_note, note, quantised_note);
-    note_tracker.held_note_on(note, quantised_note);
+    note_tracker_held_note_on(note, quantised_note, channel);
 
     this->actualSendNoteOn(quantised_note, velocity, channel);
 }

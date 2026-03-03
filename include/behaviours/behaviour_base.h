@@ -131,6 +131,29 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         virtual int requantise_all_notes();
     #endif
 
+    // abstracted note_tracker access so that we can override to eg track multiple channels separately if we need to
+    virtual bool note_tracker_foreach_note(NoteTracker::foreach_func_def func) {
+        return note_tracker.foreach_note(func);
+    }
+    virtual int8_t note_tracker_get_transposed_note_for(int8_t note) {
+        return note_tracker.get_transposed_note_for(note);
+    }
+    virtual bool is_note_held(int8_t note, int8_t channel) {
+        return note_tracker.is_note_held(note);
+    }
+    virtual bool note_tracker_held_note_on(int8_t note, int8_t transposed_note, int8_t channel) {
+        return note_tracker.held_note_on(note, transposed_note);
+    }
+    virtual bool note_tracker_held_note_off(int8_t note, int8_t channel) {
+        return note_tracker.held_note_off(note);
+    }
+    virtual int8_t note_tracker_count_held() {
+        return note_tracker.count_held();
+    }
+    virtual const char *note_tracker_get_held_notes_c() {
+        return note_tracker.get_held_notes_c();
+    }
+
     virtual void killCurrentNote() {
         //Serial.println("-=-=-");
         if (is_valid_note(current_transposed_note)) {
@@ -138,7 +161,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             this->sendNoteOff(current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel); //velocity, channel);
             //current_transposed_note = NOTE_OFF;
         }
-        note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
+        note_tracker_foreach_note([=](int8_t note, int8_t transposed_note) {
             //this->actualSendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
             if (debug) Serial_printf("%20s: killCurrentNote() killing TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
             this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
@@ -148,7 +171,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
             if (debug) Serial_printf("%20s: killCurrentNote() still have current_transposed_note=%i (%s) on channel %i\n", this->get_label(), current_transposed_note, get_note_name_c(current_transposed_note), this->current_channel);
         }
         if (debug) {
-            note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
+            note_tracker_foreach_note([=](int8_t note, int8_t transposed_note) {
                 Serial_printf("%20s: killCurrentNote() still have TRACKED note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), this->current_channel);
             });
         }
@@ -163,7 +186,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
 
         if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
 
-        int8_t quantised_note = note_tracker.get_transposed_note_for(note);
+        int8_t quantised_note = note_tracker_get_transposed_note_for(note);
         if (debug) Serial_printf("\t\t note_tracker.get_transposed_note_for(%i) = %i (%s)\n", note, quantised_note, get_note_name_c(quantised_note));
 
         //quantised_note = this->recalculate_pitch(quantised_note);
@@ -175,7 +198,7 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         note += this->TUNING_OFFSET;
         if (!is_valid_note(note)) return;
 
-        note_tracker.held_note_off(note);
+        note_tracker_held_note_off(note, channel);
 
         if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i) -> quantised_note %i, about to call actualSendNoteOff(%i..)\n", this->get_label(), note, velocity, channel, quantised_note, quantised_note);
         this->actualSendNoteOff(quantised_note, velocity, channel);

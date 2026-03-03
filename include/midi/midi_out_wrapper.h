@@ -32,10 +32,10 @@ class MIDITrack;
 // used by WithHistory subclass(es) for logging messages
 struct message_history_t {
     uint32_t ticks;
-    int8_t type;
-    int8_t channel;
+    uint8_t type;
+    uint8_t channel;
     int8_t pitch;
-    int8_t velocity;
+    uint8_t velocity;
 };
 
 
@@ -178,20 +178,27 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
         int8_t next_message_history_index = 0;
 
         virtual void set_log_message_mode(bool status) {
-            if (!status && this->message_history!=nullptr) {
-                free(this->message_history);
-                this->message_history = nullptr;
-            } else if (status && this->message_history==nullptr) {
-                this->message_history = (message_history_t*)CALLOC_FUNC(sizeof(message_history_t), message_history_size);
+            if (this->message_history==nullptr && status) {
+                int memory_size = sizeof(message_history_t)*message_history_size;
+                Serial_printf("Allocating message_history for %s with size %i bytes\n", label, memory_size);
+                Serial_flush();
+                this->message_history = (message_history_t*)CALLOC_FUNC(memory_size, 1);
+                if (this->message_history==nullptr) {
+                    Serial_printf("ERROR: failed to allocate message_history for %s\n", label);
+                }
+                Serial_flush();
             }
         }
 
         virtual void log_message(int8_t type, int8_t pitch, int8_t velocity, int8_t channel) {
-            if (this->debug) Serial_printf("%s#log_message(%02x, %3i, %2i, %2i)\n", this->label, type, pitch, velocity, channel);
-
-            Serial.printf("%s#log_message(type=%2x, pitch=%3i, velocity=%3i, channel=%2i)\n", this->label, type, pitch, velocity, channel);
-
             if (this->message_history!=nullptr) {
+                if (this->debug) Serial_printf("%s#log_message(%02x, %3i, %2i, %2i) into slot %i/%i\n", this->label, type, pitch, velocity, channel, next_message_history_index, message_history_size-1);
+
+                if (!is_valid_note(pitch)) {
+                    //Serial_printf("WARNING: %s#log_message called with invalid pitch %i -- ignoring\n", this->label, pitch);
+                    return;
+                }
+
                 this->message_history[next_message_history_index].ticks = ticks;
                 this->message_history[next_message_history_index].type = type;
                 this->message_history[next_message_history_index].pitch = pitch;
@@ -210,7 +217,6 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
         }
 
 };
-
 
 class MIDIOutputWrapper_PC : public MIDIOutputWrapper {
     public:
