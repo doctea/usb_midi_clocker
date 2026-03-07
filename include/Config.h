@@ -63,9 +63,9 @@
 
 #ifdef ENABLE_SCREEN 
     #ifdef TFT_ST7789_T3
-        //#define TFT_ST7789_T3_BIG
+        #define TFT_ST7789_T3_BIG
         #define DisplayTranslator_Configured DisplayTranslator_STeensy_Big
-        #define MENU_MS_BETWEEN_REDRAW  75
+        #define MENU_MS_BETWEEN_REDRAW  20
     #elif defined (TFT_BODMER)
         #define DisplayTranslator_Configured DisplayTranslator_Bodmer
         #define MENU_MS_BETWEEN_REDRAW  75
