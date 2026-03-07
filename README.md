@@ -124,7 +124,8 @@ Both are encouraged, I would love to have this be useful to others and to accept
 - [8MB PSRAM expansion](https://www.pjrc.com/store/psram.html)
 - ~~ST7789 or ~~ILI9341 oled screen for display
   - ~~st7789 option https://www.amazon.co.uk/Waveshare-TFT-Touch-Shield-Resolution/dp/B00W9BMTVG using "ST7789_t3_Big" menu (current prototype version much prefers this)~~
-  - ILI9341 screen option https://www.aliexpress.com/item/1005003005413104.html 'Module With Touch' version for PCB
+  - Previously used ~~ILI9341 screen option https://www.aliexpress.com/item/1005003005413104.html 'Module With Touch' version for PCB~~
+  - Now uses (March 2026) https://www.aliexpress.com/item/1005010650454159.html -- better display quality, but requires hacks to the ili9341_t3n library (found on my github)
 - Rotary encoder + two wired buttons for control and/or USB typing keyboard
 - Akai APCMini for controlling the sequencer and clocks (although not needed for running the rest of it)
 - Prototype Eurorack module for gate output using MCP23s17 (supports 16 gate outputs.  could be configured as inputs instead - but somehow had some problems with this)
