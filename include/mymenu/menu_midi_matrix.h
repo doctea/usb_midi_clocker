@@ -12,6 +12,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     //void (*setter_func)(MIDIOutputWrapper *midi_output);
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
+    // https://ankiewicz.com/color/hex/00cccc <- colour palette picker
     const uint16_t target_colours[MAX_NUM_TARGETS] = {
         0xF800,        //#define ST77XX_RED        
         0xDCDD,        //#define ST77XX_GREEN      
@@ -122,6 +123,8 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         bool opened_on_target = opened && selected_source_index>=0;
         const source_id_t relevant_source_id = opened_on_source ? selected_value_index : selected_source_index;
 
+        int available_rows = (tft->height() - pos.y) / tft->getRowHeight();
+
         // draw the selected target's currently held + last note
         if (opened_on_target) {
             //tft->setCursor(0, tft->height()-30);
@@ -133,26 +136,31 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             pos.y = tft->getCursorY();
         }
 
+
         // for remembering the lowest we go on screen
         int lowest_y = pos.y;
 
+        uint16_t halfbright_white = tft->halfbright_565(C_WHITE);
         // render MIDI sources (left-hand column)
+        //Serial.printf("starting sources loop render at scroll_offset %i because selected_value_index is %i and rows_available is %i\n", scroll_offset, selected_value_index, rows_available);
         for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
-            const bool is_current_value_selected = source_id==current_value;
+            source_id_t source_id_actual = (source_id + selected_value_index + (available_rows*2)) % midi_matrix_manager->sources_count;
+            //source_id_t source_id_actual = source_id;
+            const bool is_current_value_selected = source_id_actual==current_value;
 
             // in 'select target' mode, the currently selected source is highlighted in green
-            int col = !opened || opened_on_source ? C_WHITE : tft->halfbright_565(C_WHITE);
+            int col = !opened || opened_on_source ? C_WHITE : halfbright_white;
             if (opened_on_target && is_current_value_selected)
                 // in 'select target' mode, the currently selected source is highlighted in green
                 col = GREEN;
-            else if (opened_on_target && midi_matrix_manager->is_connected(source_id, selected_value_index))
+            else if (opened_on_target && midi_matrix_manager->is_connected(source_id_actual, selected_value_index))
                 // in 'select target' mode, sources that are connected to the currently highlighted target are highlighted, even if they're not the currently selected source
                 col = C_WHITE;
 
-            colours(opened && selected_source_index==-1 && selected_value_index==source_id, col, BLACK);
-            tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id));
+            colours(opened && selected_source_index==-1 && selected_value_index==source_id_actual, col, BLACK);
+            tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
             tft->println();
-            source_position[source_id] = tft->getCursorY() - (tft->getRowHeight()/2);
+            source_position[source_id_actual] = tft->getCursorY() - (tft->getRowHeight()/2);
         }
         lowest_y = tft->getCursorY();
 

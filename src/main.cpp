@@ -130,7 +130,9 @@ void setup() {
   #endif
   
   if (CrashReport) {
-    while (!Serial);
+    #ifdef WAIT_FOR_SERIAL
+      while (!Serial);
+    #endif
     //Serial_println("CRASHREPORT!");
     //Serial_print(CrashReport);
     /*while(Serial.available()==0);
