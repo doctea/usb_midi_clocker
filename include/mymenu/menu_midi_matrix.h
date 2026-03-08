@@ -13,12 +13,12 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
     const uint16_t target_colours[MAX_NUM_TARGETS] = {
-        0xF800, //#define ST77XX_RED        
-        0x07E0,        //#define ST77XX_GREEN      
-        0x001F,        //#define ST77XX_BLUE       
+        0xF800,        //#define ST77XX_RED        
+        0xDCDD,        //#define ST77XX_GREEN      
+        0x0679,        //#define ST77XX_BLUE       
         0x07FF,        //#define ST77XX_CYAN       
         0xF81F,        //#define ST77XX_MAGENTA   
-        0xFFE0,//#define ST77XX_YELLOW     
+        0xFFE0,        //#define ST77XX_YELLOW     
         0xFC00,        //#define ST77XX_ORANGE     
         0xF710,        //#define ST77XX_PINK       250 + 250 + 
         (0xF800 + 0x001F)/2,
@@ -37,16 +37,21 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         (0xF81F + 0xFC00)/3,
         250 + (0x07E0 + 0x001F)/3,
         250 + (0xF800 + 0x07FF)/3,
+        0xCE60,     // yellowy
+        0xCF1D,     // bluey
+        0xA578,     // grey-blue
+        0x9E66,     // yellow-green
+        0xA670,     // nicey green
+        0x8351,     // purpley
     }; 
 
     uint16_t get_colour_for_target_id(target_id_t target_id) {
-        return target_colours[target_id];
+        return target_colours[target_id % (sizeof(target_colours)/sizeof(target_colours[0]))];
     }
 
     public:
     int actual_value_index;
     int selected_source_index = -1;
-    int selected_target_index = -1;
 
     MidiMatrixSelectorControl(const char *label) : SelectorControl(label, 0) {};
 
@@ -101,7 +106,6 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         pos.y = header(label, pos, selected, opened);
         num_values = this->get_num_available();
 
-
         tft->setTextSize(1);
 
         int current_value = actual_value_index; //this->getter();
@@ -135,9 +139,16 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         // render MIDI sources (left-hand column)
         for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
             const bool is_current_value_selected = source_id==current_value;
-            int col = is_current_value_selected ? GREEN : C_WHITE;
-            if (opened_on_target && !is_current_value_selected) 
-                col = tft->halfbright_565(col);
+
+            // in 'select target' mode, the currently selected source is highlighted in green
+            int col = !opened || opened_on_source ? C_WHITE : tft->halfbright_565(C_WHITE);
+            if (opened_on_target && is_current_value_selected)
+                // in 'select target' mode, the currently selected source is highlighted in green
+                col = GREEN;
+            else if (opened_on_target && midi_matrix_manager->is_connected(source_id, selected_value_index))
+                // in 'select target' mode, sources that are connected to the currently highlighted target are highlighted, even if they're not the currently selected source
+                col = C_WHITE;
+
             colours(opened && selected_source_index==-1 && selected_value_index==source_id, col, BLACK);
             tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id));
             tft->println();
@@ -172,10 +183,15 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             target_position[target_id] = (tft->getCursorY());// + (tft->getRowHeight()/2); // + tft->getRowHeight()) + (tft->getRowHeight()/2);
             
             tft->println();
+            Serial.printf("target_id %i at y %i is '%s' with target_colour=%02x\n", target_id, target_position[target_id], (char*)midi_matrix_manager->get_label_for_target_id(target_id), target_colour);
 
             // draw the lines connecting sources+targets
             for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
-                const uint16_t line_colour = !opened || (opened && relevant_source_id == source_id) ? target_colour : half_target_colour;
+                const uint16_t line_colour = 
+                        (opened_on_target && relevant_source_id == source_id && midi_matrix_manager->is_connected(source_id, target_id)) ? GREEN :  
+                        (!opened || (
+                            (opened_on_source && relevant_source_id == source_id) || (opened_on_target && selected_value_index == target_id)
+                        ) ? target_colour : half_target_colour);
                 if (midi_matrix_manager->is_connected(source_id, target_id)) {
                     // calculate the offset from the label positions to draw the connection line; take into account how many other connections there are (by asking midi_matrix_manager), and how many we've already drawn (by tracking in *_processed_count arrays)
                     //int pixels_per_source = constrain(source_processed_count[source_id] * (tft->getRowHeight() / midi_matrix_manager->connected_to_source_count(source_id)), 1, tft->getRowHeight());
