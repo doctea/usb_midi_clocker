@@ -157,8 +157,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
                 col = GREEN;
             else if (opened_on_target && midi_matrix_manager->is_connected(source_id_actual, selected_value_index))
                 // in 'select target' mode, sources that are connected to the currently highlighted target are highlighted, even if they're not the currently selected source
-                //col = C_WHITE;
-                col = this->get_colour_for_target_id(selected_value_index);
+                col = this->get_colour_for_target_id(selected_value_index);     // C_WHITE
 
             colours(
                 (opened && selected_source_index==-1 && selected_value_index==source_id_actual) ||
