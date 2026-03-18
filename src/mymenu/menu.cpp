@@ -446,7 +446,7 @@ void setup_menu(bool button_high_state) {
     Serial_flush();
     Serial.println(F("Creating Menu object.."));
     Serial_flush();
-    menu = new Menu(tft, false);
+    menu = new Menu(tft, button_high_state);
     Serial.println(F("Created Menu object"));
     Serial_flush();
 

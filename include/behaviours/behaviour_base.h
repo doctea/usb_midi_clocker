@@ -429,6 +429,8 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
                 Serial_flush();
             }
 
+            // todo: this should maybe live in parameter_manager instead; but it also needs to know what the owner 
+            // is in order to disambiguate between parameters with the same name on different behaviours, so lives here for now
             if (this->parameters_hash->containsKey(parameter_name)) {
                 if (debug) Serial_printf("behaviour_base#load_parse_key_value: parameter '%s' found in parameters hash!\n", parameter_name.c_str());
                 FloatParameter *parameter = *this->parameters_hash->get(parameter_name);
