@@ -74,9 +74,11 @@ Menu *menu; // = Menu();
     //extern Bounce pushButtonC;
 #endif
 
-LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN, BEATS_PER_BAR, BARS_PER_PHRASE);
-
+LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN);
 BPMPositionIndicator posbar = BPMPositionIndicator();
+#ifdef ENABLE_TIME_SIGNATURE
+    TimeSignatureIndicator timesig_indicator = TimeSignatureIndicator();
+#endif
 ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
 
 #ifdef ENABLE_CLOCK_INPUT_CV
@@ -137,7 +139,9 @@ void setup_menu_transport() {
     //menu->add(new SeparatorMenuItem("Transport"));
 
     menu->add(&posbar);     // bpm and position indicator
-
+    #ifdef ENABLE_TIME_SIGNATURE
+        menu->add(&timesig_indicator);             // time signature indicator
+    #endif
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
     #ifdef ENABLE_CLOCK_INPUT_CV
         menu->add(&external_ppqn_selector); // external clock ppqn selector

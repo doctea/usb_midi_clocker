@@ -890,7 +890,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
             menuitems->add(new NoteHarmonyDisplay(
-                (const char*)"Progression harmony", 
+                (const char*)"Progression harmony",
                 &midi_matrix_manager->global_scale_identity.scale_number, 
                 &midi_matrix_manager->global_scale_identity.root_note, 
                 &this->note_tracker,

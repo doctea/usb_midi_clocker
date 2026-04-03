@@ -38,8 +38,8 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     VirtualBehaviour_EuclidianRhythms() : DeviceBehaviourUltimateBase () {
         this->output_processor = new FullDrumKitAndBassMIDIOutputProcessor(this);
         this->sequencer = new EuclidianSequencer(output_processor->nodes);
-        this->output_processor->addNode(new MIDIDrumOutput("Misc8", 0, MISC_CHANNEL_8, this));
-        this->output_processor->addNode(new MIDIDrumOutput("Misc9", 0, MISC_CHANNEL_9, this));
+        this->output_processor->addNode(new MIDIDrumOutput("Misc8", this, 0, MISC_CHANNEL_8));
+        this->output_processor->addNode(new MIDIDrumOutput("Misc9", this, 0, MISC_CHANNEL_9));
         output_processor->configure_sequencer(sequencer);
         sequencer->initialise_patterns();
         sequencer->reset_patterns();
@@ -154,7 +154,10 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         virtual LinkedList<MenuItem*> *make_menu_items() override {
             LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
-            this->sequencer->make_menu_items(menu, COMBINE_LOCKS_WITH_CIRCLE | COMBINE_MODULATION_WITH_MUTATION | COMBINE_PATTERN_MODULATION_WITH_PATTERN);
+            this->sequencer->make_menu_items(
+                menu, 
+                Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE | Euclidian::CombinePageOption::COMBINE_MODULATION_WITH_MUTATION | Euclidian::CombinePageOption::COMBINE_PATTERN_MODULATION_WITH_PATTERN
+            );
             this->output_processor->create_menu_items(true);
 
             return menuitems;

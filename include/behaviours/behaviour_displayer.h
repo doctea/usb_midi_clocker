@@ -75,7 +75,7 @@ class VirtualBehaviour_Displayer : virtual public VirtualBehaviourBase {
         return "nothing";
     }*/
 
-    virtual char *get_label() override {
+    virtual const char *get_label() override {
         return (char*)"Displayer";
     }
 
