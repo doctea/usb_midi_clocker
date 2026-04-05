@@ -467,6 +467,9 @@ void setup_menu(bool button_high_state) {
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
         setup_menu_sequencer();
     #endif
+    #ifdef ENABLE_CV_GATE_OUTPUT
+        setup_gate_manager_menus();
+    #endif
     #ifdef ENABLE_LOOPER
         setup_menu_looper();
     #endif

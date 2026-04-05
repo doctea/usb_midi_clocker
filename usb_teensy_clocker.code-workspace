@@ -24,6 +24,9 @@
 		},
 		{
 			"path": "../my_libraries/uClock"
+		},
+		{
+			"path": "../my_libraries/saveloadlib"
 		}
 	],
 	"settings": {
