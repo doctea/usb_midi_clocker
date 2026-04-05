@@ -59,10 +59,10 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, public
             ClockedBehaviour::on_tick(ticks);
         }
 
-        virtual void setup_saveable_parameters() override {
-            DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            ClockedBehaviour::setup_saveable_parameters();
-            MIDIBassBehaviour::setup_saveable_parameters();
+        virtual void setup_saveable_settings() override {
+            DeviceBehaviourUltimateBase::setup_saveable_settings();
+            // ClockedBehaviour has no saveable settings of its own
+            MIDIBassBehaviour::setup_saveable_settings();
         }
 
         bool already_initialised = false;

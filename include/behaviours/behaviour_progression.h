@@ -241,44 +241,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         }
     }
 
-    virtual void setup_saveable_parameters() override {
-        DeviceBehaviourUltimateBase::setup_saveable_parameters();
-
-        this->saveable_parameters->add(new LSaveableParameter<bool>(
-            "Advance progression",
-            "Progression", 
-            &advance_progression_bar
-        ));
-        this->saveable_parameters->add(new LSaveableParameter<bool>(
-            "Advance playlist",
-            "Progression", 
-            &advance_progression_playlist
-        ));
-
-        this->saveable_parameters->add(new LSaveableParameter<uint8_t>(
-            "Chord octave",
-            "Progression", 
-            &chord_octave
-        ));
-        this->saveable_parameters->add(new LSaveableParameter<uint8_t>(
-            "Bass octave",
-            "Progression", 
-            &bass_octave
-        ));
-        this->saveable_parameters->add(new LSaveableParameter<uint8_t>(
-            "Topline octave",
-            "Progression", 
-            &topline_octave
-        ));
-
-        //this->sequencer->setup_saveable_parameters();
-
-        // todo: better way of 'nesting' a sequencer/child object's saveableparameters within a host object's
-        /*
-        for(unsigned int i = 0 ; i < sequencer->saveable_parameters->size() ; i++) {
-            this->saveable_parameters->add(sequencer->saveable_parameters->get(i));
-        }
-        */
+    virtual void setup_saveable_settings() override {
+        DeviceBehaviourUltimateBase::setup_saveable_settings();
+        register_setting(new LSaveableSetting<bool>("Advance progression",  "Progression", &advance_progression_bar));
+        register_setting(new LSaveableSetting<bool>("Advance playlist",      "Progression", &advance_progression_playlist));
+        register_setting(new LSaveableSetting<uint8_t>("Chord octave",   "Progression", &chord_octave));
+        register_setting(new LSaveableSetting<uint8_t>("Bass octave",     "Progression", &bass_octave));
+        register_setting(new LSaveableSetting<uint8_t>("Topline octave",  "Progression", &topline_octave));
     }
 
     // untested, but this should fire the tick before a beat happens; use this to change chords outside of a bar change..

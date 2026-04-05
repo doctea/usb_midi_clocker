@@ -178,13 +178,10 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
         }
 
-        virtual void setup_saveable_parameters() override {
-            if (this->saveable_parameters==nullptr)
-                DeviceBehaviourUltimateBase::setup_saveable_parameters();
-
-            //MIDIOutputWrapper *my_wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-            this->saveable_parameters->add(new LSaveableParameter<bool>("drone", "MIDI Bass", &this->drone_enabled, [=](bool v) { this->set_drone(v); }, [=]() -> bool { return this->is_drone(); }));
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>("machinegun", "MIDI Bass", &this->machinegun, [=](int8_t v) { this->set_machinegun(v); }, [=]() -> int8_t { return this->get_machinegun();} ));
+        virtual void setup_saveable_settings() override {
+            // mixin: register only own settings; concrete class calls DeviceBehaviourUltimateBase::setup_saveable_settings() first
+            register_setting(new LSaveableSetting<bool>(   "drone",      "MIDI Bass", &this->drone_enabled, [=](bool v)    { this->set_drone(v); },      [=]() -> bool    { return this->is_drone(); }));
+            register_setting(new LSaveableSetting<int8_t>( "machinegun", "MIDI Bass", &this->machinegun,    [=](int8_t v)  { this->set_machinegun(v); }, [=]() -> int8_t  { return this->get_machinegun(); }));
         }
 
         #ifdef ENABLE_SCREEN

@@ -12,11 +12,13 @@
 #include "notetracker.h"
 #include "Drums.h"
 
+// saveloadlib must be included before Parameter.h because ParameterInput.h inherits SHStorage
+#include "saveload_settings.h"
+
 #include "parameters/Parameter.h"
 #include "parameters/MIDICCParameter.h"
 #include "ParameterManager.h"
 
-#include "SaveableParameters.h"
 #include "Hashtable.h"
 
 #include "file_manager/file_manager_interfaces.h"
@@ -43,7 +45,7 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget {
+class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget, public virtual SHStorage<16, 160> {
     public:
 
     bool debug = false;
@@ -64,7 +66,6 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     NoteTracker note_tracker;
 
     Hashtable<String, FloatParameter*> *parameters_hash = nullptr;
-    Hashtable<String, SaveableParameterBase*> *saveable_parameters_hash = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
@@ -272,193 +273,58 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
     }
 
-    virtual bool has_saveable_parameters() {
-        return this->saveable_parameters!=nullptr && this->saveable_parameters->size()>0;
-    }
+    // ---- saveloadlib-based settings (replaces old SaveableParameters system) ----
+    virtual void setup_saveable_settings() override {
+        ISaveableSettingHost::setup_saveable_settings();
+        // Tag each behaviour's lines with its label as the tree path segment
+        this->set_path_segment(this->get_label());
 
-    // saveable parameter handling shit
-    LinkedList<SaveableParameterBase*> *saveable_parameters = nullptr;
-    virtual void setup_saveable_parameters() {
-        if (this->saveable_parameters==nullptr) {
-            Debug_println("instantiating saveable_parameters list");
-            this->saveable_parameters = new LinkedList<SaveableParameterBase*> ();
-
-            if(this->transmits_midi_notes()) {
-                this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note",       "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNote(v); },     [=]() -> int8_t { return this->getLowestNote(); }));
-                this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note",      "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNote(v); },    [=]() -> int8_t { return this->getHighestNote(); }));
-                this->saveable_parameters->add(new LSaveableParameter<int8_t>("lowest_note_mode",  "Note restriction", nullptr, [=](int8_t v) -> void { this->setLowestNoteMode(v); }, [=]() -> int8_t { return this->getLowestNoteMode(); }));
-                this->saveable_parameters->add(new LSaveableParameter<int8_t>("highest_note_mode", "Note restriction", nullptr, [=](int8_t v) -> void { this->setHighestNoteMode(v); },[=]() -> int8_t { return this->getHighestNoteMode(); }));
-            }
+        if (this->transmits_midi_notes()) {
+            register_setting(new LSaveableSetting<int8_t>("lowest_note",       "Note restriction", nullptr,
+                [this](int8_t v) { this->setLowestNote(v); },
+                [this]() -> int8_t { return this->getLowestNote(); }));
+            register_setting(new LSaveableSetting<int8_t>("highest_note",      "Note restriction", nullptr,
+                [this](int8_t v) { this->setHighestNote(v); },
+                [this]() -> int8_t { return this->getHighestNote(); }));
+            register_setting(new LSaveableSetting<int8_t>("lowest_note_mode",  "Note restriction", nullptr,
+                [this](int8_t v) { this->setLowestNoteMode(v); },
+                [this]() -> int8_t { return this->getLowestNoteMode(); }));
+            register_setting(new LSaveableSetting<int8_t>("highest_note_mode", "Note restriction", nullptr,
+                [this](int8_t v) { this->setHighestNoteMode(v); },
+                [this]() -> int8_t { return this->getHighestNoteMode(); }));
         }
 
-        // todo: add all the modulatable parameters via a wrapped class
-        /*if (this->has_parameters()) {
-            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-                this->saveable_parameters->add(new SaveableParameterWrapper(parameters->get(i)));
-            }
-        }*/
-    }
-    virtual bool load_parse_key_value_saveable_parameters(String key, String value) {
-        if (saveable_parameters==nullptr) {
-            Serial_printf("WARNING: load_parse_key_value_saveable_parameters(%s,%s) called for %s, but saveable_parameters isn't initialised yet!\n", key.c_str(), value.c_str(), this->get_label());
-            return false;
-        }
-
-        SaveableParameterBase *found_param = nullptr;
-
-        /*uint32_t start = micros();
-        // old style: lookup via list search
-        for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
-            if (!saveable_parameters->get(i)->is_recall_enabled())
-                continue;
-            if (saveable_parameters->get(i)->parse_key_value(key, value)) {
-                //return true;
-                found_param = saveable_parameters->get(i);
-                break;
-            }
-        }
-        uint32_t duration = micros() - start;
-        Serial.printf("load_parse_key_value_saveable_parameters(%s,%s) in %s took %i us via list lookup\n", key.c_str(), value.c_str(), this->get_label(), duration);
-        */
-
-        // lookup via hashtable
-        //uint32_t start2 = micros();
-        if (this->saveable_parameters_hash->containsKey(key)) {
-            SaveableParameterBase *param = *this->saveable_parameters_hash->get(key);
-            if (param->is_recall_enabled()) {
-                //param->parse_key_value(key, value);
-                //return true;
-                /*if (found_param!=param) {
-                    Serial_printf("DEBUG WARNING: load_parse_key_value_saveable_parameters(%s,%s) hashmap found different parameter than list lookup!\n", key.c_str(), value.c_str(), param->label);
-                    Serial_printf("DEBUG WARNING: hashmap found '%p'@'%s', list lookup found '%p'@'%s'\n", 
-                        param,
-                        param->label, 
-                        found_param,
-                        found_param!=nullptr?found_param->label:"<null>"
-                    );
-                    messages_log_add(F("WARNING: saveable_parameters_hash inconsistent with saveable_parameters list!"));
-                }*/
-                found_param = param;
-            }
-        }
-        //uint32_t duration2 = micros() - start2;
-        //Serial_printf("load_parse_key_value_saveable_parameters(%s,%s) in %s took %i us via hashtable lookup\n", key.c_str(), value.c_str(), this->get_label(), duration2);
-
-        if (found_param != nullptr) {
-            found_param->parse_key_value(key, value);
-            return true;
-        }
-
-        return false;
-    }
-    virtual void save_sequence_add_lines_saveable_parameters(LinkedList<String> *lines) {
-        if (this->saveable_parameters==nullptr) {
-            Debug_println("WARNING: save_sequence_add_lines_saveable_parameters() called, but saveable_parameters isn't initialised yet!");
-            this->setup_saveable_parameters();
-        }
-        for (uint_fast8_t i = 0 ; i < saveable_parameters->size() ; i++) {
-            Debug_printf("%s#save_sequence_add_lines_saveable_parameters() processing %i aka '%s'..\n", this->get_label(), i, saveable_parameters->get(i)->label);
-            if (saveable_parameters->get(i)->is_save_enabled()) {
-                Debug_printf("\t\tis_save_enabled() returned true, getting line!");
-                lines->add(saveable_parameters->get(i)->get_line());
-            }
-        }
-    }
-
-    virtual void save_project_add_lines(LinkedList<String> *lines) {
-
-    }
-    virtual bool parse_project_key_value(String key, String value) {
-        return false;
-    }
-    // call this when the project changes so behaviour can update its settings
-    virtual void notify_project_changed(int project_number) {
-
-    }
-
-    // save all the parameter mapping settings; override in subclasses, which should call back up the chain
-    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
-        this->save_sequence_add_lines_parameters(lines);
-        this->save_sequence_add_lines_saveable_parameters(lines);
-    }
-
-    virtual void save_sequence_add_lines_parameters(LinkedList<String> *lines) {
-        Debug_printf("save_sequence_add_lines_parameters in %s..\n", this->get_label());
+        // Register FloatParameters as children so their save/load is handled by the tree
         if (this->has_parameters()) {
-            LinkedList<FloatParameter*> *parameters = this->get_parameters();
-            for (uint_fast16_t i = 0 ; i < parameters->size() ; i++) {
-                FloatParameter *parameter = parameters->get(i);
-                if (debug) Serial.printf("%s#save_sequence_add_lines_parameters(): saving parameter %s\n", this->get_label(), parameter->label);
-
-                parameter->save_pattern_add_lines(lines);
+            LinkedList<FloatParameter*> *params = this->get_parameters();
+            for (unsigned int i = 0 ; i < params->size() ; i++) {
+                register_child(params->get(i));
             }
         }
-        Debug_println("finished save_sequence_add_lines_parameters.");
     }
 
-    // ask behaviour to process the key/value pair
+    // Save all pattern settings for this behaviour into lines (each prefixed with behaviour path).
+    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
+        sl_save_to_linkedlist(this, *lines);
+    }
+
+    // Project-level hooks (separate from pattern save/load; not migrated to saveloadlib)
+    virtual void save_project_add_lines(LinkedList<String> *lines) {}
+    virtual bool parse_project_key_value(String key, String value) { return false; }
+    virtual void notify_project_changed(int project_number) {}
+
+    // Route a key=value pair (key has behaviour prefix already stripped) into the save tree.
     virtual bool load_parse_key_value(String key, String value) {
-        //bool debug = true;
-        if (debug) Serial.printf("DeviceBehaviourUltimateBase\tload_parse_key_value passed '%s' => '%s'...\n", key.c_str(), value.c_str());
-
-        // first check the behaviour's custom project key values
-        if (this->parse_project_key_value(key, value)) {
-            return true;
-        }
-
-        // then check the 'saveable parameters'
-        if (this->load_parse_key_value_saveable_parameters(key, value)) {
-            return true;
-        }
-
-        // then check the 'modulatable parameters' (ie those from parameters library))
-        static const char *prefix = "parameter~";
-        if (this->has_parameters() && key.startsWith(prefix)) {
-            // its a parameter key, targeted for this behaviour
-            if (debug) Serial.printf("behaviour_base#load_parse_key_value: key starts with '%s', looking for parameter..\n", prefix);
-
-            String stripped_key = key.substring(strlen(prefix));
-            String parameter_name = stripped_key.substring(0, stripped_key.indexOf('~'));
-
-            if (debug) {
-                Serial_printf(
-                    "behaviour_base#load_parse_key_value: looking up parameter '%s' in parameters hash @%p..\n", 
-                    parameter_name.c_str(), 
-                    this->parameters_hash
-                );
-                Serial_flush();
-            }
-
-            // todo: this should maybe live in parameter_manager instead; but it also needs to know what the owner 
-            // is in order to disambiguate between parameters with the same name on different behaviours, so lives here for now
-            if (this->parameters_hash->containsKey(parameter_name)) {
-                if (debug) Serial_printf("behaviour_base#load_parse_key_value: parameter '%s' found in parameters hash!\n", parameter_name.c_str());
-                FloatParameter *parameter = *this->parameters_hash->get(parameter_name);
-                if (parameter->load_parse_key_value(key, value)) {
-                    if (debug) Serial_printf("PARAMETERS\tDeviceBehaviourUltimateBase#load_parse_key_value(%s, %s) found a match in parameters!\n", key.c_str(), value.c_str());
-                    return true;
-                }
-            } else {
-                if (debug) Serial.printf("WARNING: behaviour_base#load_parse_key_value: parameter '%s' not found in parameters hash!\n", parameter_name.c_str());
-            }
-        }
-        if (debug) Serial.printf(F("...load_parse_key_value(%s, %s) isn't a known parameter!\n"));
-        return false;
+        if (this->parse_project_key_value(key, value)) return true;
+        static char keybuf[SL_MAX_LINE];
+        key.toCharArray(keybuf, sizeof(keybuf));
+        static char* segs[16];
+        int count = sl_tokenise_inplace(keybuf, segs, 16);
+        if (count <= 0) return false;
+        return this->load_line(segs, count, value.c_str());
     }
 
-    virtual void setup_saveable_parameters_hash() {
-        if (this->saveable_parameters_hash==nullptr) {
-            Debug_println("instantiating saveable_parameters_hash");
-            this->saveable_parameters_hash = new Hashtable<String, SaveableParameterBase*> ();
-
-            if(this->has_saveable_parameters()) {
-                for (unsigned int i = 0 ; i < this->saveable_parameters->size() ; i++) {
-                    SaveableParameterBase *param = this->saveable_parameters->get(i);
-                    this->saveable_parameters_hash->put(String(param->label), param);
-                }
-            }
-        }
-    }
+    virtual void setup_saveable_parameters_hash() {} // no-op; kept for source compatibility
 
     #ifdef ENABLE_SCREEN
         LinkedList<MenuItem*> *menuitems = nullptr;

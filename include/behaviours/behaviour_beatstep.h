@@ -14,8 +14,6 @@
 
 #include "queue.h"
 
-#include "SaveableParameters.h"
-
 extern MIDIOutputWrapper *beatstep_output;
 
 //void beatstep_setOutputWrapper(MIDIOutputWrapper *);
@@ -492,25 +490,24 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
                 sysex_request_queue->setPaused(false);
             }
 
-            virtual void setup_saveable_parameters() override {
-                if (this->saveable_parameters==nullptr)
-                    DeviceBehaviourUltimateBase::setup_saveable_parameters();
-                DividedClockedBehaviour::setup_saveable_parameters();
+            virtual void setup_saveable_settings() override {
+                DeviceBehaviourUltimateBase::setup_saveable_settings();
+                DividedClockedBehaviour::setup_saveable_settings();
 
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
-                    saveable_parameters->add(new LSaveableParameter<int8_t>(
+                    register_setting(new LSaveableSetting<int8_t>(
                         sysex_parameters[i].label,
                         "Sysex",
                         sysex_parameters[i].target_variable,
-                        [=](int8_t v) -> void { 
+                        [=](int8_t v) {
                             void(DeviceBehaviour_Beatstep::*setter_func)(int8_t) = sysex_parameters[i].setter_func;
                             if (setter_func!=nullptr)
-                                (this->*setter_func)(v); 
+                                (this->*setter_func)(v);
                             else if (sysex_parameters[i].target_variable!=nullptr)
                                 *sysex_parameters[i].target_variable = v;
                         }
                     ));
-                }                    
+                }
             }
         #endif
 

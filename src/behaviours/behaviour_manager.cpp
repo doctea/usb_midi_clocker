@@ -307,7 +307,9 @@ void setup_behaviour_manager() {
     Serial_println(F("Setting up behaviours label hash...")); Serial_flush();
     behaviour_manager->setup_behaviours_label_hash();
     Serial_println(F("Finished setting up behaviours label hash...")); Serial_flush();
-
+    Serial_println(F("Setting up saveable settings...")); Serial_flush();
+    behaviour_manager->setup_saveable_settings();
+    Serial_println(F("Finished setting up saveable settings.")); Serial_flush();
     Serial_println(F("Exiting setup_behaviour_manager()"));
 }
 
@@ -357,6 +359,8 @@ void setup_behaviour_manager() {
 
         // create a page for holding recall/save options from every behaviour
         menu->add_page("Recall parameters");
+        // TODO: rebuild recall-parameter UI using saveloadlib settings tree
+        /*
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             tft_print("!");
             Serial_printf("about to set up Recall parameters () for behaviour %i/%i ", i+1, behaviours->size());
@@ -387,17 +391,18 @@ void setup_behaviour_manager() {
                     menu->add(recall_selector, behaviour->colour);
                 }
                 recall_selector->addItem(new SaveableParameterOptionToggle(p));
-                /*menu->add(
-                    new LambdaToggleControl(p->niceify(), 
-                        [p](bool v) -> void { p->set_recall_enabled(v); },
-                        [p]() -> bool { return p->is_recall_enabled(); }
-                    ),
-                    behaviour->colour
-                );*/
+                // menu->add(
+                //     new LambdaToggleControl(p->niceify(), 
+                //         [p](bool v) -> void { p->set_recall_enabled(v); },
+                //         [p]() -> bool { return p->is_recall_enabled(); }
+                //     ),
+                //     behaviour->colour
+                // );
 
                 last_category = p->category_name;
             }
         }
+        */ // end TODO comment
         tft_print("\n");
 
         Serial_println("Finished in create_all_behaviour_menu_items"); Serial_flush();
@@ -413,7 +418,7 @@ void setup_behaviour_manager() {
             Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: done calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
 
             uint16_t group_colour = C_WHITE;
-            if (menuitems->size()>0 || behaviour->has_parameters() || behaviour->has_saveable_parameters()) {
+            if (menuitems->size()>0 || behaviour->has_parameters()) {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
                 menu->add_page(behaviour->get_label(), group_colour);
@@ -437,16 +442,6 @@ void setup_behaviour_manager() {
                     menu, 
                     behaviour->get_label(), 
                     behaviour->get_parameters(),
-                    group_colour
-                );
-                Serial_println("done."); Serial_flush(); 
-            }
-
-            // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
-            if (behaviour->has_saveable_parameters()) {
-                Serial_print("doing create_saveable_parameters_recall_selector.."); Serial_flush(); 
-                menu->add(
-                    behaviour->create_saveable_parameters_recall_selector(), 
                     group_colour
                 );
                 Serial_println("done."); Serial_flush(); 

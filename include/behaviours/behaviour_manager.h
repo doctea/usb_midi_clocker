@@ -37,11 +37,10 @@ class DeviceBehaviourManager {
 
         Hashtable<String, DeviceBehaviourUltimateBase*> *behaviours_label_hash = nullptr;
 
-        void setup_saveable_parameters() {
+        void setup_saveable_settings() {
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                Serial_printf("setup_saveable_parameters for %i: %s\n", i, behaviours->get(i)->get_label());
-                behaviours->get(i)->setup_saveable_parameters();
-                behaviours->get(i)->setup_saveable_parameters_hash();
+                Serial_printf("setup_saveable_settings for %i: %s\n", i, behaviours->get(i)->get_label());
+                sl_setup_all(behaviours->get(i));
             }
         }
 
@@ -388,42 +387,31 @@ class DeviceBehaviourManager {
                 return nullptr;
         }
 
+        // Parse a single line from the pattern save file.
+        // New format: "BehaviourLabel~key~subkey=value"
         bool load_parse_line(String line) {
-            //Serial_printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
-            int split = line.indexOf('=');
-            if (split>=0) {
-                String key = line.substring(0, split);
-                String value = line.substring(split+1);
-                //Serial.printf("behaviour_manager#load_parse_line processing %s\n", line.c_str());
-                return this->load_parse_key_value(key, value);
-            } else {
-                return this->load_parse_key_value(line, "");
-            }
-        }
+            int eq = line.indexOf('=');
+            if (eq < 0) return false;
+            String wholekey = line.substring(0, eq);
+            String value    = line.substring(eq + 1);
 
-        bool load_parse_key_value(String key, String value) {
-            static DeviceBehaviourUltimateBase *current_behaviour = nullptr;
-            //Serial.printf("behaviour_manager#load_parse_key_value passed '%s','%s' while current_behaviour is @%p\n", key.c_str(), value.c_str(), current_behaviour);
+            int tilde = wholekey.indexOf('~');
+            if (tilde < 0) return false;
+            String behaviour_label = wholekey.substring(0, tilde);
+            String rest            = wholekey.substring(tilde + 1);
 
-            if (key.equals(F("behaviour_start"))) {
-                DeviceBehaviourUltimateBase *d = this->find_behaviour_for_label(value);
-                if (debug) Serial_printf(F("found behaviour_start for '%s' with behaviour @%p\n"), value.c_str(), d); 
-                current_behaviour = d;
-                return true;
-            } else if (key.equals(F("behaviour_end"))) {
-                //Serial_printf(F("found behaviour_end for '%s'\n"), value.c_str());
-                current_behaviour = nullptr;
-                return true;
-            } else if (current_behaviour!=nullptr && current_behaviour->load_parse_key_value(key, value)) {
-                if (debug) Serial_printf(F("%s: Succeeded in loading key %s for value '%s'\n"), current_behaviour->get_label(), key.c_str(), value.c_str());
-                return true;
+            DeviceBehaviourUltimateBase *b = find_behaviour_for_label(behaviour_label);
+            if (!b) {
+                if (debug) Serial_printf("load_parse_line: no behaviour found for label '%s'\n", behaviour_label.c_str());
+                return false;
             }
-            if (debug) {
-                Serial_printf(F("behaviour_manager tried processing '%s' => '%s' but: not handled; "), key.c_str(), value.c_str());
-                if (current_behaviour==nullptr) Serial_printf("and no behaviour set");
-                Serial_println();
-            }
-            return false;
+
+            static char keybuf[SL_MAX_LINE];
+            rest.toCharArray(keybuf, sizeof(keybuf));
+            static char* segs[16];
+            int count = sl_tokenise_inplace(keybuf, segs, 16);
+            if (count <= 0) return false;
+            return b->load_line(segs, count, value.c_str());
         }
 
         // ask each behaviour to add option lines to save project file
@@ -443,22 +431,9 @@ class DeviceBehaviourManager {
 
         // ask each behaviour to add option lines to save pattern file
         void save_pattern_add_lines(LinkedList<String> *lines) {
-            //LinkedList<String> lines = LinkedList<String>();
             const uint_fast8_t size = behaviours->size();
             for (uint_fast8_t i = 0 ; i < size ; i++) {
-                //Serial_printf(">>> behaviour_manager#save_pattern_add_lines for behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
-                DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                unsigned int lines_before = lines->size();
-                //Serial_printf("about to save_pattern_add_lines on behaviour.."); Serial_flush();
-                device->save_pattern_add_lines(lines);
-                //Serial_printf("just did save_pattern_add_lines and got %i items\n", lines->size()); Serial_flush();
-                // only add behaviour_start and behaviour_end lines if the behaviour added lines
-                if (lines_before!=lines->size()) {
-                    lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
-                    //Serial_printf("\tbehaviour_manager#save_pattern_add_lines calling on behaviour...\n");
-                    lines->add(F("behaviour_end=") + String(device->get_label()));
-                }
-                //Serial_printf("<<< behaviour_manager#save_pattern_add_lines completed behaviour %i aka %s\n", i, behaviours->get(i)->get_label());
+                behaviours->get(i)->save_pattern_add_lines(lines);
             }
         }
 

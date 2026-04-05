@@ -175,47 +175,29 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             // TODO: logic to round-robin the outputs and track notes that are playing etc
         }*/
 
-        virtual void setup_saveable_parameters() override {
-            if (this->saveable_parameters == nullptr)
-                DeviceBehaviourUltimateBase::setup_saveable_parameters();
+        virtual void setup_saveable_settings() override {
+            DeviceBehaviourUltimateBase::setup_saveable_settings();
+            PolyphonicBehaviour::setup_saveable_settings();
 
-            PolyphonicBehaviour::setup_saveable_parameters();
-
-            // Add saveable parameters specific to CVOutputBehaviour
             for (int i = 0 ; i < channel_count; i++) {
-                if (outputs[i] != nullptr) {
-                    this->saveable_parameters->add(new LSaveableParameter<bool>(
-                        (String("Slew ") + String(/*'A'+*/i)).c_str(),
-                        "Slews",
-                        &outputs[i]->slew_enabled
-                    ));
-                }
+                if (outputs[i] != nullptr)
+                    register_setting(new LSaveableSetting<bool>(
+                        (String("Slew ") + String(i)).c_str(), "Slews",
+                        &outputs[i]->slew_enabled));
             }
-
-            // Add saveable parameters for controlling the slew rate of the outputs
             for (int i = 0 ; i < channel_count; i++) {
-                if (outputs[i] != nullptr) {
-                    this->saveable_parameters->add(new LSaveableParameter<float>(
-                        (String("Slew Rate ") + String(/*'A'+*/i)).c_str(),
-                        "Slews",
-                        nullptr,
-                        [=](float v) -> void { outputs[i]->set_slew_rate_normal(v); },
-                        [=]() -> float { return outputs[i]->get_slew_rate_normal(); }
-                    ));
-                }
+                if (outputs[i] != nullptr)
+                    register_setting(new LSaveableSetting<float>(
+                        (String("Slew Rate ") + String(i)).c_str(), "Slews", nullptr,
+                        [=](float v) { outputs[i]->set_slew_rate_normal(v); },
+                        [=]() -> float { return outputs[i]->get_slew_rate_normal(); }));
             }
-
-            // Add saveable parameters for controlling the gate output enabled status
             for (int i = 0 ; i < channel_count; i++) {
-                if (outputs[i] != nullptr) {
-                    this->saveable_parameters->add(new LSaveableParameter<bool>(
-                        (String("Gate Output ") + String(/*'A'+*/i)).c_str(),
-                        "Gates",
-                        nullptr,
-                        [=](bool v) -> void { outputs[i]->set_gate_output_enabled(v); },
-                        [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }
-                    ));
-                }
+                if (outputs[i] != nullptr)
+                    register_setting(new LSaveableSetting<bool>(
+                        (String("Gate Output ") + String(i)).c_str(), "Gates", nullptr,
+                        [=](bool v) { outputs[i]->set_gate_output_enabled(v); },
+                        [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }));
             }
         }
 

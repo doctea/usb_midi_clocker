@@ -422,44 +422,43 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             new BambleSaveableParameter<bool>   ("seed_use_phrase", this,   &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase), // aka 'Use Phrase'
         };*/
 
-        class SaveableParameterPatternEnabled : public SaveableParameterBase {
+        class SaveableParameterPatternEnabled : public SaveableSettingBase {
             public:
                 DeviceBehaviour_Bamble *target = nullptr;
                 int index;
-                const String prefix = String("pattern_enable_") + String(index);
-                SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index) 
-                    : SaveableParameterBase(target->patterns[index].label, index < 16 ? "Patterns 1" : "Patterns 2"), 
-                    target(target), 
-                    index(index) {}
-
-                virtual String get_line() override { 
-                    return prefix + String('=') + String(target->patterns[index].current_state?"true":"false");
+                SaveableParameterPatternEnabled(DeviceBehaviour_Bamble *target, int index)
+                    : target(target), index(index) {
+                    set_label((String("pattern_enable_") + String(index)).c_str());
+                    set_category(index < 16 ? "Patterns 1" : "Patterns 2");
                 }
-                virtual bool parse_key_value(String key, String value) override {
-                    if (key.startsWith(prefix)) {
-                        target->setPatternEnabled(index, value.equals("true") || value.equals("enabled"));
-                        return true;
-                    }
-                    return false;
+                virtual const char* get_line() override {
+                    snprintf(linebuf, SL_MAX_LINE, "%s=%s", label,
+                        target->patterns[index].current_state ? "true" : "false");
+                    return linebuf;
+                }
+                virtual bool parse_key_value(const char* key, const char* value) override {
+                    if (strcmp(key, label) != 0) return false;
+                    target->setPatternEnabled(index, strcmp(value,"true")==0 || strcmp(value,"enabled")==0);
+                    return true;
                 }
         };
 
-        virtual void setup_saveable_parameters() {
-            DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            DividedClockedBehaviour::setup_saveable_parameters();
+        virtual void setup_saveable_settings() override {
+            DeviceBehaviourUltimateBase::setup_saveable_settings();
+            DividedClockedBehaviour::setup_saveable_settings();
 
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("euclidian_mode", "Euclidian", this, &this->demo_mode, nullptr, nullptr, &DeviceBehaviour_Bamble::setDemoMode,   &DeviceBehaviour_Bamble::getDemoMode));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("fills_mode",     "Euclidian", this, &this->fills_mode, nullptr, nullptr, &DeviceBehaviour_Bamble::setFillsMode,  &DeviceBehaviour_Bamble::getFillsMode));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, float>  ("density",        "Euclidian", this, &this->density, nullptr, nullptr, &DeviceBehaviour_Bamble::setDensity,    &DeviceBehaviour_Bamble::getDensity));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("mutate_low",     "Mutate",    this, &this->minimum_pattern, nullptr, nullptr, &DeviceBehaviour_Bamble::setMinimumPattern,    &DeviceBehaviour_Bamble::getMinimumPattern));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, int8_t> ("mutate_high",    "Mutate",    this, &this->maximum_pattern, nullptr, nullptr, &DeviceBehaviour_Bamble::setMaximumPattern,    &DeviceBehaviour_Bamble::getMaximumPattern));
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", "Mutate",    this, &this->euclidian_seed_modifier, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,    &DeviceBehaviour_Bamble::getEuclidianSeedModifier)); // aka 'Seed Modifier' / 'Seed bank'
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("reset_before_mutate", "Mutate",    this, &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate,    &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate)); // aka 'auto-reset'
-            this->saveable_parameters->add(new SaveableParameter<DeviceBehaviour_Bamble, bool>   ("seed_use_phrase","Mutate",    this, &this->euclidian_seed_use_phrase, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,    &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase)); // aka 'Use Phrase')
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("euclidian_mode",       "Euclidian", this, &this->demo_mode,                      nullptr, nullptr, &DeviceBehaviour_Bamble::setDemoMode,                    &DeviceBehaviour_Bamble::getDemoMode));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("fills_mode",           "Euclidian", this, &this->fills_mode,                      nullptr, nullptr, &DeviceBehaviour_Bamble::setFillsMode,                   &DeviceBehaviour_Bamble::getFillsMode));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, float>   ("density",              "Euclidian", this, &this->density,                         nullptr, nullptr, &DeviceBehaviour_Bamble::setDensity,                     &DeviceBehaviour_Bamble::getDensity));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("mutate_low",           "Mutate",    this, &this->minimum_pattern,                nullptr, nullptr, &DeviceBehaviour_Bamble::setMinimumPattern,              &DeviceBehaviour_Bamble::getMinimumPattern));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("mutate_high",          "Mutate",    this, &this->maximum_pattern,                nullptr, nullptr, &DeviceBehaviour_Bamble::setMaximumPattern,              &DeviceBehaviour_Bamble::getMaximumPattern));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", "Mutate",    this, &this->euclidian_seed_modifier,         nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,      &DeviceBehaviour_Bamble::getEuclidianSeedModifier));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("reset_before_mutate",  "Mutate",    this, &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate, &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("seed_use_phrase",      "Mutate",    this, &this->euclidian_seed_use_phrase,      nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,     &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase));
 
             const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
             for (unsigned int i = 0 ; i < size ; i++) {
-                this->saveable_parameters->add(new SaveableParameterPatternEnabled(this, i));
+                register_setting(new SaveableParameterPatternEnabled(this, i));
             }
         }
 

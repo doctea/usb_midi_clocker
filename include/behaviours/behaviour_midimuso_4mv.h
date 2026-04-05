@@ -127,15 +127,10 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*publi
         DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
     }
 
-    virtual void setup_saveable_parameters() override {
-        if (this->saveable_parameters==nullptr)
-            DeviceBehaviourUltimateBase::setup_saveable_parameters();
-
-        //MIDIBassBehaviour::setup_saveable_parameters();
-
-        DividedClockedBehaviour::setup_saveable_parameters();
-
-        PolyphonicBehaviour::setup_saveable_parameters();
+    virtual void setup_saveable_settings() override {
+        DeviceBehaviourUltimateBase::setup_saveable_settings();
+        DividedClockedBehaviour::setup_saveable_settings();
+        PolyphonicBehaviour::setup_saveable_settings();
     }
 
 

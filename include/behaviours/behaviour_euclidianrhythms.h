@@ -164,14 +164,10 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         }
     #endif
 
-    virtual void setup_saveable_parameters() override {
-        DeviceBehaviourUltimateBase::setup_saveable_parameters();
-        this->sequencer->setup_saveable_parameters();
-
-        // todo: better way of 'nesting' a sequencer/child object's saveableparameters within a host object's
-        for(unsigned int i = 0 ; i < sequencer->saveable_parameters->size() ; i++) {
-            this->saveable_parameters->add(sequencer->saveable_parameters->get(i));
-        }
+    virtual void setup_saveable_settings() override {
+        DeviceBehaviourUltimateBase::setup_saveable_settings();
+        // Register sequencer as a child; sl_setup_all will call sequencer->setup_saveable_settings()
+        register_child(this->sequencer);
     }
 
 };

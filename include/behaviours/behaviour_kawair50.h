@@ -9,8 +9,6 @@
 #include "behaviours/behaviour_base_serial.h"
 #include "behaviours/behaviour_clocked.h"
 
-#include <SaveableParameters.h>
-
 #include "Drums.h"
 
 
@@ -368,26 +366,18 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
         virtual LinkedList<MenuItem*> *make_menu_items() override;
     #endif
 
-    virtual void setup_saveable_parameters() override {
-        DeviceBehaviourUltimateBase::setup_saveable_parameters();
-        DividedClockedBehaviour::setup_saveable_parameters();
+    virtual void setup_saveable_settings() override {
+        DeviceBehaviourUltimateBase::setup_saveable_settings();
+        DividedClockedBehaviour::setup_saveable_settings();
 
         for (uint8_t i = 0; i < MIDI_NUM_NOTES ; i++) {
             DrumMapEntry *entry = drum_mapper.drum_map_storage[i];
             if (entry != nullptr) {
-                this->saveable_parameters->add(
-                    /*new SaveableParameter<DrumMapEntry, bool>(
-                        (char *)(String("kawair50_drummap_") + String(entry->incoming_midi_note) + String("_enabled")).c_str(),
-                        (char *)"KawaiR50",
-                        &entry,
-                        &entry->enabled
-                    )*/
-                   new LSaveableParameter<bool>(
-                        (char *)(String("kawair50_drummap_") + String(entry->incoming_midi_note) + String("_enabled")).c_str(),
-                        (char *)"KawaiR50",
-                        &entry->enabled
-                    )
-                );
+                register_setting(new LSaveableSetting<bool>(
+                    (String("kawair50_drummap_") + String(entry->incoming_midi_note) + String("_enabled")).c_str(),
+                    "KawaiR50",
+                    &entry->enabled
+                ));
             }
         }
     }

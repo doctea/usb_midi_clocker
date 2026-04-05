@@ -235,21 +235,8 @@ namespace storage {
       }
       myFile.println(F("; end sequence"));
 
-      // save parameter input states
-      if (debug) {
-        Serial_println(F("Saving parameter inputs..")); Serial_flush();
-      }
-      myFile.println(F("; parameter inputs"));
-      LinkedList<String> parameter_input_lines = LinkedList<String>();
-      parameter_manager->save_pattern_parameter_inputs_add_lines(&parameter_input_lines);
-      for (unsigned int i = 0 ; i < parameter_input_lines.size() ; i++) {
-        //if (debug) 
-        Serial_printf(F("\twriting parameter input line [%i/%i] '%s'\n"), i+1, parameter_input_lines.size(), parameter_input_lines.get(i).c_str());
-        //myFile.printf(F("%s\n"), parameter_input_lines.get(i).c_str());
-        myFile.println(parameter_input_lines.get(i).c_str());
-      }
-      myFile.println(F("; end parameter inputs"));
-      Serial.println(F("Finished saving parameter inputs.")); Serial_flush();
+      // TODO: save parameter input states via saveloadlib
+      // parameter_manager->save_pattern_parameter_inputs_add_lines() removed - vestige of old save/load mechanism
       
       // all done -- close the file
       myFile.close();
@@ -388,10 +375,11 @@ namespace storage {
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
       if (debug) Serial_println(F("Parsed a line with behaviour_manager"));
       return true;
-    } else if (project->isLoadParameterInputOptions() && parameter_manager->load_parse_line(line)) {
+    } /*else if (project->isLoadParameterInputOptions() && parameter_manager->load_parse_line(line)) {
+      // TODO: reload parameter input options via saveloadlib
       if (debug) Serial_println(F("Parsed a line with parameter_manager"));
       return true;
-    } /*else {
+    }*/ /*else {
       // silently ignore for testing
       return;
     }*/

@@ -258,15 +258,12 @@ class DividedClockedBehaviour : public ClockedBehaviour {
             }
         }
 
-        virtual void setup_saveable_parameters() {
-            if (this->saveable_parameters==nullptr)
-                DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            Serial_println("DividedClockedBehaviour::setup_saveable_parameters");
-            Serial_printf("saveable_parameters is @%p\n", this->saveable_parameters);
-            this->saveable_parameters->add(new LSaveableParameter<uint32_t>("divisor", "Clocked", &this->clock_divisor, [=](uint32_t v) -> void { this->set_divisor(v); }, [=]() -> uint32_t { return this->get_divisor(); }));
-            this->saveable_parameters->add(new LSaveableParameter<int32_t>("delay_ticks", "Clocked", &this->clock_delay_ticks, [=](int32_t v) -> void { this->set_delay_ticks(v); }, [=]() -> int32_t { return this->get_delay_ticks(); }));
-            this->saveable_parameters->add(new LSaveableParameter<bool>("auto_restart_on_change","Clocked", &this->auto_restart_on_change, [=](bool v) -> void { this->set_auto_restart_on_change(v); }, [=]() -> bool { return this->should_auto_restart_on_change(); }));
-            this->saveable_parameters->add(new LSaveableParameter<int8_t>("pause_on", "Clocked", &this->pause_during_delay, [=](int8_t v) -> void { this->set_pause_during_delay(v); }, [=]() -> int8_t { return this->get_pause_during_delay(); } ));
+        virtual void setup_saveable_settings() override {
+            // mixin: register only own settings; concrete class calls DeviceBehaviourUltimateBase::setup_saveable_settings() first
+            register_setting(new LSaveableSetting<uint32_t>("divisor",               "Clocked", &this->clock_divisor,          [=](uint32_t v) { this->set_divisor(v); },                [=]() -> uint32_t { return this->get_divisor(); }));
+            register_setting(new LSaveableSetting<int32_t>( "delay_ticks",           "Clocked", &this->clock_delay_ticks,      [=](int32_t v)  { this->set_delay_ticks(v); },             [=]() -> int32_t  { return this->get_delay_ticks(); }));
+            register_setting(new LSaveableSetting<bool>(    "auto_restart_on_change","Clocked", &this->auto_restart_on_change, [=](bool v)     { this->set_auto_restart_on_change(v); },  [=]() -> bool     { return this->should_auto_restart_on_change(); }));
+            register_setting(new LSaveableSetting<int8_t>(  "pause_on",              "Clocked", &this->pause_during_delay,     [=](int8_t v)   { this->set_pause_during_delay(v); },       [=]() -> int8_t   { return this->get_pause_during_delay(); }));
         }
 
         #ifdef ENABLE_SCREEN

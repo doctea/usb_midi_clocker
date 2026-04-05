@@ -208,17 +208,13 @@ class DeviceBehaviour_SkulptSynth : virtual public SkulptDeviceBehaviourBase, vi
         }
         virtual bool transmits_midi_notes() { return true; }
 
-        virtual void setup_saveable_parameters() override {
-            if (this->saveable_parameters==nullptr)
-                DeviceBehaviourUltimateBase::setup_saveable_parameters();
-            ClockedBehaviour::setup_saveable_parameters();
-            ModwheelReceiver::setup_saveable_parameters();
-
-            this->saveable_parameters->add(new LSaveableParameter<bool>(
-                "Clock Enabled",
-                "Clock",
+        virtual void setup_saveable_settings() override {
+            DeviceBehaviourUltimateBase::setup_saveable_settings();
+            // ClockedBehaviour and ModwheelReceiver have no saveable settings of their own
+            register_setting(new LSaveableSetting<bool>(
+                "Clock Enabled", "Clock",
                 &this->clock_enabled,
-                [=](bool v) -> void { this->clock_enabled = v; }
+                [=](bool v) { this->clock_enabled = v; }
             ));
         }
 

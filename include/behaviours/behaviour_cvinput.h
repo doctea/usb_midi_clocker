@@ -145,40 +145,20 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
                 lines->add(String(F("velocity_source=")) + String(this->velocity_input->name));
         }
 
-        virtual void save_pattern_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUltimateBase::save_pattern_add_lines(lines);
-        }
-
-        virtual void setup_saveable_parameters() override {
-            if (this->saveable_parameters==nullptr)
-                DeviceBehaviourUltimateBase::setup_saveable_parameters();
+        virtual void setup_saveable_settings() override {
+            DeviceBehaviourUltimateBase::setup_saveable_settings();
 
             #ifdef ENABLE_SCALES
-                // key centre + scale
-                this->saveable_parameters->add(new LSaveableParameter<int8_t>    
-                    ("scale_root", "CV", &this->chord_player.scale_root, [=](int8_t v) -> void { this->chord_player.set_scale_root(v); }, [=]() -> int8_t { return this->chord_player.get_scale_root(); } ));
-                this->saveable_parameters->add(new LSaveableParameter<scale_index_t>
-                    ("scale_number", "CV", &this->chord_player.scale, [=](scale_index_t v) -> void { this->chord_player.set_scale(v); }, [=]() -> scale_index_t { return this->chord_player.get_scale(); }));
-
-                // note duration and triggers
-                this->saveable_parameters->add(new LSaveableParameter<int32_t>
-                    ("note_length_ticks", "CV", &this->chord_player.note_length_ticks, [=](int32_t v) -> void{ this->chord_player.set_note_length(v); }, [=]() -> int32_t { return this->chord_player.get_note_length(); } ));
-                this->saveable_parameters->add(new LSaveableParameter<int32_t>
-                    ("trigger_each", "CV", &this->chord_player.trigger_on_ticks, [=](int32_t v) -> void{ this->chord_player.set_trigger_on_ticks(v); }, [=]() -> int32_t { return this->chord_player.get_trigger_on_ticks(); } ));
-                this->saveable_parameters->add(new LSaveableParameter<int32_t>
-                    ("trigger_delay_ticks", "CV", &this->chord_player.trigger_delay_ticks, [=](int32_t v) -> void { this->chord_player.set_trigger_delay_ticks(v); }, [=]() -> int32_t { return this->chord_player.get_trigger_delay_ticks(); } ));
-
-                // quantisation settings
-                this->saveable_parameters->add(new LSaveableParameter<bool>   
-                    ("quantise_enable", "CV", &this->chord_player.quantise, [=](bool v) -> void { this->chord_player.set_quantise(v); }, [=]() -> bool { return this->chord_player.is_quantise(); } ));
-                this->saveable_parameters->add(new LSaveableParameter<bool>   
-                    ("play_chords", "CV", &this->chord_player.play_chords, [=](bool v) -> void{ this->chord_player.set_play_chords(v); }, [=]() -> bool { return this->chord_player.is_play_chords(); } ));
-                this->saveable_parameters->add(new LSaveableParameter<CHORD::Type>
-                    ("Chord", "CV", &this->chord_player.selected_chord_number, [=](CHORD::Type v) -> void { this->chord_player.set_selected_chord(v); }, [=]() -> CHORD::Type { return this->chord_player.get_selected_chord(); } ));
-                this->saveable_parameters->add(new LSaveableParameter<int8_t>
-                    ("inversion", "CV", &this->chord_player.inversion, [=](int8_t v) -> void { this->chord_player.set_inversion(v); }, [=]() -> int8_t { return this->chord_player.get_inversion(); } ));
+                register_setting(new LSaveableSetting<int8_t>(      "scale_root",          "CV", &this->chord_player.scale_root,                  [=](int8_t v)        { this->chord_player.set_scale_root(v); },         [=]() -> int8_t        { return this->chord_player.get_scale_root(); }));
+                register_setting(new LSaveableSetting<scale_index_t>("scale_number",        "CV", &this->chord_player.scale,                       [=](scale_index_t v) { this->chord_player.set_scale(v); },             [=]() -> scale_index_t { return this->chord_player.get_scale(); }));
+                register_setting(new LSaveableSetting<int32_t>(      "note_length_ticks",   "CV", &this->chord_player.note_length_ticks,            [=](int32_t v)       { this->chord_player.set_note_length(v); },        [=]() -> int32_t       { return this->chord_player.get_note_length(); }));
+                register_setting(new LSaveableSetting<int32_t>(      "trigger_each",        "CV", &this->chord_player.trigger_on_ticks,             [=](int32_t v)       { this->chord_player.set_trigger_on_ticks(v); },   [=]() -> int32_t       { return this->chord_player.get_trigger_on_ticks(); }));
+                register_setting(new LSaveableSetting<int32_t>(      "trigger_delay_ticks", "CV", &this->chord_player.trigger_delay_ticks,          [=](int32_t v)       { this->chord_player.set_trigger_delay_ticks(v); },[=]() -> int32_t       { return this->chord_player.get_trigger_delay_ticks(); }));
+                register_setting(new LSaveableSetting<bool>(         "quantise_enable",     "CV", &this->chord_player.quantise,                     [=](bool v)          { this->chord_player.set_quantise(v); },           [=]() -> bool          { return this->chord_player.is_quantise(); }));
+                register_setting(new LSaveableSetting<bool>(         "play_chords",         "CV", &this->chord_player.play_chords,                  [=](bool v)          { this->chord_player.set_play_chords(v); },        [=]() -> bool          { return this->chord_player.is_play_chords(); }));
+                register_setting(new LSaveableSetting<CHORD::Type>(  "Chord",               "CV", &this->chord_player.selected_chord_number,        [=](CHORD::Type v)   { this->chord_player.set_selected_chord(v); },     [=]() -> CHORD::Type   { return this->chord_player.get_selected_chord(); }));
+                register_setting(new LSaveableSetting<int8_t>(       "inversion",           "CV", &this->chord_player.inversion,                    [=](int8_t v)        { this->chord_player.set_inversion(v); },          [=]() -> int8_t        { return this->chord_player.get_inversion(); }));
             #endif
-
         }
 
         // ask behaviour to process the key/value pair
