@@ -1,9 +1,8 @@
 #include <Arduino.h>
-#include "storage.h"
-
-#include "project.h"
-
-#include "behaviours/behaviour_manager.h"
+#include "settings_root.h"  // defines SettingsRoot; also pulls in storage.h, project.h, behaviour_manager.h
+#include "storage.h"        // idempotent re-include (pragma once)
+#include "project.h"        // idempotent
+#include "behaviours/behaviour_manager.h"  // idempotent
 
 #include "mymenu/menu_fileviewers.h"
 
@@ -238,8 +237,8 @@ namespace storage {
       if (debug) { Serial_println(F("Saving behaviour extensions..")); Serial_flush(); }
       myFile.println(F("; behaviour extensions"));
       LinkedList<String> behaviour_lines = LinkedList<String>();
-      if (debug) Serial.println("calling save_pattern_add_lines..");
-      behaviour_manager->save_pattern_add_lines(&behaviour_lines);
+      if (debug) Serial.println("calling sl_save_to_linkedlist for behaviour_manager..");
+      sl_save_to_linkedlist(behaviour_manager, behaviour_lines, SL_SCOPE_PATTERN);
       if (debug) { Serial.println("got behaviour_lines to save.."); Serial.flush(); }
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
         if (debug) {

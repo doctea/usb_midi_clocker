@@ -40,7 +40,7 @@ void behaviour_manager_kill_all_current_notes();
 class MIDITrack;
 class DeviceBehaviourUltimateBase;
 
-class MIDIMatrixManager {
+class MIDIMatrixManager : public SHStorage<MAX_NUM_SOURCES, 8> {
     public:
     static MIDIMatrixManager* getInstance();
 
@@ -552,6 +552,100 @@ class MIDIMatrixManager {
         } else {
             return this->load_parse_key_value(line, "");
         }
+    }
+
+    // ---- saveloadlib settings ----
+    //
+    // One child node per registered source; each emits one line:
+    //   midi_matrix~<src_handle>~targets=tgt1;tgt2;...
+    // Scale settings are registered with SL_SCOPE_PROJECT;
+    // connection lists are registered with SL_SCOPE_ROUTING so they can be
+    // excluded from a load without touching scale/project settings.
+    // reset_matrix() must be called before loading routing (done in project.h).
+    char routing_line_buf[SL_MAX_LINE];  // shared scratch buf (singleton, single-threaded)
+
+    struct SourceNode : public SHStorage<0, 1> {
+        MIDIMatrixManager* manager = nullptr;
+        source_id_t source_id = -1;
+
+        struct TargetListSetting : public SaveableSettingBase {
+            SourceNode* node;
+            TargetListSetting(SourceNode* n) : node(n) {
+                set_label("targets");
+            }
+            const char* get_line() override {
+                char* buf = node->manager->routing_line_buf;
+                int pos = snprintf(buf, SL_MAX_LINE, "targets=");
+                bool first = true;
+                for (target_id_t t = 0; t < (target_id_t)node->manager->targets_count; t++) {
+                    if (node->manager->is_connected(node->source_id, t)) {
+                        if (!first && pos < SL_MAX_LINE - 2) buf[pos++] = ';';
+                        int w = snprintf(buf + pos, SL_MAX_LINE - pos, "%s",
+                            node->manager->targets[t].handle);
+                        if (w > 0) pos += w;
+                        first = false;
+                    }
+                }
+                if (pos < SL_MAX_LINE) buf[pos] = '\0';
+                return buf;
+            }
+            bool parse_key_value(const char* key, const char* value) override {
+                if (strcmp(key, "targets") != 0) return false;
+                if (!value || !*value) return true;  // no connections — valid
+                char* buf = node->manager->routing_line_buf;
+                strncpy(buf, value, SL_MAX_LINE - 1);
+                buf[SL_MAX_LINE - 1] = '\0';
+                const char* src_handle = node->manager->sources[node->source_id].handle;
+                char* p = buf;
+                while (*p) {
+                    char* semi = strchr(p, ';');
+                    if (semi) *semi = '\0';
+                    if (*p) node->manager->connect(src_handle, p);
+                    if (!semi) break;
+                    p = semi + 1;
+                }
+                return true;
+            }
+            size_t heap_size() const override { return sizeof(TargetListSetting); }
+        };
+
+        void init(MIDIMatrixManager* m, source_id_t sid) {
+            manager = m;
+            source_id = sid;
+            set_path_segment(m->sources[sid].handle);
+            register_setting(new TargetListSetting(this), false, SL_SCOPE_ROUTING);
+        }
+    };
+
+    SourceNode source_nodes[MAX_NUM_SOURCES] = {};
+
+    virtual void setup_saveable_settings() override {
+        set_path_segment("midi_matrix");
+        // Register one child node per registered source
+        for (source_id_t s = 0; s < (source_id_t)sources_count; s++) {
+            source_nodes[s].init(this, s);
+            register_child(&source_nodes[s]);
+        }
+        #ifdef ENABLE_SCALES
+            register_setting(new LSaveableSetting<scale_index_t>(
+                "global_scale_type", "Scale", nullptr,
+                [=](scale_index_t v) { this->set_global_scale_type(v); },
+                [=]() -> scale_index_t { return this->get_global_scale_type(); }
+            ), false, SL_SCOPE_PROJECT);
+            register_setting(new LSaveableSetting<int8_t>(
+                "global_scale_root", "Scale", nullptr,
+                [=](int8_t v) { this->set_global_scale_root(v); },
+                [=]() -> int8_t { return this->get_global_scale_root(); }
+            ), false, SL_SCOPE_PROJECT);
+            register_setting(new LSaveableSetting<bool>(
+                "global_quantise_on", "Scale",
+                &this->global_quantise_on
+            ), false, SL_SCOPE_PROJECT);
+            register_setting(new LSaveableSetting<bool>(
+                "global_quantise_chord_on", "Scale",
+                &this->global_quantise_chord_on
+            ), false, SL_SCOPE_PROJECT);
+        #endif
     }
 
     bool load_parse_key_value(String key, String value, bool debug_print = false) {

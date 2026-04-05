@@ -137,16 +137,43 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             #endif
         }
 
-        // todo: do we like, want a 'save_global_add_lines' sorta thing for global configs?  or should this be project config?
-        virtual void save_project_add_lines(LinkedList<String> *lines) override {
-            if (this->pitch_input!=nullptr)
-                lines->add(String(F("pitch_source=")) + String(this->pitch_input->name));
-            if (this->velocity_input!=nullptr)
-                lines->add(String(F("velocity_source=")) + String(this->velocity_input->name));
-        }
-
         virtual void setup_saveable_settings() override {
             DeviceBehaviourUltimateBase::setup_saveable_settings();
+
+            register_setting(new LSaveableSetting<const char*>(
+                "pitch_source", "CV",
+                nullptr,
+                [=](const char* name) {
+                    BaseParameterInput *source = (name && name[0]) ? parameter_manager->getInputForName((char*)name) : nullptr;
+                    if (source != nullptr)
+                        this->set_selected_parameter_input(source);
+                    else {
+                        this->set_selected_parameter_input(nullptr);
+                        if (name && name[0])
+                            messages_log_add(String(F("WARNING: CVInput couldn't find pitch input '")) + name + "'");
+                    }
+                },
+                [=]() -> const char* {
+                    return (this->pitch_input != nullptr) ? this->pitch_input->name : nullptr;
+                }
+            ), false, SL_SCOPE_PROJECT);
+            register_setting(new LSaveableSetting<const char*>(
+                "velocity_source", "CV",
+                nullptr,
+                [=](const char* name) {
+                    BaseParameterInput *source = (name && name[0]) ? parameter_manager->getInputForName((char*)name) : nullptr;
+                    if (source != nullptr)
+                        this->set_selected_velocity_input(source);
+                    else {
+                        this->set_selected_velocity_input(nullptr);
+                        if (name && name[0])
+                            messages_log_add(String(F("WARNING: CVInput couldn't find velocity input '")) + name + "'");
+                    }
+                },
+                [=]() -> const char* {
+                    return (this->velocity_input != nullptr) ? this->velocity_input->name : nullptr;
+                }
+            ), false, SL_SCOPE_PROJECT);
 
             #ifdef ENABLE_SCALES
                 register_setting(new LSaveableSetting<int8_t>(      "scale_root",          "CV", &this->chord_player.scale_root,                  [=](int8_t v)        { this->chord_player.set_scale_root(v); },         [=]() -> int8_t        { return this->chord_player.get_scale_root(); }));
@@ -161,34 +188,10 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             #endif
         }
 
-        // ask behaviour to process the key/value pair
+        // ask behaviour to process the key/value pair — pitch_source and velocity_source
+        // are now handled by the saveloadlib tree registered in setup_saveable_settings().
         virtual bool load_parse_key_value(String key, String value) override {
-            static const String warning_message = String("WARNING: Behaviour_CVInput couldn't find an input for the name '");
-            if (key.equals(F("pitch_source"))) {
-                //this->pitch_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
-                BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
-                if (source!=nullptr)
-                    this->set_selected_parameter_input(source);
-                else {
-                    this->set_selected_parameter_input(nullptr);
-                    messages_log_add(warning_message + value + "'");
-                }
-                return true;
-            } else if (key.equals(F("velocity_source"))) {
-                //this->pitch_input = parameter_manager->getInputForName((char*)value.c_str()); //.charAt(0));
-                BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
-                if (source!=nullptr)
-                    this->set_selected_velocity_input(source);
-                else {
-                    this->set_selected_velocity_input(nullptr);
-                    messages_log_add(warning_message + value + "'");
-                }
-                return true;
-            } else if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
-                return true;
-            }
-
-            return false;
+            return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
         }
 
         #ifdef ENABLE_PARAMETERS

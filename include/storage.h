@@ -8,7 +8,6 @@
   #include "SD.h"
 #endif
 
-
 void setup_saveloadlib();
 namespace storage {
 
@@ -96,8 +95,8 @@ namespace storage {
     uint8_t size_sequences = NUM_SEQUENCES;
     uint8_t size_steps     = NUM_STEPS;
     uint8_t clock_multiplier[NUM_CLOCKS] = {
-      //7, 6, 5, 4, 3, 2, 1, 0
-      5, 4, 3, 2, 1, 3, 4, 7
+      7, 6, 5, 4, 3, 2, 1, 0
+      //5, 4, 3, 2, 1, 3, 4, 7
     };
     uint8_t sequence_data[NUM_SEQUENCES][NUM_STEPS];
     uint8_t clock_delay[NUM_CLOCKS] = { 0, 0, 0, 0,
@@ -141,25 +140,9 @@ namespace storage {
   extern savestate current_state;
 }
 
-class SettingsRoot : public SHStorage<16,16> {
-    public:
-        SettingsRoot() {
-          this->set_path_segment("root");
-        }
-
-        virtual void setup_saveable_settings() override {
-            //this->register_setting(new LSaveableSetting<uint8_t>("test_setting", "Root", &test_setting));
-
-            register_child(project);
-
-            //register_child(midi_matrix_manager);
-
-            register_child(&storage::current_state);
-        }
-
-        uint8_t test_setting = 42;
-};
-
-
+// SettingsRoot is defined in settings_root.h (above the circular include boundary).
+// storage.h only forward-declares it so callers that just need the pointer type
+// do not have to pull in project.h / behaviour_manager.h etc.
+class SettingsRoot;
 extern SettingsRoot *settings_root;
 

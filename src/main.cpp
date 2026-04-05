@@ -171,6 +171,12 @@ void setup() {
   setup_behaviour_manager();
   Serial_printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
 
+  #ifdef ENABLE_STORAGE
+    Serial.println("Setting up saveloadlib..."); Serial.flush();
+    setup_saveloadlib();
+    Serial.println("Finished setting up saveloadlib!"); Serial.flush();
+  #endif
+
   //Serial_println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
   Serial_println(F("..MIDI matrix manager.."));
@@ -325,12 +331,6 @@ void setup() {
   #ifdef LOAD_CALIBRATION_ON_BOOT
     parameter_manager->load_all_calibrations();
   #endif
-
-  #ifdef ENABLE_STORAGE
-    Serial.println("Setting up saveloadlib..."); Serial.flush();
-    setup_saveloadlib();
-    Serial.println("Finished setting up saveloadlib!"); Serial.flush();
-#endif
 
   #ifdef USE_UCLOCK
     Serial_println("Starting uClock..."); Serial_flush();

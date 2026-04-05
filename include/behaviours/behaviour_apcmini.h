@@ -427,17 +427,12 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             }
         }
 
-        virtual void save_project_add_lines(LinkedList<String> *lines) override {
-            DeviceBehaviourUSBBase::save_project_add_lines(lines);
-            lines->add(String("tempo_cc=")+String(this->tempo_fader_cc));
-        }
-
-        virtual bool parse_project_key_value(String key, String value) override {
-            if (key.equals("tempo_cc")) {
-                this->tempo_fader_cc = value.toInt();
-                return true;
-            }
-            return DeviceBehaviourUSBBase::parse_project_key_value(key, value);
+        virtual void setup_saveable_settings() override {
+            DeviceBehaviourUSBBase::setup_saveable_settings();
+            register_setting(new LSaveableSetting<uint8_t>(
+                "tempo_cc", "APCMini",
+                &this->tempo_fader_cc
+            ), false, SL_SCOPE_PROJECT);
         }
 
         //FLASHMEM // causes a section type conflict with virtual void DeviceBehaviour_APCMini::setup_callbacks() 

@@ -413,19 +413,31 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
             gate_manager->send_gate(this->bank, i, HIGH);
     }
 
+    // ---- saveloadlib ----
+    virtual void setup_saveable_settings() override {
+        DeviceBehaviourUltimateBase::setup_saveable_settings();
+        // Encode the 128-entry note→gate map as a compact nibble-hex string.
+        // Stored values are map_note_to_gate[i]+1 (offset=1) so that
+        // the -1 sentinel (no gate) becomes nibble 0, and gates 0..8 become 1..9.
+        register_setting(new SaveableNibbleArraySetting<int8_t>(
+            "map_note_to_gate", "Gates",
+            this->map_note_to_gate, MIDI_NUM_NOTES, /*offset=*/1
+        ), false, SL_SCOPE_PROJECT);
+    }
+
     virtual void save_project_add_lines(LinkedList<String> *lines) override {
-        DeviceBehaviourUltimateBase::save_project_add_lines(lines);
-        for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
-            lines->add(String("map_note_to_gate=")+String(i)+'|'+String(this->map_note_to_gate[i]));
-        }
+        // Legacy virtual kept empty — map_note_to_gate is now emitted by the saveloadlib tree.
+        // (DeviceBehaviourUltimateBase::save_project_add_lines is also a no-op)
     }
 
     virtual bool parse_project_key_value(String key, String value) override {
-        //Serial.printf("VirtualBehaviour_SequencerGates#parse_project_key_value(%s, %s): ", key.c_str(), value.c_str()); Serial_flush();
-        if (key.startsWith("map_note_to_gate")) {
+        // Legacy load: old project files wrote 128 lines of "map_note_to_gate=i|v".
+        // Detect those by the presence of '|' in the value and handle them directly.
+        // New files write a single nibble line handled by the saveloadlib tree.
+        if (key.startsWith(F("map_note_to_gate")) && value.indexOf('|') >= 0) {
             int8_t separator = value.indexOf('|');
-            if (separator>=0)
-                this->map_note_to_gate[value.substring(0,separator).toInt()] = value.substring(separator+1).toInt();
+            this->map_note_to_gate[value.substring(0, separator).toInt()] =
+                value.substring(separator + 1).toInt();
             return true;
         }
         return DeviceBehaviourUltimateBase::parse_project_key_value(key, value);

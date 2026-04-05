@@ -18,7 +18,7 @@
     #include <util/atomic.h>
 #endif
 
-class DeviceBehaviourManager {
+class DeviceBehaviourManager : public SHStorage<48, 0> {
     public:
         bool debug = false;
 
@@ -37,10 +37,11 @@ class DeviceBehaviourManager {
 
         Hashtable<String, DeviceBehaviourUltimateBase*> *behaviours_label_hash = nullptr;
 
-        void setup_saveable_settings() {
+        virtual void setup_saveable_settings() override {
+            set_path_segment("behaviours");
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                Serial_printf("setup_saveable_settings for %i: %s\n", i, behaviours->get(i)->get_label());
-                sl_setup_all(behaviours->get(i));
+                Serial_printf("setup_saveable_settings register_child for %i: %s\n", i, behaviours->get(i)->get_label());
+                register_child(behaviours->get(i));
             }
         }
 
@@ -414,17 +415,21 @@ class DeviceBehaviourManager {
             return b->load_line(segs, count, value.c_str());
         }
 
-        // ask each behaviour to add option lines to save project file
+        // ask each behaviour to add project-scope option lines to save project file.
+        // Output format: "BehaviourLabel~key=value" (tilde-delimited) so that
+        // load_parse_line() can route lines back to the correct behaviour.
         void save_project_add_lines(LinkedList<String> *lines) {
             const uint_fast8_t size = behaviours->size();
             for (uint_fast8_t i = 0 ; i < size ; i++) {
                 DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                unsigned int lines_before = lines->size();
-                device->save_project_add_lines(lines);
-                // only add behaviour_start and behaviour_end lines if the behaviour added lines
-                if (lines_before!=lines->size()) {
-                    lines->add(lines_before, F("behaviour_start=") + String(device->get_label()));
-                    lines->add(F("behaviour_end=") + String(device->get_label()));
+                LinkedList<String> blines = LinkedList<String>();
+                // saveloadlib tree (migrated behaviours): emits "key=value" without label prefix
+                sl_save_to_linkedlist(device, blines, SL_SCOPE_PROJECT);
+                // legacy virtual (unmigrated behaviours): appends its own "key=value" lines
+                device->save_project_add_lines(&blines);
+                const char *label = device->get_label();
+                for (unsigned int j = 0 ; j < blines.size() ; j++) {
+                    lines->add(String(label) + "~" + blines.get(j));
                 }
             }
         }
@@ -485,6 +490,8 @@ class DeviceBehaviourManager {
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {
+            set_path_segment("behaviour_manager");
+
             #ifdef ENABLE_USB
                 this->behaviours_usb = new LinkedList<DeviceBehaviourUSBBase*>();
             #endif

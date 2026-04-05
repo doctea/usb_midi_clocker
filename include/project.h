@@ -26,7 +26,7 @@ using namespace storage;
 
 extern volatile bool global_load_lock;
 
-class Project {
+class Project : public SHStorage<0, 8> {
     bool pattern_slot_has_file[NUM_PATTERN_SLOTS_PER_PROJECT];
     #ifdef ENABLE_LOOPER
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];
@@ -100,6 +100,27 @@ class Project {
 
         Project() {
             //initialise_pattern_slots();
+        }
+
+        // ---- saveloadlib integration ----
+        // Registers project-scope scalar settings so they are saved/loaded when
+        // sl_save_to_linkedlist / sl_load_from_file is called with SL_SCOPE_PROJECT.
+        // Called automatically by sl_setup_all() via SettingsRoot::setup_saveable_settings().
+        virtual void setup_saveable_settings() override {
+            this->set_path_segment("project");
+            register_setting(new LSaveableSetting<int>(
+                "id", "Project", nullptr,
+                [this](int v) { /* id on load is informational; project number set by caller */ },
+                [this]() -> int { return this->current_project_number; }
+            ), false, SL_SCOPE_PROJECT);
+            register_setting(new LSaveableSetting<bool>(
+                "auto_advance_pattern", "Project", &this->auto_advance_pattern
+            ), false, SL_SCOPE_PROJECT);
+            #ifdef ENABLE_LOOPER
+            register_setting(new LSaveableSetting<bool>(
+                "auto_advance_looper", "Project", &this->auto_advance_looper
+            ), false, SL_SCOPE_PROJECT);
+            #endif
         }
 
         FLASHMEM void setup_project() {
@@ -347,11 +368,8 @@ class Project {
         }
         bool save_project_settings(int save_to_project_number) {
             #ifdef ENABLE_SD
-            //bool irqs_enabled = __irq_enabled();
-            //__disable_irq();
             File myFile;
 
-            // determine filename, delete if exists, and open the file up for writing
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
             Serial.printf(F("save_project_settings(%i) writing to %s\n"), save_to_project_number, filename);
@@ -359,27 +377,32 @@ class Project {
                 Serial.printf(F("%s exists, deleting first\n"), filename);
                 SD.remove(filename);
             }
-            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
-            if (!myFile) {    
+            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
+            if (!myFile) {
                 Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
-                //if (irqs_enabled) __enable_irq();
                 return false;
             }
 
-            // header
             myFile.println(F("; begin project"));
-            myFile.printf(F("id=%i\n"), save_to_project_number);
 
-            // subclocker settings
+            // Save Project-scope scalar settings via saveloadlib ("project~key=value" lines)
+            LinkedList<String> project_lines = LinkedList<String>();
+            sl_save_to_linkedlist(this, project_lines, SL_SCOPE_PROJECT);
+            for (unsigned int i = 0 ; i < project_lines.size() ; i++) {
+                myFile.println(project_lines.get(i));
+            }
+
+            // Save behaviour project-scope settings ("BehaviourLabel~key=value" lines)
             LinkedList<String> behaviour_lines = LinkedList<String>();
             behaviour_manager->save_project_add_lines(&behaviour_lines);
             for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
                 myFile.println(behaviour_lines.get(i));
             }
 
-            // midi matrix settings
+            // Save MIDI matrix mappings via saveloadlib tree
+            // Connections are scoped SL_SCOPE_ROUTING; scale settings are SL_SCOPE_PROJECT
             LinkedList<String> matrix_lines = LinkedList<String>();
-            midi_matrix_manager->save_project_add_lines(&matrix_lines);
+            sl_save_to_linkedlist(midi_matrix_manager, matrix_lines, (sl_scope_t)(SL_SCOPE_ROUTING | SL_SCOPE_PROJECT));
             for (unsigned int i = 0 ; i < matrix_lines.size() ; i++) {
                 myFile.println(matrix_lines.get(i));
             }
@@ -389,8 +412,6 @@ class Project {
             Serial.println(F("Finished saving."));
 
             update_project_filename(filename);
-
-            //if (irqs_enabled) __enable_irq();
             #endif
             return true;
         }
@@ -440,41 +461,77 @@ class Project {
         }
 
         void load_project_parse_line(String line, bool debug = false) {
-            if (line.charAt(0)==';') 
+            if (line.charAt(0)==';')
                 return;  // skip comment lines
 
-            line = line.replace('\n',"");
-            line = line.replace('\r',"");
+            line.replace('\n', "");
+            line.replace('\r', "");
 
-            String key = line.substring(0, line.indexOf('='));
-            String value = line.substring(line.indexOf('=')+1);
-            line = line.replace('\n',"");
+            int eq = line.indexOf('=');
+            if (eq < 0) return;
+            String left  = line.substring(0, eq);
+            String value = line.substring(eq + 1);
 
-            //Serial_printf("load_project_parse_line(%s)\n", line.c_str());
+            int tilde = left.indexOf('~');
+            if (tilde >= 0) {
+                // Tilde-delimited format: "segment~key=value"
+                String segment = left.substring(0, tilde);
+                String rest    = left.substring(tilde + 1);
 
-            if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
-                // legacy save format, pre-matrix
-                if (debug) {
-                    Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
+                if (segment.equals(F("project"))) {
+                    // Route to this Project's saveloadlib settings tree
+                    static char restbuf[SL_MAX_LINE];
+                    static char valbuf[SL_MAX_LINE];
+                    rest.toCharArray(restbuf, sizeof(restbuf));
+                    value.toCharArray(valbuf, sizeof(valbuf));
+                    static char* segs[16];
+                    int cnt = sl_tokenise_inplace(restbuf, segs, 16);
+                    if (cnt > 0) load_line(segs, cnt, valbuf, SL_SCOPE_PROJECT);
+                    return;
+                } else if (segment.equals(F("midi_matrix"))) {
+                    // Route to midi_matrix_manager's saveloadlib tree.
+                    // SL_SCOPE_ROUTING is included only when isLoadMatrixMappings() is true;
+                    // scale settings (SL_SCOPE_PROJECT) are always loaded.
+                    sl_scope_t routing_scope = this->isLoadMatrixMappings()
+                        ? (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING)
+                        : SL_SCOPE_PROJECT;
+                    static char restbuf[SL_MAX_LINE];
+                    static char valbuf[SL_MAX_LINE];
+                    rest.toCharArray(restbuf, sizeof(restbuf));
+                    value.toCharArray(valbuf, sizeof(valbuf));
+                    static char* segs[16];
+                    int cnt = sl_tokenise_inplace(restbuf, segs, 16);
+                    if (cnt > 0) midi_matrix_manager->load_line(segs, cnt, valbuf, routing_scope);
+                    return;
+                } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
+                    // "BehaviourLabel~key=value" handled by behaviour_manager
+                    return;
+                } else if (this->isLoadMatrixMappings() && midi_matrix_manager->load_parse_line(line)) {
+                    // legacy fallback for any tilde-prefixed matrix lines in old files
+                    return;
                 }
-                line = line.remove(0,String(F("midi_output_map=")).length());
+                if (debug) Serial.printf(F("project: unknown tilde line '%s'\n"), line.c_str());
+                messages_log_add(String("Unknown Project line '") + line + String("'"));
+                return;
+            }
+
+            // Legacy flat format
+            if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
+                // pre-matrix legacy format
+                if (debug) Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
+                line = line.remove(0, String(F("midi_output_map=")).length());
                 int split = line.indexOf('|');
-                String source_label = line.substring(0,split);
-                source_label = source_label.replace(F("_output"),F(""));  // translate pre-matrix style naming to matrix-style naming
-                String target_label = line.substring(split+1,line.length());
+                String source_label = line.substring(0, split);
+                source_label.replace(F("_output"), F(""));
+                String target_label = line.substring(split+1, line.length());
                 midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
                 return;
             } else if (this->isLoadMatrixMappings() && midi_matrix_manager->load_parse_line(line)) {
                 return;
             } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-                // ask behaviour_manager to process the line
-                //Serial.printf(F("project read line '%s', processed by behaviour_manager\n"), line.c_str());
-                //Serial.printf(F("line '%s' was processed by behaviour_manager\n"), line.c_str()); Serial_flush();
                 return;
             }
-            if (debug) {
-                Serial.printf(F("project read line '%s', but didn't know how to process it\n"), line.c_str());
-            }
+            if (debug) Serial.printf(F("project read line '%s', but didn't know how to process it\n"), line.c_str());
             messages_log_add(String("Unknown Project line '") + line + String("'"));
         }
 };

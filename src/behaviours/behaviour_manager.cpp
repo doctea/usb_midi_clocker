@@ -307,9 +307,8 @@ void setup_behaviour_manager() {
     Serial_println(F("Setting up behaviours label hash...")); Serial_flush();
     behaviour_manager->setup_behaviours_label_hash();
     Serial_println(F("Finished setting up behaviours label hash...")); Serial_flush();
-    Serial_println(F("Setting up saveable settings...")); Serial_flush();
-    behaviour_manager->setup_saveable_settings();
-    Serial_println(F("Finished setting up saveable settings.")); Serial_flush();
+    // NOTE: setup_saveable_settings() is now driven by sl_setup_all() in setup_saveloadlib()
+    // (behaviour_manager is a child of SettingsRoot; no standalone call needed here)
     Serial_println(F("Exiting setup_behaviour_manager()"));
 }
 

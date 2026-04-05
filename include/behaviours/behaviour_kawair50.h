@@ -366,20 +366,69 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
         virtual LinkedList<MenuItem*> *make_menu_items() override;
     #endif
 
+    // ---- saveloadlib: pack all drum map state into one line ----
+    //
+    // Format: "kawair50_drummap=note:enabled:index,note:enabled:index,..."
+    // Only canonical entries (entry->incoming_midi_note == slot) are written.
+    // One allocation, one line — vs one LSaveableSetting per entry per field.
+    struct DrumMapStateSetting : public SaveableSettingBase {
+        DrumMapper* mapper;
+
+        DrumMapStateSetting(const char* lbl, const char* cat, DrumMapper* m) : mapper(m) {
+            set_label(lbl);
+            set_category(cat ? cat : "");
+        }
+
+        const char* get_line() override {
+            int pos = snprintf(linebuf, SL_MAX_LINE, "%s=", label);
+            bool first = true;
+            for (uint8_t i = 0; i < MIDI_NUM_NOTES && pos < SL_MAX_LINE - 12; i++) {
+                DrumMapEntry* e = mapper->drum_map_storage[i];
+                if (e == nullptr || e->incoming_midi_note != i) continue;
+                if (!first) linebuf[pos++] = ',';
+                pos += snprintf(linebuf + pos, SL_MAX_LINE - pos, "%u:%u:%u",
+                    (unsigned)i, (unsigned)e->enabled, (unsigned)e->current_note_index);
+                first = false;
+            }
+            linebuf[pos] = '\0';
+            return linebuf;
+        }
+
+        bool parse_key_value(const char* key, const char* value) override {
+            if (strcmp(key, label) != 0) return false;
+            const char* p = value;
+            while (*p) {
+                char* end;
+                unsigned long note = strtoul(p, &end, 10);
+                if (end == p || *end != ':') break;
+                p = end + 1;
+                unsigned long en = strtoul(p, &end, 10);
+                if (end == p || *end != ':') break;
+                p = end + 1;
+                unsigned long idx = strtoul(p, &end, 10);
+                p = end;
+                if (note < MIDI_NUM_NOTES) {
+                    DrumMapEntry* e = mapper->drum_map_storage[note];
+                    if (e != nullptr) {
+                        e->enabled = (bool)en;
+                        e->current_note_index = (uint8_t)constrain(idx, 0, e->num_possible_notes - 1);
+                    }
+                }
+                if (*p == ',') p++;
+            }
+            return true;
+        }
+
+        virtual size_t heap_size() const override { return sizeof(DrumMapStateSetting); }
+    };
+
     virtual void setup_saveable_settings() override {
         DeviceBehaviourUltimateBase::setup_saveable_settings();
         DividedClockedBehaviour::setup_saveable_settings();
 
-        for (uint8_t i = 0; i < MIDI_NUM_NOTES ; i++) {
-            DrumMapEntry *entry = drum_mapper.drum_map_storage[i];
-            if (entry != nullptr) {
-                register_setting(new LSaveableSetting<bool>(
-                    (String("kawair50_drummap_") + String(entry->incoming_midi_note) + String("_enabled")).c_str(),
-                    "KawaiR50",
-                    &entry->enabled
-                ));
-            }
-        }
+        register_setting(new DrumMapStateSetting(
+            "kawair50_drummap", "KawaiR50", &drum_mapper
+        ), false, SL_SCOPE_PROJECT);
     }
 
 };
