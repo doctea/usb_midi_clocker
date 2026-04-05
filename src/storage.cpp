@@ -19,9 +19,6 @@ namespace storage {
 
   savestate current_state; 
 
-  #if defined(__arm__) && defined(CORE_TEENSY)
-  // ... Teensy, so save to SD card instead of to EEPROM
-
   /**
    * hex2int - from https://stackoverflow.com/questions/10156409/convert-hex-string-char-to-int
    * take a hex string and convert it to a 32bit number (max 8 hex digits)
@@ -148,18 +145,52 @@ namespace storage {
     #endif
   }
 
-  FLASHMEM void setup_storage() {
+  // ---------------------------------------------------------------------------
+  // savestate::setup_saveable_settings()
+  // Registers all scene fields under path segment "scene" with SL_SCOPE_PATTERN
+  // mask.  Called once by setup_sd() on current_state.
+  // ---------------------------------------------------------------------------
+  void savestate::setup_saveable_settings() {
+    set_path_segment("scene");
+    char lbl[20];
+
+    // Scene metadata
+    register_setting(new LSaveableSetting<uint8_t>("id",          "Scene", &id),            false, SL_SCOPE_PATTERN);
+    register_setting(new LSaveableSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   false, SL_SCOPE_PATTERN);
+    register_setting(new LSaveableSetting<uint8_t>("size_seqs",   "Scene", &size_sequences), false, SL_SCOPE_PATTERN);
+    register_setting(new LSaveableSetting<uint8_t>("size_steps",  "Scene", &size_steps),    false, SL_SCOPE_PATTERN);
+
+    // Clock multipliers and delays — one setting per clock
+    for (uint8_t i = 0; i < NUM_CLOCKS; i++) {
+      snprintf(lbl, sizeof(lbl), "clock_mult_%u", i);
+      register_setting(new LSaveableSetting<uint8_t>(lbl, "Clock", &clock_multiplier[i]), false, SL_SCOPE_PATTERN);
+    }
+    for (uint8_t i = 0; i < NUM_CLOCKS; i++) {
+      snprintf(lbl, sizeof(lbl), "clock_delay_%u", i);
+      register_setting(new LSaveableSetting<uint8_t>(lbl, "Clock", &clock_delay[i]), false, SL_SCOPE_PATTERN);
+    }
+
+    // Sequence rows — nibble-encoded hex, length read from live size_steps pointer
+    for (uint8_t i = 0; i < NUM_SEQUENCES; i++) {
+      snprintf(lbl, sizeof(lbl), "seq_%u", i);
+      register_setting(new SequenceRowSetting(lbl, "Sequence", sequence_data[i], &size_steps), false, SL_SCOPE_PATTERN);
+    }
+  }
+
+  FLASHMEM void setup_sd() {
     static bool storage_initialised = false;
     if (storage_initialised) 
       return;
     #ifdef ENABLE_SD
       SD.begin(chipSelect);
       //SD.setMediaDetectPin(0xFF); // disable media detect
-      Serial.printf("setup_storage() SD card initialised, media present: %i\n", SD.mediaPresent());
+      Serial.printf("setup_sd() SD card initialised, media present: %i\n", SD.mediaPresent());
       storage_initialised = true;
     #else
-      Serial.println("setup_storage() SD not enabled");
+      Serial.println("setup_sd() SD not enabled");
     #endif
+    // Register savestate settings so current_state can save/load via saveloadlib
+    current_state.setup_saveable_settings();
   }
 
   bool save_pattern(int project_number, uint8_t pattern_number, savestate *input, bool debug) {
@@ -191,49 +222,36 @@ namespace storage {
       }
       if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
 
-      // save clock + sequence data
-      myFile.println(F("; begin sequence"));
-      myFile.printf(F("id=%i\n"),input->id);
-      myFile.printf(F("size_clocks=%i\n"),     input->size_clocks);
-      myFile.printf(F("size_sequences=%i\n"),  input->size_sequences);
-      myFile.printf(F("size_steps=%i\n"),      input->size_steps);
-      for (unsigned int i = 0 ; i < input->size_clocks ; i++) {
-        myFile.printf(F("clock_multiplier=%i\n"), input->clock_multiplier[i]);
-      }
-      for (unsigned int i = 0 ; i < input->size_clocks ; i++) {
-        myFile.printf(F("clock_delay=%i\n"), input->clock_delay[i]);
-      }
-      for (unsigned int i = 0 ; i < input->size_sequences ; i++) {
-        myFile.printf(F("sequence_data="));
-        for (int x = 0 ; x < input->size_steps ; x++) {
-          myFile.printf("%1x", input->sequence_data[i][x]);
-        }
-        myFile.println();
-      }
+      myFile.println(F("; begin scene"));
 
-      // save behaviour extensions
-      if (debug) {
-        Serial_println(F("Saving behaviour extensions..")); Serial_flush();
+      // Save scene fields (clock multipliers, delays, sequence data) via saveloadlib.
+      // Each line is prefixed "scene~key=value".
+      LinkedList<String> scene_lines = LinkedList<String>();
+      sl_save_to_linkedlist(input, scene_lines, SL_SCOPE_PATTERN);
+      for (unsigned int i = 0 ; i < scene_lines.size() ; i++) {
+        myFile.println(scene_lines.get(i).c_str());
       }
-      myFile.println(F("; behaviour extensions")); 
+      if (debug) Serial.printf("wrote %u scene lines\n", scene_lines.size());
+
+      // Save behaviour pattern extensions via saveloadlib.
+      // Each behaviour writes its SL_SCOPE_PATTERN settings prefixed by its label.
+      if (debug) { Serial_println(F("Saving behaviour extensions..")); Serial_flush(); }
+      myFile.println(F("; behaviour extensions"));
       LinkedList<String> behaviour_lines = LinkedList<String>();
       if (debug) Serial.println("calling save_pattern_add_lines..");
       behaviour_manager->save_pattern_add_lines(&behaviour_lines);
       if (debug) { Serial.println("got behaviour_lines to save.."); Serial.flush(); }
       for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
-        //myFile.printf("behaviour_option_%s\n", behaviour_lines.get(i).c_str());
         if (debug) {
           Serial_printf(F("\twriting behaviour line [%i/%i] '%s'\n"), i+1, behaviour_lines.size(), behaviour_lines.get(i).c_str());
-          Serial.flush(); Serial.flush(); Serial.flush();
+          Serial.flush();
         }
-        //myFile.printf(F("%s\n"), behaviour_lines.get(i).c_str());
         myFile.println(behaviour_lines.get(i).c_str());
       }
       if (debug) {
         Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size()); Serial_flush();
-        Serial.flush(); Serial.flush(); Serial.flush(); 
       }
-      myFile.println(F("; end sequence"));
+      myFile.println(F("; end scene"));
 
       // TODO: save parameter input states via saveloadlib
       // parameter_manager->save_pattern_parameter_inputs_add_lines() removed - vestige of old save/load mechanism
@@ -313,78 +331,103 @@ namespace storage {
   }*/
 
   bool load_pattern_parse_line(String line, savestate *output, bool debug = false) {
-    line = line.replace('\n',"");
-    line = line.replace('\r',"");
-    
-    //bool debug = false;
-    if (line.charAt(0)==';') {
-      return true;  // skip comment lines
-    } else if (line.startsWith(F("id="))) {
-      output->id = (uint8_t) line.remove(0,String(F("id=")).length()).toInt();
+    line.replace('\n', "");
+    line.replace('\r', "");
+
+    if (line.charAt(0) == ';') return true;  // comment
+
+    int eq = line.indexOf('=');
+    if (eq < 0) return false;
+
+    String left  = line.substring(0, eq);
+    String value = line.substring(eq + 1);
+
+    int tilde = left.indexOf('~');
+    if (tilde >= 0) {
+      // -----------------------------------------------------------------------
+      // saveloadlib tilde-delimited format: "segment~key=value"
+      // Route "scene~..." to the savestate settings tree;
+      // everything else to behaviour_manager ("BehaviourLabel~key=value").
+      // -----------------------------------------------------------------------
+      String segment = left.substring(0, tilde);
+      String rest    = left.substring(tilde + 1);
+
+      if (segment.equals(F("scene"))) {
+        static char restbuf[SL_MAX_LINE];
+        static char valbuf[SL_MAX_LINE];
+        rest.toCharArray(restbuf,  sizeof(restbuf));
+        value.toCharArray(valbuf, sizeof(valbuf));
+        static char* segs[16];
+        int cnt = sl_tokenise_inplace(restbuf, segs, 16);
+        if (cnt > 0) return output->load_line(segs, cnt, valbuf, SL_SCOPE_PATTERN);
+        return false;
+      } else if (project->isLoadBehaviourOptions()) {
+        if (debug) Serial_println(F("Routing to behaviour_manager"));
+        return behaviour_manager->load_parse_line(line);
+      }
+      return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Legacy flat format fallback — handles save files written before the
+    // saveloadlib migration.  Positional counters (clock_multiplier_index etc.)
+    // are reset at the top of load_pattern() before parsing begins.
+    // -------------------------------------------------------------------------
+    if (debug) Serial.printf(F("load_pattern_parse_line: legacy format: '%s'\n"), line.c_str());
+
+    if (left.equals(F("id"))) {
+      output->id = (uint8_t)value.toInt();
       if (debug) Serial.printf(F("Read id %i\n"), output->id);
       return true;
-    } else if (line.startsWith(F("size_clocks="))) {
-      output->size_clocks = (uint8_t) line.remove(0,String(F("size_clocks=")).length()).toInt();
+    } else if (left.equals(F("size_clocks"))) {
+      output->size_clocks = (uint8_t)value.toInt();
       if (debug) Serial.printf(F("Read size_clocks %i\n"), output->size_clocks);
       return true;
-    } else if (line.startsWith(F("size_sequences="))) {
-      output->size_sequences = (uint8_t) line.remove(0,String(F("size_sequences=")).length()).toInt();
+    } else if (left.equals(F("size_sequences"))) {
+      output->size_sequences = (uint8_t)value.toInt();
       if (debug) Serial.printf(F("Read size_sequences %i\n"), output->size_sequences);
       return true;
-    } else if (line.startsWith(F("size_steps="))) {
-      output->size_steps = (uint8_t) line.remove(0,String(F("size_steps=")).length()).toInt();
+    } else if (left.equals(F("size_steps"))) {
+      output->size_steps = (uint8_t)value.toInt();
       if (debug) Serial.printf(F("Read size_steps %i\n"), output->size_steps);
       return true;
-    } else if (project->isLoadClockSettings() && line.startsWith(F("clock_multiplier="))) {
-      if (clock_multiplier_index>NUM_CLOCKS) {
-        if (debug) Serial.println(F("Skipping clock_multiplier entry as exceeds NUM_CLOCKS"));
-        return false;
+    } else if (project->isLoadClockSettings() && left.equals(F("clock_multiplier"))) {
+      if (clock_multiplier_index < NUM_CLOCKS) {
+        output->clock_multiplier[clock_multiplier_index] = (uint8_t)value.toInt();
+        if (debug) Serial.printf(F("Read clock_multiplier[%i]=%i\n"), clock_multiplier_index, output->clock_multiplier[clock_multiplier_index]);
+        clock_multiplier_index++;
       }
-      output->clock_multiplier[clock_multiplier_index] = (uint8_t) line.remove(0,String(F("clock_multiplier=")).length()).toInt();
-      if (debug) Serial.printf(F("Read a clock_multiplier: %i\n"), output->clock_multiplier[clock_multiplier_index]);
-      clock_multiplier_index++;
       return true;
-    } else if (project->isLoadClockSettings() && line.startsWith(F("clock_delay="))) {
-      if (clock_delay_index>NUM_CLOCKS) {
-        if (debug) Serial.println(F("Skipping clock_delay entry as exceeds NUM_CLOCKS"));
-        return false;
+    } else if (project->isLoadClockSettings() && left.equals(F("clock_delay"))) {
+      if (clock_delay_index < NUM_CLOCKS) {
+        output->clock_delay[clock_delay_index] = (uint8_t)value.toInt();
+        if (debug) Serial.printf(F("Read clock_delay[%i]=%i\n"), clock_delay_index, output->clock_delay[clock_delay_index]);
+        clock_delay_index++;
       }
-      output->clock_delay[clock_delay_index] = (uint8_t) line.remove(0,String(F("clock_delay=")).length()).toInt();      
-      if (debug) Serial.printf(F("Read a clock_delay: %i\n"), output->clock_delay[clock_delay_index]);
-      clock_delay_index++;
       return true;
-    } else if (project->isLoadSequencerSettings() && line.startsWith(F("sequence_data="))) {
-      if (clock_delay_index>NUM_SEQUENCES) {
-        if (debug) Serial.println(F("Skipping sequence_data entry as exceeds NUM_CLOCKS"));
-        return false;
+    } else if (project->isLoadSequencerSettings() && left.equals(F("sequence_data"))) {
+      if (sequence_data_index < NUM_SEQUENCES) {
+        if (debug) Serial.printf(F("Reading legacy sequence %i: ["), sequence_data_index);
+        char v[2] = "0";
+        for (unsigned int x = 0; x < (unsigned)value.length() && x < output->size_steps; x++) {
+          v[0] = value.charAt(x);
+          if (v[0] == '\n') break;
+          output->sequence_data[sequence_data_index][x] = hex2int(v);
+          if (debug) Serial.printf(F("%i"), output->sequence_data[sequence_data_index][x]);
+        }
+        if (debug) Serial.println(']');
+        sequence_data_index++;
       }
-      //output->clock_multiplier = (uint8_t) line.remove(0,String("clock_multiplier=").length()).toInt();      
-      String data = line.remove(0,String(F("sequence_data=")).length());
-      char v[2] = "0";
-      if (debug) Serial.printf(F("Reading sequence %i: ["), sequence_data_index);
-      for (unsigned int x = 0 ; x < data.length() && x < output->size_steps && data.charAt(x)!='\n' ; x++) {
-        v[0] = data.charAt(x);
-        if (v[0]=='\n') break;
-        output->sequence_data[sequence_data_index][x] = hex2int(v);
-        //Serial.printf("%i:%i, ", x, output->sequence_data[sequence_data_index][x]);
-        if (debug) Serial.printf(F("%i"), output->sequence_data[sequence_data_index][x]);
-      }
-      if (debug) Serial.println(']');
-      sequence_data_index++;
       return true;
     } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      if (debug) Serial_println(F("Parsed a line with behaviour_manager"));
+      if (debug) Serial_println(F("Parsed a legacy line with behaviour_manager"));
       return true;
-    } /*else if (project->isLoadParameterInputOptions() && parameter_manager->load_parse_line(line)) {
-      // TODO: reload parameter input options via saveloadlib
-      if (debug) Serial_println(F("Parsed a line with parameter_manager"));
-      return true;
-    }*/ /*else {
-      // silently ignore for testing
-      return;
-    }*/
-    if (debug) Serial.printf(F("Unrecognised line in pattern file: '%s'\n"), line.c_str());
-    messages_log_add(String("Ignoring line '") + line + String("'"));
+    }
+    // TODO: reload parameter input options via saveloadlib
+    // parameter_manager->load_parse_line(line) removed - vestige of old mechanism
+
+    if (debug) Serial.printf(F("Unrecognised line in scene file: '%s'\n"), line.c_str());
+    messages_log_add(String("Ignoring scene line '") + line + String("'"));
     return false;
   }
 
@@ -539,48 +582,20 @@ namespace storage {
     //if (irqs_enabled) __enable_irq();
     return true;
   }
-
-
-  #else
-  // Arduino, save to EEPROM
-  #include <EEPROM.h>
-
-  void setup_storage() {
-    // nothing to do for Arduino
-  }
-
-  void save_pattern(uint8_t preset_number, savestate *input) {
-    int eeAddress = 16 + (preset_number * sizeof(savestate));
-    Serial.print(F("save_pattern at "));
-    Serial.println(eeAddress);
-    EEPROM.put(eeAddress, *input);
-  }
-
-  bool load_pattern(uint8_t preset_number, savestate *output) {
-    int eeAddress = 16 + (preset_number * sizeof(savestate));
-    byte id = EEPROM.read(eeAddress);
-    if (id==SAVE_ID_BYTE_V0 || id==SAVE_ID_BYTE_V1) {
-      Serial.print(F("Found ID "));
-      Serial.print(id);
-      Serial.print(F(" at "));
-      Serial.print(eeAddress);
-      Serial.println(F(" - loading! :D"));
-      EEPROM.get(eeAddress, *output);
-      if (id==SAVE_ID_BYTE_V0) {  // v0 didn't have clock delays included, so zero them out
-        output->clock_delay[0] = output->clock_delay[1] = output->clock_delay[2] = output->clock_delay[3] = 0;
-      }
-      return true;
-
-    } else {
-      Serial.print(F("Didn't find a magic id byte at "));
-      //Serial.print(0xD0);
-      //Serial.print(F(" at "));
-      Serial.print(eeAddress);
-      Serial.print(F(" - found "));
-      Serial.print(id);
-      Serial.println(F(" instead :("));
-      return false;
-    }    
-  }
-#endif
 }
+
+
+
+void setup_saveloadlib() {
+    // Register settings with saveloadlib by calling setup_saveable_settings() on an instance of each ISaveableSettingHost subclass.
+
+    settings_root = new SettingsRoot();
+
+    sl_register_root(settings_root);
+
+    sl_setup_all(settings_root);
+
+}
+
+
+SettingsRoot *settings_root;

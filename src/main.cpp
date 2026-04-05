@@ -137,14 +137,14 @@ void setup() {
     //Serial_print(CrashReport);
     /*while(Serial.available()==0);
     Serial.clear();*/
-    setup_storage();
+    setup_sd();
     log_crashreport();
   }
   delay(1);
   #ifdef DUMP_CRASHLOG_AT_STARTUP
     while (!Serial);
     delay(500);
-    setup_storage();
+    setup_sd();
     dump_crashreport_log();
   #endif
 
@@ -161,8 +161,8 @@ void setup() {
   //    1:30am WAIT WUT its actually loading the calibration values for the cvoutputparameters successfully now?!
   //    next day: wasn't working again so implemented load_all_parameters() in parameter_manager
   /*tft_print((char*)"..storage..\n");
-  storage::setup_storage();
-  Serial_printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
+  storage::setup_sd();
+  Serial_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
   */
 
   //tft_print((char*)"..USB device handler..");
@@ -215,8 +215,8 @@ void setup() {
   Debug_printf(F("after setup_midi_serial_devices(), free RAM is %u\n"), freeRam());
 
   tft_print((char*)"..storage..\n");
-  storage::setup_storage();
-  Debug_printf(F("after setup_storage(), free RAM is %u\n"), freeRam());
+  storage::setup_sd();
+  Debug_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
 
   tft_print((char*)"..setup project..\n");
   project->setup_project();
@@ -325,6 +325,12 @@ void setup() {
   #ifdef LOAD_CALIBRATION_ON_BOOT
     parameter_manager->load_all_calibrations();
   #endif
+
+  #ifdef ENABLE_STORAGE
+    Serial.println("Setting up saveloadlib..."); Serial.flush();
+    setup_saveloadlib();
+    Serial.println("Finished setting up saveloadlib!"); Serial.flush();
+#endif
 
   #ifdef USE_UCLOCK
     Serial_println("Starting uClock..."); Serial_flush();
