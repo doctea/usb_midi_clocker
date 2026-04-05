@@ -20,9 +20,11 @@
 #ifdef ENABLE_CV_OUTPUT
     #include "cv_output.h"
 #endif
-
 #ifdef USE_UCLOCK
     #include "uClock.h"
+#endif
+#ifdef ENABLE_STORAGE
+    #include "saveloadlib.h"
 #endif
 
 #include "__version.h"
@@ -41,23 +43,28 @@ class DebugPanel : public MenuItem {
             unsigned long time = millis()/1000;
             tft->setCursor(pos.x,pos.y);
 
+            // live stats
             pos.y = header("Status:", pos, selected, opened);
             tft->printf("  Free RAM: %u bytes\n", freeRam());
+
             #ifdef ARDUINO_TEENSY41
                 tft->printf("  Free extRAM: %u bytes\n", freeExtRam());
                 tft->printf("  PSRAM clock: %i MHz\n", psram_clocked_at);
             #endif
+
             tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
             tft->printf("  Tick:   %i\n", ticks);
+
             #ifdef USE_UCLOCK
                 tft->printf("  uClock int overflow: %u\n", uClock.getIntOverflowCounter());
                 tft->printf("  uClock ext overflow: %u\n", uClock.getExtOverflowCounter());
             #endif
             
-            tft->print("\nSerial: ");
+            tft->print("  Serial: ");
             tft->print(Serial?"connected\n":"not connected\n");
 
-            tft->println("\nBuild info:");
+            // build info
+            tft->println("Build info:");
             tft->println("  PIO Env: " ENV_NAME);
             tft->println("  Git info: " COMMIT_INFO);
             tft->println("  Built at " __TIME__ " on " __DATE__);
@@ -87,9 +94,14 @@ class DebugPanel : public MenuItem {
                 tft->println();
             #endif
 
-            tft->println("\nStats:");
+            tft->println("\nSetup stats:");
             #ifdef ENABLE_PARAMETERS
                 tft->printf("  Parameters: %i\n", parameter_manager->available_parameters->size());
+            #endif
+
+            #ifdef ENABLE_STORAGE
+                SL_TreeCounts sl_counts = sl_count_tree(SL_ROOT);
+                tft->printf("  Save tree: %u nodes %u settings ~%lu KB\n", sl_counts.nodes, sl_counts.settings, (unsigned long)sl_counts.bytes/1024);
             #endif
 
             return tft->getCursorY();
