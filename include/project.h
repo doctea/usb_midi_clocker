@@ -369,11 +369,12 @@ class Project : public SHStorage<0, 8> {
         }
         bool save_project_settings(int save_to_project_number) {
             #ifdef ENABLE_SD
-            //File myFile;
+            
+            make_project_folders(save_to_project_number);
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
-            Serial.printf(F("save_project_settings(%i) writing to %s\n"), save_to_project_number, filename);
+            Serial.printf(F("save_project_settings(%i) writing to `%s`\n"), save_to_project_number, filename);
             if (SD.exists(filename)) {
                 Serial.printf(F("%s exists, deleting first!\n"), filename);
                 SD.remove(filename);
@@ -383,7 +384,12 @@ class Project : public SHStorage<0, 8> {
             // SL_SCOPE_ROUTING is included so midi_matrix connection lines are saved;
             // scale/project settings use SL_SCOPE_PROJECT.
 
-            sl_save_to_file(save_tree, filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING));
+            uint32_t micros_start = micros();
+            if (!sl_save_to_file(save_tree, filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING))) {
+                Serial.printf(F("Error saving project settings to %s\n"), filename);
+                return false;
+            }
+            Serial.printf(F("Saved project settings in %lu microseconds.\n"), micros() - micros_start);
 
             update_project_filename(filename);
             #endif
@@ -393,13 +399,15 @@ class Project : public SHStorage<0, 8> {
         bool load_project_settings(int project_number) {
             #ifdef ENABLE_SD
 
+            midi_matrix_manager->reset_matrix();  // disconnect all sources and targets before loading new routing settings
+
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
             Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
 
+            uint32_t micros_start = micros();
             sl_load_from_file(filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING));
-
-            Serial.printf(F("Loaded project settings.\n"));
+            Serial.printf(F("Loaded project settings in %u microseconds.\n"), micros() - micros_start);
 
             update_project_filename(filename);
             #endif

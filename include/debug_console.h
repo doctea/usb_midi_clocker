@@ -91,7 +91,7 @@ bool execute_command(const char *command_line) {
         return true;    
     } else if (strcmp(command, "show") == 0) {
         if (arg1[0] == '\0') {
-            Serial.println("Usage: show <type> <filename>");
+            Serial.println("Usage: show <type> <slot_number>");
             return true;
         }
         char *filename = nullptr;
@@ -101,6 +101,7 @@ bool execute_command(const char *command_line) {
                 Serial.println("Usage: show seq <slot_number> (using currently selected slot if slot_number not provided)");
                 // show current sequence pattern
                 sprintf(arg2, "%i", project->selected_pattern_number); // default to slot 0 if no slot number provided
+                return false;
             }
 
             int desired_pattern_number = atoi(arg2);
@@ -115,8 +116,20 @@ bool execute_command(const char *command_line) {
             // read the appropriate file from disc and output its contents to serial
             filename = storage::get_pattern_filename(project->current_project_number, desired_pattern_number);
         } else if (strcmp(arg1, "proj") == 0) {
-            // show current project settings
-            filename = storage::get_project_settings_filename(project->current_project_number);
+            // show specified project settings
+
+            if (arg2[0] == '\0') {
+                Serial.println("Usage: show proj <project_number>");
+                return false;
+            }
+
+            int desired_project_number = atoi(arg2);
+            if (desired_project_number < 0) {
+                Serial.printf("Invalid project number: %i\n", desired_project_number);
+                return true;
+            }
+            
+            filename = storage::get_project_settings_filename(desired_project_number);
         } else {
             Serial.printf("Unknown type: %s\n", arg1);
             return true;
@@ -165,7 +178,7 @@ bool execute_command(const char *command_line) {
             }
             Serial.printf("Loading project settings from file %i...\n", project_number);
             project->load_project_settings(project_number);
-            
+
             return true;
         } else if (strcmp(arg1, "seq") == 0) {
             // load a sequence pattern from the specified file
@@ -224,7 +237,11 @@ bool execute_command(const char *command_line) {
                     return true;
                 }
                 Serial.printf("Saving sequence pattern to slot %i...\n", desired_pattern_number);
-                project->save_pattern(desired_pattern_number);
+                if (!project->save_project_settings(desired_pattern_number)) {
+                    Serial.printf("Error saving pattern to slot %i\n", desired_pattern_number);
+                } else {
+                    Serial.printf("Saved pattern to slot %i\n", desired_pattern_number);
+                }
                 return true;
             }
         } else {

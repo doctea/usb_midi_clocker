@@ -92,7 +92,7 @@ namespace storage {
   // force a crash, for testing CrashReport purposes
   void force_crash() {
     messages_log_add("Forcing crash!");
-    Serial_println("Forcing crash!");
+    Serial_println("Forcing crash!"); Serial_flush();
     *(volatile uint32_t *)0x30000000 = 0;
   }
 
@@ -324,7 +324,7 @@ namespace storage {
     load_state_output = output;
   }*/
 
-  bool load_pattern_parse_line(String line, savestate *output, bool debug = false) {
+  bool load_pattern_parse_line(String line, savestate *output, bool debug) {
     line.replace('\n', "");
     line.replace('\r', "");
 
@@ -585,11 +585,16 @@ namespace storage {
 void setup_saveloadlib() {
     // Register settings with saveloadlib by calling setup_saveable_settings() on an instance of each ISaveableSettingHost subclass.
 
+    EXTMEM static SL_Arena<240000> sl_arena;
+    sl_set_setting_arena(&sl_arena);
+
     settings_root = new SettingsRoot();
 
     sl_register_root(settings_root);
 
+    uint32_t start_time = millis();
     sl_setup_all(settings_root);
+    Serial.printf("setup_saveloadlib: Finished sl_setup_all in %i millis.\n", millis()-start_time);
 
     // Wire the save tree into Project so Project::save_project_settings() can
     // call sl_save_to_file without needing to know the full SettingsRoot type.
