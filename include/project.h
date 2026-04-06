@@ -234,7 +234,7 @@ class Project : public SHStorage<0, 8> {
             if (result)
                 loaded_scene_number = selected_scene_number;
             uint32_t micros_end = micros();
-            Serial_printf(F("load_scene took %lu microseconds - returning\n"), micros_end - micros_start);
+            Serial_printf(F("storage::load_scene took %lu microseconds (result: %s).\n"), micros_end - micros_start, result ? "success" : "failure");
             Serial_flush();
             return result;
         }

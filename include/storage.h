@@ -160,9 +160,6 @@ namespace storage {
 
   bool save_scene(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
   bool load_scene(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
-  /*void load_state_update();
-  void load_state_start(uint8_t preset_number, savestate *input);*/
-  bool load_scene_parse_line(String line, savestate *output, bool debug = false);
   FLASHMEM void setup_sd();
 
   FLASHMEM void log_crashreport();

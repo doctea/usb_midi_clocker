@@ -8,6 +8,44 @@
 
 #include <util/atomic.h>
 
+/*
+(smaller files are fragments of previous storage approaches)
+
+Files in project0:
+sequences/ (0 bytes)
+        sequence0.txt (65897 bytes)
+        sequence1.txt (65898 bytes)
+        sequence2.txt (983 bytes)
+        sequence5.txt (984 bytes)
+        sequence7.txt (3338 bytes)
+        sequence3.txt (983 bytes)
+        sequence4.txt (1658 bytes)
+        sequence6.txt (3496 bytes)
+loops/ (0 bytes)
+        loop1.txt (7356 bytes)
+        loop0.mid (102 bytes)
+        loop2.txt (797 bytes)
+        loop4.txt (1901 bytes)
+        loop6.txt (1483 bytes)
+        loop7.txt (1651 bytes)
+        loop5.txt (958 bytes)
+        loop3.txt (2148 bytes)
+        loop1.mid (262 bytes)
+project.txt (18872 bytes)
+sections/ (0 bytes)
+        section0.txt (467 bytes)
+        section2.txt (467 bytes)
+        section3.txt (467 bytes)
+        section1.txt (467 bytes)
+playlist.txt (242 bytes)
+Total storage used in project 0: 180877 bytes
+*/
+
+
+#ifndef READ_FILE_BUF_SIZE
+    #define READ_FILE_BUF_SIZE ((unsigned int)pow(2, 17)) // should give us a buffer size of 131072 bytes
+#endif
+
 #ifdef ENABLE_SD
   #include "SD.h"
 #endif
@@ -188,242 +226,25 @@ namespace storage {
   }
 
   bool save_scene(int project_number, uint8_t scene_number, savestate *input, bool debug) {
-    uint32_t micros_start = micros();
     #ifdef ENABLE_SD
-    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-      //bool debug = false;
-      #ifdef ENABLE_SD
-      File myFile;
+    make_project_folders(project_number);
 
-      // check + create project folders, if they don't already exist
-      make_project_folders(project_number);
+    char filename[MAX_FILEPATH] = "";
+    snprintf(filename, MAX_FILEPATH, FILEPATH_SCENE_FORMAT, project_number, scene_number);
+    if (debug) Serial.printf(F("save_scene(%i, %i) writing to %s\n"), project_number, scene_number, filename);
+    if (SD.exists(filename)) SD.remove(filename);
 
-      // check + remove sequence file if it already exists
-      char filename[MAX_FILEPATH] = "";
-      snprintf(filename, MAX_FILEPATH, FILEPATH_SCENE_FORMAT, project_number, scene_number);
-      if (debug) Serial.printf(F("save_scene(%i, %i) writing to %s\n"), project_number, scene_number, filename);
-      if (SD.exists(filename)) {
-        //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
-        SD.remove(filename);
-        //Serial.println("deleted"); Serial.flush();
-      }
-
-      myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
-      if (!myFile) {    
-        if (debug) Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
-        //if (irqs_enabled) __enable_irq();
-        return false;
-      }
-      if (debug) { Serial.println("Starting data write.."); Serial_flush(); }
-
-      myFile.println(F("; begin scene"));
-
-      // Save scene fields (clock multipliers, delays, sequence data) via saveloadlib.
-      // Each line is prefixed "scene~key=value".
-      LinkedList<String> scene_lines = LinkedList<String>();
-      sl_save_to_linkedlist(input, scene_lines, SL_SCOPE_SCENE);
-      for (unsigned int i = 0 ; i < scene_lines.size() ; i++) {
-        myFile.println(scene_lines.get(i).c_str());
-      }
-      if (debug) Serial.printf("wrote %u scene lines\n", scene_lines.size());
-
-      // Save behaviour pattern extensions via saveloadlib.
-      // Each behaviour writes its SL_SCOPE_SCENE settings prefixed by its label.
-      if (debug) { Serial_println(F("Saving behaviour extensions..")); Serial_flush(); }
-      myFile.println(F("; behaviour extensions"));
-      LinkedList<String> behaviour_lines = LinkedList<String>();
-      if (debug) Serial.println("calling sl_save_to_linkedlist for behaviour_manager..");
-      sl_save_to_linkedlist(behaviour_manager, behaviour_lines, SL_SCOPE_SCENE);
-      if (debug) { Serial.println("got behaviour_lines to save.."); Serial.flush(); }
-      for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
-        if (debug) {
-          Serial_printf(F("\twriting behaviour line [%i/%i] '%s'\n"), i+1, behaviour_lines.size(), behaviour_lines.get(i).c_str());
-          Serial.flush();
-        }
-        myFile.println(behaviour_lines.get(i).c_str());
-      }
-      if (debug) {
-        Serial.printf("wrote %i behaviour lines\n", behaviour_lines.size()); Serial_flush();
-      }
-      myFile.println(F("; end scene"));
-
-      // TODO: save parameter input states via saveloadlib
-      // parameter_manager->save_pattern_parameter_inputs_add_lines() removed - vestige of old save/load mechanism
-      
-      // all done -- close the file
-      myFile.close();
-      //if (irqs_enabled) __enable_irq();
-      //Serial.println(F("Finished saving."));
-
-      //sequence_fileviewer->debug = debug;
-      //update_scene_filename(String(filename));
-
-      messages_log_add(String("Saved to project : pattern ") + String(project_number) + " : " + String(scene_number));
-
-      #endif
-    }
-    if (debug) Serial.println("finishing save_scene");
-
-    Serial.printf("save_scene took %i micros\n", micros()-micros_start);
-
-    return true;
-    #endif
-    return false;
-  }
-
-  enum load_states {
-    NONE,
-    LOADING
-  };
-
-  byte load_state_current = load_states::NONE;
-  savestate *load_state_output;
-  File load_state_file;
-  uint8_t clock_multiplier_index = 0;
-  uint8_t clock_delay_index = 0;
-  uint8_t sequence_data_index = 0;
-
-/*
-  void load_state_update() {
-    if (load_state_current!=load_states::LOADING || !load_state_file)
-      return;
-
-    String line;
-    if(line = load_state_file.readStringUntil('\n')) {
-      Serial.printf("%i: parsing line %s\n", millis(), line.c_str());
-      load_scene_parse_line(line, load_state_output);
-      Serial.printf("%i: finished load_scene_parse_line\n", millis());
-    } else {
-      Serial.printf("%i: Finished loading file\n", millis());
-      load_state_current = load_states::NONE;
-      load_state_file.close();
-      Serial.printf("%i: closed file\n",millis());
-    }
-  }
-  void load_state_start(uint8_t preset_number, savestate *output) {
-    //bool debug = false;
-    //Serial.println("load_scene not implemented on teensy");
-    if (load_state_current==load_states::LOADING) {
-      load_state_file.close();
-      load_state_current = load_states::NONE;
-    }
-    clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
-
-    char filename[255] = "";
-    sprintf(filename, "sequences/sequence%i.txt", preset_number);
-    Serial.printf("load_state_start(%i) opening %s\n", preset_number, filename);
-    load_state_file = SD.open(filename, FILE_READ);
-
-    if (!load_state_file) {
-      Serial.printf("Error: Couldn't open %s for reading!\n", filename);
-      return;
-    }
-
-    load_state_file.setTimeout(0);
-    load_state_current = load_states::LOADING;
-    load_state_output = output;
-  }*/
-
-  bool load_scene_parse_line(String line, savestate *output, bool debug) {
-    line.replace('\n', "");
-    line.replace('\r', "");
-
-    if (line.charAt(0) == ';') return true;  // comment
-
-    int eq = line.indexOf('=');
-    if (eq < 0) return false;
-
-    String left  = line.substring(0, eq);
-    String value = line.substring(eq + 1);
-
-    int tilde = left.indexOf('~');
-    if (tilde >= 0) {
-      // -----------------------------------------------------------------------
-      // saveloadlib tilde-delimited format: "segment~key=value"
-      // Route "scene~..." to the savestate settings tree;
-      // everything else to behaviour_manager ("BehaviourLabel~key=value").
-      // -----------------------------------------------------------------------
-      String segment = left.substring(0, tilde);
-      String rest    = left.substring(tilde + 1);
-
-      if (segment.equals(F("scene"))) {
-        static char restbuf[SL_MAX_LINE];
-        static char valbuf[SL_MAX_LINE];
-        rest.toCharArray(restbuf,  sizeof(restbuf));
-        value.toCharArray(valbuf, sizeof(valbuf));
-        static char* segs[16];
-        int cnt = sl_tokenise_inplace(restbuf, segs, 16);
-        if (cnt > 0) return output->load_line(segs, cnt, valbuf, SL_SCOPE_SCENE);
-        return false;
-      }
-      // } else if (project->isLoadBehaviourOptions()) {
-      //   if (debug) Serial_println(F("Routing to behaviour_manager"));
-      //   return behaviour_manager->load_parse_line(line);
-      // }
+    uint32_t micros_start = micros();
+    if (!sl_save_to_file(project->save_tree, filename, SL_SCOPE_SCENE)) {
+      if (debug) Serial.printf(F("save_scene: sl_save_to_file failed for %s\n"), filename);
       return false;
     }
+    Serial.printf("save_scene took %lu micros\n", micros() - micros_start);
 
-    // -------------------------------------------------------------------------
-    // Legacy flat format fallback — handles save files written before the
-    // saveloadlib migration.  Positional counters (clock_multiplier_index etc.)
-    // are reset at the top of load_scene() before parsing begins.
-    // -------------------------------------------------------------------------
-    if (debug) Serial.printf(F("load_scene_parse_line: legacy format: '%s'\n"), line.c_str());
-
-    /*if (left.equals(F("scene_id"))) {
-      output->scene_id = (uint8_t)value.toInt();
-      if (debug) Serial.printf(F("Read scene_id %i\n"), output->sceid);
-      return true;
-    } else*/ if (left.equals(F("size_clocks"))) {
-      output->size_clocks = (uint8_t)value.toInt();
-      if (debug) Serial.printf(F("Read size_clocks %i\n"), output->size_clocks);
-      return true;
-    } else if (left.equals(F("size_sequences"))) {
-      output->size_sequences = (uint8_t)value.toInt();
-      if (debug) Serial.printf(F("Read size_sequences %i\n"), output->size_sequences);
-      return true;
-    } else if (left.equals(F("size_steps"))) {
-      output->size_steps = (uint8_t)value.toInt();
-      if (debug) Serial.printf(F("Read size_steps %i\n"), output->size_steps);
-      return true;
-    } else if (project->isLoadClockSettings() && left.equals(F("clock_multiplier"))) {
-      if (clock_multiplier_index < NUM_CLOCKS) {
-        output->clock_multiplier[clock_multiplier_index] = (uint8_t)value.toInt();
-        if (debug) Serial.printf(F("Read clock_multiplier[%i]=%i\n"), clock_multiplier_index, output->clock_multiplier[clock_multiplier_index]);
-        clock_multiplier_index++;
-      }
-      return true;
-    } else if (project->isLoadClockSettings() && left.equals(F("clock_delay"))) {
-      if (clock_delay_index < NUM_CLOCKS) {
-        output->clock_delay[clock_delay_index] = (uint8_t)value.toInt();
-        if (debug) Serial.printf(F("Read clock_delay[%i]=%i\n"), clock_delay_index, output->clock_delay[clock_delay_index]);
-        clock_delay_index++;
-      }
-      return true;
-    } else if (project->isLoadSequencerSettings() && left.equals(F("sequence_data"))) {
-      if (sequence_data_index < NUM_SEQUENCES) {
-        if (debug) Serial.printf(F("Reading legacy sequence %i: ["), sequence_data_index);
-        char v[2] = "0";
-        for (unsigned int x = 0; x < (unsigned)value.length() && x < output->size_steps; x++) {
-          v[0] = value.charAt(x);
-          if (v[0] == '\n') break;
-          output->sequence_data[sequence_data_index][x] = hex2int(v);
-          if (debug) Serial.printf(F("%i"), output->sequence_data[sequence_data_index][x]);
-        }
-        if (debug) Serial.println(']');
-        sequence_data_index++;
-      }
-      return true;
-    }
-    // } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-    //   if (debug) Serial_println(F("Parsed a legacy line with behaviour_manager"));
-    //   return true;
-    // }
-    // TODO: reload parameter input options via saveloadlib
-    // parameter_manager->load_parse_line(line) removed - vestige of old mechanism
-
-    if (debug) Serial.printf(F("Unrecognised line in scene file: '%s'\n"), line.c_str());
-    messages_log_add(String("Ignoring scene line '") + line + String("'"));
+    update_scene_filename(String(filename));
+    messages_log_add(String("Saved scene ") + String(project_number) + ":" + String(scene_number));
+    return true;
+    #endif
     return false;
   }
 
@@ -441,99 +262,28 @@ namespace storage {
   }
 
   bool load_scene(int project_number, uint8_t scene_number, savestate *output, bool debug) {
+    #ifdef ENABLE_SD
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-      #ifdef ENABLE_SD
       static volatile bool already_loading = false;
       if (already_loading) return false;
       if (global_load_lock) return false;
-      global_load_lock = true; 
-      already_loading = true;
+      global_load_lock = already_loading = true;
 
-      messages_log_add(String("Loading pattern ") + String(scene_number));
-
-      //bool irqs_enabled = __irq_enabled();
-      //__disable_irq();
+      messages_log_add(String("Loading scene ") + String(scene_number));
 
       char *filename = get_scene_filename(project_number, scene_number);
-
       update_scene_filename(String(filename));
-      // ^^^ hmm get more frequent intermittent crashes on load in T+A modes if this is enabled...
 
-      File myFile;   
-      if (debug) { Serial_printf(F("load_scene: load_scene(%i,%i) opening %s\n"), project_number, scene_number, filename); Serial_flush(); }
-      uint32_t start_time = micros();
-      myFile = SD.open(filename, FILE_READ);
-      uint32_t time_to_open = micros()-start_time;
-      if (debug) { Serial_printf(F("load_scene: opened file in %i micros\n"), time_to_open); Serial_flush(); }
-     
-      clock_multiplier_index = clock_delay_index = sequence_data_index = 0;
+      if (debug) Serial_printf(F("load_scene(%i,%i) from %s\n"), project_number, scene_number, filename);
+      uint32_t micros_start = micros();
+      bool ok = sl_load_from_file(filename, SL_SCOPE_SCENE);
+      Serial_printf(F("sl_load_from_file for scene %i:%i took %lu micros\n"), project_number, scene_number, micros() - micros_start);
 
-      /*if(project.isLoadBehaviourOptions()) {
-        behaviour_manager->reset_all_mappings();
-      }*/
-
-      if (!myFile) {
-        if (debug) Serial.printf(F("load_scene: Error: Couldn't open %s for reading!\n"), filename);  Serial_flush();
-        //if (irqs_enabled) __enable_irq();
-        global_load_lock = already_loading = false;
-        return false;
-      }
-      myFile.setTimeout(0);
-      /*char *file_contents = (char *)malloc(myFile.size()+1);
-      if (!file_contents) {
-        Serial_println(F("load_scene: Error: couldn't allocate memory for file_contents")); Serial_flush();
-        myFile.close();
-        global_load_lock = already_loading = false;
-        return false;
-      }
-
-      myFile.readBytes(file_contents, myFile.size());
-      myFile.close();
-
-      char *line_start = file_contents;
-      char *line_end = nullptr;
-      while (line_start && *line_start) {
-        line_end = strchr(line_start, '\n');
-        if (line_end) {
-          *line_end = '\0';
-        }
-        String line = String(line_start);
-        //Serial.printf(F("load_scene: parsing line: %s\n"), line.c_str()); Serial_flush();
-        load_scene_parse_line(line, output);
-        //Serial.printf(F("load_scene: finished load_scene_parse_line\n")); Serial_flush();
-        if (line_end) {
-          line_start = line_end + 1;
-        } else {
-          line_start = nullptr;
-        }
-      }
-
-      free(file_contents);
-      */
-
-      String line;
-      int line_count = 0;
-      int failed_line_count = 0;
-      while (line = myFile.readStringUntil('\n')) {
-        if (debug) Serial.printf(F("load_scene: parsing line %3i: '%s'\n"), line_count, line.c_str()); Serial_flush();
-        failed_line_count += load_scene_parse_line(line, output, debug) ? 0 : 1;
-        if (debug) Serial.printf(F("load_scene: finished load_scene_parse_line %3i\n"), line_count); Serial_flush(); Serial_flush();
-        line_count++;
-      }
-      if (debug) Serial_printf(F("load_scene: Closing file after %3i lines (%3i failed)\n"), line_count, failed_line_count); Serial_flush();
-      myFile.close();
-      //if (irqs_enabled) __enable_irq();
-      if (debug) Serial_println(F("load_scene: File closed")); Serial_flush();
-
-      #ifdef ENABLE_APCMINI_DISPLAY
-        //redraw_immediately = true;
-      #endif
-
-      if (debug) Serial_printf(F("load_scene: Loaded pattern from [%s] [%i clocks, %i sequences of %i steps]\n"), filename, clock_multiplier_index, sequence_data_index, output->size_steps); Serial_flush();
       global_load_lock = already_loading = false;
-      #endif
+      return ok;
     }
-    return true;
+    #endif
+    return false;
   }
 
   /*bool copy_directory(char *sourceDirectory, char *destinationDirectory) {
@@ -585,8 +335,13 @@ namespace storage {
 void setup_saveloadlib() {
     // Register settings with saveloadlib by calling setup_saveable_settings() on an instance of each ISaveableSettingHost subclass.
 
+    // set up pool for allocation of settings -- improves speed significantly compared to slow EXTMEM new()
     EXTMEM static SL_Arena<240000> sl_arena;
     sl_set_setting_arena(&sl_arena);
+
+    // set up file read buffer for sl_load_from_file -- also much faster than EXTMEM new() on demand
+    EXTMEM static char sl_file_buf[READ_FILE_BUF_SIZE];
+    sl_set_file_read_buffer(sl_file_buf, READ_FILE_BUF_SIZE);
 
     settings_root = new SettingsRoot();
 

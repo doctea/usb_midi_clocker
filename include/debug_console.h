@@ -15,6 +15,31 @@ int serial_buffer_index = 0;
 
 bool serial_connected = false;
 
+uint32_t list_files_in_directory(const char *path, int max_depth = 8, int current_depth = 0) {
+    if (current_depth > max_depth) {
+        Serial.printf("Max directory depth of %i reached at path: %s\n", max_depth, path);
+        return 0;
+    }
+    File dir = SD.open(path);
+    if (!dir) {
+        Serial.printf("Error opening directory %s\n", path);
+        return 0;
+    }
+    uint32_t total_size = 0;
+    while (File entry = dir.openNextFile()) {
+        for (int i = 0; i < current_depth; i++)
+            Serial.print("\t");
+        Serial.printf("%s%s (%lu bytes)\n", entry.name(), entry.isDirectory() ? "/" : "", entry.size());
+        total_size += entry.size();
+        if (entry.isDirectory()) {
+            char subpath[256];
+            snprintf(subpath, sizeof(subpath), "%s/%s", path, entry.name());
+            total_size += list_files_in_directory(subpath, max_depth, current_depth + 1);
+        }
+    }
+    return total_size;
+}
+
 bool execute_command(const char *command_line) {
     // parse and execute the command, return true if command was recognized and executed, false if unknown command
 
@@ -75,6 +100,11 @@ bool execute_command(const char *command_line) {
         return true;
     } else if (strcmp(command, "status") == 0) {
         Serial.println("Status: All systems nominal.");
+        Serial.printf("Current project: %i, selected scene: %i\n", project->current_project_number, project->selected_scene_number);
+        Serial.printf("Free RAM: %i bytes\n", freeRam());
+        Serial.printf("SD card present: %s\n", SD.begin(BUILTIN_SDCARD) ? "yes" : "no");
+        SL_TreeCounts sl_tree_counts = sl_count_tree(project->save_tree);
+        Serial.printf("Savetree counts - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts.nodes, sl_tree_counts.settings, sl_tree_counts.bytes);
         return true;
     } else if (strcmp(command, "reset") == 0) {
         Serial.println("Resetting device...");
@@ -88,7 +118,55 @@ bool execute_command(const char *command_line) {
         return true;
     } else if (strcmp(command, "clearcrashlog") == 0) {
         clear_crashreport_log();
-        return true;    
+        return true;
+    } else if (strcmp(command, "list") == 0) {
+        // list files and filesize on SD card in given project folder
+        // recurse into folders if possible (up to 2 levels deep?) and print files with relative path from project folder
+        if (arg1[0] == '\0') {
+            Serial.println("Usage: list <project_number>");
+            return true;
+        }
+        int project_number = atoi(arg1);
+        if (project_number < 0) {
+            Serial.printf("Invalid project number: %i\n", project_number);
+            return true;
+        }
+        char path[MAX_FILEPATH];
+        snprintf(path, MAX_FILEPATH, "project%i", project_number);
+        Serial.printf("Files in %s:\n", path);
+
+        uint32_t total_size = list_files_in_directory(path, 2, 0);
+
+        Serial.printf("Total storage used in project %i: %lu bytes\n", project_number, total_size);
+
+        return true;
+    } else if (strcmp(command, "set") == 0) {
+        // switch to project number or scene number
+        if (arg1[0] == '\0' || arg2[0] == '\0') {
+            Serial.println("Usage: set <project|scene> <number>");
+            return true;
+        }
+        int number = atoi(arg2);
+        if (strcmp(arg1, "project") == 0) {
+            if (number < 0) {
+                Serial.printf("Invalid project number: %i\n", number);
+                return true;
+            }
+            project->setProjectNumber(number);
+            Serial.printf("Current project set to %i\n", number);
+            return true;
+        } else if (strcmp(arg1, "scene") == 0) {
+            if (number < 0 || number >= NUM_SCENE_SLOTS_PER_PROJECT) {
+                Serial.printf("Invalid scene number: %i\n", number);
+                return true;
+            }
+            project->selected_scene_number = number;
+            Serial.printf("Selected scene set to %i\n", number);
+            return true;
+        } else {
+            Serial.printf("Unknown type: %s\n", arg1);
+            return true;
+        }
     } else if (strcmp(command, "show") == 0) {
         if (arg1[0] == '\0') {
             Serial.println("Usage: show <type> <slot_number>");
@@ -316,9 +394,11 @@ bool execute_command(const char *command_line) {
         Serial.println("  crashlog - Dump the crash report log (if any)");
         Serial.println("  clearcrashlog - Clear the crash report log (if any)");
         Serial.println("  showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
-        Serial.println("  show - Show contents of a file");
-        Serial.println("  load - Load a scene, project, etc from a file on the SD card");
-        Serial.println("  save - Save a scene, project, etc to a file on the SD card");
+        Serial.println("  list <project_number> - List files on the SD card for the given project");
+        Serial.println("  set project/scene <number> - Set the current project or scene number");
+        Serial.println("  show <scene|proj> <number> - Show the contents of a scene or project settings file");
+        Serial.println("  save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
+        Serial.println("  load <scene|proj> <number> - Load a scene or project settings from the given slot number");
         Serial.println("  [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a scene file (for testing parsing)");
         Serial.println("  info - show build info");
         Serial.println("  help - Show this help message");
