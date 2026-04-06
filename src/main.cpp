@@ -389,7 +389,7 @@ void loop() {
   update_serial();
 
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
-  if (debug_stress_sequencer_load && ticks % 6 == 1)  {
+  if (debug_stress_scene_load && ticks % 6 == 1)  {
     OnPress(':');
     OnPress('L');
     OnPress('J');

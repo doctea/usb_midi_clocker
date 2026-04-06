@@ -29,7 +29,7 @@
         extern DisplayTranslator_Configured *display_translator;
     #endif
 
-    bool debug_stress_sequencer_load = false;
+    bool debug_stress_scene_load = false;
 
     #ifdef ENABLE_SCREEN
         #include "menu.h"
@@ -269,10 +269,10 @@
                 Serial_println(F("------------------------")); break;
             #endif
             case 'T':
-                debug_stress_sequencer_load = true;
+                debug_stress_scene_load = true;
                 break;
             case 't':
-                debug_stress_sequencer_load = false;
+                debug_stress_scene_load = false;
                 break;
             case 'p': case 'P':
                 Serial_println(F("MIDI (p)ANIC AT THE DISCO"));
@@ -307,34 +307,34 @@
                 save_screenshot(display_translator);
                 break;
             #endif
-            // load/save/move selected sequence
+            // load/save/move selected scene
             case 'L'            : 
-                Serial_println(F("(L)oad selected sequence"));
+                Serial_println(F("(L)oad selected scene"));
                 project->load_selected_scene();
-                Serial_println(F("Finished loading selected sequence"));
+                Serial_println(F("Finished loading selected scene"));
                 break;
             case 'S'            :
-                Serial_println(F("(S)ave sequencer!"));
+                Serial_println(F("(S)ave scener!"));
                 project->save_selected_scene();
                 break;
             case 'J'            :
-                Serial_println(F("==== Loading previous sequence.."));
-                //input_keyboard.queue_load_previous_sequence();
+                Serial_println(F("==== Loading previous scene.."));
+                //input_keyboard.queue_load_previous_scene();
                 project->load_previous_scene();
-                Serial_println(F("==== Loaded previous sequence!"));
+                Serial_println(F("==== Loaded previous scene!"));
                 break;
             case ':'            :
-                Serial_println(F("==== Loading next sequence")); Serial_flush();
-                //input_keyboard.queue_load_next_sequence();
+                Serial_println(F("==== Loading next scene")); Serial_flush();
+                //input_keyboard.queue_load_next_scene();
                 project->load_next_scene();
-                Serial_println(F("==== Loaded next sequence!")); Serial_flush();
+                Serial_println(F("==== Loaded next scene!")); Serial_flush();
                 break;
             case 'j'            :
-                //Serial_println(F("Select previous sequence"));
+                //Serial_println(F("Select previous scene"));
                 project->select_previous_scene();
                 break;
             case ';'            :
-                //Serial_println(F("Select next sequence"));
+                //Serial_println(F("Select next scene"));
                 project->select_next_scene();
                 break;
             // change project number
