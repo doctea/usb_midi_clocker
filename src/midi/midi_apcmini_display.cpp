@@ -263,7 +263,7 @@ void redraw_pads_row(byte row, bool force) {
 #ifdef ENABLE_APCMINI_DISPLAY
   void apcmini_clear_display(bool force) {
     if (behaviour_apcmini->device==nullptr) return;
-    Serial_println(F("Clearing APC display..")); Serial_flush();
+    //Serial_println(F("Clearing APC display..")); Serial_flush();
 
     if (force) 
       apcdisplay_initialise_last_sent();
@@ -304,7 +304,7 @@ void redraw_pads_row(byte row, bool force) {
     */
    
     //delay(1000);
-    Serial_println(F("Leaving APC display")); Serial_flush();
+    //Serial_println(F("Leaving APC display")); Serial_flush();
     // 
   }
 
