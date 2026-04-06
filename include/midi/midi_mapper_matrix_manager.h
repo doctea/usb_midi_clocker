@@ -40,7 +40,7 @@ void behaviour_manager_kill_all_current_notes();
 class MIDITrack;
 class DeviceBehaviourUltimateBase;
 
-class MIDIMatrixManager : public SHStorage<MAX_NUM_SOURCES, 8> {
+class MIDIMatrixManager : public SHStorage<0, 8> {
     public:
     static MIDIMatrixManager* getInstance();
 
@@ -518,114 +518,86 @@ class MIDIMatrixManager : public SHStorage<MAX_NUM_SOURCES, 8> {
         }
     #endif
 
-    ////////// save and load 
-    void save_project_add_lines(LinkedList<String> *lines) {
-        for (source_id_t source_id = 0 ; source_id < sources_count ; source_id++) {
-            for (target_id_t target_id = 0 ; target_id < targets_count ; target_id++) {
-                if (is_connected(source_id,target_id)) {
-                    lines->add(
-                        String("midi_matrix_map=")+
-                        String(sources[source_id].handle) +
-                        String('|') +
-                        String(targets[target_id].handle)
-                    );
-                }
-            }
-        }
-        #ifdef ENABLE_SCALES
-            lines->add(String("global_scale_type=")+String(get_global_scale_type()));
-            lines->add(String("global_scale_root=")+String(get_global_scale_root()));
-            lines->add(String("global_quantise_on=")+String(is_global_quantise_on()?"true":"false"));
-            lines->add(String("global_quantise_chord_on=")+String(is_global_quantise_chord_on()?"true":"false"));
-        #endif
-    }
-
-    bool load_parse_line(String line) {
-        line = line.replace('\n',"");
-        line = line.replace('\r',"");
-        //Serial_printf("\t\tbehaviour_manager#load_parse_line() passed line \"%s\"\n", line.c_str()); Serial_flush();
-        int split = line.indexOf('=');
-        if (split>=0) {
-            String key = line.substring(0, split);
-            String value = line.substring(split+1);
-            return this->load_parse_key_value(key, value);
-        } else {
-            return this->load_parse_key_value(line, "");
-        }
-    }
-
     // ---- saveloadlib settings ----
     //
     // One child node per registered source; each emits one line:
     //   midi_matrix~<src_handle>~targets=tgt1;tgt2;...
     // Scale settings are registered with SL_SCOPE_PROJECT;
-    // connection lists are registered with SL_SCOPE_ROUTING so they can be
-    // excluded from a load without touching scale/project settings.
+    // connections are emitted/parsed dynamically (sources are registered AFTER
+    // sl_setup_all runs, so static SourceNode children cannot be used).
     // reset_matrix() must be called before loading routing (done in project.h).
     char routing_line_buf[SL_MAX_LINE];  // shared scratch buf (singleton, single-threaded)
 
-    struct SourceNode : public SHStorage<0, 1> {
-        MIDIMatrixManager* manager = nullptr;
-        source_id_t source_id = -1;
-
-        struct TargetListSetting : public SaveableSettingBase {
-            SourceNode* node;
-            TargetListSetting(SourceNode* n) : node(n) {
-                set_label("targets");
-            }
-            const char* get_line() override {
-                char* buf = node->manager->routing_line_buf;
-                int pos = snprintf(buf, SL_MAX_LINE, "targets=");
-                bool first = true;
-                for (target_id_t t = 0; t < (target_id_t)node->manager->targets_count; t++) {
-                    if (node->manager->is_connected(node->source_id, t)) {
-                        if (!first && pos < SL_MAX_LINE - 2) buf[pos++] = ';';
-                        int w = snprintf(buf + pos, SL_MAX_LINE - pos, "%s",
-                            node->manager->targets[t].handle);
-                        if (w > 0) pos += w;
-                        first = false;
-                    }
+    // Internal helper: emit one "<prefix~>src~targets=t1;t2" line per connected source.
+    // Used by both save_recursive overloads.
+    void _emit_routing_lines(const char* prefix, size_t prefix_len,
+                             void (*cb_noct)(const char*),
+                             void (*cb_ctx)(const char*, void*), void* ctx) {
+        static char val_buf[SL_MAX_LINE];
+        static char out[SL_MAX_LINE];
+        for (source_id_t s = 0; s < (source_id_t)sources_count; s++) {
+            int pos = 0; bool first = true;
+            for (target_id_t t = 0; t < (target_id_t)targets_count; t++) {
+                if (is_connected(s, t)) {
+                    if (!first && pos < SL_MAX_LINE - 2) val_buf[pos++] = ';';
+                    int w = snprintf(val_buf + pos, SL_MAX_LINE - pos - 1, "%s", targets[t].handle);
+                    if (w > 0) pos += w;
+                    first = false;
                 }
-                if (pos < SL_MAX_LINE) buf[pos] = '\0';
-                return buf;
             }
-            bool parse_key_value(const char* key, const char* value) override {
-                if (strcmp(key, "targets") != 0) return false;
-                if (!value || !*value) return true;  // no connections — valid
-                char* buf = node->manager->routing_line_buf;
-                strncpy(buf, value, SL_MAX_LINE - 1);
-                buf[SL_MAX_LINE - 1] = '\0';
-                const char* src_handle = node->manager->sources[node->source_id].handle;
-                char* p = buf;
-                while (*p) {
-                    char* semi = strchr(p, ';');
-                    if (semi) *semi = '\0';
-                    if (*p) node->manager->connect(src_handle, p);
-                    if (!semi) break;
-                    p = semi + 1;
-                }
-                return true;
-            }
-            size_t heap_size() const override { return sizeof(TargetListSetting); }
-        };
-
-        void init(MIDIMatrixManager* m, source_id_t sid) {
-            manager = m;
-            source_id = sid;
-            set_path_segment(m->sources[sid].handle);
-            register_setting(new TargetListSetting(this), false, SL_SCOPE_ROUTING);
+            if (first) continue;  // source has no connections — omit
+            val_buf[pos] = '\0';
+            if (prefix_len == 0)
+                snprintf(out, SL_MAX_LINE, "%s~targets=%s", sources[s].handle, val_buf);
+            else
+                snprintf(out, SL_MAX_LINE, "%s~%s~targets=%s", prefix, sources[s].handle, val_buf);
+            if (cb_noct) cb_noct(out);
+            if (cb_ctx)  cb_ctx(out, ctx);
         }
-    };
+    }
 
-    SourceNode source_nodes[MAX_NUM_SOURCES] = {};
+    // Override save_recursive to dynamically emit per-source target lists.
+    // Sources are registered after sl_setup_all, so we can't use static children.
+    virtual void save_recursive(char* prefix, size_t prefix_len,
+                                void (*output_cb)(const char*),
+                                sl_scope_t scope = SL_SCOPE_ALL) override {
+        ISaveableSettingHost::save_recursive(prefix, prefix_len, output_cb, scope);
+        if (scope & SL_SCOPE_ROUTING)
+            _emit_routing_lines(prefix, prefix_len, output_cb, nullptr, nullptr);
+    }
+    virtual void save_recursive(char* prefix, size_t prefix_len,
+                                void (*output_cb)(const char*, void*), void* ctx,
+                                sl_scope_t scope = SL_SCOPE_ALL) override {
+        ISaveableSettingHost::save_recursive(prefix, prefix_len, output_cb, ctx, scope);
+        if (scope & SL_SCOPE_ROUTING)
+            _emit_routing_lines(prefix, prefix_len, nullptr, output_cb, ctx);
+    }
+
+    // Override load_line to handle "src_handle~targets=t1;t2" without needing
+    // registered SourceNode children (sources registered too late for that).
+    virtual bool load_line(char** segments, int seg_count, const char* value,
+                           sl_scope_t scope = SL_SCOPE_ALL) override {
+        if (seg_count == 2 && strcmp(segments[1], "targets") == 0) {
+            if (!(scope & SL_SCOPE_ROUTING)) return false;
+            const char* src_handle = segments[0];
+            if (!value || !*value) return true;  // empty targets line — valid
+            strncpy(routing_line_buf, value, SL_MAX_LINE - 1);
+            routing_line_buf[SL_MAX_LINE - 1] = '\0';
+            char* p = routing_line_buf;
+            while (*p) {
+                char* semi = strchr(p, ';');
+                if (semi) *semi = '\0';
+                if (*p) connect(src_handle, p);
+                if (!semi) break;
+                p = semi + 1;
+            }
+            return true;
+        }
+        // Single segment or unknown: try registered settings (scale etc)
+        return ISaveableSettingHost::load_line(segments, seg_count, value, scope);
+    }
 
     virtual void setup_saveable_settings() override {
-        set_path_segment("midi_matrix");
-        // Register one child node per registered source
-        for (source_id_t s = 0; s < (source_id_t)sources_count; s++) {
-            source_nodes[s].init(this, s);
-            register_child(&source_nodes[s]);
-        }
         #ifdef ENABLE_SCALES
             register_setting(new LSaveableSetting<scale_index_t>(
                 "global_scale_type", "Scale", nullptr,
@@ -648,40 +620,11 @@ class MIDIMatrixManager : public SHStorage<MAX_NUM_SOURCES, 8> {
         #endif
     }
 
-    bool load_parse_key_value(String key, String value, bool debug_print = false) {
-        if (key.equals(F("midi_matrix_map"))) {
-            // midi matrix version
-            if (debug_print) {
-                Serial_printf(F("----\nLoading midi_matrix_map line '%s=%s'\n"), key.c_str(), value.c_str());
-            }
-            int split = value.indexOf('|');
-            String source_label = value.substring(0,split);
-            String target_label = value.substring(split+1,value.length());
-            this->connect(source_label.c_str(), target_label.c_str());
-            return true;
-        }
-        #ifdef ENABLE_SCALES
-            else if (key.equals("global_scale_type")) {
-                this->set_global_scale_type((scale_index_t)value.toInt());
-                return true;
-            } else if (key.equals("global_scale_root")) {
-                this->set_global_scale_root(value.toInt());
-                return true;
-            } else if (key.equals("global_quantise_on")) {
-                this->set_global_quantise_on(value.equals("true") || value.equals("on") || value.equals("1"));
-                return true;
-            } else if (key.equals("global_quantise_chord_on")) {
-                this->set_global_quantise_chord_on(value.equals("true") || value.equals("on") || value.equals("1"));
-                return true;
-            }
-        #endif
-        return false;
-    }
-
     private:
         // stuff for making singleton
         static MIDIMatrixManager* inst_;
         MIDIMatrixManager() {
+            set_path_segment("midi_matrix");  // fixed segment; set here so register_child captures it correctly
             //setup_midi_output_wrapper_manager();
             //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
             sources = (source_entry*)CALLOC_FUNC(MAX_NUM_SOURCES, sizeof(source_entry));

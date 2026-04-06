@@ -24,15 +24,18 @@ class SettingsRoot : public SHStorage<16, 16> {
         }
 
         virtual void setup_saveable_settings() override {
+            // MIDI matrix mappings — connections (SL_SCOPE_ROUTING) + scale settings (SL_SCOPE_PROJECT)
+            register_child(midi_matrix_manager);
+
             // Project-scope settings (project scalars + behaviour project options)
             register_child(project);
 
             // Behaviour tree — each behaviour is a child of behaviour_manager
             register_child(behaviour_manager);
 
-            // MIDI matrix mappings — connections (SL_SCOPE_ROUTING) + scale settings (SL_SCOPE_PROJECT)
-            register_child(midi_matrix_manager);
-
+            // Parameter tree
+            register_child(parameter_manager);
+            
             // Scene / pattern-scope settings (clock multipliers, sequence data)
             register_child(&storage::current_state);
         }

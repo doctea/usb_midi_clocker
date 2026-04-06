@@ -40,8 +40,9 @@ class DeviceBehaviourManager : public SHStorage<48, 0> {
         virtual void setup_saveable_settings() override {
             set_path_segment("behaviours");
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                Serial_printf("setup_saveable_settings register_child for %i: %s\n", i, behaviours->get(i)->get_label());
-                register_child(behaviours->get(i));
+                DeviceBehaviourUltimateBase* b = behaviours->get(i);
+                //Debug_printf("setup_saveable_settings register_child for %i: %s\n", i, b->get_label());
+                register_child(b);
             }
         }
 
@@ -329,118 +330,63 @@ class DeviceBehaviourManager : public SHStorage<48, 0> {
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
-
-            /*
-            DeviceBehaviourUltimateBase *found = nullptr;
-            DeviceBehaviourUltimateBase *found_2 = nullptr;
-
-            // replace this with a hashmap lookup instead of a loop
-            uint32_t start = micros();
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                DeviceBehaviourUltimateBase *device = this->behaviours->get(i);
-                //Serial_printf("find_behaviour_for_label('%s') looping over '%s'\n", label.c_str(), device->get_label());
-                if (device!=nullptr && label.equals(device->get_label())) {
-                    found = device;
-                    break;
-                }
-            }
-            uint32_t duration = micros() - start;
-            if (found==nullptr) {
-                Serial_printf("find_behaviour_for_label('%s') list loop failed after %i us\n", label.c_str(), duration);
-            } else {
-                Serial_printf("find_behaviour_for_label('%s') list loop succeeded after %i us\n", label.c_str(), duration);
-            }
-            //return found;
-
-            start = micros();
-            found_2 = *behaviours_label_hash->get(label);
-            duration = micros() - start;
-            if (found_2) {
-                Serial_printf("find_behaviour_for_label('%s') hashtable lookup succeeded after %i us\n", label.c_str(), duration);
-                Serial_flush();
-            } else {
-                Serial_printf("find_behaviour_for_label('%s') hashtable lookup failed after %i us\n", label.c_str(), duration);
-                Serial_flush();
-            }
-
-            if (found!=found_2) {
-                Serial_printf("WARNING: find_behaviour_for_label('%s') found different results between list loop (%p) and hashtable lookup (%p)!\n", label.c_str(), found, found_2);
-                if (found) {
-                    Serial_printf("\tlist loop found '%s'\n", found->get_label());
-                }
-                if (found_2) {
-                    Serial_printf("\thashtable lookup found '%s'\n", found_2->get_label());
-                }
-                Serial_flush();
-            }
-
-            if (found!=nullptr) {
-                Serial_printf("find_behaviour_for_label('%s') succeeded after %i us\n", label.c_str(), duration);
-                Serial_flush();
-            }*/
-            //Serial_printf("behaviour_start failed to find a behaviour with label '%s'\n", label.c_str());
-            //return found;
-
             if (behaviours_label_hash->containsKey(label))
                 return *behaviours_label_hash->get(label);
             else
                 return nullptr;
         }
 
-        // Parse a single line from the pattern save file.
-        // New format: "BehaviourLabel~key~subkey=value"
-        bool load_parse_line(String line) {
-            int eq = line.indexOf('=');
-            if (eq < 0) return false;
-            String wholekey = line.substring(0, eq);
-            String value    = line.substring(eq + 1);
+        // // Parse a single line from the pattern save file.
+        // // New format: "BehaviourLabel~key~subkey=value"
+        // bool load_parse_line(String line) {
+        //     int eq = line.indexOf('=');
+        //     if (eq < 0) return false;
+        //     String wholekey = line.substring(0, eq);
+        //     String value    = line.substring(eq + 1);
 
-            int tilde = wholekey.indexOf('~');
-            if (tilde < 0) return false;
-            String behaviour_label = wholekey.substring(0, tilde);
-            String rest            = wholekey.substring(tilde + 1);
+        //     int tilde = wholekey.indexOf('~');
+        //     if (tilde < 0) return false;
+        //     String behaviour_label = wholekey.substring(0, tilde);
+        //     String rest            = wholekey.substring(tilde + 1);
 
-            DeviceBehaviourUltimateBase *b = find_behaviour_for_label(behaviour_label);
-            if (!b) {
-                if (debug) Serial_printf("load_parse_line: no behaviour found for label '%s'\n", behaviour_label.c_str());
-                return false;
-            }
+        //     DeviceBehaviourUltimateBase *b = find_behaviour_for_label(behaviour_label);
+        //     if (!b) {
+        //         if (debug) Serial_printf("load_parse_line: no behaviour found for label '%s'\n", behaviour_label.c_str());
+        //         return false;
+        //     }
 
-            static char keybuf[SL_MAX_LINE];
-            rest.toCharArray(keybuf, sizeof(keybuf));
-            static char* segs[16];
-            int count = sl_tokenise_inplace(keybuf, segs, 16);
-            if (count <= 0) return false;
-            return b->load_line(segs, count, value.c_str());
-        }
+        //     static char keybuf[SL_MAX_LINE];
+        //     rest.toCharArray(keybuf, sizeof(keybuf));
+        //     static char* segs[16];
+        //     int count = sl_tokenise_inplace(keybuf, segs, 16);
+        //     if (count <= 0) return false;
+        //     return b->load_line(segs, count, value.c_str());
+        // }
 
         // ask each behaviour to add project-scope option lines to save project file.
-        // Output format: "BehaviourLabel~key=value" (tilde-delimited) so that
-        // load_parse_line() can route lines back to the correct behaviour.
-        void save_project_add_lines(LinkedList<String> *lines) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                LinkedList<String> blines = LinkedList<String>();
-                // saveloadlib tree (migrated behaviours): emits "key=value" without label prefix
-                sl_save_to_linkedlist(device, blines, SL_SCOPE_PROJECT);
-                // legacy virtual (unmigrated behaviours): appends its own "key=value" lines
-                device->save_project_add_lines(&blines);
-                const char *label = device->get_label();
-                for (unsigned int j = 0 ; j < blines.size() ; j++) {
-                    lines->add(String(label) + "~" + blines.get(j));
-                }
-            }
-        }
+        // // Output format: "BehaviourLabel~key=value" (tilde-delimited) so that
+        // // load_parse_line() can route lines back to the correct behaviour.
+        // void save_project_add_lines(LinkedList<String> *lines) {
+        //     const uint_fast8_t size = behaviours->size();
+        //     for (uint_fast8_t i = 0 ; i < size ; i++) {
+        //         DeviceBehaviourUltimateBase *device = behaviours->get(i);
+        //         LinkedList<String> blines = LinkedList<String>();
+        //         // saveloadlib tree emits settings lines; prefix each with the behaviour label
+        //         sl_save_to_linkedlist(device, blines, SL_SCOPE_PROJECT);
+        //         const char *label = device->get_label();
+        //         for (unsigned int j = 0 ; j < blines.size() ; j++) {
+        //             lines->add(String(label) + "~" + blines.get(j));
+        //         }
+        //     }
+        // }
 
-        // ask each behaviour to add option lines to save pattern file
-        void save_pattern_add_lines(LinkedList<String> *lines) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->save_pattern_add_lines(lines);
-            }
-        }
+        // // ask each behaviour to add option lines to save pattern file
+        // void save_pattern_add_lines(LinkedList<String> *lines) {
+        //     const uint_fast8_t size = behaviours->size();
+        //     for (uint_fast8_t i = 0 ; i < size ; i++) {
+        //         behaviours->get(i)->save_pattern_add_lines(lines);
+        //     }
+        // }
 
         void reset_all_mappings() {
             const unsigned int size = behaviours->size();

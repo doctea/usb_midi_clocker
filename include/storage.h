@@ -32,6 +32,7 @@ namespace storage {
 
   #define SAVE_ID_BYTE_V0 0xD0
   #define SAVE_ID_BYTE_V1 0xD1
+  #define SAVE_ID_BYTE_V7 0xD7
 
   // ---------------------------------------------------------------------------
   // SequenceRowSetting — custom SaveableSetting that serialises / parses one row
@@ -73,6 +74,42 @@ namespace storage {
   };
 
   // ---------------------------------------------------------------------------
+  // PackedByteArraySetting — encodes a uint8_t array as a 2-hex-chars-per-byte
+  // string: e.g. clock_mult=07060504030201 (no separator needed, fixed width).
+  // ---------------------------------------------------------------------------
+  struct PackedByteArraySetting : public SaveableSettingBase {
+    uint8_t* arr;
+    uint8_t  count;
+
+    PackedByteArraySetting(const char* lbl, const char* cat, uint8_t* data, uint8_t n)
+        : arr(data), count(n) {
+      set_label(lbl);
+      set_category(cat ? cat : "");
+    }
+
+    const char* get_line() override {
+      int pos = snprintf(linebuf, SL_MAX_LINE, "%s=", label);
+      for (uint8_t i = 0; i < count && pos < SL_MAX_LINE - 2; i++) {
+        snprintf(linebuf + pos, 3, "%02x", arr[i]);
+        pos += 2;
+      }
+      linebuf[pos] = '\0';
+      return linebuf;
+    }
+
+    bool parse_key_value(const char* key, const char* value) override {
+      if (strcmp(key, label) != 0) return false;
+      for (uint8_t i = 0; i < count && value[i*2] && value[i*2+1]; i++) {
+        char hex[3] = { value[i*2], value[i*2+1], '\0' };
+        arr[i] = (uint8_t)strtol(hex, nullptr, 16);
+      }
+      return true;
+    }
+
+    virtual size_t heap_size() const override { return sizeof(PackedByteArraySetting); }
+  };
+
+  // ---------------------------------------------------------------------------
   // savestate — the clock + sequence data for one scene.
   //
   // Inherits SHStorage so all fields are registered as saveloadlib settings under
@@ -89,8 +126,8 @@ namespace storage {
   // Note: SHStorage adds virtual methods, making savestate non-trivially-destructible.
   //       The legacy Arduino EEPROM path at the bottom of storage.cpp is incompatible.
   // ---------------------------------------------------------------------------
-  struct savestate : public SHStorage<0, 4 + NUM_CLOCKS + NUM_CLOCKS + NUM_SEQUENCES> {
-    uint8_t id             = SAVE_ID_BYTE_V1;
+  struct savestate : public SHStorage<0, (20 + NUM_SEQUENCES)> {
+    uint8_t id             = SAVE_ID_BYTE_V7;
     uint8_t size_clocks    = NUM_CLOCKS;
     uint8_t size_sequences = NUM_SEQUENCES;
     uint8_t size_steps     = NUM_STEPS;

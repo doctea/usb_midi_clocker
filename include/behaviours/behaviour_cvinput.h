@@ -188,11 +188,6 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             #endif
         }
 
-        // ask behaviour to process the key/value pair — pitch_source and velocity_source
-        // are now handled by the saveloadlib tree registered in setup_saveable_settings().
-        virtual bool load_parse_key_value(String key, String value) override {
-            return DeviceBehaviourUltimateBase::load_parse_key_value(key, value);
-        }
 
         #ifdef ENABLE_PARAMETERS
             bool already_initialised = false;

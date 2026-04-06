@@ -16,7 +16,10 @@
 #include "ram_stuff.h"
 
 #include "debug.h"
-#include "storage.h"
+#ifdef ENABLE_STORAGE
+  #include "storage.h"
+  #include "settings_root.h"
+#endif
 
 #ifdef ENABLE_SCREEN
   //#include "tft.h"
@@ -171,11 +174,6 @@ void setup() {
   setup_behaviour_manager();
   Serial_printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
 
-  #ifdef ENABLE_STORAGE
-    Serial.println("Setting up saveloadlib..."); Serial.flush();
-    setup_saveloadlib();
-    Serial.println("Finished setting up saveloadlib!"); Serial.flush();
-  #endif
 
   //Serial_println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
@@ -259,6 +257,12 @@ void setup() {
     Serial_println(F("...finished behaviour_manager#make_menu_items...")); Serial_flush();
   #endif
 
+  #ifdef ENABLE_STORAGE
+    tft_print((char*)"...setup save tree...\n"); Serial_flush();
+    setup_saveloadlib();
+    //tft_print((char*)"Finished setting up saveloadlib!"); Serial.flush();
+  #endif
+
   /*
   #ifdef ENABLE_SEQUENCER
     tft_print((char*)"..Sequencer..\n");
@@ -300,7 +304,7 @@ void setup() {
 
   Serial_println(F("Arduino ready.")); Serial_flush();
   #ifdef ENABLE_SCREEN
-    tft_print((char*)"Ready!"); 
+    tft_print((char*)"Ready to start menu!"); 
     //tft_clear();
 
     Serial_println(F("About to init menu..")); Serial_flush();

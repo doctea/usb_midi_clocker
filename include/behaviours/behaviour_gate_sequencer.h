@@ -425,23 +425,6 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
         ), false, SL_SCOPE_PROJECT);
     }
 
-    virtual void save_project_add_lines(LinkedList<String> *lines) override {
-        // Legacy virtual kept empty — map_note_to_gate is now emitted by the saveloadlib tree.
-        // (DeviceBehaviourUltimateBase::save_project_add_lines is also a no-op)
-    }
-
-    virtual bool parse_project_key_value(String key, String value) override {
-        // Legacy load: old project files wrote 128 lines of "map_note_to_gate=i|v".
-        // Detect those by the presence of '|' in the value and handle them directly.
-        // New files write a single nibble line handled by the saveloadlib tree.
-        if (key.startsWith(F("map_note_to_gate")) && value.indexOf('|') >= 0) {
-            int8_t separator = value.indexOf('|');
-            this->map_note_to_gate[value.substring(0, separator).toInt()] =
-                value.substring(separator + 1).toInt();
-            return true;
-        }
-        return DeviceBehaviourUltimateBase::parse_project_key_value(key, value);
-    }
 
 };
 

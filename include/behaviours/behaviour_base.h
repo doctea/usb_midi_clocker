@@ -274,9 +274,13 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
     }
 
     // ---- saveloadlib-based settings (replaces old SaveableParameters system) ----
+    // get_path_segment() returns the behaviour's label as its tree segment.
+    // Called by sl_setup_all() via virtual dispatch after full construction.
+    virtual const char* get_path_segment() const override { return const_cast<DeviceBehaviourUltimateBase*>(this)->get_label(); }
+
     virtual void setup_saveable_settings() override {
         ISaveableSettingHost::setup_saveable_settings();
-        // Tag each behaviour's lines with its label as the tree path segment
+        // path_segment is kept in sync so set_path_segment-based callers still work
         this->set_path_segment(this->get_label());
 
         if (this->transmits_midi_notes()) {
@@ -303,26 +307,26 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         }
     }
 
-    // Save all pattern settings for this behaviour into lines (each prefixed with behaviour path).
-    virtual void save_pattern_add_lines(LinkedList<String> *lines) {
-        sl_save_to_linkedlist(this, *lines);
-    }
+    // // // Save all pattern settings for this behaviour into lines (each prefixed with behaviour path).
+    // // virtual void save_pattern_add_lines(LinkedList<String> *lines) {
+    // //     sl_save_to_linkedlist(this, *lines);
+    // // }
 
-    // Project-level hooks (separate from pattern save/load; not migrated to saveloadlib)
-    virtual void save_project_add_lines(LinkedList<String> *lines) {}
-    virtual bool parse_project_key_value(String key, String value) { return false; }
+    // // Project-level hooks (separate from pattern save/load; not migrated to saveloadlib)
+    // virtual void save_project_add_lines(LinkedList<String> *lines) {}
+    // virtual bool parse_project_key_value(String key, String value) { return false; }
     virtual void notify_project_changed(int project_number) {}
 
-    // Route a key=value pair (key has behaviour prefix already stripped) into the save tree.
-    virtual bool load_parse_key_value(String key, String value) {
-        if (this->parse_project_key_value(key, value)) return true;
-        static char keybuf[SL_MAX_LINE];
-        key.toCharArray(keybuf, sizeof(keybuf));
-        static char* segs[16];
-        int count = sl_tokenise_inplace(keybuf, segs, 16);
-        if (count <= 0) return false;
-        return this->load_line(segs, count, value.c_str());
-    }
+    // // Route a key=value pair (key has behaviour prefix already stripped) into the save tree.
+    // virtual bool load_parse_key_value(String key, String value) {
+    //     if (this->parse_project_key_value(key, value)) return true;
+    //     static char keybuf[SL_MAX_LINE];
+    //     key.toCharArray(keybuf, sizeof(keybuf));
+    //     static char* segs[16];
+    //     int count = sl_tokenise_inplace(keybuf, segs, 16);
+    //     if (count <= 0) return false;
+    //     return this->load_line(segs, count, value.c_str());
+    // }
 
     virtual void setup_saveable_parameters_hash() {} // no-op; kept for source compatibility
 

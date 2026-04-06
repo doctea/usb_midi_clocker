@@ -82,6 +82,7 @@ class Project : public SHStorage<0, 8> {
     }
     #endif
     public:
+        ISaveableSettingHost* save_tree = nullptr;  // set by setup_saveloadlib() after construction
         int current_project_number = 0;
 
         int selected_pattern_number = 0;
@@ -109,7 +110,7 @@ class Project : public SHStorage<0, 8> {
         virtual void setup_saveable_settings() override {
             this->set_path_segment("project");
             register_setting(new LSaveableSetting<int>(
-                "id", "Project", nullptr,
+                "project_id", "Project", nullptr,
                 [this](int v) { /* id on load is informational; project number set by caller */ },
                 [this]() -> int { return this->current_project_number; }
             ), false, SL_SCOPE_PROJECT);
@@ -368,48 +369,21 @@ class Project : public SHStorage<0, 8> {
         }
         bool save_project_settings(int save_to_project_number) {
             #ifdef ENABLE_SD
-            File myFile;
+            //File myFile;
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
             Serial.printf(F("save_project_settings(%i) writing to %s\n"), save_to_project_number, filename);
             if (SD.exists(filename)) {
-                Serial.printf(F("%s exists, deleting first\n"), filename);
+                Serial.printf(F("%s exists, deleting first!\n"), filename);
                 SD.remove(filename);
             }
-            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
-            if (!myFile) {
-                Serial.printf(F("Error: couldn't open %s for writing\n"), filename);
-                return false;
-            }
 
-            myFile.println(F("; begin project"));
+            // Save entire tree, scoped to SL_SCOPE_PROJECT | SL_SCOPE_ROUTING.
+            // SL_SCOPE_ROUTING is included so midi_matrix connection lines are saved;
+            // scale/project settings use SL_SCOPE_PROJECT.
 
-            // Save Project-scope scalar settings via saveloadlib ("project~key=value" lines)
-            LinkedList<String> project_lines = LinkedList<String>();
-            sl_save_to_linkedlist(this, project_lines, SL_SCOPE_PROJECT);
-            for (unsigned int i = 0 ; i < project_lines.size() ; i++) {
-                myFile.println(project_lines.get(i));
-            }
-
-            // Save behaviour project-scope settings ("BehaviourLabel~key=value" lines)
-            LinkedList<String> behaviour_lines = LinkedList<String>();
-            behaviour_manager->save_project_add_lines(&behaviour_lines);
-            for (unsigned int i = 0 ; i < behaviour_lines.size() ; i++) {
-                myFile.println(behaviour_lines.get(i));
-            }
-
-            // Save MIDI matrix mappings via saveloadlib tree
-            // Connections are scoped SL_SCOPE_ROUTING; scale settings are SL_SCOPE_PROJECT
-            LinkedList<String> matrix_lines = LinkedList<String>();
-            sl_save_to_linkedlist(midi_matrix_manager, matrix_lines, (sl_scope_t)(SL_SCOPE_ROUTING | SL_SCOPE_PROJECT));
-            for (unsigned int i = 0 ; i < matrix_lines.size() ; i++) {
-                myFile.println(matrix_lines.get(i));
-            }
-
-            myFile.println(F("; end project"));
-            myFile.close();
-            Serial.println(F("Finished saving."));
+            sl_save_to_file(save_tree, filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING));
 
             update_project_filename(filename);
             #endif
@@ -418,121 +392,19 @@ class Project : public SHStorage<0, 8> {
 
         bool load_project_settings(int project_number) {
             #ifdef ENABLE_SD
-            //bool irqs_enabled = __irq_enabled();
-            //__disable_irq();
-            File myFile;
-
-            messages_log_add(String("Loading project ") + String(project_number));
-
-            if (isLoadMatrixMappings()) {
-                Serial.printf(F("load_project_settings(%i) resetting matrix!\n"), project_number);
-                midi_matrix_manager->reset_matrix(); 
-            }
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
             Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
-            myFile = SD.open(filename, FILE_READ);
-            myFile.setTimeout(0);
 
-            if (!myFile) {
-                Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
-                //if (irqs_enabled) __enable_irq();
-                return false;
-            }
+            sl_load_from_file(filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING));
 
-            String line;
-            while (line = myFile.readStringUntil('\n')) {
-                load_project_parse_line(line);
-            }
-            Serial.println(F("Closing file.."));
-            myFile.close();
-            //if (irqs_enabled) __enable_irq();
-            Serial.println(F("File closed"));
-
-            //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
-            current_project_number = project_number;
             Serial.printf(F("Loaded project settings.\n"));
 
             update_project_filename(filename);
             #endif
 
             return true;
-        }
-
-        void load_project_parse_line(String line, bool debug = false) {
-            if (line.charAt(0)==';')
-                return;  // skip comment lines
-
-            line.replace('\n', "");
-            line.replace('\r', "");
-
-            int eq = line.indexOf('=');
-            if (eq < 0) return;
-            String left  = line.substring(0, eq);
-            String value = line.substring(eq + 1);
-
-            int tilde = left.indexOf('~');
-            if (tilde >= 0) {
-                // Tilde-delimited format: "segment~key=value"
-                String segment = left.substring(0, tilde);
-                String rest    = left.substring(tilde + 1);
-
-                if (segment.equals(F("project"))) {
-                    // Route to this Project's saveloadlib settings tree
-                    static char restbuf[SL_MAX_LINE];
-                    static char valbuf[SL_MAX_LINE];
-                    rest.toCharArray(restbuf, sizeof(restbuf));
-                    value.toCharArray(valbuf, sizeof(valbuf));
-                    static char* segs[16];
-                    int cnt = sl_tokenise_inplace(restbuf, segs, 16);
-                    if (cnt > 0) load_line(segs, cnt, valbuf, SL_SCOPE_PROJECT);
-                    return;
-                } else if (segment.equals(F("midi_matrix"))) {
-                    // Route to midi_matrix_manager's saveloadlib tree.
-                    // SL_SCOPE_ROUTING is included only when isLoadMatrixMappings() is true;
-                    // scale settings (SL_SCOPE_PROJECT) are always loaded.
-                    sl_scope_t routing_scope = this->isLoadMatrixMappings()
-                        ? (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING)
-                        : SL_SCOPE_PROJECT;
-                    static char restbuf[SL_MAX_LINE];
-                    static char valbuf[SL_MAX_LINE];
-                    rest.toCharArray(restbuf, sizeof(restbuf));
-                    value.toCharArray(valbuf, sizeof(valbuf));
-                    static char* segs[16];
-                    int cnt = sl_tokenise_inplace(restbuf, segs, 16);
-                    if (cnt > 0) midi_matrix_manager->load_line(segs, cnt, valbuf, routing_scope);
-                    return;
-                } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-                    // "BehaviourLabel~key=value" handled by behaviour_manager
-                    return;
-                } else if (this->isLoadMatrixMappings() && midi_matrix_manager->load_parse_line(line)) {
-                    // legacy fallback for any tilde-prefixed matrix lines in old files
-                    return;
-                }
-                if (debug) Serial.printf(F("project: unknown tilde line '%s'\n"), line.c_str());
-                messages_log_add(String("Unknown Project line '") + line + String("'"));
-                return;
-            }
-
-            // Legacy flat format
-            if (this->isLoadMatrixMappings() && line.startsWith(F("midi_output_map="))) {
-                // pre-matrix legacy format
-                if (debug) Serial.printf(F("----\nLoading midi_output_map line '%s'\n"), line.c_str());
-                line = line.remove(0, String(F("midi_output_map=")).length());
-                int split = line.indexOf('|');
-                String source_label = line.substring(0, split);
-                source_label.replace(F("_output"), F(""));
-                String target_label = line.substring(split+1, line.length());
-                midi_matrix_manager->connect(source_label.c_str(), target_label.c_str());
-                return;
-            } else if (this->isLoadMatrixMappings() && midi_matrix_manager->load_parse_line(line)) {
-                return;
-            } else if (this->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-                return;
-            }
-            if (debug) Serial.printf(F("project read line '%s', but didn't know how to process it\n"), line.c_str());
-            messages_log_add(String("Unknown Project line '") + line + String("'"));
         }
 };
 

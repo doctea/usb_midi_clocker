@@ -217,35 +217,58 @@ bool execute_command(const char *command_line) {
             Serial.printf("Unknown type: %s\n", arg1);
             return true;
         }
-    } else if (strcmp(command, "loadline") == 0) {
-        // load a line from serial input as if it were a line from a file, for testing parsing of 
-        // pattern files without needing to write to the SD card. Usage: loadline <line_contents>
-        if (arg1[0] == '\0') {
-            Serial.println("Usage: loadline <type> <line_contents>");
-            return true;
-        }
-        char line_buffer[512];
-        if (arg2[0] == '\0') {
-            Serial.println("Usage: loadline <type> <line_contents>");
-            return true;
-        }
+    // } else if (strcmp(command, "loadline") == 0) {
+    //     // load a line from serial input as if it were a line from a file, for testing parsing of 
+    //     // pattern files without needing to write to the SD card. Usage: loadline <line_contents>
+    //     if (arg1[0] == '\0') {
+    //         Serial.println("Usage: loadline <type> <line_contents>");
+    //         return true;
+    //     }
+    //     char line_buffer[512];
+    //     if (arg2[0] == '\0') {
+    //         Serial.println("Usage: loadline <type> <line_contents>");
+    //         return true;
+    //     }
 
-        snprintf(line_buffer, sizeof(line_buffer), "%s", arg2);
+    //     snprintf(line_buffer, sizeof(line_buffer), "%s", arg2);
 
-        if (strcmp(arg1, "pattern") == 0) {
-            // load a line of text as if it were a line from a pattern file, and output the result of parsing it
-            Serial_printf("Parsing line as pattern line: '%s'\n", line_buffer);
-            storage::load_pattern_parse_line(line_buffer, &storage::current_state, pass_debug);
-            Serial_println("Done.");
-        } else if (strcmp(arg1, "project") == 0) {
-            // load a line of text as if it were a line from a project settings file, and output the result of parsing it
-            Serial_printf("Parsing line as project settings line: '%s'\n", line_buffer);
-            project->load_project_parse_line(line_buffer, pass_debug);
-            Serial_println("Done.");
-        } else {
-            Serial.printf("Unknown type: %s\n", arg1);
-        }
+    //     if (strcmp(arg1, "pattern") == 0) {
+    //         // load a line of text as if it were a line from a pattern file, and output the result of parsing it
+    //         Serial_printf("Parsing line as pattern line: '%s'\n", line_buffer);
+    //         storage::load_pattern_parse_line(line_buffer, &storage::current_state, pass_debug);
+    //         Serial_println("Done.");
+    //     } else if (strcmp(arg1, "project") == 0) {
+    //         // load a line of text as if it were a line from a project settings file, and output the result of parsing it
+    //         Serial_printf("Parsing line as project settings line: '%s'\n", line_buffer);
+    //         project->load_project_parse_line(line_buffer, pass_debug);
+    //         Serial_println("Done.");
+    //     } else {
+    //         Serial.printf("Unknown type: %s\n", arg1);
+    //     }
         
+    //     return true;
+    } else if (strcmp(command, "showtree") == 0) {
+        // output the current settings tree as a text dump to the serial console, for debugging
+        Serial.println("Dumping settings tree (to depth 8):");
+        if (settings_root) {
+            sl_print_tree_to_print(settings_root, Serial, 8);
+        } else {
+            Serial.println("No settings root found!");
+        }
+        SL_TreeCounts counts = sl_count_tree(settings_root);
+        Serial.printf(
+            "There are %i settings and %i host nodes in the tree, occupying %i bytes (averaging %i bytes per setting).\n", 
+            counts.settings, 
+            counts.nodes, 
+            counts.bytes,
+            counts.settings > 0 ? counts.bytes / counts.settings : 0
+        );
+        return true;
+    } else if (strcmp(command, "info") == 0) {
+        Serial.println("Tyrell Corp Nexus6 USB Teensy Clocker");
+        Serial.println("Build date: " __DATE__ " " __TIME__);
+        Serial.println("Git commit: " COMMIT_INFO);
+        Serial.println("Build env: " ENV_NAME);
         return true;
     } else if (strcmp(command, "help") == 0) {
         Serial.println("Available commands:");
@@ -256,10 +279,12 @@ bool execute_command(const char *command_line) {
         Serial.println("  free_ram - Check available RAM");
         Serial.println("  crashlog - Dump the crash report log (if any)");
         Serial.println("  clearcrashlog - Clear the crash report log (if any)");
+        Serial.println("  showtree - Show the current settings tree (to depth 8)");
         Serial.println("  show - Show contents of a file");
         Serial.println("  load - Load a pattern, project, etc from a file on the SD card");
         Serial.println("  save - Save a pattern, project, etc to a file on the SD card");
-        Serial.println("  loadline - Load a line of text as if it were from a pattern file (for testing parsing)");
+        Serial.println("  [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a pattern file (for testing parsing)");
+        Serial.println("  info - show build info");
         Serial.println("  help - Show this help message");
         return true;
     }

@@ -179,6 +179,9 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             DeviceBehaviourUltimateBase::setup_saveable_settings();
             PolyphonicBehaviour::setup_saveable_settings();
 
+            // todo: save velocity output and pitch output? actually, seems like that already didn't exist in main branch
+            // todo: so, just investigate whether we actually need it and document how it connects to what we have here
+
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
                     register_setting(new LSaveableSetting<bool>(
@@ -199,39 +202,6 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                         [=](bool v) { outputs[i]->set_gate_output_enabled(v); },
                         [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }));
             }
-        }
-
-        virtual bool load_parse_key_value(String key, String value) override {
-            static const String warning_message = String("WARNING: CVOutputBehaviour couldn't find an output for the name '");
-            /*if (key.equals(F("pitch_output"))) {
-                BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
-                if (source != nullptr)
-                    this->set_selected_pitch_output(source);
-                else {
-                    this->set_selected_pitch_output(nullptr);
-                    messages_log_add(warning_message + value + "'");
-                }
-                return true;
-            } else if (key.equals(F("velocity_output"))) {
-                BaseParameterInput *source = parameter_manager->getInputForName((char*)value.c_str());
-                if (source != nullptr)
-                    this->set_selected_velocity_output(source);
-                else {
-                    this->set_selected_velocity_output(nullptr);
-                    messages_log_add(warning_message + value + "'");
-                }
-                return true;
-            } else
-            */
-            if (PolyphonicBehaviour::load_parse_key_value(key, value)) {
-                return true;
-            }
-
-            if (DeviceBehaviourUltimateBase::load_parse_key_value(key, value)) {
-                return true;
-            }
-
-            return false;
         }
 
         #ifdef ENABLE_PARAMETERS

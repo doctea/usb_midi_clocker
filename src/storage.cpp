@@ -151,25 +151,20 @@ namespace storage {
   // ---------------------------------------------------------------------------
   void savestate::setup_saveable_settings() {
     set_path_segment("scene");
-    char lbl[20];
 
     // Scene metadata
-    register_setting(new LSaveableSetting<uint8_t>("id",          "Scene", &id),            false, SL_SCOPE_PATTERN);
+    register_setting(new LSaveableSetting<uint8_t>("scene_id",    "Scene", &id),            false, SL_SCOPE_PATTERN);
     register_setting(new LSaveableSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   false, SL_SCOPE_PATTERN);
     register_setting(new LSaveableSetting<uint8_t>("size_seqs",   "Scene", &size_sequences), false, SL_SCOPE_PATTERN);
     register_setting(new LSaveableSetting<uint8_t>("size_steps",  "Scene", &size_steps),    false, SL_SCOPE_PATTERN);
 
-    // Clock multipliers and delays — one setting per clock
-    for (uint8_t i = 0; i < NUM_CLOCKS; i++) {
-      snprintf(lbl, sizeof(lbl), "clock_mult_%u", i);
-      register_setting(new LSaveableSetting<uint8_t>(lbl, "Clock", &clock_multiplier[i]), false, SL_SCOPE_PATTERN);
-    }
-    for (uint8_t i = 0; i < NUM_CLOCKS; i++) {
-      snprintf(lbl, sizeof(lbl), "clock_delay_%u", i);
-      register_setting(new LSaveableSetting<uint8_t>(lbl, "Clock", &clock_delay[i]), false, SL_SCOPE_PATTERN);
-    }
+    // Clock multipliers — packed as 2-hex-chars-per-byte: "clock_mult=07060504..."
+    register_setting(new PackedByteArraySetting("clock_mult",  "Clock", clock_multiplier, NUM_CLOCKS), false, SL_SCOPE_PATTERN);
+    // Clock delays — same format
+    register_setting(new PackedByteArraySetting("clock_delay", "Clock", clock_delay,      NUM_CLOCKS), false, SL_SCOPE_PATTERN);
 
-    // Sequence rows — nibble-encoded hex, length read from live size_steps pointer
+    // Sequence rows — one nibble-hex setting per row, length from live size_steps pointer
+    char lbl[20];
     for (uint8_t i = 0; i < NUM_SEQUENCES; i++) {
       snprintf(lbl, sizeof(lbl), "seq_%u", i);
       register_setting(new SequenceRowSetting(lbl, "Sequence", sequence_data[i], &size_steps), false, SL_SCOPE_PATTERN);
@@ -360,10 +355,11 @@ namespace storage {
         int cnt = sl_tokenise_inplace(restbuf, segs, 16);
         if (cnt > 0) return output->load_line(segs, cnt, valbuf, SL_SCOPE_PATTERN);
         return false;
-      } else if (project->isLoadBehaviourOptions()) {
-        if (debug) Serial_println(F("Routing to behaviour_manager"));
-        return behaviour_manager->load_parse_line(line);
       }
+      // } else if (project->isLoadBehaviourOptions()) {
+      //   if (debug) Serial_println(F("Routing to behaviour_manager"));
+      //   return behaviour_manager->load_parse_line(line);
+      // }
       return false;
     }
 
@@ -374,11 +370,11 @@ namespace storage {
     // -------------------------------------------------------------------------
     if (debug) Serial.printf(F("load_pattern_parse_line: legacy format: '%s'\n"), line.c_str());
 
-    if (left.equals(F("id"))) {
-      output->id = (uint8_t)value.toInt();
-      if (debug) Serial.printf(F("Read id %i\n"), output->id);
+    /*if (left.equals(F("scene_id"))) {
+      output->scene_id = (uint8_t)value.toInt();
+      if (debug) Serial.printf(F("Read scene_id %i\n"), output->sceid);
       return true;
-    } else if (left.equals(F("size_clocks"))) {
+    } else*/ if (left.equals(F("size_clocks"))) {
       output->size_clocks = (uint8_t)value.toInt();
       if (debug) Serial.printf(F("Read size_clocks %i\n"), output->size_clocks);
       return true;
@@ -418,10 +414,11 @@ namespace storage {
         sequence_data_index++;
       }
       return true;
-    } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
-      if (debug) Serial_println(F("Parsed a legacy line with behaviour_manager"));
-      return true;
     }
+    // } else if (project->isLoadBehaviourOptions() && behaviour_manager->load_parse_line(line)) {
+    //   if (debug) Serial_println(F("Parsed a legacy line with behaviour_manager"));
+    //   return true;
+    // }
     // TODO: reload parameter input options via saveloadlib
     // parameter_manager->load_parse_line(line) removed - vestige of old mechanism
 
@@ -443,7 +440,7 @@ namespace storage {
     return filename;
   }
 
-  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug = false) {
+  bool load_pattern(int project_number, uint8_t pattern_number, savestate *output, bool debug) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       #ifdef ENABLE_SD
       static volatile bool already_loading = false;
@@ -594,7 +591,9 @@ void setup_saveloadlib() {
 
     sl_setup_all(settings_root);
 
+    // Wire the save tree into Project so Project::save_project_settings() can
+    // call sl_save_to_file without needing to know the full SettingsRoot type.
+    project->save_tree = settings_root;
 }
-
 
 SettingsRoot *settings_root;

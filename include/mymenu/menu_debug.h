@@ -96,7 +96,10 @@ class DebugPanel : public MenuItem {
 
             tft->println("\nSetup stats:");
             #ifdef ENABLE_PARAMETERS
-                tft->printf("  Parameters: %i\n", parameter_manager->available_parameters->size());
+                tft->printf("  Parameters: %i    Parameter inputs: %i\n", 
+                    parameter_manager->available_parameters->size(),
+                    parameter_manager->available_inputs->size()
+                );
             #endif
 
             #ifdef ENABLE_STORAGE
