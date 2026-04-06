@@ -96,10 +96,10 @@ bool execute_command(const char *command_line) {
         }
         char *filename = nullptr;
 
-        if (strcmp(arg1, "seq") == 0) {
+        if (strcmp(arg1, "scene") == 0) {
             if (arg2[0] == '\0') {
-                Serial.println("Usage: show seq <slot_number> (using currently selected slot if slot_number not provided)");
-                // show current sequence pattern
+                Serial.println("Usage: show scene <slot_number> (using currently selected slot if slot_number not provided)");
+                // show current scene
                 sprintf(arg2, "%i", project->selected_scene_number); // default to slot 0 if no slot number provided
                 return false;
             }
@@ -110,7 +110,7 @@ bool execute_command(const char *command_line) {
                 return true;
             }
             if (project->is_selected_scene_number_empty(desired_scene_number)) {
-                Serial.printf("No pattern file found for slot %i\n", desired_scene_number);
+                Serial.printf("No scene file found for slot %i\n", desired_scene_number);
                 return true;
             }
             // read the appropriate file from disc and output its contents to serial
@@ -160,7 +160,7 @@ bool execute_command(const char *command_line) {
         return true;
 
     } else if (strcmp(command, "load") == 0) {
-        // load a pattern, project, etc from a file on the SD card. Usage: load <type> <filename>
+        // load a scene, project, etc from a file on the SD card. Usage: load <type> <filename>
         if (arg1[0] == '\0' || arg2[0] == '\0') {
             Serial.println("Usage: load <type> <filename>");
             return true;
@@ -180,9 +180,9 @@ bool execute_command(const char *command_line) {
             project->load_project_settings(project_number);
 
             return true;
-        } else if (strcmp(arg1, "seq") == 0) {
-            // load a sequence pattern from the specified file
-            Serial.printf("Loading sequence pattern from file %s...\n", arg2);
+        } else if (strcmp(arg1, "scene") == 0) {
+            // load a scene from the specified file
+            Serial.printf("Loading scene from file %s...\n", arg2);
 
             int desired_scene_number = atoi(arg2);
             if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
@@ -190,11 +190,11 @@ bool execute_command(const char *command_line) {
                 return true;
             }
             if (project->is_selected_scene_number_empty(desired_scene_number)) {
-                Serial.printf("No pattern file found for slot %i\n", desired_scene_number);
+                Serial.printf("No scene file found for slot %i\n", desired_scene_number);
                 return true;
             }
 
-            Serial.printf("Loading pattern from file %i...\n", desired_scene_number);
+            Serial.printf("Loading scene from file %i...\n", desired_scene_number);
             project->load_scene(desired_scene_number, pass_debug);
 
             return true;
@@ -203,7 +203,7 @@ bool execute_command(const char *command_line) {
             return true;
         }
     } else if (strcmp(command, "save") == 0) {
-        // save a pattern, project, etc to a file on the SD card. Usage: save <type> <filename>
+        // save a scene, project, etc to a file on the SD card. Usage: save <type> <filename>
         if (arg1[0] == '\0' || arg2[0] == '\0') {
             Serial.println("Usage: save <type> <filename>");
             return true;
@@ -224,10 +224,10 @@ bool execute_command(const char *command_line) {
                 project->save_project_settings(desired_project_number);
                 return true;
             }
-        } else if (strcmp(arg1, "seq") == 0) {
+        } else if (strcmp(arg1, "scene") == 0) {
             if (arg2[0] == '\0') {
-                // save current sequence pattern to the specified file
-                Serial.printf("Saving sequence pattern to file %s...\n", arg2);
+                // save current scene to the specified file
+                Serial.printf("Saving scene to file %s...\n", arg2);
                 project->save_scene();
                 return true;
             } else {
@@ -236,11 +236,11 @@ bool execute_command(const char *command_line) {
                     Serial.printf("Invalid slot number: %i\n", desired_scene_number);
                     return true;
                 }
-                Serial.printf("Saving sequence pattern to slot %i...\n", desired_scene_number);
-                if (!project->save_project_settings(desired_scene_number)) {
-                    Serial.printf("Error saving pattern to slot %i\n", desired_scene_number);
+                Serial.printf("Saving scene to slot %i...\n", desired_scene_number);
+                if (!project->save_scene(desired_scene_number)) {
+                    Serial.printf("Error saving scene to slot %i\n", desired_scene_number);
                 } else {
-                    Serial.printf("Saved pattern to slot %i\n", desired_scene_number);
+                    Serial.printf("Saved scene to slot %i\n", desired_scene_number);
                 }
                 return true;
             }
@@ -250,7 +250,7 @@ bool execute_command(const char *command_line) {
         }
     // } else if (strcmp(command, "loadline") == 0) {
     //     // load a line from serial input as if it were a line from a file, for testing parsing of 
-    //     // pattern files without needing to write to the SD card. Usage: loadline <line_contents>
+    //     // scene files without needing to write to the SD card. Usage: loadline <line_contents>
     //     if (arg1[0] == '\0') {
     //         Serial.println("Usage: loadline <type> <line_contents>");
     //         return true;
@@ -263,9 +263,9 @@ bool execute_command(const char *command_line) {
 
     //     snprintf(line_buffer, sizeof(line_buffer), "%s", arg2);
 
-    //     if (strcmp(arg1, "pattern") == 0) {
-    //         // load a line of text as if it were a line from a pattern file, and output the result of parsing it
-    //         Serial_printf("Parsing line as pattern line: '%s'\n", line_buffer);
+    //     if (strcmp(arg1, "scene") == 0) {
+    //         // load a line of text as if it were a line from a scene file, and output the result of parsing it
+    //         Serial_printf("Parsing line as scene line: '%s'\n", line_buffer);
     //         storage::load_scene_parse_line(line_buffer, &storage::current_state, pass_debug);
     //         Serial_println("Done.");
     //     } else if (strcmp(arg1, "project") == 0) {
@@ -317,9 +317,9 @@ bool execute_command(const char *command_line) {
         Serial.println("  clearcrashlog - Clear the crash report log (if any)");
         Serial.println("  showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
         Serial.println("  show - Show contents of a file");
-        Serial.println("  load - Load a pattern, project, etc from a file on the SD card");
-        Serial.println("  save - Save a pattern, project, etc to a file on the SD card");
-        Serial.println("  [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a pattern file (for testing parsing)");
+        Serial.println("  load - Load a scene, project, etc from a file on the SD card");
+        Serial.println("  save - Save a scene, project, etc to a file on the SD card");
+        Serial.println("  [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a scene file (for testing parsing)");
         Serial.println("  info - show build info");
         Serial.println("  help - Show this help message");
         return true;
