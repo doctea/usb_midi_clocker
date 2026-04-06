@@ -356,7 +356,7 @@ void setup() {
     #endif
   #endif
   
-  tft_print("Setup (minus waiting for USB setup) took ");
+  tft_print("Setup (minus waiting 2.5 seconds for USB setup) took ");
   tft_print(String(millis()-start_millis-2500).c_str());
   tft_print("ms\n");
 

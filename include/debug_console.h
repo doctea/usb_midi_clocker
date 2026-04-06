@@ -156,7 +156,18 @@ bool execute_command(const char *command_line) {
             Serial.println("Usage: load <type> <filename>");
             return true;
         }
-        if (strcmp(arg1, "seq") == 0 ) {
+        if (strcmp(arg1, "proj") == 0) {
+            // load project settings from the specified file
+            int project_number = atoi(arg2);
+            if (project_number < 0) {
+                Serial.printf("Invalid project number: %i\n", project_number);
+                return true;
+            }
+            Serial.printf("Loading project settings from file %i...\n", project_number);
+            project->load_project_settings(project_number);
+            
+            return true;
+        } else if (strcmp(arg1, "seq") == 0) {
             // load a sequence pattern from the specified file
             Serial.printf("Loading sequence pattern from file %s...\n", arg2);
 
@@ -170,9 +181,12 @@ bool execute_command(const char *command_line) {
                 return true;
             }
 
-            Serial_printf("Loading pattern from file %s...\n", arg2);
+            Serial.printf("Loading pattern from file %i...\n", desired_pattern_number);
             project->load_pattern(desired_pattern_number, pass_debug);
 
+            return true;
+        } else {
+            Serial.printf("Unknown type: %s\n", arg1);
             return true;
         }
     } else if (strcmp(command, "save") == 0) {
@@ -249,9 +263,14 @@ bool execute_command(const char *command_line) {
     //     return true;
     } else if (strcmp(command, "showtree") == 0) {
         // output the current settings tree as a text dump to the serial console, for debugging
-        Serial.println("Dumping settings tree (to depth 8):");
+        // usage: showtree [scopemask]
+        uint8_t scopemask = 0xFF; // default to showing all scopes
+        if (arg1[0] != '\0') {
+            scopemask = (uint8_t)strtoul(arg1, nullptr, 0);
+        }
+        Serial.printf("Dumping settings tree (to depth 8 with scopemask=0x%02X):\n", scopemask);
         if (settings_root) {
-            sl_print_tree_to_print(settings_root, Serial, 8);
+            sl_print_tree_to_print(settings_root, Serial, 8, scopemask);
         } else {
             Serial.println("No settings root found!");
         }
@@ -279,7 +298,7 @@ bool execute_command(const char *command_line) {
         Serial.println("  free_ram - Check available RAM");
         Serial.println("  crashlog - Dump the crash report log (if any)");
         Serial.println("  clearcrashlog - Clear the crash report log (if any)");
-        Serial.println("  showtree - Show the current settings tree (to depth 8)");
+        Serial.println("  showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
         Serial.println("  show - Show contents of a file");
         Serial.println("  load - Load a pattern, project, etc from a file on the SD card");
         Serial.println("  save - Save a pattern, project, etc to a file on the SD card");
