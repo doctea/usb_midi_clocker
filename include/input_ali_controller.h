@@ -310,32 +310,32 @@
             // load/save/move selected sequence
             case 'L'            : 
                 Serial_println(F("(L)oad selected sequence"));
-                project->load_selected_pattern();
+                project->load_selected_scene();
                 Serial_println(F("Finished loading selected sequence"));
                 break;
             case 'S'            :
                 Serial_println(F("(S)ave sequencer!"));
-                project->save_selected_pattern();
+                project->save_selected_scene();
                 break;
             case 'J'            :
                 Serial_println(F("==== Loading previous sequence.."));
                 //input_keyboard.queue_load_previous_sequence();
-                project->load_previous_pattern();
+                project->load_previous_scene();
                 Serial_println(F("==== Loaded previous sequence!"));
                 break;
             case ':'            :
                 Serial_println(F("==== Loading next sequence")); Serial_flush();
                 //input_keyboard.queue_load_next_sequence();
-                project->load_next_pattern();
+                project->load_next_scene();
                 Serial_println(F("==== Loaded next sequence!")); Serial_flush();
                 break;
             case 'j'            :
                 //Serial_println(F("Select previous sequence"));
-                project->select_previous_pattern();
+                project->select_previous_scene();
                 break;
             case ';'            :
                 //Serial_println(F("Select next sequence"));
-                project->select_next_pattern();
+                project->select_next_scene();
                 break;
             // change project number
             case 49 ... 57      :

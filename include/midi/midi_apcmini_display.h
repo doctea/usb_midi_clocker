@@ -39,7 +39,7 @@ byte get_colour(byte lev);
 enum apc_gate_page_t {
   CLOCKS,
   SEQUENCES,
-  PATTERNS,
+  SCENES,
   #ifdef ENABLE_APCMINI_PADS
     PADS,
   #elif defined(ENABLE_APCMINI_PROGRESSIONS)
@@ -69,7 +69,7 @@ void redraw_clock_selected(byte old_clock_selected, byte clock_selected, bool fo
 void redraw_sequence_row(byte c, bool force = false);
 #endif
 
-void redraw_patterns_row(byte row, bool force = false);
+void redraw_scenes_row(byte row, bool force = false);
 void redraw_pads_row(byte row, bool force = false);
 
 #ifdef ENABLE_APCMINI_PROGRESSIONS

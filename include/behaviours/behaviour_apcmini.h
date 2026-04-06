@@ -213,18 +213,18 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             return false;
         }
 
-        bool process_note_on_patterns_page(byte inChannel, byte inNumber, byte inVelocity) {
+        bool process_note_on_scenes_page(byte inChannel, byte inNumber, byte inVelocity) {
             if (inNumber>=0 && inNumber < NUM_SEQUENCES * APCMINI_DISPLAY_WIDTH) {
                 byte row = (NUM_SEQUENCES-1) - (inNumber / APCMINI_DISPLAY_WIDTH);
                 byte col = inNumber - (((NUM_SEQUENCES-1)-row)*APCMINI_DISPLAY_WIDTH);
                 if (row==0) {
                     if (apcmini_shift_held) {
-                        project->save_pattern(col);
+                        project->save_scene(col);
                     } else {
-                        if (!project->is_selected_pattern_number_empty(col)) {
-                            project->load_pattern(col);
+                        if (!project->is_selected_scene_number_empty(col)) {
+                            project->load_scene(col);
                         } else {
-                            project->select_pattern_number(col);
+                            project->select_scene_number(col);
                             behaviour_sequencer_gates->sequencer_clear_pattern();
                         }
                     }
@@ -293,7 +293,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             } else if (get_apc_gate_page()==SEQUENCES && process_note_on_sequence_page(inChannel, inNumber, inVelocity)) {
                 // on SEQUENCES page and processed value
                 return;
-            } else if (get_apc_gate_page()==PATTERNS && process_note_on_patterns_page(inChannel, inNumber, inVelocity)) {
+            } else if (get_apc_gate_page()==SCENES && process_note_on_scenes_page(inChannel, inNumber, inVelocity)) {
                 // on PATTERNS page and processed value
                 return;
             #ifdef ENABLE_APCMINI_PADS
@@ -343,7 +343,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 set_apc_gate_page(SEQUENCES);
             } else if (inNumber==APCMINI_BUTTON_SEND) {
                 apcmini_clear_display(false);
-                set_apc_gate_page(PATTERNS);
+                set_apc_gate_page(SCENES);
             } else if (inNumber==APCMINI_BUTTON_DEVICE) {
                 apcmini_clear_display(false);
                 #ifdef ENABLE_APCMINI_PADS
@@ -360,14 +360,14 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
                 Serial.print(F("Single-stepped to tick "));
                 Serial.println(ticks);*/
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_1) {
-                //load_state_start(project.selected_pattern_number, &project.current_state);
-                project->load_pattern(); //project.selected_pattern_number);
+                //load_state_start(project.selected_scene_number, &project.current_state);
+                project->load_scene(); //project.selected_scene_number);
                 #ifdef ENABLE_APCMINI_DISPLAY
                     apcmini_update_clock_display();
                 #endif
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_UNLABELED_2) {
-                //save_pattern(project.selected_pattern_number, &project.current_state);
-                project->save_pattern(); //project.selected_pattern_number);
+                //save_scene(project.selected_scene_number, &project.current_state);
+                project->save_scene(); //project.selected_scene_number);
             #ifdef ENABLE_DRUM_LOOPER
             } else if (apcmini_shift_held && inNumber==APCMINI_BUTTON_SEND) {
                 // toggle drums recording status?

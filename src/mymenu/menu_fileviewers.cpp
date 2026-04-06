@@ -12,7 +12,7 @@
 PageFileViewerMenuItem *sequence_fileviewer = nullptr;
 PageFileViewerMenuItem *project_fileviewer = nullptr;
 
-void update_pattern_filename(String filename) {
+void update_scene_filename(String filename) {
     if (sequence_fileviewer!=nullptr) {
         sequence_fileviewer->readFile(filename.c_str());
     }

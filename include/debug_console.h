@@ -100,21 +100,21 @@ bool execute_command(const char *command_line) {
             if (arg2[0] == '\0') {
                 Serial.println("Usage: show seq <slot_number> (using currently selected slot if slot_number not provided)");
                 // show current sequence pattern
-                sprintf(arg2, "%i", project->selected_pattern_number); // default to slot 0 if no slot number provided
+                sprintf(arg2, "%i", project->selected_scene_number); // default to slot 0 if no slot number provided
                 return false;
             }
 
-            int desired_pattern_number = atoi(arg2);
-            if (desired_pattern_number < 0 || desired_pattern_number >= NUM_PATTERN_SLOTS_PER_PROJECT) {
-                Serial.printf("Invalid slot number: %i\n", desired_pattern_number);
+            int desired_scene_number = atoi(arg2);
+            if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
+                Serial.printf("Invalid slot number: %i\n", desired_scene_number);
                 return true;
             }
-            if (project->is_selected_pattern_number_empty(desired_pattern_number)) {
-                Serial.printf("No pattern file found for slot %i\n", desired_pattern_number);
+            if (project->is_selected_scene_number_empty(desired_scene_number)) {
+                Serial.printf("No pattern file found for slot %i\n", desired_scene_number);
                 return true;
             }
             // read the appropriate file from disc and output its contents to serial
-            filename = storage::get_pattern_filename(project->current_project_number, desired_pattern_number);
+            filename = storage::get_scene_filename(project->current_project_number, desired_scene_number);
         } else if (strcmp(arg1, "proj") == 0) {
             // show specified project settings
 
@@ -184,18 +184,18 @@ bool execute_command(const char *command_line) {
             // load a sequence pattern from the specified file
             Serial.printf("Loading sequence pattern from file %s...\n", arg2);
 
-            int desired_pattern_number = atoi(arg2);
-            if (desired_pattern_number < 0 || desired_pattern_number >= NUM_PATTERN_SLOTS_PER_PROJECT) {
-                Serial.printf("Invalid slot number: %i\n", desired_pattern_number);
+            int desired_scene_number = atoi(arg2);
+            if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
+                Serial.printf("Invalid slot number: %i\n", desired_scene_number);
                 return true;
             }
-            if (project->is_selected_pattern_number_empty(desired_pattern_number)) {
-                Serial.printf("No pattern file found for slot %i\n", desired_pattern_number);
+            if (project->is_selected_scene_number_empty(desired_scene_number)) {
+                Serial.printf("No pattern file found for slot %i\n", desired_scene_number);
                 return true;
             }
 
-            Serial.printf("Loading pattern from file %i...\n", desired_pattern_number);
-            project->load_pattern(desired_pattern_number, pass_debug);
+            Serial.printf("Loading pattern from file %i...\n", desired_scene_number);
+            project->load_scene(desired_scene_number, pass_debug);
 
             return true;
         } else {
@@ -228,19 +228,19 @@ bool execute_command(const char *command_line) {
             if (arg2[0] == '\0') {
                 // save current sequence pattern to the specified file
                 Serial.printf("Saving sequence pattern to file %s...\n", arg2);
-                project->save_pattern();
+                project->save_scene();
                 return true;
             } else {
-                int desired_pattern_number = atoi(arg2);
-                if (desired_pattern_number < 0 || desired_pattern_number >= NUM_PATTERN_SLOTS_PER_PROJECT) {
-                    Serial.printf("Invalid slot number: %i\n", desired_pattern_number);
+                int desired_scene_number = atoi(arg2);
+                if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
+                    Serial.printf("Invalid slot number: %i\n", desired_scene_number);
                     return true;
                 }
-                Serial.printf("Saving sequence pattern to slot %i...\n", desired_pattern_number);
-                if (!project->save_project_settings(desired_pattern_number)) {
-                    Serial.printf("Error saving pattern to slot %i\n", desired_pattern_number);
+                Serial.printf("Saving sequence pattern to slot %i...\n", desired_scene_number);
+                if (!project->save_project_settings(desired_scene_number)) {
+                    Serial.printf("Error saving pattern to slot %i\n", desired_scene_number);
                 } else {
-                    Serial.printf("Saved pattern to slot %i\n", desired_pattern_number);
+                    Serial.printf("Saved pattern to slot %i\n", desired_scene_number);
                 }
                 return true;
             }
@@ -266,7 +266,7 @@ bool execute_command(const char *command_line) {
     //     if (strcmp(arg1, "pattern") == 0) {
     //         // load a line of text as if it were a line from a pattern file, and output the result of parsing it
     //         Serial_printf("Parsing line as pattern line: '%s'\n", line_buffer);
-    //         storage::load_pattern_parse_line(line_buffer, &storage::current_state, pass_debug);
+    //         storage::load_scene_parse_line(line_buffer, &storage::current_state, pass_debug);
     //         Serial_println("Done.");
     //     } else if (strcmp(arg1, "project") == 0) {
     //         // load a line of text as if it were a line from a project settings file, and output the result of parsing it

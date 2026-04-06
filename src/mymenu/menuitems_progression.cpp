@@ -37,7 +37,7 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
         tft->printf("Clk");
     else if (get_apc_gate_page()==SEQUENCES)
         tft->printf("Seq");
-    else if (get_apc_gate_page()==PATTERNS)
+    else if (get_apc_gate_page()==SCENES)
         tft->printf("Pat");
     #ifdef ENABLE_APCMINI_PROGRESSIONS
         else if (get_apc_gate_page()==PROGRESSIONS)

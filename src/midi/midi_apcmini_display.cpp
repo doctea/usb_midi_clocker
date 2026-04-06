@@ -187,7 +187,7 @@ void redraw_sequence_row(byte sequence_number, bool force) {
 }
 #endif
 
-void redraw_patterns_row(byte row, bool force) {
+void redraw_scenes_row(byte row, bool force) {
   if (behaviour_apcmini->device==nullptr) return;
 
   // draw the available patterns...
@@ -199,13 +199,13 @@ void redraw_patterns_row(byte row, bool force) {
     if (row==0) {
       // only draw on the first row
         byte colour = APCMINI_OFF;
-        if (!project->is_selected_pattern_number_empty(x))
+        if (!project->is_selected_scene_number_empty(x))
           colour = APCMINI_GREEN;
-        if (project->loaded_pattern_number==(int)x)
+        if (project->loaded_scene_number==(int)x)
           colour = APCMINI_YELLOW;
-        if (project->selected_pattern_number==(int)x && project->is_selected_pattern_number_empty(x))
+        if (project->selected_scene_number==(int)x && project->is_selected_scene_number_empty(x))
           colour = APCMINI_GREEN_BLINK;
-        else if (project->selected_pattern_number==(int)x)
+        else if (project->selected_scene_number==(int)x)
           colour += 1;
         apcdisplay_sendNoteOn(start_row+x, colour);
     } else {
@@ -320,8 +320,8 @@ void redraw_pads_row(byte row, bool force) {
         redraw_clock_row(row_to_draw);
       else if (get_apc_gate_page()==SEQUENCES) 
         redraw_sequence_row(row_to_draw);
-      else if (get_apc_gate_page()==PATTERNS)
-        redraw_patterns_row(row_to_draw);
+      else if (get_apc_gate_page()==SCENES)
+        redraw_scenes_row(row_to_draw);
       #ifdef ENABLE_APCMINI_PADS
       else if (get_apc_gate_page()==PADS)
         redraw_pads_row(row_to_draw);

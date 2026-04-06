@@ -678,7 +678,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
-            if (debug) Serial_printf(F("save_pattern(%i, %i) writing to %s\n"), project_number, section_number, filename);
+            if (debug) Serial_printf(F("save_scene(%i, %i) writing to %s\n"), project_number, section_number, filename);
             if (SD.exists(filename)) {
               //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
               SD.remove(filename);

@@ -206,7 +206,7 @@ void setup_menu_transport() {
             );
         #endif
         #ifdef ENABLE_SEQUENCER
-            MultiToggleItemClass<Project> *load_pattern = new MultiToggleItemClass<Project> (
+            MultiToggleItemClass<Project> *load_scene = new MultiToggleItemClass<Project> (
                 "Sequence Settings",
                 project,
                 &Project::setLoadSequencerSettings,
@@ -231,7 +231,7 @@ void setup_menu_transport() {
             project_multi_recall_options->addItem(load_clock);
         #endif
         #ifdef ENABLE_SEQUENCER
-            project_multi_recall_options->addItem(load_pattern);
+            project_multi_recall_options->addItem(load_scene);
         #endif
         project_multi_recall_options->addItem(load_behaviour_settings);
         //menu->add(&project_load_matrix_mappings);
@@ -240,13 +240,13 @@ void setup_menu_transport() {
         // options for whether to auto-advance looper/sequencer/beatstep
         project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
         #ifdef ENABLE_SEQUENCER
-            MultiToggleItemClass<Project> *auto_advance_pattern = new MultiToggleItemClass<Project> (
+            MultiToggleItemClass<Project> *auto_advance_scene = new MultiToggleItemClass<Project> (
                 "Sequence",
                 project,
-                &Project::set_auto_advance_pattern,
-                &Project::is_auto_advance_pattern
+                &Project::set_auto_advance_scene,
+                &Project::is_auto_advance_scene
             );
-            project_multi_autoadvance->addItem(auto_advance_pattern);
+            project_multi_autoadvance->addItem(auto_advance_scene);
         #endif
         #ifdef ENABLE_LOOPER
             MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
@@ -265,15 +265,13 @@ void setup_menu_transport() {
                     "Beatstep",
                 #endif
                 behaviour_beatstep,
-                &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
-                &DeviceBehaviour_Beatstep::is_auto_advance_pattern
+                &DeviceBehaviour_Beatstep::set_auto_advance_pattern,                &DeviceBehaviour_Beatstep::is_auto_advance_pattern
             ));
             #ifdef ENABLE_BEATSTEP_2
                 project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
                     "Beatstep 2",
                     behaviour_beatstep_2,
-                    &DeviceBehaviour_Beatstep::set_auto_advance_pattern,
-                    &DeviceBehaviour_Beatstep::is_auto_advance_pattern
+                    &DeviceBehaviour_Beatstep::set_auto_advance_pattern,                    &DeviceBehaviour_Beatstep::is_auto_advance_pattern
                 ));
             #endif
         #endif
@@ -381,7 +379,7 @@ void setup_menu_midi() {
         SubMenuItemBar *save_load_bar = new SubMenuItemBar("Sequence load/save", false, true);
         save_load_bar->add(new LambdaNumberControl<int>(
             "Slot", 
-            [=](int slot_number) -> void { project->select_pattern_number(slot_number); },
+            [=](int slot_number) -> void { project->select_scene_number(slot_number); },
             [=]() -> int { return sequencer_status.get_selected_slot(); },
             nullptr, 
             0, 

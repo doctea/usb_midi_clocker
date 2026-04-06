@@ -12,7 +12,7 @@ void setup_saveloadlib();
 namespace storage {
 
   #define FILEPATH_PROJECT_FOLDER_FORMAT    "project%i"
-  #define FILEPATH_PATTERN_FORMAT           "project%i/sequences/sequence%i.txt"
+  #define FILEPATH_SCENE_FORMAT           "project%i/sequences/sequence%i.txt"
   #define FILEPATH_SECTION_FORMAT           "project%i/sections/section%i.txt"
   #define FILEPATH_PLAYLIST_FORMAT          "project%i/playlist.txt"
   #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
@@ -113,7 +113,7 @@ namespace storage {
   // savestate — the clock + sequence data for one scene.
   //
   // Inherits SHStorage so all fields are registered as saveloadlib settings under
-  // the path segment "scene" with SL_SCOPE_PATTERN mask.  setup_saveable_settings()
+  // the path segment "scene" with SL_SCOPE_SCENE mask.  setup_saveable_settings()
   // must be called once (done by setup_sd()) before any save/load.
   //
   // File format produced: "scene~key=value" lines (new format).
@@ -151,18 +151,18 @@ namespace storage {
       #endif
     };
 
-    // Registers all fields as SL_SCOPE_PATTERN settings.  Called by setup_sd().
+    // Registers all fields as SL_SCOPE_SCENE settings.  Called by setup_sd().
     virtual void setup_saveable_settings() override;
   };
 
-  char *get_pattern_filename(int project_number, int pattern_number);
+  char *get_scene_filename(int project_number, int scene_number);
   char *get_project_settings_filename(int project_number);
 
-  bool save_pattern(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
-  bool load_pattern(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
+  bool save_scene(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
+  bool load_scene(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
   /*void load_state_update();
   void load_state_start(uint8_t preset_number, savestate *input);*/
-  bool load_pattern_parse_line(String line, savestate *output, bool debug = false);
+  bool load_scene_parse_line(String line, savestate *output, bool debug = false);
   FLASHMEM void setup_sd();
 
   FLASHMEM void log_crashreport();

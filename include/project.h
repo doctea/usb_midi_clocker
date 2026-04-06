@@ -12,7 +12,7 @@
 
 #include "mymenu/menu_fileviewers.h"
 
-#define NUM_PATTERN_SLOTS_PER_PROJECT   8
+#define NUM_SCENE_SLOTS_PER_PROJECT   8
 #define NUM_LOOP_SLOTS_PER_PROJECT      8
 
 using namespace storage;
@@ -27,7 +27,7 @@ using namespace storage;
 extern volatile bool global_load_lock;
 
 class Project : public SHStorage<0, 8> {
-    bool pattern_slot_has_file[NUM_PATTERN_SLOTS_PER_PROJECT];
+    bool scene_slot_has_file[NUM_SCENE_SLOTS_PER_PROJECT];
     #ifdef ENABLE_LOOPER
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];
     #endif
@@ -38,17 +38,17 @@ class Project : public SHStorage<0, 8> {
     MIDITrack *temp_loop = new MIDITrack();
     #endif
 
-    void initialise_pattern_slots() {
+    void initialise_scene_slots() {
         #ifdef ENABLE_SD
-            Serial.println(F("initialise_pattern_slots starting.."));
-            for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
-                pattern_slot_has_file[i] = SD.exists(storage::get_pattern_filename(this->current_project_number, i));
-                Serial_printf(F("\tpattern_slot_has_file[i] = %i for %s\n"), pattern_slot_has_file[i], get_pattern_filename(this->current_project_number, i));
+            Serial.println(F("initialise_scene_slots starting.."));
+            for (unsigned int i = 0 ; i < NUM_SCENE_SLOTS_PER_PROJECT ; i++) {
+                scene_slot_has_file[i] = SD.exists(storage::get_scene_filename(this->current_project_number, i));
+                Serial_printf(F("\tscene_slot_has_file[i] = %i for %s\n"), scene_slot_has_file[i], get_scene_filename(this->current_project_number, i));
             }
-            Serial_println(F("initialise_pattern_slots finished"));
+            Serial_println(F("initialise_scene_slots finished"));
         #else
-            for (unsigned int i = 0 ; i < NUM_PATTERN_SLOTS_PER_PROJECT ; i++) {
-                pattern_slot_has_file[i] = false;
+            for (unsigned int i = 0 ; i < NUM_SCENE_SLOTS_PER_PROJECT ; i++) {
+                scene_slot_has_file[i] = false;
             }
             Serial.println("ENABLE_SD not defined, so pattern slots not initialised");
         #endif
@@ -85,8 +85,8 @@ class Project : public SHStorage<0, 8> {
         ISaveableSettingHost* save_tree = nullptr;  // set by setup_saveloadlib() after construction
         int current_project_number = 0;
 
-        int selected_pattern_number = 0;
-        int loaded_pattern_number = -1;
+        int selected_scene_number = 0;
+        int loaded_scene_number = -1;
 
         #ifdef ENABLE_LOOPER
         int selected_loop_number = 0;
@@ -100,7 +100,7 @@ class Project : public SHStorage<0, 8> {
         bool load_parameter_input_options = true;
 
         Project() {
-            //initialise_pattern_slots();
+            //initialise_scene_slots();
         }
 
         // ---- saveloadlib integration ----
@@ -115,7 +115,7 @@ class Project : public SHStorage<0, 8> {
                 [this]() -> int { return this->current_project_number; }
             ), false, SL_SCOPE_PROJECT);
             register_setting(new LSaveableSetting<bool>(
-                "auto_advance_pattern", "Project", &this->auto_advance_pattern
+                "auto_advance_scene", "Project", &this->auto_advance_scene
             ), false, SL_SCOPE_PROJECT);
             #ifdef ENABLE_LOOPER
             register_setting(new LSaveableSetting<bool>(
@@ -127,7 +127,7 @@ class Project : public SHStorage<0, 8> {
         FLASHMEM void setup_project() {
             setProjectNumber(this->current_project_number);
 
-            initialise_pattern_slots();
+            initialise_scene_slots();
             #ifdef ENABLE_LOOPER
             initialise_loop_slots(false);
             #endif
@@ -181,7 +181,7 @@ class Project : public SHStorage<0, 8> {
                 #ifdef ENABLE_LOOPER
                 this->initialise_loop_slots();
                 #endif
-                this->initialise_pattern_slots();
+                this->initialise_scene_slots();
                 this->notify_behaviours_for_project_change(number);
             //}
         }
@@ -190,61 +190,61 @@ class Project : public SHStorage<0, 8> {
         }
 
         ////////////// clocks / sequences
-        bool select_pattern_number(int sn) {
-            Serial_printf(F("select_pattern_number %i\n"), sn); Serial_flush();
-            selected_pattern_number = sn % NUM_PATTERN_SLOTS_PER_PROJECT;
-            return sn == selected_pattern_number;
+        bool select_scene_number(int sn) {
+            Serial_printf(F("select_scene_number %i\n"), sn); Serial_flush();
+            selected_scene_number = sn % NUM_SCENE_SLOTS_PER_PROJECT;
+            return sn == selected_scene_number;
         }
 
-        bool is_selected_pattern_number_empty(int sn) {
-            return !pattern_slot_has_file[sn];
+        bool is_selected_scene_number_empty(int sn) {
+            return !scene_slot_has_file[sn];
         }
 
-        int get_selected_pattern_number() {
-            return this->selected_pattern_number;
+        int get_selected_scene_number() {
+            return this->selected_scene_number;
         }
-        int get_loaded_pattern_number() {
-            return this->loaded_pattern_number;
+        int get_loaded_scene_number() {
+            return this->loaded_scene_number;
         }
-        int get_max_pattern_slots() {
-            return NUM_PATTERN_SLOTS_PER_PROJECT;
+        int get_max_scene_slots() {
+            return NUM_SCENE_SLOTS_PER_PROJECT;
         }
 
         // load and save sequences / clock settings etc
-        bool load_selected_pattern() {
-            return load_pattern(selected_pattern_number);
+        bool load_selected_scene() {
+            return load_scene(selected_scene_number);
         }
-        bool save_selected_pattern() {
-            return save_pattern(selected_pattern_number);
+        bool save_selected_scene() {
+            return save_scene(selected_scene_number);
         }
-        bool load_pattern(bool debug = false) {
-            return load_pattern(selected_pattern_number, debug);
+        bool load_scene(bool debug = false) {
+            return load_scene(selected_scene_number, debug);
         }
-        bool save_pattern() {
-            return save_pattern(selected_pattern_number);
+        bool save_scene() {
+            return save_scene(selected_scene_number);
         }
-        bool load_specific_pattern(int selected_pattern_number) {
-            return this->load_pattern(selected_pattern_number);
+        bool load_specific_scene(int selected_scene_number) {
+            return this->load_scene(selected_scene_number);
         }
 
-        bool load_pattern(int selected_pattern_number, bool debug = false) {
-            if (debug) { Serial.printf(F("load for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
+        bool load_scene(int selected_scene_number, bool debug = false) {
+            if (debug) { Serial.printf(F("load for selected_scene_number %i\n"), selected_scene_number); Serial_flush(); }
             uint32_t micros_start = micros();
-            bool result = storage::load_pattern(current_project_number, selected_pattern_number, &storage::current_state, debug);
+            bool result = storage::load_scene(current_project_number, selected_scene_number, &storage::current_state, debug);
             if (result)
-                loaded_pattern_number = selected_pattern_number;
+                loaded_scene_number = selected_scene_number;
             uint32_t micros_end = micros();
-            Serial_printf(F("load_pattern took %lu microseconds - returning\n"), micros_end - micros_start);
+            Serial_printf(F("load_scene took %lu microseconds - returning\n"), micros_end - micros_start);
             Serial_flush();
             return result;
         }
-        bool save_pattern(int selected_pattern_number, bool debug = false) {
+        bool save_scene(int selected_scene_number, bool debug = false) {
             //this->debug = true;
-            if (debug) { Serial.printf(F("save for selected_pattern_number %i\n"), selected_pattern_number); Serial_flush(); }
-            bool result = storage::save_pattern(current_project_number, selected_pattern_number, &storage::current_state, debug);
+            if (debug) { Serial.printf(F("save for selected_scene_number %i\n"), selected_scene_number); Serial_flush(); }
+            bool result = storage::save_scene(current_project_number, selected_scene_number, &storage::current_state, debug);
             if (result) {
-                pattern_slot_has_file[selected_pattern_number] = true;
-                loaded_pattern_number = selected_pattern_number;
+                scene_slot_has_file[selected_scene_number] = true;
+                loaded_scene_number = selected_scene_number;
             }
             return result;
         }
@@ -265,27 +265,27 @@ class Project : public SHStorage<0, 8> {
         }
         #endif
 
-        void select_next_pattern() {
-            selected_pattern_number++;
-            if (selected_pattern_number>=NUM_PATTERN_SLOTS_PER_PROJECT)
-                selected_pattern_number = 0;
+        void select_next_scene() {
+            selected_scene_number++;
+            if (selected_scene_number>=NUM_SCENE_SLOTS_PER_PROJECT)
+                selected_scene_number = 0;
         }
-        void select_previous_pattern() {
-            selected_pattern_number--;
-            if (selected_pattern_number < 0) 
-                selected_pattern_number = NUM_PATTERN_SLOTS_PER_PROJECT-1;
+        void select_previous_scene() {
+            selected_scene_number--;
+            if (selected_scene_number < 0) 
+                selected_scene_number = NUM_SCENE_SLOTS_PER_PROJECT-1;
         }
-        void load_next_pattern() {
-            loaded_pattern_number++;
-            if (loaded_pattern_number>=NUM_PATTERN_SLOTS_PER_PROJECT)
-                loaded_pattern_number = 0;
-            load_pattern(loaded_pattern_number);
+        void load_next_scene() {
+            loaded_scene_number++;
+            if (loaded_scene_number>=NUM_SCENE_SLOTS_PER_PROJECT)
+                loaded_scene_number = 0;
+            load_scene(loaded_scene_number);
         }
-        void load_previous_pattern() {
-            loaded_pattern_number--;
-            if (loaded_pattern_number < 0)
-                loaded_pattern_number = NUM_PATTERN_SLOTS_PER_PROJECT-1;
-            load_pattern(loaded_pattern_number);
+        void load_previous_scene() {
+            loaded_scene_number--;
+            if (loaded_scene_number < 0)
+                loaded_scene_number = NUM_SCENE_SLOTS_PER_PROJECT-1;
+            load_scene(loaded_scene_number);
         }
 
         #ifdef ENABLE_LOOPER
@@ -308,7 +308,7 @@ class Project : public SHStorage<0, 8> {
             }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("load_loop(): load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
-                //bool result = storage::load_pattern(selected_loop_number, &storage::current_state);
+                //bool result = storage::load_scene(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
                     loaded_loop_number = selected_loop_number;
@@ -316,7 +316,7 @@ class Project : public SHStorage<0, 8> {
             }
             bool save_loop(int selected_loop_number, MIDITrack *track) {
                 Serial.printf(F("save for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
-                //bool result = storage::save_pattern(selected_loop_number, &storage::current_state);
+                //bool result = storage::save_scene(selected_loop_number, &storage::current_state);
                 bool result = track->save_loop(current_project_number, selected_loop_number);
                 if (result) {
                     if (track->count_events()>0)
@@ -336,14 +336,14 @@ class Project : public SHStorage<0, 8> {
         #endif
 
         // callbacks so project can respond to events eg on_phrase...
-        bool auto_advance_pattern = false;
+        bool auto_advance_scene = false;
         void on_phrase(int phrase) {
-            int slot = phrase % NUM_PATTERN_SLOTS_PER_PROJECT;
+            int slot = phrase % NUM_SCENE_SLOTS_PER_PROJECT;
             Debug_printf(F("Project#on_phrase(%i) called (slot %i)...\n"), phrase, slot);
-            if (auto_advance_pattern) {
-                this->selected_pattern_number = slot % NUM_PATTERN_SLOTS_PER_PROJECT;
-                //Serial.printf("on_phrase loading sequence_number %i\n", selected_pattern_number);
-                this->load_pattern(this->selected_pattern_number);
+            if (auto_advance_scene) {
+                this->selected_scene_number = slot % NUM_SCENE_SLOTS_PER_PROJECT;
+                //Serial.printf("on_phrase loading sequence_number %i\n", selected_scene_number);
+                this->load_scene(this->selected_scene_number);
                 //Serial.println("done!");
             }
             #ifdef ENABLE_LOOPER
@@ -356,11 +356,11 @@ class Project : public SHStorage<0, 8> {
             #endif
             Debug_printf(F("Project#on_phrase(%i) finished (slot %i)!\n"), phrase, slot);
         }
-        bool is_auto_advance_pattern() {
-            return this->auto_advance_pattern;
+        bool is_auto_advance_scene() {
+            return this->auto_advance_scene;
         }
-        void set_auto_advance_pattern(bool auto_advance_pattern) {
-            this->auto_advance_pattern = auto_advance_pattern;
+        void set_auto_advance_scene(bool auto_advance_scene) {
+            this->auto_advance_scene = auto_advance_scene;
         }
 
 
