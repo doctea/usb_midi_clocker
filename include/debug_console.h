@@ -11,7 +11,7 @@
 bool pass_debug = true;
 
 char serial_buffer[1024];
-int serial_buffer_index = 0;
+unsigned int serial_buffer_index = 0;
 
 bool serial_connected = false;
 
@@ -103,7 +103,7 @@ bool execute_command(const char *command_line) {
         Serial.printf("Current project: %i, selected scene: %i\n", project->current_project_number, project->selected_scene_number);
         Serial.printf("Free RAM: %i bytes\n", freeRam());
         Serial.printf("SD card present: %s\n", SD.begin(BUILTIN_SDCARD) ? "yes" : "no");
-        
+
         SL_TreeCounts sl_tree_counts_all = sl_count_tree(project->save_tree);
         Serial.printf("Savetree counts - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_all.nodes, sl_tree_counts_all.settings, sl_tree_counts_all.bytes);
         SL_TreeCounts sl_tree_counts_scene = sl_count_tree(project->save_tree, false, SL_SCOPE_SCENE);
@@ -389,8 +389,8 @@ bool execute_command(const char *command_line) {
         }
 
         // output available scopes
-        Serial.println("Available scopes:");
-        for (int i = 0 ; i < SL_SCOPE_ENTRY_COUNT ; i++) {
+        Serial.print("Available scopes:\t");
+        for (size_t i = 0 ; i < SL_SCOPE_ENTRY_COUNT ; i++) {
             Serial.printf("  %s (0x%02X)\t", sl_scope_to_string(1 << i), 1 << i);
         }
         Serial.println();

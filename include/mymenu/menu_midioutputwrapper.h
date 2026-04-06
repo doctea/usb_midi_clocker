@@ -63,14 +63,14 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
 
                 if (current->type>0) {
                     //Serial.printf("Rendering message from history index %i/%i: ticks=%u, type=%02x, channel=%i, pitch=%i, velocity=%i\n", actual, target->message_history_size-1, current->ticks, current->type, current->channel, current->pitch, current->velocity);
-                    char *type_name = "??";
+                    const char *type_name = "??";
                     if (current->type==midi::NoteOn)
                         type_name = "On";
                     else if (current->type==midi::NoteOff)
                         type_name = "Off";
                     else 
                         type_name = "??";
-                    tft->printf("%5u: %3s   ", current->ticks, type_name);
+                    tft->printf("%5u: %3s   ", current->ticks, (char*)type_name);
                     tft->printf("%2i  ", current->channel);
                     tft->printf("%3i %3s", current->pitch, (char*)get_note_name_c(current->pitch));
                     tft->printf("  %i\n", current->velocity);
