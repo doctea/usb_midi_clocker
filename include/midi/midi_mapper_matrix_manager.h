@@ -573,6 +573,12 @@ class MIDIMatrixManager : public SHStorage<0, 8> {
             _emit_routing_lines(prefix, prefix_len, nullptr, output_cb, ctx);
     }
 
+    // Make routing connections visible in showtree / sl_print_recursive.
+    virtual void print_dynamic_entries(const char* prefix, SL_PrintCallback cb, void* ctx, sl_scope_t scope) override {
+        if (scope & SL_SCOPE_ROUTING)
+            _emit_routing_lines(prefix, strlen(prefix), nullptr, cb, ctx);
+    }
+
     // Override load_line to handle "src_handle~targets=t1;t2" without needing
     // registered SourceNode children (sources registered too late for that).
     virtual bool load_line(char** segments, int seg_count, const char* value,
@@ -603,20 +609,20 @@ class MIDIMatrixManager : public SHStorage<0, 8> {
                 "global_scale_type", "Scale", nullptr,
                 [=](scale_index_t v) { this->set_global_scale_type(v); },
                 [=]() -> scale_index_t { return this->get_global_scale_type(); }
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
             register_setting(new LSaveableSetting<int8_t>(
                 "global_scale_root", "Scale", nullptr,
                 [=](int8_t v) { this->set_global_scale_root(v); },
                 [=]() -> int8_t { return this->get_global_scale_root(); }
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
             register_setting(new LSaveableSetting<bool>(
                 "global_quantise_on", "Scale",
                 &this->global_quantise_on
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
             register_setting(new LSaveableSetting<bool>(
                 "global_quantise_chord_on", "Scale",
                 &this->global_quantise_chord_on
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
         #endif
     }
 

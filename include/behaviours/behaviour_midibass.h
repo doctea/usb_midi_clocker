@@ -180,8 +180,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         virtual void setup_saveable_settings() override {
             // mixin: register only own settings; concrete class calls DeviceBehaviourUltimateBase::setup_saveable_settings() first
-            register_setting(new LSaveableSetting<bool>(   "drone",      "MIDI Bass", &this->drone_enabled, [=](bool v)    { this->set_drone(v); },      [=]() -> bool    { return this->is_drone(); }));
-            register_setting(new LSaveableSetting<int8_t>( "machinegun", "MIDI Bass", &this->machinegun,    [=](int8_t v)  { this->set_machinegun(v); }, [=]() -> int8_t  { return this->get_machinegun(); }));
+            register_setting(new LSaveableSetting<bool>(   "drone",      "MIDI Bass", &this->drone_enabled, [=](bool v)    { this->set_drone(v); },      [=]() -> bool    { return this->is_drone(); }), SL_SCOPE_SCENE);
+            register_setting(new LSaveableSetting<int8_t>( "machinegun", "MIDI Bass", &this->machinegun,    [=](int8_t v)  { this->set_machinegun(v); }, [=]() -> int8_t  { return this->get_machinegun(); }), SL_SCOPE_SCENE);
         }
 
         #ifdef ENABLE_SCREEN

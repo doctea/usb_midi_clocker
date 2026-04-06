@@ -447,18 +447,18 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
             DeviceBehaviourUltimateBase::setup_saveable_settings();
             DividedClockedBehaviour::setup_saveable_settings();
 
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("euclidian_mode",       "Euclidian", this, &this->demo_mode,                      nullptr, nullptr, &DeviceBehaviour_Bamble::setDemoMode,                    &DeviceBehaviour_Bamble::getDemoMode));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("fills_mode",           "Euclidian", this, &this->fills_mode,                      nullptr, nullptr, &DeviceBehaviour_Bamble::setFillsMode,                   &DeviceBehaviour_Bamble::getFillsMode));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, float>   ("density",              "Euclidian", this, &this->density,                         nullptr, nullptr, &DeviceBehaviour_Bamble::setDensity,                     &DeviceBehaviour_Bamble::getDensity));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("mutate_low",           "Mutate",    this, &this->minimum_pattern,                nullptr, nullptr, &DeviceBehaviour_Bamble::setMinimumPattern,              &DeviceBehaviour_Bamble::getMinimumPattern));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("mutate_high",          "Mutate",    this, &this->maximum_pattern,                nullptr, nullptr, &DeviceBehaviour_Bamble::setMaximumPattern,              &DeviceBehaviour_Bamble::getMaximumPattern));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", "Mutate",    this, &this->euclidian_seed_modifier,         nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,      &DeviceBehaviour_Bamble::getEuclidianSeedModifier));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("reset_before_mutate",  "Mutate",    this, &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate, &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate));
-            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("seed_use_phrase",      "Mutate",    this, &this->euclidian_seed_use_phrase,      nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,     &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase));
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("euclidian_mode",       "Euclidian", this, &this->demo_mode,                      nullptr, nullptr, &DeviceBehaviour_Bamble::setDemoMode,                    &DeviceBehaviour_Bamble::getDemoMode), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("fills_mode",           "Euclidian", this, &this->fills_mode,                      nullptr, nullptr, &DeviceBehaviour_Bamble::setFillsMode,                   &DeviceBehaviour_Bamble::getFillsMode), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, float>   ("density",              "Euclidian", this, &this->density,                         nullptr, nullptr, &DeviceBehaviour_Bamble::setDensity,                     &DeviceBehaviour_Bamble::getDensity), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("mutate_low",           "Mutate",    this, &this->minimum_pattern,                nullptr, nullptr, &DeviceBehaviour_Bamble::setMinimumPattern,              &DeviceBehaviour_Bamble::getMinimumPattern), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, int8_t>  ("mutate_high",          "Mutate",    this, &this->maximum_pattern,                nullptr, nullptr, &DeviceBehaviour_Bamble::setMaximumPattern,              &DeviceBehaviour_Bamble::getMaximumPattern), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, uint16_t>("mutate_seed_modifier", "Mutate",    this, &this->euclidian_seed_modifier,         nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedModifier,      &DeviceBehaviour_Bamble::getEuclidianSeedModifier), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("reset_before_mutate",  "Mutate",    this, &this->euclidian_reset_before_mutate, nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianResetBeforeMutate, &DeviceBehaviour_Bamble::getEuclidianResetBeforeMutate), SL_SCOPE_SCENE);
+            register_setting(new SaveableSetting<DeviceBehaviour_Bamble, bool>    ("seed_use_phrase",      "Mutate",    this, &this->euclidian_seed_use_phrase,      nullptr, nullptr, &DeviceBehaviour_Bamble::setEuclidianSeedUsePhrase,     &DeviceBehaviour_Bamble::getEuclidianSeedUsePhrase), SL_SCOPE_SCENE);
 
             const unsigned int size = NUM_EUCLIDIAN_PATTERNS;
             for (unsigned int i = 0 ; i < size ; i++) {
-                register_setting(new SaveableParameterPatternEnabled(this, i));
+                register_setting(new SaveableParameterPatternEnabled(this, i), SL_SCOPE_SCENE);
             }
         }
 

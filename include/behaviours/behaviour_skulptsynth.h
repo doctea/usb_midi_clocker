@@ -218,7 +218,7 @@ class DeviceBehaviour_SkulptSynth
                 "Clock Enabled", "Clock",
                 &this->clock_enabled,
                 [=](bool v) { this->clock_enabled = v; }
-            ));
+            ), SL_SCOPE_SCENE);
         }
 
         

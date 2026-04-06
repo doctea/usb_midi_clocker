@@ -286,16 +286,16 @@ class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public 
         if (this->transmits_midi_notes()) {
             register_setting(new LSaveableSetting<int8_t>("lowest_note",       "Note restriction", nullptr,
                 [this](int8_t v) { this->setLowestNote(v); },
-                [this]() -> int8_t { return this->getLowestNote(); }));
+                [this]() -> int8_t { return this->getLowestNote(); }), SL_SCOPE_SCENE);
             register_setting(new LSaveableSetting<int8_t>("highest_note",      "Note restriction", nullptr,
                 [this](int8_t v) { this->setHighestNote(v); },
-                [this]() -> int8_t { return this->getHighestNote(); }));
+                [this]() -> int8_t { return this->getHighestNote(); }), SL_SCOPE_SCENE);
             register_setting(new LSaveableSetting<int8_t>("lowest_note_mode",  "Note restriction", nullptr,
                 [this](int8_t v) { this->setLowestNoteMode(v); },
-                [this]() -> int8_t { return this->getLowestNoteMode(); }));
+                [this]() -> int8_t { return this->getLowestNoteMode(); }), SL_SCOPE_SCENE);
             register_setting(new LSaveableSetting<int8_t>("highest_note_mode", "Note restriction", nullptr,
                 [this](int8_t v) { this->setHighestNoteMode(v); },
-                [this]() -> int8_t { return this->getHighestNoteMode(); }));
+                [this]() -> int8_t { return this->getHighestNoteMode(); }), SL_SCOPE_SCENE);
         }
 
         // Register FloatParameters as children so their save/load is handled by the tree

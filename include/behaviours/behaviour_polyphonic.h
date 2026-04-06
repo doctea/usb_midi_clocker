@@ -100,10 +100,10 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
 
     virtual void setup_saveable_settings() override {
         // mixin: register only own settings; concrete class calls DeviceBehaviourUltimateBase::setup_saveable_settings() first
-        register_setting(new LSaveableSetting<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0], [=](bool v) { this->allow_voice_for_auto[0] = v; }, [=]() -> bool { return this->allow_voice_for_auto[0]; }));
-        register_setting(new LSaveableSetting<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1], [=](bool v) { this->allow_voice_for_auto[1] = v; }, [=]() -> bool { return this->allow_voice_for_auto[1]; }));
-        register_setting(new LSaveableSetting<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }));
-        register_setting(new LSaveableSetting<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }));
+        register_setting(new LSaveableSetting<bool>("Output 1", "Allowed by Auto", &this->allow_voice_for_auto[0], [=](bool v) { this->allow_voice_for_auto[0] = v; }, [=]() -> bool { return this->allow_voice_for_auto[0]; }), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<bool>("Output 2", "Allowed by Auto", &this->allow_voice_for_auto[1], [=](bool v) { this->allow_voice_for_auto[1] = v; }, [=]() -> bool { return this->allow_voice_for_auto[1]; }), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<bool>("Output 3", "Allowed by Auto", &this->allow_voice_for_auto[2], [=](bool v) { this->allow_voice_for_auto[2] = v; }, [=]() -> bool { return this->allow_voice_for_auto[2]; }), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<bool>("Output 4", "Allowed by Auto", &this->allow_voice_for_auto[3], [=](bool v) { this->allow_voice_for_auto[3] = v; }, [=]() -> bool { return this->allow_voice_for_auto[3]; }), SL_SCOPE_SCENE);
     }
 
     #ifdef ENABLE_SCREEN

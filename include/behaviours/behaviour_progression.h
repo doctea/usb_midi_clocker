@@ -243,11 +243,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void setup_saveable_settings() override {
         DeviceBehaviourUltimateBase::setup_saveable_settings();
-        register_setting(new LSaveableSetting<bool>("Advance progression",  "Progression", &advance_progression_bar));
-        register_setting(new LSaveableSetting<bool>("Advance playlist",      "Progression", &advance_progression_playlist));
-        register_setting(new LSaveableSetting<uint8_t>("Chord octave",   "Progression", &chord_octave));
-        register_setting(new LSaveableSetting<uint8_t>("Bass octave",     "Progression", &bass_octave));
-        register_setting(new LSaveableSetting<uint8_t>("Topline octave",  "Progression", &topline_octave));
+        register_setting(new LSaveableSetting<bool>("Advance progression",  "Progression", &advance_progression_bar), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<bool>("Advance playlist",      "Progression", &advance_progression_playlist), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<uint8_t>("Chord octave",   "Progression", &chord_octave), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<uint8_t>("Bass octave",     "Progression", &bass_octave), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<uint8_t>("Topline octave",  "Progression", &topline_octave), SL_SCOPE_SCENE);
     }
 
     // untested, but this should fire the tick before a beat happens; use this to change chords outside of a bar change..

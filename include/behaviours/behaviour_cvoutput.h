@@ -186,21 +186,21 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 if (outputs[i] != nullptr)
                     register_setting(new LSaveableSetting<bool>(
                         (String("Slew ") + String(i)).c_str(), "Slews",
-                        &outputs[i]->slew_enabled));
+                        &outputs[i]->slew_enabled), SL_SCOPE_SCENE);
             }
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
                     register_setting(new LSaveableSetting<float>(
                         (String("Slew Rate ") + String(i)).c_str(), "Slews", nullptr,
                         [=](float v) { outputs[i]->set_slew_rate_normal(v); },
-                        [=]() -> float { return outputs[i]->get_slew_rate_normal(); }));
+                        [=]() -> float { return outputs[i]->get_slew_rate_normal(); }), SL_SCOPE_SCENE);
             }
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
                     register_setting(new LSaveableSetting<bool>(
                         (String("Gate Output ") + String(i)).c_str(), "Gates", nullptr,
                         [=](bool v) { outputs[i]->set_gate_output_enabled(v); },
-                        [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }));
+                        [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }), SL_SCOPE_SCENE);
             }
         }
 

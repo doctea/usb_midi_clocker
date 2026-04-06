@@ -113,14 +113,14 @@ class Project : public SHStorage<0, 8> {
                 "project_id", "Project", nullptr,
                 [this](int v) { /* id on load is informational; project number set by caller */ },
                 [this]() -> int { return this->current_project_number; }
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
             register_setting(new LSaveableSetting<bool>(
                 "auto_advance_scene", "Project", &this->auto_advance_scene
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
             #ifdef ENABLE_LOOPER
             register_setting(new LSaveableSetting<bool>(
                 "auto_advance_looper", "Project", &this->auto_advance_looper
-            ), false, SL_SCOPE_PROJECT);
+            ), SL_SCOPE_PROJECT, false);
             #endif
         }
 

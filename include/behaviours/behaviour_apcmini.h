@@ -432,7 +432,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             register_setting(new LSaveableSetting<uint8_t>(
                 "tempo_cc", "APCMini",
                 &this->tempo_fader_cc
-            ), false, SL_SCOPE_PROJECT);
+            ), false, SL_SCOPE_SYSTEM);
         }
 
         //FLASHMEM // causes a section type conflict with virtual void DeviceBehaviour_APCMini::setup_callbacks() 

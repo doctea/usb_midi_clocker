@@ -191,21 +191,21 @@ namespace storage {
     set_path_segment("scene");
 
     // Scene metadata
-    register_setting(new LSaveableSetting<uint8_t>("scene_id",    "Scene", &id),            false, SL_SCOPE_SCENE);
-    register_setting(new LSaveableSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   false, SL_SCOPE_SCENE);
-    register_setting(new LSaveableSetting<uint8_t>("size_seqs",   "Scene", &size_sequences), false, SL_SCOPE_SCENE);
-    register_setting(new LSaveableSetting<uint8_t>("size_steps",  "Scene", &size_steps),    false, SL_SCOPE_SCENE);
+    register_setting(new LSaveableSetting<uint8_t>("scene_id",    "Scene", &id),            SL_SCOPE_SCENE, false);
+    register_setting(new LSaveableSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   SL_SCOPE_SCENE, false);
+    register_setting(new LSaveableSetting<uint8_t>("size_seqs",   "Scene", &size_sequences), SL_SCOPE_SCENE, false);
+    register_setting(new LSaveableSetting<uint8_t>("size_steps",  "Scene", &size_steps),    SL_SCOPE_SCENE, false);
 
     // Clock multipliers — packed as 2-hex-chars-per-byte: "clock_mult=07060504..."
-    register_setting(new PackedByteArraySetting("clock_mult",  "Clock", clock_multiplier, NUM_CLOCKS), false, SL_SCOPE_SCENE);
+    register_setting(new PackedByteArraySetting("clock_mult",  "Clock", clock_multiplier, NUM_CLOCKS), SL_SCOPE_SCENE, false);
     // Clock delays — same format
-    register_setting(new PackedByteArraySetting("clock_delay", "Clock", clock_delay,      NUM_CLOCKS), false, SL_SCOPE_SCENE);
+    register_setting(new PackedByteArraySetting("clock_delay", "Clock", clock_delay,      NUM_CLOCKS), SL_SCOPE_SCENE, false);
 
     // Sequence rows — one nibble-hex setting per row, length from live size_steps pointer
     char lbl[20];
     for (uint8_t i = 0; i < NUM_SEQUENCES; i++) {
       snprintf(lbl, sizeof(lbl), "seq_%u", i);
-      register_setting(new SequenceRowSetting(lbl, "Sequence", sequence_data[i], &size_steps), false, SL_SCOPE_SCENE);
+      register_setting(new SequenceRowSetting(lbl, "Sequence", sequence_data[i], &size_steps), SL_SCOPE_SCENE, false);
     }
   }
 

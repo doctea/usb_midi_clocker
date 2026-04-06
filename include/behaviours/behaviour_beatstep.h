@@ -506,7 +506,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
                             else if (sysex_parameters[i].target_variable!=nullptr)
                                 *sysex_parameters[i].target_variable = v;
                         }
-                    ));
+                    ), SL_SCOPE_SCENE);
                 }
             }
         #endif

@@ -103,8 +103,19 @@ bool execute_command(const char *command_line) {
         Serial.printf("Current project: %i, selected scene: %i\n", project->current_project_number, project->selected_scene_number);
         Serial.printf("Free RAM: %i bytes\n", freeRam());
         Serial.printf("SD card present: %s\n", SD.begin(BUILTIN_SDCARD) ? "yes" : "no");
-        SL_TreeCounts sl_tree_counts = sl_count_tree(project->save_tree);
-        Serial.printf("Savetree counts - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts.nodes, sl_tree_counts.settings, sl_tree_counts.bytes);
+        
+        SL_TreeCounts sl_tree_counts_all = sl_count_tree(project->save_tree);
+        Serial.printf("Savetree counts - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_all.nodes, sl_tree_counts_all.settings, sl_tree_counts_all.bytes);
+        SL_TreeCounts sl_tree_counts_scene = sl_count_tree(project->save_tree, false, SL_SCOPE_SCENE);
+        SL_TreeCounts sl_tree_counts_project = sl_count_tree(project->save_tree, false, SL_SCOPE_PROJECT);
+        SL_TreeCounts sl_tree_counts_routing = sl_count_tree(project->save_tree, false, SL_SCOPE_ROUTING);
+        SL_TreeCounts sl_tree_counts_system = sl_count_tree(project->save_tree, false, SL_SCOPE_SYSTEM);
+        Serial.printf("Savetree counts by scope:\n");
+        Serial.printf("  SCENE - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_scene.nodes, sl_tree_counts_scene.settings, sl_tree_counts_scene.bytes);
+        Serial.printf("  PROJECT - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_project.nodes, sl_tree_counts_project.settings, sl_tree_counts_project.bytes);
+        Serial.printf("  ROUTING - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_routing.nodes, sl_tree_counts_routing.settings, sl_tree_counts_routing.bytes);
+        Serial.printf("  SYSTEM - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_system.nodes, sl_tree_counts_system.settings, sl_tree_counts_system.bytes);
+
         return true;
     } else if (strcmp(command, "reset") == 0) {
         Serial.println("Resetting device...");
@@ -359,16 +370,31 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "showtree") == 0) {
         // output the current settings tree as a text dump to the serial console, for debugging
         // usage: showtree [scopemask]
+
         uint8_t scopemask = 0xFF; // default to showing all scopes
         if (arg1[0] != '\0') {
-            scopemask = (uint8_t)strtoul(arg1, nullptr, 0);
+            // if argument doesn't start with a number, assume SL_SCOPE_SCENE, SL_SCOPE_PROJECT,
+            // and parse using sl_scope_from_string, otherwise parse as number
+            if (isdigit((unsigned char)arg1[0])) {
+                scopemask = (uint8_t)strtoul(arg1, nullptr, 0);
+            } else {
+                scopemask = sl_scope_from_string(arg1);
+            }
         }
-        Serial.printf("Dumping settings tree (to depth 8 with scopemask=0x%02X):\n", scopemask);
+        Serial.printf("Dumping settings tree (to depth 8 with scopemask=0x%02X aka %s):\n", scopemask, sl_scope_to_string(scopemask));
         if (settings_root) {
             sl_print_tree_to_print(settings_root, Serial, 8, scopemask);
         } else {
             Serial.println("No settings root found!");
         }
+
+        // output available scopes
+        Serial.println("Available scopes:");
+        for (int i = 0 ; i < SL_SCOPE_ENTRY_COUNT ; i++) {
+            Serial.printf("  %s (0x%02X)\t", sl_scope_to_string(1 << i), 1 << i);
+        }
+        Serial.println();
+
         SL_TreeCounts counts = sl_count_tree(settings_root);
         Serial.printf(
             "There are %i settings and %i host nodes in the tree, occupying %i bytes (averaging %i bytes per setting).\n", 

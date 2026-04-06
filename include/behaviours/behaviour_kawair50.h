@@ -428,7 +428,7 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
 
         register_setting(new DrumMapStateSetting(
             "kawair50_drummap", "KawaiR50", &drum_mapper
-        ), false, SL_SCOPE_PROJECT);
+        ), SL_SCOPE_PROJECT, false);
     }
 
 };
