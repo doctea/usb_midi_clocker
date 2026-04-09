@@ -12,7 +12,7 @@
 #include "notetracker.h"
 #include "Drums.h"
 
-// saveloadlib must be included before Parameter.h because ParameterInput.h inherits SHStorage
+// saveloadlib must be included before Parameter.h because ParameterInput.h inherits SHDynamic
 #include "saveload_settings.h"
 
 #include "parameters/Parameter.h"
@@ -45,7 +45,7 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget, public virtual SHStorage<16, 160> {
+class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget, public virtual SHDynamic<16, 160> {
     public:
 
     bool debug = false;

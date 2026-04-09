@@ -188,7 +188,7 @@ Sawtooth to Square / 97-127 - Square to Sample and Hold*/
 
 class DeviceBehaviour_SkulptSynth 
     : virtual public SkulptDeviceBehaviourBase, virtual public ClockedBehaviour, virtual public ModwheelReceiver,
-      virtual public SHStorage<24, 24> 
+      virtual public SHDynamic<24, 24> 
     {
     //using ClockedBehaviour::DeviceBehaviourUltimateBase;
     using ClockedBehaviour::DeviceBehaviourUltimateBase::parameters;

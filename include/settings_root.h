@@ -17,7 +17,7 @@
 #include "behaviours/behaviour_manager.h"
 #include "midi/midi_mapper_matrix_manager.h"
 
-class SettingsRoot : public SHStorage<16, 16> {
+class SettingsRoot : public SHDynamic<16, 16> {
     public:
         SettingsRoot() {
             this->set_path_segment("root");

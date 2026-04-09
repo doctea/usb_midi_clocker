@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include "Config.h"
-#include "saveload_settings.h"  // ISaveableSettingHost, SHStorage, LSaveableSetting, sl_scope_t etc.
+#include "saveload_settings.h"  // ISaveableSettingHost, SHDynamic, LSaveableSetting, sl_scope_t etc.
 
 #ifdef ENABLE_SD
   #include "SD.h"
@@ -112,7 +112,7 @@ namespace storage {
   // ---------------------------------------------------------------------------
   // savestate — the clock + sequence data for one scene.
   //
-  // Inherits SHStorage so all fields are registered as saveloadlib settings under
+  // Inherits SHDynamic so all fields are registered as saveloadlib settings under
   // the path segment "scene" with SL_SCOPE_SCENE mask.  setup_saveable_settings()
   // must be called once (done by setup_sd()) before any save/load.
   //
@@ -123,10 +123,10 @@ namespace storage {
   // or shadow savestate instances at project-open time; apply_scene() then replays
   // them through load_line() with no SD I/O required.
   //
-  // Note: SHStorage adds virtual methods, making savestate non-trivially-destructible.
+  // Note: SHDynamic adds virtual methods, making savestate non-trivially-destructible.
   //       The legacy Arduino EEPROM path at the bottom of storage.cpp is incompatible.
   // ---------------------------------------------------------------------------
-  struct savestate : public SHStorage<0, (20 + NUM_SEQUENCES)> {
+  struct savestate : public SHDynamic<0, 6 + NUM_SEQUENCES> {
     uint8_t id             = SAVE_ID_BYTE_V7;
     uint8_t size_clocks    = NUM_CLOCKS;
     uint8_t size_sequences = NUM_SEQUENCES;

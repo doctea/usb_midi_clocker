@@ -40,7 +40,7 @@ void behaviour_manager_kill_all_current_notes();
 class MIDITrack;
 class DeviceBehaviourUltimateBase;
 
-class MIDIMatrixManager : public SHStorage<0, 8> {
+class MIDIMatrixManager : public SHDynamic<0, 8> {
     public:
     static MIDIMatrixManager* getInstance();
 

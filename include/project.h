@@ -26,7 +26,7 @@ using namespace storage;
 
 extern volatile bool global_load_lock;
 
-class Project : public SHStorage<0, 8> {
+class Project : public SHDynamic<0, 8> {
     bool scene_slot_has_file[NUM_SCENE_SLOTS_PER_PROJECT];
     #ifdef ENABLE_LOOPER
     bool loop_slot_has_file[NUM_LOOP_SLOTS_PER_PROJECT];

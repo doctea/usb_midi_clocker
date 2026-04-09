@@ -18,7 +18,7 @@
     #include <util/atomic.h>
 #endif
 
-class DeviceBehaviourManager : public SHStorage<48, 0> {
+class DeviceBehaviourManager : public SHDynamic<48, 0> {
     public:
         bool debug = false;
 
