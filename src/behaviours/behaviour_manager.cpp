@@ -39,14 +39,21 @@
 #include "behaviours/behaviour_arpeggiator.h"
 
 #include "behaviours/behaviour_euclidianrhythms.h"
+#include "behaviours/behaviour_turingmachine.h"
 
 #include "behaviours/behaviour_progression.h"
 
 #include "behaviours/behaviour_displayer.h"
 
+#include "behaviours/behaviour_midilooper.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
+
+#ifdef ENABLE_LOOPER
+    VirtualBehaviour_MidiLooper *behaviour_midilooper = nullptr;
+#endif
 DeviceBehaviourManager* DeviceBehaviourManager::getInstance() {
     if (inst_ == nullptr) {
         inst_ = new DeviceBehaviourManager();
@@ -99,10 +106,22 @@ void setup_behaviour_manager() {
         behaviour_manager->registerBehaviour(behaviour_euclidianrhythms);
     #endif
 
+    #ifdef ENABLE_TURINGMACHINE
+        behaviour_turingmachine = new VirtualBehaviour_TuringMachine();
+        behaviour_manager->registerBehaviour(behaviour_turingmachine);
+    #endif
+
+    #ifdef ENABLE_LOOPER
+        extern MIDITrack midi_loop_track;  // defined in src/midi/midi_looper.cpp
+        behaviour_midilooper = new VirtualBehaviour_MidiLooper();
+        behaviour_midilooper->track = &midi_loop_track;
+        behaviour_manager->registerBehaviour(behaviour_midilooper);
+    #endif
+
     #ifdef ENABLE_APCMINI
         behaviour_apcmini = new DeviceBehaviour_APCMini();
         #ifdef ENABLE_LOOPER
-            behaviour_apcmini->loop_track = &midi_loop_track;
+            behaviour_apcmini->loop_track = behaviour_midilooper->track;
         #endif
         behaviour_manager->registerBehaviour(behaviour_apcmini);
     #endif

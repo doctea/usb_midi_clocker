@@ -12,6 +12,7 @@
 #include "usb/multi_usb_handlers.h"
 
 #include "project.h"
+#include "behaviours/behaviour_midilooper.h"
 
 void chocolate_handle_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void chocolate_handle_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
@@ -69,13 +70,13 @@ class DeviceBehaviour_Chocolate : virtual public DeviceBehaviourUSBBase {
 
             #ifdef ENABLE_LOOPER
                 if (note==CHOC_NOTE_TOGGLEPLAY) {
-                    midi_loop_track.toggle_playing();
+                    behaviour_midilooper->toggle_playing();
                 } else if (note==CHOC_NOTE_TOGGLEREC) {
-                    midi_loop_track.toggle_recording();
+                    behaviour_midilooper->toggle_recording();
                 } else if (note==CHOC_NOTE_RECORD_MOM) {
-                    midi_loop_track.start_recording();
+                    behaviour_midilooper->start_recording();
                 } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
-                    midi_loop_track.start_overwriting();
+                    behaviour_midilooper->start_overwriting();
                 }
             #endif
 
@@ -103,9 +104,9 @@ class DeviceBehaviour_Chocolate : virtual public DeviceBehaviourUSBBase {
 
             #ifdef ENABLE_LOOPER
                 if (note==CHOC_NOTE_RECORD_MOM) {
-                    midi_loop_track.stop_recording();
+                    behaviour_midilooper->stop_recording();
                 } else if (note==CHOC_NOTE_OVERWRITE_MOM) {
-                    midi_loop_track.stop_overwriting();
+                    behaviour_midilooper->stop_overwriting();
                 }
             #endif
 

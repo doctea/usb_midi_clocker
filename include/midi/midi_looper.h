@@ -57,7 +57,7 @@ struct tracked_note {
 
 
 class MIDITrack {
-    LinkedList<midi_message> **frames = nullptr;
+    LinkedList<midi_message> *frames[MAX_LOOP_LENGTH_STEPS];
 
     tracked_note recorded_hanging_notes[MIDI_NUM_NOTES];
     int loaded_recording_number = -1;
@@ -134,16 +134,11 @@ class MIDITrack {
         bool bitmap_enabled = true;
 
         MIDITrack() {
-            // allocate space for the array of frame pointers
-            this->frames = (LinkedList<midi_message>**)CALLOC_FUNC(sizeof(LinkedList<midi_message>*), MAX_LOOP_LENGTH_STEPS);
-            
             this->wipe_piano_roll_bitmap();
-
-            // initialise linkedlists for each frame
             for(int i = 0 ; i < MAX_LOOP_LENGTH_STEPS ; i++) {
                 this->frames[i] = new LinkedList<midi_message>();
                 if (!this->frames[i]) {
-                    Serial.printf(F("Error allocating memory for MIDITrack frames at index %i\n"), i);
+                    Serial.printf(F("!!! MIDITrack constructor failed to allocate frames[%i]!\n"), i);
                 }
             }
         };
@@ -354,7 +349,7 @@ class MIDITrack {
                 frames[i]->clear();
                 //clear_tick(i);
             }
-            //Serial.println(F("cleared"));
+            Serial.println(F("cleared"));
             this->wipe_piano_roll_bitmap();
         }
 
@@ -507,7 +502,7 @@ class MIDITrack {
             if (!this->bitmap_enabled) return;
 
             if (this->piano_roll_bitmap==nullptr)
-                this->piano_roll_bitmap = (loop_bitmap*)CALLOC_FUNC(LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
+                this->piano_roll_bitmap = (loop_bitmap*)CALLOC_FUNC(MAX_LOOP_LENGTH_STEPS, MIDI_MAX_NOTE);
             //memset(*this->piano_roll_bitmap, 0, LOOP_LENGTH_STEPS*127);
             memset(this->piano_roll_held, 0, MIDI_MAX_NOTE);
             memset(this->pitch_contains_notes, 0, MIDI_MAX_NOTE);

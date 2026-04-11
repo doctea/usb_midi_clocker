@@ -167,7 +167,9 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void setup_saveable_settings() override {
         DeviceBehaviourUltimateBase::setup_saveable_settings();
         // Register sequencer as a child; sl_setup_all will call sequencer->setup_saveable_settings()
+        // @@TODO: think there may be a problem here now where the sequencer's parameters are added twice?
         register_child(this->sequencer);
+        register_child(this->output_processor);
     }
 
 };

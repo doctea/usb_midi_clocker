@@ -638,11 +638,7 @@ void do_tick(uint32_t in_ticks) {
   behaviour_manager->do_pre_clock(in_ticks);
   DEBUG_MAIN_PRINTLN(F("do_tick(): just did behaviour_manager->do_pre_clock()"));
 
-  #ifdef ENABLE_LOOPER
-    DEBUG_MAIN_PRINTLN(F("in do_tick() about to midi_loop_track.process_tick()")); 
-    midi_loop_track.process_tick(ticks);
-    DEBUG_MAIN_PRINTLN(F("in do_tick() just did midi_loop_track.process_tick()"));
-  #endif
+  // midi_loop_track.process_tick() is now called via behaviour_manager->do_ticks() below
 
   // drone / machinegun works when do_end_bar here !
   // do this after everything else because of problems with machinegun mode..?

@@ -35,10 +35,13 @@
 #include "behaviours/behaviour_apcmini.h"
 
 #include "behaviours/behaviour_euclidianrhythms.h"
+#include "behaviours/behaviour_turingmachine.h"
 
 #include "behaviours/behaviour_progression.h"
 
 #include "behaviours/behaviour_displayer.h"
+
+#include "behaviours/behaviour_midilooper.h"
 
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
@@ -290,8 +293,9 @@ void setup_midi_mapper_matrix_manager() {
 
     // instantiate the loop tracks and point them at their default output wrappers
     #ifdef ENABLE_LOOPER
-        midi_matrix_manager->register_source(&midi_loop_track, "loop_track_1");
-        midi_matrix_manager->register_target(&midi_loop_track, "loop_track_1");
+        midi_matrix_manager->register_source(behaviour_midilooper, "loop_track_1");
+        behaviour_midilooper->track->source_id = behaviour_midilooper->source_id;  // sync source_id so MIDITrack::sendNoteOn uses the right id
+        midi_matrix_manager->register_target(behaviour_midilooper->track, "loop_track_1");
         midi_matrix_manager->connect("loop_track_1",            "S1 : Bitbox : ch 3");
         #ifdef ENABLE_MPK49
             midi_matrix_manager->connect(behaviour_mpk49,           "loop_track_1");
@@ -327,6 +331,10 @@ void setup_midi_mapper_matrix_manager() {
         behaviour_euclidianrhythms->source_id_4 = midi_matrix_manager->register_source("EucRhythms ch9");
         //Serial.printf("ENABLE_EUCLIDIAN: connecting source_id=%i to target_id=%i\n", behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
         midi_matrix_manager->connect(behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
+    #endif
+
+    #ifdef ENABLE_TURINGMACHINE
+        midi_matrix_manager->register_source(behaviour_turingmachine, "Turing Machine");
     #endif
 
     behaviour_sequencer_gates->source_id = midi_matrix_manager->register_source("Gate Sequencer");

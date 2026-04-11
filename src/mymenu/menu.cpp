@@ -33,6 +33,7 @@
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_neutron.h"
 #include "behaviours/behaviour_progression.h"
+#include "behaviours/behaviour_midilooper.h"
 
 #include "midi/midi_out_wrapper.h"
 #include "midi/midi_outs.h"
@@ -415,7 +416,7 @@ void setup_menu_midi() {
     void setup_menu_looper() {
         // looper stuff
         menu->add_page("Looper");
-        menu->add(midi_loop_track.make_menu_items());
+        menu->add(behaviour_midilooper->make_menu_items());
         #ifdef ENABLE_DRUM_LOOPER
             menu->add(&drum_looper_status);
             menu->add(&drum_loop_quantizer_setting);
