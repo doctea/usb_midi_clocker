@@ -389,11 +389,18 @@
     FLASHMEM 
     #endif
     void setup_typing_keyboard() {
+        // Serial.printf("setup_typing_keyboard: keyboard1=%p, hid1=%p\n", &keyboard1, &hid1);
         keyboard1.attachPress(OnPress);
         //keyboard1.attachRawPress(OnRawPress);
         keyboard1.attachRelease(OnRelease);
 
         keyboard1.attachExtrasPress(OnExtrasPress);
-        keyboard1.attachExtrasPress(OnExtrasRelease);
+        keyboard1.attachExtrasRelease(OnExtrasRelease);
+        // Serial.printf("setup_typing_keyboard: callbacks attached\n");
     }
+
+    // void debug_keyboard_status() {
+    //     Serial.printf("keyboard1 connected=%d, hid1 in use=%d\n", 
+    //         (bool)keyboard1, (bool)hid1);
+    // }
 #endif
