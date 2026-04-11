@@ -45,7 +45,11 @@ enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };
 
-class DeviceBehaviourUltimateBase : public virtual IMIDIProxiedCCTarget, public virtual IMIDINoteAndCCTarget, public virtual SHDynamic<16, 160> {
+class DeviceBehaviourUltimateBase :
+        public virtual IMIDIProxiedCCTarget, 
+        public virtual IMIDINoteAndCCTarget, 
+        public virtual SHDynamic<4, 4> 
+    {
     public:
 
     bool debug = false;

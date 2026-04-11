@@ -158,6 +158,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     );
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
+        this->set_path_segment("progression");
         //memset(grid, 0, 64);
         //this->chord_player->debug = true;
         /*song_sections[0].grid[0].degree = 1;

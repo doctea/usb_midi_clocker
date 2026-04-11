@@ -28,7 +28,7 @@ class MCP23S17BankInterface : public BankInterface {
             //SPI1.setCS(MCP23S17_SPI_CS1_PIN);
             this->num_gates = num_gates;
 
-            this->current_states = (bool*)calloc(num_gates, sizeof(bool));
+            this->current_states = (bool*)CALLOC_FUNC(num_gates, sizeof(bool));
 
             mcp = new MCP23S17(cs_pin, address, spi);
             mcp->setSPIspeed(10000000);
@@ -179,7 +179,7 @@ class MCP23S17InputBankInterface : public BankInterface {
             SPI1.setClockDivider(SPI_CLOCK_DIV4);
             SPI1.begin();*/
 
-            this->current_states = (bool*)calloc(num_gates, sizeof(bool));
+            this->current_states = (bool*)CALLOC_FUNC(num_gates, sizeof(bool));
 
             mcp = new MCP23S17(cs_pin, address, spi);
             Serial.println("\tconstructed!... calling begin()");

@@ -43,7 +43,7 @@ Total storage used in project 0: 180877 bytes
 
 
 #ifndef READ_FILE_BUF_SIZE
-    #define READ_FILE_BUF_SIZE ((unsigned int)pow(2, 17)) // should give us a buffer size of 131072 bytes
+    #define READ_FILE_BUF_SIZE (131072) // should give us a buffer size of 128k for files
 #endif
 
 #ifdef ENABLE_SD
@@ -336,7 +336,7 @@ void setup_saveloadlib() {
     // Register settings with saveloadlib by calling setup_saveable_settings() on an instance of each ISaveableSettingHost subclass.
 
     // set up pool for allocation of settings -- improves speed significantly compared to slow EXTMEM new()
-    EXTMEM static SL_Arena<240000> sl_arena;
+    EXTMEM static SL_Arena<524288> sl_arena;
     sl_set_setting_arena(&sl_arena);
 
     // set up file read buffer for sl_load_from_file -- also much faster than EXTMEM new() on demand
@@ -350,6 +350,8 @@ void setup_saveloadlib() {
     uint32_t start_time = millis();
     sl_setup_all(settings_root);
     Serial.printf("setup_saveloadlib: Finished sl_setup_all in %i millis.\n", millis()-start_time);
+
+    //sl_validate_tree(settings_root, Serial);
 
     // Wire the save tree into Project so Project::save_project_settings() can
     // call sl_save_to_file without needing to know the full SettingsRoot type.

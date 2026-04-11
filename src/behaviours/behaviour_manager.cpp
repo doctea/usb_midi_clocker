@@ -357,9 +357,9 @@ void setup_behaviour_manager() {
         tft_print("\n");
 
         // create a page for holding recall/save options from every behaviour
-        menu->add_page("Recall parameters");
         // TODO: rebuild recall-parameter UI using saveloadlib settings tree
         /*
+        menu->add_page("Recall parameters");
         for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
             tft_print("!");
             Serial_printf("about to set up Recall parameters () for behaviour %i/%i ", i+1, behaviours->size());

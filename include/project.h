@@ -101,6 +101,7 @@ class Project : public SHDynamic<0, 8> {
 
         Project() {
             //initialise_scene_slots();
+            this->set_path_segment("project");
         }
 
         // ---- saveloadlib integration ----
@@ -108,7 +109,6 @@ class Project : public SHDynamic<0, 8> {
         // sl_save_to_linkedlist / sl_load_from_file is called with SL_SCOPE_PROJECT.
         // Called automatically by sl_setup_all() via SettingsRoot::setup_saveable_settings().
         virtual void setup_saveable_settings() override {
-            this->set_path_segment("project");
             register_setting(new LSaveableSetting<int>(
                 "project_id", "Project", nullptr,
                 [this](int v) { /* id on load is informational; project number set by caller */ },

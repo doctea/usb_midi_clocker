@@ -14,6 +14,7 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
         strncpy(this->label, label, 32);
         this->can_transmit_midi_notes = can_transmit_midi_notes;
         this->can_receive_midi_notes = can_receive_midi_notes;
+        this->set_path_segment(label);
     }
 
     #ifdef ENABLE_SCREEN
@@ -38,7 +39,7 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
 
 #ifdef ENABLE_USB
 template<class BaseClass>
-class Behaviour_SimpleWrapperUSB : public Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourUSBBase> {
+class Behaviour_SimpleWrapperUSB : virtual public Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourUSBBase> {
     public:
 
     uint16_t vid, pid;
@@ -48,6 +49,7 @@ class Behaviour_SimpleWrapperUSB : public Behaviour_SimpleWrapper<BaseClass, Dev
     {
         this->pid = pid;
         this->vid = vid;
+        this->set_path_segment(label);
     }
 
     virtual uint32_t get_packed_id() override  { return (this->vid<<16 | this->pid); }
@@ -70,7 +72,9 @@ class Behaviour_SimpleWrapperSerial : public Behaviour_SimpleWrapper<BaseClass, 
 
     Behaviour_SimpleWrapperSerial(const char *label, bool receives_midi_notes = false, bool transmits_midi_notes = false) 
     : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase>(label, receives_midi_notes, transmits_midi_notes) 
-    {}
+    {
+        this->set_path_segment(label);
+    }
 };
 
 

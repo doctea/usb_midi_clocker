@@ -121,8 +121,8 @@
 
 // enable MIDI looping for MPK49
 #ifdef PCB_STUDIO
-    #define ENABLE_LOOPER
-    #define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
+    // #define ENABLE_LOOPER
+    // #define ENABLE_LOOPER_PIANOROLL // enable piano roll looper display
     #define ENABLE_WORKSHOP_COMPUTER
 #endif
 

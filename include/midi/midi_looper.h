@@ -57,7 +57,7 @@ struct tracked_note {
 
 
 class MIDITrack {
-    LinkedList<midi_message> *frames[LOOP_LENGTH_STEPS];
+    LinkedList<midi_message> **frames = nullptr;
 
     tracked_note recorded_hanging_notes[MIDI_NUM_NOTES];
     int loaded_recording_number = -1;
@@ -134,9 +134,17 @@ class MIDITrack {
         bool bitmap_enabled = true;
 
         MIDITrack() {
+            // allocate space for the array of frame pointers
+            this->frames = (LinkedList<midi_message>**)CALLOC_FUNC(sizeof(LinkedList<midi_message>*), MAX_LOOP_LENGTH_STEPS);
+            
             this->wipe_piano_roll_bitmap();
-            for(int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
+
+            // initialise linkedlists for each frame
+            for(int i = 0 ; i < MAX_LOOP_LENGTH_STEPS ; i++) {
                 this->frames[i] = new LinkedList<midi_message>();
+                if (!this->frames[i]) {
+                    Serial.printf(F("Error allocating memory for MIDITrack frames at index %i\n"), i);
+                }
             }
         };
 
@@ -341,7 +349,7 @@ class MIDITrack {
         void clear_all() {
             stop_all_notes();
             Serial.println(F("clearing recording.."));
-            for (unsigned int i = 0 ; i < LOOP_LENGTH_STEPS ; i++) {
+            for (unsigned int i = 0 ; i < MAX_LOOP_LENGTH_STEPS ; i++) {
                 // todo: actually free the recorded memory..?
                 frames[i]->clear();
                 //clear_tick(i);
@@ -453,7 +461,7 @@ class MIDITrack {
         //track_note_bitmap *piano_roll_bitmap;
         //int8_t (*piano_roll_bitmap)[LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];
 
-        typedef int8_t loop_bitmap[LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];
+        typedef int8_t loop_bitmap[MAX_LOOP_LENGTH_STEPS][MIDI_NUM_NOTES];
         loop_bitmap *piano_roll_bitmap = nullptr;       // dynamically allocate RAM for this on first call to wipe_piano_roll_bitmap (in constructor)
 
         int8_t piano_roll_held[MIDI_NUM_NOTES];

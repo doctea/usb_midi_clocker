@@ -259,7 +259,9 @@ void setup() {
 
   #ifdef ENABLE_STORAGE
     tft_print((char*)"...setup save tree...\n"); Serial_flush();
+    debug_free_ram();
     setup_saveloadlib();
+    debug_free_ram();
     //tft_print((char*)"Finished setting up saveloadlib!"); Serial.flush();
   #endif
 

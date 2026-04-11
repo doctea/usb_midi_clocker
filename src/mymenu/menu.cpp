@@ -139,9 +139,6 @@ void setup_menu_transport() {
     //menu->add(new SeparatorMenuItem("Transport"));
 
     menu->add(&posbar);     // bpm and position indicator
-    #ifdef ENABLE_TIME_SIGNATURE
-        menu->add(&timesig_indicator);             // time signature indicator
-    #endif
     menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
     #ifdef ENABLE_CLOCK_INPUT_CV
         menu->add(&external_ppqn_selector); // external clock ppqn selector
@@ -160,6 +157,11 @@ void setup_menu_transport() {
     project_startstop->add(new ActionItem("Stop",     clock_stop));
     project_startstop->add(new ActionItem("Continue", clock_continue));
     project_startstop->add(new ActionFeedbackItem("Restart", set_restart_on_next_bar_on, is_restart_on_next_bar, "Restarting..", "Restart"));
+
+    #ifdef ENABLE_TIME_SIGNATURE
+        menu->add(&timesig_indicator);             // time signature indicator
+    #endif
+
     menu->add(project_startstop);
 }
 

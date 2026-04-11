@@ -10,6 +10,7 @@ class MIDIBassBehaviourProxy : virtual public MIDIBassBehaviour {
 
     MIDIBassBehaviourProxy() : DeviceBehaviourUltimateBase() {
         this->drone_channel = 1;
+        set_path_segment("midibassproxy");
     }
 
     virtual const char *get_label() override {
