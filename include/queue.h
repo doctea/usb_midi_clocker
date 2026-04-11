@@ -85,12 +85,15 @@ class Queue {
         if (this->isEmpty())            
             // not ready if nothing queued!
             return false;
-        if ( (queue_delay_mode==QUEUE_DELAY_ABSOLUTE && delay_at[head] > millis()) || 
+        // use next=(head+1)%size to index the front item; head itself is the last *popped* index
+        // (when head==-1 initially, (head+1)%size == 0, which is correct)
+        int next = (head + 1) % max_queue_size;
+        if ( (queue_delay_mode==QUEUE_DELAY_ABSOLUTE && delay_at[next] > millis()) || 
              (queue_delay_mode==QUEUE_DELAY_RELATIVE && this->actual_delay_at > millis())
         )
             // don't send message if we haven't reached its delay time yet
             return false;
-        if (this->paused && timeout[head]!=0 && actual_timeout_at<=millis()) {  
+        if (this->paused && timeout[next]!=0 && actual_timeout_at<=millis()) {  
             // break out of paused state if timeout has been reached
             Debug_printf("\tqueue timed out (%i vs %i)\n", actual_timeout_at, millis());
             this->paused = false;

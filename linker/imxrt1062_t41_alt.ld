@@ -63,28 +63,32 @@ SECTIONS
         . = . + 32; /* MPU to trap NULL pointer deref */
         *(.fastrun)
         /* Have to add these to keep in text.itcm (excluded above from text.code) */
-        *(eeprom.c.o .text*)
-        *(EEPROM.c.o .text*)
-        *(imxrt.c.o* .text*)
-        *(interrupt.c.o .text*)
-        *(memcpy-armv7m.S.o .text*)
-        *(memset.S.o .text*)
-        *(Display* .text*) /* this increases FPS from 9 to 13 */
+        /* NOTE: correct GNU ld syntax is FILEPATTERN(.text*) not *(FILEPATTERN .text*) --  */
+        /* the latter matches sections whose NAME contains the pattern, not files!           */
+        /* e.g. *(*midi* .text*) would put .bss.midi01 in ITCM because the section name     */
+        /* contains "midi". Fixed to FILEPATTERN(.text*) form.                               */
+        *eeprom.c.o(.text*)
+        *EEPROM.c.o(.text*)
+        *imxrt.c.o*(.text*)
+        *interrupt.c.o(.text*)
+        *memcpy-armv7m.S.o(.text*)
+        *memset.S.o(.text*)
+        *Display*(.text*) /* this increases FPS from 9 to 13 */
         /* the rest of these made no noticeable difference */
-        *(ILI9341_t3n* .text*)
-        *(*arameter* .text*)
-        *(*cv_input* .text*)
-        *(*USBHost* .text*)
-        *(*midi* .text*)
-        *(*MIDI* .text*)
-        *(*nvelope* .text*)
-        *(uClock* .text*)
-        *(*menu* .text*)
-        *(*handlers* .text*)
-        *(*Spi* .text*)
-        *(*Voltage* .text*)
-        *(MCP23S17* .text*)
-        *(*Wire* .text*)
+        *ILI9341_t3n*(.text*)
+        **arameter*(.text*)
+        **cv_input*(.text*)
+        **USBHost*(.text*)
+        **midi*(.text*)
+        **MIDI*(.text*)
+        **nvelope*(.text*)
+        *uClock*(.text*)
+        **menu*(.text*)
+        **handlers*(.text*)
+        **Spi*(.text*)
+        **Voltage*(.text*)
+        *MCP23S17*(.text*)
+        **Wire*(.text*)
         . = ALIGN(16);
     } > ITCM  AT> FLASH
 
