@@ -61,6 +61,7 @@ void do_tick(uint32_t ticks);
 
 #include "bpm.h"
 #include "clock.h"
+#include <conductor.h>
 
 #include "interfaces/interfaces.h"
 #include "cv_gate_outs.h"
@@ -176,6 +177,7 @@ void setup() {
   
   vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
 
+  conductor = new Conductor();
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..

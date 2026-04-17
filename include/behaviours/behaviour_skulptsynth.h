@@ -202,8 +202,8 @@ class DeviceBehaviour_SkulptSynth
         DeviceBehaviour_SkulptSynth() : SkulptDeviceBehaviourBase() {
             this->setClockEnabled(false);
             this->setLowestNote(3 * 12); // C3
-            this->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
-            this->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+            this->setLowestNoteMode(NOTE_LIMIT_MODE::TRANSPOSE);
+            this->setHighestNoteMode(NOTE_LIMIT_MODE::TRANSPOSE);
         }
 
         virtual const char *get_label() override {

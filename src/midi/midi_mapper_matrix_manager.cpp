@@ -374,9 +374,9 @@ void setup_midi_mapper_matrix_manager() {
     MIDIOutputWrapper *wrapper = make_midioutputwrapper("Bass Proxy", behaviour_midibassproxy);
     behaviour_midibassproxy->target_id = midi_matrix_manager->register_target(wrapper, "Bass Proxy");
     behaviour_midibassproxy->setHighestNote(4*12);
-    behaviour_midibassproxy->setHighestNoteMode(NOTE_MODE::TRANSPOSE);
+    behaviour_midibassproxy->setHighestNoteMode(NOTE_LIMIT_MODE::TRANSPOSE);
     behaviour_midibassproxy->setLowestNote(1*12);
-    behaviour_midibassproxy->setLowestNoteMode(NOTE_MODE::TRANSPOSE);
+    behaviour_midibassproxy->setLowestNoteMode(NOTE_LIMIT_MODE::TRANSPOSE);
 
     midi_matrix_manager->register_source(behaviour_arpeggiator, "Arpeggiator");
     //MIDIOutputWrapper *arp_wrapper = make_midioutputwrapper("Arp Chords", behaviour_arpeggiator);

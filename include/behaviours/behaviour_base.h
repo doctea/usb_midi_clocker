@@ -41,10 +41,7 @@ enum BehaviourType {
     virt             // a 'virtual' device type that exists only in code (eg CV Input)
 };
 
-// todo: move to seqlib?
-enum NOTE_MODE {
-    IGNORE, TRANSPOSE
-};
+// enum NOTE_MODE moved to midihelpers and renamed NOTE_LIMIT_MODE
 
 class DeviceBehaviourUltimateBase :
         public virtual IMIDIProxiedCCTarget, 
@@ -358,8 +355,8 @@ class DeviceBehaviourUltimateBase :
         return this->force_octave;
     }*/
 
-    int8_t lowest_note_mode  = NOTE_MODE::IGNORE;
-    int8_t highest_note_mode = NOTE_MODE::IGNORE;
+    int8_t lowest_note_mode  = NOTE_LIMIT_MODE::IGNORE;
+    int8_t highest_note_mode = NOTE_LIMIT_MODE::IGNORE;
     int8_t lowest_note = 0;
     int8_t highest_note = MIDI_MAX_NOTE;
 
@@ -383,7 +380,7 @@ class DeviceBehaviourUltimateBase :
     virtual int8_t getLowestNoteMode() {
         return lowest_note_mode;
     }
-    // mode from NOTE_MODE enum (IGNORE or TRANSPOSE)
+    // mode from NOTE_LIMIT_MODE enum (IGNORE or TRANSPOSE)
     virtual void setLowestNoteMode(int8_t mode) {
         if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < this->getLowestNote())
             this->killCurrentNote();
@@ -411,7 +408,7 @@ class DeviceBehaviourUltimateBase :
     virtual int8_t getHighestNoteMode() {
         return this->highest_note_mode;
     }
-    // mode from NOTE_MODE enum (IGNORE or TRANSPOSE)
+    // mode from NOTE_LIMIT_MODE enum (IGNORE or TRANSPOSE)
     virtual void setHighestNoteMode(int8_t mode) {
         if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > this->getHighestNote())
             this->killCurrentNote();
@@ -442,10 +439,10 @@ class DeviceBehaviourUltimateBase :
             
         if (note < getLowestNote()) {
             if (this->debug) Serial_printf("\tnote %i (%s)\tis lower than lowest note\t%i (%s)\n", note, get_note_name_c(note), getLowestNote(), get_note_name_c(getLowestNote()));
-            if (getLowestNoteMode()==NOTE_MODE::IGNORE) {
+            if (getLowestNoteMode()==NOTE_LIMIT_MODE::IGNORE) {
                 if (this->debug) Serial.println("\tignoring!");
                 note = NOTE_OFF;
-            } else if (getLowestNoteMode()==NOTE_MODE::TRANSPOSE) {
+            } else if (getLowestNoteMode()==NOTE_LIMIT_MODE::TRANSPOSE) {
                 //int8_t octave = note / 12;
                 /*int8_t lowest_octave = getLowestNote() / 12;
                 int8_t chromatic_pitch = note % 12;
@@ -459,10 +456,10 @@ class DeviceBehaviourUltimateBase :
             }
         } else if (note > getHighestNote()) {
             if (this->debug) Serial_printf("\tnote\t%i (%s)\tis higher than highest note\t%i (%s)\n", note, get_note_name_c(note), getHighestNote(), get_note_name_c(getHighestNote()));
-            if (getHighestNoteMode()==NOTE_MODE::IGNORE) {
+            if (getHighestNoteMode()==NOTE_LIMIT_MODE::IGNORE) {
                 if (this->debug) Serial_println("\tignoring!");
                 note = NOTE_OFF;
-            } else if (getHighestNoteMode()==NOTE_MODE::TRANSPOSE) {
+            } else if (getHighestNoteMode()==NOTE_LIMIT_MODE::TRANSPOSE) {
                 //int8_t octave = note / 12;
                 /*int8_t highest_octave = getHighestNote() / 12;
                 int8_t chromatic_pitch = note % 12;

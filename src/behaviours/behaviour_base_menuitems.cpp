@@ -66,8 +66,8 @@
                     nullptr,
                     true
                 );
-                lowest_note_mode_control->add_available_value(NOTE_MODE::IGNORE, "Ignore");
-                lowest_note_mode_control->add_available_value(NOTE_MODE::TRANSPOSE, "Transpose");
+                lowest_note_mode_control->add_available_value(NOTE_LIMIT_MODE::IGNORE, "Ignore");
+                lowest_note_mode_control->add_available_value(NOTE_LIMIT_MODE::TRANSPOSE, "Transpose");
                 transposition_bar->add(lowest_note_mode_control);
 
                 LambdaSelectorControl<int8_t> *highest_note_mode_control = new LambdaSelectorControl<int8_t>(

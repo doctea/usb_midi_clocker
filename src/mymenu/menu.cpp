@@ -9,11 +9,9 @@
 
 #include "mymenu/menu_looper.h"
 #include "mymenu/menu_sequencer.h"
-#include "mymenu/menu_bpm.h"
+#include "mymenu/menu_conductor.h"
 #include "mymenu/menu_taptempo.h"
-#include "mymenu/menu_clock_source.h"
 #include "mymenu/menu_midi_matrix.h"
-#include "mymenu/menuitems_scale.h"
 
 #include "mymenu/menu_taptempo.h"
 
@@ -75,12 +73,7 @@ Menu *menu; // = Menu();
     //extern Bounce pushButtonC;
 #endif
 
-LoopMarkerPanel top_loop_marker_panel = LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN);
-BPMPositionIndicator posbar = BPMPositionIndicator();
-#ifdef ENABLE_TIME_SIGNATURE
-    TimeSignatureIndicator timesig_indicator = TimeSignatureIndicator();
-#endif
-ClockSourceSelectorControl clock_source_selector = ClockSourceSelectorControl("Clock source", clock_mode);
+
 
 #ifdef ENABLE_CLOCK_INPUT_CV
     ExternalPPQNSelectorControl external_ppqn_selector = ExternalPPQNSelectorControl("Ext Clock PPQN", external_cv_ppqn);
@@ -137,33 +130,10 @@ DisplayTranslator_Configured display_translator = DisplayTranslator_Configured()
 //int8_t shuffle_data = 0;
 
 void setup_menu_transport() {
-    //menu->add(new SeparatorMenuItem("Transport"));
-
-    menu->add(&posbar);     // bpm and position indicator
-    menu->add(&clock_source_selector);  // midi clock source (internal or from PC USB)
+    conductor->make_menu_items(menu, COMBINE_NONE);
     #ifdef ENABLE_CLOCK_INPUT_CV
         menu->add(&external_ppqn_selector); // external clock ppqn selector
     #endif
-
-    // todo: support midi clock shuffle, when possible to do so..
-    //menu->add(new DirectNumberControl<int8_t>("Shuffle", &shuffle_data, 0, (int8_t)0, (int8_t)255));
-    /*menu->add(new LambdaToggleControl("Shuffle", 
-        [=](bool v) -> void { uClock.setShuffle(v); },   [=]() -> bool { return uClock.isShuffled(); }
-    ));
-    */
-
-    // add start/stop/continue bar
-    SubMenuItemBar *project_startstop = new SubMenuItemBar("Transport", false);
-    project_startstop->add(new ActionItem("Start",    clock_start));
-    project_startstop->add(new ActionItem("Stop",     clock_stop));
-    project_startstop->add(new ActionItem("Continue", clock_continue));
-    project_startstop->add(new ActionFeedbackItem("Restart", set_restart_on_next_bar_on, is_restart_on_next_bar, "Restarting..", "Restart"));
-
-    #ifdef ENABLE_TIME_SIGNATURE
-        menu->add(&timesig_indicator);             // time signature indicator
-    #endif
-
-    menu->add(project_startstop);
 }
 
 #ifdef ENABLE_TAPTEMPO
@@ -342,15 +312,16 @@ void setup_menu_midi() {
     menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
     */
 
+    // TOOD: this stuff actually now belongs in Conductor menu items..
     menu->add_page("Quantiser");
     menu->remember_opened_page();
-
+    
     LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
         "Global Scale", 
-        [=](scale_index_t scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
-        [=]() -> scale_index_t { return midi_matrix_manager->get_global_scale_type(); },
-        [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
-        [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
+        [](scale_index_t t)   { conductor->set_scale_type(t); },
+        []() -> scale_index_t { return conductor->get_scale_type(); },
+        [](int8_t r)          { conductor->set_scale_root(r); },
+        []() -> int8_t        { return conductor->get_scale_root(); },
         false, true, true
     );
     global_quantise_bar->add(new LambdaToggleControl("Quantise",
@@ -462,7 +433,7 @@ void setup_menu(bool button_high_state) {
 
     menu->set_messages_log(messages_log);
 
-    menu->add_pinned(&top_loop_marker_panel);  // pinned position indicator
+    menu->add_pinned(new LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN));  // pinned position indicator
 
     setup_menu_transport();
     #ifdef ENABLE_TAPTEMPO
