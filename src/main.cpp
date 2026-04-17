@@ -113,6 +113,11 @@ IntervalTimer myTimer;
 void checkClock();
 bool has_cv_clock_ticked();
 
+
+// Buffer in EXTMEM (one slow PSRAM malloc); metadata in fast DTCM
+EXTMEM static char vlpp_pool[65536];           // tune this size
+static VLPP_ArenaBase vlpp_arena_obj(vlpp_pool, sizeof(vlpp_pool));
+
 #ifndef GDB_DEBUG
 //FLASHMEM 
 #endif
@@ -167,6 +172,10 @@ void setup() {
   storage::setup_sd();
   Serial_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
   */
+
+  
+  vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
+
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
@@ -329,6 +338,12 @@ void setup() {
 
   Serial_println(F("Finished setup()!"));
   Serial_printf(F("at end of setup(), free RAM is %u\n"), freeRam());
+
+  
+  // After setup, check usage:
+  Serial.printf("vlpp arena: %u / %u bytes\n",
+                vlpp_arena_obj.bytes_used(), vlpp_arena_obj.capacity);
+
 
   #ifdef ENABLE_SCREEN
     snprintf(menu->last_message, MENU_C_MAX, "started up, %uK RAM2 free, %uK EXT free", freeRam()/1024, freeExtRam()/1024);

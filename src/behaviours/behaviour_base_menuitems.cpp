@@ -33,6 +33,7 @@
                 );
                 menuitems->add(output_harmony_status);
             
+                // todo: make this a custom combined type that we can share with seqlib 
                 SubMenuItemBar *transposition_bar = new SubMenuItemBar("Transpose");
                 LambdaScaleNoteMenuItem<int8_t> *lowest_note_control = new LambdaScaleNoteMenuItem<int8_t>(
                     "Lowest",

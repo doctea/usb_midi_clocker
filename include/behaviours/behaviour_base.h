@@ -41,6 +41,7 @@ enum BehaviourType {
     virt             // a 'virtual' device type that exists only in code (eg CV Input)
 };
 
+// todo: move to seqlib?
 enum NOTE_MODE {
     IGNORE, TRANSPOSE
 };

@@ -41,6 +41,12 @@ playlist.txt (242 bytes)
 Total storage used in project 0: 180877 bytes
 */
 
+#include <vlpp_arena.h>
+
+// // Buffer in EXTMEM (one slow PSRAM malloc); metadata in fast DTCM
+// EXTMEM static char vlpp_pool[65536];           // tune this size
+// static VLPP_ArenaBase vlpp_arena_obj(vlpp_pool, sizeof(vlpp_pool));
+
 
 #ifndef READ_FILE_BUF_SIZE
     #define READ_FILE_BUF_SIZE (131072) // should give us a buffer size of 128k for files
@@ -190,6 +196,8 @@ namespace storage {
   void savestate::setup_saveable_settings() {
     set_path_segment("scene");
 
+    //vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
+
     // Scene metadata
     register_setting(new LSaveableSetting<uint8_t>("scene_id",    "Scene", &id),            SL_SCOPE_SCENE, false);
     register_setting(new LSaveableSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   SL_SCOPE_SCENE, false);
@@ -207,6 +215,11 @@ namespace storage {
       snprintf(lbl, sizeof(lbl), "seq_%u", i);
       register_setting(new SequenceRowSetting(lbl, "Sequence", sequence_data[i], &size_steps), SL_SCOPE_SCENE, false);
     }
+
+    // // After setup, check usage:
+    // Serial.printf("vlpp arena: %u / %u bytes\n",
+    //               vlpp_arena_obj.bytes_used(), vlpp_arena_obj.capacity);
+
   }
 
   FLASHMEM void setup_sd() {
