@@ -180,6 +180,11 @@ class DeviceBehaviourUltimateBase :
         }
         //Serial.println("-=-=-");
     }
+    // send note off without doing any of the quantising stuff -- used for killing notes after a harmony etc change where the usual note off would
+    // get tranposed to the wrong thing
+    virtual void sendNoteOffRaw(uint8_t note, uint8_t velocity, uint8_t channel) {
+        this->actualSendNoteOff(note, velocity, channel);
+    }
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override;
     // tell the device to play a note off

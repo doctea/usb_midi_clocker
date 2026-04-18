@@ -45,10 +45,6 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         sequencer->reset_patterns();
         output_processor->setup_parameters();
         
-        conductor->register_time_sig_change_callback(
-            [this](uint8_t num, uint8_t den) { this->sequencer->notify_time_sig_changed(num, den); }
-        );
-
         #ifdef USE_UCLOCK
             #ifdef ENABLE_SHUFFLE
                 uClock.setOnStep(shuffled_callback, NUMBER_SHUFFLE_PATTERNS);

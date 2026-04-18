@@ -18,6 +18,7 @@
 #include "behaviours/behaviour_manager.h"
 
 #include "parameter_inputs/VirtualParameterInput.h"
+#include "parameter_inputs/BarLockParameterInputs.h"
 #include "parameter_inputs/MixerParameterInput.h"
 
 ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
@@ -109,6 +110,19 @@ void setup_parameters() {
     parameter_manager->addInput(mixerpi1);
     parameter_manager->addInput(mixerpi2);
     parameter_manager->addInput(mixerpi3);
+
+    BarLockParameterInput *barlock1 = new BarLockParameterInput((char*)"BR-Log", BARLOCK_RISE_LOG);
+    BarLockParameterInput *barlock2 = new BarLockParameterInput((char*)"BF-Exp", BARLOCK_FALL_EXP);
+    BarLockParameterInput *barlock3 = new BarLockParameterInput((char*)"LBR", BARLOCK_LAST_BEAT_RISE);
+    BarLockParameterInput *barlock4 = new BarLockParameterInput((char*)"LBF", BARLOCK_LAST_BEAT_FALL);
+    BarLockParameterInput *barlock5 = new BarLockParameterInput((char*)"PR-Lin", BARLOCK_PHRASE_RISE);
+    BarLockParameterInput *barlock6 = new BarLockParameterInput((char*)"PF-Smooth", BARLOCK_PHRASE_FALL);
+    parameter_manager->addInput(barlock1);
+    parameter_manager->addInput(barlock2);
+    parameter_manager->addInput(barlock3);
+    parameter_manager->addInput(barlock4);
+    parameter_manager->addInput(barlock5);
+    parameter_manager->addInput(barlock6);
 
     // get the available target parameters
     // todo: dynamically pull them from other things that could have parameters available
