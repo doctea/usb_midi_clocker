@@ -86,10 +86,10 @@ class VirtualBehaviour_Displayer : virtual public VirtualBehaviourBase {
         menuitems->add(new NoteDisplay("Notes", &this->note_tracker));
         menuitems->add(new NoteHarmonyDisplay(
             (const char*)"Harmony", 
-            &midi_matrix_manager->global_scale_identity.scale_number, 
-            &midi_matrix_manager->global_scale_identity.root_note, 
+            &conductor->global_scale_identity.scale_number, 
+            &conductor->global_scale_identity.root_note, 
             &this->note_tracker,
-            &midi_matrix_manager->global_quantise_on
+            &conductor->global_quantise_on
         ));
 
         /*

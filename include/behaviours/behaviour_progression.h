@@ -234,7 +234,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     void set_degree(int8_t degree) {
         this->current_chord.degree = degree;
         if (degree>=-1 && degree<PITCHES_PER_SCALE+1) {
-            midi_matrix_manager->set_global_chord_degree(degree);
+            conductor->set_chord_degree(degree);
         } else {
             this->chord_player->stop_chord();
             //Serial_printf("invalid degree %i\n", degree);
@@ -300,7 +300,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     void set_current_chord(chord_identity_t chord, bool requantise_immediately = true) {
         this->current_chord = chord;
         if (chord.degree>0)
-            midi_matrix_manager->set_global_chord(current_chord, requantise_immediately);
+            conductor->set_chord_identity(current_chord, requantise_immediately);
         else
             this->chord_player->stop_chord();
     }
@@ -548,13 +548,14 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         if (already_playing) {
             if (debug) Serial_printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", this->current_chord.degree);
             if (debug) Serial_println("behaviour_progression#requantise_all_notes() is playing...");
-            bool initial_global_quantise_on = midi_matrix_manager->global_quantise_on;
-            bool initial_global_quantise_chord_on = midi_matrix_manager->global_quantise_chord_on;   
-            midi_matrix_manager->global_quantise_on = false;
-            midi_matrix_manager->global_quantise_chord_on = false;
+            // TODO: this is a big hack -- need to sort this out properly
+            bool initial_global_quantise_on = conductor->is_global_quantise_on();
+            bool initial_global_quantise_chord_on = conductor->is_global_quantise_chord_on();   
+            conductor->set_global_quantise_on(false);
+            conductor->set_global_quantise_chord_on(false);
             this->chord_player->stop_chord();
-            midi_matrix_manager->global_quantise_on = initial_global_quantise_on;
-            midi_matrix_manager->global_quantise_chord_on = initial_global_quantise_chord_on;
+            conductor->set_global_quantise_on(initial_global_quantise_on);
+            conductor->set_global_quantise_chord_on(initial_global_quantise_chord_on);
             if (debug) Serial_printf("behaviour_progression#requantise_all_notes: now gonna play chord %i!\n",this->current_chord.degree);
             this->chord_player->play_chord(this->current_chord);
             if (debug) Serial_printf("behaviour_progression#requantise_all_notes: played chord %i!\n", this->current_chord.degree);
@@ -809,31 +810,31 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             // todo: this was cribbed from menu.cpp setup_menu_midi() -- can probably re-use the same controls here to save some memory!
             LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
                 "Global Scale", 
-                [=](scale_index_t scale) -> void { midi_matrix_manager->set_global_scale_type(scale); }, 
-                [=]() -> scale_index_t { return midi_matrix_manager->get_global_scale_type(); },
-                [=](int8_t scale_root) -> void { midi_matrix_manager->set_global_scale_root(scale_root); },
-                [=]() -> int8_t { return midi_matrix_manager->get_global_scale_root(); },
+                [=](scale_index_t scale) -> void { conductor->set_scale_type(scale); }, 
+                [=]() -> scale_index_t { return conductor->get_scale_type(); },
+                [=](int8_t scale_root) -> void { conductor->set_scale_root(scale_root); },
+                [=]() -> int8_t { return conductor->get_scale_root(); },
                 false, true, true
             );
             global_quantise_bar->add(new LambdaToggleControl("Quantise",
-                [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
-                [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
+                [=](bool v) -> void { conductor->set_global_quantise_on(v); },
+                [=]() -> bool { return conductor->is_global_quantise_on(); }
             ));
             menuitems->add(global_quantise_bar);
 
             LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
                 "Global Chord", 
-                [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
-                [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
-                [=](CHORD::Type chord_type) -> void { midi_matrix_manager->set_global_chord_type(chord_type); }, 
-                [=]() -> CHORD::Type { return midi_matrix_manager->get_global_chord_type(); },
-                [=](int8_t inversion) -> void { midi_matrix_manager->set_global_chord_inversion(inversion); },
-                [=]() -> int8_t { return midi_matrix_manager->get_global_chord_inversion(); },
+                [=](int8_t degree) -> void { conductor->set_chord_degree(degree); },
+                [=]() -> int8_t { return conductor->get_chord_degree(); },
+                [=](CHORD::Type chord_type) -> void { conductor->set_chord_type(chord_type); }, 
+                [=]() -> CHORD::Type { return conductor->get_chord_type(); },
+                [=](int8_t inversion) -> void { conductor->set_chord_inversion(inversion); },
+                [=]() -> int8_t { return conductor->get_chord_inversion(); },
                 false, true, true
             );
             global_chord_bar->add(new LambdaToggleControl("Quantise",
-                [=](bool v) -> void { midi_matrix_manager->set_global_quantise_chord_on(v); },
-                [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
+                [=](bool v) -> void { conductor->set_global_quantise_chord_on(v); },
+                [=]() -> bool { return conductor->is_global_quantise_chord_on(); }
             ));
             menuitems->add(global_chord_bar);
 
@@ -861,10 +862,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
             menuitems->add(new NoteHarmonyDisplay(
                 (const char*)"Progression harmony",
-                &midi_matrix_manager->global_scale_identity.scale_number, 
-                &midi_matrix_manager->global_scale_identity.root_note, 
+                &conductor->global_scale_identity.scale_number, 
+                &conductor->global_scale_identity.root_note, 
                 &this->note_tracker,
-                &midi_matrix_manager->global_quantise_on
+                &conductor->global_quantise_on
             ));
 
             SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);

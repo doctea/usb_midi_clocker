@@ -312,7 +312,9 @@ void setup_menu_midi() {
     menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
     */
 
-    // TOOD: this stuff actually now belongs in Conductor menu items..
+    // TODO: this stuff actually now belongs in Conductor menu items..
+    // TOOD: but there is still logic in the midi_matrix_manager for requantising everything
+    // TODO: so we need to preserve that logic but make it fire on a callback when conductor notifies it
     menu->add_page("Quantiser");
     menu->remember_opened_page();
     
@@ -325,24 +327,24 @@ void setup_menu_midi() {
         false, true, true
     );
     global_quantise_bar->add(new LambdaToggleControl("Quantise",
-        [=](bool v) -> void { midi_matrix_manager->set_global_quantise_on(v); },
-        [=]() -> bool { return midi_matrix_manager->is_global_quantise_on(); }
+        [=](bool v) -> void { conductor->set_global_quantise_on(v); },
+        [=]() -> bool { return conductor->is_global_quantise_on(); }
     ));
     menu->add(global_quantise_bar);
 
     LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
         "Global Chord", 
-        [=](int8_t degree) -> void { midi_matrix_manager->set_global_chord_degree(degree); },
-        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_degree(); },
-        [=](CHORD::Type chord_type) -> void { midi_matrix_manager->set_global_chord_type(chord_type); }, 
-        [=]() -> CHORD::Type { return midi_matrix_manager->get_global_chord_type(); },
-        [=](int8_t inversion) -> void { midi_matrix_manager->set_global_chord_inversion(inversion); },
-        [=]() -> int8_t { return midi_matrix_manager->get_global_chord_inversion(); },
+        [=](int8_t degree) -> void { conductor->set_chord_degree(degree); },
+        [=]() -> int8_t { return conductor->get_chord_degree(); },
+        [=](CHORD::Type chord_type) -> void { conductor->set_chord_type(chord_type); }, 
+        [=]() -> CHORD::Type { return conductor->get_chord_type(); },
+        [=](int8_t inversion) -> void { conductor->set_chord_inversion(inversion); },
+        [=]() -> int8_t { return conductor->get_chord_inversion(); },
         false, true, true
     );
     global_chord_bar->add(new LambdaToggleControl("Quantise",
-        [=](bool v) -> void { midi_matrix_manager->set_global_quantise_chord_on(v); },
-        [=]() -> bool { return midi_matrix_manager->is_global_quantise_chord_on(); }
+        [=](bool v) -> void { conductor->set_global_quantise_chord_on(v); },
+        [=]() -> bool { return conductor->is_global_quantise_chord_on(); }
     ));
     menu->add(global_chord_bar);
 }
