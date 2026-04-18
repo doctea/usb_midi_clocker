@@ -62,6 +62,9 @@ void do_tick(uint32_t ticks);
 #include "bpm.h"
 #include "clock.h"
 #include <conductor.h>
+#ifdef ENABLE_ARRANGER
+  #include <arranger.h>
+#endif
 
 #include "interfaces/interfaces.h"
 #include "cv_gate_outs.h"
@@ -178,6 +181,10 @@ void setup() {
   vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
 
   conductor = new Conductor();
+
+  #ifdef ENABLE_ARRANGER
+  arranger = new Arranger();
+  #endif
 
   //tft_print((char*)"..USB device handler..");
   // do this first, because need to have the behaviour classes instantiated before menu, as menu wants to call back to the behaviour_subclocker behaviours..
@@ -354,6 +361,11 @@ void setup() {
   #ifdef LOAD_CALIBRATION_ON_BOOT
     parameter_manager->load_all_calibrations();
   #endif
+
+  // Re-apply project at end of setup: this runs load + behaviour notification
+  // after all major systems are initialized, so migration/save-back paths can
+  // execute with a fully ready save tree.
+  project->setProjectNumber(project->current_project_number);
 
   #ifdef USE_UCLOCK
     Serial_println("Starting uClock..."); Serial_flush();

@@ -24,20 +24,9 @@
 
 #include "behaviours/behaviour_cvoutput.h"
 
+#include "arranger.h"
+
 extern MIDIMatrixManager *midi_matrix_manager;
-
-#define NUM_SONG_SECTIONS 4
-#define MAX_REPEATS 64
-#define NUM_PLAYLIST_SLOTS 8
-#define CHORDS_PER_SECTION 8
-
-/*
-Song structure is:-
-    - Playlist has NUM_PLAYLIST_SLOTS slots
-    - Each playlist slot points to a section, and has a number of repeats
-    - Song has NUM_SONG_SECTIONS possible sections
-    - Each section has CHORDS_PER_SECTION chords (ie bars per section)
-*/
 
 class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     public:
@@ -48,89 +37,18 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     uint8_t BASS_CHANNEL = 2,   TOPLINE_CHANNEL = 3;
     uint8_t bass_octave = 2,    topline_octave = 3, chord_octave = 5;
 
-    bool modified_song_since_save = true;
+    // Proxy dirty-flag methods to arranger
     virtual bool has_song_changes_to_save() {
-        return modified_song_since_save;
+        return arranger->has_changes_to_save();
     }
     virtual void mark_song_save_done() {
-        modified_song_since_save = false;
+        arranger->mark_save_done();
     }
     virtual void mark_song_as_modified() {
-        modified_song_since_save = true;
+        arranger->mark_as_modified();
     }
 
     virtual bool transmits_midi_notes() { return true; }
-
-    struct song_section_t {
-        chord_identity_t grid[CHORDS_PER_SECTION];
-        
-        virtual void add_section_add_lines(LinkedList<String> *lines) {
-            for (int i = 0 ; i < CHORDS_PER_SECTION ; i++) {
-                lines->add(String("grid_")+String(i)+String("_degree=")+String(grid[i].degree));
-                lines->add(String("grid_")+String(i)+String("_type=")+String(grid[i].type));
-                lines->add(String("grid_")+String(i)+String("_inversion=")+String(grid[i].inversion));
-            }
-        };
-        virtual bool parse_section_line(String key, String value) {
-            if (key.startsWith("grid_")) {
-                int8_t grid_index = key.substring(5,6).toInt();
-                if (grid_index>=0 && grid_index<CHORDS_PER_SECTION) {
-                    if (key.endsWith("_degree")) {
-                        grid[grid_index].degree = value.toInt();
-                    } else if (key.endsWith("_type")) {
-                        grid[grid_index].type = (CHORD::Type)value.toInt();
-                    } else if (key.endsWith("_inversion")) {
-                        grid[grid_index].inversion = value.toInt();
-                    }
-                }
-                return true;
-            } 
-            return false;
-        };
-    };
-
-    song_section_t song_sections[NUM_SONG_SECTIONS];
-
-    struct playlist_entry_t {
-        int8_t section;
-        int8_t repeats;
-    };
-    struct playlist_t {
-        playlist_entry_t entries[NUM_PLAYLIST_SLOTS] = { 
-            { 0, 2 },
-            { 1, 2 },
-            { 2, 2 },
-            { 3, 2 },
-            { 0, 2 },
-            { 1, 2 },
-            { 2, 2 },
-            { 3, 2 },
-        };
-        virtual void save_project_add_lines(LinkedList<String> *lines) {
-            for (int i = 0 ; i < NUM_PLAYLIST_SLOTS ; i++) {
-                lines->add(String("section_")+String(i)+String("=")+String(entries[i].section));
-                lines->add(String("repeats_")+String(i)+String("=")+String(entries[i].repeats));
-            }
-        };
-        virtual bool parse_key_value(String key, String value) {
-            if (key.startsWith("section_")) {
-                int8_t slot = key.substring(8,9).toInt();
-                if (slot>=0 && slot<NUM_PLAYLIST_SLOTS) {
-                    entries[slot].section = value.toInt();
-                    return true;
-                }
-            } else if (key.startsWith("repeats_")) {
-                int8_t slot = key.substring(8,9).toInt();
-                if (slot>=0 && slot<NUM_PLAYLIST_SLOTS) {
-                    entries[slot].repeats = value.toInt();
-                    return true;
-                }
-            }
-            return false;
-        };
-    };
-    playlist_t playlist;
-    int8_t playlist_position = 0;
 
     enum MODE {
         DEGREE,
@@ -141,12 +59,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     };
 
     MODE current_mode = DEGREE;
-    chord_identity_t current_chord;
-    int8_t current_section = 0;
-    int8_t current_section_plays = 0;
 
-    bool advance_progression_playlist = true;
-    bool advance_progression_bar = true;
+    // Proxy advance flags to arranger for backwards compatibility
+    // (menu.cpp and other code accesses these directly)
+    bool& advance_progression_bar      = arranger->advance_bar;
+    bool& advance_progression_playlist = arranger->advance_playlist;
 
     ChordPlayer *chord_player = new ChordPlayer(
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOn (note, velocity, channel); },
@@ -159,18 +76,17 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     VirtualBehaviour_Progression() : DeviceBehaviourUltimateBase() {
         this->set_path_segment("progression");
-        //memset(grid, 0, 64);
-        //this->chord_player->debug = true;
-        /*song_sections[0].grid[0].degree = 1;
-        song_sections[0].grid[1].degree = 2;
-        song_sections[0].grid[2].degree = 5;
-        song_sections[0].grid[3].degree = 4;
-        song_sections[0].grid[4].degree = 3;
-        song_sections[0].grid[5].degree = 2;
-        song_sections[0].grid[6].degree = 6;
-        song_sections[0].grid[7].degree = 3;*/
 
-        //this->debug = this->chord_player->debug = true;
+        // Wire up arranger callbacks
+        arranger->on_chord_changed([this](const chord_identity_t& chord, bool requantise) {
+            if (chord.degree > 0)
+                conductor->set_chord_identity(chord, requantise);
+            else
+                this->chord_player->stop_chord();
+
+            if (chord.is_valid_chord())
+                this->chord_player->play_chord(chord);
+        });
     }
 
     virtual const char *get_label() override {
@@ -232,23 +148,29 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     // degrees should be 1-7; 0 implies no chord, -1 implies 'use global'?
     void set_degree(int8_t degree) {
-        this->current_chord.degree = degree;
+        arranger->current_chord.degree = degree;
         if (degree>=-1 && degree<PITCHES_PER_SCALE+1) {
             conductor->set_chord_degree(degree);
         } else {
             this->chord_player->stop_chord();
-            //Serial_printf("invalid degree %i\n", degree);
-            //this->chord_player->trigger_off_for_pitch_because_length(-1);
         }
     }
 
     virtual void setup_saveable_settings() override {
         DeviceBehaviourUltimateBase::setup_saveable_settings();
-        register_setting(new LSaveableSetting<bool>("Advance progression",  "Progression", &advance_progression_bar), SL_SCOPE_SCENE);
-        register_setting(new LSaveableSetting<bool>("Advance playlist",      "Progression", &advance_progression_playlist), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<bool>("Advance progression",  "Progression", &arranger->advance_bar), SL_SCOPE_SCENE);
+        register_setting(new LSaveableSetting<bool>("Advance playlist",      "Progression", &arranger->advance_playlist), SL_SCOPE_SCENE);
         register_setting(new LSaveableSetting<uint8_t>("Chord octave",   "Progression", &chord_octave), SL_SCOPE_SCENE);
         register_setting(new LSaveableSetting<uint8_t>("Bass octave",     "Progression", &bass_octave), SL_SCOPE_SCENE);
         register_setting(new LSaveableSetting<uint8_t>("Topline octave",  "Progression", &topline_octave), SL_SCOPE_SCENE);
+
+        // Song structure: sections + playlist (saved per-project)
+        for (int i = 0; i < NUM_SONG_SECTIONS; i++) {
+            char lbl[16];
+            snprintf(lbl, sizeof(lbl), "section_%i", i);
+            register_setting(new SaveableSectionGridSetting(lbl, "Progression", &arranger->song_sections[i]), SL_SCOPE_PROJECT);
+        }
+        register_setting(new SaveablePlaylistSetting("playlist", "Progression", &arranger->playlist), SL_SCOPE_PROJECT);
     }
 
     // untested, but this should fire the tick before a beat happens; use this to change chords outside of a bar change..
@@ -285,55 +207,34 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         if (!Serial) return;
 
         Serial_printf("dump_grid:");
-        //for (int y = 0 ; y < 8 ; y++) {
-            //Serial.printf("Grid row %i: [ ", y);
-            for (int x = 0 ; x < 8 ; x++) {
-                //Serial.printf("%i ", grid[x].chord_degree);
-                //Serial.printf("%i ", get_cell_colour_for(x, y));
-                Serial_printf("{ %i %i=%5s %i }, ", song_sections[current_section].grid[x].degree, song_sections[current_section].grid[x].type, chords[song_sections[current_section].grid[x].type].label, song_sections[current_section].grid[x].inversion);
+            for (int x = 0 ; x < CHORDS_PER_SECTION ; x++) {
+                Serial_printf("{ %i %i=%5s %i }, ", arranger->song_sections[arranger->current_section].grid[x].degree, arranger->song_sections[arranger->current_section].grid[x].type, chords[arranger->song_sections[arranger->current_section].grid[x].type].label, arranger->song_sections[arranger->current_section].grid[x].inversion);
             }
             Serial_println("]");
-        //}
         Serial_println("------");
     }
 
     void set_current_chord(chord_identity_t chord, bool requantise_immediately = true) {
-        this->current_chord = chord;
+        arranger->current_chord = chord;
         if (chord.degree>0)
-            conductor->set_chord_identity(current_chord, requantise_immediately);
+            conductor->set_chord_identity(arranger->current_chord, requantise_immediately);
         else
             this->chord_player->stop_chord();
     }
 
     void move_next_playlist() {
-        move_playlist(playlist_position+1);
+        arranger->move_next_playlist();
     }
     void move_playlist(int8_t pos) {
-        playlist_position = pos;
-        if (playlist_position>=NUM_PLAYLIST_SLOTS) playlist_position = 0;
-        if (playlist_position<0) playlist_position = NUM_PLAYLIST_SLOTS-1;
-        change_section(playlist.entries[playlist_position].section);
+        arranger->move_playlist(pos);
     }
 
     virtual void on_end_phrase(uint32_t phrase_number) override {
         if (debug) Serial_printf("on_end_phrase %2i\n", phrase_number);
-        //if (debug) dump_grid();
-        // todo: this should only move the section on every 2 phrases, not every phrase
-        if (advance_progression_bar && advance_progression_playlist) {
-            current_section_plays++;
-
-            if (current_section_plays >= playlist.entries[playlist_position].repeats) {
-                if (this->debug) Serial_printf("Reached %i of %i plays; changing section from %i to %i\n", current_section_plays, playlist.entries[playlist_position].repeats, current_section, current_section+1);
-                current_section_plays = 0;
-                // todo: crashes?!
-                //change_section(current_section+1);
-                move_next_playlist();
-
-                this->chord_player->stop_chord();
-                // trying to start chords here seems to cause intermittent crashes when changing sections..?
-                //if (this->current_chord.is_valid_chord())
-                //    this->chord_player->play_chord(song_sections[current_section].grid[BPM_CURRENT_BAR]);
-            }
+        int8_t prev_section = arranger->current_section;
+        arranger->on_end_phrase(phrase_number);
+        if (arranger->current_section != prev_section) {
+            this->chord_player->stop_chord();
         }
     }
 
@@ -342,43 +243,20 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual void on_restart() override {
-        playlist_position = 0;
-        current_bar = -1;
+        arranger->on_restart();
     }
 
     void move_bar(int new_bar) {
-        if (new_bar>=8) {
-            new_bar = 0;
-        } else if (new_bar<0) {
-            new_bar = 7;
-        }
-        current_bar = new_bar;
-        if (debug) Serial_printf("move_bar(%i)\n", new_bar);
-        this->set_current_chord(song_sections[current_section].grid[current_bar]);
-
-        // send the chord for the current degree
-        if (this->current_chord.is_valid_chord())
-            this->chord_player->play_chord(this->current_chord);
+        arranger->move_bar(new_bar);
     }
 
-    int8_t current_bar = -1; // initialise to -1 so that the first bar is 0
     virtual void on_bar(int bar_number) override {
-        if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, current_bar);
-        //if (advance_progression_bar) {
-            //bar_number = BPM_CURRENT_BAR;
-            //bar_number %= 8;
-            //bar_number %= BARS_PER_PHRASE;// * 2;
-            if (advance_progression_bar) {
-                move_bar(current_bar+1);
-            } else {
-                move_bar(current_bar);
-            }
+        if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, arranger->current_bar);
+        arranger->on_bar(bar_number);
 
-            if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, current_bar);
-            if (debug) dump_grid();
-
-            if (debug) Serial_printf("=======\n");
-        //}
+        if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, arranger->current_bar);
+        if (debug) dump_grid();
+        if (debug) Serial_printf("=======\n");
     }
 
 
@@ -387,26 +265,26 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         if (/*y==0 ||*/ x>=8 || y>=8) return 0;
         if (current_mode==MODE::DEGREE) {
             if (y==0) { // top row
-                if (x==current_bar) {
+                if (x==arranger->current_bar) {
                     // indicate the current bar
                     return APCMINI_YELLOW_BLINK;
                 } else {
                     return APCMINI_OFF;
                 }
             }
-            return song_sections[current_section].grid[x].degree == (8-y);
+            return arranger->song_sections[arranger->current_section].grid[x].degree == (8-y);
         } else if (current_mode==MODE::QUALITY) {
-            return song_sections[current_section].grid[x].type == (7-y);
+            return arranger->song_sections[arranger->current_section].grid[x].type == (7-y);
         } else if (current_mode==MODE::INVERSION) {
-            return song_sections[current_section].grid[x].inversion == (7-y);
+            return arranger->song_sections[arranger->current_section].grid[x].inversion == (7-y);
         } else if (current_mode==MODE::PLAYLIST) {
-            if (playlist.entries[x].section == (7-y)) {
-                if (playlist.entries[x].repeats == 2) {
-                    return APCMINI_GREEN  + (playlist_position==x ? 1 : 0);
-                } else if (playlist.entries[x].repeats == 4) {
-                    return APCMINI_YELLOW + (playlist_position==x ? 1 : 0);
-                } else if (playlist.entries[x].repeats == 8) {
-                    return APCMINI_RED    + (playlist_position==x ? 1 : 0);
+            if (arranger->playlist.entries[x].section == (7-y)) {
+                if (arranger->playlist.entries[x].repeats == 2) {
+                    return APCMINI_GREEN  + (arranger->playlist_position==x ? 1 : 0);
+                } else if (arranger->playlist.entries[x].repeats == 4) {
+                    return APCMINI_YELLOW + (arranger->playlist_position==x ? 1 : 0);
+                } else if (arranger->playlist.entries[x].repeats == 8) {
+                    return APCMINI_RED    + (arranger->playlist_position==x ? 1 : 0);
                 }
             }
             return APCMINI_OFF;
@@ -426,38 +304,37 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (current_mode==MODE::DEGREE) {
                 int new_degree = row + 1;
                 if (new_degree>0 && new_degree<=PITCHES_PER_SCALE) {
-                    song_sections[current_section].grid[col].degree = new_degree;
+                    arranger->song_sections[arranger->current_section].grid[col].degree = new_degree;
                     mark_song_as_modified();
                     return true;
                 }
             } else if (current_mode==MODE::QUALITY) {
                 int new_quality = row;
                 if (new_quality>=0 && new_quality<CHORD::NONE) {
-                    song_sections[current_section].grid[col].type = (CHORD::Type)new_quality;
+                    arranger->song_sections[arranger->current_section].grid[col].type = (CHORD::Type)new_quality;
                     mark_song_as_modified();
                     return true;
                 }
             } else if (current_mode==MODE::INVERSION) {
                 int new_inversion = row;
                 if (new_inversion>=0 && new_inversion<=MAX_INVERSIONS) {
-                    song_sections[current_section].grid[col].inversion = new_inversion;
+                    arranger->song_sections[arranger->current_section].grid[col].inversion = new_inversion;
                     mark_song_as_modified();
                     return true;
                 }
             } else if (current_mode==MODE::PLAYLIST) {
                 if (row>=NUM_SONG_SECTIONS) {
-                    //playlist.entries[col].section = row;
                     return false;
                 }
-                int8_t original_repeats = playlist.entries[col].repeats;
-                if (playlist.entries[col].section==row) {
-                    playlist.entries[col].repeats*=2;
-                    if (playlist.entries[col].repeats>16) 
-                        playlist.entries[col].repeats = 2;
+                int8_t original_repeats = arranger->playlist.entries[col].repeats;
+                if (arranger->playlist.entries[col].section==row) {
+                    arranger->playlist.entries[col].repeats*=2;
+                    if (arranger->playlist.entries[col].repeats>16) 
+                        arranger->playlist.entries[col].repeats = 2;
                 } else {
-                    playlist.entries[col] = { row, playlist.entries[col].repeats };
+                    arranger->playlist.entries[col] = { row, arranger->playlist.entries[col].repeats };
                 }
-                if (playlist.entries[col].repeats != original_repeats) {
+                if (arranger->playlist.entries[col].repeats != original_repeats) {
                     mark_song_as_modified();
                 }
                 return true;
@@ -478,16 +355,16 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         } else if (inNumber==APCMINI_BUTTON_LEFT || inNumber==APCMINI_BUTTON_RIGHT) {
             if (current_mode==MODE::DEGREE || current_mode==MODE::QUALITY || current_mode==MODE::INVERSION) {
                 if (inNumber==APCMINI_BUTTON_LEFT) {
-                    move_bar(current_bar-1);
+                    move_bar(arranger->current_bar-1);
                 } else {
-                    move_bar(current_bar+1);
+                    move_bar(arranger->current_bar+1);
                 }
                 return true;
             } else if (current_mode==MODE::PLAYLIST) {
                 if (inNumber==APCMINI_BUTTON_LEFT) {
-                    move_playlist(playlist_position-1);
+                    move_playlist(arranger->playlist_position-1);
                 } else {
-                    move_playlist(playlist_position+1);
+                    move_playlist(arranger->playlist_position+1);
                 }
                 return true;
             }
@@ -529,7 +406,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     virtual void change_chord_octave(int new_chord_octave) {
         bool was_playing = this->chord_player->is_playing;
         chord_identity_t chord;
-        memcpy(&chord, &this->current_chord, sizeof(chord_identity_t));
+        memcpy(&chord, &arranger->current_chord, sizeof(chord_identity_t));
         if (was_playing) {
             this->chord_player->stop_chord();
         }
@@ -546,19 +423,21 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         if (debug) Serial_println("behaviour_progression#requantise_all_notes()...");
 
         if (already_playing) {
-            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", this->current_chord.degree);
+            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", arranger->current_chord.degree);
             if (debug) Serial_println("behaviour_progression#requantise_all_notes() is playing...");
             // TODO: this is a big hack -- need to sort this out properly
-            bool initial_global_quantise_on = conductor->is_global_quantise_on();
-            bool initial_global_quantise_chord_on = conductor->is_global_quantise_chord_on();   
-            conductor->set_global_quantise_on(false);
-            conductor->set_global_quantise_chord_on(false);
+            // chord player needs to be able to stop the existing chord without applying quantisation..
+            // so we temporarily disable quantisation, stop the chord, then restore the quantisation mode and re-play the chord to apply the new quantisation settings
+            quantise_mode_t initial_global_quantise_mode = conductor->get_global_quantise_mode();
+
+            conductor->set_global_quantise_mode(QUANTISE_MODE_NONE);
             this->chord_player->stop_chord();
-            conductor->set_global_quantise_on(initial_global_quantise_on);
-            conductor->set_global_quantise_chord_on(initial_global_quantise_chord_on);
-            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: now gonna play chord %i!\n",this->current_chord.degree);
-            this->chord_player->play_chord(this->current_chord);
-            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: played chord %i!\n", this->current_chord.degree);
+            
+            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: now gonna re-play chord %i!\n", arranger->current_chord.degree);
+            conductor->set_global_quantise_mode(initial_global_quantise_mode);
+            this->chord_player->play_chord(arranger->current_chord);
+
+            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: played chord %i!\n", arranger->current_chord.degree);
             if (debug) Serial_println("behaviour_progression#requantise_all_notes() done.");
 
             return 4;   // assume there were 4 notes to requantise in this chord
@@ -570,14 +449,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     // changes section, but leaves reseting the bar to the caller to deal with (or not)
     virtual void change_section(int section_number) {
-        //Serial.printf("change_section(%i)\n", section_number); Serial.flush();
-        if (section_number==NUM_SONG_SECTIONS) 
-            section_number = 0;
-        else if (section_number<0) 
-            section_number = NUM_SONG_SECTIONS-1;
-
-        this->current_section_plays = 0;
-        current_section = section_number;
+        arranger->change_section(section_number);
     }
 
     virtual bool save_playlist(int project_number = -1) {
@@ -585,7 +457,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         if (project_number<0) project_number = project->current_project_number;
 
         LinkedList<String> section_lines = LinkedList<String>();
-        playlist.save_project_add_lines(&section_lines);
+        arranger->playlist.save_project_add_lines(&section_lines);
 
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             File myFile;
@@ -650,7 +522,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             while (line = myFile.readStringUntil('\n')) {
                 if (line.startsWith(";")) continue;
                 if (debug) Serial_printf("load_playlist: parsing line %s\n", line.c_str());
-                playlist.parse_key_value(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
+                arranger->playlist.parse_key_value(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
             }
             myFile.close();
         }
@@ -665,13 +537,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual bool save_section(int section_number = -1, int project_number = -1) {
         #ifdef ENABLE_SD
-        if (section_number<0) section_number = current_section;
+        if (section_number<0) section_number = arranger->current_section;
         if (project_number<0) project_number = project->getProjectNumber();
 
         LinkedList<String> section_lines = LinkedList<String>();
         section_lines.add(String("current_section=")+String(section_number));
         if (section_number>=0 && section_number<NUM_SONG_SECTIONS) {
-            song_sections[section_number].add_section_add_lines(&section_lines);
+            arranger->song_sections[section_number].add_section_add_lines(&section_lines);
         }
         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             File myFile;
@@ -716,7 +588,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual bool load_section(int section_number = -1, int project_number = -1) {
         #ifdef ENABLE_SD
-        if (section_number<0) section_number = current_section;
+        if (section_number<0) section_number = arranger->current_section;
         if (project_number<0) project_number = project->getProjectNumber();
 
         Serial.printf("Progression#load_section(section_number=%i, project_number=%i)\n", section_number, project_number);
@@ -739,7 +611,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             while (line = myFile.readStringUntil('\n')) {
                 if (line.startsWith(";")) continue;
                 if (debug) Serial.printf("load_section: parsing line %s\n", line.c_str());
-                song_sections[section_number].parse_section_line(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
+                arranger->song_sections[section_number].parse_section_line(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
             }
             myFile.close();
         }
@@ -753,11 +625,140 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         #endif
     }
 
+    // notify_project_changed: saveloadlib handles bulk project loading of
+    // sections+playlist via SL_SCOPE_PROJECT.  Old per-file methods are kept
+    // for individual section import/export.
+    //
+    // Migration: if old-format files exist but the new saveloadlib project
+    // file has already been loaded (and presumably contained no arranger data
+    // because it was saved before the migration), we detect non-empty old
+    // files, load them, and re-save the project so the data is written in the
+    // new format.  The old files are left in place for safety.
     virtual void notify_project_changed(int project_number) override {
-        load_playlist(project_number);
-        for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
-            load_section(i, project_number);
+        #ifdef ENABLE_SD
+        // Migration must run only after saveloadlib has a valid root/tree,
+        // otherwise re-save can fail and consume recovery files.
+        if (SL_ROOT == nullptr || project == nullptr || project->save_tree == nullptr) {
+            Serial.println("Arranger migration: save tree not ready, skipping migration for now.");
+            return;
         }
+
+        // One-time recovery path:
+        // If normal legacy files are missing but '.migrated' backups exist,
+        // promote backups back to legacy filenames so they can be imported.
+        // After import, they are archived as '.restored' to avoid re-triggering.
+        bool promoted_from_migrated = false;
+
+        char filename[MAX_FILEPATH] = "";
+        snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
+
+        if (!SD.exists(filename)) {
+            char migrated_playlist[MAX_FILEPATH] = "";
+            snprintf(migrated_playlist, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".migrated", project_number);
+            char restored_playlist[MAX_FILEPATH] = "";
+            snprintf(restored_playlist, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".restored", project_number);
+            const char* backup_playlist = nullptr;
+            if (SD.exists(migrated_playlist)) backup_playlist = migrated_playlist;
+            else if (SD.exists(restored_playlist)) backup_playlist = restored_playlist;
+
+            if (backup_playlist != nullptr) {
+                if (SD.rename(backup_playlist, filename)) {
+                    promoted_from_migrated = true;
+                    Serial.printf("Arranger restore: promoted %s -> %s\n", backup_playlist, filename);
+                } else {
+                    Serial.printf("Arranger restore: failed to promote %s -> %s\n", backup_playlist, filename);
+                }
+            }
+        }
+
+        for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+            char sec_filename[MAX_FILEPATH] = "";
+            snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
+            if (!SD.exists(sec_filename)) {
+                char sec_migrated[MAX_FILEPATH] = "";
+                snprintf(sec_migrated, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".migrated", project_number, i);
+                char sec_restored[MAX_FILEPATH] = "";
+                snprintf(sec_restored, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".restored", project_number, i);
+                const char* backup_section = nullptr;
+                if (SD.exists(sec_migrated)) backup_section = sec_migrated;
+                else if (SD.exists(sec_restored)) backup_section = sec_restored;
+
+                if (backup_section != nullptr) {
+                    if (SD.rename(backup_section, sec_filename)) {
+                        promoted_from_migrated = true;
+                        Serial.printf("Arranger restore: promoted %s -> %s\n", backup_section, sec_filename);
+                    } else {
+                        Serial.printf("Arranger restore: failed to promote %s -> %s\n", backup_section, sec_filename);
+                    }
+                }
+            }
+        }
+
+        // Check whether old-format playlist file exists for this project
+        if (SD.exists(filename)) {
+            Serial.printf("Arranger migration: found old playlist file %s, importing...\n", filename);
+            load_playlist(project_number);
+            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+                char sec_filename[MAX_FILEPATH] = "";
+                snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
+                if (SD.exists(sec_filename)) {
+                    Serial.printf("Arranger migration: found old section file %s, importing...\n", sec_filename);
+                    load_section(i, project_number);
+                }
+            }
+            // Re-save via saveloadlib so data is persisted in the new format
+            Serial.println("Arranger migration: re-saving project in new format...");
+            bool save_ok = project->save_project_settings(project_number);
+
+            if (!save_ok) {
+                Serial.println("Arranger migration: save failed; keeping legacy files for retry.");
+                return;
+            }
+
+            // Rename old files so migration doesn't re-trigger
+            char newname[MAX_FILEPATH] = "";
+            snprintf(newname, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".migrated", project_number);
+            SD.rename(filename, newname);
+            Serial.printf("Arranger migration: renamed %s -> %s\n", filename, newname);
+
+            // If this migration came from promoted '.migrated' backups,
+            // archive the re-created '.migrated' files as '.restored' so
+            // this restore path runs only once.
+            if (promoted_from_migrated) {
+                char restored_name[MAX_FILEPATH] = "";
+                snprintf(restored_name, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".restored", project_number);
+                if (SD.exists(restored_name)) SD.remove(restored_name);
+                if (SD.rename(newname, restored_name)) {
+                    Serial.printf("Arranger restore: archived %s -> %s\n", newname, restored_name);
+                } else {
+                    Serial.printf("Arranger restore: failed to archive %s -> %s\n", newname, restored_name);
+                }
+            }
+
+            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+                char sec_filename[MAX_FILEPATH] = "";
+                snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
+                if (SD.exists(sec_filename)) {
+                    char sec_newname[MAX_FILEPATH] = "";
+                    snprintf(sec_newname, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".migrated", project_number, i);
+                    SD.rename(sec_filename, sec_newname);
+                    Serial.printf("Arranger migration: renamed %s -> %s\n", sec_filename, sec_newname);
+
+                    if (promoted_from_migrated) {
+                        char sec_restored[MAX_FILEPATH] = "";
+                        snprintf(sec_restored, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".restored", project_number, i);
+                        if (SD.exists(sec_restored)) SD.remove(sec_restored);
+                        if (SD.rename(sec_newname, sec_restored)) {
+                            Serial.printf("Arranger restore: archived %s -> %s\n", sec_newname, sec_restored);
+                        } else {
+                            Serial.printf("Arranger restore: failed to archive %s -> %s\n", sec_newname, sec_restored);
+                        }
+                    }
+                }
+            }
+            Serial.println("Arranger migration: done.");
+        }
+        #endif
     }
 
 
@@ -872,37 +873,25 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             section_bar->add(new LambdaNumberControl<int8_t>(
                 "PlaylistPos", 
                 [=] (int8_t pos) -> void { move_playlist(pos); },
-                [=] () -> int8_t { return this->playlist_position; },
+                [=] () -> int8_t { return arranger->playlist_position; },
                 nullptr
             ));
             section_bar->add(new LambdaNumberControl<int8_t>(
                 "Section", 
                 [=] (int8_t section) -> void { change_section(section); },
-                [=] () -> int8_t { return this->current_section; },
+                [=] () -> int8_t { return arranger->current_section; },
                 nullptr,
                 0, 
                 NUM_SONG_SECTIONS-1, 
                 true, 
                 false
             ));
-            /*section_bar->add(new LambdaNumberControl<int8_t>(
-                "Max repeats", 
-                [=] (int8_t repeats) -> void {
-                    this->song_sections[current_section].repeats = repeats;
-                },
-                [=] () -> int8_t { return this->song_sections[current_section].repeats; },
-                nullptr,
-                0,
-                8,
-                true,
-                true
-            ));*/
-            section_bar->add(new NumberControl<int8_t>("Plays", &this->current_section_plays, 0, 8, true, true));
+            section_bar->add(new NumberControl<int8_t>("Plays", &arranger->current_section_plays, 0, 8, true, true));
             menuitems->add(section_bar);
 
             SubMenuItemBar *save_section_bar = new SubMenuItemBar("Section", false, true);
-            save_section_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_section(current_section); }));
-            save_section_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_section(current_section); }));
+            save_section_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_section(arranger->current_section); }));
+            save_section_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_section(arranger->current_section); }));
             menuitems->add(save_section_bar);
 
             SubMenuItemBar *save_playlist_bar = new SubMenuItemBar("Playlist", false, true);
@@ -999,12 +988,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
                 menu->add(new LambdaPlaylistSubMenuItemBarWithIndicator(
                     (String("Slot ") + String(i)).c_str(),
-                    [=](int8_t section) -> void { playlist.entries[i].section = section; mark_song_as_modified(); },
-                    [=]() -> int8_t { return playlist.entries[i].section; },
-                    [=](int8_t repeats) -> void { playlist.entries[i].repeats = repeats; mark_song_as_modified(); },
-                    [=]() -> int8_t { return playlist.entries[i].repeats; },
+                    [=](int8_t section) -> void { arranger->playlist.entries[i].section = section; mark_song_as_modified(); },
+                    [=]() -> int8_t { return arranger->playlist.entries[i].section; },
+                    [=](int8_t repeats) -> void { arranger->playlist.entries[i].repeats = repeats; mark_song_as_modified(); },
+                    [=]() -> int8_t { return arranger->playlist.entries[i].repeats; },
                     i,
-                    &this->current_section,
+                    &arranger->current_section,
                     NUM_SONG_SECTIONS, 
                     MAX_REPEATS,
                     false, false
@@ -1026,26 +1015,26 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     LambdaChordSubMenuItemBarWithIndicator *section_bar = new LambdaChordSubMenuItemBarWithIndicator(
                         (String("Bar ") + String(j)).c_str(),
                         [=](int8_t degree) -> void { 
-                            song_sections[i].grid[j].degree = degree; 
+                            arranger->song_sections[i].grid[j].degree = degree; 
                             mark_song_as_modified(); 
                         },
                         [=]() -> int8_t { 
-                            return song_sections[i].grid[j].degree; 
+                            return arranger->song_sections[i].grid[j].degree; 
                         },
                         [=](CHORD::Type chord_type) -> void { 
-                            song_sections[i].grid[j].type = chord_type; 
+                            arranger->song_sections[i].grid[j].type = chord_type; 
                             mark_song_as_modified(); },
                         [=]() -> CHORD::Type { 
-                            return song_sections[i].grid[j].type; 
+                            return arranger->song_sections[i].grid[j].type; 
                         },
                         [=](int8_t inversion) -> void { 
-                            song_sections[i].grid[j].inversion = inversion; 
+                            arranger->song_sections[i].grid[j].inversion = inversion; 
                             mark_song_as_modified(); 
                         },
                         [=]() -> int8_t { 
-                            return song_sections[i].grid[j].inversion; 
+                            return arranger->song_sections[i].grid[j].inversion; 
                         },
-                        i, j, &this->current_section, &this->current_bar,
+                        i, j, &arranger->current_section, &arranger->current_bar,
                         false, false, false
                     );
                     menu->add(section_bar);

@@ -399,20 +399,39 @@ class Project : public SHDynamic<0, 8> {
         bool load_project_settings(int project_number) {
             #ifdef ENABLE_SD
 
-            midi_matrix_manager->reset_matrix();  // disconnect all sources and targets before loading new routing settings
+            // During early startup, setup_project() may run before saveloadlib
+            // has a registered root. In that case, skip loading so we don't
+            // reset routing and then silently drop all lines.
+            if (SL_ROOT == nullptr) {
+                Serial.printf(F("load_project_settings(%i): saveload root not ready yet, deferring load.\n"), project_number);
+                return false;
+            }
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
             Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
+            sl_scope_t load_scope = SL_SCOPE_PROJECT;
+            if (this->load_matrix_mappings) {
+                midi_matrix_manager->reset_matrix();  // disconnect before applying routing from file
+                load_scope = (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING);
+            }
 
             uint32_t micros_start = micros();
-            sl_load_from_file(filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING));
-            Serial.printf(F("Loaded project settings in %u microseconds.\n"), micros() - micros_start);
+            bool loaded_ok = sl_load_from_file(filename, load_scope);
+            if (loaded_ok) {
+                Serial.printf(F("Loaded project settings in %u microseconds.\n"), micros() - micros_start);
+            } else {
+                Serial.printf(F("Failed to load project settings from %s (missing or unreadable).\n"), filename);
+            }
 
             update_project_filename(filename);
             #endif
 
+            #ifdef ENABLE_SD
+            return loaded_ok;
+            #else
             return true;
+            #endif
         }
 };
 

@@ -90,6 +90,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     FLASHMEM source_id_t register_source(const char *handle) {
         //Serial_printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
         strncpy(sources[NUM_REGISTERED_SOURCES].handle, handle, LANGST_HANDEL_ROUT);
+        sources[NUM_REGISTERED_SOURCES].handle[LANGST_HANDEL_ROUT - 1] = '\0';
         return NUM_REGISTERED_SOURCES++;
     }
     // assign a source_id for the midi track
@@ -214,8 +215,8 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         // TODO: move this to conductor
         int8_t do_quant(int8_t pitch, int8_t channel) {
             if (channel!=GM_CHANNEL_DRUMS) {
-                if (conductor->is_global_quantise_on())       pitch = ::quantise_pitch_to_scale(pitch);
-                if (conductor->is_global_quantise_chord_on()) pitch = ::quantise_pitch_to_chord(pitch, 3);
+                if (conductor->get_global_quantise_mode()==QUANTISE_MODE_CHORD) pitch = ::quantise_pitch_to_chord(pitch, 3);
+                if (conductor->get_global_quantise_mode()==QUANTISE_MODE_SCALE) pitch = ::quantise_pitch_to_scale(pitch);
             }
             return pitch;
         }
@@ -369,6 +370,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
         // TODO: detect and warn if duplicate handle used
         strncpy(targets[NUM_REGISTERED_TARGETS].handle, handle, LANGST_HANDEL_ROUT);
+        targets[NUM_REGISTERED_TARGETS].handle[LANGST_HANDEL_ROUT - 1] = '\0';
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
         Serial_printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);
         if (target==nullptr) {
@@ -410,29 +412,29 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     #ifdef ENABLE_SCALES
         /////// scale and quantisation functions
         // getters & setters for quantisation on/offs
-        void set_global_quantise_on(bool v, bool requantise_immediately = true) {
-            bool changed = v != conductor->is_global_quantise_on();
-            conductor->set_global_quantise_on(v);
-            if (changed && requantise_immediately) {
-                //Serial_println(F("set_global_quantise_on() about to call behaviour_manager_requantise_all_notes()"));
-                behaviour_manager_requantise_all_notes();
-            }
-        }
-        bool is_global_quantise_on() {
-            return conductor->is_global_quantise_on();
-        }
+        // void set_global_quantise_on(bool v, bool requantise_immediately = true) {
+        //     bool changed = v != conductor->is_global_quantise_on();
+        //     conductor->set_global_quantise_on(v);
+        //     if (changed && requantise_immediately) {
+        //         //Serial_println(F("set_global_quantise_on() about to call behaviour_manager_requantise_all_notes()"));
+        //         behaviour_manager_requantise_all_notes();
+        //     }
+        // }
+        // bool is_global_quantise_on() {
+        //     return conductor->is_global_quantise_on();
+        // }
 
-        void set_global_quantise_chord_on(bool v, bool requantise_immediately = true) {
-            bool changed = v != conductor->is_global_quantise_chord_on();
-            conductor->set_global_quantise_chord_on(v);
-            if (changed && requantise_immediately) {
-                //Serial_println(F("set_global_quantise_chord_on() about to call behaviour_manager_requantise_all_notes()"));
-                behaviour_manager_requantise_all_notes();
-            }
-        }
-        bool is_global_quantise_chord_on() {
-            return conductor->is_global_quantise_chord_on();
-        }
+        // void set_global_quantise_chord_on(bool v, bool requantise_immediately = true) {
+        //     bool changed = v != conductor->is_global_quantise_chord_on();
+        //     conductor->set_global_quantise_chord_on(v);
+        //     if (changed && requantise_immediately) {
+        //         //Serial_println(F("set_global_quantise_chord_on() about to call behaviour_manager_requantise_all_notes()"));
+        //         behaviour_manager_requantise_all_notes();
+        //     }
+        // }
+        // bool is_global_quantise_chord_on() {
+        //     return conductor->is_global_quantise_chord_on();
+        // }
 
         // getters & setters for global scale + global chord settings
         chord_identity_t get_global_chord() {
@@ -595,17 +597,39 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                            sl_scope_t scope = SL_SCOPE_ALL) override {
         if (seg_count == 2 && strcmp(segments[1], "targets") == 0) {
             if (!(scope & SL_SCOPE_ROUTING)) return false;
-            const char* src_handle = segments[0];
+            char src_handle_buf[SL_MAX_LABEL];
+            strncpy(src_handle_buf, segments[0], sizeof(src_handle_buf) - 1);
+            src_handle_buf[sizeof(src_handle_buf) - 1] = '\0';
+            sl_trim_inplace(src_handle_buf);
+            const char* src_handle = src_handle_buf;
             if (!value || !*value) return true;  // empty targets line — valid
             strncpy(routing_line_buf, value, SL_MAX_LINE - 1);
             routing_line_buf[SL_MAX_LINE - 1] = '\0';
             char* p = routing_line_buf;
+            int attempted = 0;
+            int connected = 0;
             while (*p) {
                 char* semi = strchr(p, ';');
                 if (semi) *semi = '\0';
-                if (*p) connect(src_handle, p);
+                sl_trim_inplace(p);
+                if (*p) {
+                    attempted++;
+                    source_id_t src_id = get_source_id_for_handle(src_handle);
+                    target_id_t tgt_id = get_target_id_for_handle(p);
+                    if (connect(src_id, tgt_id)) {
+                        connected++;
+                    } else {
+                        Serial_printf(F("midi_matrix load routing: failed connect '%s' -> '%s' (src_id=%i tgt_id=%i)\n"),
+                                      src_handle, p,
+                                      src_id,
+                                      tgt_id);
+                    }
+                }
                 if (!semi) break;
                 p = semi + 1;
+            }
+            if (attempted > 0 && connected == 0) {
+                Serial_printf(F("midi_matrix load routing: no targets restored for source '%s'\n"), src_handle);
             }
             return true;
         }

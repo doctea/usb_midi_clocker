@@ -23,7 +23,9 @@
     #define ENABLE_CV_OUTPUT_3_EXTENDED_ADDRESS 0
 #endif*/
 
-#define ENABLE_PROGRESSION
+#ifdef ENABLE_ARRANGER
+    #define ENABLE_PROGRESSION
+#endif
 #if defined(ENABLE_PROGRESSION) && defined(ENABLE_SCALES)
     #define ENABLE_APCMINI_PROGRESSIONS
 #else

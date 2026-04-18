@@ -57,11 +57,11 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     } else {
         tft->setTextColor(RED, BLACK);
     }
-    tft->printf("%i/%i ", behaviour_progression->playlist_position+1, 8);
+    tft->printf("%i/%i ", arranger->playlist_position+1, 8);
 
     tft->setTextColor(C_WHITE, BLACK);
-    tft->printf("%i/%i ", behaviour_progression->current_section_plays+1, behaviour_progression->playlist.entries[behaviour_progression->playlist_position].repeats);
-    tft->printf("%i/%i ", behaviour_progression->current_section+1, 4);
+    tft->printf("%i/%i ", arranger->current_section_plays+1, arranger->playlist.entries[arranger->playlist_position].repeats);
+    tft->printf("%i/%i ", arranger->current_section+1, 4);
 
     // show bar position information - green if playing, red if paused
     if (behaviour_progression->advance_progression_bar) {
@@ -69,7 +69,7 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     } else {
         tft->setTextColor(RED, BLACK);
     }
-    tft->printf("%i/%i ", behaviour_progression->current_bar+1, 8);
+    tft->printf("%i/%i ", arranger->current_bar+1, 8);
     tft->setTextColor(C_WHITE, BLACK);
 
     // indicate current apc page info

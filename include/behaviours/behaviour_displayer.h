@@ -89,7 +89,7 @@ class VirtualBehaviour_Displayer : virtual public VirtualBehaviourBase {
             &conductor->global_scale_identity.scale_number, 
             &conductor->global_scale_identity.root_note, 
             &this->note_tracker,
-            &conductor->global_quantise_on
+            &conductor->global_quantise_mode
         ));
 
         /*
