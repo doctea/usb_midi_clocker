@@ -24,9 +24,12 @@ extern bool debug_flag;
             this->pitch_parameter_selector->update_source(input);
         }*/
         this->pitch_input = input;
+        #ifdef ENABLE_SCALES
+            this->trigger_core.set_parameter_input_pitch(input);
+        #endif
 
         #ifdef ENABLE_SCALES
-            this->pitch_trigger.stop_all();
+            this->trigger_core.stop_all();
         #endif
         //Serial.println(F("finished in set_selected_paramter_input"));
         //else
@@ -43,6 +46,9 @@ extern bool debug_flag;
             this->velocity_parameter_selector->update_source(input);
         } */
         this->velocity_input = input;
+        #ifdef ENABLE_SCALES
+            this->trigger_core.set_parameter_input_velocity(input);
+        #endif
 
         /*if (is_valid_note(this->current_note)) {
             trigger_off_for_pitch_because_changed(this->current_note);
@@ -78,32 +84,23 @@ extern bool debug_flag;
 
         SubMenuItemBar *bar = new SubMenuItemBar("Inputs");
 
-        this->pitch_parameter_selector 
-            = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
-                "1v/oct Input",
-                this,
-                &DeviceBehaviour_CVInput::set_selected_parameter_input,
-                &DeviceBehaviour_CVInput::get_selected_parameter_input,
-                parameter_manager->get_available_pitch_inputs(),
-                this->pitch_input
+        auto selectors = CVPitchInputWiring::add_parameter_input_selectors<DeviceBehaviour_CVInput>(
+            bar,
+            this,
+            &DeviceBehaviour_CVInput::set_selected_parameter_input,
+            &DeviceBehaviour_CVInput::get_selected_parameter_input,
+            &DeviceBehaviour_CVInput::set_selected_velocity_input,
+            &DeviceBehaviour_CVInput::get_selected_velocity_input,
+            "1v/oct Input",
+            "Velocity Input"
         );
-        bar->add(pitch_parameter_selector);
-
-        this->velocity_parameter_selector 
-            = new ParameterInputSelectorControl<DeviceBehaviour_CVInput> (
-                "Velocity Input",
-                this,
-                &DeviceBehaviour_CVInput::set_selected_velocity_input,
-                &DeviceBehaviour_CVInput::get_selected_velocity_input,
-                parameter_manager->available_inputs,
-                this->velocity_input
-        );
-        bar->add(velocity_parameter_selector);
+        this->pitch_parameter_selector = selectors.pitch;
+        this->velocity_parameter_selector = selectors.velocity;
 
         menuitems->add(bar);
 
         #ifdef ENABLE_SCALES
-            this->pitch_trigger.make_menu_items(menuitems);
+            this->trigger_core.get_pitch_trigger()->make_menu_items(menuitems);
             this->chord_player.make_menu_items(menuitems);
         #endif
 
