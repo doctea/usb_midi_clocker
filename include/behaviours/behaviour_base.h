@@ -60,8 +60,8 @@ class DeviceBehaviourUltimateBase :
     target_id_t target_id = -1;
 
     //int force_octave = -1;
-    int last_transposed_note = -1, current_transposed_note = -1;
-    int current_channel = 0;
+    int8_t last_transposed_note = -1, current_transposed_note = -1;
+    int8_t current_channel = 0;
     int8_t TUNING_OFFSET = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
 

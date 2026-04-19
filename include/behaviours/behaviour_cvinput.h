@@ -63,6 +63,7 @@ class DeviceBehaviour_CVInput;
 #endif
 
 #include "chord_player.h"
+#include "pitch_trigger_source.h"
 #include "functional-vlpp.h"
 
 #ifndef MAX_LABEL_LENGTH
@@ -75,6 +76,23 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             ChordPlayer chord_player = ChordPlayer(
                 [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_on(channel, note, velocity); },
                 [=](int8_t channel, int8_t note, int8_t velocity) -> void { this->receive_note_off(channel, note, velocity); }
+            );
+
+            PitchTriggerSource pitch_trigger = PitchTriggerSource(
+                [=](int8_t note, int8_t velocity) -> void {
+                    this->chord_player.trigger_on_for_pitch(
+                        note,
+                        velocity,
+                        this->chord_player.get_selected_chord(),
+                        this->chord_player.get_inversion()
+                    );
+                },
+                [=](int8_t note, int8_t velocity) -> void {
+                    this->chord_player.trigger_off_for_pitch_because_length(note, velocity);
+                },
+                [=](int8_t note, int8_t velocity) -> void {
+                    this->chord_player.trigger_off_for_pitch_because_changed(note, velocity);
+                }
             );
         #endif
 
@@ -133,7 +151,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             }
 
             #ifdef ENABLE_SCALES
-                this->chord_player.on_pre_clock(ticks, new_note, velocity);
+                this->pitch_trigger.on_pre_clock(ticks, new_note, velocity);
             #endif
         }
 
@@ -176,15 +194,8 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             ), false, SL_SCOPE_PROJECT);
 
             #ifdef ENABLE_SCALES
-                register_setting(new LSaveableSetting<int8_t>(       "scale_root",          "CV", &this->chord_player.scale_root,                  [=](int8_t v)        { this->chord_player.set_scale_root(v); },         [=]() -> int8_t        { return this->chord_player.get_scale_root(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<scale_index_t>("scale_number",        "CV", &this->chord_player.scale,                       [=](scale_index_t v) { this->chord_player.set_scale(v); },             [=]() -> scale_index_t { return this->chord_player.get_scale(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<int32_t>(      "note_length_ticks",   "CV", &this->chord_player.note_length_ticks,            [=](int32_t v)       { this->chord_player.set_note_length(v); },        [=]() -> int32_t       { return this->chord_player.get_note_length(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<int32_t>(      "trigger_each",        "CV", &this->chord_player.trigger_on_ticks,             [=](int32_t v)       { this->chord_player.set_trigger_on_ticks(v); },   [=]() -> int32_t       { return this->chord_player.get_trigger_on_ticks(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<int32_t>(      "trigger_delay_ticks", "CV", &this->chord_player.trigger_delay_ticks,          [=](int32_t v)       { this->chord_player.set_trigger_delay_ticks(v); },[=]() -> int32_t       { return this->chord_player.get_trigger_delay_ticks(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<bool>(         "quantise_enable",     "CV", &this->chord_player.quantise,                     [=](bool v)          { this->chord_player.set_quantise(v); },           [=]() -> bool          { return this->chord_player.is_quantise(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<bool>(         "play_chords",         "CV", &this->chord_player.play_chords,                  [=](bool v)          { this->chord_player.set_play_chords(v); },        [=]() -> bool          { return this->chord_player.is_play_chords(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<CHORD::Type>(  "Chord",               "CV", &this->chord_player.selected_chord_number,        [=](CHORD::Type v)   { this->chord_player.set_selected_chord(v); },     [=]() -> CHORD::Type   { return this->chord_player.get_selected_chord(); }), SL_SCOPE_SCENE);
-                register_setting(new LSaveableSetting<int8_t>(       "inversion",           "CV", &this->chord_player.inversion,                    [=](int8_t v)        { this->chord_player.set_inversion(v); },          [=]() -> int8_t        { return this->chord_player.get_inversion(); }), SL_SCOPE_SCENE);
+                register_child(&this->pitch_trigger);
+                register_child(&this->chord_player);
             #endif
         }
 

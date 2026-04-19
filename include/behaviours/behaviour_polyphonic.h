@@ -22,8 +22,8 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
     }
 
     static const int8_t max_voice_count = 4;
-    int voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };   // ideally int8_t, but int is compatible with HarmonyStatus menuitem
-    int last_voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
+    int8_t voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
+    int8_t last_voices[max_voice_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
     target_id_t voice_target_id[max_voice_count] = { -1, -1, -1, -1 };
 
     bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };

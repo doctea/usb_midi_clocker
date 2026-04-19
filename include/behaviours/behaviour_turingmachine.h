@@ -53,7 +53,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 
             sequencer->on_tick(ticks);
-        if (is_bpm_on_sixteenth(ticks) && output_processor->is_enabled())
+        if (output_processor->is_enabled())
             output_processor->process();
     };
 

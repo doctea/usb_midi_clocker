@@ -112,7 +112,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
         bool auto_advance_pattern = false;   // todo: make configurable!
         bool wait_before_changing = true;    // for quantising pattern parameters that otherwise force untimely pattern restarts
 
-        int last_note = -1, current_note = -1;
+        int8_t last_note = -1, current_note = -1;
 
         uint16_t vid = 0x1c75, pid = 0x0206;
         virtual uint32_t get_packed_id () override { return (this->vid<<16 | this->pid); }

@@ -26,9 +26,7 @@ extern bool debug_flag;
         this->pitch_input = input;
 
         #ifdef ENABLE_SCALES
-            if (is_valid_note(this->chord_player.current_note)) {
-                chord_player.trigger_off_for_pitch_because_changed(this->chord_player.current_note);
-            }
+            this->pitch_trigger.stop_all();
         #endif
         //Serial.println(F("finished in set_selected_paramter_input"));
         //else
@@ -105,6 +103,7 @@ extern bool debug_flag;
         menuitems->add(bar);
 
         #ifdef ENABLE_SCALES
+            this->pitch_trigger.make_menu_items(menuitems);
             this->chord_player.make_menu_items(menuitems);
         #endif
 

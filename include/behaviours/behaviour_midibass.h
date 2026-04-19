@@ -14,7 +14,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         bool new_bar = true;        // reset on new bar, so that we can pick up only the first note played
         bool drone_enabled = false; // whether or not drone is enabled
-        int last_drone_note = NOTE_OFF;   // note that we should drone on
+        int8_t last_drone_note = NOTE_OFF;   // note that we should drone on
         byte drone_channel = 0;     // channel that we should drone on
 
         int8_t machinegun = 0;
@@ -50,7 +50,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             }
             this->drone_enabled = value;
         }
-        virtual int get_drone_note() {
+        virtual int8_t get_drone_note() {
             return this->last_drone_note;
         }
 

@@ -61,13 +61,10 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
     }
     if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c());
 
-    bool initial_global_quantise_on = conductor->is_global_quantise_on();
-    bool initial_global_quantise_chord_on = conductor->is_global_quantise_chord_on();
-
     int requantised_notes = 0;
     
     uint32_t start_foreach = micros();
-    requantised_notes = note_tracker_foreach_note([this,initial_global_quantise_chord_on,initial_global_quantise_on](int8_t note, int8_t old_transposed_note) {
+    requantised_notes = note_tracker_foreach_note([this](int8_t note, int8_t old_transposed_note) {
         int8_t new_transposed_note = midi_matrix_manager->do_quant(note, this->current_channel);
         if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes in foreach_requantised_note: note=%i (%s), old_transposed_note=%i (%s), new_transposed_note=%i (%s)\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), new_transposed_note, get_note_name_c(new_transposed_note));
         // note is the original note, transposed_note is the note that the original note was transposed to
@@ -87,12 +84,6 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
             if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to invalid note; stopping old_transposed_note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), this->current_channel); 
             // TODO: this is really hacky, we need to disable quantisation temporarily to stop the old note off, otherwise it will get re-quantised to the new (invalid) note and won't stop... we should really add a 'raw' note off function that doesn't apply quantisation at all
             this->sendNoteOffRaw(note, MIDI_MIN_VELOCITY, this->current_channel);
-            // conductor->set_global_quantise_on(false);
-            // conductor->set_global_quantise_chord_on(false);
-            // //this->sendNoteOff(old_transposed_note, MIDI_MIN_VELOCITY, this->current_channel);
-            // this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
-            // conductor->set_global_quantise_on(initial_global_quantise_on);
-            // conductor->set_global_quantise_chord_on(initial_global_quantise_chord_on);
             return;
         }
         // if the new transposed note is valid, then we need to stop the old note and start the new one

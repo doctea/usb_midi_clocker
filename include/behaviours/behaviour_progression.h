@@ -380,7 +380,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
 
     virtual void change_bass_octave(int new_bass_octave) {
-        bool was_playing = this->chord_player->is_playing;
+        bool was_playing = this->chord_player->is_playing_bass;
         int8_t note = this->chord_player->current_bass_note;
         if (was_playing) {
             this->chord_player->stop_bass_note();
@@ -392,7 +392,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual void change_topline_octave(int new_topline_octave) {
-        bool was_playing = this->chord_player->is_playing;
+        bool was_playing = this->chord_player->is_playing_topline;
         int8_t note = this->chord_player->current_topline_note;
         if (was_playing) {
             this->chord_player->stop_topline_note();
@@ -404,7 +404,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual void change_chord_octave(int new_chord_octave) {
-        bool was_playing = this->chord_player->is_playing;
+        bool was_playing = this->chord_player->is_playing_chord;
         chord_identity_t chord;
         memcpy(&chord, &arranger->current_chord, sizeof(chord_identity_t));
         if (was_playing) {
@@ -419,7 +419,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
 
     virtual int requantise_all_notes() override {
-        bool already_playing = this->chord_player->is_playing;
+        bool already_playing = this->chord_player->is_playing_chord;
         if (debug) Serial_println("behaviour_progression#requantise_all_notes()...");
 
         if (already_playing) {
@@ -817,9 +817,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 [=]() -> int8_t { return conductor->get_scale_root(); },
                 false, true, true
             );
-            global_quantise_bar->add(new LambdaToggleControl("Quantise",
-                [=](bool v) -> void { conductor->set_global_quantise_on(v); },
-                [=]() -> bool { return conductor->is_global_quantise_on(); }
+            global_quantise_bar->add(new LambdaQuantiseModeControl(
+                "Quant",
+                [=](int8_t v) -> void { conductor->set_global_quantise_mode((quantise_mode_t)constrain((int)v, (int)QUANTISE_MODE_NONE, (int)QUANTISE_MODE_CHORD)); },
+                [=]() -> int8_t { return (int8_t)conductor->get_global_quantise_mode(); }
             ));
             menuitems->add(global_quantise_bar);
 
@@ -833,10 +834,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 [=]() -> int8_t { return conductor->get_chord_inversion(); },
                 false, true, true
             );
-            global_chord_bar->add(new LambdaToggleControl("Quantise",
-                [=](bool v) -> void { conductor->set_global_quantise_chord_on(v); },
-                [=]() -> bool { return conductor->is_global_quantise_chord_on(); }
-            ));
+            // global_chord_bar->add(new LambdaToggleControl("Quantise",
+            //     [=](bool v) -> void { conductor->set_global_quantise_chord_on(v); },
+            //     [=]() -> bool { return conductor->is_global_quantise_chord_on(); }
+            // ));
             menuitems->add(global_chord_bar);
 
             //chord_player->make_menu_items(menuitems);
@@ -866,7 +867,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 &conductor->global_scale_identity.scale_number, 
                 &conductor->global_scale_identity.root_note, 
                 &this->note_tracker,
-                &conductor->global_quantise_on
+                &conductor->global_quantise_mode
             ));
 
             SubMenuItemBar *section_bar = new SubMenuItemBar("Section", true, true);

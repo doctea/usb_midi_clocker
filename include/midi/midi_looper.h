@@ -126,8 +126,8 @@ class MIDITrack {
 
         bool overwrite = false;
 
-        int last_note = -1;
-        int current_note = -1;
+        int8_t last_note = -1;
+        int8_t current_note = -1;
 
         int8_t transpose_amount = 0;
 
