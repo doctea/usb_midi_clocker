@@ -74,13 +74,13 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         // this was/should really be receive_note_on ...
         //if (this->debug) 
         if (this->debug) Serial.printf(F("behaviour_turingmachine#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
-        midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
+        midi_matrix_manager->processNoteOn(this->source_id, note, velocity, this->current_channel);
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_off !
         //if (this->debug) Serial.printf(F("!! behaviour_lestrum#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i)with source_id %i: \n"), channel, note, velocity, source_id_2);
         if (this->debug) Serial.printf(F("behaviour_turingmachine#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
-        midi_matrix_manager->processNoteOff(this->source_id, note, MIDI_MIN_VELOCITY, channel);
+        midi_matrix_manager->processNoteOff(this->source_id, note, MIDI_MIN_VELOCITY, this->current_channel);
     }
 
 

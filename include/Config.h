@@ -45,7 +45,9 @@
     //#define ENABLE_CV_INPUT 0x49
     //#define ENABLE_CV_OUTPUT 0x4C
 #endif
-#define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
+#ifndef TIME_BETWEEN_CV_INPUT_UPDATES
+    #define TIME_BETWEEN_CV_INPUT_UPDATES 1 //25    
+#endif
 
 #ifdef ENABLE_SD
     #ifndef ENABLE_CALIBRATION_STORAGE
