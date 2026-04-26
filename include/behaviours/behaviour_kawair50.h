@@ -381,6 +381,10 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
 
         const char* get_line() override {
             int pos = snprintf(linebuf, SL_MAX_LINE, "%s=", label);
+            if (mapper == nullptr) {
+                linebuf[pos] = '\0';
+                return linebuf;
+            }
             bool first = true;
             for (uint8_t i = 0; i < MIDI_NUM_NOTES && pos < SL_MAX_LINE - 12; i++) {
                 DrumMapEntry* e = mapper->drum_map_storage[i];
@@ -396,6 +400,7 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
 
         bool parse_key_value(const char* key, const char* value) override {
             if (strcmp(key, label) != 0) return false;
+            if (mapper == nullptr || value == nullptr) return false;
             const char* p = value;
             while (*p) {
                 char* end;
@@ -411,7 +416,11 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
                     DrumMapEntry* e = mapper->drum_map_storage[note];
                     if (e != nullptr) {
                         e->enabled = (bool)en;
-                        e->current_note_index = (uint8_t)constrain(idx, 0, e->num_possible_notes - 1);
+                        if (e->num_possible_notes > 0) {
+                            e->current_note_index = (uint8_t)constrain(idx, 0, e->num_possible_notes - 1);
+                        } else {
+                            e->current_note_index = 0;
+                        }
                     }
                 }
                 if (*p == ',') p++;

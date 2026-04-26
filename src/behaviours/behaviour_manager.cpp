@@ -47,6 +47,8 @@
 
 #include "behaviours/behaviour_midilooper.h"
 
+#include "behaviours/behaviour_td3.h"
+
 DeviceBehaviourManager *behaviour_manager = nullptr;
 
 DeviceBehaviourManager* DeviceBehaviourManager::inst_ = nullptr;
@@ -144,6 +146,10 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_KEYSTEP
         behaviour_keystep = new DeviceBehaviour_Keystep();
         behaviour_manager->registerBehaviour(behaviour_keystep);
+    #endif
+    
+    #ifdef ENABLE_TD3
+        behaviour_td3 = new Behaviour_SimpleWrapperUSB<DividedClockedBehaviour>("TD3", 0x1397, 0x1226);
     #endif
     
     #ifdef ENABLE_MPK49
@@ -320,9 +326,6 @@ void setup_behaviour_manager() {
 
     behaviour_manager->registerBehaviour(behaviour_displayer);
 
-    Serial_println(F("Setting up behaviours label hash...")); Serial_flush();
-    behaviour_manager->setup_behaviours_label_hash();
-    Serial_println(F("Finished setting up behaviours label hash...")); Serial_flush();
     // NOTE: setup_saveable_settings() is now driven by sl_setup_all() in setup_saveloadlib()
     // (behaviour_manager is a child of SettingsRoot; no standalone call needed here)
     Serial_println(F("Exiting setup_behaviour_manager()"));

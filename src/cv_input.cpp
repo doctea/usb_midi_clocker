@@ -21,7 +21,7 @@
 #include "parameter_inputs/BarLockParameterInputs.h"
 #include "parameter_inputs/MixerParameterInput.h"
 
-ParameterManager *parameter_manager = new ParameterManager(LOOP_LENGTH_TICKS);
+ParameterManager *parameter_manager = new ParameterManager();
 
 // initialise the voltage-reading hardware/libraries and the ParameterManager
 //FLASHMEM

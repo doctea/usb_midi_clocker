@@ -43,6 +43,8 @@
 
 #include "behaviours/behaviour_midilooper.h"
 
+#include "behaviours/behaviour_td3.h"
+
 #include "midi/midi_mapper_update_wrapper_menus.h"
 
 #include "midi/midi_looper.h"
@@ -186,6 +188,10 @@ void setup_midi_mapper_matrix_manager() {
                 midi_out_used[i] = true;
                 behaviour_dptlooper->target_id = midi_matrix_manager->register_target(make_midioutputwrapper("DPT Looper", behaviour_dptlooper));
             }
+        #endif
+        #ifdef ENABLE_TD3
+            midi_matrix_manager->register_target(make_midioutputwrapper("TD3", behaviour_td3));
+            midi_matrix_manager->register_source(behaviour_td3, "TD3");
         #endif
         
 
@@ -409,7 +415,6 @@ void setup_midi_mapper_matrix_manager() {
     #ifdef ENABLE_WORKSHOP_COMPUTER
         midi_matrix_manager->register_source(behaviour_manager->find_behaviour_for_label("Workshop Computer"), "Workshop ch10");
     #endif
-
 
     //Serial.println(F("##### finished setup_midi_mapper_matrix_manager")); Serial_flush();
     //while(1);

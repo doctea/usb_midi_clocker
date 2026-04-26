@@ -139,6 +139,10 @@
     #define DEFAULT_NEUTRON_OCTAVE 3    // set to -1 for 'disabled'
 #endif
 
+#ifdef PCB_GO
+    #define ENABLE_TD3    
+#endif
+
 //#define ENABLE_DPT_LOOPER
 #ifdef ENABLE_DPT_LOOPER
     #ifdef PROTOTYPE

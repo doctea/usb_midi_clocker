@@ -12,7 +12,6 @@
 #include "mymenu.h"
 
 #include <LinkedList.h>
-#include <Hashtable.h>
 
 #ifdef IRQ_PROTECT_USB_CHANGES
     #include <util/atomic.h>
@@ -34,8 +33,6 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         #ifdef ENABLE_USBSERIAL
             LinkedList<DeviceBehaviourUSBSerialBase *> *behaviours_usbserial = nullptr;
         #endif
-
-        Hashtable<String, DeviceBehaviourUltimateBase*> *behaviours_label_hash = nullptr;
 
         virtual void setup_saveable_settings() override {
             set_path_segment("behaviours");
@@ -83,17 +80,6 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
             Debug_printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
             this->behaviours_virtual->add(behaviour);
             this->behaviours->add(behaviour);
-        }
-
-        void setup_behaviours_label_hash() {
-            // create the label hash if it doesn't exist yet
-            if (this->behaviours_label_hash==nullptr)
-                this->behaviours_label_hash = new Hashtable<String, DeviceBehaviourUltimateBase*>();
-
-            for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
-                this->behaviours_label_hash->put(String(behaviour->get_label()), behaviour);
-            }
         }
 
         #ifdef ENABLE_USB
@@ -330,63 +316,14 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
-            if (behaviours_label_hash->containsKey(label))
-                return *behaviours_label_hash->get(label);
-            else
-                return nullptr;
+            for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+                DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+                if (behaviour!=nullptr && String(behaviour->get_label())==label) {
+                    return behaviour;
+                }
+            }
+            return nullptr;
         }
-
-        // // Parse a single line from the pattern save file.
-        // // New format: "BehaviourLabel~key~subkey=value"
-        // bool load_parse_line(String line) {
-        //     int eq = line.indexOf('=');
-        //     if (eq < 0) return false;
-        //     String wholekey = line.substring(0, eq);
-        //     String value    = line.substring(eq + 1);
-
-        //     int tilde = wholekey.indexOf('~');
-        //     if (tilde < 0) return false;
-        //     String behaviour_label = wholekey.substring(0, tilde);
-        //     String rest            = wholekey.substring(tilde + 1);
-
-        //     DeviceBehaviourUltimateBase *b = find_behaviour_for_label(behaviour_label);
-        //     if (!b) {
-        //         if (debug) Serial_printf("load_parse_line: no behaviour found for label '%s'\n", behaviour_label.c_str());
-        //         return false;
-        //     }
-
-        //     static char keybuf[SL_MAX_LINE];
-        //     rest.toCharArray(keybuf, sizeof(keybuf));
-        //     static char* segs[16];
-        //     int count = sl_tokenise_inplace(keybuf, segs, 16);
-        //     if (count <= 0) return false;
-        //     return b->load_line(segs, count, value.c_str());
-        // }
-
-        // ask each behaviour to add project-scope option lines to save project file.
-        // // Output format: "BehaviourLabel~key=value" (tilde-delimited) so that
-        // // load_parse_line() can route lines back to the correct behaviour.
-        // void save_project_add_lines(LinkedList<String> *lines) {
-        //     const uint_fast8_t size = behaviours->size();
-        //     for (uint_fast8_t i = 0 ; i < size ; i++) {
-        //         DeviceBehaviourUltimateBase *device = behaviours->get(i);
-        //         LinkedList<String> blines = LinkedList<String>();
-        //         // saveloadlib tree emits settings lines; prefix each with the behaviour label
-        //         sl_save_to_linkedlist(device, blines, SL_SCOPE_PROJECT);
-        //         const char *label = device->get_label();
-        //         for (unsigned int j = 0 ; j < blines.size() ; j++) {
-        //             lines->add(String(label) + "~" + blines.get(j));
-        //         }
-        //     }
-        // }
-
-        // // ask each behaviour to add option lines to save pattern file
-        // void save_pattern_add_lines(LinkedList<String> *lines) {
-        //     const uint_fast8_t size = behaviours->size();
-        //     for (uint_fast8_t i = 0 ; i < size ; i++) {
-        //         behaviours->get(i)->save_pattern_add_lines(lines);
-        //     }
-        // }
 
         void reset_all_mappings() {
             const unsigned int size = behaviours->size();

@@ -19,8 +19,6 @@
 #include "parameters/MIDICCParameter.h"
 #include "ParameterManager.h"
 
-#include "Hashtable.h"
-
 #include "file_manager/file_manager_interfaces.h"
 
 #ifdef ENABLE_SCREEN
@@ -66,8 +64,6 @@ class DeviceBehaviourUltimateBase :
     //MIDIOutputWrapper *wrapper = nullptr;
 
     NoteTracker note_tracker;
-
-    Hashtable<String, FloatParameter*> *parameters_hash = nullptr;
 
     DeviceBehaviourUltimateBase() = default;
     virtual ~DeviceBehaviourUltimateBase() = default;
@@ -243,15 +239,7 @@ class DeviceBehaviourUltimateBase :
     LinkedList<FloatParameter*> *parameters = new LinkedList<FloatParameter*>();
     virtual LinkedList<FloatParameter*> *get_parameters () {
         if (parameters==nullptr || parameters->size()==0) {
-            this->initialise_parameters();
-
-            // set up parameters hashload
-            this->parameters_hash = new Hashtable<String, FloatParameter*>();
-            for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-                Serial.printf("behaviour_base#initialise_parameters for '%s': adding parameter '%s' to hash\n", this->get_label(), parameters->get(i)->label);
-                FloatParameter *param = parameters->get(i);
-                this->parameters_hash->put(String(param->label), param);
-            }            
+            this->initialise_parameters();   
         }
         return parameters;
     }
@@ -314,28 +302,7 @@ class DeviceBehaviourUltimateBase :
         }
     }
 
-    // // // Save all pattern settings for this behaviour into lines (each prefixed with behaviour path).
-    // // virtual void save_pattern_add_lines(LinkedList<String> *lines) {
-    // //     sl_save_to_linkedlist(this, *lines);
-    // // }
-
-    // // Project-level hooks (separate from pattern save/load; not migrated to saveloadlib)
-    // virtual void save_project_add_lines(LinkedList<String> *lines) {}
-    // virtual bool parse_project_key_value(String key, String value) { return false; }
     virtual void notify_project_changed(int project_number) {}
-
-    // // Route a key=value pair (key has behaviour prefix already stripped) into the save tree.
-    // virtual bool load_parse_key_value(String key, String value) {
-    //     if (this->parse_project_key_value(key, value)) return true;
-    //     static char keybuf[SL_MAX_LINE];
-    //     key.toCharArray(keybuf, sizeof(keybuf));
-    //     static char* segs[16];
-    //     int count = sl_tokenise_inplace(keybuf, segs, 16);
-    //     if (count <= 0) return false;
-    //     return this->load_line(segs, count, value.c_str());
-    // }
-
-    virtual void setup_saveable_parameters_hash() {} // no-op; kept for source compatibility
 
     #ifdef ENABLE_SCREEN
         LinkedList<MenuItem*> *menuitems = nullptr;
