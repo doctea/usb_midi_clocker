@@ -35,7 +35,6 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         #endif
 
         virtual void setup_saveable_settings() override {
-            set_path_segment("behaviours");
             for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
                 DeviceBehaviourUltimateBase* b = behaviours->get(i);
                 //Debug_printf("setup_saveable_settings register_child for %i: %s\n", i, b->get_label());
@@ -373,7 +372,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
     private:
         static DeviceBehaviourManager* inst_;
         DeviceBehaviourManager() {
-            set_path_segment("behaviour_manager");
+            set_path_segment("behaviours");
 
             #ifdef ENABLE_USB
                 this->behaviours_usb = new LinkedList<DeviceBehaviourUSBBase*>();
