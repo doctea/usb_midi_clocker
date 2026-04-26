@@ -130,6 +130,71 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "clearcrashlog") == 0) {
         clear_crashreport_log();
         return true;
+    } else if (strcmp(command, "listbehaviours") == 0) {
+        Serial.println("Behaviours:");
+        for (uint_fast8_t i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
+            DeviceBehaviourUltimateBase *b = behaviour_manager->behaviours->get(i);
+            Serial.printf(
+                "  Label: '%s', Type: '%s', Indicator: '%s'\n", 
+                b->get_label(), 
+                b->getType() == BehaviourType::serial ? "Serial" : 
+                b->getType() == BehaviourType::usb ? "USBMIDI" : 
+                b->getType() == BehaviourType::usbserial ? "USBSerial" :
+                b->getType() == BehaviourType::usbserialmidi ? "USBSerialMIDI" :
+                b->getType() == BehaviourType::virt ? "Virtual" : "Undefined",
+                b->get_indicator()
+            );
+        }
+        return true;
+    } else if (strcmp(command, "playnote") == 0 || strcmp(command, "stopnote") == 0) {
+        // take a behaviour label and note number as arguments, find the behaviour and play/stop the note on it (for testing)
+        if (arg1[0] == '\0' || arg2[0] == '\0') {
+            Serial.println("Usage: playnote|stopnote <behaviour_label> <note_number>");
+            return true;
+        }
+        DeviceBehaviourUltimateBase* b = behaviour_manager->find_behaviour_for_label(arg1);
+        if (b == nullptr) {
+            Serial.printf("No behaviour found with label '%s'\n", arg1);
+            return true;
+        }
+        int8_t note_number = atoi(arg2);
+        if (is_valid_note(note_number)) {
+            if (strcmp(command, "playnote") == 0)
+                b->sendNoteOn(note_number, MIDI_MAX_VELOCITY, b->current_channel);
+            else if (strcmp(command, "stopnote") == 0)
+                b->sendNoteOff(note_number, MIDI_MAX_VELOCITY, b->current_channel);
+            Serial.printf("%s note %i on behaviour '%s'\n", strcmp(command, "playnote") == 0 ? "Played" : "Stopped", note_number, arg1);
+        } else {
+            Serial.printf("Invalid note number: %i\n", note_number);
+        }
+        return true;
+    } else if (strcmp(command, "setdebugbehaviour") == 0) {
+        if (arg1[0] == '\0' || arg2[0] == '\0') {
+            Serial.println("Usage: setdebugbehaviour <label> <on|off> (toggles debug output on/off)");
+            return true;
+        }
+        DeviceBehaviourUltimateBase* b = behaviour_manager->find_behaviour_for_label(arg1);
+        if (b == nullptr) {
+            Serial.printf("No behaviour found with label '%s'\n", arg1);
+            return true;
+        }
+        // set debug on/off for specified behaviour
+        if (arg2[0] == '\0') {
+            Serial.println("Usage: setdebugbehaviour <label> <on|off>");
+            return true;
+        }
+        bool debug_value;
+        if (strcmp(arg2, "on") == 0) {
+            debug_value = true;
+        } else if (strcmp(arg2, "off") == 0) {
+            debug_value = false;
+        } else {
+            Serial.println("Usage: setdebugbehaviour <label> <on|off>");
+            return true;
+        }
+        b->debug = debug_value;
+        Serial.printf("Set debug output for behaviour '%s' to %s\n", arg1, debug_value ? "enabled" : "disabled");
+        return true;
     } else if (strcmp(command, "list") == 0) {
         // list files and filesize on SD card in given project folder
         // recurse into folders if possible (up to 2 levels deep?) and print files with relative path from project folder
@@ -412,22 +477,30 @@ bool execute_command(const char *command_line) {
         return true;
     } else if (strcmp(command, "help") == 0) {
         Serial.println("Available commands:");
-        Serial.printf("  debug on/off - Enable or disable debug output (currently %s)\n", pass_debug ? "on" : "off");
-        Serial.println("  ping - Check if the device is responsive");
-        Serial.println("  status - Get the current status of the device");
-        Serial.println("  reset - Reset the device");
-        Serial.println("  free_ram - Check available RAM");
-        Serial.println("  crashlog - Dump the crash report log (if any)");
-        Serial.println("  clearcrashlog - Clear the crash report log (if any)");
-        Serial.println("  showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
-        Serial.println("  list <project_number> - List files on the SD card for the given project");
-        Serial.println("  set project/scene <number> - Set the current project or scene number");
-        Serial.println("  show <scene|proj> <number> - Show the contents of a scene or project settings file");
-        Serial.println("  save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
-        Serial.println("  load <scene|proj> <number> - Load a scene or project settings from the given slot number");
-        Serial.println("  [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a scene file (for testing parsing)");
-        Serial.println("  info - show build info");
-        Serial.println("  help - Show this help message");
+        Serial.println("  == info/status ==");
+        Serial.printf("     debug on/off - Enable or disable debug output (currently %s)\n", pass_debug ? "on" : "off");
+        Serial.println("    ping - Check if the device is responsive");
+        Serial.println("    status - Get the current status of the device");
+        Serial.println("    reset - Reset the device");
+        Serial.println("    free_ram - Check available RAM");
+        Serial.println("    info - show build info");
+        Serial.println("    help - Show this help message");
+        Serial.println("  == debug/crashlog commands ==");
+        Serial.println("    crashlog - Dump the crash report log (if any)");
+        Serial.println("    clearcrashlog - Clear the crash report log (if any)");
+        Serial.println("  == saveload/file commands ==");
+        Serial.println("    showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
+        Serial.println("    list <project_number> - List files on the SD card for the given project");
+        Serial.println("    set project/scene <number> - Set the current project or scene number");
+        Serial.println("    show <scene|proj> <number> - Show the contents of a scene or project settings file");
+        Serial.println("    save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
+        Serial.println("    load <scene|proj> <number> - Load a scene or project settings from the given slot number");
+        Serial.println("    [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a scene file (for testing parsing)");
+        Serial.println("  == behaviour testing commands ==");
+        Serial.println("    listbehaviours - List all behaviours with their labels and types");
+        Serial.println("    playnote <behaviour_label> <note_number> - Send a Note On message for the given note number to the behaviour with the given label");
+        Serial.println("    stopnote <behaviour_label> <note_number> - Send a Note Off message for the given note number to the behaviour with the given label");
+        Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
         return true;
     }
     return false;
