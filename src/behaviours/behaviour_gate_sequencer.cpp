@@ -127,14 +127,14 @@ void VirtualBehaviour_SequencerGates::process_sequencer(unsigned long ticks) {
             }
 
             if (should_go_high) {
-              cv_out_sequence_pin_on (i);
+              // cv_out_sequence_pin_on (i);                   // TODO: should this be removed, since we just want to send midi notes via the midi matrix routing now?
               if (this->is_send_midi_notes_enabled()) {
                   // send a midi note on for this step too
                   this->receive_note_on(this->current_channel, get_midi_note_for_gate_number(i), MIDI_MAX_VELOCITY);
               }
             }
             else if (should_go_low) {
-              cv_out_sequence_pin_off(i);
+              // cv_out_sequence_pin_off(i);                   // TODO: should this be removed, since we just want to send midi notes via the midi matrix routing now?
               if (this->is_send_midi_notes_enabled()) {
                   // send a midi note off for this step too
                   this->receive_note_off(this->current_channel, get_midi_note_for_gate_number(i), 0);
