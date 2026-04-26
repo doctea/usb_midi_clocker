@@ -294,7 +294,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
                 return 1;
             case GM_NOTE_HAND_CLAP:
                 return 2;
-            case GM_NOTE_COWBELL:
+            case GM_NOTE_LOW_TOM:
                 return 3;
             case GM_NOTE_CLOSED_HI_HAT:
                 return 4;
