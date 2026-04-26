@@ -183,26 +183,32 @@ class DeviceBehaviourUltimateBase :
     }
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override;
-    // tell the device to play a note off
+    // tell the device to play a note off; handles quantisation and note tracking so that the correct note gets turned off even if quantisation would normally change it, and so that held notes get tracked properly
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         //Serial.println("DeviceBehaviourUltimateBase#sendNoteOff");
-        // TODO: this is where ForceOctave check should go..?
 
         if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
+        
+        // do nothing if passed an invalid note
+        if (!is_valid_note(note)) return;
 
+        // quantised_note should be the value that this desired note was last played as; 
+        // so we can make it stop by sending the note off for that value, even if quantisation would normally
+        // prevent it.
         int8_t quantised_note = note_tracker_get_transposed_note_for(note);
         if (debug) Serial_printf("\t\t note_tracker.get_transposed_note_for(%i) = %i (%s)\n", note, quantised_note, get_note_name_c(quantised_note));
 
-        //quantised_note = this->recalculate_pitch(quantised_note);
-        if (!is_valid_note(note)) return;
+        // remember the transposed note settings (todo: why?  where is this used?)
         this->last_transposed_note = note;
         if (this->current_transposed_note==note)
             this->current_transposed_note = NOTE_OFF;
 
-        note += this->TUNING_OFFSET;
-        if (!is_valid_note(note)) return;
-
         note_tracker_held_note_off(note, channel);
+
+        // adjust note according to tuning offset; this is for devices that have a tuning offset setting, eg MIDIMusoCV12
+        // todo: is this happening at the right place?  previously had this before the note_tracker_held_off check
+        quantised_note += this->TUNING_OFFSET;
+        if (!is_valid_note(note)) return;
 
         if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOff(%i, %i, %i) -> quantised_note %i, about to call actualSendNoteOff(%i..)\n", this->get_label(), note, velocity, channel, quantised_note, quantised_note);
         this->actualSendNoteOff(quantised_note, velocity, channel);

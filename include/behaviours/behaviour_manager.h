@@ -344,12 +344,14 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
             void requantise_all_notes() {
                 uint32_t time = millis();
                 const uint_fast8_t size = behaviours->size();
-                int requantised_notes = 0;
-                if (debug) { Serial_printf("requantise_all_notes() processing %i behaviours...\n", size); Serial_flush(); }
+                int8_t requantised_notes = 0;
+                if (debug) { 
+                    Serial_printf("requantise_all_notes() processing %i behaviours...\n", size); Serial_flush(); 
+                }
                 for (uint_fast8_t i = 0 ; i < size ; i++) {
-                    int behaviour_time = micros();
+                    uint32_t behaviour_time = micros();
                     DeviceBehaviourUltimateBase *device = behaviours->get(i);
-                    int notes = device->requantise_all_notes();
+                    int8_t notes = device->requantise_all_notes();
                     if (notes>0) {
                         requantised_notes += notes;
                     }

@@ -71,10 +71,10 @@ void behaviour_manager_kill_all_current_notes () {
 
 #ifdef ENABLE_SCALES
     void behaviour_manager_requantise_all_notes(bool force) {
-        //Serial_println(F("!!!! behaviour_manager_requantise_all_notes")); Serial_flush();
+        // Serial_println(F("!!!! behaviour_manager_requantise_all_notes called...")); Serial_flush();
 
         if (force || conductor->get_global_quantise_mode() != QUANTISE_MODE_NONE) {
-            //Serial_printf("!!!! behaviour_manager_requantise_all_notes\n");
+            // Serial_printf("!!!! behaviour_manager_requantise_all_notes running!\n");
             //behaviour_manager->debug = true;
             behaviour_manager->requantise_all_notes();
             //behaviour_manager->debug = false;
