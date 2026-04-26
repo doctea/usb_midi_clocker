@@ -298,7 +298,11 @@
                 break;
             case '~': 
                 Serial_println(F("Toggling (~p)laying"));
-                clock_continue();
+                if (conductor->is_playing()) {
+                    conductor->stop();
+                } else {
+                    clock_continue();
+                }
                 break;
             // take screenshot
             #if defined(ENABLE_SCREEN) && defined(ENABLE_SD) && defined(ENABLE_SCREENSHOT)
