@@ -40,6 +40,14 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         tm_pattern->set_path_segment("pattern_0");
         tm_pattern->set_steps(16);
         this->sequencer->add_pattern(tm_pattern);
+
+        #if defined(ENABLE_PARAMETERS)
+            parameter_manager->addInput(tm_pattern);
+
+            //Serial.println("..calling sequencer.getParameters()..");
+            LinkedList<FloatParameter*> *params = sequencer->getParameters();
+            Debug_printf("after setting up sequencer parameters, free RAM is %u\n", freeRam());
+        #endif
     }
 
     virtual const char *get_label() override {
@@ -106,7 +114,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
             LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
             this->sequencer->make_menu_items(menu, true);
-            this->output_processor->create_menu_items();
+            this->output_processor->create_menu_items(true);
 
             return menuitems;
         }
