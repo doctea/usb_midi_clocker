@@ -361,6 +361,10 @@ void setup_behaviour_manager() {
                 Serial_printf(" ('%s')\n", behaviour->get_label());
             }
             Serial_flush();
+
+            // TODO: we want to do something here where we can tell whether a behaviour should get an entire page or whether it can be combined
+            // and then if it can be combined (eg if it only has very basic controls on it) then skip it in this loop and create a combined page
+            // for them all later...
             this->create_single_behaviour_menu_items(menu, behaviour);
 
             // add page to behaviour quickjump, so long as isn't itself
@@ -436,7 +440,10 @@ void setup_behaviour_manager() {
             Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: done calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
 
             uint16_t group_colour = C_WHITE;
-            if (menuitems->size()>0 || behaviour->has_parameters()) {
+            if (
+                menuitems->size()>0 || 
+                (behaviour->has_parameters() && behaviour->show_dedicated_parameters_page())
+            ) {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
                 menu->add_page(behaviour->get_label(), group_colour);
@@ -453,7 +460,7 @@ void setup_behaviour_manager() {
             }
 
             // todo: move this into behaviour's make_menu_items? not doing this currently because would need to add it manually to every subclass's make_menu_items...
-            if (behaviour->has_parameters()) {
+            if (behaviour->has_parameters() && behaviour->show_dedicated_parameters_page()) {
                 Serial_print("doing addParameterSubMenuItems.."); Serial_flush(); 
                 debug_free_ram();
                 parameter_manager->addParameterSubMenuItems(

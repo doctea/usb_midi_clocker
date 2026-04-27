@@ -323,6 +323,12 @@ class DeviceBehaviourUltimateBase :
         FLASHMEM
         virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
 
+        // override this and set to false if you don't want to have a dedicated parameters page for this behaviour 
+        // (eg because you want to put the parameters on the device's main menu page instead, as with MIDIBass)
+        virtual bool show_dedicated_parameters_page() {
+            return this->get_parameters()!=nullptr && this->get_parameters()->size()>0;
+        }
+
         HarmonyStatus *output_harmony_status = nullptr; // store a pointer to this so we can update it from subclasses, eg MIDIBass
     #endif
 

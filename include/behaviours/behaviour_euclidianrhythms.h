@@ -162,6 +162,10 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
             return menuitems;
         }
+
+        virtual bool show_dedicated_parameters_page() {
+            return false;
+        }
     #endif
 
     virtual void setup_saveable_settings() override {
