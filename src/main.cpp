@@ -25,6 +25,7 @@
   //#include "tft.h"
   #include "menu.h"
   #include "mymenu/menu_debug.h"
+  #include "mymenu/menu_system_settings.h"
 #endif
 #include "project.h"
 
@@ -279,6 +280,13 @@ void setup() {
     tft_print((char*)"...setup save tree...\n"); Serial_flush();
     debug_free_ram();
     setup_saveloadlib();
+    parameter_manager->save_system_settings_callback = []() -> bool {
+      return storage::save_system_settings();
+    };
+    parameter_manager->load_system_settings_callback = []() -> bool {
+      return storage::load_system_settings();
+    };
+    storage::load_system_settings();
     debug_free_ram();
     //tft_print((char*)"Finished setting up saveloadlib!"); Serial.flush();
   #endif
@@ -336,6 +344,10 @@ void setup() {
 
     setup_debug_menu();
     Debug_printf(F("after setup_debug_menu(), free RAM is %u\n"), freeRam());
+    #ifdef ENABLE_STORAGE
+      setup_system_settings_menu();
+    #endif
+    Debug_printf(F("after setup_system_settings_menu(), free RAM is %u\n"), freeRam());
 
     menu->select_page(0);
   #endif
@@ -356,10 +368,6 @@ void setup() {
 
   #ifdef ENABLE_SCREEN
     snprintf(menu->last_message, MENU_C_MAX, "started up, %uK RAM2 free, %uK EXT free", freeRam()/1024, freeExtRam()/1024);
-  #endif
-
-  #ifdef LOAD_CALIBRATION_ON_BOOT
-    parameter_manager->load_all_calibrations();
   #endif
 
   // Re-apply project at end of setup: this runs load + behaviour notification

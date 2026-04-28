@@ -273,6 +273,72 @@ namespace storage {
     snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
     return filename;
   }
+  char *get_system_settings_filename() {
+    static char filename[MAX_FILEPATH];
+    snprintf(filename, MAX_FILEPATH, FILEPATH_SYSTEM_SETTINGS);
+    return filename;
+  }
+
+  bool save_system_settings(bool debug) {
+    #ifdef ENABLE_SD
+    if (settings_root == nullptr) {
+      Serial.println(F("save_system_settings: settings_root is null"));
+      return false;
+    }
+
+    char *filename = get_system_settings_filename();
+    if (debug) Serial.printf(F("save_system_settings() writing to %s\n"), filename);
+    if (SD.exists(filename)) {
+      SD.remove(filename);
+    }
+
+    uint32_t micros_start = micros();
+    bool ok = sl_save_to_file(settings_root, filename, SL_SCOPE_SYSTEM);
+    if (ok) {
+      Serial.printf(F("Saved system settings in %lu microseconds.\n"), micros() - micros_start);
+      messages_log_add(String("Saved system settings"));
+    } else {
+      Serial.printf(F("Failed to save system settings to %s\n"), filename);
+      messages_log_add(String("Failed to save system settings"));
+    }
+    update_system_settings_filename(String(filename));
+    return ok;
+    #endif
+
+    return false;
+  }
+
+  bool load_system_settings(bool debug) {
+    #ifdef ENABLE_SD
+    if (settings_root == nullptr) {
+      Serial.println(F("load_system_settings: settings_root is null"));
+      return false;
+    }
+
+    char *filename = get_system_settings_filename();
+    if (debug) Serial.printf(F("load_system_settings() opening %s\n"), filename);
+
+    if (!SD.exists(filename)) {
+      messages_log_add(String("System settings file does not exist: ") + String(filename));
+      update_system_settings_filename(String(filename));
+      return false;
+    }
+
+    uint32_t micros_start = micros();
+    bool ok = sl_load_from_file(filename, SL_SCOPE_SYSTEM);
+    if (ok) {
+      Serial.printf(F("Loaded system settings in %lu microseconds.\n"), micros() - micros_start);
+      messages_log_add(String("Loaded system settings"));
+    } else {
+      Serial.printf(F("Failed to load system settings from %s (missing or unreadable).\n"), filename);
+      messages_log_add(String("No system settings file found"));
+    }
+    update_system_settings_filename(String(filename));
+    return ok;
+    #endif
+
+    return false;
+  }
 
   bool load_scene(int project_number, uint8_t scene_number, savestate *output, bool debug) {
     #ifdef ENABLE_SD

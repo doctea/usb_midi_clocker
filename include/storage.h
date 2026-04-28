@@ -17,6 +17,7 @@ namespace storage {
   #define FILEPATH_PLAYLIST_FORMAT          "project%i/playlist.txt"
   #define FILEPATH_PROJECT_SETTINGS_FORMAT  "project%i/project.txt"
   #define FILEPATH_LOOP_FORMAT              "project%i/loops/loop%i.txt"
+  #define FILEPATH_SYSTEM_SETTINGS          "system.txt"
   #define FILEPATH_CALIBRATION_FORMAT       "calibration_voltage_source_%i.txt"
 
   #define MAX_FILEPATH 255
@@ -157,9 +158,12 @@ namespace storage {
 
   char *get_scene_filename(int project_number, int scene_number);
   char *get_project_settings_filename(int project_number);
+  char *get_system_settings_filename();
 
   bool save_scene(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
   bool load_scene(int project_number, uint8_t preset_number, savestate *input, bool debug = false);
+  bool save_system_settings(bool debug = false);
+  bool load_system_settings(bool debug = false);
   FLASHMEM void setup_sd();
 
   FLASHMEM void log_crashreport();

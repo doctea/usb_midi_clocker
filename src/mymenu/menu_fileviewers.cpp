@@ -11,6 +11,7 @@
 
 PageFileViewerMenuItem *sequence_fileviewer = nullptr;
 PageFileViewerMenuItem *project_fileviewer = nullptr;
+PageFileViewerMenuItem *system_settings_fileviewer = nullptr;
 
 void update_scene_filename(String filename) {
     if (sequence_fileviewer!=nullptr) {
@@ -21,6 +22,12 @@ void update_scene_filename(String filename) {
 void update_project_filename(String filename) {
     if (project_fileviewer!=nullptr) {
         project_fileviewer->readFile(filename.c_str());
+    }
+}
+
+void update_system_settings_filename(String filename) {
+    if (system_settings_fileviewer!=nullptr) {
+        system_settings_fileviewer->readFile(filename.c_str());
     }
 }
 
