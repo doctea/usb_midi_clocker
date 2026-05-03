@@ -20,6 +20,7 @@
 #include "mymenu/menuitems_scale.h"
 #include "mymenu/menuitems_notedisplay.h"
 #include "mymenu/menuitems_progression.h"
+#include "mymenu/menu_arranger.h"
 #include "chord_player.h"
 
 #include "behaviours/behaviour_cvoutput.h"
@@ -890,16 +891,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             section_bar->add(new NumberControl<int8_t>("Plays", &arranger->current_section_plays, 0, 8, true, true));
             menuitems->add(section_bar);
 
-            SubMenuItemBar *save_section_bar = new SubMenuItemBar("Section", false, true);
-            save_section_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_section(arranger->current_section); }));
-            save_section_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_section(arranger->current_section); }));
-            menuitems->add(save_section_bar);
-
-            SubMenuItemBar *save_playlist_bar = new SubMenuItemBar("Playlist", false, true);
-            save_playlist_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_playlist(-1); }));
-            save_playlist_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_playlist(-1); }));
-            menuitems->add(save_playlist_bar);
-
             /*
             // test menu items to test generating new scales
             menuitems->add(new LambdaActionItem("Generate new scale", [=] () -> void {
@@ -942,108 +933,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-            this->create_menu_items_playlist();
+            arranger_make_menu_items(menu, this->colour,
+                [=]() -> void { this->save_playlist(); },
+                [=]() -> void { this->load_playlist(); });
 
             return menuitems;
-        }
-
-        
-        //void create_menu_items_playlist();
-        virtual void create_menu_items_playlist() {
-            //LinkedList<MenuItem *> *menuitems = new LinkedList<MenuItem *>();
-
-            // SubMenuItemBar *playlist_bar = new SubMenuItemBar("Playlist controls", false, true);
-            // playlist_bar->add(new LambdaActionItem("Next section", [=] () -> void { move_next_playlist(); }));
-            // menuitems->add(playlist_bar);
-
-            // create only one set of enable/advance buttons, and save/load buttons, and re-use them for all of the pages here
-            // add save/load buttons 
-            SubMenuItemBar *save_load_bar = new SubMenuItemBar("Section controls", false, true);
-            save_load_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { this->save_playlist(); }));
-            save_load_bar->add(
-                new CallbackMenuItem(
-                    "State", 
-                    [=] () -> const char* { return this->has_song_changes_to_save() ? "Unsaved" : "Saved"; }, 
-                    [=] () -> uint16_t { return this->has_song_changes_to_save() ? RED : GREEN; },
-                    false
-                )
-            );
-            save_load_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { this->load_playlist(); }));
-
-            // add controls to enable/disable advance of bars and section
-            SubMenuItemBar *advance_bar = new SubMenuItemBar("Advance controls", false, true);
-            advance_bar->add(new LambdaToggleControl("Advance bar", 
-                [=] (bool v) -> void { this->advance_progression_bar = v; },
-                [=] (void) -> bool { return this->advance_progression_bar; }
-            ));
-            advance_bar->add(new LambdaToggleControl("Advance playlist", 
-                [=] (bool v) -> void { this->advance_progression_playlist = v; },
-                [=] (void) -> bool { return this->advance_progression_playlist; }
-            ));
-
-            
-            // a page showing and allowing edit of the the song structure (playlist)
-            // header row
-            menu->add_page("Playlist", this->colour, false);
-            menu->add(new MenuItem("Section      Repeats        ", false, true));
-            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
-                menu->add(new LambdaPlaylistSubMenuItemBarWithIndicator(
-                    (String("Slot ") + String(i)).c_str(),
-                    [=](int8_t section) -> void { arranger->playlist.entries[i].section = section; mark_song_as_modified(); },
-                    [=]() -> int8_t { return arranger->playlist.entries[i].section; },
-                    [=](int8_t repeats) -> void { arranger->playlist.entries[i].repeats = repeats; mark_song_as_modified(); },
-                    [=]() -> int8_t { return arranger->playlist.entries[i].repeats; },
-                    i,
-                    &arranger->current_section,
-                    NUM_SONG_SECTIONS, 
-                    MAX_REPEATS,
-                    false, false
-                ));
-            }
-
-            menu->add(save_load_bar);
-            menu->add(advance_bar);
-
-            // one page per song section
-            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
-                menu->add_page((String("Section ") + String(i)).c_str(), this->colour, false);
-
-                // header row
-                menu->add(new MenuItem("Degree      Type        Inversion", false, true));
-
-                // then one row per bar
-                for (int j = 0 ; j < CHORDS_PER_SECTION ; j++) {
-                    LambdaChordSubMenuItemBarWithIndicator *section_bar = new LambdaChordSubMenuItemBarWithIndicator(
-                        (String("Bar ") + String(j)).c_str(),
-                        [=](int8_t degree) -> void { 
-                            arranger->song_sections[i].grid[j].degree = degree; 
-                            mark_song_as_modified(); 
-                        },
-                        [=]() -> int8_t { 
-                            return arranger->song_sections[i].grid[j].degree; 
-                        },
-                        [=](CHORD::Type chord_type) -> void { 
-                            arranger->song_sections[i].grid[j].type = chord_type; 
-                            mark_song_as_modified(); },
-                        [=]() -> CHORD::Type { 
-                            return arranger->song_sections[i].grid[j].type; 
-                        },
-                        [=](int8_t inversion) -> void { 
-                            arranger->song_sections[i].grid[j].inversion = inversion; 
-                            mark_song_as_modified(); 
-                        },
-                        [=]() -> int8_t { 
-                            return arranger->song_sections[i].grid[j].inversion; 
-                        },
-                        i, j, &arranger->current_section, &arranger->current_bar,
-                        false, false, false
-                    );
-                    menu->add(section_bar);
-                }
-
-                menu->add(save_load_bar);
-                menu->add(advance_bar);
-            }
         }
 
     #endif
