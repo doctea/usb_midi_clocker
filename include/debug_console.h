@@ -402,36 +402,40 @@ bool execute_command(const char *command_line) {
             Serial.printf("Unknown type: %s\n", arg1);
             return true;
         }
-    // } else if (strcmp(command, "loadline") == 0) {
-    //     // load a line from serial input as if it were a line from a file, for testing parsing of 
-    //     // scene files without needing to write to the SD card. Usage: loadline <line_contents>
-    //     if (arg1[0] == '\0') {
-    //         Serial.println("Usage: loadline <type> <line_contents>");
-    //         return true;
-    //     }
-    //     char line_buffer[512];
-    //     if (arg2[0] == '\0') {
-    //         Serial.println("Usage: loadline <type> <line_contents>");
-    //         return true;
-    //     }
+    } else if (strcmp(command, "loadline") == 0) {
+        // load a line from serial input as if it were a line from a file, for testing parsing of 
+        // scene files without needing to write to the SD card. Usage: loadline <line_contents>
+        if (arg1[0] == '\0') {
+            Serial.println("Usage: loadline <type> <line_contents>");
+            return true;
+        }
+        char line_buffer[512];
+        if (arg2[0] == '\0') {
+            Serial.println("Usage: loadline <type> <line_contents>");
+            return true;
+        }
 
-    //     snprintf(line_buffer, sizeof(line_buffer), "%s", arg2);
+        snprintf(line_buffer, sizeof(line_buffer), "%s", arg2);
+        sl_scope_t scope = 0;
+        if (strcmp(arg1, "scene") == 0) {
+            // load a line of text as if it were a line from a scene file, and output the result of parsing it
+            Serial_printf("Parsing line as scene line: '%s'\n", line_buffer);
+            scope = SL_SCOPE_SCENE;
+            Serial_println("Done.");
+        } else if (strcmp(arg1, "project") == 0) {
+            // load a line of text as if it were a line from a project settings file, and output the result of parsing it
+            Serial_printf("Parsing line as project settings line: '%s'\n", line_buffer);
+            scope = SL_SCOPE_PROJECT;
+            Serial_println("Done.");
+        } else {
+            Serial.printf("Unknown type: %s\n", arg1);
+        }
 
-    //     if (strcmp(arg1, "scene") == 0) {
-    //         // load a line of text as if it were a line from a scene file, and output the result of parsing it
-    //         Serial_printf("Parsing line as scene line: '%s'\n", line_buffer);
-    //         storage::load_scene_parse_line(line_buffer, &storage::current_state, pass_debug);
-    //         Serial_println("Done.");
-    //     } else if (strcmp(arg1, "project") == 0) {
-    //         // load a line of text as if it were a line from a project settings file, and output the result of parsing it
-    //         Serial_printf("Parsing line as project settings line: '%s'\n", line_buffer);
-    //         project->load_project_parse_line(line_buffer, pass_debug);
-    //         Serial_println("Done.");
-    //     } else {
-    //         Serial.printf("Unknown type: %s\n", arg1);
-    //     }
+        // attempt to load the line via the saveloadlib tree
+        bool result = sl_parse_line_buffer(line_buffer, scope);
+        Serial.printf("Result of parsing line: %s\n", result ? "success" : "failure");
         
-    //     return true;
+        return true;
     } else if (strcmp(command, "showtree") == 0) {
         // output the current settings tree as a text dump to the serial console, for debugging
         // usage: showtree [scopemask]
