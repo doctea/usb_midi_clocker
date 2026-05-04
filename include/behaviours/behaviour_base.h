@@ -141,6 +141,7 @@ class DeviceBehaviourUltimateBase :
             for (uint8_t i = 0; i < MAX_SLOT_CONNECTIONS; i++) {
                 this->pitch_bend_parameter->connections[i].polar_mode = MOD_SLOT_UNI_CENTERED;
             }
+            this->pitch_bend_parameter->float_unit = 'c'; // cents
             this->pitch_bend_parameter->setInitialValueFromData(0.0f);
             this->parameters->add(this->pitch_bend_parameter);
         }

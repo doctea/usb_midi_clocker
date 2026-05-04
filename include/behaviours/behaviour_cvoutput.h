@@ -239,6 +239,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                     pitch_bend_parameters[output_index]->connections[i].polar_mode = MOD_SLOT_UNI_CENTERED;
                 }
 
+                pitch_bend_parameters[output_index]->float_unit = 'c'; // cents
                 this->parameters->add(pitch_bend_parameters[output_index]);
             }
         #endif
