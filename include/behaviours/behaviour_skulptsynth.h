@@ -214,10 +214,9 @@ class DeviceBehaviour_SkulptSynth
         virtual void setup_saveable_settings() override {
             DeviceBehaviourUltimateBase::setup_saveable_settings();
             // ClockedBehaviour and ModwheelReceiver have no saveable settings of their own
-            register_setting(new LSaveableSetting<bool>(
+            register_setting(new VarSetting<bool>(
                 "Clock Enabled", "Clock",
-                &this->clock_enabled,
-                [=](bool v) { this->clock_enabled = v; }
+                &this->clock_enabled
             ), SL_SCOPE_SCENE);
         }
 

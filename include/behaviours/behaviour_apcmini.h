@@ -429,7 +429,7 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
 
         virtual void setup_saveable_settings() override {
             DeviceBehaviourUSBBase::setup_saveable_settings();
-            register_setting(new LSaveableSetting<uint8_t>(
+            register_setting(new VarSetting<uint8_t>(
                 "tempo_cc", "APCMini",
                 &this->tempo_fader_cc
             ), false, SL_SCOPE_SYSTEM);

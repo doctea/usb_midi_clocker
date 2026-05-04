@@ -199,10 +199,10 @@ namespace storage {
     //vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
 
     // Scene metadata
-    register_setting(new LSaveableSetting<uint8_t>("scene_id",    "Scene", &id),            SL_SCOPE_SCENE, false);
-    register_setting(new LSaveableSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   SL_SCOPE_SCENE, false);
-    register_setting(new LSaveableSetting<uint8_t>("size_seqs",   "Scene", &size_sequences), SL_SCOPE_SCENE, false);
-    register_setting(new LSaveableSetting<uint8_t>("size_steps",  "Scene", &size_steps),    SL_SCOPE_SCENE, false);
+    register_setting(new VarSetting<uint8_t>("scene_id",    "Scene", &id),            SL_SCOPE_SCENE, false);
+    register_setting(new VarSetting<uint8_t>("size_clocks", "Scene", &size_clocks),   SL_SCOPE_SCENE, false);
+    register_setting(new VarSetting<uint8_t>("size_seqs",   "Scene", &size_sequences), SL_SCOPE_SCENE, false);
+    register_setting(new VarSetting<uint8_t>("size_steps",  "Scene", &size_steps),    SL_SCOPE_SCENE, false);
 
     // Clock multipliers — packed as 2-hex-chars-per-byte: "clock_mult=07060504..."
     register_setting(new PackedByteArraySetting("clock_mult",  "Clock", clock_multiplier, NUM_CLOCKS), SL_SCOPE_SCENE, false);

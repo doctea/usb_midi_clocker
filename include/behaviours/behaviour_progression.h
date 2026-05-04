@@ -159,11 +159,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void setup_saveable_settings() override {
         DeviceBehaviourUltimateBase::setup_saveable_settings();
-        register_setting(new LSaveableSetting<bool>("Advance progression",  "Progression", &arranger->advance_bar), SL_SCOPE_SCENE);
-        register_setting(new LSaveableSetting<bool>("Advance playlist",      "Progression", &arranger->advance_playlist), SL_SCOPE_SCENE);
-        register_setting(new LSaveableSetting<uint8_t>("Chord octave",   "Progression", &chord_octave), SL_SCOPE_SCENE);
-        register_setting(new LSaveableSetting<uint8_t>("Bass octave",     "Progression", &bass_octave), SL_SCOPE_SCENE);
-        register_setting(new LSaveableSetting<uint8_t>("Topline octave",  "Progression", &topline_octave), SL_SCOPE_SCENE);
+        register_setting(new VarSetting<bool>("Advance progression","Progression", &arranger->advance_bar), SL_SCOPE_SCENE);
+        register_setting(new VarSetting<bool>("Advance playlist",   "Progression", &arranger->advance_playlist), SL_SCOPE_SCENE);
+        register_setting(new VarSetting<uint8_t>("Chord octave",    "Progression", &chord_octave), SL_SCOPE_SCENE);
+        register_setting(new VarSetting<uint8_t>("Bass octave",     "Progression", &bass_octave), SL_SCOPE_SCENE);
+        register_setting(new VarSetting<uint8_t>("Topline octave",  "Progression", &topline_octave), SL_SCOPE_SCENE);
 
         // Song structure: sections + playlist (saved per-project)
         for (int i = 0; i < NUM_SONG_SECTIONS; i++) {
@@ -933,7 +933,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-            arranger_make_menu_items(menu, this->colour,
+            arranger_make_menu_items(menu, false, false, this->colour,
                 [=]() -> void { this->save_playlist(); },
                 [=]() -> void { this->load_playlist(); });
 

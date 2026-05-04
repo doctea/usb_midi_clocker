@@ -114,11 +114,11 @@ class Project : public SHDynamic<0, 8> {
                 [this](int v) { /* id on load is informational; project number set by caller */ },
                 [this]() -> int { return this->current_project_number; }
             ), SL_SCOPE_PROJECT, false);
-            register_setting(new LSaveableSetting<bool>(
+            register_setting(new VarSetting<bool>(
                 "auto_advance_scene", "Project", &this->auto_advance_scene
             ), SL_SCOPE_PROJECT, false);
             #ifdef ENABLE_LOOPER
-            register_setting(new LSaveableSetting<bool>(
+            register_setting(new VarSetting<bool>(
                 "auto_advance_looper", "Project", &this->auto_advance_looper
             ), SL_SCOPE_PROJECT, false);
             #endif
