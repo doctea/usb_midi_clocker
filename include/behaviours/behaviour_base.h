@@ -49,7 +49,7 @@ enum class PitchBendSupport : uint8_t {
 class DeviceBehaviourUltimateBase :
         public virtual IMIDIProxiedCCTarget, 
         public virtual IMIDINoteAndCCTarget, 
-    public virtual IMIDIPitchBendTarget,
+        public virtual IMIDIPitchBendTarget,
         public virtual SHDynamic<4, 4> 
     {
     public:
@@ -90,33 +90,33 @@ class DeviceBehaviourUltimateBase :
         return this->get_pitch_bend_support() == PitchBendSupport::MODULATED;
     }
 
+    virtual int8_t get_pitch_bend_range_semitones() const {
+        return 2;
+    }
+
+    virtual float pitch_bend_to_normalized(int16_t bend) const {
+        return constrain((float)bend / 8192.0f, -1.0f, 1.0f);
+    }
+    virtual int16_t normalized_to_pitch_bend(float normalized) const {
+        normalized = constrain(normalized, -1.0f, 1.0f);
+        long bend = (long)(normalized * 8192.0f);
+        bend = constrain(bend, -8192L, 8191L);
+        return (int16_t)bend;
+    }
+    virtual float pitch_bend_to_semitones(int16_t bend) const {
+        return pitch_bend_to_normalized(bend) * (float)this->get_pitch_bend_range_semitones();
+    }
+    virtual int16_t semitones_to_pitch_bend(float semitones) const {
+        float range = (float)this->get_pitch_bend_range_semitones();
+        if (range <= 0.0f)
+            return 0;
+        return normalized_to_pitch_bend(semitones / range);
+    }
+
     #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
         int16_t last_received_pitch_bend = 0;
         float last_received_pitch_bend_semitones = 0.0f;
         LDataParameter<float> *pitch_bend_parameter = nullptr;
-
-        virtual int8_t get_pitch_bend_range_semitones() const {
-            return 2;
-        }
-
-        virtual float pitch_bend_to_normalized(int16_t bend) const {
-            return constrain((float)bend / 8192.0f, -1.0f, 1.0f);
-        }
-        virtual int16_t normalized_to_pitch_bend(float normalized) const {
-            normalized = constrain(normalized, -1.0f, 1.0f);
-            long bend = (long)(normalized * 8192.0f);
-            bend = constrain(bend, -8192L, 8191L);
-            return (int16_t)bend;
-        }
-        virtual float pitch_bend_to_semitones(int16_t bend) const {
-            return pitch_bend_to_normalized(bend) * (float)this->get_pitch_bend_range_semitones();
-        }
-        virtual int16_t semitones_to_pitch_bend(float semitones) const {
-            float range = (float)this->get_pitch_bend_range_semitones();
-            if (range <= 0.0f)
-                return 0;
-            return normalized_to_pitch_bend(semitones / range);
-        }
 
         virtual void emit_effective_pitch_bend_from_semitones(float semitones, uint8_t channel) {
             this->sendPitchBend(semitones_to_pitch_bend(semitones), channel);
@@ -138,6 +138,9 @@ class DeviceBehaviourUltimateBase :
                 (float)(-range),
                 (float)(range)
             );
+            for (uint8_t i = 0; i < MAX_SLOT_CONNECTIONS; i++) {
+                this->pitch_bend_parameter->connections[i].polar_mode = MOD_SLOT_UNI_CENTERED;
+            }
             this->pitch_bend_parameter->setInitialValueFromData(0.0f);
             this->parameters->add(this->pitch_bend_parameter);
         }

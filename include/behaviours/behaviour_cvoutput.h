@@ -40,6 +40,10 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         static const int8_t channel_count = 4;
         CVOutputParameter<DACClass> *outputs[channel_count] = { nullptr, nullptr, nullptr, nullptr };
 
+        #if defined(ENABLE_PARAMETERS)
+            LDataParameter<float> *pitch_bend_parameters[channel_count] = { nullptr, nullptr, nullptr, nullptr };
+        #endif
+
         const char *parameter_label_prefix = "CVO-";
 
         GateManager *gate_manager = nullptr;
@@ -135,6 +139,141 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
         virtual bool transmits_midi_notes() override {
             return true;
+        }
+
+        virtual PitchBendSupport get_pitch_bend_support() const override {
+            #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+                return PitchBendSupport::MODULATED;
+            #else
+                return PitchBendSupport::PASSTHRU;
+            #endif
+        }
+
+        virtual void apply_omni_pitch_bend_to_allowed_outputs(float semitones) {
+            // Omni bend intentionally targets only outputs in the auto-voice pool.
+            // Manually pinned voices keep dedicated/channel bend behavior only.
+            for (uint8_t i = 0; i < channel_count; i++) {
+                if (outputs[i] == nullptr)
+                    continue;
+
+                // Omni pitch bend should only affect outputs that are in the auto-voice pool.
+                outputs[i]->set_omni_pitch_bend_semitones(this->allow_voice_for_auto[i] ? semitones : 0.0f);
+                #if CV_PITCH_BEND_TRACE
+                    Serial_printf("CVBEND omni idx=%u auto=%u semi=%0.3f\n", i, this->allow_voice_for_auto[i] ? 1 : 0, semitones);
+                #endif
+            }
+        }
+
+        virtual void emit_effective_pitch_bend_from_semitones(float semitones, uint8_t channel) override {
+            (void)channel;
+            apply_omni_pitch_bend_to_allowed_outputs(semitones);
+        }
+
+        #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+            virtual bool handle_modulated_pitch_bend(uint8_t inChannel, int bend) override {
+                if (!this->supports_advanced_pitch_bend() || !this->transmits_midi_notes())
+                    return false;
+
+                this->last_received_pitch_bend = (int16_t)bend;
+                this->last_received_pitch_bend_semitones = this->pitch_bend_to_semitones((int16_t)bend);
+
+                if (inChannel == 0) {
+                    // Keep the behaviour-level pitch bend parameter as the omni source.
+                    this->ensure_advanced_pitch_bend_parameter();
+                    this->current_channel = 0;
+                    #if CV_PITCH_BEND_TRACE
+                        Serial_printf("CVBEND advanced omni in bend=%d semi=%0.3f\n", bend, this->last_received_pitch_bend_semitones);
+                    #endif
+
+                    if (this->pitch_bend_parameter != nullptr) {
+                        this->pitch_bend_parameter->updateValueFromData(this->last_received_pitch_bend_semitones);
+                    } else {
+                        this->apply_omni_pitch_bend_to_allowed_outputs(this->last_received_pitch_bend_semitones);
+                    }
+                    return true;
+                }
+
+                if (inChannel > channel_count)
+                    return false;
+
+                #if CV_PITCH_BEND_TRACE
+                    Serial_printf("CVBEND advanced ch=%u bend=%d semi=%0.3f\n", inChannel, bend, this->last_received_pitch_bend_semitones);
+                #endif
+
+                this->ensure_pitch_bend_parameter(inChannel - 1);
+                if (pitch_bend_parameters[inChannel - 1] != nullptr) {
+                    pitch_bend_parameters[inChannel - 1]->updateValueFromData(this->last_received_pitch_bend_semitones);
+                } else {
+                    this->apply_pitch_bend_to_output(inChannel - 1, (int16_t)bend);
+                }
+                return true;
+            }
+        #endif
+
+        #if defined(ENABLE_PARAMETERS)
+            virtual void ensure_pitch_bend_parameter(uint8_t output_index) {
+                if (output_index >= channel_count)
+                    return;
+                if (pitch_bend_parameters[output_index] != nullptr)
+                    return;
+
+                char parameter_label[MENU_C_MAX] = "";
+                snprintf(parameter_label, MENU_C_MAX, "Pitch Bend %u", (unsigned int)(output_index + 1));
+                const int8_t range = this->get_pitch_bend_range_semitones();
+
+                pitch_bend_parameters[output_index] = new LDataParameter<float>(
+                    parameter_label,
+                    [=](float semitones) -> void {
+                        if (outputs[output_index] != nullptr)
+                            outputs[output_index]->set_channel_pitch_bend_semitones(semitones);
+                    },
+                    [=]() -> float {
+                        if (outputs[output_index] != nullptr)
+                            return outputs[output_index]->get_channel_pitch_bend_semitones();
+                        return 0.0f;
+                    },
+                    (float)(-range),
+                    (float)(range)
+                );
+                for (uint8_t i = 0; i < MAX_SLOT_CONNECTIONS; i++) {
+                    pitch_bend_parameters[output_index]->connections[i].polar_mode = MOD_SLOT_UNI_CENTERED;
+                }
+
+                this->parameters->add(pitch_bend_parameters[output_index]);
+            }
+        #endif
+
+        virtual void apply_pitch_bend_to_output(uint8_t output_index, int16_t bend) {
+            if (output_index >= channel_count)
+                return;
+
+            float bend_semitones = this->pitch_bend_to_semitones(bend);
+
+            #if defined(ENABLE_PARAMETERS)
+                if (pitch_bend_parameters[output_index] != nullptr) {
+                    pitch_bend_parameters[output_index]->updateValueFromData(bend_semitones);
+                    return;
+                }
+            #endif
+
+            if (outputs[output_index] != nullptr)
+                outputs[output_index]->set_channel_pitch_bend_semitones(bend_semitones);
+        }
+
+        virtual void actualSendPitchBend(int16_t bend, uint8_t channel) override {
+            if (channel == 0) {
+                apply_omni_pitch_bend_to_allowed_outputs(this->pitch_bend_to_semitones(bend));
+                return;
+            }
+
+            if (channel > channel_count) {
+                if (debug) {
+                    Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendPitchBend(%i, %i) got invalid channel!\n", bend, channel);
+                }
+                return;
+            }
+
+            apply_pitch_bend_to_output(channel - 1, bend);
         }
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
@@ -238,6 +377,10 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                             0.0, 
                             1.0
                         ));
+
+                        #if defined(ENABLE_ADVANCED_PITCHBEND)
+                            this->ensure_pitch_bend_parameter(i);
+                        #endif
                     }
                 }
 
