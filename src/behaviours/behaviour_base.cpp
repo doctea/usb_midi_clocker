@@ -28,7 +28,19 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
 }
 
 void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend) {
-    midi_matrix_manager->processPitchBend(this->source_id, bend);
+    (void)inChannel;
+
+    #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+        if (this->supports_advanced_pitch_bend() && this->handle_modulated_pitch_bend(inChannel, bend)) {
+            return;
+        }
+    #endif
+
+    // Preserve existing passthrough behavior by default, and keep it as a safe
+    // fallback for MODULATED behaviours until their advanced path is wired.
+    if (this->supports_passthru_pitch_bend() || this->supports_advanced_pitch_bend()) {
+        midi_matrix_manager->processPitchBend(this->source_id, bend);
+    }
 }
 
 #ifdef ENABLE_SCREEN

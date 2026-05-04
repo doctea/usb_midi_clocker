@@ -32,6 +32,14 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, virtua
             return true;
         }
 
+        virtual PitchBendSupport get_pitch_bend_support() const override {
+            #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+                return PitchBendSupport::MODULATED;
+            #else
+                return PitchBendSupport::PASSTHRU;
+            #endif
+        }
+
         virtual void on_bar(int bar) override {
             MIDIBassBehaviour::on_bar(bar);
             ClockedBehaviour::on_bar(bar);

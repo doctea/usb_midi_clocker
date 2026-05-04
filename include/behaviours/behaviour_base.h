@@ -39,11 +39,17 @@ enum BehaviourType {
     virt             // a 'virtual' device type that exists only in code (eg CV Input)
 };
 
+enum class PitchBendSupport : uint8_t {
+    PASSTHRU,
+    MODULATED
+};
+
 // enum NOTE_MODE moved to midihelpers and renamed NOTE_LIMIT_MODE
 
 class DeviceBehaviourUltimateBase :
         public virtual IMIDIProxiedCCTarget, 
         public virtual IMIDINoteAndCCTarget, 
+    public virtual IMIDIPitchBendTarget,
         public virtual SHDynamic<4, 4> 
     {
     public:
@@ -75,6 +81,84 @@ class DeviceBehaviourUltimateBase :
     virtual bool receives_midi_notes()  { return false; }
     virtual bool transmits_midi_notes() { return false; }
     virtual bool transmits_midi_clock() { return false; }
+
+    virtual PitchBendSupport get_pitch_bend_support() const { return PitchBendSupport::PASSTHRU; }
+    virtual bool supports_passthru_pitch_bend() const {
+        return this->get_pitch_bend_support() == PitchBendSupport::PASSTHRU;
+    }
+    virtual bool supports_advanced_pitch_bend() const {
+        return this->get_pitch_bend_support() == PitchBendSupport::MODULATED;
+    }
+
+    #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+        int16_t last_received_pitch_bend = 0;
+        float last_received_pitch_bend_semitones = 0.0f;
+        LDataParameter<float> *pitch_bend_parameter = nullptr;
+
+        virtual int8_t get_pitch_bend_range_semitones() const {
+            return 2;
+        }
+
+        virtual float pitch_bend_to_normalized(int16_t bend) const {
+            return constrain((float)bend / 8192.0f, -1.0f, 1.0f);
+        }
+        virtual int16_t normalized_to_pitch_bend(float normalized) const {
+            normalized = constrain(normalized, -1.0f, 1.0f);
+            long bend = (long)(normalized * 8192.0f);
+            bend = constrain(bend, -8192L, 8191L);
+            return (int16_t)bend;
+        }
+        virtual float pitch_bend_to_semitones(int16_t bend) const {
+            return pitch_bend_to_normalized(bend) * (float)this->get_pitch_bend_range_semitones();
+        }
+        virtual int16_t semitones_to_pitch_bend(float semitones) const {
+            float range = (float)this->get_pitch_bend_range_semitones();
+            if (range <= 0.0f)
+                return 0;
+            return normalized_to_pitch_bend(semitones / range);
+        }
+
+        virtual void emit_effective_pitch_bend_from_semitones(float semitones, uint8_t channel) {
+            this->sendPitchBend(semitones_to_pitch_bend(semitones), channel);
+        }
+
+        virtual void ensure_advanced_pitch_bend_parameter() {
+            if (this->pitch_bend_parameter != nullptr)
+                return;
+
+            const int8_t range = this->get_pitch_bend_range_semitones();
+            this->pitch_bend_parameter = new LDataParameter<float>(
+                "Pitch Bend",
+                [this](float semitones) -> void {
+                    this->emit_effective_pitch_bend_from_semitones(semitones, this->current_channel);
+                },
+                [this]() -> float {
+                    return this->last_received_pitch_bend_semitones;
+                },
+                (float)(-range),
+                (float)(range)
+            );
+            this->pitch_bend_parameter->setInitialValueFromData(0.0f);
+            this->parameters->add(this->pitch_bend_parameter);
+        }
+
+        // Return true once the advanced path has fully handled the event.
+        virtual bool handle_modulated_pitch_bend(uint8_t inChannel, int bend) {
+            if (!this->supports_advanced_pitch_bend() || !this->transmits_midi_notes())
+                return false;
+
+            this->ensure_advanced_pitch_bend_parameter();
+            if (this->pitch_bend_parameter == nullptr)
+                return false;
+
+            this->current_channel = inChannel;
+            this->last_received_pitch_bend = (int16_t)bend;
+            this->last_received_pitch_bend_semitones = this->pitch_bend_to_semitones((int16_t)bend);
+            this->pitch_bend_parameter->updateValueFromData(this->last_received_pitch_bend_semitones);
+
+            return true;
+        }
+    #endif
 
     // input/output indicator
     bool indicator_done = false;
@@ -218,7 +302,7 @@ class DeviceBehaviourUltimateBase :
         //Serial.println("DeviceBehaviourUltimateBase#sendControlChange");
         this->actualSendControlChange(number, value, channel);
     };
-    virtual void sendPitchBend(int16_t bend, uint8_t channel) {
+    virtual void sendPitchBend(int16_t bend, uint8_t channel) override {
         this->actualSendPitchBend(bend, channel);
     }
     // tell the device to send a realtime message
@@ -251,6 +335,11 @@ class DeviceBehaviourUltimateBase :
     }
     virtual LinkedList<FloatParameter*> *initialise_parameters() {
         //Serial.printf("behaviour_base#initialise_parameters for '%s'..\n", this->get_label());
+        #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+            if (this->supports_advanced_pitch_bend() && this->transmits_midi_notes()) {
+                this->ensure_advanced_pitch_bend_parameter();
+            }
+        #endif
         return parameters;
     }
     virtual bool has_parameters() {

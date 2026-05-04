@@ -187,7 +187,7 @@
 
     #ifdef PCB_STUDIO
         //#define ENABLE_KEYSTEP
-        //#define ENABLE_CRAFTSYNTH_USB
+        #define ENABLE_CRAFTSYNTH_USB
         //#define ENABLE_SKULPTSYNTH_USB
         #define ENABLE_CHOCOLATEFEET_USB
         #define ENABLE_MIDILIGHTS
