@@ -159,20 +159,12 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     virtual void setup_saveable_settings() override {
         DeviceBehaviourUltimateBase::setup_saveable_settings();
-        register_setting(new VarSetting<bool>("Advance progression","Progression", &arranger->advance_bar), SL_SCOPE_SCENE);
-        register_setting(new VarSetting<bool>("Advance playlist",   "Progression", &arranger->advance_playlist), SL_SCOPE_SCENE);
         register_setting(new VarSetting<uint8_t>("Chord octave",    "Progression", &chord_octave), SL_SCOPE_SCENE);
         register_setting(new VarSetting<uint8_t>("Bass octave",     "Progression", &bass_octave), SL_SCOPE_SCENE);
         register_setting(new VarSetting<uint8_t>("Topline octave",  "Progression", &topline_octave), SL_SCOPE_SCENE);
 
-        // Song structure: sections + playlist (saved per-project)
-        for (int i = 0; i < NUM_SONG_SECTIONS; i++) {
-            char lbl[16];
-            snprintf(lbl, sizeof(lbl), "section_%i", i);
-            register_setting(new SaveableSectionGridSetting(lbl, "Progression", &arranger->song_sections[i]), SL_SCOPE_PROJECT);
-        }
-        register_setting(new SaveablePlaylistSetting("playlist", "Progression", &arranger->playlist), SL_SCOPE_PROJECT);
     }
+
 
     // untested, but this should fire the tick before a beat happens; use this to change chords outside of a bar change..
     /*virtual void on_end_beat(int beat_number) override {

@@ -653,6 +653,9 @@ void do_tick(uint32_t in_ticks) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to global_on_restart"));
     global_on_restart();
     set_restart_on_next_bar(false);
+    // After clock_reset() ticks=0. Without this, uClock fires do_tick(0) which is not
+    // caught by the duplicate guard (last_processed_tick==N) and on_bar(0) fires twice.
+    last_processed_tick = 0;
   }
 
   if (is_bpm_on_phrase(ticks)) {

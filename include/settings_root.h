@@ -17,6 +17,7 @@
 #include "behaviours/behaviour_manager.h"
 #include "midi/midi_mapper_matrix_manager.h"
 #include "conductor.h"
+#include "arranger.h"
 
 class SettingsRoot : public SHDynamic<16, 16> {
     public:
@@ -27,6 +28,9 @@ class SettingsRoot : public SHDynamic<16, 16> {
         virtual void setup_saveable_settings() override {
             // Clock, BPM, time signature, global scale/key, global chord
             register_child(conductor);
+
+            // Song arranger — sections, playlist, time signatures
+            register_child(arranger);
 
             // MIDI matrix mappings — connections (SL_SCOPE_ROUTING) + scale settings (SL_SCOPE_PROJECT)
             register_child(midi_matrix_manager);
