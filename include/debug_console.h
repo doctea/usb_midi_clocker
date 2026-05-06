@@ -436,6 +436,34 @@ bool execute_command(const char *command_line) {
         Serial.printf("Result of parsing line: %s\n", result ? "success" : "failure");
         
         return true;
+    } else if (strcmp(command, "listplaylists") == 0) {
+        Serial.println("Playlist entries:");
+        for (int i = 0; i < NUM_PLAYLIST_SLOTS; i++) {
+            playlist_entry_t &e = arranger->playlist.entries[i];
+            Serial.printf("  Slot %i: Section %i %s\t, Repeats %i, Max Bars %i\n", i, e.section, get_section_name(e.section), e.repeats, e.max_bars);
+        }
+        return true;
+    } else if (strcmp(command, "listsections") == 0) {
+        Serial.println("Song sections:");
+        for (int i = 0; i < NUM_SONG_SECTIONS; i++) {
+            song_section_t &s = arranger->song_sections[i];
+            Serial.printf("  Section %i: Label '%s',\t Length=%i, Bars-per-phrase=%i, Time Signature=%i/%i\n", 
+                i, get_section_name(i), s.length, s.bars_per_phrase, s.time_signature.numerator, s.time_signature.denominator
+            );
+            for (int j = 0; j < CHORDS_PER_SECTION ; j++) {
+                chord_identity_t &c = s.grid[j];
+                Serial.printf(
+                    "\tChord %i: Degree %i, Type %i %s, Inversion %i\n", 
+                    j, 
+                    c.degree, 
+                    c.type, 
+                    chords[c.type].label, 
+                    c.inversion
+                );
+            }
+            Serial.println("--");
+        }
+        return true;
     } else if (strcmp(command, "showtree") == 0) {
         // output the current settings tree as a text dump to the serial console, for debugging
         // usage: showtree [scopemask]
@@ -499,7 +527,10 @@ bool execute_command(const char *command_line) {
         Serial.println("    show <scene|proj> <number> - Show the contents of a scene or project settings file");
         Serial.println("    save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
         Serial.println("    load <scene|proj> <number> - Load a scene or project settings from the given slot number");
-        Serial.println("    [DISABLED WHILE UPGRADING TO SAVELOADLIB] loadline - Load a line of text as if it were from a scene file (for testing parsing)");
+        Serial.println("    loadline - Load a line of text as if it were from a scene file (for testing parsing)");
+        Serial.println("  == Playlist and Song section commmands ==");
+        Serial.println("    listplaylists - List all playlist entries with their section, repeats, and max bars");
+        Serial.println("    listsections - List all song sections with their labels, number of chords, length, bars, time signatures, and chords.");
         Serial.println("  == behaviour testing commands ==");
         Serial.println("    listbehaviours - List all behaviours with their labels and types");
         Serial.println("    playnote <behaviour_label> <note_number> - Send a Note On message for the given note number to the behaviour with the given label");

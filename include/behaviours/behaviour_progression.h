@@ -445,178 +445,178 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         arranger->change_section(section_number);
     }
 
-    virtual bool save_playlist(int project_number = -1) {
-        #ifdef ENABLE_SD
-        if (project_number<0) project_number = project->current_project_number;
+    // virtual bool save_playlist(int project_number = -1) {
+    //     #ifdef ENABLE_SD
+    //     if (project_number<0) project_number = project->current_project_number;
 
-        LinkedList<String> section_lines = LinkedList<String>();
-        arranger->playlist.save_project_add_lines(&section_lines);
+    //     LinkedList<String> section_lines = LinkedList<String>();
+    //     arranger->playlist.save_project_add_lines(&section_lines);
 
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            File myFile;
+    //     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    //         File myFile;
 
-            make_project_folders(project_number);
+    //         make_project_folders(project_number);
 
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
-            if (debug) Serial_printf(F("save_playlist(%i) writing to %s\n"), project_number, filename);
-            if (SD.exists(filename)) {
-              //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
-              SD.remove(filename);
-              //Serial.println("deleted"); Serial.flush();
-            }
+    //         char filename[MAX_FILEPATH] = "";
+    //         snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
+    //         if (debug) Serial_printf(F("save_playlist(%i) writing to %s\n"), project_number, filename);
+    //         if (SD.exists(filename)) {
+    //           //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
+    //           SD.remove(filename);
+    //           //Serial.println("deleted"); Serial.flush();
+    //         }
 
-            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
-            if (!myFile) {    
-              if (debug) Serial_printf(F("Error: couldn't open %s for writing\n"), filename);
-              //if (irqs_enabled) __enable_irq();
-              return false;
-            }
-            if (debug) { Serial_println("Starting data write.."); Serial_flush(); }
+    //         myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
+    //         if (!myFile) {    
+    //           if (debug) Serial_printf(F("Error: couldn't open %s for writing\n"), filename);
+    //           //if (irqs_enabled) __enable_irq();
+    //           return false;
+    //         }
+    //         if (debug) { Serial_println("Starting data write.."); Serial_flush(); }
 
-            myFile.println(F("; begin playlist"));
-            for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
-                myFile.println(section_lines.get(i));
-            }
-            myFile.println(F("; end playlist"));
-            myFile.close();
+    //         myFile.println(F("; begin playlist"));
+    //         for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
+    //             myFile.println(section_lines.get(i));
+    //         }
+    //         myFile.println(F("; end playlist"));
+    //         myFile.close();
 
-            messages_log_add(String("Saved to project : playlist ") + String(project_number));
-        }
+    //         messages_log_add(String("Saved to project : playlist ") + String(project_number));
+    //     }
 
-        mark_song_save_done();
+    //     mark_song_save_done();
 
-        return true;
-        #else
-        return false;
-        #endif
-    }
+    //     return true;
+    //     #else
+    //     return false;
+    //     #endif
+    // }
 
-    virtual bool load_playlist(int project_number = -1) {
-        #ifdef ENABLE_SD
-        if (project_number<0) project_number = project->getProjectNumber();
+    // virtual bool load_playlist(int project_number = -1) {
+    //     #ifdef ENABLE_SD
+    //     if (project_number<0) project_number = project->getProjectNumber();
 
-        Serial.printf("Progression#load_playlist(%i)\n", project_number);
+    //     Serial.printf("Progression#load_playlist(%i)\n", project_number);
 
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            File myFile;
+    //     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    //         File myFile;
 
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
-            if (debug) Serial_printf(F("load_playlist(%i) opening %s\n"), project_number, filename);
-            myFile = SD.open(filename, FILE_READ);
-            if (!myFile) {
-                if (debug) Serial_printf(F("Error: Couldn't open %s for reading!\n"), filename);
-                return false;
-            }
-            myFile.setTimeout(0);
+    //         char filename[MAX_FILEPATH] = "";
+    //         snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
+    //         if (debug) Serial_printf(F("load_playlist(%i) opening %s\n"), project_number, filename);
+    //         myFile = SD.open(filename, FILE_READ);
+    //         if (!myFile) {
+    //             if (debug) Serial_printf(F("Error: Couldn't open %s for reading!\n"), filename);
+    //             return false;
+    //         }
+    //         myFile.setTimeout(0);
 
-            String line;
-            while (line = myFile.readStringUntil('\n')) {
-                if (line.startsWith(";")) continue;
-                if (debug) Serial_printf("load_playlist: parsing line %s\n", line.c_str());
-                arranger->playlist.parse_key_value(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
-            }
-            myFile.close();
-        }
+    //         String line;
+    //         while (line = myFile.readStringUntil('\n')) {
+    //             if (line.startsWith(";")) continue;
+    //             if (debug) Serial_printf("load_playlist: parsing line %s\n", line.c_str());
+    //             arranger->playlist.parse_key_value(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
+    //         }
+    //         myFile.close();
+    //     }
 
-        mark_song_save_done();
+    //     mark_song_save_done();
 
-        return true;
-        #else
-        return false;
-        #endif
-    }
+    //     return true;
+    //     #else
+    //     return false;
+    //     #endif
+    // }
 
-    virtual bool save_section(int section_number = -1, int project_number = -1) {
-        #ifdef ENABLE_SD
-        if (section_number<0) section_number = arranger->current_section;
-        if (project_number<0) project_number = project->getProjectNumber();
+    // virtual bool save_section(int section_number = -1, int project_number = -1) {
+    //     #ifdef ENABLE_SD
+    //     if (section_number<0) section_number = arranger->current_section;
+    //     if (project_number<0) project_number = project->getProjectNumber();
 
-        LinkedList<String> section_lines = LinkedList<String>();
-        section_lines.add(String("current_section=")+String(section_number));
-        if (section_number>=0 && section_number<NUM_SONG_SECTIONS) {
-            arranger->song_sections[section_number].add_section_add_lines(&section_lines);
-        }
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            File myFile;
+    //     LinkedList<String> section_lines = LinkedList<String>();
+    //     section_lines.add(String("current_section=")+String(section_number));
+    //     if (section_number>=0 && section_number<NUM_SONG_SECTIONS) {
+    //         arranger->song_sections[section_number].add_section_add_lines(&section_lines);
+    //     }
+    //     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    //         File myFile;
 
-            make_project_folders(project_number);
+    //         make_project_folders(project_number);
 
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
-            if (debug) Serial_printf(F("save_scene(%i, %i) writing to %s\n"), project_number, section_number, filename);
-            if (SD.exists(filename)) {
-              //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
-              SD.remove(filename);
-              //Serial.println("deleted"); Serial.flush();
-            }
+    //         char filename[MAX_FILEPATH] = "";
+    //         snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
+    //         if (debug) Serial_printf(F("save_scene(%i, %i) writing to %s\n"), project_number, section_number, filename);
+    //         if (SD.exists(filename)) {
+    //           //Serial.printf(F("%s exists, deleting first\n"), filename); Serial.flush();
+    //           SD.remove(filename);
+    //           //Serial.println("deleted"); Serial.flush();
+    //         }
 
-            myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
-            if (!myFile) {    
-              if (debug) Serial_printf(F("Error: couldn't open %s for writing\n"), filename);
-              //if (irqs_enabled) __enable_irq();
-              return false;
-            }
-            if (debug) { Serial_println("Starting data write.."); Serial_flush(); }
+    //         myFile = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC);
+    //         if (!myFile) {    
+    //           if (debug) Serial_printf(F("Error: couldn't open %s for writing\n"), filename);
+    //           //if (irqs_enabled) __enable_irq();
+    //           return false;
+    //         }
+    //         if (debug) { Serial_println("Starting data write.."); Serial_flush(); }
 
-            myFile.println(F("; begin section"));
-            for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
-                myFile.println(section_lines.get(i));
-            }
-            myFile.println(F("; end section"));
-            myFile.close();
+    //         myFile.println(F("; begin section"));
+    //         for (uint_fast16_t i = 0 ; i < section_lines.size() ; i++) {
+    //             myFile.println(section_lines.get(i));
+    //         }
+    //         myFile.println(F("; end section"));
+    //         myFile.close();
 
-            messages_log_add(String("Saved to project : section ") + String(project_number) + " : " + String(section_number));
-        }
+    //         messages_log_add(String("Saved to project : section ") + String(project_number) + " : " + String(section_number));
+    //     }
 
-        mark_song_save_done();
+    //     mark_song_save_done();
 
-        return true;
-        #else
-        return false;
-        #endif
-    }
+    //     return true;
+    //     #else
+    //     return false;
+    //     #endif
+    // }
 
 
-    virtual bool load_section(int section_number = -1, int project_number = -1) {
-        #ifdef ENABLE_SD
-        if (section_number<0) section_number = arranger->current_section;
-        if (project_number<0) project_number = project->getProjectNumber();
+    // virtual bool load_section(int section_number = -1, int project_number = -1) {
+    //     #ifdef ENABLE_SD
+    //     if (section_number<0) section_number = arranger->current_section;
+    //     if (project_number<0) project_number = project->getProjectNumber();
 
-        Serial.printf("Progression#load_section(section_number=%i, project_number=%i)\n", section_number, project_number);
-        //debug = true;
+    //     Serial.printf("Progression#load_section(section_number=%i, project_number=%i)\n", section_number, project_number);
+    //     //debug = true;
 
-        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-            File myFile;
+    //     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    //         File myFile;
 
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
-            if (debug) Serial.printf(F("load_section(%i, %i) opening %s\n"), project_number, section_number, filename);
-            myFile = SD.open(filename, FILE_READ);
-            if (!myFile) {
-                if (debug) Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
-                return false;
-            }
-            myFile.setTimeout(0);
+    //         char filename[MAX_FILEPATH] = "";
+    //         snprintf(filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, section_number);
+    //         if (debug) Serial.printf(F("load_section(%i, %i) opening %s\n"), project_number, section_number, filename);
+    //         myFile = SD.open(filename, FILE_READ);
+    //         if (!myFile) {
+    //             if (debug) Serial.printf(F("Error: Couldn't open %s for reading!\n"), filename);
+    //             return false;
+    //         }
+    //         myFile.setTimeout(0);
 
-            String line;
-            while (line = myFile.readStringUntil('\n')) {
-                if (line.startsWith(";")) continue;
-                if (debug) Serial.printf("load_section: parsing line %s\n", line.c_str());
-                arranger->song_sections[section_number].parse_section_line(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
-            }
-            myFile.close();
-        }
-        //debug = false;
+    //         String line;
+    //         while (line = myFile.readStringUntil('\n')) {
+    //             if (line.startsWith(";")) continue;
+    //             if (debug) Serial.printf("load_section: parsing line %s\n", line.c_str());
+    //             arranger->song_sections[section_number].parse_section_line(line.substring(0, line.indexOf('=')), line.substring(line.indexOf('=')+1));
+    //         }
+    //         myFile.close();
+    //     }
+    //     //debug = false;
 
-        mark_song_save_done();
+    //     mark_song_save_done();
 
-        return true;
-        #else
-        return false;
-        #endif
-    }
+    //     return true;
+    //     #else
+    //     return false;
+    //     #endif
+    // }
 
     // notify_project_changed: saveloadlib handles bulk project loading of
     // sections+playlist via SL_SCOPE_PROJECT.  Old per-file methods are kept
@@ -627,132 +627,132 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     // because it was saved before the migration), we detect non-empty old
     // files, load them, and re-save the project so the data is written in the
     // new format.  The old files are left in place for safety.
-    virtual void notify_project_changed(int project_number) override {
-        #ifdef ENABLE_SD
-        // Migration must run only after saveloadlib has a valid root/tree,
-        // otherwise re-save can fail and consume recovery files.
-        if (SL_ROOT == nullptr || project == nullptr || project->save_tree == nullptr) {
-            Serial.println("Arranger migration: save tree not ready, skipping migration for now.");
-            return;
-        }
+    // virtual void notify_project_changed(int project_number) override {
+    //     #ifdef ENABLE_SD
+    //     // Migration must run only after saveloadlib has a valid root/tree,
+    //     // otherwise re-save can fail and consume recovery files.
+    //     if (SL_ROOT == nullptr || project == nullptr || project->save_tree == nullptr) {
+    //         Serial.println("Arranger migration: save tree not ready, skipping migration for now.");
+    //         return;
+    //     }
 
-        // One-time recovery path:
-        // If normal legacy files are missing but '.migrated' backups exist,
-        // promote backups back to legacy filenames so they can be imported.
-        // After import, they are archived as '.restored' to avoid re-triggering.
-        bool promoted_from_migrated = false;
+    //     // One-time recovery path:
+    //     // If normal legacy files are missing but '.migrated' backups exist,
+    //     // promote backups back to legacy filenames so they can be imported.
+    //     // After import, they are archived as '.restored' to avoid re-triggering.
+    //     bool promoted_from_migrated = false;
 
-        char filename[MAX_FILEPATH] = "";
-        snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
+    //     char filename[MAX_FILEPATH] = "";
+    //     snprintf(filename, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT, project_number);
 
-        if (!SD.exists(filename)) {
-            char migrated_playlist[MAX_FILEPATH] = "";
-            snprintf(migrated_playlist, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".migrated", project_number);
-            char restored_playlist[MAX_FILEPATH] = "";
-            snprintf(restored_playlist, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".restored", project_number);
-            const char* backup_playlist = nullptr;
-            if (SD.exists(migrated_playlist)) backup_playlist = migrated_playlist;
-            else if (SD.exists(restored_playlist)) backup_playlist = restored_playlist;
+    //     if (!SD.exists(filename)) {
+    //         char migrated_playlist[MAX_FILEPATH] = "";
+    //         snprintf(migrated_playlist, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".migrated", project_number);
+    //         char restored_playlist[MAX_FILEPATH] = "";
+    //         snprintf(restored_playlist, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".restored", project_number);
+    //         const char* backup_playlist = nullptr;
+    //         if (SD.exists(migrated_playlist)) backup_playlist = migrated_playlist;
+    //         else if (SD.exists(restored_playlist)) backup_playlist = restored_playlist;
 
-            if (backup_playlist != nullptr) {
-                if (SD.rename(backup_playlist, filename)) {
-                    promoted_from_migrated = true;
-                    Serial.printf("Arranger restore: promoted %s -> %s\n", backup_playlist, filename);
-                } else {
-                    Serial.printf("Arranger restore: failed to promote %s -> %s\n", backup_playlist, filename);
-                }
-            }
-        }
+    //         if (backup_playlist != nullptr) {
+    //             if (SD.rename(backup_playlist, filename)) {
+    //                 promoted_from_migrated = true;
+    //                 Serial.printf("Arranger restore: promoted %s -> %s\n", backup_playlist, filename);
+    //             } else {
+    //                 Serial.printf("Arranger restore: failed to promote %s -> %s\n", backup_playlist, filename);
+    //             }
+    //         }
+    //     }
 
-        for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
-            char sec_filename[MAX_FILEPATH] = "";
-            snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
-            if (!SD.exists(sec_filename)) {
-                char sec_migrated[MAX_FILEPATH] = "";
-                snprintf(sec_migrated, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".migrated", project_number, i);
-                char sec_restored[MAX_FILEPATH] = "";
-                snprintf(sec_restored, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".restored", project_number, i);
-                const char* backup_section = nullptr;
-                if (SD.exists(sec_migrated)) backup_section = sec_migrated;
-                else if (SD.exists(sec_restored)) backup_section = sec_restored;
+    //     for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+    //         char sec_filename[MAX_FILEPATH] = "";
+    //         snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
+    //         if (!SD.exists(sec_filename)) {
+    //             char sec_migrated[MAX_FILEPATH] = "";
+    //             snprintf(sec_migrated, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".migrated", project_number, i);
+    //             char sec_restored[MAX_FILEPATH] = "";
+    //             snprintf(sec_restored, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".restored", project_number, i);
+    //             const char* backup_section = nullptr;
+    //             if (SD.exists(sec_migrated)) backup_section = sec_migrated;
+    //             else if (SD.exists(sec_restored)) backup_section = sec_restored;
 
-                if (backup_section != nullptr) {
-                    if (SD.rename(backup_section, sec_filename)) {
-                        promoted_from_migrated = true;
-                        Serial.printf("Arranger restore: promoted %s -> %s\n", backup_section, sec_filename);
-                    } else {
-                        Serial.printf("Arranger restore: failed to promote %s -> %s\n", backup_section, sec_filename);
-                    }
-                }
-            }
-        }
+    //             if (backup_section != nullptr) {
+    //                 if (SD.rename(backup_section, sec_filename)) {
+    //                     promoted_from_migrated = true;
+    //                     Serial.printf("Arranger restore: promoted %s -> %s\n", backup_section, sec_filename);
+    //                 } else {
+    //                     Serial.printf("Arranger restore: failed to promote %s -> %s\n", backup_section, sec_filename);
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        // Check whether old-format playlist file exists for this project
-        if (SD.exists(filename)) {
-            Serial.printf("Arranger migration: found old playlist file %s, importing...\n", filename);
-            load_playlist(project_number);
-            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
-                char sec_filename[MAX_FILEPATH] = "";
-                snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
-                if (SD.exists(sec_filename)) {
-                    Serial.printf("Arranger migration: found old section file %s, importing...\n", sec_filename);
-                    load_section(i, project_number);
-                }
-            }
-            // Re-save via saveloadlib so data is persisted in the new format
-            Serial.println("Arranger migration: re-saving project in new format...");
-            bool save_ok = project->save_project_settings(project_number);
+    //     // Check whether old-format playlist file exists for this project
+    //     if (SD.exists(filename)) {
+    //         Serial.printf("Arranger migration: found old playlist file %s, importing...\n", filename);
+    //         load_playlist(project_number);
+    //         for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+    //             char sec_filename[MAX_FILEPATH] = "";
+    //             snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
+    //             if (SD.exists(sec_filename)) {
+    //                 Serial.printf("Arranger migration: found old section file %s, importing...\n", sec_filename);
+    //                 load_section(i, project_number);
+    //             }
+    //         }
+    //         // Re-save via saveloadlib so data is persisted in the new format
+    //         Serial.println("Arranger migration: re-saving project in new format...");
+    //         bool save_ok = project->save_project_settings(project_number);
 
-            if (!save_ok) {
-                Serial.println("Arranger migration: save failed; keeping legacy files for retry.");
-                return;
-            }
+    //         if (!save_ok) {
+    //             Serial.println("Arranger migration: save failed; keeping legacy files for retry.");
+    //             return;
+    //         }
 
-            // Rename old files so migration doesn't re-trigger
-            char newname[MAX_FILEPATH] = "";
-            snprintf(newname, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".migrated", project_number);
-            SD.rename(filename, newname);
-            Serial.printf("Arranger migration: renamed %s -> %s\n", filename, newname);
+    //         // Rename old files so migration doesn't re-trigger
+    //         char newname[MAX_FILEPATH] = "";
+    //         snprintf(newname, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".migrated", project_number);
+    //         SD.rename(filename, newname);
+    //         Serial.printf("Arranger migration: renamed %s -> %s\n", filename, newname);
 
-            // If this migration came from promoted '.migrated' backups,
-            // archive the re-created '.migrated' files as '.restored' so
-            // this restore path runs only once.
-            if (promoted_from_migrated) {
-                char restored_name[MAX_FILEPATH] = "";
-                snprintf(restored_name, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".restored", project_number);
-                if (SD.exists(restored_name)) SD.remove(restored_name);
-                if (SD.rename(newname, restored_name)) {
-                    Serial.printf("Arranger restore: archived %s -> %s\n", newname, restored_name);
-                } else {
-                    Serial.printf("Arranger restore: failed to archive %s -> %s\n", newname, restored_name);
-                }
-            }
+    //         // If this migration came from promoted '.migrated' backups,
+    //         // archive the re-created '.migrated' files as '.restored' so
+    //         // this restore path runs only once.
+    //         if (promoted_from_migrated) {
+    //             char restored_name[MAX_FILEPATH] = "";
+    //             snprintf(restored_name, MAX_FILEPATH, FILEPATH_PLAYLIST_FORMAT ".restored", project_number);
+    //             if (SD.exists(restored_name)) SD.remove(restored_name);
+    //             if (SD.rename(newname, restored_name)) {
+    //                 Serial.printf("Arranger restore: archived %s -> %s\n", newname, restored_name);
+    //             } else {
+    //                 Serial.printf("Arranger restore: failed to archive %s -> %s\n", newname, restored_name);
+    //             }
+    //         }
 
-            for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
-                char sec_filename[MAX_FILEPATH] = "";
-                snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
-                if (SD.exists(sec_filename)) {
-                    char sec_newname[MAX_FILEPATH] = "";
-                    snprintf(sec_newname, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".migrated", project_number, i);
-                    SD.rename(sec_filename, sec_newname);
-                    Serial.printf("Arranger migration: renamed %s -> %s\n", sec_filename, sec_newname);
+    //         for (int i = 0 ; i < NUM_SONG_SECTIONS ; i++) {
+    //             char sec_filename[MAX_FILEPATH] = "";
+    //             snprintf(sec_filename, MAX_FILEPATH, FILEPATH_SECTION_FORMAT, project_number, i);
+    //             if (SD.exists(sec_filename)) {
+    //                 char sec_newname[MAX_FILEPATH] = "";
+    //                 snprintf(sec_newname, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".migrated", project_number, i);
+    //                 SD.rename(sec_filename, sec_newname);
+    //                 Serial.printf("Arranger migration: renamed %s -> %s\n", sec_filename, sec_newname);
 
-                    if (promoted_from_migrated) {
-                        char sec_restored[MAX_FILEPATH] = "";
-                        snprintf(sec_restored, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".restored", project_number, i);
-                        if (SD.exists(sec_restored)) SD.remove(sec_restored);
-                        if (SD.rename(sec_newname, sec_restored)) {
-                            Serial.printf("Arranger restore: archived %s -> %s\n", sec_newname, sec_restored);
-                        } else {
-                            Serial.printf("Arranger restore: failed to archive %s -> %s\n", sec_newname, sec_restored);
-                        }
-                    }
-                }
-            }
-            Serial.println("Arranger migration: done.");
-        }
-        #endif
-    }
+    //                 if (promoted_from_migrated) {
+    //                     char sec_restored[MAX_FILEPATH] = "";
+    //                     snprintf(sec_restored, MAX_FILEPATH, FILEPATH_SECTION_FORMAT ".restored", project_number, i);
+    //                     if (SD.exists(sec_restored)) SD.remove(sec_restored);
+    //                     if (SD.rename(sec_newname, sec_restored)) {
+    //                         Serial.printf("Arranger restore: archived %s -> %s\n", sec_newname, sec_restored);
+    //                     } else {
+    //                         Serial.printf("Arranger restore: failed to archive %s -> %s\n", sec_newname, sec_restored);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         Serial.println("Arranger migration: done.");
+    //     }
+    //     #endif
+    // }
 
 
     #ifdef ENABLE_SCREEN
@@ -925,9 +925,11 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             menuitems->add(new ToggleControl<bool>("Debug", &this->debug));
 
-            arranger_make_menu_items(menu, false, false, this->colour,
-                [=]() -> void { this->save_playlist(); },
-                [=]() -> void { this->load_playlist(); });
+            arranger_make_menu_items(menu, false, true, this->colour
+                // ,
+                // [=]() -> void { this->save_playlist(); },
+                // [=]() -> void { this->load_playlist(); }
+            );
 
             return menuitems;
         }
