@@ -52,7 +52,7 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     tft->println();
     
     // show playlist position information - green if playing, red if paused
-    if (behaviour_progression->advance_progression_playlist) {
+    if (arranger->is_playlist_mode()) {
         tft->setTextColor(GREEN, BLACK);
     } else {
         tft->setTextColor(RED, BLACK);
@@ -64,7 +64,7 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     tft->printf("%i/%i ", arranger->current_section+1, NUM_SONG_SECTIONS);
 
     // show bar position information - green if playing, red if paused
-    if (behaviour_progression->advance_progression_bar) {
+    if (arranger->is_playlist_mode() || arranger->is_section_mode()) {
         tft->setTextColor(GREEN, BLACK);
     } else {
         tft->setTextColor(RED, BLACK);

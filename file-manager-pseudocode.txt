@@ -1,0 +1,105 @@
+
+Top-level types of things to save+reload:-
+
+    System settings 
+        Calibration data for CV ins + outs
+    Song settings
+        Tempo
+        Arrangement / progression
+    Scene settings
+        Behaviour settings
+
+Types of object that we want to be able to save + load:-
+
+- Trigger sequences (probably move this into a Behaviour?)
+
+- Behaviours (plugins)
+    - SaveableParameters (settings)
+    - Parameters (modulatable values)
+        - Modulation settings (eg connected ParameterInputs and amounts)
+
+- ParameterManager
+    - ParameterInputs (modulation sources)
+        - settings (eg polarity, phase..)
+
+
+so; some pseudocode for how this might work:-
+
+    interface KeyResolver:
+        def parse(String key, String value);
+        def get_save_lines();
+
+    class StorageManager:
+        HashMap<String, KeyResolver> resolvers;
+
+        def parse(String key, String value):
+            first = split(key, '#', 1)[0]
+            rest = split(key, '#')[1]
+            resolvers.get(key)->parse(rest, value)
+
+        def save():
+            for resolver in resolvers:
+                write_lines(resolver->get_save_lines())
+
+        def register_resolver(String prefix, KeyResolver resolver):
+            resolvers.put(prefix, resolver)
+
+               
+    class BehaviourManager implements KeyResolver:
+        HashMap<String, Behaviour> behaviours_label_hash;
+
+        def parse(String key, String value):
+            first = split(key, '#', 1)[0]
+            rest = split(key, '#')[1]
+            behaviours_label_hash.get(key)->parse(rest, value)
+
+        def get_save_lines():
+            for behaviour in behaviours:
+                for trib in behaviour->get_save_lines():
+                    write(
+                        'BehaviourManager#{behaviour.name}#{trib.name}={trib.val}'
+                    )
+
+        def setup_behaviours_label_hash():
+            for behaviour in behaviours:
+                behaviours_label_hash.put(behaviour.label, behaviour)
+
+    class ParameterManager implements KeyResolver:
+        HashMap<String, ParameterInput> parameter_inputs;
+
+        def parse(String key, String value):
+            first = split(key, '#', 1)[0]
+            rest = split(key, '#')[1]
+            if (first == 'ParameterInputs'):
+                parameter_inputs.get(key)->parse(rest, value)
+            else other things?
+
+        def get_save_lines():
+            for parameter_input in parameter_inputs:
+                for trib in parameter_input->get_save_lines():
+                    write(
+                        'ParameterManager#ParameterInputs#{parameter_input.name}#{trib.name}={trib.val}'
+                    )
+
+    storage_manager = StorageManager()
+
+    storage_manager.register_resolver(
+        'BehaviourManager',
+        behaviour_manager
+    )
+
+    storage_manager.register_resolver(
+        'ParameterManager',
+        parameter_manager
+    )
+
+
+KeyResolver#parse(String Key, String value) {
+
+}
+    
+"BehaviourManager#CV Pitch Input 1#PitchInput" -> "ADC1 A"
+"BehaviourManager#CV Pitch Input 1#Quantise" -> [true, false]
+
+"ParameterManager#ParameterInputs#ADC1 A#polarity" -> [uni, bi]
+"ParameterManager#ParameterInputs#ADC1 A#invert"   -> [true, false]

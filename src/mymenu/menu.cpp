@@ -261,18 +261,18 @@ void setup_menu_transport() {
                 ));
             #endif
         #endif
-        #ifdef ENABLE_PROGRESSION
-            project_multi_autoadvance->addItem(new MultiToggleItemLambda (
-                "Prog.Pls",
-                [=] (bool v) -> void { behaviour_progression->advance_progression_playlist = v; },
-                [=] () -> bool { return behaviour_progression->advance_progression_playlist; }
-            ));
-            project_multi_autoadvance->addItem(new MultiToggleItemLambda (
-                "Prog.Bar",
-                [=] (bool v) -> void { behaviour_progression->advance_progression_bar = v; },
-                [=] () -> bool { return behaviour_progression->advance_progression_bar; }
-            ));
-        #endif
+        // #ifdef ENABLE_PROGRESSION
+        //     project_multi_autoadvance->addItem(new MultiToggleItemLambda (
+        //         "Prog.Pls",
+        //         [=] (bool v) -> void { arranger->get_playback_mode() == LOOP_PLAYLIST; },
+        //         [=] () -> bool { return behaviour_progression->advance_progression_playlist; }
+        //     ));
+        //     project_multi_autoadvance->addItem(new MultiToggleItemLambda (
+        //         "Prog.Bar",
+        //         [=] (bool v) -> void { behaviour_progression->advance_progression_bar = v; },
+        //         [=] () -> bool { return behaviour_progression->advance_progression_bar; }
+        //     ));
+        // #endif
         menu->add(project_multi_autoadvance);
 
         #ifdef ENABLE_SD

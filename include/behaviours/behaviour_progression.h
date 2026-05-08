@@ -61,11 +61,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
     MODE current_mode = DEGREE;
 
-    // Proxy advance flags to arranger for backwards compatibility
-    // (menu.cpp and other code accesses these directly)
-    bool& advance_progression_bar      = arranger->advance_bar;
-    bool& advance_progression_playlist = arranger->advance_playlist;
-
     ChordPlayer *chord_player = new ChordPlayer(
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOn (note, velocity, channel); },
         [=] (int8_t channel, int8_t note, int8_t velocity) -> void { this->sendNoteOff(note, velocity, channel); },
@@ -337,14 +332,19 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             Serial_flush();
             this->current_mode = (VirtualBehaviour_Progression::MODE)(inNumber - APCMINI_BUTTON_CLIP_STOP);
             return true;
-        } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
-            this->advance_progression_bar = !this->advance_progression_bar;
-            mark_song_as_modified();
-            return true;
-        } else if (inNumber==APCMINI_BUTTON_UNLABELED_2) {
-            this->advance_progression_playlist = !this->advance_progression_playlist;
-            mark_song_as_modified();
-            return true;
+            // TODO: replace with a more intuitive way to switch between modes, e.g. long-pressing the first button to switch to degree mode, second button for quality mode, etc., and show the current mode on the screen; this is pretty clunky and not very discoverable
+        // } else if (inNumber==APCMINI_BUTTON_UNLABELED_1) {
+        //     arranger->set_playback_mode(
+        //         arranger->playback_mode==playback_mode_t::LOOP_BAR ?
+        //             PlaybackMode::LOOP_SECTION :
+        //             PlaybackMode::LOOP_BAR
+        //     )
+        //     mark_song_as_modified();
+        //     return true;
+        // } else if (inNumber==APCMINI_BUTTON_UNLABELED_2) {
+        //     arranger->advance_playlist = !arranger->advance_playlist;
+        //     mark_song_as_modified();
+        //     return true;
         } else if (inNumber==APCMINI_BUTTON_LEFT || inNumber==APCMINI_BUTTON_RIGHT) {
             if (current_mode==MODE::DEGREE || current_mode==MODE::QUALITY || current_mode==MODE::INVERSION) {
                 if (inNumber==APCMINI_BUTTON_LEFT) {
@@ -844,15 +844,15 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                 [=] (int8_t) -> void { chord_player_}
             ));*/
 
-            bar->add(new LambdaToggleControl("Advance bar", 
-                [=] (bool v) -> void { this->advance_progression_bar = v; mark_song_as_modified();},
-                [=] (void) -> bool { return this->advance_progression_bar; }
-            ));
-            bar->add(new LambdaToggleControl("Advance playlist", 
-                [=] (bool v) -> void { this->advance_progression_playlist = v; mark_song_as_modified();},
-                [=] (void) -> bool { return this->advance_progression_playlist; }
-            ));
-            menuitems->add(bar);
+            // bar->add(new LambdaToggleControl("Advance bar", 
+            //     [=] (bool v) -> void { this->advance_progression_bar = v; mark_song_as_modified();},
+            //     [=] (void) -> bool { return this->advance_progression_bar; }
+            // ));
+            // bar->add(new LambdaToggleControl("Advance playlist", 
+            //     [=] (bool v) -> void { this->advance_progression_playlist = v; mark_song_as_modified();},
+            //     [=] (void) -> bool { return this->advance_progression_playlist; }
+            // ));
+            // menuitems->add(bar);
 
             menuitems->add(new NoteDisplay("Progression notes", &this->note_tracker));
             menuitems->add(new NoteHarmonyDisplay(

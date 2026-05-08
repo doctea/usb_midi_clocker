@@ -27,6 +27,15 @@
 		},
 		{
 			"path": "../my_libraries/saveloadlib"
+		},
+		{
+			"path": "../my_libraries/functional-vlpp"
+		},
+		{
+			"path": "../Microlidian"
+		},
+		{
+			"path": ".pio/libdeps/pcb_studio/LinkedList"
 		}
 	],
 	"settings": {
