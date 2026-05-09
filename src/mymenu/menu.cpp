@@ -287,7 +287,7 @@ void setup_menu_transport() {
 
 void setup_menu_midi() {
     menu->add_page("MIDI");
-    menu->remember_opened_page();
+    menu->remember_opened_page(-1, true);
     menu->add(new SeparatorMenuItem("MIDI"));
     SubMenuItemBar *midi_matrix_bar = new SubMenuItemBar("Panic", false, false);
     midi_matrix_bar->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 

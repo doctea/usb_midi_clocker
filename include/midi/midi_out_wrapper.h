@@ -86,8 +86,8 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 channel = default_channel;
             }
 
-            this->log_message_on(current_note, velocity, channel);
-            this->actual_sendNoteOn(current_note, velocity, channel);
+            this->log_message_on(in_pitch, velocity, channel);
+            this->actual_sendNoteOn(in_pitch, velocity, channel);
         }
 
         virtual void sendNoteOff(uint8_t in_pitch, uint8_t velocity, uint8_t channel) override {
@@ -119,7 +119,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 channel = default_channel;
             }
 
-            this->log_message_off(current_note, velocity, channel);
+            this->log_message_off(in_pitch, velocity, channel);
             this->actual_sendNoteOff(in_pitch, velocity, channel);
 
             //this->last_transposed_note = in_pitch;
@@ -174,7 +174,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
 
 
         message_history_t *message_history = nullptr;
-        const int8_t message_history_size = 10;
+        const int8_t message_history_size = 16;
         int8_t next_message_history_index = 0;
 
         virtual void set_log_message_mode(bool status) {

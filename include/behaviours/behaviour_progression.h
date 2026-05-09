@@ -157,7 +157,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         register_setting(new VarSetting<uint8_t>("Chord octave",    "Progression", &chord_octave), SL_SCOPE_SCENE);
         register_setting(new VarSetting<uint8_t>("Bass octave",     "Progression", &bass_octave), SL_SCOPE_SCENE);
         register_setting(new VarSetting<uint8_t>("Topline octave",  "Progression", &topline_octave), SL_SCOPE_SCENE);
-
     }
 
 
@@ -835,7 +834,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
             //chord_player->make_menu_items(menuitems);
 
-            SubMenuItemBar *bar = new SubMenuItemBar("Chord controller", true, true);
+            // SubMenuItemBar *bar = new SubMenuItemBar("Chord controller", true, true);
             
             /*menuitems->add(new LambdaScaleMenuItemBar(
                 "Chord controller", 

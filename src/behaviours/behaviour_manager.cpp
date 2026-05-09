@@ -347,7 +347,10 @@ void setup_behaviour_manager() {
         page_t *started_page = menu->get_selected_page();   // for remembering what page the quickjump menu itself is
         
         // add the behaviours quickjump page to the 'main' menu quickjump list
-        menu->remember_opened_page(menu->get_page_index_for_name(menu->get_selected_page()->title));
+        menu->remember_opened_page(
+            menu->get_page_index_for_name(menu->get_selected_page()->title), 
+            true
+        );
 
         unsigned int i = 0;
         for (auto* behaviour : *behaviours) {

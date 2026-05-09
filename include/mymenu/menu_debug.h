@@ -129,6 +129,7 @@ void setup_debug_menu() {
     ////
 
     menu->add_page("Debug");
+    menu->remember_opened_page();
 
     ActionConfirmItem *reset_control = new ActionConfirmItem("RESET TEENSY?", reset_teensy);
     menu->add(reset_control);
