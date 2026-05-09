@@ -352,18 +352,18 @@ class DeviceBehaviourUltimateBase :
     }
     virtual FloatParameter* getParameterForLabel(const char *label) {
         //Serial.printf(F("getParameterForLabel(%s) in behaviour %s..\n"), label, this->get_label());
-        for (unsigned int i = 0 ; i < parameters->size() ; i++) {
-            //Serial.printf(F("Comparing '%s' to '%s'\n"), parameters->get(i)->label, label);
-            if (strcmp(parameters->get(i)->label, label)==0) 
-                return parameters->get(i);
+        for (auto* p : *parameters) {
+            //Serial.printf(F("Comparing '%s' to '%s'\n"), p->label, label);
+            if (strcmp(p->label, label)==0) 
+                return p;
         }
         Serial_printf(F("WARNING/ERROR in behaviour %s: didn't find a Parameter labelled %s\n"), this->get_label(), label);
         return nullptr;
     }
 
     virtual void reset_all_mappings() {
-        for (unsigned int i = 0 ; i < this->parameters->size() ; i++) {
-            this->parameters->get(i)->reset_mappings();
+        for (auto* p : *this->parameters) {
+            p->reset_mappings();
         }
     }
 
@@ -395,8 +395,8 @@ class DeviceBehaviourUltimateBase :
         // Register FloatParameters as children so their save/load is handled by the tree
         if (this->has_parameters()) {
             LinkedList<FloatParameter*> *params = this->get_parameters();
-            for (unsigned int i = 0 ; i < params->size() ; i++) {
-                register_child(params->get(i));
+            for (auto* p : *params) {
+                register_child(p);
             }
         }
     }

@@ -215,9 +215,11 @@ class MIDITrack {
         }
 
         unsigned int is_event_duplicate(midi_message midi_event, unsigned long time) {
-            for (unsigned int i = 0 ; i < frames[time]->size() ; i++) {
-                if(event_matches(midi_event,frames[time]->get(i)))
-                    return i;
+            unsigned int idx = 0;
+            for (auto msg : *frames[time]) {
+                if(event_matches(midi_event, msg))
+                    return idx;
+                ++idx;
             }
             return 0;
         }
@@ -521,8 +523,7 @@ class MIDITrack {
 
             //if(this->debug) { Serial.println(F("building bitmap..")); Serial_flush(); }
             for (unsigned int x = 0 ; x < LOOP_LENGTH_STEPS ; x++) {   // for each column
-                for (unsigned int m = 0 ; m < frames[x]->size() ; m++) {
-                    midi_message message = frames[x]->get(m);
+                for (auto message : *frames[x]) {
                     if (message.message_type==midi::NoteOn) {
                         /*if (piano_roll_highest < message.pitch)
                             piano_roll_lowest = message.pitch;
@@ -714,8 +715,7 @@ class MIDITrack {
                 }
                 f.printf(F("loop_data=")); //%2x:", frames[x].size());
                 
-                for(unsigned int i = 0 ; i < size ; i++) {
-                    midi_message m = frames[x]->get(i);
+                for (auto m : *frames[x]) {
                     f.printf("%02x%02x%02x%02x,", m.message_type, m.channel, m.pitch, m.velocity);
                 }
                 lines_written++;

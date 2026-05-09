@@ -349,13 +349,14 @@ void setup_behaviour_manager() {
         // add the behaviours quickjump page to the 'main' menu quickjump list
         menu->remember_opened_page(menu->get_page_index_for_name(menu->get_selected_page()->title));
 
-        for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
+        unsigned int i = 0;
+        for (auto* behaviour : *behaviours) {
             tft_print(".");
-            DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
             Serial_printf("about to create_single_behaviour_menu_items() for behaviour %i/%i", i+1, behaviours->size());
             Serial_flush();
             if (behaviour==nullptr) {
                 Serial_println("\tgot a nullptr behaviour!");
+                ++i;
                 continue;
             } else {
                 Serial_printf(" ('%s')\n", behaviour->get_label());
@@ -376,6 +377,7 @@ void setup_behaviour_manager() {
             }
             Serial_printf("...created, free ram is now %u\n", freeRam());
             //started_page = menu->get_selected_page();
+            ++i;
         }
         tft_print("\n");
 

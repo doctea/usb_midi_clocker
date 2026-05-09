@@ -132,8 +132,7 @@ bool execute_command(const char *command_line) {
         return true;
     } else if (strcmp(command, "listbehaviours") == 0) {
         Serial.println("Behaviours:");
-        for (uint_fast8_t i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
-            DeviceBehaviourUltimateBase *b = behaviour_manager->behaviours->get(i);
+        for (auto* b : *behaviour_manager->behaviours) {
             Serial.printf(
                 "  Label: '%s', Type: '%s', Indicator: '%s'\n", 
                 b->get_label(), 

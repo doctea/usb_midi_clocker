@@ -129,15 +129,15 @@ void setup_parameters() {
 
     // add Parameters from registered Behaviours
     // todo: move this to the behaviour initialising!
-    for(unsigned int i = 0 ; i < behaviour_manager->behaviours->size() ; i++) {
+    for (auto* b : *behaviour_manager->behaviours) {
         //Serial.printf("\tdoing addParameters for behaviour %i/%i\n", i+1, behaviour_manager->behaviours->size());
-        if (behaviour_manager->behaviours->get(i)==nullptr) {
+        if (b==nullptr) {
             //Serial.printf("\tbehaviour %i is nullptr!!\n", i);
             continue;
         } else {
-            //Serial.printf("\tbehaviour %s\n", behaviour_manager->behaviours->get(i)->get_label());
+            //Serial.printf("\tbehaviour %s\n", b->get_label());
         }
-        parameter_manager->addParameters(behaviour_manager->behaviours->get(i)->get_parameters());
+        parameter_manager->addParameters(b->get_parameters());
     }
     //Serial.println("finished allParameters.");
 

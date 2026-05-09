@@ -35,8 +35,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         #endif
 
         virtual void setup_saveable_settings() override {
-            for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                DeviceBehaviourUltimateBase* b = behaviours->get(i);
+            for (auto* b : *behaviours) {
                 //Debug_printf("setup_saveable_settings register_child for %i: %s\n", i, b->get_label());
                 register_child(b);
             }
@@ -91,9 +90,8 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
 
                 // loop over the registered behaviours and if the correct one is found, set it up
                 // todo: replace with hashmap lookup?
-                const unsigned int size = behaviours_usb->size();
-                for (unsigned int i = 0 ; i < size ; i++) {
-                    DeviceBehaviourUSBBase *behaviour = behaviours_usb->get(i);
+                unsigned int i = 0;
+                for (auto* behaviour : *behaviours_usb) {
                     Debug_printf(F("DeviceBehaviourManager#attempt_usb_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                     usb_midi_slots[idx].packed_id = packed_id;
                     if (!behaviour->is_connected() && behaviour->matches_identifiers(packed_id)) {
@@ -103,6 +101,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                         //if (irqs_enabled) __enable_irq();
                         return true;
                     }
+                    ++i;
                 }
                 Debug_printf(F("Didn't find a behaviour for usbmidi device #%u with %08X!\n"), idx, packed_id);
                 #ifdef IRQ_PROTECT_USB_CHANGES
@@ -123,14 +122,13 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                 #endif
                 Serial_printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
-                const unsigned int size = behaviours_usbserial->size();
-                for (unsigned int i = 0 ; i < size ; i++) {
+                unsigned int i = 0;
+                for (auto* behaviour : *behaviours_usbserial) {
                     if (!usb_serial_slots[idx].usbdevice || usb_serial_slots[idx].packed_id!=packed_id) {
                         Serial_printf(F("WARNING: usb serial device at %i went away!\n"), idx);
                         //if (irqs_enabled) __enable_irq();
                         return false;
                     }
-                    DeviceBehaviourUSBSerialBase *behaviour = behaviours_usbserial->get(i);
                     Debug_printf(F("DeviceBehaviourManager#attempt_usbserial_device_connect(): checking behaviour %i -- does it match %08X?\n"), i, packed_id);
                     usb_serial_slots[idx].packed_id = packed_id;
                     if (behaviour->matches_identifiers(packed_id)) {
@@ -145,6 +143,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                         //if (irqs_enabled) __enable_irq();
                         return true;
                     }
+                    ++i;
                 }
                 #ifdef IRQ_PROTECT_USB_CHANGES
                     }
@@ -156,12 +155,11 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         #endif
 
         void do_reads() {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                //Serial_printf("\tdo_reads on index %i (@%p) about to call read..\n", i, behaviours->get(i)); Serial_flush();
-                //Serial_printf("\t\t%s\n", behaviours->get(i)->get_label());
-                behaviours->get(i)->read();
-                //Serial_printf("\tdo_reads on index %i (@%p) called read..\n", i, behaviours->get(i)); Serial_flush();
+            for (auto* b : *behaviours) {
+                //Serial_printf("\tdo_reads on index %i (@%p) about to call read..\n", i, b); Serial_flush();
+                //Serial_printf("\t\t%s\n", b->get_label());
+                b->read();
+                //Serial_printf("\tdo_reads on index %i (@%p) called read..\n", i, b); Serial_flush();
             }
         }
         /*#define SINGLE_FRAME_READ
@@ -210,50 +208,43 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         }*/
 
         void send_clocks() {    // replaces behaviours_send_clock
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
+            for (auto* b : *behaviours) {
                 //Serial_printf("behaviours#send_clocks calling send_clock on behaviour %i\n", i); Serial_flush();
-                behaviours->get(i)->send_clock(ticks);
+                b->send_clock(ticks);
                 //Serial_printf("behaviours#send_clocks called send_clock on behaviour %i\n", i); Serial_flush();
             }  
         }
 
         void do_phrase(int phrase) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->on_phrase(phrase);
+            for (auto* b : *behaviours) {
+                b->on_phrase(phrase);
             }
         }
         void do_end_phrase(int phrase) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->on_end_phrase(phrase);
+            for (auto* b : *behaviours) {
+                b->on_end_phrase(phrase);
             }
         }
 
         void do_end_phrase_pre_clock(int phrase) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->on_end_phrase_pre_clock(phrase);
+            for (auto* b : *behaviours) {
+                b->on_end_phrase_pre_clock(phrase);
             }
         }
 
         void do_bar(int bar) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->on_bar(bar);
+            for (auto* b : *behaviours) {
+                b->on_bar(bar);
             }
         }
         void do_end_bar(int bar) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->on_end_bar(bar);
+            for (auto* b : *behaviours) {
+                b->on_end_bar(bar);
             }
         }
         void do_end_beat(int beat) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->on_end_beat(beat);
+            for (auto* b : *behaviours) {
+                b->on_end_beat(beat);
             }
         }
 
@@ -261,9 +252,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
             unsigned long temp_tick;
             //noInterrupts();
             temp_tick = ticks;
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+            for (auto* behaviour : *behaviours) {
                 if (behaviour!=nullptr) {
                     //Serial_printf("behaviours#do_loops calling loop on behaviour %i\n", i); Serial_flush();
                     behaviour->loop(temp_tick);
@@ -273,35 +262,34 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         }
 
         void do_pre_clock(unsigned long in_ticks) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                Debug_printf("About to on_pre_clock() for behaviour #%i at %p...\n", i, behaviours->get(i));
-                if (behaviours->get(i)!=nullptr) {
-                    Debug_printf("\t\t(named %s)\n", behaviours->get(i)->get_label()); 
+            uint_fast8_t i = 0;
+            for (auto* b : *behaviours) {
+                Debug_printf("About to on_pre_clock() for behaviour #%i at %p...\n", i, b);
+                if (b!=nullptr) {
+                    Debug_printf("\t\t(named %s)\n", b->get_label()); 
                     Serial_flush();
-                    behaviours->get(i)->on_pre_clock(in_ticks);
+                    b->on_pre_clock(in_ticks);
                     Debug_printf("finished on_pre_clock() for behaviour #%i...\n", i); Serial_flush();
                 }
+                ++i;
             }
         }
 
         void do_ticks(unsigned long in_ticks) { // replaces behaviours_do_tick
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
+            for (auto* b : *behaviours) {
                 //Serial_printf("behaviours#do_ticks calling on_tick on behaviour %i\n", i); Serial_flush();
-                if (behaviours->get(i)!=nullptr) {
-                    behaviours->get(i)->on_tick(in_ticks);
+                if (b!=nullptr) {
+                    b->on_tick(in_ticks);
                 }
                 //Serial_printf("behaviours#do_ticks called on_tick on behaviour %i\n", i); Serial_flush();
             }
         }
 
         void on_restart() {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
+            for (auto* b : *behaviours) {
                 //Serial_printf("behaviours#on_restart calling on_restart on behaviour %i\n", i); Serial_flush();
-                if (behaviours->get(i)!=nullptr) {
-                    behaviours->get(i)->on_restart();
+                if (b!=nullptr) {
+                    b->on_restart();
                 }
                 //Serial_printf("behaviours#on_restart called on_restart on behaviour %i\n", i); Serial_flush();
             }
@@ -315,8 +303,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         #endif
 
         DeviceBehaviourUltimateBase *find_behaviour_for_label(String label) {
-            for (unsigned int i = 0 ; i < behaviours->size() ; i++) {
-                DeviceBehaviourUltimateBase *behaviour = behaviours->get(i);
+            for (auto* behaviour : *behaviours) {
                 if (behaviour!=nullptr && String(behaviour->get_label())==label) {
                     return behaviour;
                 }
@@ -325,17 +312,15 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         }
 
         void reset_all_mappings() {
-            const unsigned int size = behaviours->size();
-            for (unsigned int i = 0 ; i < size ; i++) {
-                behaviours->get(i)->reset_all_mappings();
+            for (auto* b : *behaviours) {
+                b->reset_all_mappings();
             }
         }
 
         void kill_all_current_notes() {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
+            for (auto* b : *behaviours) {
                 // todo: only kill if the behaviour is quantising
-                behaviours->get(i)->killCurrentNote();
+                b->killCurrentNote();
             }
         }
 
@@ -348,26 +333,26 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                 if (debug) { 
                     Serial_printf("requantise_all_notes() processing %i behaviours...\n", size); Serial_flush(); 
                 }
-                for (uint_fast8_t i = 0 ; i < size ; i++) {
+                uint_fast8_t i = 0;
+                for (auto* device : *behaviours) {
                     uint32_t behaviour_time = micros();
-                    DeviceBehaviourUltimateBase *device = behaviours->get(i);
                     int8_t notes = device->requantise_all_notes();
                     if (notes>0) {
                         requantised_notes += notes;
                     }
                     if ((debug && micros()-behaviour_time>0) || device->debug) {
-                        Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, behaviours->get(i)->get_label()); Serial_flush();
-                        Serial_printf("\trequantise_all_notes() took %i us for behaviour %i (%s) to process %i notes\n", micros()-behaviour_time, i, behaviours->get(i)->get_label(), notes); Serial_flush();
+                        Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, device->get_label()); Serial_flush();
+                        Serial_printf("\trequantise_all_notes() took %i us for behaviour %i (%s) to process %i notes\n", micros()-behaviour_time, i, device->get_label(), notes); Serial_flush();
                     }
+                    ++i;
                 }
                 if (debug) { Serial_printf("..requantise_all_notes took %i ms to process %i behaviours with %i notes.\n", millis()-time, size, requantised_notes); Serial_flush(); }
             }
         #endif
 
         void notify_behaviours_for_project_change(int8_t project_number) {
-            const uint_fast8_t size = behaviours->size();
-            for (uint_fast8_t i = 0 ; i < size ; i++) {
-                behaviours->get(i)->notify_project_changed(project_number);
+            for (auto* b : *behaviours) {
+                b->notify_project_changed(project_number);
             }
         }
 
