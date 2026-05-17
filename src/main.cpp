@@ -638,6 +638,12 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
   //Serial_println("ticked");
 
+  // Safety guard: uClock's ISR fires do_tick() from interrupt even when the
+  // sequencer should be paused (e.g. waiting for external clock).  Bail out
+  // early so no sequencer state is advanced until playing is actually true.
+  if (!playing)
+    return;
+
   static uint32_t last_processed_tick = -1337;
   if (last_processed_tick == in_ticks) {
     //if (debug) { 
@@ -653,9 +659,12 @@ void do_tick(uint32_t in_ticks) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to global_on_restart"));
     global_on_restart();
     set_restart_on_next_bar(false);
-    // After clock_reset() ticks=0. Without this, uClock fires do_tick(0) which is not
-    // caught by the duplicate guard (last_processed_tick==N) and on_bar(0) fires twice.
-    last_processed_tick = 0;
+    // global_on_restart() called clock_reset() which set ::ticks=0.
+    // Sync in_ticks so that all downstream calls (do_ticks, do_pre_clock, etc.)
+    // use tick 0, not the old bar-boundary tick N.
+    // last_processed_tick is updated to in_ticks at the bottom of do_tick(), so
+    // it will be set to 0 there — naturally blocking the redundant uClock do_tick(0).
+    in_ticks = ::ticks;
   }
 
   if (is_bpm_on_phrase(ticks)) {
