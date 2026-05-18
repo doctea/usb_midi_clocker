@@ -10,6 +10,8 @@
     #include "mymenu/menuitems_scale.h"
     #include "mymenu/menuitems_harmony.h"
 
+    #include "mymenu/menuitem_notelimit.h"
+
     FLASHMEM 
     LinkedList<MenuItem*> *DeviceBehaviourUltimateBase::make_menu_items() {
         if (this->menuitems == nullptr) {
@@ -59,26 +61,23 @@
                 );
                 transposition_bar->add(highest_note_control);
 
-                LambdaSelectorControl<int8_t> *lowest_note_mode_control = new LambdaSelectorControl<int8_t>(
+                transposition_bar->add(new NoteLimitModeControl<>(
                     "Low Mode",
-                    [=](int8_t v) -> void { this->setLowestNoteMode(v); },
-                    [=]() -> int8_t { return this->getLowestNoteMode(); },
+                    [=](NOTE_LIMIT_MODE v) -> void { this->setLowestNoteMode(v); },
+                    [=]() -> NOTE_LIMIT_MODE { return this->getLowestNoteMode(); },
                     nullptr,
+                    true,
                     true
-                );
-                lowest_note_mode_control->add_available_value(NOTE_LIMIT_MODE::IGNORE, "Ignore");
-                lowest_note_mode_control->add_available_value(NOTE_LIMIT_MODE::TRANSPOSE, "Transpose");
-                transposition_bar->add(lowest_note_mode_control);
+                ));
 
-                LambdaSelectorControl<int8_t> *highest_note_mode_control = new LambdaSelectorControl<int8_t>(
+                transposition_bar->add(new NoteLimitModeControl<>(
                     "High Mode",
-                    [=](int8_t v) -> void { this->setHighestNoteMode(v); },
-                    [=]() -> int8_t { return this->getHighestNoteMode(); },
+                    [=](NOTE_LIMIT_MODE v) -> void { this->setHighestNoteMode(v); },
+                    [=]() -> NOTE_LIMIT_MODE { return this->getHighestNoteMode(); },
                     nullptr,
+                    true,
                     true
-                );
-                highest_note_mode_control->set_available_values(lowest_note_mode_control->available_values);
-                transposition_bar->add(highest_note_mode_control);
+                ));
 
                 menuitems->add(transposition_bar);
             }

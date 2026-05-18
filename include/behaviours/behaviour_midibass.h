@@ -4,6 +4,8 @@
 #include "behaviour_base.h"
 #include "midi/midi_mapper_matrix_manager.h"
 
+#include "midi_helpers.h"
+
 // TODO: rename this into DroneBehaviour or something
 class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
@@ -154,7 +156,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
                 // do drone stuff
                 //if (this->debug) Serial.printf(F("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n"));
-                pitch = recalculate_pitch(pitch);
+                pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), getLowestNote(), getHighestNote());
+
                 if (!is_valid_note(last_drone_note) && new_bar) {
                     if (this->machinegun)
                         this->machinegun_current_note = pitch;
@@ -171,7 +174,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {
             if (drone_enabled) {
                 //
-                pitch = recalculate_pitch(pitch);
+                pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), getLowestNote(), getHighestNote());
                 if (!is_valid_note(last_drone_note) && machinegun>0 && pitch==this->machinegun_current_note)
                     kill_machinegun_note();
             } else

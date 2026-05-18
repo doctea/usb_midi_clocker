@@ -130,7 +130,8 @@ void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uin
     #endif
     if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i\n", this->get_label(), note, velocity, channel, quantised_note);
 
-    quantised_note = this->recalculate_pitch(quantised_note);
+    // quantised_note = this->recalculate_pitch(quantised_note);
+    quantised_note = apply_note_limits(quantised_note, this->getLowestNoteMode(), this->getHighestNoteMode(), getLowestNote(), getHighestNote());
     if (!is_valid_note(quantised_note)) return;
     this->current_transposed_note = quantised_note;
     this->current_channel = channel;
