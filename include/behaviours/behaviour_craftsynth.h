@@ -91,6 +91,7 @@ class DeviceBehaviour_CraftSynth : virtual public DeviceBehaviourUSBBase, virtua
             return "CraftSynth 2.0";
         }
         virtual bool transmits_midi_notes() { return true; }
+        virtual bool supports_note_limits() { return true; }
         virtual PitchBendSupport get_pitch_bend_support() const override {
             #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
                 return PitchBendSupport::MODULATED;

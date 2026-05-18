@@ -16,6 +16,7 @@
 #include "saveload_settings.h"
 
 #include "parameters/Parameter.h"
+#include "parameters/ProxyParameter.h"
 #include "parameters/MIDICCParameter.h"
 #include "ParameterManager.h"
 
@@ -81,6 +82,7 @@ class DeviceBehaviourUltimateBase :
     virtual bool receives_midi_notes()  { return false; }
     virtual bool transmits_midi_notes() { return false; }
     virtual bool transmits_midi_clock() { return false; }
+    virtual bool supports_note_limits() { return false; }
 
     virtual PitchBendSupport get_pitch_bend_support() const { return PitchBendSupport::PASSTHRU; }
     virtual bool supports_passthru_pitch_bend() const {
@@ -163,6 +165,28 @@ class DeviceBehaviourUltimateBase :
             return true;
         }
     #endif
+
+    bool note_limit_parameters_setup = false;
+    virtual void ensure_note_limit_parameters() {
+        if (note_limit_parameters_setup) return;
+        note_limit_parameters_setup = true;
+
+        parameters->add(new ProxyNoteParameter<int8_t>(
+            "Lowest note",
+            &this->lowest_note,
+            &this->effective_lowest_note,
+            MIDI_MIN_NOTE,
+            MIDI_MAX_NOTE
+        ));
+
+        parameters->add(new ProxyNoteParameter<int8_t>(
+            "Highest note",
+            &this->highest_note,
+            &this->effective_highest_note,
+            MIDI_MIN_NOTE,
+            MIDI_MAX_NOTE
+        ));
+    };
 
     // input/output indicator
     bool indicator_done = false;
@@ -344,6 +368,9 @@ class DeviceBehaviourUltimateBase :
                 this->ensure_advanced_pitch_bend_parameter();
             }
         #endif
+        if (this->supports_note_limits()) {
+            this->ensure_note_limit_parameters();
+        }
         return parameters;
     }
     virtual bool has_parameters() {
@@ -436,6 +463,8 @@ class DeviceBehaviourUltimateBase :
     NOTE_LIMIT_MODE highest_note_mode = NOTE_LIMIT_MODE::IGNORE;
     int8_t lowest_note = 0;
     int8_t highest_note = MIDI_MAX_NOTE;
+    int8_t effective_lowest_note = 0; // the actual lowest note being applied after taking into account things like force octave
+    int8_t effective_highest_note = MIDI_MAX_NOTE; // the actual highest note being
 
     virtual void setLowestNote(int8_t note) {
         // don't allow highest note to be set higher than highest note
@@ -491,6 +520,13 @@ class DeviceBehaviourUltimateBase :
             this->killCurrentNote();
             //this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->highest_note_mode = mode;
+    }
+
+    virtual int8_t get_effective_lowest_note() {
+        return min(effective_lowest_note, effective_highest_note);
+    }
+    virtual int8_t get_effective_highest_note() {
+        return max(effective_highest_note, effective_lowest_note);
     }
 
     // remap pitch if force octave is on, TODO: other tranposition modes

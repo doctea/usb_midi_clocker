@@ -210,6 +210,7 @@ class DeviceBehaviour_SkulptSynth
             return "SkulptSynth";
         }
         virtual bool transmits_midi_notes() { return true; }
+        virtual bool supports_note_limits() { return true; }
         virtual PitchBendSupport get_pitch_bend_support() const override {
             #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
                 return PitchBendSupport::MODULATED;

@@ -8,12 +8,13 @@ template<class BaseClass = DividedClockedBehaviour, class DeviceClass = DeviceBe
 class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
     public:
     char label[32] = "Generic";
-    bool can_transmit_midi_notes = false, can_receive_midi_notes = false;
+    bool can_transmit_midi_notes = false, can_receive_midi_notes = false, can_limit_notes = false;
 
-    Behaviour_SimpleWrapper(const char *label, bool can_receive_midi_notes = false, bool can_transmit_midi_notes = false) : BaseClass() {
+    Behaviour_SimpleWrapper(const char *label, bool can_receive_midi_notes = false, bool can_transmit_midi_notes = false, bool can_limit_notes = false) : BaseClass() {
         strncpy(this->label, label, 32);
         this->can_transmit_midi_notes = can_transmit_midi_notes;
         this->can_receive_midi_notes = can_receive_midi_notes;
+        this->can_limit_notes = can_limit_notes;
         this->set_path_segment(label);
     }
 
@@ -28,12 +29,9 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
         return label;
     }
 
-    virtual bool transmits_midi_notes() override {
-        return this->can_transmit_midi_notes;
-    }
-    virtual bool receives_midi_notes() override {
-        return this->can_receive_midi_notes;
-    }
+    virtual bool transmits_midi_notes() override { return this->can_transmit_midi_notes; }
+    virtual bool receives_midi_notes() override { return this->can_receive_midi_notes; }
+    virtual bool supports_note_limits() { return this->can_limit_notes; }
    
 };
 
@@ -44,8 +42,8 @@ class Behaviour_SimpleWrapperUSB : virtual public Behaviour_SimpleWrapper<BaseCl
 
     uint16_t vid, pid;
 
-    Behaviour_SimpleWrapperUSB(const char *label, uint16_t vid, uint16_t pid, bool receives_midi_notes = false, bool transmits_midi_notes = false) 
-    : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourUSBBase>(label, receives_midi_notes, transmits_midi_notes) 
+    Behaviour_SimpleWrapperUSB(const char *label, uint16_t vid, uint16_t pid, bool receives_midi_notes = false, bool transmits_midi_notes = false, bool can_limit_notes = false) 
+    : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourUSBBase>(label, receives_midi_notes, transmits_midi_notes, can_limit_notes) 
     {
         this->pid = pid;
         this->vid = vid;
@@ -70,8 +68,8 @@ class Behaviour_SimpleWrapperSerial : public Behaviour_SimpleWrapper<BaseClass, 
         this->connect_device_output(output_device);
     }*/
 
-    Behaviour_SimpleWrapperSerial(const char *label, bool receives_midi_notes = false, bool transmits_midi_notes = false) 
-    : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase>(label, receives_midi_notes, transmits_midi_notes) 
+    Behaviour_SimpleWrapperSerial(const char *label, bool receives_midi_notes = false, bool transmits_midi_notes = false, bool can_limit_notes = false) 
+    : Behaviour_SimpleWrapper<BaseClass, DeviceBehaviourSerialBase>(label, receives_midi_notes, transmits_midi_notes, can_limit_notes) 
     {
         this->set_path_segment(label);
     }

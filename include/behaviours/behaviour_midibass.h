@@ -10,9 +10,8 @@
 class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
     public:
 
-        virtual bool transmits_midi_notes() override {
-            return true;
-        }
+        virtual bool transmits_midi_notes() override { return true; }
+        virtual bool supports_note_limits() { return true; }
 
         bool new_bar = true;        // reset on new bar, so that we can pick up only the first note played
         bool drone_enabled = false; // whether or not drone is enabled
@@ -156,7 +155,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
 
                 // do drone stuff
                 //if (this->debug) Serial.printf(F("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n"));
-                pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), getLowestNote(), getHighestNote());
+                pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
 
                 if (!is_valid_note(last_drone_note) && new_bar) {
                     if (this->machinegun)
@@ -174,7 +173,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {
             if (drone_enabled) {
                 //
-                pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), getLowestNote(), getHighestNote());
+                pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
                 if (!is_valid_note(last_drone_note) && machinegun>0 && pitch==this->machinegun_current_note)
                     kill_machinegun_note();
             } else

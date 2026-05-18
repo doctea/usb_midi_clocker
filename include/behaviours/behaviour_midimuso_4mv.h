@@ -37,9 +37,8 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*publi
         //setConcreteClass(this);
     }
 
-    virtual bool transmits_midi_notes() override {
-        return true;
-    }
+    virtual bool transmits_midi_notes() override { return true; }
+    virtual bool supports_note_limits() { return true; }    
 
     virtual const char *get_label() override {
         return "MIDIMuso 4MV";

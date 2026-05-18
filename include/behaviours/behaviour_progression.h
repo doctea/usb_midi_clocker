@@ -50,6 +50,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
     virtual bool transmits_midi_notes() { return true; }
+    virtual bool supports_note_limits() { return true; }
 
     enum MODE {
         DEGREE,
