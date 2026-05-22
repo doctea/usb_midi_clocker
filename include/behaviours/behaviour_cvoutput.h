@@ -49,7 +49,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         GateManager *gate_manager = nullptr;
         int8_t gate_bank = -1, gate_offset = 0;
 
-        DeviceBehaviour_CVOutput(const char *label, uint8_t address, uint8_t dac_extended_address, const char *parameter_label_prefix = "CVO-", TwoWire *wire = &Wire)
+        DeviceBehaviour_CVOutput(const char *label, uint8_t address, uint8_t dac_extended_address, const char *parameter_label_prefix = "CVO-", TwoWire *wire = &Wire, const cv_channel_range_t *channels = nullptr)
             : DeviceBehaviourUltimateBase() {
             if (label != nullptr)
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
@@ -58,6 +58,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
             this->parameter_label_prefix = parameter_label_prefix;
             //this->debug = true;
+            this->create_output_parameters(channels);
             this->init();
         }
             
@@ -66,6 +67,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 strncpy(this->label, label, MAX_LABEL_LENGTH);
             this->dac_output = dac_output;
             //this->debug = true;
+            this->create_output_parameters(nullptr);
             this->init();
         }
 
@@ -98,30 +100,10 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 Serial.println("DeviceBehaviour_CVOutput#init()..");
 
             if (dac_output!=nullptr) {
-                if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput telling dac_output to start and setting up the CVOutputParameters..");
+                if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput telling dac_output to start..");
                 Wire.begin();
                 dac_output->begin();
-
-                outputs[0] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("A")).c_str(), dac_output, 0, VALUE_TYPE::UNIPOLAR, true);
-                outputs[1] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("B")).c_str(), dac_output, 1, VALUE_TYPE::UNIPOLAR, true);
-                outputs[2] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("C")).c_str(), dac_output, 2, VALUE_TYPE::UNIPOLAR, true);
-                outputs[3] = new CVOutputParameter<DAC8574,float>((String(parameter_label_prefix)+String("D")).c_str(), dac_output, 3, VALUE_TYPE::UNIPOLAR, true);
-
-                if (this->debug) this->outputs[0]->debug = true;
-
-                // hardwire the LFO sync to the first slot of first output, for testing...
-                // TODO: remove this from here (and bake it into configuration/sequence/project saves instead..)
-                // hmmm, so, currently init() is called before the parameterinputs are created, so this doesn't work
-                // BUT we need the outputs set up before set_calibration_parameter_input() is called 
-                //outputs[0]->set_slot_input(0, "LFO sync");
-                //outputs[0]->set_slot_0_amount(1.0);
-
-                /*this->parameters->add(outputs[0]);
-                this->parameters->add(outputs[1]);
-                this->parameters->add(outputs[2]);
-                this->parameters->add(outputs[3]);
-                */
-                if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput#init() finished setting up the parameters.");
+                if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput#init() finished.");
             } else {
                 if (debug && Serial) Serial.printf("WARNING: DeviceBehaviour_CVOutput '%s' has null dac_output!\n", this->label);
                 messages_log_add("WARNING: CVOutputBehaviour couldn't initialise DAC output due to nullness!");
@@ -450,6 +432,26 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 return menuitems;
             }
         #endif
+
+    private:
+        void create_output_parameters(const cv_channel_range_t *channels) {
+            if (dac_output == nullptr) return;
+            const cv_channel_range_t defaults[channel_count] = CV_ALL_UNIPOLAR;
+            if (channels == nullptr) channels = defaults;
+            const char *chan_labels[4] = { "A", "B", "C", "D" };
+            for (int i = 0; i < channel_count; i++) {
+                const VALUE_TYPE pol = (channels[i].floor < 0.0f) ? VALUE_TYPE::BIPOLAR : VALUE_TYPE::UNIPOLAR;
+                outputs[i] = new CVOutputParameter<DACClass,float>(
+                    (String(parameter_label_prefix) + String(chan_labels[i])).c_str(),
+                    dac_output, i, pol, channels[i].inverted,
+                    channels[i].floor, channels[i].ceil
+                );
+            }
+            if (this->debug && outputs[0] != nullptr) outputs[0]->debug = true;
+            // TODO: hardwired slot connections should be baked into configuration/project saves instead
+            //outputs[0]->set_slot_input(0, "LFO sync");
+            //outputs[0]->set_slot_0_amount(1.0);
+        }
 };
 
 #endif

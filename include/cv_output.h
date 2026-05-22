@@ -14,12 +14,15 @@
     template<class DACClass>
     class DeviceBehaviour_CVOutput;
 
+    #include "parameters/CVOutputParameterBase.h"  // provides cv_channel_range_t and CV_ALL_* macros
+
     struct cvoutput_config_t {
         uint8_t address;
         uint8_t dac_extended_address;
         GATEBANKS gate_bank;
         int8_t gate_offset;
         const char *calibration_input_names[4];
+        cv_channel_range_t channels[4] = CV_ALL_UNIPOLAR;  // per-channel voltage range; mix freely, e.g. {{0,10},{-5,5},{0,10},{-5,5}}
         DeviceBehaviour_CVOutput<DAC8574> *behaviour = nullptr;
     };
 

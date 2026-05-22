@@ -223,7 +223,9 @@ void setup_behaviour_manager() {
                 (String("CV Pitch Output ") + String(i+1)).c_str(),
                 config.address,
                 config.dac_extended_address,
-                (String("CVPO") + String(i+1) + "-").c_str()
+                (String("CVPO") + String(i+1) + "-").c_str(),
+                &Wire,
+                config.channels
             );
             if (config.gate_bank!=-1)
                 behaviour_cvoutput->set_gate_outputter(gate_manager, config.gate_bank, config.gate_offset);
