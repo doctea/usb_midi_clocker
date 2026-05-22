@@ -180,7 +180,12 @@ void setup_parameter_menu() {
         setup_cv_output_parameter_inputs();
         // ask ParameterManager to add all the menu items for the CVOutputs
         parameter_manager->addAllCVOutputCalibrationMenuItems(menu);
+        // Oscillator tuning page
+        parameter_manager->addOscillatorTuningMenuItems(menu);
     #endif
+
+    // CV input calibration wizard pages
+    parameter_manager->addAllCVInputCalibrationMenuItems(menu);
 
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
