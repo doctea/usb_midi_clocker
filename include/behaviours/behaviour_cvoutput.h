@@ -6,26 +6,23 @@
 #if defined(CONFIG_CV_OUTPUT_1) || defined(CONFIG_CV_OUTPUT_2) || defined(CONFIG_CV_OUTPUT_3)
     
 #include "behaviour_base.h"
+#include "behaviours/behaviour_polyphonic.h"
 #include "parameter_inputs/VoltageParameterInput.h"
 #include "parameters/CVOutputParameter.h"
 #include "ParameterManager.h"
-
-#include "behaviours/behaviour_polyphonic.h"
 
 #include "Wire.h"
 
 #include "interfaces/interfaces.h"
 
-#include "submenuitem_bar.h"
+#ifdef ENABLE_SCREEN
+    #include "submenuitem_bar.h"
+#endif
 
 #include "cv_output.h"
 
 extern ParameterManager *parameter_manager;
 
-/*#ifdef ENABLE_SCREEN
-    template<class TargetClass>
-    class ParameterInputSelectorControl;
-#endif*/
 
 // todo: make CVOutputParameter more agnostic about underlying library so it can support other DACs
 // todo: including a 'dummy' DAC for testing purposes
@@ -307,8 +304,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 if (outputs[i] != nullptr)
                     register_setting(new VarSetting<bool>(
                         (String("Slew ") + String(i)).c_str(), "Slews",
-                        &outputs[i]->slew_enabled)
-                    , SL_SCOPE_SCENE);
+                        &outputs[i]->slew_enabled), SL_SCOPE_SCENE);
             }
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
@@ -371,9 +367,6 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         #endif
 
         #ifdef ENABLE_SCREEN
-            //ParameterInputSelectorControl<DeviceBehaviour_CVOutput> *pitch_parameter_selector = nullptr;
-            //ParameterInputSelectorControl<DeviceBehaviour_CVOutput> *velocity_parameter_selector = nullptr;
-            //virtual LinkedList<MenuItem *> *make_menu_items() override;
             virtual LinkedList<MenuItem*> *make_menu_items() override {
                 LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
@@ -448,9 +441,6 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 );
             }
             if (this->debug && outputs[0] != nullptr) outputs[0]->debug = true;
-            // TODO: hardwired slot connections should be baked into configuration/project saves instead
-            //outputs[0]->set_slot_input(0, "LFO sync");
-            //outputs[0]->set_slot_0_amount(1.0);
         }
 };
 
