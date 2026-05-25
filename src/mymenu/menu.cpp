@@ -441,7 +441,7 @@ void setup_menu(bool button_high_state) {
     Serial.println(F("Created Menu object"));
     Serial_flush();
 
-    menu->set_messages_log(messages_log);
+    menu->set_messages_log(&message_log);
 
     menu->add_pinned(new LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN));  // pinned position indicator
 

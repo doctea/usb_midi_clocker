@@ -283,6 +283,9 @@ bool execute_command(const char *command_line) {
             }
             
             filename = storage::get_project_settings_filename(desired_project_number);
+        } else if (strcmp(arg1, "system") == 0) {
+            // show system settings
+            filename = storage::get_system_settings_filename();
         } else {
             Serial.printf("Unknown type: %s\n", arg1);
             return true;
@@ -318,12 +321,12 @@ bool execute_command(const char *command_line) {
             Serial.println("Usage: load <type> <filename>");
             return true;
         }
-        if (arg2[0] == '\0') {
-            Serial.println("Usage: load <type> <filename>");
-            return true;
-        }
         if (strcmp(arg1, "proj") == 0) {
             // load project settings from the specified file
+            if (arg2[0] == '\0') {
+                Serial.println("Usage: load proj <filename>");
+                return true;
+            }
             int project_number = atoi(arg2);
             if (project_number < 0) {
                 Serial.printf("Invalid project number: %i\n", project_number);
@@ -334,6 +337,10 @@ bool execute_command(const char *command_line) {
 
             return true;
         } else if (strcmp(arg1, "scene") == 0) {
+            if (arg2[0] == '\0') {
+                Serial.println("Usage: load scene <filename>");
+                return true;
+            }
             // load a scene from the specified file
             Serial.printf("Loading scene from file %s...\n", arg2);
 
@@ -350,6 +357,10 @@ bool execute_command(const char *command_line) {
             Serial.printf("Loading scene from file %i...\n", desired_scene_number);
             project->load_scene(desired_scene_number, pass_debug);
 
+            return true;
+        } else if (strcmp(arg1, "system") == 0) {
+            Serial.printf("Loading system settings from file %s...\n", arg2);
+            load_system_settings();
             return true;
         } else {
             Serial.printf("Unknown type: %s\n", arg1);
@@ -397,6 +408,16 @@ bool execute_command(const char *command_line) {
                 }
                 return true;
             }
+        } else if (strcmp(arg1, "system") == 0) {
+            if (arg2[0] == '\0') {
+                // save current system settings to the specified file
+                Serial.printf("Saving system settings to file %s...\n", arg2);
+                save_system_settings();
+                return true;
+            } else {
+                Serial.println("System settings can only be saved to the default system settings file. Usage: save system");
+                return true;
+            }
         } else {
             Serial.printf("Unknown type: %s\n", arg1);
             return true;
@@ -425,6 +446,11 @@ bool execute_command(const char *command_line) {
             // load a line of text as if it were a line from a project settings file, and output the result of parsing it
             Serial_printf("Parsing line as project settings line: '%s'\n", line_buffer);
             scope = SL_SCOPE_PROJECT;
+            Serial_println("Done.");
+        } else if (strcmp(arg1, "system") == 0) {
+            // load a line of text as if it were a line from a system settings file, and output the result of parsing it
+            Serial_printf("Parsing line as system settings line: '%s'\n", line_buffer);
+            scope = SL_SCOPE_SYSTEM;
             Serial_println("Done.");
         } else {
             Serial.printf("Unknown type: %s\n", arg1);
@@ -523,7 +549,7 @@ bool execute_command(const char *command_line) {
         Serial.println("    showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
         Serial.println("    list <project_number> - List files on the SD card for the given project");
         Serial.println("    set project/scene <number> - Set the current project or scene number");
-        Serial.println("    show <scene|proj> <number> - Show the contents of a scene or project settings file");
+        Serial.println("    show <scene|proj|system> [number] - Show the contents of a scene, project, or system settings file");
         Serial.println("    save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
         Serial.println("    load <scene|proj> <number> - Load a scene or project settings from the given slot number");
         Serial.println("    loadline - Load a line of text as if it were from a scene file (for testing parsing)");
