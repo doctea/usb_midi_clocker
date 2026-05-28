@@ -27,6 +27,9 @@
   #include "mymenu/menu_debug.h"
   #include "mymenu/menu_system_settings.h"
 #endif
+#ifdef ENABLE_REMOTE_VIEWER
+  #include "remote_viewer_serial.h"
+#endif
 #include "project.h"
 
 #ifdef ENABLE_PARAMETERS
@@ -425,6 +428,9 @@ void loop() {
     }
   }
 
+  #ifdef ENABLE_REMOTE_VIEWER
+  read_viewer_serial();
+  #endif
   update_serial();
 
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
@@ -503,6 +509,9 @@ void loop() {
       bool screen_was_drawn = false;      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
       {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
+        #ifdef ENABLE_REMOTE_VIEWER
+        dispatch_viewer_commands();
+        #endif
         static bool first_run = true;
         if (!first_run) {
           menu->update_inputs();

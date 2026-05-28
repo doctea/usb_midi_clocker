@@ -243,14 +243,14 @@
                     menu->button_back();
                 break;*/
             #ifdef ENABLE_SCREEN
-            case KEYD_UP        : Serial_println(F("UP"));             menu->knob_left(); break;
-            case KEYD_DOWN      : Serial_println(F("DN"));             menu->knob_right(); break;
+            case KEYD_UP        : Debug_println(F("UP"));             menu->knob_left(); break;
+            case KEYD_DOWN      : Debug_println(F("DN"));             menu->knob_right(); break;
             case KEYD_ESC       :
             case KEYD_LEFT      : 
-            case KEYD_BACKSPACE : Serial_println(F("LEFT"));           menu->button_back(); break;
-            case KEYD_RIGHT     : Serial_println(F("RIGHT")); 
-            case KEYD_ENTER     : Serial_println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
-            case KEYD_HASH      : Serial_println(F("right-button"));   menu->button_right(); break;
+            case KEYD_BACKSPACE : Debug_println(F("LEFT"));           menu->button_back(); break;
+            case KEYD_RIGHT     : Debug_println(F("RIGHT")); 
+            case KEYD_ENTER     : Debug_println(F("selecting"));      menu->button_select(); menu->button_select_released(); break;
+            case KEYD_HASH      : Debug_println(F("right-button"));   menu->button_right(); break;
             case KEYD_TAB       :
                 // switch menu page
                 if (modifiers & MOD_LSHIFT || modifiers & MOD_RSHIFT) {

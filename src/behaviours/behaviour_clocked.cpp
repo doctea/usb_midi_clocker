@@ -28,9 +28,9 @@
         return menuitems;
     }
 
-    LinkedList<LambdaSelectorControl<int32_t>::option> *delay_ticks_control_available_values = nullptr;
+    OptionList<LambdaSelectorControl<int32_t>::option> *delay_ticks_control_available_values = nullptr;
 
-    void add_option_delay_ticks_control(LinkedList<LambdaSelectorControl<int32_t>::option> *list, int32_t value, const char *label) { 
+    void add_option_delay_ticks_control(OptionList<LambdaSelectorControl<int32_t>::option> *list, int32_t value, const char *label) { 
         String *l = new String(label);
         list->add(LambdaSelectorControl<int32_t>::option { .value = value, .label = l->c_str() });
     }
@@ -63,7 +63,7 @@
         #ifdef ENABLE_DELAY_TICKS_CONTROL
             // use a global delay_ticks_control list of available values to save (hopefully) code space and RAM
             if (delay_ticks_control_available_values==nullptr) {
-                delay_ticks_control_available_values = new LinkedList<LambdaSelectorControl<int32_t>::option>();
+                delay_ticks_control_available_values = new OptionList<LambdaSelectorControl<int32_t>::option>();
                 add_option_delay_ticks_control(delay_ticks_control_available_values, 0,                "None");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/4,            "1/4");
                 add_option_delay_ticks_control(delay_ticks_control_available_values,PPQN/2,            "1/2");
