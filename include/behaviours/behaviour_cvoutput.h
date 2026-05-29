@@ -17,6 +17,7 @@
 
 #ifdef ENABLE_SCREEN
     #include "submenuitem_bar.h"
+    #include "behaviours/cv_output_channel_submenu.h"
 #endif
 
 #include "cv_output.h"
@@ -42,6 +43,15 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         #endif
 
         const char *parameter_label_prefix = "CVO-";
+
+        // Per-channel note limits (applied in actualSendNoteOn/Off, after global limits)
+        int8_t per_channel_lowest_note[channel_count]  = { MIDI_MIN_NOTE, MIDI_MIN_NOTE, MIDI_MIN_NOTE, MIDI_MIN_NOTE };
+        int8_t per_channel_highest_note[channel_count] = { MIDI_MAX_NOTE, MIDI_MAX_NOTE, MIDI_MAX_NOTE, MIDI_MAX_NOTE };
+        NOTE_LIMIT_MODE per_channel_lowest_mode[channel_count]  = { NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE };
+        NOTE_LIMIT_MODE per_channel_highest_mode[channel_count] = { NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE };
+
+        // Last note played per channel; persists after NoteOff so collapsed sub-menu can show it
+        int8_t last_channel_note[channel_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
 
         GateManager *gate_manager = nullptr;
         int8_t gate_bank = -1, gate_offset = 0;
@@ -255,13 +265,26 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             apply_pitch_bend_to_output(channel - 1, bend);
         }
 
+        // Apply per-channel note limits to a note, returning NOTE_OFF if dropped or the (possibly transposed) note.
+        // Must be called identically in both actualSendNoteOn and actualSendNoteOff for NoteOff symmetry.
+        inline int8_t apply_per_channel_limits(uint8_t note, uint8_t ch_idx) {
+            return apply_note_limits(
+                (int8_t)note,
+                per_channel_lowest_mode[ch_idx],  per_channel_highest_mode[ch_idx],
+                per_channel_lowest_note[ch_idx],  per_channel_highest_note[ch_idx]
+            );
+        }
+
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOn (%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
             if (channel > channel_count) {
                 // this shouldn't happen?
                 Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOn (%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
-                if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOn(note, velocity, channel);
+                const int8_t limited_note = apply_per_channel_limits(note, channel - 1);
+                if (!is_valid_note(limited_note)) return;
+                last_channel_note[channel - 1] = limited_note;
+                if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOn(limited_note, velocity, channel);
             }
         }
 
@@ -271,7 +294,12 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 // this shouldn't happen?
                 Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
-                if (outputs[channel-1] != nullptr) outputs[channel-1]->sendNoteOff(note, velocity, channel);
+                // Apply the same per-channel transform as actualSendNoteOn so NoteOff targets the right note.
+                // If the note was dropped (IGNORE mode), limited_note == NOTE_OFF; we still forward the
+                // original note so CVOutputParameter can safely no-op (current_pitch_note won't match).
+                const int8_t limited_note = apply_per_channel_limits(note, channel - 1);
+                if (outputs[channel-1] != nullptr)
+                    outputs[channel-1]->sendNoteOff(is_valid_note(limited_note) ? limited_note : (int8_t)note, velocity, channel);
             }
         }
 
@@ -322,6 +350,24 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                         [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }
                     ), SL_SCOPE_SCENE);
             }
+            for (int i = 0 ; i < channel_count; i++) {
+                register_setting(new VarSetting<int8_t>(
+                    (String("ChLowestNote ") + String(i)).c_str(), "ChLimits",
+                    &this->per_channel_lowest_note[i]), SL_SCOPE_SCENE);
+                register_setting(new VarSetting<int8_t>(
+                    (String("ChHighestNote ") + String(i)).c_str(), "ChLimits",
+                    &this->per_channel_highest_note[i]), SL_SCOPE_SCENE);
+                register_setting(new LSaveableSetting<NOTE_LIMIT_MODE>(
+                    (String("ChLoMode ") + String(i)).c_str(), "ChLimits", nullptr,
+                    [=](NOTE_LIMIT_MODE v) { this->per_channel_lowest_mode[i]  = v; },
+                    [=]() -> NOTE_LIMIT_MODE { return this->per_channel_lowest_mode[i];  }
+                ), SL_SCOPE_SCENE);
+                register_setting(new LSaveableSetting<NOTE_LIMIT_MODE>(
+                    (String("ChHiMode ") + String(i)).c_str(), "ChLimits", nullptr,
+                    [=](NOTE_LIMIT_MODE v) { this->per_channel_highest_mode[i] = v; },
+                    [=]() -> NOTE_LIMIT_MODE { return this->per_channel_highest_mode[i]; }
+                ), SL_SCOPE_SCENE);
+            }
         }
 
         #ifdef ENABLE_PARAMETERS
@@ -370,57 +416,26 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             virtual LinkedList<MenuItem*> *make_menu_items() override {
                 LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
-                PolyphonicBehaviour::make_menu_items();
+                // Initialise shared lowmemory modulation controls once (reused by every channel sub-menu)
+                ensure_shared_lowmemory_controls();
 
-                // make controls for enabling/disabling gate outputs
-                SubMenuItemBar *gate_output_menu = new SubMenuItemBar("Gate Outputs", true, true);
-                for (int i=0; i<channel_count; i++) {
-                    if (outputs[i] != nullptr) {
-                        gate_output_menu->add(new LambdaToggleControl(
-                            (String("Output ") + String(i+1)).c_str(),
-                            [=](bool v) -> void { outputs[i]->set_gate_output_enabled(v); },
-                            [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }
-                        ));
-                    }
+                // One sub-menu per CV output channel containing all per-channel controls
+                const char *chan_labels[4] = { "Ch A", "Ch B", "Ch C", "Ch D" };
+                for (int i = 0; i < channel_count; i++) {
+                    if (outputs[i] == nullptr) continue;
+                    char *item_label = new char[strlen(this->get_label()) + strlen(chan_labels[i]) + 2];
+                    snprintf(item_label, strlen(this->get_label()) + strlen(chan_labels[i]) + 2, "%s %s", this->get_label(), chan_labels[i]);
+                    menuitems->add(new CVOutputChannelSubMenuItem<DACClass>(
+                        item_label,
+                        outputs[i],
+                        &this->allow_voice_for_auto[i],
+                        &this->last_channel_note[i],
+                        &this->per_channel_lowest_note[i],
+                        &this->per_channel_highest_note[i],
+                        &this->per_channel_lowest_mode[i],
+                        &this->per_channel_highest_mode[i]
+                    ));
                 }
-                menuitems->add(gate_output_menu);
-
-                // add a Slew separator
-                menuitems->add(new SeparatorMenuItem("Slew Controls"));
-
-                // make slew controls for the outputs
-                SubMenuItemBar *slew_menu = new SubMenuItemBar("Slew", true, true);
-                for (int i=0; i<channel_count; i++) {
-                    if (outputs[i] != nullptr) {
-                        slew_menu->add(new LambdaToggleControl(
-                            (String("Output ") + String(i+1)).c_str(),
-                            [=](bool v) -> void { outputs[i]->slew_enabled = v; },
-                            [=]() -> bool { return outputs[i]->slew_enabled; }
-                        ));
-                    }
-                }
-                menuitems->add(slew_menu);
-
-                // make slew controls to set the slew rate for the outputs
-                SubMenuItemBar *slew_rate_menu = new SubMenuItemBar("Slew Rate", true, true);
-                for (int i=0; i<channel_count; i++) {
-                    if (outputs[i] != nullptr) {
-                        slew_rate_menu->add(new LambdaNumberControl<float>(
-                            //(String("Output ") + String(i+1)).c_str(),
-                            outputs[i]->label,
-                            [=](float v) -> void { outputs[i]->set_slew_rate_normal(v); },
-                            [=]() -> float { return outputs[i]->get_slew_rate_normal(); },
-                            nullptr,
-                            0.0, 
-                            1.0, 
-                            0.01,
-                            true
-                        ));
-                    }
-                }
-                menuitems->add(slew_rate_menu);
-
-                //MIDIBassBehaviour::make_menu_items();
 
                 return menuitems;
             }

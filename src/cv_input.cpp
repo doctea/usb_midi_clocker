@@ -117,6 +117,10 @@ void setup_parameters() {
         parameter_manager->addInput(new VirtualParameterInput((char*)"LFO Phrase",  "E-LFOs", LFO_LOCKED, 4.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2xPhrase",  "E-LFOs", LFO_LOCKED, 8.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 4xPhrase", "E-LFOs", LFO_LOCKED, 16.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        // Additional free-running LFOs at different speeds (divisor: higher = slower)
+        { auto *f = new VirtualParameterInput((char*)"Free fast",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor =  33.0f; parameter_manager->addInput(f); }
+        { auto *f = new VirtualParameterInput((char*)"Free slow",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 300.0f; parameter_manager->addInput(f); }
+        { auto *f = new VirtualParameterInput((char*)"Free vSlow", "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 999.0f; parameter_manager->addInput(f); }
     #endif
 
     VirtualMixerParameterInput *mixerpi1 = new VirtualMixerParameterInput((char*)"Mix 1", "Mixers");
