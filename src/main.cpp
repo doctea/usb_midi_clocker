@@ -743,6 +743,7 @@ void do_tick(uint32_t in_ticks) {
   #endif*/
 
   DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush();
+  parameter_manager->tick_sh();
   behaviour_manager->do_ticks(in_ticks);
   DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush();
 
