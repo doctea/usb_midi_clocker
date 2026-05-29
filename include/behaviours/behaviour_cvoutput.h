@@ -22,6 +22,10 @@
 
 #include "cv_output.h"
 
+#ifdef ENABLE_SCALES
+    #include "conductor.h"
+#endif
+
 extern ParameterManager *parameter_manager;
 
 
@@ -115,6 +119,15 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 if (debug && Serial) Serial.printf("WARNING: DeviceBehaviour_CVOutput '%s' has null dac_output!\n", this->label);
                 messages_log_add("WARNING: CVOutputBehaviour couldn't initialise DAC output due to nullness!");
             }
+
+            #ifdef ENABLE_SCALES
+                if (conductor != nullptr) {
+                    conductor->register_harmony_change_callback([this](const scale_identity_t&, const chord_identity_t&) {
+                        for (int i = 0; i < channel_count; i++)
+                            park_channel(i);
+                    });
+                }
+            #endif
         };
 
         char label[MAX_LABEL_LENGTH] = "CV Output";
@@ -300,8 +313,30 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                 const int8_t limited_note = apply_per_channel_limits(note, channel - 1);
                 if (outputs[channel-1] != nullptr)
                     outputs[channel-1]->sendNoteOff(is_valid_note(limited_note) ? limited_note : (int8_t)note, velocity, channel);
+                #ifdef ENABLE_SCALES
+                    park_channel(channel - 1);
+                #endif
             }
         }
+
+        #ifdef ENABLE_SCALES
+        void park_channel(int ch_idx) {
+            if (ch_idx < 0 || ch_idx >= channel_count) return;
+            if (outputs[ch_idx] == nullptr) return;
+            if (!outputs[ch_idx]->get_park_enabled()) return;
+            if (!allow_voice_for_auto[ch_idx]) return;          // only pool channels
+            if (outputs[ch_idx]->is_note_active()) return;      // don't park if note is still sounding
+            if (conductor == nullptr) return;
+            if (conductor->get_global_quantise_mode() == QUANTISE_MODE_NONE) return;
+            const int8_t ref = last_channel_note[ch_idx];
+            if (!is_valid_note(ref)) return;
+            const int8_t parked = (conductor->get_global_quantise_mode() == QUANTISE_MODE_CHORD)
+                ? conductor->quantise_to_chord(ref, 3)
+                : conductor->quantise_to_scale(ref);
+            outputs[ch_idx]->park_pitch(parked);
+            last_channel_note[ch_idx] = parked;
+        }
+        #endif
 
         using PolyphonicBehaviour::sendNoteOn;
         using PolyphonicBehaviour::sendNoteOff;

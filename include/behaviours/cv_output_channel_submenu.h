@@ -139,7 +139,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
                     return "---";
                 },
                 [=]() -> uint16_t {
-                    if (is_valid_note(output_->current_pitch_note)) return YELLOW;
+                    if (output_->is_note_active()) return YELLOW;
                     if (last_note_ && is_valid_note(*last_note_))   return DARK_YELLOW;
                     return GREY;
                 }
@@ -248,6 +248,14 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
                 0.0f, 1.0f,
                 0.01f, true
             ));
+
+            // 3. Park: re-quantise CV voltage to scale/chord when channel is idle
+            #ifdef ENABLE_SCALES
+            settings_bar->add(new LambdaToggleControl("Park",
+                [=](bool v) { output_->set_park_enabled(v); },
+                [=]() -> bool  { return output_->get_park_enabled(); }
+            ));
+            #endif
 
             this->add(settings_bar);
 
