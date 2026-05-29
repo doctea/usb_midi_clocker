@@ -449,6 +449,9 @@ class DeviceBehaviourUltimateBase :
             return this->get_parameters()!=nullptr && this->get_parameters()->size()>0;
         }
 
+        // Override and return false to prevent the behaviour's menu page from scrolling.
+        virtual bool is_page_scrollable() { return true; }
+
         HarmonyStatus *output_harmony_status = nullptr; // store a pointer to this so we can update it from subclasses, eg MIDIBass
     #endif
 

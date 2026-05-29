@@ -49,10 +49,23 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         const char *parameter_label_prefix = "CVO-";
 
         // Per-channel note limits (applied in actualSendNoteOn/Off, after global limits)
+        // Base values — user-set, saved/loaded directly.
         int8_t per_channel_lowest_note[channel_count]  = { MIDI_MIN_NOTE, MIDI_MIN_NOTE, MIDI_MIN_NOTE, MIDI_MIN_NOTE };
         int8_t per_channel_highest_note[channel_count] = { MIDI_MAX_NOTE, MIDI_MAX_NOTE, MIDI_MAX_NOTE, MIDI_MAX_NOTE };
         NOTE_LIMIT_MODE per_channel_lowest_mode[channel_count]  = { NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE };
         NOTE_LIMIT_MODE per_channel_highest_mode[channel_count] = { NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE, NOTE_LIMIT_MODE::IGNORE };
+        // Effective (post-modulation) note limits — used by apply_per_channel_limits().
+        // Initialised equal to base; modulation writes here via ProxyNoteParameter.
+        int8_t effective_per_channel_lowest_note[channel_count]  = { MIDI_MIN_NOTE, MIDI_MIN_NOTE, MIDI_MIN_NOTE, MIDI_MIN_NOTE };
+        int8_t effective_per_channel_highest_note[channel_count] = { MIDI_MAX_NOTE, MIDI_MAX_NOTE, MIDI_MAX_NOTE, MIDI_MAX_NOTE };
+        // Per-channel slew rate base values (user-set/saved); effective slew lives on outputs[i]->effective_slew_rate_normal.
+        float slew_base_normal[channel_count] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+        // UI-only filtered parameter lists (view subsets of this->parameters).
+        // per_pool_parameters: pool-level params (populated after base class initialise_parameters()).
+        // per_channel_parameters[i]: per-channel params for the channel Mod sub-page.
+        LinkedList<FloatParameter*> *per_pool_parameters = new LinkedList<FloatParameter*>();
+        LinkedList<FloatParameter*> *per_channel_parameters[channel_count] = { nullptr, nullptr, nullptr, nullptr };
 
         // Last note played per channel; persists after NoteOff so collapsed sub-menu can show it
         int8_t last_channel_note[channel_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
@@ -219,7 +232,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                     return;
 
                 char parameter_label[MENU_C_MAX] = "";
-                snprintf(parameter_label, MENU_C_MAX, "Pitch Bend %u", (unsigned int)(output_index + 1));
+                snprintf(parameter_label, MENU_C_MAX, "Ch %c Pitch Bend", (unsigned int)('A' + output_index));
                 const int8_t range = this->get_pitch_bend_range_semitones();
 
                 pitch_bend_parameters[output_index] = new LDataParameter<float>(
@@ -283,8 +296,8 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         inline int8_t apply_per_channel_limits(uint8_t note, uint8_t ch_idx) {
             return apply_note_limits(
                 (int8_t)note,
-                per_channel_lowest_mode[ch_idx],  per_channel_highest_mode[ch_idx],
-                per_channel_lowest_note[ch_idx],  per_channel_highest_note[ch_idx]
+                per_channel_lowest_mode[ch_idx],   per_channel_highest_mode[ch_idx],
+                effective_per_channel_lowest_note[ch_idx], effective_per_channel_highest_note[ch_idx]
             );
         }
 
@@ -366,39 +379,43 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
                     register_setting(new VarSetting<bool>(
-                        (String("Slew ") + String(i)).c_str(), "Slews",
+                        (String("Ch ") + String('A' + i) + " Slew").c_str(), "Slews",
                         &outputs[i]->slew_enabled), SL_SCOPE_SCENE);
             }
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
                     register_setting(new LSaveableSetting<float>(
-                        (String("Slew Rate ") + String(i)).c_str(), "Slews", nullptr,
-                        [=](float v) { outputs[i]->set_slew_rate_normal(v); },
-                        [=]() -> float { return outputs[i]->get_slew_rate_normal(); }
+                        (String("Ch ") + String('A' + i) + " Slew Rate").c_str(), "Slews", nullptr,
+                        [=](float v) { slew_base_normal[i] = v; outputs[i]->effective_slew_rate_normal = v; },
+                        [=]() -> float { return slew_base_normal[i]; }
                     ), SL_SCOPE_SCENE);
             }
             for (int i = 0 ; i < channel_count; i++) {
                 if (outputs[i] != nullptr)
                     register_setting(new LSaveableSetting<bool>(
-                        (String("Gate Output ") + String(i)).c_str(), "Gates", nullptr,
+                        (String("Ch ") + String('A' + i) + " Gate Output").c_str(), "Gates", nullptr,
                         [=](bool v) { outputs[i]->set_gate_output_enabled(v); },
                         [=]() -> bool { return outputs[i]->get_gate_output_enabled(); }
                     ), SL_SCOPE_SCENE);
             }
             for (int i = 0 ; i < channel_count; i++) {
-                register_setting(new VarSetting<int8_t>(
-                    (String("ChLowestNote ") + String(i)).c_str(), "ChLimits",
-                    &this->per_channel_lowest_note[i]), SL_SCOPE_SCENE);
-                register_setting(new VarSetting<int8_t>(
-                    (String("ChHighestNote ") + String(i)).c_str(), "ChLimits",
-                    &this->per_channel_highest_note[i]), SL_SCOPE_SCENE);
+                register_setting(new LSaveableSetting<int8_t>(
+                    (String("Ch ") + String('A' + i) + " Lowest Note").c_str(), "ChLimits", nullptr,
+                    [=](int8_t v) { per_channel_lowest_note[i] = v; effective_per_channel_lowest_note[i] = v; },
+                    [=]() -> int8_t { return per_channel_lowest_note[i]; }
+                ), SL_SCOPE_SCENE);
+                register_setting(new LSaveableSetting<int8_t>(
+                    (String("Ch ") + String('A' + i) + " Highest Note").c_str(), "ChLimits", nullptr,
+                    [=](int8_t v) { per_channel_highest_note[i] = v; effective_per_channel_highest_note[i] = v; },
+                    [=]() -> int8_t { return per_channel_highest_note[i]; }
+                ), SL_SCOPE_SCENE);
                 register_setting(new LSaveableSetting<NOTE_LIMIT_MODE>(
-                    (String("ChLoMode ") + String(i)).c_str(), "ChLimits", nullptr,
+                    (String("Ch ") + String('A' + i) + " Lowest Note Mode").c_str(), "ChLimits", nullptr,
                     [=](NOTE_LIMIT_MODE v) { this->per_channel_lowest_mode[i]  = v; },
                     [=]() -> NOTE_LIMIT_MODE { return this->per_channel_lowest_mode[i];  }
                 ), SL_SCOPE_SCENE);
                 register_setting(new LSaveableSetting<NOTE_LIMIT_MODE>(
-                    (String("ChHiMode ") + String(i)).c_str(), "ChLimits", nullptr,
+                    (String("Ch ") + String('A' + i) + " Highest Note Mode").c_str(), "ChLimits", nullptr,
                     [=](NOTE_LIMIT_MODE v) { this->per_channel_highest_mode[i] = v; },
                     [=]() -> NOTE_LIMIT_MODE { return this->per_channel_highest_mode[i]; }
                 ), SL_SCOPE_SCENE);
@@ -408,44 +425,74 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         #ifdef ENABLE_PARAMETERS
             bool already_initialised = false;
             virtual LinkedList<FloatParameter*> *initialise_parameters() {
-                //if (already_initialised && this->parameters != nullptr)
-                //    return this->parameters;
-                //already_initialised = true;
-                /*while (1) {
-                    Serial.println("DeviceBehaviour_CVOutput#initialise_parameters()..");
-                }*/
+                // Initialise per_channel_parameters lists
+                for (int i = 0; i < channel_count; i++) {
+                    if (per_channel_parameters[i] == nullptr)
+                        per_channel_parameters[i] = new LinkedList<FloatParameter*>();
+                }
 
+                // Let base classes add pool-level parameters (e.g. lowest_note/highest_note ProxyNoteParams)
                 DeviceBehaviourUltimateBase::initialise_parameters();
                 PolyphonicBehaviour::initialise_parameters();
 
-                this->parameters->add(outputs[0]);
-                this->parameters->add(outputs[1]);
-                this->parameters->add(outputs[2]);
-                this->parameters->add(outputs[3]);
+                // Snapshot pool-level params (added by base classes above)
+                for (auto* p : *this->parameters)
+                    per_pool_parameters->add(p);
 
-                // Add parameters specific to CVOutputBehaviour
-                //this->init();
+                // Add per-channel parameters: CVOutput, slew proxy, note limit proxies, pitch bend
+                const char *chan_labels[4] = { "A", "B", "C", "D" };
+                for (int i = 0; i < channel_count; i++) {
+                    if (outputs[i] == nullptr) continue;
 
-                // add parameters for controlling the slew rate of the outputs
-                for (int i = 0 ; i < channel_count; i++) {
-                    if (outputs[i] != nullptr) {
-                        this->parameters->add(new LDataParameter<float>(
-                            (String("Slew Rate ") + String(/*'A'+*/i)).c_str(),
-                            [=](float v) -> void { outputs[i]->set_slew_rate_normal(v); },
-                            [=]() -> float { return outputs[i]->get_slew_rate_normal(); },
-                            0.0, 
-                            1.0
-                        ));
+                    // Pitch CV output parameter
+                    this->parameters->add(outputs[i]);
+                    per_channel_parameters[i]->add(outputs[i]);
 
-                        #if defined(ENABLE_ADVANCED_PITCHBEND)
-                            this->ensure_pitch_bend_parameter(i);
-                        #endif
-                    }
+                    // Slew rate as a proxy: base in slew_base_normal[i], effective on outputs[i]->effective_slew_rate_normal
+                    this->parameters->add(new ProxyParameter<float>(
+                        (String("Ch ") + String(chan_labels[i]) + " Slew Rate").c_str(),
+                        &slew_base_normal[i],
+                        &outputs[i]->effective_slew_rate_normal,
+                        0.0f,
+                        1.0f
+                    ));
+                    per_channel_parameters[i]->add(this->parameters->get(this->parameters->size() - 1));
+
+                    // Per-channel lowest note proxy: base in per_channel_lowest_note[i], effective in effective_per_channel_lowest_note[i]
+                    this->parameters->add(new ProxyNoteParameter<int8_t>(
+                        (String("Ch ") + String(chan_labels[i]) + " Lowest Note").c_str(),
+                        &per_channel_lowest_note[i],
+                        &effective_per_channel_lowest_note[i]
+                    ));
+                    per_channel_parameters[i]->add(this->parameters->get(this->parameters->size() - 1));
+
+                    // Per-channel highest note proxy
+                    this->parameters->add(new ProxyNoteParameter<int8_t>(
+                        (String("Ch ") + String(chan_labels[i]) + " Highest Note").c_str(),
+                        &per_channel_highest_note[i],
+                        &effective_per_channel_highest_note[i]
+                    ));
+                    per_channel_parameters[i]->add(this->parameters->get(this->parameters->size() - 1));
+
+                    #if defined(ENABLE_ADVANCED_PITCHBEND)
+                        this->ensure_pitch_bend_parameter(i);
+                        if (pitch_bend_parameters[i] != nullptr)
+                            per_channel_parameters[i]->add(pitch_bend_parameters[i]);
+                    #endif
                 }
 
                 return parameters;
             }
         #endif
+
+        // Pool-level parameters page is built manually in make_menu_items() using per_pool_parameters.
+        // The standard dedicated parameters page (which would show all parameters) is suppressed.
+        virtual bool show_dedicated_parameters_page() override {
+            return false;
+        }
+
+        // CV output channel sub-menus are compact enough that scrolling is not needed.
+        virtual bool is_page_scrollable() override { return false; }
 
         #ifdef ENABLE_SCREEN
             virtual LinkedList<MenuItem*> *make_menu_items() override {
@@ -453,6 +500,10 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
                 // Initialise shared lowmemory modulation controls once (reused by every channel sub-menu)
                 ensure_shared_lowmemory_controls();
+
+                // Pool-level parameters page (global note limits etc.) if any pool params exist
+                if (per_pool_parameters != nullptr && per_pool_parameters->size() > 0)
+                    menuitems->add(parameter_manager->getModulatableParameterSubMenuItems(nullptr, this->get_label(), per_pool_parameters));
 
                 // One sub-menu per CV output channel containing all per-channel controls
                 const char *chan_labels[4] = { "Ch A", "Ch B", "Ch C", "Ch D" };
@@ -468,7 +519,13 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                         &this->per_channel_lowest_note[i],
                         &this->per_channel_highest_note[i],
                         &this->per_channel_lowest_mode[i],
-                        &this->per_channel_highest_mode[i]
+                        &this->per_channel_highest_mode[i],
+                        per_channel_parameters[i],
+                        &this->effective_per_channel_lowest_note[i],
+                        &this->effective_per_channel_highest_note[i],
+                        &this->slew_base_normal[i],
+                        true,
+                        false
                     ));
                 }
 

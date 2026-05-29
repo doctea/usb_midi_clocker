@@ -57,11 +57,11 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     } else {
         tft->setTextColor(RED, BLACK);
     }
-    tft->printf("%i/%i ", arranger->playlist_position+1, NUM_PLAYLIST_SLOTS);
+    tft->printf("%2i  ", arranger->playlist_position+1); //, NUM_PLAYLIST_SLOTS);
 
     tft->setTextColor(C_WHITE, BLACK);
     tft->printf("%i/%i ", arranger->current_section_plays+1, arranger->playlist.entries[arranger->playlist_position].repeats);
-    tft->printf("%i/%i ", arranger->current_section+1, NUM_SONG_SECTIONS);
+    tft->printf("%i ", arranger->current_section+1); //, NUM_SONG_SECTIONS);
 
     // show bar position information - green if playing, red if paused
     if (arranger->is_playlist_mode() || arranger->is_section_mode()) {

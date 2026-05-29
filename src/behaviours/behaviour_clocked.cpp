@@ -13,10 +13,10 @@
     FLASHMEM LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
         LinkedList<MenuItem*> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
-            String restart_label = String(F("Restart ") + String(this->get_label()) + F(" on bar"));
+            String *restart_label = new String(String(F("Restart ") + String(this->get_label()) + F(" on bar")));
 
             LambdaActionItem *restart_action = new LambdaActionItem(
-                restart_label.c_str(),
+                restart_label->c_str(),
                 [=]() -> void { this->set_restart_on_bar(true); },
                 [=]() -> bool { return this->is_set_restart_on_bar(); },
                 "Restarting.."

@@ -39,9 +39,11 @@ public:
         line2_cb_(line2_cb), colour2_cb_(colour2_cb) {}
 
     virtual int renderValue(bool selected, bool opened, uint16_t max_character_width) override {
+        int saved_x = tft->getCursorX();  // remember column X so line 2 aligns correctly
         CallbackMenuItem::renderValue(selected, opened, max_character_width);
         const char *txt2 = line2_cb_();
         if (txt2 != nullptr && txt2[0] != '\0') {
+            tft->setCursor(saved_x, tft->getCursorY());  // restore column X after println from line 1
             this->colours(selected, colour2_cb_(), BLACK);
             int ts = tft->get_textsize_for_width(txt2, max_character_width * tft->characterWidth());
             tft->setTextSize(ts);
@@ -78,11 +80,21 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             int8_t *lowest_note,
             int8_t *highest_note,
             NOTE_LIMIT_MODE *lowest_mode,
-            NOTE_LIMIT_MODE *highest_mode
-        ) : SubMenuItem(label),
+            NOTE_LIMIT_MODE *highest_mode,
+            LinkedList<FloatParameter*> *per_channel_params,
+            int8_t *effective_lowest_note,
+            int8_t *effective_highest_note,
+            float  *slew_base_normal, 
+            bool show_header = true,
+            bool scrollable = true
+        ) : SubMenuItem(label, show_header, scrollable),
             output_(output), pool_flag_(pool_flag), last_note_(last_note),
             lowest_note_(lowest_note), highest_note_(highest_note),
-            lowest_mode_(lowest_mode), highest_mode_(highest_mode)
+            lowest_mode_(lowest_mode), highest_mode_(highest_mode),
+            per_channel_params_(per_channel_params),
+            effective_lowest_note_(effective_lowest_note),
+            effective_highest_note_(effective_highest_note),
+            slew_base_normal_(slew_base_normal)
         {
             build_items();
             build_summary_bar();
@@ -123,6 +135,10 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
         int8_t          *highest_note_ = nullptr;
         NOTE_LIMIT_MODE *lowest_mode_  = nullptr;
         NOTE_LIMIT_MODE *highest_mode_ = nullptr;
+        LinkedList<FloatParameter*> *per_channel_params_   = nullptr;
+        int8_t          *effective_lowest_note_  = nullptr;
+        int8_t          *effective_highest_note_ = nullptr;
+        float           *slew_base_normal_       = nullptr;
         SubMenuItemBar  *summary_bar_  = nullptr;
 
         // Build a headerless SubMenuItemBar of CallbackMenuItem columns shown when collapsed.
@@ -157,12 +173,12 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
                 [=]() -> uint16_t    { return output_->get_gate_output_enabled() ? GREEN : GREY;  }
             ));
 
-            // Col 4: slew
+            // Col 4: slew — shows post-modulation effective slew rate
             summary_bar_->add(new CallbackMenuItem("Slew",
                 [=]() -> const char* {
                     static char buf[8];
                     if (output_->slew_enabled)
-                        snprintf(buf, sizeof(buf), "%3d%%", (int)(output_->get_slew_rate_normal() * 100.0f + 0.5f));
+                        snprintf(buf, sizeof(buf), "%3d%%", (int)(output_->effective_slew_rate_normal * 100.0f + 0.5f));
                     else
                         strncpy(buf, "Off", sizeof(buf));
                     return buf;
@@ -170,31 +186,31 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
                 [=]() -> uint16_t { return output_->slew_enabled ? ORANGE : GREY; }
             ));
 
-            // Col 5: note limits — line 1 = range, line 2 = per-limit wrap/drop modes
+            // Col 5: note limits — line 1 = NNN>NNN range, line 2 = per-limit wrap/drop modes
+            // Shows post-modulation (effective) values.
+            // Format: 3-char left-aligned note name (or "---" for open-ended) separated by ">".
             summary_bar_->add(new TwoLineCallbackMenuItem("Limit",
                 [=]() -> const char* {
                     static char buf[12];
-                    const bool lo = lowest_note_  && (*lowest_note_  > MIDI_MIN_NOTE);
-                    const bool hi = highest_note_ && (*highest_note_ < MIDI_MAX_NOTE);
-                    if (lo || hi) {
-                        const char *ls = lo ? get_note_name_c(*lowest_note_)  : "---";
-                        const char *hs = hi ? get_note_name_c(*highest_note_) : "---";
-                        snprintf(buf, sizeof(buf), "%s-%s", ls, hs);
-                    } else {
-                        strncpy(buf, "Off", sizeof(buf));
-                    }
+                    const int8_t lo = effective_lowest_note_  ? *effective_lowest_note_  : (lowest_note_  ? *lowest_note_  : MIDI_MIN_NOTE);
+                    const int8_t hi = effective_highest_note_ ? *effective_highest_note_ : (highest_note_ ? *highest_note_ : MIDI_MAX_NOTE);
+                    const char *ls = (lo > MIDI_MIN_NOTE) ? get_note_name_c(lo) : "---";
+                    const char *hs = (hi < MIDI_MAX_NOTE) ? get_note_name_c(hi) : "---";
+                    snprintf(buf, sizeof(buf), "%-3s>%-3s", ls, hs);
                     return buf;
                 },
                 [=]() -> uint16_t {
-                    const bool lo = lowest_note_  && (*lowest_note_  > MIDI_MIN_NOTE);
-                    const bool hi = highest_note_ && (*highest_note_ < MIDI_MAX_NOTE);
-                    return (lo || hi) ? ORANGE : GREY;
+                    const int8_t lo = effective_lowest_note_  ? *effective_lowest_note_  : MIDI_MIN_NOTE;
+                    const int8_t hi = effective_highest_note_ ? *effective_highest_note_ : MIDI_MAX_NOTE;
+                    return (lo > MIDI_MIN_NOTE || hi < MIDI_MAX_NOTE) ? ORANGE : GREY;
                 },
                 [=]() -> const char* {
                     static char buf[12];
-                    const bool lo = lowest_note_  && (*lowest_note_  > MIDI_MIN_NOTE);
-                    const bool hi = highest_note_ && (*highest_note_ < MIDI_MAX_NOTE);
-                    if (lo || hi) {
+                    const int8_t lo = effective_lowest_note_  ? *effective_lowest_note_  : MIDI_MIN_NOTE;
+                    const int8_t hi = effective_highest_note_ ? *effective_highest_note_ : MIDI_MAX_NOTE;
+                    const bool has_lo = (lo > MIDI_MIN_NOTE);
+                    const bool has_hi = (hi < MIDI_MAX_NOTE);
+                    if (has_lo || has_hi) {
                         const char *lm = (lowest_mode_  && *lowest_mode_  == NOTE_LIMIT_MODE::TRANSPOSE) ? "Wrp" : "Drp";
                         const char *hm = (highest_mode_ && *highest_mode_ == NOTE_LIMIT_MODE::TRANSPOSE) ? "Wrp" : "Drp";
                         snprintf(buf, sizeof(buf), "%s %s", lm, hm);
@@ -204,16 +220,28 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
                     return buf;
                 },
                 [=]() -> uint16_t {
-                    const bool lo = lowest_note_  && (*lowest_note_  > MIDI_MIN_NOTE);
-                    const bool hi = highest_note_ && (*highest_note_ < MIDI_MAX_NOTE);
-                    return (lo || hi) ? ORANGE : GREY;
+                    const int8_t lo = effective_lowest_note_  ? *effective_lowest_note_  : MIDI_MIN_NOTE;
+                    const int8_t hi = effective_highest_note_ ? *effective_highest_note_ : MIDI_MAX_NOTE;
+                    return (lo > MIDI_MIN_NOTE || hi < MIDI_MAX_NOTE) ? ORANGE : GREY;
                 }
             ));
 
-            // Col 6: modulation (slot connected + non-zero amount)
+            // Col 6: modulation — lights up if any per-channel parameter has an active modulation slot
             summary_bar_->add(new CallbackMenuItem("Mod",
-                [=]() -> const char* { return output_->has_active_modulation() ? "Y" : "N"; },
-                [=]() -> uint16_t    { return output_->has_active_modulation() ? PURPLE : GREY; }
+                [=]() -> const char* {
+                    if (per_channel_params_) {
+                        for (auto* p : *per_channel_params_)
+                            if (p && p->has_active_modulation()) return "Y";
+                    }
+                    return "N";
+                },
+                [=]() -> uint16_t {
+                    if (per_channel_params_) {
+                        for (auto* p : *per_channel_params_)
+                            if (p && p->has_active_modulation()) return PURPLE;
+                    }
+                    return GREY;
+                }
             ));
         }
 
@@ -232,6 +260,14 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
                 [=]() -> bool  { return output_->get_gate_output_enabled(); }
             ));
 
+            // 3. Park: re-quantise CV voltage to scale/chord when channel is idle
+            #ifdef ENABLE_SCALES
+            settings_bar->add(new LambdaToggleControl("Park",
+                [=](bool v) { output_->set_park_enabled(v); },
+                [=]() -> bool  { return output_->get_park_enabled(); }
+            ));
+            #endif
+
             // -- Slew - combine with the Settings bar
             // 5. Slew enable toggle
             settings_bar->add(new LambdaToggleControl("Slew",
@@ -242,20 +278,12 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             // 6. Slew rate
             settings_bar->add(new LambdaNumberControl<float>(
                 "Slew Rate",
-                [=](float v) { output_->set_slew_rate_normal(v); },
-                [=]() -> float { return output_->get_slew_rate_normal(); },
+                [=](float v) { if (slew_base_normal_) *slew_base_normal_ = v; output_->effective_slew_rate_normal = v; },
+                [=]() -> float { return slew_base_normal_ ? *slew_base_normal_ : output_->effective_slew_rate_normal; },
                 nullptr,
                 0.0f, 1.0f,
                 0.01f, true
             ));
-
-            // 3. Park: re-quantise CV voltage to scale/chord when channel is idle
-            #ifdef ENABLE_SCALES
-            settings_bar->add(new LambdaToggleControl("Park",
-                [=](bool v) { output_->set_park_enabled(v); },
-                [=]() -> bool  { return output_->get_park_enabled(); }
-            ));
-            #endif
 
             this->add(settings_bar);
 
@@ -266,7 +294,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             SubMenuItemBar *limits_bar = new SubMenuItemBar("Limits");
             limits_bar->add(new LambdaScaleNoteMenuItem<int8_t>(
                 "Lo",
-                [=](int8_t v) { *lowest_note_ = v; },
+                [=](int8_t v) { *lowest_note_ = v; if (effective_lowest_note_) *effective_lowest_note_ = v; },
                 [=]() -> int8_t { return *lowest_note_; },
                 nullptr,
                 (int8_t)MIDI_MIN_NOTE, (int8_t)MIDI_MAX_NOTE,
@@ -274,7 +302,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             ));
             limits_bar->add(new LambdaScaleNoteMenuItem<int8_t>(
                 "Hi",
-                [=](int8_t v) { *highest_note_ = v; },
+                [=](int8_t v) { *highest_note_ = v; if (effective_highest_note_) *effective_highest_note_ = v; },
                 [=]() -> int8_t { return *highest_note_; },
                 nullptr,
                 (int8_t)MIDI_MIN_NOTE, (int8_t)MIDI_MAX_NOTE,
@@ -295,22 +323,28 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             this->add(limits_bar);
 
             // 7. CV polarity / invert controls (unique per output channel, from addCustomTypeControls)
-            this->add(new SeparatorMenuItem("Output modulation"));
+            this->add(new SeparatorMenuItem("Output settings"));
             LinkedList<MenuItem *> *custom_controls = new LinkedList<MenuItem *>();
             output_->addCustomTypeControls(custom_controls);
             this->add(custom_controls);   // transfers ownership; deletes the list wrapper
 
-            // 8. LowMemory embed: invisibly swaps lowmemory_controls.parameter to this channel on render
-            this->add(new LowMemoryEmbedMenuItem((char *)"", output_, C_WHITE));
-
-            // 9 + 10. Shared lowmemory amount controls and modulation slot rows.
-            // Must already be initialised via ensure_shared_lowmemory_controls() before construction.
+            // Modulation sub-page: per-channel parameter selector + shared lowmemory controls.
+            // ParameterMenuItemSelector lets the user pick which per-channel parameter to modulate;
+            // LowMemorySwitcherMenuItem updates lowmemory_controls.parameter to the selection;
+            // the shared amount/slot controls then operate on the selected parameter.
+            // auto *mod = new SubMenuItem("Mod");
+            this->add(new SeparatorMenuItem("Modulation"));
+            auto *param_sel = new ParameterMenuItemSelector("Param", per_channel_params_);
+            this->add(param_sel);
+            // mod->add(param_sel);
+            this->add(new LowMemorySwitcherMenuItem((char *)"", per_channel_params_, param_sel, C_WHITE));
             if (lowmemory_controls.parameter_amount_controls != nullptr)
                 this->add(lowmemory_controls.parameter_amount_controls);
             for (uint_fast8_t j = 0; j < MAX_SLOT_CONNECTIONS; j++) {
                 if (lowmemory_controls.slot_rows[j] != nullptr)
                     this->add(lowmemory_controls.slot_rows[j]);
             }
+            // this->add(mod);
         }
 };
 

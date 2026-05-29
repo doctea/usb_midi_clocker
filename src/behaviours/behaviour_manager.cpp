@@ -453,7 +453,7 @@ void setup_behaviour_manager() {
             ) {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
-                menu->add_page(behaviour->get_label(), group_colour);
+                menu->add_page(behaviour->get_label(), group_colour, behaviour->is_page_scrollable());
 
                 // add a separator bar
                 SeparatorMenuItem *separator = new SeparatorMenuItem(behaviour->get_label());
