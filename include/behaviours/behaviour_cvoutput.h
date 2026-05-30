@@ -64,8 +64,8 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         // UI-only filtered parameter lists (view subsets of this->parameters).
         // per_pool_parameters: pool-level params (populated after base class initialise_parameters()).
         // per_channel_parameters[i]: per-channel params for the channel Mod sub-page.
-        LinkedList<FloatParameter*> *per_pool_parameters = new LinkedList<FloatParameter*>();
-        LinkedList<FloatParameter*> *per_channel_parameters[channel_count] = { nullptr, nullptr, nullptr, nullptr };
+        ParameterList *per_pool_parameters = new ParameterList();
+        ParameterList *per_channel_parameters[channel_count] = { nullptr, nullptr, nullptr, nullptr };
 
         // Last note played per channel; persists after NoteOff so collapsed sub-menu can show it
         int8_t last_channel_note[channel_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
@@ -424,11 +424,11 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
         #ifdef ENABLE_PARAMETERS
             bool already_initialised = false;
-            virtual LinkedList<FloatParameter*> *initialise_parameters() {
+            virtual ParameterList *initialise_parameters() {
                 // Initialise per_channel_parameters lists
                 for (int i = 0; i < channel_count; i++) {
                     if (per_channel_parameters[i] == nullptr)
-                        per_channel_parameters[i] = new LinkedList<FloatParameter*>();
+                        per_channel_parameters[i] = new ParameterList();
                 }
 
                 // Let base classes add pool-level parameters (e.g. lowest_note/highest_note ProxyNoteParams)

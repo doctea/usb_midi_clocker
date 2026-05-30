@@ -152,7 +152,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
         #ifdef ENABLE_PARAMETERS
             bool already_initialised = false;
             //FLASHMEM 
-            virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+            virtual ParameterList *initialise_parameters() override {
                 //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
                 if (already_initialised && this->parameters!=nullptr)
                     return this->parameters;

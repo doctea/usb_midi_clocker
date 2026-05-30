@@ -354,14 +354,14 @@ class DeviceBehaviourUltimateBase :
     virtual void actualSendPitchBend(int16_t bend, uint8_t channel) {}
 
     // parameter handling shit
-    LinkedList<FloatParameter*> *parameters = new LinkedList<FloatParameter*>();
-    virtual LinkedList<FloatParameter*> *get_parameters () {
+    ParameterList *parameters = new ParameterList();
+    virtual ParameterList *get_parameters () {
         if (parameters==nullptr || parameters->size()==0) {
             this->initialise_parameters();   
         }
         return parameters;
     }
-    virtual LinkedList<FloatParameter*> *initialise_parameters() {
+    virtual ParameterList *initialise_parameters() {
         //Serial.printf("behaviour_base#initialise_parameters for '%s'..\n", this->get_label());
         #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
             if (this->supports_advanced_pitch_bend() && this->transmits_midi_notes()) {
@@ -374,7 +374,7 @@ class DeviceBehaviourUltimateBase :
         return parameters;
     }
     virtual bool has_parameters() {
-        LinkedList<FloatParameter*> *test_p = this->get_parameters();
+        ParameterList *test_p = this->get_parameters();
         return test_p!=nullptr && test_p->size()>0;
     }
     virtual FloatParameter* getParameterForLabel(const char *label) {
@@ -421,7 +421,7 @@ class DeviceBehaviourUltimateBase :
 
         // Register FloatParameters as children so their save/load is handled by the tree
         if (this->has_parameters()) {
-            LinkedList<FloatParameter*> *params = this->get_parameters();
+            ParameterList *params = this->get_parameters();
             for (auto* p : *params) {
                 register_child(p);
             }

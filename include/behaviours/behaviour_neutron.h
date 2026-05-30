@@ -74,7 +74,7 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, virtua
 
         bool already_initialised = false;
         FLASHMEM
-        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+        virtual ParameterList *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)

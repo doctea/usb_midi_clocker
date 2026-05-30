@@ -133,7 +133,7 @@ class DeviceBehaviour_CraftSynth : virtual public DeviceBehaviourUSBBase, virtua
         }
 
         bool already_initialised = false;
-        FLASHMEM virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+        FLASHMEM virtual ParameterList *initialise_parameters() override {
             //Serial.printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()..."));
             if (already_initialised)
                 return this->parameters;

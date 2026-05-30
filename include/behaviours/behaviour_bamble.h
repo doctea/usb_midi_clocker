@@ -311,7 +311,7 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         /// these for mappable parameters
         //FLASHMEM 
         bool already_initialised = false;
-        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+        virtual ParameterList *initialise_parameters() override {
             Debug_printf(F("DeviceBehaviour_Bamble#initialise_parameters()..."));
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)

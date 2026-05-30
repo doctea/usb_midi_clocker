@@ -130,7 +130,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     bool already_initialised = false;
     //FLASHMEM 
     // also initialises menu items!
-    virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+    virtual ParameterList *initialise_parameters() override {
         Serial.printf("%s#initialise_parameters()...", this->get_label());
         if (already_initialised && this->parameters!=nullptr)
             return this->parameters;
@@ -138,7 +138,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         DeviceBehaviourUltimateBase::initialise_parameters();
 
         // initialises sequencer/pattern parameters and add them to the host object's parameters list so that they will get saved and reloaded
-        LinkedList<FloatParameter*> *sequencer_parameters = sequencer->getParameters(); 
+        ParameterList *sequencer_parameters = sequencer->getParameters(); 
         for (auto* p : *sequencer_parameters) {
             this->parameters->add(p);
         }

@@ -81,7 +81,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             int8_t *highest_note,
             NOTE_LIMIT_MODE *lowest_mode,
             NOTE_LIMIT_MODE *highest_mode,
-            LinkedList<FloatParameter*> *per_channel_params,
+            ParameterList *per_channel_params,
             int8_t *effective_lowest_note,
             int8_t *effective_highest_note,
             float  *slew_base_normal, 
@@ -135,7 +135,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
         int8_t          *highest_note_ = nullptr;
         NOTE_LIMIT_MODE *lowest_mode_  = nullptr;
         NOTE_LIMIT_MODE *highest_mode_ = nullptr;
-        LinkedList<FloatParameter*> *per_channel_params_   = nullptr;
+        ParameterList   *per_channel_params_   = nullptr;
         int8_t          *effective_lowest_note_  = nullptr;
         int8_t          *effective_highest_note_ = nullptr;
         float           *slew_base_normal_       = nullptr;

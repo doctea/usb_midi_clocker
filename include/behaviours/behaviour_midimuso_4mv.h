@@ -135,7 +135,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*publi
 
     //FLASHMEM 
     bool already_initialised_parameters = false;
-    virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+    virtual ParameterList *initialise_parameters() override {
         Serial_printf(F("DeviceBehaviour_CraftSynth#initialise_parameters()...")); Serial_flush();
         if (already_initialised_parameters)
             return this->parameters;

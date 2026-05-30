@@ -150,7 +150,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
 
         bool already_initialised = false;
         //FLASHMEM
-        virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+        virtual ParameterList *initialise_parameters() override {
             //static bool already_initialised = false;
             if (already_initialised && this->parameters!=nullptr)
                 return this->parameters;

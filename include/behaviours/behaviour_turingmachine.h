@@ -45,7 +45,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
             parameter_manager->addInput(tm_pattern);
 
             //Serial.println("..calling sequencer.getParameters()..");
-            LinkedList<FloatParameter*> *params = sequencer->getParameters();
+            ParameterList *params = sequencer->getParameters();
             Debug_printf("after setting up sequencer parameters, free RAM is %u\n", freeRam());
         #endif
     }
@@ -87,7 +87,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
     bool already_initialised = false;
     //FLASHMEM 
     // also initialises menu items!
-    virtual LinkedList<FloatParameter*> *initialise_parameters() override {
+    virtual ParameterList *initialise_parameters() override {
         Serial.printf("%s#initialise_parameters()...", this->get_label());
         if (already_initialised && this->parameters!=nullptr)
             return this->parameters;
