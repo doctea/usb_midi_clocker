@@ -45,7 +45,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
             parameter_manager->addInput(tm_pattern);
 
             //Serial.println("..calling sequencer.getParameters()..");
-            ParameterList *params = sequencer->getParameters();
+            ParameterList *params = sequencer->getParameters(); // initialise the parameters, but dont need to do anything else with them
             Debug_printf("after setting up sequencer parameters, free RAM is %u\n", freeRam());
         #endif
     }

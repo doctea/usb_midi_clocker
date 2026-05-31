@@ -52,8 +52,8 @@ class DebugPanel : public MenuItem {
                 tft->printf("  PSRAM clock: %i MHz\n", psram_clocked_at);
             #endif
 
-            tft->printf("  Uptime: %02uh %02um %02us\n", time/60/60, (time/60)%60, (time)%60);
-            tft->printf("  Tick:   %i\n", ticks);
+            tft->printf("  Uptime: %02luh %02lum %02lus\n", time/60/60, (time/60)%60, (time)%60);
+            tft->printf("  Tick:   %lu\n", ticks);
 
             #ifdef USE_UCLOCK
                 tft->printf("  uClock int overflow: %u\n", uClock.getIntOverflowCounter());

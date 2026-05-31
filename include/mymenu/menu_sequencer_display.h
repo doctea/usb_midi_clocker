@@ -43,7 +43,7 @@ class ClockSequencerDisplay : public MenuItem {
             const int cell_height = cell_width / 2;
 
             if (opened_level==ROW)
-                tft->printf("Select clock row...\n", selected_row);
+                tft->printf("Select clock row...\n");
             else if (opened_level==MULTIPLIER)
                 tft->printf("Editing multiplier...\n");
             else if (opened_level==DELAY) 
