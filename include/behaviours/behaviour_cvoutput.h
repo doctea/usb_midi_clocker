@@ -495,8 +495,8 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         virtual bool is_page_scrollable() override { return false; }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items() override {
-                LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+            virtual MenuItemList *make_menu_items() override {
+                MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
                 // Initialise shared lowmemory modulation controls once (reused by every channel sub-menu)
                 ensure_shared_lowmemory_controls();

@@ -54,9 +54,9 @@ void MIDITrack::stop_all_notes() {
     #include "mymenu/menu_looper.h"
 
     FLASHMEM
-    LinkedList<MenuItem*> *MIDITrack::make_menu_items() {
+    MenuItemList *MIDITrack::make_menu_items() {
 
-        LinkedList<MenuItem*> *menuitems = new LinkedList<MenuItem*>();
+        MenuItemList *menuitems = new MenuItemList();
 
         LooperStatus            *looper_status =            new LooperStatus("Looper", this);
         LooperQuantizeControl   *looper_quantizer_setting = new LooperQuantizeControl("Loop quantisation", this);   

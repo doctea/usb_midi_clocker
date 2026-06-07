@@ -68,9 +68,9 @@ extern bool debug_flag;
     #include "mymenu_items/ParameterInputMenuItems.h"
     #include "mymenu/menuitems_harmony.h"
     //FLASHMEM
-    LinkedList<MenuItem *> *DeviceBehaviour_CVInput::make_menu_items() {
+    MenuItemList *DeviceBehaviour_CVInput::make_menu_items() {
         //Serial.println(F("DeviceBehaviour_CVInput::make_menu_items() start")); Serial_flush();
-        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+        MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         //SubMenuItemBar *bar = new SubMenuItemBar((String(this->get_label()) + String(" CV Pitch")).c_str());
         /*
                 const char *label, 

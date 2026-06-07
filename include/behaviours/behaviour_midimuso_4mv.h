@@ -173,7 +173,7 @@ class Behaviour_MIDIMuso_4MV : virtual public DeviceBehaviourSerialBase, /*publi
 
     #ifdef ENABLE_SCREEN
         //FLASHMEM
-        virtual LinkedList<MenuItem *> *make_menu_items() override;
+        virtual MenuItemList *make_menu_items() override;
     #endif
 
 };

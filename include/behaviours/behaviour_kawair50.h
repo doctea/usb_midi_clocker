@@ -363,7 +363,7 @@ class DeviceBehaviour_KawaiR50 : virtual public DeviceBehaviourSerialBase, virtu
 
     #ifdef ENABLE_SCREEN
         //FLASHMEM 
-        virtual LinkedList<MenuItem*> *make_menu_items() override;
+        virtual MenuItemList *make_menu_items() override;
     #endif
 
     // ---- saveloadlib: pack all drum map state into one line ----

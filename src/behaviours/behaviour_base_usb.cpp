@@ -8,7 +8,7 @@
     #include "menuitems_lambda.h"
 
     FLASHMEM
-    LinkedList<MenuItem*> *DeviceBehaviourUSBBase::make_menu_items_device() {
+    MenuItemList *DeviceBehaviourUSBBase::make_menu_items_device() {
         /*String midi_info = "[MIDI DIN device]";
         if (this->transmits_midi_notes() || this->receives_midi_notes()) {
             midi_info = (receives_midi_notes() ? "MIDI in: "    + String(this->input_midi_number+1)    + " "    : "") + 

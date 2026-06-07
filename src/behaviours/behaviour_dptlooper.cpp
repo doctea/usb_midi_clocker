@@ -10,7 +10,7 @@ DeviceBehaviour_DPTLooper *behaviour_dptlooper = new DeviceBehaviour_DPTLooper()
     #include "mymenu.h"
     #include "submenuitem_bar.h"
     //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
-    /*LinkedList<MenuItem*> *DeviceBehaviour_DPTLooper::make_menu_items() {
+    /*MenuItemList *DeviceBehaviour_DPTLooper::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
         SubMenuItemBar *bar = new SubMenuItemBar("DPT Looper options");
 

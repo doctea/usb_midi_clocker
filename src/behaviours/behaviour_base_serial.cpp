@@ -26,7 +26,7 @@ const char *DeviceBehaviourSerialBase::get_indicator() {
     #endif
     // add menuitems specific to the underlying device type (eg serial, usbserial, usbmidi, virtual)
     //FLASHMEM
-    LinkedList<MenuItem*> *DeviceBehaviourSerialBase::make_menu_items_device() {
+    MenuItemList *DeviceBehaviourSerialBase::make_menu_items_device() {
         String midi_info = "[MIDI DIN device]";
         if (this->transmits_midi_notes() || this->receives_midi_notes() || this->transmits_midi_clock()) {
             midi_info = (receives_midi_notes()  ? "MIDI in: "    + String(this->input_midi_number+1)    + " "    : "") + 

@@ -876,7 +876,7 @@ class MIDITrack {
         }       
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items();
+            virtual MenuItemList *make_menu_items();
         #endif
 
 };

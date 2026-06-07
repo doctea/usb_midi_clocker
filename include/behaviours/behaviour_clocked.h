@@ -70,7 +70,7 @@ class ClockedBehaviour : virtual public DeviceBehaviourUltimateBase {
 
         #ifdef ENABLE_SCREEN
             //FLASHMEM 
-            virtual LinkedList<MenuItem*> *make_menu_items() override;
+            virtual MenuItemList *make_menu_items() override;
         #endif
 };
 
@@ -267,7 +267,7 @@ class DividedClockedBehaviour : public ClockedBehaviour {
         }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items() override;
+            virtual MenuItemList *make_menu_items() override;
         #endif
 };
 

@@ -66,7 +66,7 @@ class VirtualBehaviour_MidiLooper : public VirtualBehaviourBase {
     int count_events()         { return track->count_events(); }
 
     #ifdef ENABLE_SCREEN
-        virtual LinkedList<MenuItem*> *make_menu_items() override {
+        virtual MenuItemList *make_menu_items() override {
             return track->make_menu_items();
         }
     #endif

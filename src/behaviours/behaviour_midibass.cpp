@@ -16,8 +16,8 @@
     #endif
 
     FLASHMEM
-    LinkedList<MenuItem *> *MIDIBassBehaviour::make_menu_items() {
-        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    MenuItemList *MIDIBassBehaviour::make_menu_items() {
+        MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         // harmony status control is created by parent class, add drone output to it
         if (this->output_harmony_status!=nullptr) {

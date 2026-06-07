@@ -126,7 +126,7 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
 
         #ifdef ENABLE_SCREEN
             //FLASHMEM
-            virtual LinkedList<MenuItem*> *make_menu_items_device() override;
+            virtual MenuItemList *make_menu_items_device() override;
         #endif        
 };
 

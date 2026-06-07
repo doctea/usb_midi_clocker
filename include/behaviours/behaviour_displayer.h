@@ -80,8 +80,8 @@ class VirtualBehaviour_Displayer : virtual public VirtualBehaviourBase {
     }
 
     #ifdef ENABLE_SCREEN
-    virtual LinkedList<MenuItem*> *make_menu_items() override {
-        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    virtual MenuItemList *make_menu_items() override {
+        MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         menuitems->add(new NoteDisplay("Notes", &this->note_tracker));
         menuitems->add(new NoteHarmonyDisplay(

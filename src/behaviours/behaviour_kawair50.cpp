@@ -3,8 +3,8 @@
 #ifdef ENABLE_KAWAI_R50
     #include "behaviours/behaviour_kawair50.h"
 
-    LinkedList<MenuItem*> *DeviceBehaviour_KawaiR50::make_menu_items() {
-        LinkedList<MenuItem*> *items = new LinkedList<MenuItem*>();
+    MenuItemList *DeviceBehaviour_KawaiR50::make_menu_items() {
+        MenuItemList *items = new MenuItemList();
 
         MenuItem *header = new MenuItem("Kawai R50 Settings", false, true);
         items->add(header);

@@ -10,8 +10,8 @@
     #include "menuitems_lambda.h"
     #include "menuitems_lambda_selector.h"
 
-    FLASHMEM LinkedList<MenuItem*> *ClockedBehaviour::make_menu_items() {
-        LinkedList<MenuItem*> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    FLASHMEM MenuItemList *ClockedBehaviour::make_menu_items() {
+        MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
         if (this->should_show_restart_option()) {
             String *restart_label = new String(String(F("Restart ") + String(this->get_label()) + F(" on bar")));
 
@@ -35,7 +35,7 @@
         list->add(LambdaSelectorControl<int32_t>::option { .value = value, .label = l->c_str() });
     }
 
-    LinkedList<MenuItem*> *DividedClockedBehaviour::make_menu_items() {
+    MenuItemList *DividedClockedBehaviour::make_menu_items() {
         //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial_flush();
         DeviceBehaviourUltimateBase::make_menu_items();
 

@@ -17,7 +17,7 @@
 
 
 /*template<class DACClass>
-LinkedList<MenuItem*> *DeviceBehaviour_CVOutput<DACClass>::make_menu_items() {
+MenuItemList *DeviceBehaviour_CVOutput<DACClass>::make_menu_items() {
     LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
     PolyphonicBehaviour::make_menu_items();

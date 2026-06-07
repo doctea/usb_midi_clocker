@@ -19,7 +19,7 @@ class Behaviour_SimpleWrapper : public DeviceClass, public BaseClass {
     }
 
     #ifdef ENABLE_SCREEN
-        virtual LinkedList<MenuItem*> *make_menu_items() override {
+        virtual MenuItemList *make_menu_items() override {
             DeviceClass::make_menu_items();
             return BaseClass::make_menu_items();
         }

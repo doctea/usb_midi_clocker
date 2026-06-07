@@ -324,7 +324,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
 
             // 7. CV polarity / invert controls (unique per output channel, from addCustomTypeControls)
             this->add(new SeparatorMenuItem("Output settings"));
-            LinkedList<MenuItem *> *custom_controls = new LinkedList<MenuItem *>();
+            MenuItemList *custom_controls = new MenuItemList();
             output_->addCustomTypeControls(custom_controls);
             this->add(custom_controls);   // transfers ownership; deletes the list wrapper
 

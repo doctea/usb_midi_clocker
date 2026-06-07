@@ -50,7 +50,7 @@ void beatstep_handle_sysex(const uint8_t *data, uint16_t length, bool complete) 
     #include "mymenu/menuitems_harmony.h"
 
     FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
-    LinkedList<MenuItem*> *DeviceBehaviour_Beatstep::make_menu_items() {
+    MenuItemList *DeviceBehaviour_Beatstep::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
 
         this->menuitems->add(new HarmonyStatus("Beatstep harmony",   &this->last_note,          &this->current_note));

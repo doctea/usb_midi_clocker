@@ -12,8 +12,8 @@
         #include "mymenu/menuitems_harmony.h"
 
         //FLASHMEM
-        LinkedList<MenuItem *> *Behaviour_MIDIMuso_4MV::make_menu_items() {
-            LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+        MenuItemList *Behaviour_MIDIMuso_4MV::make_menu_items() {
+            MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
             //return menuitems;
 

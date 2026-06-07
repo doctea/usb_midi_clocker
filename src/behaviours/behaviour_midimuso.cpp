@@ -11,7 +11,7 @@
     #include "menuitems_lambda.h"
 
     //FLASHMEM //DeviceBehaviour_Beatstep::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Beatstep::setup_callbacks()
-    LinkedList<MenuItem*> *DeviceBehaviour_MIDIMuso::make_menu_items() {
+    MenuItemList *DeviceBehaviour_MIDIMuso::make_menu_items() {
         DeviceBehaviourUltimateBase::make_menu_items();
 
         this->menuitems->add(new LambdaActionConfirmItem("Set mode 0B", this, [=]() -> void { this->set_mode_0b; } )); //&DeviceBehaviour_MIDIMuso::set_mode_0b));

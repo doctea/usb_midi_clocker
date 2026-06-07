@@ -406,7 +406,7 @@ void setup_menu_midi() {
 #endif
 
 #ifndef GDB_DEBUG
-//FLASHMEM // causes a section type conflict with 'void Menu::add(LinkedList<MenuItem*>*, uint16_t)'
+//FLASHMEM // causes a section type conflict with 'void Menu::add(MenuItemList*, uint16_t)'
 #endif
 void setup_menu(bool button_high_state) {
     Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));

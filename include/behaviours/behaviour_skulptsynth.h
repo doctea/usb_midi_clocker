@@ -310,8 +310,8 @@ class DeviceBehaviour_SkulptSynth
         }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items() override {
-                LinkedList<MenuItem *> *menuitems = SkulptDeviceBehaviourBase::make_menu_items();
+            virtual MenuItemList *make_menu_items() override {
+                MenuItemList *menuitems = SkulptDeviceBehaviourBase::make_menu_items();
                 
                 ClockedBehaviour::make_menu_items();
                 ModwheelReceiver::make_menu_items();

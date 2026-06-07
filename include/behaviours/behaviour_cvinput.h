@@ -179,7 +179,7 @@ class DeviceBehaviour_CVInput : /* virtual */ public DeviceBehaviourUltimateBase
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *pitch_parameter_selector = nullptr;
             ParameterInputSelectorControl<DeviceBehaviour_CVInput> *velocity_parameter_selector = nullptr;
             //FLASHMEM
-            virtual LinkedList<MenuItem *> *make_menu_items() override;
+            virtual MenuItemList *make_menu_items() override;
         #endif
 
 };

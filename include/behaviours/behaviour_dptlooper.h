@@ -66,7 +66,7 @@ class DeviceBehaviour_DPTLooper : virtual public DeviceBehaviourSerialBase {
         }
 
         /*#ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items() override;
+            virtual MenuItemList *make_menu_items() override;
         #endif*/
 
 };

@@ -46,8 +46,8 @@ class BamblePatternToggle : public MultiToggleItemBase {
 
 
 
-//FLASHMEM //virtual LinkedList<MenuItem*>* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
-LinkedList<MenuItem*> *DeviceBehaviour_Bamble::make_menu_items() {
+//FLASHMEM //virtual MenuItemList* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::setup_callbacks()
+MenuItemList *DeviceBehaviour_Bamble::make_menu_items() {
     //Serial.println(F("\tDividedClockedBehaviour calling DeviceBehaviourUltimateBase::make_menu_items()")); Serial_flush();
     DeviceBehaviourUltimateBase::make_menu_items();
 

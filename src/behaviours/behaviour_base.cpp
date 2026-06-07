@@ -42,7 +42,7 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend
 }
 
 #ifdef ENABLE_SCREEN
-    LinkedList<MenuItem *> *DeviceBehaviourUltimateBase::create_saveable_parameters_recall_selector() {
+    MenuItemList *DeviceBehaviourUltimateBase::create_saveable_parameters_recall_selector() {
         // TODO: rebuild recall-selector UI using saveloadlib settings tree if needed
         return nullptr;
     }

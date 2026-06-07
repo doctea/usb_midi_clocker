@@ -513,7 +513,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
 
         #ifdef ENABLE_SCREEN
             FLASHMEM
-            virtual LinkedList<MenuItem*> *make_menu_items() override;
+            virtual MenuItemList *make_menu_items() override;
         #endif
 
         // UNTESTED!!! 

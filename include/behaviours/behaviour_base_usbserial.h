@@ -92,7 +92,7 @@ class DeviceBehaviourUSBSerialBase : virtual public DeviceBehaviourUltimateBase 
         };
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items_device();
+            virtual MenuItemList *make_menu_items_device();
         #endif
 };
 

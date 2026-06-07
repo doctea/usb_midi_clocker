@@ -52,7 +52,7 @@ class DeviceBehaviour_MIDIMuso : virtual public DeviceBehaviourSerialBase {
         }
 
         #ifdef ENABLE_SCREEN
-            virtual LinkedList<MenuItem*> *make_menu_items();
+            virtual MenuItemList *make_menu_items();
         #endif
 
 };

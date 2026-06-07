@@ -431,17 +431,17 @@ class DeviceBehaviourUltimateBase :
     virtual void notify_project_changed(int project_number) {}
 
     #ifdef ENABLE_SCREEN
-        LinkedList<MenuItem*> *menuitems = nullptr;
+        MenuItemList *menuitems = nullptr;
         FLASHMEM
-        virtual LinkedList<MenuItem*> *make_menu_items();
+        virtual MenuItemList *make_menu_items();
         //FLASHMEM
         // make menu items for the underlying device type (ie usb, usbserial, serial, virtual)
-        virtual LinkedList<MenuItem*> *make_menu_items_device() {
+        virtual MenuItemList *make_menu_items_device() {
             // dummy device menuitems
             return this->menuitems;
         }
         FLASHMEM
-        virtual LinkedList<MenuItem*> *create_saveable_parameters_recall_selector();
+        virtual MenuItemList *create_saveable_parameters_recall_selector();
 
         // override this and set to false if you don't want to have a dedicated parameters page for this behaviour 
         // (eg because you want to put the parameters on the device's main menu page instead, as with MIDIBass)

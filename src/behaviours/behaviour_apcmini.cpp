@@ -20,8 +20,8 @@ void apcmini_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) {
     #include "menuitems_lambda_selector.h"
 
     //FLASHMEM // causes a section type conflict with virtual void DeviceBehaviour_APCMini::setup_callbacks()
-    LinkedList<MenuItem*> *DeviceBehaviour_APCMini::make_menu_items() {
-        LinkedList<MenuItem*> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    MenuItemList *DeviceBehaviour_APCMini::make_menu_items() {
+        MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         LambdaSelectorControl<uint8_t> *tempo_selector_control = new LambdaSelectorControl<uint8_t>(
             "Tempo Control",

@@ -46,7 +46,7 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, virtua
 
         #ifdef ENABLE_SCREEN
             FLASHMEM
-            virtual LinkedList<MenuItem*> *make_menu_items() override {
+            virtual MenuItemList *make_menu_items() override {
                 DeviceBehaviourSerialBase::make_menu_items();
                 ClockedBehaviour::make_menu_items();
                 return MIDIBassBehaviour::make_menu_items();

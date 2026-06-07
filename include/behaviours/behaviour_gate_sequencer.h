@@ -90,8 +90,8 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
     };
 
     #ifdef ENABLE_SCREEN
-    virtual LinkedList<MenuItem*> *make_menu_items() override {
-        LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+    virtual MenuItemList *make_menu_items() override {
+        MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
         menuitems->add(new LambdaToggleControl(
             "Enable APC sequencer",

@@ -151,8 +151,8 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     }
 
     #ifdef ENABLE_SCREEN
-        virtual LinkedList<MenuItem*> *make_menu_items() override {
-            LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+        virtual MenuItemList *make_menu_items() override {
+           MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
             this->sequencer->make_menu_items(
                 menu, 

@@ -110,8 +110,8 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
         FLASHMEM
         //virtual LinkedList<MenuItem *> *make_menu_items() override;
 
-        virtual LinkedList<MenuItem *> *make_menu_items() override {
-            LinkedList<MenuItem *> *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
+        virtual MenuItemList *make_menu_items() override {
+            MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
             //return menuitems;
 
