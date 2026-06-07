@@ -107,16 +107,17 @@ void setup_parameters() {
     #ifdef ENABLE_EXTENDED_VIRTUAL_INPUTS
         #define EXTENDED_VIRTUALS_AS_LIGHTWEIGHT false
         // Additional random sources at different S&H rates (lightweight = no display/controls)
+        parameter_manager->addInput(new VirtualParameterInput((char*)"Rand step",   "Rands", RAND, 4.0f, 0.0f, TICKS_PER_STEP,          EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"Rand beat",   "Rands", RAND, 4.0f, 0.0f, PPQN,                    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"Rand bar",    "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR,      EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"Rand 2bar",   "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR*2,    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"Rand phrase", "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_PHRASE,   EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         // Additional LFO sources at different speeds
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 1bar",  "E-LFOs", LFO_LOCKED, 1.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2bar",  "E-LFOs", LFO_LOCKED, 2.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 1bar",    "E-LFOs", LFO_LOCKED, 1.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2bar",    "E-LFOs", LFO_LOCKED, 2.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(new VirtualParameterInput((char*)"LFO Phrase",  "E-LFOs", LFO_LOCKED, 4.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2xPhrase",  "E-LFOs", LFO_LOCKED, 8.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 4xPhrase", "E-LFOs", LFO_LOCKED, 16.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2xPhrase","E-LFOs", LFO_LOCKED, 8.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 4xPhrase","E-LFOs", LFO_LOCKED, 16.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         // Additional free-running LFOs at different speeds (divisor: higher = slower)
         { auto *f = new VirtualParameterInput((char*)"Free fast",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor =  33.0f; parameter_manager->addInput(f); }
         { auto *f = new VirtualParameterInput((char*)"Free slow",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 300.0f; parameter_manager->addInput(f); }
@@ -130,12 +131,12 @@ void setup_parameters() {
     parameter_manager->addInput(mixerpi2);
     parameter_manager->addInput(mixerpi3);
 
-    BarLockParameterInput *barlock1 = new BarLockParameterInput((char*)"BR-Log", BARLOCK_RISE_LOG);
-    BarLockParameterInput *barlock2 = new BarLockParameterInput((char*)"BF-Exp", BARLOCK_FALL_EXP);
-    BarLockParameterInput *barlock3 = new BarLockParameterInput((char*)"LBR", BARLOCK_LAST_BEAT_RISE);
-    BarLockParameterInput *barlock4 = new BarLockParameterInput((char*)"LBF", BARLOCK_LAST_BEAT_FALL);
-    BarLockParameterInput *barlock5 = new BarLockParameterInput((char*)"PR-Lin", BARLOCK_PHRASE_RISE);
-    BarLockParameterInput *barlock6 = new BarLockParameterInput((char*)"PF-Smooth", BARLOCK_PHRASE_FALL);
+    BarLockParameterInput *barlock1 = new BarLockParameterInput((char*)"BarRise", BARLOCK_RISE_LOG);
+    BarLockParameterInput *barlock2 = new BarLockParameterInput((char*)"BarFall", BARLOCK_FALL_EXP);
+    BarLockParameterInput *barlock3 = new BarLockParameterInput((char*)"L-BRise", BARLOCK_LAST_BEAT_RISE);
+    BarLockParameterInput *barlock4 = new BarLockParameterInput((char*)"L-BFall", BARLOCK_LAST_BEAT_FALL);
+    BarLockParameterInput *barlock5 = new BarLockParameterInput((char*)"PhrRise", BARLOCK_PHRASE_RISE);
+    BarLockParameterInput *barlock6 = new BarLockParameterInput((char*)"PhrFall", BARLOCK_PHRASE_FALL);
     parameter_manager->addInput(barlock1);
     parameter_manager->addInput(barlock2);
     parameter_manager->addInput(barlock3);
