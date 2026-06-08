@@ -265,7 +265,7 @@
                 menu->set_hide_pinned(!menu->get_hide_pinned());
                 break;
             case '-':
-                menu->select_page_quickjump();
+                menu->quickjump_button_pressed();
                 Serial_println(F("------------------------")); break;
             #endif
             case 'T':

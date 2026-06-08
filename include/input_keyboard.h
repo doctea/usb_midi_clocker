@@ -177,7 +177,7 @@
                 debug_stress_scene_load = false;
                 break;
             case '-':
-                menu->select_page_quickjump();
+                menu->quickjump_button_pressed();
                 Serial_println(F("------------------------")); break;
             case 'p': case 'P':
                 Serial_println(F("MIDI (p)ANIC AT THE DISCO"));

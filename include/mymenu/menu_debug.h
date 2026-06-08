@@ -116,7 +116,7 @@ class DebugPanel : public MenuItem {
 //FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
 #endif
 void setup_debug_menu() {
-    menu->add_page("Behaviours/USB");
+    menu->add_page("Behaviours/USB", TFT_CYAN, false, "Debug");
 
     #ifdef ENABLE_USB
         USBDevicesPanel *usbdevices_panel = new USBDevicesPanel();
@@ -128,7 +128,7 @@ void setup_debug_menu() {
 
     ////
 
-    menu->add_page("Debug");
+    menu->add_page("Debug", TFT_CYAN, false, "Debug");
     menu->remember_opened_page();
 
     ActionConfirmItem *reset_control = new ActionConfirmItem("RESET TEENSY?", reset_teensy);

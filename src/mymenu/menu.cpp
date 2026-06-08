@@ -153,7 +153,7 @@ void setup_menu_transport() {
 
 #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
     void setup_menu_project() {
-        menu->add_page("Project");
+        menu->add_page("Project", C_WHITE, true, "Project");
 
         //menu->add(new SeparatorMenuItem("Project"));
 
@@ -286,7 +286,7 @@ void setup_menu_transport() {
 #include "mymenu/menuitems_notedisplay.h"
 
 void setup_menu_midi() {
-    menu->add_page("MIDI");
+    menu->add_page("MIDI", C_WHITE, true, "Settings");
     menu->remember_opened_page(-1, true);
     menu->add(new SeparatorMenuItem("MIDI"));
     SubMenuItemBar *midi_matrix_bar = new SubMenuItemBar("Panic", false, false);
@@ -360,7 +360,7 @@ void setup_menu_midi() {
 #ifdef ENABLE_SEQUENCER
     void setup_menu_sequencer() {
         // sequencer
-        menu->add_page("Sequencer");
+        menu->add_page("Sequencer", C_WHITE, true, "Project");
         //menu->add(&project_auto_advance_sequencer);
         menu->add(new SeparatorMenuItem("Sequencer"));
         menu->add(&sequencer_status);
@@ -396,7 +396,7 @@ void setup_menu_midi() {
 #ifdef ENABLE_LOOPER
     void setup_menu_looper() {
         // looper stuff
-        menu->add_page("Looper");
+        menu->add_page("Looper", C_WHITE, true, "Project");  // should this be somewhere else? isnt it already handled as a behaviour..?
         menu->add(behaviour_midilooper->make_menu_items());
         #ifdef ENABLE_DRUM_LOOPER
             menu->add(&drum_looper_status);

@@ -10,7 +10,7 @@
 #include "storage.h"
 
 void setup_system_settings_menu() {
-    menu->add_page("System Settings");
+    menu->add_page("Storage", C_WHITE, true, "Settings");
 
     SubMenuItemBar *system_settings_bar = new SubMenuItemBar("System Settings", false, false);
     system_settings_bar->add(new LambdaActionConfirmItem("Save", [=]() -> void {

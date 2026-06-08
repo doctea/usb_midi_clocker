@@ -343,7 +343,7 @@ void setup_behaviour_manager() {
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         Serial_println("Starting create_all_behaviour_menu_items"); Serial_flush();
 
-        menu->add_page("QuickJumpBehaviours");
+        menu->add_page("QuickJumpBehaviours", C_WHITE, true, "Navigation");
         CustomQuickPagesMenuItem *quickjump = new CustomQuickPagesMenuItem("QuickJump to Behaviours");
         menu->add(quickjump);
         page_t *started_page = menu->get_selected_page();   // for remembering what page the quickjump menu itself is
@@ -453,7 +453,8 @@ void setup_behaviour_manager() {
             ) {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
-                menu->add_page(behaviour->get_label(), group_colour, behaviour->is_page_scrollable());
+                // todo: get the page group from the behaviour itself, so that can group multiple behaviours together
+                menu->add_page(behaviour->get_label(), group_colour, behaviour->is_page_scrollable(), "Behaviours");
 
                 // add a separator bar
                 SeparatorMenuItem *separator = new SeparatorMenuItem(behaviour->get_label());
