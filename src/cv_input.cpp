@@ -97,9 +97,9 @@ void setup_parameters() {
         }
     #endif
 
-    VirtualParameterInput *virtpi1 = new VirtualParameterInput((char*)"LFO sync", "LFOs", LFO_LOCKED);
-    VirtualParameterInput *virtpi2 = new VirtualParameterInput((char*)"LFO free", "LFOs", LFO_FREE);
-    VirtualParameterInput *virtpi3 = new VirtualParameterInput((char*)"Random",   "LFOs", RAND);
+    VirtualParameterInput *virtpi1 = makeVirtualParameterInput((char*)"LFO sync", "LFOs", LFO_LOCKED);
+    VirtualParameterInput *virtpi2 = makeVirtualParameterInput((char*)"LFO free", "LFOs", LFO_FREE);
+    VirtualParameterInput *virtpi3 = makeVirtualParameterInput((char*)"Random",   "LFOs", RAND);
     parameter_manager->addInput(virtpi1);
     parameter_manager->addInput(virtpi2);
     parameter_manager->addInput(virtpi3);
@@ -107,21 +107,21 @@ void setup_parameters() {
     #ifdef ENABLE_EXTENDED_VIRTUAL_INPUTS
         #define EXTENDED_VIRTUALS_AS_LIGHTWEIGHT false
         // Additional random sources at different S&H rates (lightweight = no display/controls)
-        parameter_manager->addInput(new VirtualParameterInput((char*)"Rand step",   "Rands", RAND, 4.0f, 0.0f, TICKS_PER_STEP,          EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"Rand beat",   "Rands", RAND, 4.0f, 0.0f, PPQN,                    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"Rand bar",    "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR,      EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"Rand 2bar",   "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR*2,    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"Rand phrase", "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_PHRASE,   EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand step",   "Rands", RAND, 4.0f, 0.0f, TICKS_PER_STEP,          EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand beat",   "Rands", RAND, 4.0f, 0.0f, PPQN,                    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand bar",    "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR,      EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand 2bar",   "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR*2,    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand phrase", "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_PHRASE,   EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         // Additional LFO sources at different speeds
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 1bar",    "E-LFOs", LFO_LOCKED, 1.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2bar",    "E-LFOs", LFO_LOCKED, 2.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO Phrase",  "E-LFOs", LFO_LOCKED, 4.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 2xPhrase","E-LFOs", LFO_LOCKED, 8.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
-        parameter_manager->addInput(new VirtualParameterInput((char*)"LFO 4xPhrase","E-LFOs", LFO_LOCKED, 16.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO 1bar",    "E-LFOs", LFO_LOCKED, 1.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO 2bar",    "E-LFOs", LFO_LOCKED, 2.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO Phrase",  "E-LFOs", LFO_LOCKED, 4.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO 2xPhrase","E-LFOs", LFO_LOCKED, 8.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO 4xPhrase","E-LFOs", LFO_LOCKED, 16.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         // Additional free-running LFOs at different speeds (divisor: higher = slower)
-        { auto *f = new VirtualParameterInput((char*)"Free fast",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor =  33.0f; parameter_manager->addInput(f); }
-        { auto *f = new VirtualParameterInput((char*)"Free slow",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 300.0f; parameter_manager->addInput(f); }
-        { auto *f = new VirtualParameterInput((char*)"Free vSlow", "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 999.0f; parameter_manager->addInput(f); }
+        { auto *f = makeVirtualParameterInput((char*)"Free fast",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor =  33.0f; parameter_manager->addInput(f); }
+        { auto *f = makeVirtualParameterInput((char*)"Free slow",  "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 300.0f; parameter_manager->addInput(f); }
+        { auto *f = makeVirtualParameterInput((char*)"Free vSlow", "E-LFOs", LFO_FREE, 4.0f, 0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT); f->free_sine_divisor = 999.0f; parameter_manager->addInput(f); }
     #endif
 
     VirtualMixerParameterInput *mixerpi1 = new VirtualMixerParameterInput((char*)"Mix 1", "Mixers");

@@ -60,7 +60,7 @@ MenuItemList *DeviceBehaviour_Bamble::make_menu_items() {
         &DeviceBehaviour_Bamble::setDemoMode,
         &DeviceBehaviour_Bamble::getDemoMode
     );
-    euclidian_mode_control->go_back_on_select = true;
+    euclidian_mode_control->flags.go_back_on_select = true;
     euclidian_mode_control->add_available_value(0, "Standby");
     euclidian_mode_control->add_available_value(1, "Euclidian");
     euclidian_mode_control->add_available_value(2, "Mutate");
@@ -85,7 +85,7 @@ MenuItemList *DeviceBehaviour_Bamble::make_menu_items() {
         (float)0.0,
         (float)1.0
     );
-    euclidian_density_control->go_back_on_select = true;
+    euclidian_density_control->flags.go_back_on_select = true;
 
     euclidian_options->add(euclidian_mode_control);
     euclidian_options->add(fills_control);
@@ -104,7 +104,7 @@ MenuItemList *DeviceBehaviour_Bamble::make_menu_items() {
     for (unsigned int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         minimum_pattern->add_available_value(i, patterns[i].label);
     }
-    minimum_pattern->go_back_on_select = true;
+    minimum_pattern->flags.go_back_on_select = true;
     mutate_range->add(minimum_pattern);
 
     ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t> *maximum_pattern = new ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t>(
@@ -116,7 +116,7 @@ MenuItemList *DeviceBehaviour_Bamble::make_menu_items() {
     for (unsigned int i = 0 ; i < sizeof(this->patterns) / sizeof(bamble_pattern) ; i++ ) {
         maximum_pattern->add_available_value(i, patterns[i].label);
     }
-    maximum_pattern->go_back_on_select = true;
+    maximum_pattern->flags.go_back_on_select = true;
     mutate_range->add(maximum_pattern);
 
     // select patterns on/off ////////////////////////////////////////////////////////////////

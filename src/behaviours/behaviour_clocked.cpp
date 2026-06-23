@@ -54,7 +54,7 @@
             false,
             false
         );
-        divisor_control->go_back_on_select = true;
+        divisor_control->flags.go_back_on_select = true;
 
         #define ENABLE_DELAY_TICKS_CONTROL
         #define ENABLE_AUTO_RESTART_CONTROL
@@ -111,7 +111,7 @@
             );       
             delay_ticks_control->set_available_values(delay_ticks_control_available_values);
 
-            delay_ticks_control->go_back_on_select = true;
+            delay_ticks_control->flags.go_back_on_select = true;
         #endif
 
         #ifdef ENABLE_AUTO_RESTART_CONTROL
@@ -141,7 +141,7 @@
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_TWO_BAR,"2Bar");
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_PHRASE, "Phrs");
             pause_during_delay_control->add_available_value(DELAY_PAUSE::PAUSE_FINAL_PHRASE, "FiPh");
-            pause_during_delay_control->go_back_on_select = true;
+            pause_during_delay_control->flags.go_back_on_select = true;
         #endif
         
         bar->add(divisor_control);

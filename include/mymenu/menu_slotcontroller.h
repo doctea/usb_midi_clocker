@@ -120,7 +120,7 @@ class SlotController : public MenuItem {
                 menu->set_last_message(msg);
             }
 
-            return go_back_on_select;
+            return flags.go_back_on_select;
         }
 
         // save 

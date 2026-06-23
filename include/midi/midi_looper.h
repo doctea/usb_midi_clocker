@@ -30,7 +30,8 @@
 #define MAX_INSTRUCTION_ARGUMENTS   4
 
 #ifdef ENABLE_SCREEN
-    class MenuItem;
+    // class MenuItem;
+    #include "menu.h"
 #endif
 
 using namespace storage;

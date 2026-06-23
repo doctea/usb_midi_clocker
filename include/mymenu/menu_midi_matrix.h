@@ -288,7 +288,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         //Serial.printf("about to set_last_message!");
         //msg[MENU_MESSAGE_MAX-1] = '\0'; // limit the string so we don't overflow set_last_message
         menu_set_last_message(msg, GREEN);*/
-        return go_back_on_select;
+        return flags.go_back_on_select;
     }
 
     virtual bool button_back() override {

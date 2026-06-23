@@ -17,7 +17,7 @@ class BambleTriggerOnSelectorControl : public ObjectSelectorControl<BambleTrigge
         BambleTriggerOnSelectorControl(const char *label, DeviceBehaviour_Bamble *behaviour, int8_t envelope_number, LinkedList<option> *available_values = nullptr) 
             : ObjectSelectorControl(label, this, &BambleTriggerOnSelectorControl::setEnvelopeTriggerOn, &BambleTriggerOnSelectorControl::getEnvelopeTriggerOn, nullptr)
             , behaviour(behaviour), envelope_number(envelope_number) {
-            this->go_back_on_select = true;
+            this->flags.go_back_on_select = true;
         }
 
         virtual LinkedList<option> *setup_available_values() override {

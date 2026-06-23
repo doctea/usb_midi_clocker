@@ -128,7 +128,7 @@ class VirtualBehaviour_SequencerGates : virtual public DeviceBehaviourUltimateBa
                 true,
                 true
             );
-            s->horiz_label = s->show_header = true;
+            s->horiz_label = s->flags.show_header = true;
             menuitems->add(s);
         }
 

@@ -36,7 +36,7 @@ extern bool debug_flag, debug_stress_scene_load;
 class DebugPanel : public MenuItem {
     public:
         DebugPanel() : MenuItem("Debug") {
-            this->selectable = false;
+            this->flags.selectable = false;
         }
 
         virtual int display(Coord pos, bool selected, bool opened) override {
