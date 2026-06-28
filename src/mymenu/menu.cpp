@@ -290,8 +290,9 @@ void setup_menu_midi() {
     menu->remember_opened_page(-1, true);
     menu->add(new SeparatorMenuItem("MIDI"));
     SubMenuItemBar *midi_matrix_bar = new SubMenuItemBar("Panic", false, false);
-    midi_matrix_bar->add(new LambdaActionItem("{PANIC}", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
+    midi_matrix_bar->add(new LambdaActionItem("PANIC", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     midi_matrix_bar->add(new LambdaActionConfirmItem("{HARD}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
+    midi_matrix_bar->add(new LambdaActionConfirmItem("reset", [=]() -> void { midi_matrix_manager->reset_matrix(); } ));
     menu->add(midi_matrix_bar);
     menu->add(&midi_matrix_selector);
 

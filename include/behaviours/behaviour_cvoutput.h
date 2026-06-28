@@ -178,12 +178,13 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             }
         }
 
-        virtual void emit_effective_pitch_bend_from_semitones(float semitones, uint8_t channel) override {
-            (void)channel;
-            apply_omni_pitch_bend_to_allowed_outputs(semitones);
-        }
-
+        
         #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
+            virtual void emit_effective_pitch_bend_from_semitones(float semitones, uint8_t channel) override {
+                (void)channel;
+                apply_omni_pitch_bend_to_allowed_outputs(semitones);
+            }
+            
             virtual bool handle_modulated_pitch_bend(uint8_t inChannel, int bend) override {
                 if (!this->supports_advanced_pitch_bend() || !this->transmits_midi_notes())
                     return false;

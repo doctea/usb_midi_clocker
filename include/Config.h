@@ -124,6 +124,7 @@
 #endif
 
 #define ENABLE_TURINGMACHINE
+#define ENABLE_FLEXIARP
 
 // enable MIDI looping for MPK49
 #ifdef PCB_STUDIO

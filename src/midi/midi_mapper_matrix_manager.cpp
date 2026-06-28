@@ -36,6 +36,7 @@
 
 #include "behaviours/behaviour_euclidianrhythms.h"
 #include "behaviours/behaviour_turingmachine.h"
+#include "behaviours/behaviour_flexiarp.h"
 
 #include "behaviours/behaviour_progression.h"
 
@@ -340,7 +341,17 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_TURINGMACHINE
-        midi_matrix_manager->register_source(behaviour_turingmachine, "Turing Machine");
+        behaviour_turingmachine->source_id   = midi_matrix_manager->register_source("TuringMachine Ch1");
+        behaviour_turingmachine->source_id_2 = midi_matrix_manager->register_source("TuringMachine Ch2");
+        behaviour_turingmachine->source_id_3 = midi_matrix_manager->register_source("TuringMachine Ch3");
+        behaviour_turingmachine->source_id_4 = midi_matrix_manager->register_source("TuringMachine Ch4");
+    #endif
+
+    #ifdef ENABLE_FLEXIARP
+        behaviour_flexiarp->source_id   = midi_matrix_manager->register_source("FlexiArp Ch1");
+        behaviour_flexiarp->source_id_2 = midi_matrix_manager->register_source("FlexiArp Ch2");
+        behaviour_flexiarp->source_id_3 = midi_matrix_manager->register_source("FlexiArp Ch3");
+        behaviour_flexiarp->source_id_4 = midi_matrix_manager->register_source("FlexiArp Ch4");
     #endif
 
     behaviour_sequencer_gates->source_id = midi_matrix_manager->register_source("Gate Sequencer");

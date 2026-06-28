@@ -40,6 +40,7 @@
 
 #include "behaviours/behaviour_euclidianrhythms.h"
 #include "behaviours/behaviour_turingmachine.h"
+#include "behaviours/behaviour_flexiarp.h"
 
 #include "behaviours/behaviour_progression.h"
 
@@ -103,6 +104,11 @@ void setup_behaviour_manager() {
     #ifdef ENABLE_EUCLIDIAN
         behaviour_euclidianrhythms = new VirtualBehaviour_EuclidianRhythms();
         behaviour_manager->registerBehaviour(behaviour_euclidianrhythms);
+    #endif
+
+    #ifdef ENABLE_FLEXIARP
+        behaviour_flexiarp = new VirtualBehaviour_FlexiArp();
+        behaviour_manager->registerBehaviour(behaviour_flexiarp);
     #endif
 
     #ifdef ENABLE_TURINGMACHINE
