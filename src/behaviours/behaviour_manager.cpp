@@ -460,7 +460,15 @@ void setup_behaviour_manager() {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
                 // todo: get the page group from the behaviour itself, so that can group multiple behaviours together
-                menu->add_page(behaviour->get_label(), group_colour, behaviour->is_page_scrollable(), "Behaviours");
+                int page_idx = menu->add_page(behaviour->get_label(), group_colour, behaviour->is_page_scrollable(), "Behaviours");
+
+                // Wire up matrix jump indices so the popup's "Jump to source/target page" rows work
+                if (midi_matrix_manager != nullptr) {
+                    if (behaviour->source_id >= 0)
+                        midi_matrix_manager->set_source_page_index(behaviour->source_id, page_idx);
+                    if (behaviour->target_id >= 0)
+                        midi_matrix_manager->set_target_page_index(behaviour->target_id, page_idx);
+                }
 
                 // add a separator bar
                 SeparatorMenuItem *separator = new SeparatorMenuItem(behaviour->get_label());

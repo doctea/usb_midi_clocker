@@ -51,9 +51,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     // Context panel rows (inline controls to avoid menu-diving)
     enum class PopupRow : uint8_t {
         CONNECT_TOGGLE = 0,
-        POLICY_ENABLED,
-        CHANNEL_MODE,
-        FIXED_CHANNEL,
+        CHANNEL,
         JUMP_SOURCE,
         JUMP_TARGET,
         DISCONNECT_OTHER_SOURCES_TO_TARGET,
@@ -72,7 +70,6 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     int selected_source_value_index = 0;  // cursor within the source list
     int selected_target_value_index = 0;  // cursor within the target list
     int selected_context_index = 0;       // cursor within context panel
-    bool popup_edit_fixed_channel = false;
 
     // These are set when we enter TARGET_SELECT / CONTEXT_PANEL
     source_id_t sel_source = -1;
@@ -90,9 +87,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     bool popup_row_enabled(PopupRow row) const {
         switch (row) {
             case PopupRow::CONNECT_TOGGLE:
-            case PopupRow::POLICY_ENABLED:
-            case PopupRow::CHANNEL_MODE:
-            case PopupRow::FIXED_CHANNEL:
+            case PopupRow::CHANNEL:
                 return sel_source >= 0 && sel_target >= 0;
             case PopupRow::JUMP_SOURCE:
                 return sel_source >= 0 && midi_matrix_manager->get_source_page_index(sel_source) >= 0;
@@ -113,18 +108,15 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         switch (row) {
             case PopupRow::CONNECT_TOGGLE:
                 return conn ? "Connected: yes" : "Connected: no";
-            case PopupRow::POLICY_ENABLED:
-                return (pol && pol->enabled) ? "Policy enabled: yes" : "Policy enabled: no";
-            case PopupRow::CHANNEL_MODE:
-                if (pol && pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED)
-                    return "Channel mode: fixed";
-                return "Channel mode: passthru";
-            case PopupRow::FIXED_CHANNEL:
+            case PopupRow::CHANNEL:
                 if (pol) {
-                    snprintf(ctx_scratch, sizeof(ctx_scratch), "Fixed channel: %2u", pol->fixed_channel);
+                    if (pol->fixed_channel > 0)
+                        snprintf(ctx_scratch, sizeof(ctx_scratch), "Channel: %2u", pol->fixed_channel);
+                    else
+                        snprintf(ctx_scratch, sizeof(ctx_scratch), "Channel: --");
                     return ctx_scratch;
                 }
-                return "Fixed channel: --";
+                return "Channel: --";
             case PopupRow::JUMP_SOURCE:
                 return "Jump to source page";
             case PopupRow::JUMP_TARGET:
@@ -159,7 +151,6 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     void enter_context_panel() {
         selected_context_index = 0;
         selected_value_index = 0;
-        popup_edit_fixed_channel = false;
         mode = Mode::CONTEXT_PANEL;
     }
 
@@ -252,17 +243,9 @@ public:
             return true;
         }
         if (mode == Mode::CONTEXT_PANEL) {
-            if (popup_edit_fixed_channel) {
-                auto *pol = midi_matrix_manager->get_connection_policy_mut(sel_source, sel_target);
-                if (pol) {
-                    if (pol->fixed_channel <= 1) pol->fixed_channel = 16;
-                    else pol->fixed_channel--;
-                }
-            } else {
-                int count = get_num_available();
-                selected_context_index = wrap_index(selected_context_index - 1, count);
-                selected_value_index = selected_context_index;
-            }
+            int count = get_num_available();
+            selected_context_index = wrap_index(selected_context_index - 1, count);
+            selected_value_index = selected_context_index;
             return true;
         }
         return true;
@@ -283,16 +266,9 @@ public:
             return true;
         }
         if (mode == Mode::CONTEXT_PANEL) {
-            if (popup_edit_fixed_channel) {
-                auto *pol = midi_matrix_manager->get_connection_policy_mut(sel_source, sel_target);
-                if (pol) {
-                    pol->fixed_channel = (uint8_t)((pol->fixed_channel % 16) + 1);
-                }
-            } else {
-                int count = get_num_available();
-                selected_context_index = wrap_index(selected_context_index + 1, count);
-                selected_value_index = selected_context_index;
-            }
+            int count = get_num_available();
+            selected_context_index = wrap_index(selected_context_index + 1, count);
+            selected_value_index = selected_context_index;
             return true;
         }
         return true;
@@ -316,28 +292,13 @@ public:
             if (pol == nullptr)
                 return false;
 
-            if (popup_edit_fixed_channel) {
-                popup_edit_fixed_channel = false;
-                return false;
-            }
-
             switch (row) {
                 case PopupRow::CONNECT_TOGGLE:
                     midi_matrix_manager->toggle_connect(sel_source, sel_target);
                     break;
-                case PopupRow::POLICY_ENABLED:
-                    pol->enabled = !pol->enabled;
-                    break;
-                case PopupRow::CHANNEL_MODE:
-                    pol->channel_mode = (pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED)
-                        ? MIDIMatrixManager::ConnectionChannelMode::PASSTHRU
-                        : MIDIMatrixManager::ConnectionChannelMode::FIXED;
-                    break;
-                case PopupRow::FIXED_CHANNEL:
-                    if (pol->fixed_channel == 0) pol->fixed_channel = 1;
-                    pol->enabled = true;
-                    pol->channel_mode = MIDIMatrixManager::ConnectionChannelMode::FIXED;
-                    popup_edit_fixed_channel = true;
+                case PopupRow::CHANNEL:
+                    // Cycle: 0 (passthru) -> 1 -> 2 -> ... -> 16 -> 0
+                    pol->fixed_channel = (pol->fixed_channel >= 16) ? 0 : pol->fixed_channel + 1;
                     break;
                 case PopupRow::JUMP_SOURCE: {
                     if (!popup_row_enabled(row)) break;
@@ -382,10 +343,6 @@ public:
 
     virtual bool button_back() override {
         if (mode == Mode::CONTEXT_PANEL) {
-            if (popup_edit_fixed_channel) {
-                popup_edit_fixed_channel = false;
-                return true;
-            }
             mode = Mode::TARGET_SELECT;
             selected_value_index = selected_target_value_index;
             return true;
@@ -405,13 +362,13 @@ public:
     // ---- display helpers ----
     void display_context_panel(Coord pos) {
         tft->setTextSize(1);
-        tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
+        tft->setTextColor(C_WHITE, BLACK);
         const char *src_lbl = midi_matrix_manager->get_label_for_source_id(sel_source);
         const char *tgt_lbl = (sel_target >= 0) ? midi_matrix_manager->get_label_for_target_id(sel_target) : "--";
         tft->printf("%.20s ", src_lbl);
         tft->setTextColor(C_WHITE, BLACK);
         tft->printf("-> %.17s\n", tgt_lbl);
-        tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
+        tft->setTextColor(this->get_colour_for_target_id(sel_target), BLACK);
         tft->printf("-----\n");
         selected_context_index = wrap_index(selected_value_index, get_num_available());
 
@@ -424,10 +381,7 @@ public:
         }
         colours(false, C_WHITE, BLACK);
         tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
-        if (popup_edit_fixed_channel)
-            tft->println("[turn]=set channel  [sel/back]=done");
-        else
-            tft->println("[turn]=select  [sel]=act/toggle  [back]=close");
+        tft->println("[turn]=scroll  [sel]=act/cycle  [back]=close");
     }
 
     // classic fixed display version
@@ -524,7 +478,7 @@ public:
                     && midi_matrix_manager->is_connected(selected_source_index, target_id_actual);
                 if (connected_here && selected_source_index >= 0) {
                     const auto *pol = midi_matrix_manager->get_connection_policy(selected_source_index, target_id_actual);
-                    if (pol && pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED && pol->fixed_channel > 0)
+                    if (pol && pol->fixed_channel > 0)
                         snprintf(ctx_scratch, sizeof(ctx_scratch), "[%2u]%-14.14s", pol->fixed_channel, tgt_base);
                     else
                         snprintf(ctx_scratch, sizeof(ctx_scratch), "%-19.19s", tgt_base);

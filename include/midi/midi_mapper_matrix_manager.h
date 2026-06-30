@@ -46,11 +46,6 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     public:
     static MIDIMatrixManager* getInstance();
 
-    enum class ConnectionChannelMode : uint8_t {
-        PASSTHRU = 0,
-        FIXED = 1,
-    };
-
     enum class ConnectionQuantiseMode : uint8_t {
         INHERIT_BEHAVIOUR = 0,
         FORCE_OFF = 1,
@@ -64,9 +59,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     };
 
     struct connection_policy_t {
-        bool enabled = true;
-        ConnectionChannelMode channel_mode = ConnectionChannelMode::PASSTHRU;
-        uint8_t fixed_channel = 0;
+        uint8_t fixed_channel = 0;  // 0 = passthru, 1-16 = remap to this channel
         ConnectionQuantiseMode quantise_mode = ConnectionQuantiseMode::INHERIT_BEHAVIOUR;
         ConnectionNoteMapMode note_map_mode = ConnectionNoteMapMode::NONE;
     };
@@ -181,12 +174,11 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     transformed_note_event_t apply_connection_policy_note(source_id_t source_id, target_id_t target_id, int8_t pitch, uint8_t channel) {
         transformed_note_event_t event = { pitch, channel, false };
         const connection_policy_t *policy = get_connection_policy(source_id, target_id);
-        if (policy == nullptr || !policy->enabled)
+        if (policy == nullptr)
             return event;
 
-        if (policy->channel_mode == ConnectionChannelMode::FIXED && policy->fixed_channel > 0) {
+        if (policy->fixed_channel > 0)
             event.channel = policy->fixed_channel;
-        }
 
         // NOTE: Quantise overrides are intentionally deferred for now.
         // Without explicit per-connection note-on/note-off pairing state,
@@ -196,6 +188,14 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (!is_valid_note(event.pitch))
             event.drop = true;
         return event;
+    }
+
+    // Apply fixed-channel remap for non-note events (CC, pitchbend).
+    uint8_t apply_connection_policy_channel(source_id_t source_id, target_id_t target_id, uint8_t channel) {
+        const connection_policy_t *policy = get_connection_policy(source_id, target_id);
+        if (policy && policy->fixed_channel > 0)
+            return policy->fixed_channel;
+        return channel;
     }
 
     // reset all connections (eg loading preset)
@@ -381,7 +381,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 if (targets[target_id].wrapper==nullptr) {
                     Serial_printf("target_id %i has a nullptr wrapper!\n", target_id); Serial_flush();
                 }*/
-                targets[target_id].wrapper->sendControlChange(cc, value, channel);
+                targets[target_id].wrapper->sendControlChange(cc, value, apply_connection_policy_channel(source_id, target_id, channel));
                 //Serial_println("successfully sent!"); Serial_flush();
             }
         }
@@ -396,7 +396,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 if (targets[target_id].wrapper==nullptr) {
                     Serial_printf("target_id %i has a nullptr wrapper!\n", target_id); Serial_flush();
                 }*/
-                targets[target_id].wrapper->sendPitchBend(bend, channel);
+                targets[target_id].wrapper->sendPitchBend(bend, apply_connection_policy_channel(source_id, target_id, channel));
                 //Serial_println("successfully sent!"); Serial_flush();
             }
         }
