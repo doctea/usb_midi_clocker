@@ -46,6 +46,37 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     public:
     static MIDIMatrixManager* getInstance();
 
+    enum class ConnectionChannelMode : uint8_t {
+        PASSTHRU = 0,
+        FIXED = 1,
+    };
+
+    enum class ConnectionQuantiseMode : uint8_t {
+        INHERIT_BEHAVIOUR = 0,
+        FORCE_OFF = 1,
+        FORCE_SCALE = 2,
+        FORCE_CHORD = 3,
+    };
+
+    enum class ConnectionNoteMapMode : uint8_t {
+        NONE = 0,
+        RESERVED = 1,
+    };
+
+    struct connection_policy_t {
+        bool enabled = false;
+        ConnectionChannelMode channel_mode = ConnectionChannelMode::PASSTHRU;
+        uint8_t fixed_channel = 0;
+        ConnectionQuantiseMode quantise_mode = ConnectionQuantiseMode::INHERIT_BEHAVIOUR;
+        ConnectionNoteMapMode note_map_mode = ConnectionNoteMapMode::NONE;
+    };
+
+    struct transformed_note_event_t {
+        int8_t pitch;
+        uint8_t channel;
+        bool drop;
+    };
+
     bool debug = false;
 
     // #ifdef ENABLE_SCALES
@@ -112,6 +143,55 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
 
     bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
     bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
+    connection_policy_t connection_policies[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
+
+    bool is_valid_connection_id_pair(source_id_t source_id, target_id_t target_id) const {
+        if (source_id < 0 || target_id < 0)
+            return false;
+        if (source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
+            return false;
+        return true;
+    }
+
+    const connection_policy_t *get_connection_policy(source_id_t source_id, target_id_t target_id) const {
+        if (!is_valid_connection_id_pair(source_id, target_id))
+            return nullptr;
+        return &connection_policies[source_id][target_id];
+    }
+
+    connection_policy_t *get_connection_policy_mut(source_id_t source_id, target_id_t target_id) {
+        if (!is_valid_connection_id_pair(source_id, target_id))
+            return nullptr;
+        return &connection_policies[source_id][target_id];
+    }
+
+    bool set_connection_policy(source_id_t source_id, target_id_t target_id, const connection_policy_t &policy) {
+        connection_policy_t *slot = get_connection_policy_mut(source_id, target_id);
+        if (slot == nullptr)
+            return false;
+        *slot = policy;
+        return true;
+    }
+
+    transformed_note_event_t apply_connection_policy_note(source_id_t source_id, target_id_t target_id, int8_t pitch, uint8_t channel) {
+        transformed_note_event_t event = { pitch, channel, false };
+        const connection_policy_t *policy = get_connection_policy(source_id, target_id);
+        if (policy == nullptr || !policy->enabled)
+            return event;
+
+        if (policy->channel_mode == ConnectionChannelMode::FIXED && policy->fixed_channel > 0) {
+            event.channel = policy->fixed_channel;
+        }
+
+        // NOTE: Quantise overrides are intentionally deferred for now.
+        // Without explicit per-connection note-on/note-off pairing state,
+        // applying dynamic quantisation here can create stuck notes when
+        // harmony context changes between note-on and note-off.
+
+        if (!is_valid_note(event.pitch))
+            event.drop = true;
+        return event;
+    }
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
@@ -244,7 +324,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             if (is_connected(source_id, target_id)) {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send ON  to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
-                targets[target_id].wrapper->sendNoteOn(pitch, velocity, channel);
+                transformed_note_event_t event = apply_connection_policy_note(source_id, target_id, pitch, channel);
+                if (!event.drop) {
+                    targets[target_id].wrapper->sendNoteOn(event.pitch, velocity, event.channel);
+                }
                 //targets[target_id].wrapper->debug = false;
             }
         }
@@ -275,7 +358,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
-                targets[target_id].wrapper->sendNoteOff(pitch, velocity, channel);
+                transformed_note_event_t event = apply_connection_policy_note(source_id, target_id, pitch, channel);
+                if (!event.drop) {
+                    targets[target_id].wrapper->sendNoteOff(event.pitch, velocity, event.channel);
+                }
                 //targets[target_id].wrapper->debug = false;
             }
         }

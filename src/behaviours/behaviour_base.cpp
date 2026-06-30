@@ -6,13 +6,13 @@
 // called when a receive_note_on message is received from the device; default behaviour is to pass it on to the midi_matrix_manager to route it
 void DeviceBehaviourUltimateBase::receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
     if (this->debug) Serial_printf("%s#receive_note_on(channel=%i,\tnote=%i,\tvelocity=%i)\t(source_id=%i)\n", this->get_label(), channel, note, velocity, this->source_id);
-    midi_matrix_manager->processNoteOn(this->source_id, note, velocity); //, channel);
+    midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
 }
 
 // called when a note_off message is received from the device; default behaviour is to pass it on to the midi_matrix_manager to route it
 void DeviceBehaviourUltimateBase::receive_note_off(uint8_t channel, uint8_t note, uint8_t velocity) {
     if (this->debug) Serial_printf("%s#receive_note_off(channel=%i,\tnote=%i,\tvelocity=%i)\t(source_id=%i)\n", this->get_label(), channel, note, velocity, this->source_id);
-    midi_matrix_manager->processNoteOff(this->source_id, note, velocity); //, channel);
+    midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
 }
 
 // called when a receive_control_change message is received from the device; default behaviour is to pass it on to the midi_matrix_manager to route it
@@ -23,7 +23,7 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
             Serial_println(F("YO, midi_matrix_manager is null?!")); Serial_flush();
         }
     }*/
-    midi_matrix_manager->processControlChange(this->source_id, inNumber, inValue); //, inChannel);
+    midi_matrix_manager->processControlChange(this->source_id, inNumber, inValue, inChannel);
     //if (this->debug) Serial_printf(F("...DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i) done!\n"), this->get_label(), inChannel, inNumber, inValue);
 }
 

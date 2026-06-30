@@ -24,6 +24,16 @@
     void flexiarp_shuffled_callback(uint32_t step, uint8_t track);
 #endif
 
+/*
+Sooo, we have 4 flexiarp output nodes.
+These can be triggered by any of the 4 patterns in the flexiarp sequencer.
+When triggered, they will send noteOn/noteOff events to the MIDI matrix manager, with a source_id corresponding to the MIDI channel set for the flexiarp output node (1-4). 
+This way, the flexiarp output nodes can be used as independent sources in the MIDI matrix, and can be routed to any destination(s) in the matrix.
+And we can combine multiple flexiarp output nodes to the same MIDI channel, in order to have multiple patterns triggering the same output channel, if desired.
+TODO: perhaps we want to update the FlexiArp Output UI so that it instead shows the source_id (1-4) instead of the MIDI channel, since the MIDI channel is just a proxy for the source_id, and the source_id is what actually matters in the matrix.
+Orrrr, maybe we just need to limit the MIDI channel to the actual source_id (1-4) and not allow any other values.
+*/
+
 class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
   MIDIOutputProcessor *output_processor = nullptr;
@@ -33,22 +43,22 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
     source_id_t source_id_3 = -1;
     source_id_t source_id_4 = -1;
 
-    // FlexiArp output channels (each becomes a matrix source)
-    const int FLEXIARP_CHANNEL_1 = 1;
-    const int FLEXIARP_CHANNEL_2 = 2;
-    const int FLEXIARP_CHANNEL_3 = 3;
-    const int FLEXIARP_CHANNEL_4 = 4;
+    // FlexiArp output sources (each becomes a matrix source)
+    const int FLEXIARP_OUTPUT_MIDI_1 = 1;
+    const int FLEXIARP_OUTPUT_MIDI_2 = 2;
+    const int FLEXIARP_OUTPUT_MIDI_3 = 3;
+    const int FLEXIARP_OUTPUT_MIDI_4 = 4;
 
     VirtualBehaviour_FlexiArp() : DeviceBehaviourUltimateBase () {
         this->output_processor = new MIDIOutputProcessor(this);
         this->sequencer = new EuclidianSequencer(output_processor->get_available_outputs(), 4);
         
-        // Create FlexiArpOutput nodes (one per channel, each is independent arpeggiator instance)
+        // Create FlexiArpOutput nodes (one per source, each is independent arpeggiator instance)
         // These output nodes will receive events from sequencer patterns
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp_Ch1", this, FLEXIARP_CHANNEL_1));
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp_Ch2", this, FLEXIARP_CHANNEL_2));
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp_Ch3", this, FLEXIARP_CHANNEL_3));
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp_Ch4", this, FLEXIARP_CHANNEL_4));
+        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch1", this, FLEXIARP_OUTPUT_MIDI_1));
+        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch2", this, FLEXIARP_OUTPUT_MIDI_2));
+        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch3", this, FLEXIARP_OUTPUT_MIDI_3));
+        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch4", this, FLEXIARP_OUTPUT_MIDI_4));
 
         output_processor->configure_sequencer(sequencer);
         sequencer->initialise_patterns();
@@ -95,13 +105,13 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
         if (this->debug) Serial.printf(F("behaviour_flexiarp#sendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
-        if (channel == FLEXIARP_CHANNEL_1) {
-            midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
-        } else if (channel == FLEXIARP_CHANNEL_2) {
+        if (channel == FLEXIARP_OUTPUT_MIDI_1) {
+            midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
+        } else if (channel == FLEXIARP_OUTPUT_MIDI_2) {
             midi_matrix_manager->processNoteOn(this->source_id_2, note, velocity);
-        } else if (channel == FLEXIARP_CHANNEL_3) {
+        } else if (channel == FLEXIARP_OUTPUT_MIDI_3) {
             midi_matrix_manager->processNoteOn(this->source_id_3, note, velocity);
-        } else if (channel == FLEXIARP_CHANNEL_4) {
+        } else if (channel == FLEXIARP_OUTPUT_MIDI_4) {
             midi_matrix_manager->processNoteOn(this->source_id_4, note, velocity);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
@@ -112,13 +122,13 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
         if (this->debug) Serial.printf(F("behaviour_flexiarp#sendNoteOff(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
-        if (channel == FLEXIARP_CHANNEL_1) {
-            midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
-        } else if (channel == FLEXIARP_CHANNEL_2) {
+        if (channel == FLEXIARP_OUTPUT_MIDI_1) {
+            midi_matrix_manager->processNoteOff(this->source_id, note, velocity);
+        } else if (channel == FLEXIARP_OUTPUT_MIDI_2) {
             midi_matrix_manager->processNoteOff(this->source_id_2, note, velocity);
-        } else if (channel == FLEXIARP_CHANNEL_3) {
+        } else if (channel == FLEXIARP_OUTPUT_MIDI_3) {
             midi_matrix_manager->processNoteOff(this->source_id_3, note, velocity);
-        } else if (channel == FLEXIARP_CHANNEL_4) {
+        } else if (channel == FLEXIARP_OUTPUT_MIDI_4) {
             midi_matrix_manager->processNoteOff(this->source_id_4, note, velocity);
         } else {
             midi_matrix_manager->processNoteOff(this->source_id, note, velocity);
