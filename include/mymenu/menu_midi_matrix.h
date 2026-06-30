@@ -78,7 +78,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     source_id_t sel_source = -1;
     target_id_t sel_target = -1;
 
-    char ctx_scratch[24];
+    char ctx_scratch[40];
 
     int wrap_index(int idx, int count) const {
         if (count <= 0) return 0;
@@ -126,13 +126,13 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
                 }
                 return "Fixed channel: --";
             case PopupRow::JUMP_SOURCE:
-                return popup_row_enabled(row) ? "Jump to source page" : "Jump to source page (n/a)";
+                return "Jump to source page";
             case PopupRow::JUMP_TARGET:
-                return popup_row_enabled(row) ? "Jump to target page" : "Jump to target page (n/a)";
+                return "Jump to target page";
             case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
-                return popup_row_enabled(row) ? "Disconnect other sources->target" : "Disconnect other sources->target (n/a)";
+                return "Disconnect other sources->target";
             case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
-                return popup_row_enabled(row) ? "Disconnect other targets from source" : "Disconnect other targets from source (n/a)";
+                return "Disconnect other targets<-source";
             default:
                 return "";
         }
@@ -392,6 +392,8 @@ public:
         }
         if (mode == Mode::TARGET_SELECT) {
             mode = Mode::SOURCE_SELECT;
+            sel_source = -1;
+            sel_target = -1;
             selected_source_index = -1;
             selected_value_index = selected_source_value_index;
             actual_value_index = selected_source_value_index;
@@ -406,7 +408,7 @@ public:
         tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
         const char *src_lbl = midi_matrix_manager->get_label_for_source_id(sel_source);
         const char *tgt_lbl = (sel_target >= 0) ? midi_matrix_manager->get_label_for_target_id(sel_target) : "--";
-        tft->printf("%.20s\n", src_lbl);
+        tft->printf("%.20s ", src_lbl);
         tft->setTextColor(C_WHITE, BLACK);
         tft->printf("-> %.17s\n", tgt_lbl);
         tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
@@ -418,7 +420,7 @@ public:
             const bool enabled = popup_row_enabled(row);
             uint16_t fg = enabled ? C_WHITE : tft->halfbright_565(C_WHITE);
             colours(selected_context_index == i, fg, BLACK);
-            tft->printf("  %-27.27s\n", popup_row_label(row));
+            tft->printf("  %-36.36s\n", popup_row_label(row));
         }
         colours(false, C_WHITE, BLACK);
         tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
@@ -486,11 +488,7 @@ public:
 
             bool show_right_hint = is_highlighted && right_available();
             colours(is_highlighted, col, BLACK);
-            // Reserve last 3 chars for [>] hint if relevant
-            if (show_right_hint)
-                tft->printf("%10.10s[>]", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
-            else
-                tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
+            tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
             tft->println();
             source_position[source_id_actual] = tft->getCursorY() - (tft->getRowHeight()/2);
         }
@@ -521,21 +519,18 @@ public:
             tft->setCursor((tft->width()/2), y);
             {
                 const char *tgt_base = midi_matrix_manager->get_label_for_target_id(target_id_actual);
-                // Policy indicator
-                if (selected_source_index >= 0) {
+                // Policy indicator: only when connected, fixed-channel only, shown LEFT of label
+                const bool connected_here = selected_source_index >= 0
+                    && midi_matrix_manager->is_connected(selected_source_index, target_id_actual);
+                if (connected_here && selected_source_index >= 0) {
                     const auto *pol = midi_matrix_manager->get_connection_policy(selected_source_index, target_id_actual);
-                    if (pol && pol->enabled) {
-                        if (pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED)
-                            snprintf(ctx_scratch, sizeof(ctx_scratch), "%-14.14s[%2u]", tgt_base, pol->fixed_channel);
-                        else
-                            snprintf(ctx_scratch, sizeof(ctx_scratch), "%-16.16s[*]", tgt_base);
-                        tgt_base = ctx_scratch;
-                    }
+                    if (pol && pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED && pol->fixed_channel > 0)
+                        snprintf(ctx_scratch, sizeof(ctx_scratch), "[%2u]%-14.14s", pol->fixed_channel, tgt_base);
+                    else
+                        snprintf(ctx_scratch, sizeof(ctx_scratch), "%-19.19s", tgt_base);
+                    tgt_base = ctx_scratch;
                 }
-                if (show_right_hint_tgt)
-                    tft->printf("%-16.16s[>]", tgt_base);
-                else
-                    tft->printf("%-19.19s", tgt_base);
+                tft->printf("%-19.19s", tgt_base);
             }
 
             target_position[target_id_actual] = tft->getCursorY();
@@ -551,7 +546,7 @@ public:
                 if (is_opened_target_and_relevant)
                     line_colour = GREEN;
                 else {
-                    const bool use_full = !opened || 
+                    const bool use_full = !opened ||
                         (opened_on_source && relevant_source_id == source_id_actual) ||
                         (opened_on_target && target_id_actual == (target_id_t)selected_target_value_index);
                     line_colour = use_full ? target_colour : half_target_colour;
@@ -576,11 +571,12 @@ public:
         if (y > lowest_y) lowest_y = y;
         if (tft->getCursorX() > 0) tft->println((char*)"");
 
-        // [>] hint overlay at bottom-right — near the physical button
         if (opened && right_available() && (mode == Mode::SOURCE_SELECT || mode == Mode::TARGET_SELECT)) {
             tft->setTextSize(1);
             const int hint_w = tft->characterWidth() * 3;
-            const int hint_h = tft->getRowHeight();
+            // getRowHeight() = singleRowHeight*(1+size) but actual rendered height = singleRowHeight*size,
+            // so use the latter to land on the true last row.
+            const int hint_h = tft->getSingleRowHeight() * max(1, tft->getTextSize());
             tft->setCursor(tft->width() - hint_w, tft->height() - hint_h);
             tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
             tft->print("[>]");

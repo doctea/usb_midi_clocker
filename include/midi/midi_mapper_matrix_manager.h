@@ -35,11 +35,6 @@ void behaviour_manager_kill_all_current_notes();
 
 #define LANGST_HANDEL_ROUT 25   // longest possible name of a target handle / get roo to do it <3
 
-// Emergency boot-isolation switch: keep MIDIMatrixManager constructor side-effect free.
-#ifndef SAFE_MINIMAL_MATRIX_CONSTRUCTOR_BOOT
-#define SAFE_MINIMAL_MATRIX_CONSTRUCTOR_BOOT 0
-#endif
-
 #include "midi/midi_mapper_matrix_types.h"
 
 #include "scales.h"
@@ -788,9 +783,6 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         // stuff for making singleton
         static MIDIMatrixManager* inst_;
         MIDIMatrixManager() {
-#if SAFE_MINIMAL_MATRIX_CONSTRUCTOR_BOOT
-            return;
-#else
             set_path_segment("midi_matrix");  // fixed segment; set here so register_child captures it correctly
             //setup_midi_output_wrapper_manager();
             sources = (source_entry*)CALLOC_FUNC(MAX_NUM_SOURCES, sizeof(source_entry));
@@ -807,7 +799,6 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             //     set_global_scale_identity_target(&this->global_scale_identity);
             //     set_global_chord_identity_target(&this->global_chord_identity);
             // #endif
-#endif
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);
