@@ -9,8 +9,6 @@
 #include "menuitems.h"
 
 class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
-    //void (*setter_func)(MIDIOutputWrapper *midi_output);
-    //MIDIOutputWrapper *initial_selected_output_wrapper = nullptr;
 
     // https://ankiewicz.com/color/hex/00cccc <- colour palette picker
     const uint16_t target_colours[MAX_NUM_TARGETS] = {
@@ -43,74 +41,407 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         0xA578,     // grey-blue
         0x9E66,     // yellow-green
         0xA670,     // nicey green
-        0x8351,     // purpley
+        0x8351,     // purprey
     }; 
 
     uint16_t get_colour_for_target_id(target_id_t target_id) {
         return target_colours[target_id % (sizeof(target_colours)/sizeof(target_colours[0]))];
     }
 
-    public:
-    int actual_value_index;
-    int selected_source_index = -1;
+    // Context panel rows (inline controls to avoid menu-diving)
+    enum class PopupRow : uint8_t {
+        CONNECT_TOGGLE = 0,
+        POLICY_ENABLED,
+        CHANNEL_MODE,
+        FIXED_CHANNEL,
+        JUMP_SOURCE,
+        JUMP_TARGET,
+        DISCONNECT_OTHER_SOURCES_TO_TARGET,
+        DISCONNECT_OTHER_TARGETS_FROM_SOURCE,
+        _COUNT
+    };
+
+    enum class Mode : uint8_t {
+        SOURCE_SELECT = 0,
+        TARGET_SELECT,
+        CONTEXT_PANEL,
+    };
+    Mode mode = Mode::SOURCE_SELECT;
+
+    // Separate index variables per side so switching modes doesn't cause jumps
+    int selected_source_value_index = 0;  // cursor within the source list
+    int selected_target_value_index = 0;  // cursor within the target list
+    int selected_context_index = 0;       // cursor within context panel
+    bool popup_edit_fixed_channel = false;
+
+    // These are set when we enter TARGET_SELECT / CONTEXT_PANEL
+    source_id_t sel_source = -1;
+    target_id_t sel_target = -1;
+
+    char ctx_scratch[24];
+
+    int wrap_index(int idx, int count) const {
+        if (count <= 0) return 0;
+        while (idx < 0) idx += count;
+        while (idx >= count) idx -= count;
+        return idx;
+    }
+
+    bool popup_row_enabled(PopupRow row) const {
+        switch (row) {
+            case PopupRow::CONNECT_TOGGLE:
+            case PopupRow::POLICY_ENABLED:
+            case PopupRow::CHANNEL_MODE:
+            case PopupRow::FIXED_CHANNEL:
+                return sel_source >= 0 && sel_target >= 0;
+            case PopupRow::JUMP_SOURCE:
+                return sel_source >= 0 && midi_matrix_manager->get_source_page_index(sel_source) >= 0;
+            case PopupRow::JUMP_TARGET:
+                return sel_target >= 0 && midi_matrix_manager->get_target_page_index(sel_target) >= 0;
+            case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
+                return sel_target >= 0 && midi_matrix_manager->connected_to_target_count(sel_target) > 1;
+            case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
+                return sel_source >= 0 && midi_matrix_manager->connected_to_source_count(sel_source) > 1;
+            default:
+                return false;
+        }
+    }
+
+    const char *popup_row_label(PopupRow row) {
+        const bool conn = (sel_source >= 0 && sel_target >= 0) ? midi_matrix_manager->is_connected(sel_source, sel_target) : false;
+        const auto *pol = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
+        switch (row) {
+            case PopupRow::CONNECT_TOGGLE:
+                return conn ? "Connected: yes" : "Connected: no";
+            case PopupRow::POLICY_ENABLED:
+                return (pol && pol->enabled) ? "Policy enabled: yes" : "Policy enabled: no";
+            case PopupRow::CHANNEL_MODE:
+                if (pol && pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED)
+                    return "Channel mode: fixed";
+                return "Channel mode: passthru";
+            case PopupRow::FIXED_CHANNEL:
+                if (pol) {
+                    snprintf(ctx_scratch, sizeof(ctx_scratch), "Fixed channel: %2u", pol->fixed_channel);
+                    return ctx_scratch;
+                }
+                return "Fixed channel: --";
+            case PopupRow::JUMP_SOURCE:
+                return popup_row_enabled(row) ? "Jump to source page" : "Jump to source page (n/a)";
+            case PopupRow::JUMP_TARGET:
+                return popup_row_enabled(row) ? "Jump to target page" : "Jump to target page (n/a)";
+            case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
+                return popup_row_enabled(row) ? "Disconnect other sources->target" : "Disconnect other sources->target (n/a)";
+            case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
+                return popup_row_enabled(row) ? "Disconnect other targets from source" : "Disconnect other targets from source (n/a)";
+            default:
+                return "";
+        }
+    }
+
+    void popup_disconnect_others_to_target() {
+        if (sel_target < 0) return;
+        for (source_id_t s = 0; s < midi_matrix_manager->sources_count; s++) {
+            if (s == sel_source) continue;
+            if (midi_matrix_manager->is_connected(s, sel_target))
+                midi_matrix_manager->disconnect(s, sel_target);
+        }
+    }
+
+    void popup_disconnect_others_from_source() {
+        if (sel_source < 0) return;
+        for (target_id_t t = 0; t < midi_matrix_manager->targets_count; t++) {
+            if (t == sel_target) continue;
+            if (midi_matrix_manager->is_connected(sel_source, t))
+                midi_matrix_manager->disconnect(sel_source, t);
+        }
+    }
+
+    void enter_context_panel() {
+        selected_context_index = 0;
+        selected_value_index = 0;
+        popup_edit_fixed_channel = false;
+        mode = Mode::CONTEXT_PANEL;
+    }
+
+    // Returns true when button_right is meaningful given current state
+    bool right_available() const {
+        if (mode == Mode::SOURCE_SELECT) {
+            // Can go to source page for the currently highlighted source.
+            int src = selected_source_value_index;
+            return src >= 0 && src < (int)midi_matrix_manager->sources_count
+                && midi_matrix_manager->get_source_page_index((source_id_t)src) >= 0;
+        }
+        if (mode == Mode::TARGET_SELECT) {
+            // popup is always useful in target mode (connect/policy/disconnect-others)
+            return sel_source >= 0;
+        }
+        return false;
+    }
+
+public:
+    int actual_value_index = 0;
+    int selected_source_index = -1;  // kept for display() compat; -1 = in source-select mode
 
     MidiMatrixSelectorControl(const char *label) : SelectorControl(label, 0) {};
 
     virtual const char* get_label_for_index(int index) {
-        if (selected_source_index==-1) {    
-            // select from the sources
-            return midi_matrix_manager->get_label_for_source_id(index); //->sources[index].handle;
-        } else {    
-            // select from targets
-            return midi_matrix_manager->get_label_for_target_id(index); //targets[index].handle;
+        if (selected_source_index==-1)    
+            return midi_matrix_manager->get_label_for_source_id(index);
+        else    
+            return midi_matrix_manager->get_label_for_target_id(index);
+    }
+
+    virtual void setter(int new_value) override {
+        if (mode == Mode::SOURCE_SELECT) {
+            selected_source_value_index = new_value;
+            actual_value_index = new_value;
+            selected_value_index = new_value;
+            // Commit: enter target-select mode
+            sel_source = (source_id_t)new_value;
+            selected_source_index = new_value;
+            mode = Mode::TARGET_SELECT;
+            // Restore target cursor, clamped
+            int tgt_count = (int)midi_matrix_manager->targets_count;
+            if (selected_target_value_index >= tgt_count && tgt_count > 0)
+                selected_target_value_index = tgt_count - 1;
+            selected_value_index = selected_target_value_index;
+        } else if (mode == Mode::TARGET_SELECT) {
+            selected_target_value_index = new_value;
+            selected_value_index = new_value;
+            sel_target = (target_id_t)new_value;
+            // Toggle the connection
+            char msg[MENU_MESSAGE_MAX];
+            if (midi_matrix_manager->toggle_connect(selected_source_index, new_value)) {
+                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s <-> %-5.18s",
+                    midi_matrix_manager->get_label_for_source_id(selected_source_index),
+                    midi_matrix_manager->get_label_for_target_id(new_value));
+            } else {
+                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s </> %-5.18s",
+                    midi_matrix_manager->get_label_for_source_id(selected_source_index),
+                    midi_matrix_manager->get_label_for_target_id(new_value));
+            }
+            menu_set_last_message(msg, GREEN);
+        } else if (mode == Mode::CONTEXT_PANEL) {
+            selected_context_index = new_value;
         }
     }
 
-    virtual void setter (int new_value) override {
-        Serial_printf("MidiMatrixSelectorControl changing from %i to %i\n", this->actual_value_index, new_value); Serial_flush();
-        if (selected_source_index==-1) { // select source
-            selected_source_index = new_value;
-            actual_value_index = new_value;
-            selected_value_index = actual_value_index;
-            if (selected_value_index>=midi_matrix_manager->targets_count) {
-                selected_value_index = midi_matrix_manager->targets_count-1;
-            }
-        } else {
-            // toggle selected for this source + target combo
-            char msg[MENU_MESSAGE_MAX];
-            if (midi_matrix_manager->toggle_connect(selected_source_index, new_value)) {
-                //Serial.printf("about to build msg string...\n");
-                //snprintf(msg, MENU_MESSAGE_MAX, "Connected %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
-                //snprintf(msg, MENU_MESSAGE_MAX, "Connected %10s to %10s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
-                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s <-> %-5.18s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
-            } else {
-                //snprintf(msg, MENU_MESSAGE_MAX, "Disconnected %10s from %10s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
-                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s </> %-5.18s", midi_matrix_manager->get_label_for_source_id(selected_source_index), midi_matrix_manager->get_label_for_target_id(new_value));
-            }
-            menu_set_last_message(msg, GREEN);
-        }
-    }
-    virtual int getter () override {
-        //if (selected_source_index==-1) // select source
+    virtual int getter() override {
         return selected_value_index;
     }
 
     virtual int get_num_available() {
-        if (selected_source_index==-1) 
-            return midi_matrix_manager->sources_count;
+        if (mode == Mode::SOURCE_SELECT)  return midi_matrix_manager->sources_count;
+        if (mode == Mode::TARGET_SELECT)  return midi_matrix_manager->targets_count;
+        if (mode == Mode::CONTEXT_PANEL)  return (int)PopupRow::_COUNT;
+        return 0;
+    }
+
+    virtual bool knob_left() override {
+        if (mode == Mode::SOURCE_SELECT) {
+            int count = get_num_available();
+            selected_source_value_index = wrap_index(selected_source_value_index - 1, count);
+            selected_value_index = selected_source_value_index;
+            actual_value_index = selected_source_value_index;
+            return true;
+        }
+        if (mode == Mode::TARGET_SELECT) {
+            int count = get_num_available();
+            selected_target_value_index = wrap_index(selected_target_value_index - 1, count);
+            selected_value_index = selected_target_value_index;
+            return true;
+        }
+        if (mode == Mode::CONTEXT_PANEL) {
+            if (popup_edit_fixed_channel) {
+                auto *pol = midi_matrix_manager->get_connection_policy_mut(sel_source, sel_target);
+                if (pol) {
+                    if (pol->fixed_channel <= 1) pol->fixed_channel = 16;
+                    else pol->fixed_channel--;
+                }
+            } else {
+                int count = get_num_available();
+                selected_context_index = wrap_index(selected_context_index - 1, count);
+                selected_value_index = selected_context_index;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    virtual bool knob_right() override {
+        if (mode == Mode::SOURCE_SELECT) {
+            int count = get_num_available();
+            selected_source_value_index = wrap_index(selected_source_value_index + 1, count);
+            selected_value_index = selected_source_value_index;
+            actual_value_index = selected_source_value_index;
+            return true;
+        }
+        if (mode == Mode::TARGET_SELECT) {
+            int count = get_num_available();
+            selected_target_value_index = wrap_index(selected_target_value_index + 1, count);
+            selected_value_index = selected_target_value_index;
+            return true;
+        }
+        if (mode == Mode::CONTEXT_PANEL) {
+            if (popup_edit_fixed_channel) {
+                auto *pol = midi_matrix_manager->get_connection_policy_mut(sel_source, sel_target);
+                if (pol) {
+                    pol->fixed_channel = (uint8_t)((pol->fixed_channel % 16) + 1);
+                }
+            } else {
+                int count = get_num_available();
+                selected_context_index = wrap_index(selected_context_index + 1, count);
+                selected_value_index = selected_context_index;
+            }
+            return true;
+        }
+        return true;
+    }
+
+    virtual bool button_select() override {
+        if (mode == Mode::SOURCE_SELECT) {
+            setter(selected_value_index);
+            return false;  // don't close
+        }
+        if (mode == Mode::TARGET_SELECT) {
+            setter(selected_value_index);
+            return false;
+        }
+        if (mode == Mode::CONTEXT_PANEL) {
+            selected_context_index = wrap_index(selected_value_index, get_num_available());
+            if (selected_context_index < 0 || selected_context_index >= get_num_available())
+                return false;
+            PopupRow row = (PopupRow)selected_context_index;
+            auto *pol = midi_matrix_manager->get_connection_policy_mut(sel_source, sel_target);
+            if (pol == nullptr)
+                return false;
+
+            if (popup_edit_fixed_channel) {
+                popup_edit_fixed_channel = false;
+                return false;
+            }
+
+            switch (row) {
+                case PopupRow::CONNECT_TOGGLE:
+                    midi_matrix_manager->toggle_connect(sel_source, sel_target);
+                    break;
+                case PopupRow::POLICY_ENABLED:
+                    pol->enabled = !pol->enabled;
+                    break;
+                case PopupRow::CHANNEL_MODE:
+                    pol->channel_mode = (pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED)
+                        ? MIDIMatrixManager::ConnectionChannelMode::PASSTHRU
+                        : MIDIMatrixManager::ConnectionChannelMode::FIXED;
+                    break;
+                case PopupRow::FIXED_CHANNEL:
+                    if (pol->fixed_channel == 0) pol->fixed_channel = 1;
+                    pol->enabled = true;
+                    pol->channel_mode = MIDIMatrixManager::ConnectionChannelMode::FIXED;
+                    popup_edit_fixed_channel = true;
+                    break;
+                case PopupRow::JUMP_SOURCE: {
+                    if (!popup_row_enabled(row)) break;
+                    int pg = midi_matrix_manager->get_source_page_index(sel_source);
+                    if (pg >= 0) menu->jump_to_page_with_return(pg);
+                    break;
+                }
+                case PopupRow::JUMP_TARGET: {
+                    if (!popup_row_enabled(row)) break;
+                    int pg = midi_matrix_manager->get_target_page_index(sel_target);
+                    if (pg >= 0) menu->jump_to_page_with_return(pg);
+                    break;
+                }
+                case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
+                    if (popup_row_enabled(row)) popup_disconnect_others_to_target();
+                    break;
+                case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
+                    if (popup_row_enabled(row)) popup_disconnect_others_from_source();
+                    break;
+                default: break;
+            }
+            return false;
+        }
+        return flags.go_back_on_select;
+    }
+
+    virtual bool button_right() override {
+        if (mode == Mode::SOURCE_SELECT) {
+            // Update sel_source to the currently highlighted source
+            sel_source = (source_id_t)selected_value_index;
+            sel_target = -1;
+            enter_context_panel();
+            return true;
+        }
+        if (mode == Mode::TARGET_SELECT) {
+            sel_target = (target_id_t)selected_value_index;
+            enter_context_panel();
+            return true;
+        }
+        return false;
+    }
+
+    virtual bool button_back() override {
+        if (mode == Mode::CONTEXT_PANEL) {
+            if (popup_edit_fixed_channel) {
+                popup_edit_fixed_channel = false;
+                return true;
+            }
+            mode = Mode::TARGET_SELECT;
+            selected_value_index = selected_target_value_index;
+            return true;
+        }
+        if (mode == Mode::TARGET_SELECT) {
+            mode = Mode::SOURCE_SELECT;
+            selected_source_index = -1;
+            selected_value_index = selected_source_value_index;
+            actual_value_index = selected_source_value_index;
+            return true;
+        }
+        return false;  // exit to top menu
+    }
+
+    // ---- display helpers ----
+    void display_context_panel(Coord pos) {
+        tft->setTextSize(1);
+        tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
+        const char *src_lbl = midi_matrix_manager->get_label_for_source_id(sel_source);
+        const char *tgt_lbl = (sel_target >= 0) ? midi_matrix_manager->get_label_for_target_id(sel_target) : "--";
+        tft->printf("%.20s\n", src_lbl);
+        tft->setTextColor(C_WHITE, BLACK);
+        tft->printf("-> %.17s\n", tgt_lbl);
+        tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
+        tft->printf("-----\n");
+        selected_context_index = wrap_index(selected_value_index, get_num_available());
+
+        for (int i = 0; i < get_num_available(); i++) {
+            PopupRow row = (PopupRow)i;
+            const bool enabled = popup_row_enabled(row);
+            uint16_t fg = enabled ? C_WHITE : tft->halfbright_565(C_WHITE);
+            colours(selected_context_index == i, fg, BLACK);
+            tft->printf("  %-27.27s\n", popup_row_label(row));
+        }
+        colours(false, C_WHITE, BLACK);
+        tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
+        if (popup_edit_fixed_channel)
+            tft->println("[turn]=set channel  [sel/back]=done");
         else
-            return midi_matrix_manager->targets_count;
+            tft->println("[turn]=select  [sel]=act/toggle  [back]=close");
     }
 
     // classic fixed display version
     virtual int display(Coord pos, bool selected, bool opened) override {
         pos.y = header(label, pos, selected, opened);
         num_values = this->get_num_available();
-
         tft->setTextSize(1);
 
-        int current_value = actual_value_index; //this->getter();
+        // ---- Full-screen panel modes ----
+        if (opened && mode == Mode::CONTEXT_PANEL) {
+            display_context_panel(pos);
+            // [>] hint not needed in panel — physical button closes it (via button_back)
+            return tft->getCursorY();
+        }
 
+        // ---- Normal matrix view ----
         int source_position[midi_matrix_manager->sources_count];
         int target_position[midi_matrix_manager->targets_count];
 
@@ -119,189 +450,145 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         memset(source_processed_count, 0, midi_matrix_manager->sources_count);
         memset(target_processed_count, 0, midi_matrix_manager->targets_count);
 
-        bool opened_on_source = opened && selected_source_index==-1;
-        bool opened_on_target = opened && selected_source_index>=0;
-        const source_id_t relevant_source_id = opened_on_source ? selected_value_index : selected_source_index;
+        bool opened_on_source = opened && mode == Mode::SOURCE_SELECT;
+        bool opened_on_target = opened && mode == Mode::TARGET_SELECT;
+        const source_id_t relevant_source_id = opened_on_source ? selected_source_value_index
+                                                                 : selected_source_index >= 0 ? (source_id_t)selected_source_index : 0;
 
         int available_rows = (tft->height() - pos.y) / tft->getRowHeight();
 
-        // draw the selected target's currently held + last note
+        // Draw current/last note for the highlighted target
         if (opened_on_target) {
-            //tft->setCursor(0, tft->height()-30);
-
-            // NOTE: we crashed here during initial testing, but can't seem to reproduce it since
-            tft->setTextColor(this->get_colour_for_target_id(selected_value_index), BLACK);
-            tft->printf("Current: %3s   Last: %3s\n", 
-                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->current_note, midi_matrix_manager->get_target_for_id(selected_value_index)->default_channel),
-                (char*)get_note_name_c(midi_matrix_manager->get_target_for_id(selected_value_index)->last_note, midi_matrix_manager->get_target_for_id(selected_value_index)->default_channel)
-            );
+            MIDIOutputWrapper *w = midi_matrix_manager->get_target_for_id((target_id_t)selected_target_value_index);
+            if (w) {
+                tft->setTextColor(this->get_colour_for_target_id(selected_target_value_index), BLACK);
+                tft->printf("Current: %3s   Last: %3s\n", 
+                    (char*)get_note_name_c(w->current_note, w->default_channel),
+                    (char*)get_note_name_c(w->last_note, w->default_channel)
+                );
+            }
             pos.y = tft->getCursorY();
         }
 
-
-        // for remembering the lowest we go on screen
         int lowest_y = pos.y;
-
         uint16_t halfbright_white = tft->halfbright_565(C_WHITE);
-        // render MIDI sources (left-hand column)
-        //Serial.printf("starting sources loop render at scroll_offset %i because selected_value_index is %i and rows_available is %i\n", scroll_offset, selected_value_index, rows_available);
-        for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+
+        // Source column (left)
+        for (source_id_t source_id = 0; source_id < midi_matrix_manager->sources_count; source_id++) {
             source_id_t source_id_actual = (source_id + relevant_source_id + (available_rows*2)) % midi_matrix_manager->sources_count;
-            //source_id_t source_id_actual = source_id;
-            const bool is_current_value_selected = source_id_actual==current_value;
+            const bool is_highlighted = opened_on_source && source_id_actual == selected_source_value_index;
 
-            // in 'select target' mode, the currently selected source is highlighted in green
             int col = !opened || opened_on_source ? C_WHITE : halfbright_white;
-            if (opened_on_target && is_current_value_selected)
-                // in 'select target' mode, the currently selected source is highlighted in green
+            if (opened_on_target && source_id_actual == (source_id_t)selected_source_index)
                 col = GREEN;
-            else if (opened_on_target && midi_matrix_manager->is_connected(source_id_actual, selected_value_index))
-                // in 'select target' mode, sources that are connected to the currently highlighted target are highlighted, even if they're not the currently selected source
-                col = this->get_colour_for_target_id(selected_value_index);     // C_WHITE
+            else if (opened_on_target && midi_matrix_manager->is_connected(source_id_actual, (target_id_t)selected_target_value_index))
+                col = this->get_colour_for_target_id(selected_target_value_index);
 
-            colours(
-                (opened && selected_source_index==-1 && selected_value_index==source_id_actual) ||
-                (opened_on_target && is_current_value_selected), 
-                col, 
-                BLACK
-            );
-            tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
+            bool show_right_hint = is_highlighted && right_available();
+            colours(is_highlighted, col, BLACK);
+            // Reserve last 3 chars for [>] hint if relevant
+            if (show_right_hint)
+                tft->printf("%10.10s[>]", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
+            else
+                tft->printf("%13s", (char*)midi_matrix_manager->get_label_for_source_id(source_id_actual));
             tft->println();
             source_position[source_id_actual] = tft->getCursorY() - (tft->getRowHeight()/2);
         }
         lowest_y = tft->getCursorY();
 
-        // position cursor ready to draw targets
+        // Target column (right)
         tft->setCursor(0, pos.y);
-
-        target_id_t selected_target_index = selected_source_index>=0 ? selected_value_index : 0; // only show selected target index if we're in 'select target' mode
+        target_id_t selected_target_scroll = opened_on_target ? (target_id_t)selected_target_value_index : 0;
 
         int y = pos.y;
-        // render target MIDI (right-hand column)
-        for (target_id_t target_id = 0 ; target_id < midi_matrix_manager->targets_count ; target_id++) {
-            target_id_t target_id_actual = (target_id + selected_target_index + (available_rows*2)) % midi_matrix_manager->targets_count;
+        for (target_id_t target_id = 0; target_id < midi_matrix_manager->targets_count; target_id++) {
+            target_id_t target_id_actual = (target_id + selected_target_scroll + (available_rows*2)) % midi_matrix_manager->targets_count;
 
             const uint16_t target_colour = this->get_colour_for_target_id(target_id_actual);
             const uint16_t half_target_colour = tft->halfbright_565(target_colour);
-            const bool opened_and_current_target_is_connected = (opened_on_source || opened_on_target) && midi_matrix_manager->is_connected(relevant_source_id, target_id_actual);
+            const bool connected_to_relevant = (opened_on_source || opened_on_target)
+                                              && midi_matrix_manager->is_connected(relevant_source_id, target_id_actual);
+            const bool is_highlighted_target = opened_on_target && target_id_actual == (target_id_t)selected_target_value_index;
 
-            bool opened_and_selected_target_is_current = opened_on_target && selected_value_index==target_id_actual;
+            bool show_right_hint_tgt = is_highlighted_target && right_available();
 
             colours(
-                opened_and_selected_target_is_current,
-                !opened || opened_and_current_target_is_connected || opened_and_selected_target_is_current? target_colour : half_target_colour, 
+                is_highlighted_target,
+                !opened || connected_to_relevant || is_highlighted_target ? target_colour : half_target_colour, 
                 BLACK
             ); 
             
             tft->setCursor((tft->width()/2), y);
-            //tft->printf((char*)"%c %1x %-23s", indicator, (int)target_id, (char*)get_label_for_index(target_id));
-            tft->printf("%-19.19s", (char*)midi_matrix_manager->get_label_for_target_id(target_id_actual));
+            {
+                const char *tgt_base = midi_matrix_manager->get_label_for_target_id(target_id_actual);
+                // Policy indicator
+                if (selected_source_index >= 0) {
+                    const auto *pol = midi_matrix_manager->get_connection_policy(selected_source_index, target_id_actual);
+                    if (pol && pol->enabled) {
+                        if (pol->channel_mode == MIDIMatrixManager::ConnectionChannelMode::FIXED)
+                            snprintf(ctx_scratch, sizeof(ctx_scratch), "%-14.14s[%2u]", tgt_base, pol->fixed_channel);
+                        else
+                            snprintf(ctx_scratch, sizeof(ctx_scratch), "%-16.16s[*]", tgt_base);
+                        tgt_base = ctx_scratch;
+                    }
+                }
+                if (show_right_hint_tgt)
+                    tft->printf("%-16.16s[>]", tgt_base);
+                else
+                    tft->printf("%-19.19s", tgt_base);
+            }
 
-            target_position[target_id_actual] = (tft->getCursorY());// + (tft->getRowHeight()/2); // + tft->getRowHeight()) + (tft->getRowHeight()/2);
-            
+            target_position[target_id_actual] = tft->getCursorY();
             tft->println();
-            //Serial.printf("target_id %i at y %i is '%s' with target_colour=%02x\n", target_id_actual, target_position[target_id_actual], (char*)midi_matrix_manager->get_label_for_target_id(target_id_actual), target_colour);
 
-            // draw the lines connecting sources+targets
-            for (source_id_t source_id = 0 ; source_id < midi_matrix_manager->sources_count ; source_id++) {
+            // Draw connection lines
+            for (source_id_t source_id = 0; source_id < midi_matrix_manager->sources_count; source_id++) {
                 const source_id_t source_id_actual = (source_id + relevant_source_id + (available_rows*2)) % midi_matrix_manager->sources_count;
+                if (!midi_matrix_manager->is_connected(source_id_actual, target_id_actual)) continue;
 
-                // Determine line colour using explicit, named conditions for clarity
-                const bool connection_exists = midi_matrix_manager->is_connected(source_id_actual, target_id_actual);
                 const bool is_opened_target_and_relevant = opened_on_target && relevant_source_id == source_id_actual;
-
                 uint16_t line_colour;
-                if (is_opened_target_and_relevant && connection_exists) {
-                    // When viewing a target and this source is the relevant one and connected, highlight in GREEN
+                if (is_opened_target_and_relevant)
                     line_colour = GREEN;
-                } else {
-                    // Otherwise decide between full target colour or half-bright depending on open/selection state
-                    const bool use_full_target_colour = !opened || (
+                else {
+                    const bool use_full = !opened || 
                         (opened_on_source && relevant_source_id == source_id_actual) ||
-                        (opened_on_target && selected_value_index == target_id_actual)
-                    );
-                    line_colour = use_full_target_colour ? target_colour : half_target_colour;
+                        (opened_on_target && target_id_actual == (target_id_t)selected_target_value_index);
+                    line_colour = use_full ? target_colour : half_target_colour;
                 }
 
-                if (midi_matrix_manager->is_connected(source_id_actual, target_id_actual)) {
-                    // calculate the offset from the label positions to draw the connection line; take into account how many other connections there are (by asking midi_matrix_manager), and how many we've already drawn (by tracking in *_processed_count arrays)
-                    //int pixels_per_source = constrain(source_processed_count[source_id] * (tft->getRowHeight() / midi_matrix_manager->connected_to_source_count(source_id)), 1, tft->getRowHeight());
-                    //int pixels_per_target = constrain(target_processed_count[target_id] * (tft->getRowHeight() / midi_matrix_manager->connected_to_target_count(target_id)), 1, tft->getRowHeight());
-                    int pixels_per_source = source_processed_count[source_id_actual] % tft->getRowHeight();
-                    int pixels_per_target = target_processed_count[target_id_actual] % tft->getRowHeight();
+                int pixels_per_source = source_processed_count[source_id_actual] % tft->getRowHeight();
+                int pixels_per_target = target_processed_count[target_id_actual] % tft->getRowHeight();
+                int source_y_offset = pixels_per_source + (tft->getRowHeight()/4);
+                int target_y_offset = pixels_per_target + (tft->getRowHeight()/4);
+                tft->drawLine(tft->characterWidth()*13, source_position[source_id_actual]+source_y_offset,
+                              tft->characterWidth()*14, source_position[source_id_actual]+source_y_offset, line_colour);
+                tft->drawLine(tft->characterWidth()*14, source_position[source_id_actual]+source_y_offset,
+                              (tft->width()/2)-(tft->characterWidth()*2), target_position[target_id_actual]+target_y_offset, line_colour);
+                tft->drawLine((tft->width()/2)-(tft->characterWidth()*2), target_position[target_id_actual]+target_y_offset,
+                              (tft->width()/2)-(tft->characterWidth()*1), target_position[target_id_actual]+target_y_offset, line_colour);
 
-                    int source_y_offset = pixels_per_source + (tft->getRowHeight()/4);
-                    int target_y_offset = pixels_per_target + (tft->getRowHeight()/4);
-                    tft->drawLine(
-                        tft->characterWidth() * 13,
-                        source_position[source_id_actual] + source_y_offset, 
-                        tft->characterWidth() * 14,
-                        source_position[source_id_actual] + source_y_offset,  
-                        line_colour
-                    );
-                    tft->drawLine(
-                        ///*3 + */(tft->width()/3), 
-                        tft->characterWidth() * 14,
-                        source_position[source_id_actual] + source_y_offset, 
-                        (tft->width()/2)-(tft->characterWidth()*2), 
-                        target_position[target_id_actual] + target_y_offset, 
-                        line_colour
-                    );
-                    tft->drawLine(
-                        (tft->width()/2)-(tft->characterWidth()*2), 
-                        target_position[target_id_actual] + target_y_offset,
-                        (tft->width()/2)-(tft->characterWidth()*1), 
-                        target_position[target_id_actual] + target_y_offset,
-                        line_colour
-                    );
-                    // TODO: some kinda logic to ensure that we always stay within the source_position and target_position rows
-                    //source_position[i]+=2;   // move the cursor 2 line downs to provide a little bit of disambiguation
-                    //target_position[target_id]+=2;
-                    /*y = tft->getCursorY();
-                    tft->setCursor(0, tft->height()-30);
-                    tft->printf("pixels_per_source = %i\npixels_per_target = %i", pixels_per_source, pixels_per_target);
-                    tft->setCursor(0, y);*/
-
-                    source_processed_count[source_id_actual]++;
-                    target_processed_count[target_id_actual]++;
-                }
+                source_processed_count[source_id_actual]++;
+                target_processed_count[target_id_actual]++;
             }
             y = tft->getCursorY();
         }
-        if (y > lowest_y) 
-            lowest_y = y;
+        if (y > lowest_y) lowest_y = y;
+        if (tft->getCursorX() > 0) tft->println((char*)"");
 
-        if (tft->getCursorX()>0) // if we haven't wrapped onto next line then do it manually
-            tft->println((char*)"");
-
-        return lowest_y; //tft->getCursorY();
-    }
-
-    virtual bool button_select() override {
-        //Serial.printf("button_select with selected_value_index %i\n", selected_value_index);
-        //Serial.printf("that is available_values[%i] of %i\n", selected_value_index, available_values[selected_value_index]);
-        this->setter(selected_value_index);
-
-        /*char msg[MENU_MESSAGE_MAX];
-        //Serial.printf("about to build msg string...\n");
-        snprintf(msg, MENU_MESSAGE_MAX, "Selected %s to %s (%i)", label, get_label_for_index(selected_value_index), selected_value_index);
-        //Serial.printf("about to set_last_message!");
-        //msg[MENU_MESSAGE_MAX-1] = '\0'; // limit the string so we don't overflow set_last_message
-        menu_set_last_message(msg, GREEN);*/
-        return flags.go_back_on_select;
-    }
-
-    virtual bool button_back() override {
-        if (selected_source_index >= 0) {
-            //Serial.println("Backing out from selecting target");
-            //menu_set_last_message((const char*)"Back out", GREEN);
-            selected_value_index = selected_source_index;
-            selected_source_index = -1;
-            return true;    // don't exit to top menu
+        // [>] hint overlay at bottom-right — near the physical button
+        if (opened && right_available() && (mode == Mode::SOURCE_SELECT || mode == Mode::TARGET_SELECT)) {
+            tft->setTextSize(1);
+            const int hint_w = tft->characterWidth() * 3;
+            const int hint_h = tft->getRowHeight();
+            tft->setCursor(tft->width() - hint_w, tft->height() - hint_h);
+            tft->setTextColor(tft->halfbright_565(C_WHITE), BLACK);
+            tft->print("[>]");
+            colours(false, C_WHITE, BLACK);
         }
-        return false;       // exit to top menu
-    }
 
+        return lowest_y;
+    }
 };
 
 #endif

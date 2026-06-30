@@ -69,7 +69,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     };
 
     struct connection_policy_t {
-        bool enabled = false;
+        bool enabled = true;
         ConnectionChannelMode channel_mode = ConnectionChannelMode::PASSTHRU;
         uint8_t fixed_channel = 0;
         ConnectionQuantiseMode quantise_mode = ConnectionQuantiseMode::INHERIT_BEHAVIOUR;
