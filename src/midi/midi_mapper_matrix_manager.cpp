@@ -54,9 +54,19 @@
 MIDIMatrixManager *midi_matrix_manager = nullptr;
 MIDIMatrixManager* MIDIMatrixManager::inst_ = nullptr;
 
+// Emergency boot-isolation switch: instantiate manager but skip registration graph setup.
+#ifndef SAFE_MINIMAL_MATRIX_BOOT
+#define SAFE_MINIMAL_MATRIX_BOOT 0
+#endif
+
 MIDIMatrixManager* MIDIMatrixManager::getInstance() {
     if (inst_ == nullptr) {
-        inst_ = new MIDIMatrixManager();
+        void *mem = malloc(sizeof(MIDIMatrixManager));
+        if (mem == nullptr) {
+            Serial_println(F("!! MIDIMatrixManager::getInstance() malloc failed"));
+            return nullptr;
+        }
+        inst_ = new (mem) MIDIMatrixManager();
     }
     return inst_;
 }
@@ -64,16 +74,18 @@ MIDIMatrixManager* MIDIMatrixManager::getInstance() {
 #ifdef ENABLE_LOOPER
 source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle) {
     if (loop_track==nullptr) return -1;
-    strncpy(sources[sources_count].handle, handle, LANGST_HANDEL_ROUT);
-    loop_track->source_id = sources_count;
-    return sources_count++;
+    source_id_t sid = this->register_source(handle);
+    if (sid >= 0)
+        loop_track->source_id = sid;
+    return sid;
 }
 #endif
 source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
     if (device==nullptr) return -1;
-    strncpy(sources[sources_count].handle, handle, LANGST_HANDEL_ROUT);
-    device->source_id = sources_count;
-    return sources_count++;
+    source_id_t sid = this->register_source(handle);
+    if (sid >= 0)
+        device->source_id = sid;
+    return sid;
 }
 
 #ifdef ENABLE_LOOPER
@@ -92,6 +104,10 @@ void MIDIMatrixManager::connect(DeviceBehaviourUltimateBase *device, const char 
 void setup_midi_mapper_matrix_manager() {
     //Serial.println(F("##### setup_midi_mapper_matrix_manager..")); Serial_flush();
     midi_matrix_manager = MIDIMatrixManager::getInstance();
+
+#if SAFE_MINIMAL_MATRIX_BOOT
+    return;
+#endif
 
 
     #ifdef ENABLE_PROGRESSION

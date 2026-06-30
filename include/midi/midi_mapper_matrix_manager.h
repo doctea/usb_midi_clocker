@@ -35,6 +35,11 @@ void behaviour_manager_kill_all_current_notes();
 
 #define LANGST_HANDEL_ROUT 25   // longest possible name of a target handle / get roo to do it <3
 
+// Emergency boot-isolation switch: keep MIDIMatrixManager constructor side-effect free.
+#ifndef SAFE_MINIMAL_MATRIX_CONSTRUCTOR_BOOT
+#define SAFE_MINIMAL_MATRIX_CONSTRUCTOR_BOOT 0
+#endif
+
 #include "midi/midi_mapper_matrix_types.h"
 
 #include "scales.h"
@@ -111,14 +116,19 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     struct source_entry {
         char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
         uint8_t connection_count = 0;
+        int16_t menu_page_index = -1;  // index into Menu::pages; -1 = no associated page
     };
     uint8_t sources_count = 0;
 
-    //DMAMEM source_entry sources[MAX_NUM_SOURCES];
     source_entry *sources = nullptr;
 
     // assign a source_id for the given name
     FLASHMEM source_id_t register_source(const char *handle) {
+        if (NUM_REGISTERED_SOURCES >= MAX_NUM_SOURCES || sources == nullptr) {
+            Serial_printf(F("!! register_source('%s') failed: source table full (%u/%u) or uninitialised\n"),
+                handle ? handle : "(null)", (unsigned int)NUM_REGISTERED_SOURCES, (unsigned int)MAX_NUM_SOURCES);
+            return -1;
+        }
         //Serial_printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
         strncpy(sources[NUM_REGISTERED_SOURCES].handle, handle, LANGST_HANDEL_ROUT);
         sources[NUM_REGISTERED_SOURCES].handle[LANGST_HANDEL_ROUT - 1] = '\0';
@@ -204,7 +214,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     }
     // is this source id connected to target id
     bool is_connected(source_id_t source_id, target_id_t target_id) {
-        if (source_id<0 || target_id<0 || source_id>NUM_REGISTERED_SOURCES || target_id>NUM_REGISTERED_TARGETS)
+        if (source_id < 0 || target_id < 0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
             return false;
         return source_to_targets[source_id][target_id];
     }
@@ -240,7 +250,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     }
 
     bool connect(source_id_t source_id, target_id_t target_id) {
-        if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
+        if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS || sources == nullptr)
             return false;
         if (!is_allowed(source_id, target_id))
             return false;
@@ -261,7 +271,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         );
     }
     void disconnect(source_id_t source_id, target_id_t target_id) {
-        if (source_id==-1 || target_id==-1 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS) return;
+        if (source_id==-1 || target_id==-1 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS || sources == nullptr) return;
         if (is_connected(source_id, target_id)) {
             if (targets[target_id].wrapper!=nullptr) 
                 targets[target_id].wrapper->stop_all_notes();
@@ -273,12 +283,12 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     }
 
     uint8_t connected_to_source_count(source_id_t source_id) {
-        if (source_id==-1 || source_id >= NUM_REGISTERED_SOURCES) return 0;
+        if (source_id==-1 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return 0;
 
         return sources[source_id].connection_count;
     }
     uint8_t connected_to_target_count(target_id_t target_id) {
-        if (target_id==-1 || target_id >= NUM_REGISTERED_SOURCES) return 0;
+        if (target_id==-1 || target_id >= NUM_REGISTERED_TARGETS) return 0;
 
         return targets[target_id].connection_count;
     }
@@ -421,11 +431,13 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     }
 
     const char *get_label_for_source_id(source_id_t source_id) {
-        if (source_id==-1) return nullptr;
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || source_id >= MAX_NUM_SOURCES || this->sources == nullptr)
+            return nullptr;
         return this->sources[source_id].handle;
     }
     const char *get_label_for_target_id(target_id_t target_id) {
-        if (target_id==-1) return nullptr;
+        if (target_id < 0 || target_id >= NUM_REGISTERED_TARGETS || target_id >= MAX_NUM_TARGETS)
+            return nullptr;
         if(this->targets[target_id].wrapper!=nullptr) 
             return this->targets[target_id].wrapper->label;
         return (const char*)F("[error - unknown]");
@@ -442,10 +454,30 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         char handle[LANGST_HANDEL_ROUT];
         uint8_t connection_count = 0;
         MIDIOutputWrapper *wrapper = nullptr;
+        int16_t menu_page_index = -1;  // index into Menu::pages; -1 = no associated page
     };
 
     uint8_t targets_count = 0;
     target_entry targets[MAX_NUM_TARGETS] = {};
+
+    void set_source_page_index(source_id_t source_id, int16_t page_index) {
+        if (source_id >= 0 && source_id < NUM_REGISTERED_SOURCES && source_id < MAX_NUM_SOURCES && sources != nullptr)
+            sources[source_id].menu_page_index = page_index;
+    }
+    void set_target_page_index(target_id_t target_id, int16_t page_index) {
+        if (target_id >= 0 && target_id < NUM_REGISTERED_TARGETS && target_id < MAX_NUM_TARGETS)
+            targets[target_id].menu_page_index = page_index;
+    }
+    int16_t get_source_page_index(source_id_t source_id) const {
+        if (source_id >= 0 && source_id < NUM_REGISTERED_SOURCES && source_id < MAX_NUM_SOURCES && sources != nullptr)
+            return sources[source_id].menu_page_index;
+        return -1;
+    }
+    int16_t get_target_page_index(target_id_t target_id) const {
+        if (target_id >= 0 && target_id < NUM_REGISTERED_TARGETS && target_id < MAX_NUM_TARGETS)
+            return targets[target_id].menu_page_index;
+        return -1;
+    }
 
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
@@ -454,6 +486,11 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         return this->register_target(make_midioutputwrapper(handle, target, channel));
     }
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
+        if (NUM_REGISTERED_TARGETS >= MAX_NUM_TARGETS) {
+            Serial_printf(F("!! register_target('%s') failed: target table full (%u/%u)\n"),
+                handle ? handle : "(null)", (unsigned int)NUM_REGISTERED_TARGETS, (unsigned int)MAX_NUM_TARGETS);
+            return -1;
+        }
         // TODO: detect and warn if duplicate handle used
         strncpy(targets[NUM_REGISTERED_TARGETS].handle, handle, LANGST_HANDEL_ROUT);
         targets[NUM_REGISTERED_TARGETS].handle[LANGST_HANDEL_ROUT - 1] = '\0';
@@ -751,11 +788,15 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         // stuff for making singleton
         static MIDIMatrixManager* inst_;
         MIDIMatrixManager() {
+#if SAFE_MINIMAL_MATRIX_CONSTRUCTOR_BOOT
+            return;
+#else
             set_path_segment("midi_matrix");  // fixed segment; set here so register_child captures it correctly
             //setup_midi_output_wrapper_manager();
-            //memset(&sources, 0, MAX_NUM_SOURCES*sizeof(source_entry));
             sources = (source_entry*)CALLOC_FUNC(MAX_NUM_SOURCES, sizeof(source_entry));
-            //memset(sources, 0, sizeof(source_entry) * MAX_NUM_SOURCES);
+            if (sources == nullptr) {
+                Serial_println(F("!! MIDIMatrixManager: failed to allocate sources table"));
+            }
             memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
 
             conductor->register_harmony_change_callback([this](scale_identity_t new_scale, chord_identity_t new_chord1) {
@@ -766,6 +807,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             //     set_global_scale_identity_target(&this->global_scale_identity);
             //     set_global_chord_identity_target(&this->global_chord_identity);
             // #endif
+#endif
         }
         MIDIMatrixManager(const MIDIMatrixManager&);
         MIDIMatrixManager& operator=(const MIDIMatrixManager&);

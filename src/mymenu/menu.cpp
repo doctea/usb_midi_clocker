@@ -45,7 +45,6 @@
 
 #include "menu_io.h"
 
-
 //DisplayTranslator *tft;
 #ifdef TFT_ST7789_T3_BIG
     DisplayTranslator_STeensy_Big *tft;
@@ -110,7 +109,7 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
     );
 #endif
 
-MidiMatrixSelectorControl midi_matrix_selector = MidiMatrixSelectorControl("MIDI Matrix");
+MidiMatrixSelectorControl *midi_matrix_selector = nullptr;
 
 #ifdef ENABLE_SD
     #include "menuitems_pageviewer.h"
@@ -289,12 +288,30 @@ void setup_menu_midi() {
     menu->add_page("MIDI", C_WHITE, true, "Settings");
     menu->remember_opened_page(-1, true);
     menu->add(new SeparatorMenuItem("MIDI"));
+
+    // Matrix manager can be intentionally deferred until after USB init.
+    // Avoid dereferencing it during early menu construction.
+    if (midi_matrix_manager == nullptr) {
+        menu->add(new LambdaActionItem("MIDI Matrix (loading)", [=]() -> void {
+            menu_set_last_message("Matrix manager not ready yet", YELLOW);
+        }));
+        return;
+    }
+
     SubMenuItemBar *midi_matrix_bar = new SubMenuItemBar("Panic", false, false);
     midi_matrix_bar->add(new LambdaActionItem("PANIC", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
     midi_matrix_bar->add(new LambdaActionConfirmItem("{HARD}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
     midi_matrix_bar->add(new LambdaActionConfirmItem("reset", [=]() -> void { midi_matrix_manager->reset_matrix(); } ));
     menu->add(midi_matrix_bar);
-    menu->add(&midi_matrix_selector);
+
+    if (midi_matrix_selector == nullptr)
+        midi_matrix_selector = new MidiMatrixSelectorControl("MIDI Matrix");
+    if (midi_matrix_selector != nullptr)
+        menu->add(midi_matrix_selector);
+    else
+        menu->add(new LambdaActionItem("MIDI Matrix (alloc fail)", [=]() -> void {
+            menu_set_last_message("Matrix UI alloc failed", RED);
+        }));
 
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
 
@@ -451,7 +468,9 @@ void setup_menu(bool button_high_state) {
         setup_menu_taptempo();
     #endif
     setup_menu_project();
+#if !SAFE_DISABLE_MATRIX_UI_BOOT
     setup_menu_midi();
+#endif
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
         setup_menu_sequencer();
     #endif
