@@ -360,15 +360,33 @@ public:
     }
 
     // ---- display helpers ----
+    virtual int header(const char *text, Coord pos, bool selected = false, bool opened = false, int textSize = 0, unsigned int text_len = (unsigned int)-1) {
+        // Draw current/last note for the highlighted target
+        bool opened_on_target = opened && mode == Mode::TARGET_SELECT;
+
+        if (opened_on_target) {
+            char text_buf[MENU_C_MAX];
+            MIDIOutputWrapper *w = midi_matrix_manager->get_target_for_id((target_id_t)selected_target_value_index);
+            if (w) {
+                snprintf(text_buf, sizeof(text_buf), "Current: %3s   Last: %3s", 
+                    (char*)get_note_name_c(w->current_note, w->default_channel),
+                    (char*)get_note_name_c(w->last_note, w->default_channel)
+                );
+            }
+            return SelectorControl<int>::header(text_buf, pos, selected, opened, textSize, text_len);
+        }
+        return SelectorControl<int>::header(text, pos, selected, opened, textSize, text_len);
+    }
+
     void display_context_panel(Coord pos) {
         tft->setTextSize(1);
         tft->setTextColor(C_WHITE, BLACK);
         const char *src_lbl = midi_matrix_manager->get_label_for_source_id(sel_source);
         const char *tgt_lbl = (sel_target >= 0) ? midi_matrix_manager->get_label_for_target_id(sel_target) : "--";
         tft->printf("%.20s ", src_lbl);
-        tft->setTextColor(C_WHITE, BLACK);
-        tft->printf("-> %.17s\n", tgt_lbl);
         tft->setTextColor(this->get_colour_for_target_id(sel_target), BLACK);
+        tft->printf("-> %.17s\n", tgt_lbl);
+        tft->setTextColor(C_WHITE, BLACK);
         tft->printf("-----\n");
         selected_context_index = wrap_index(selected_value_index, get_num_available());
 
@@ -408,23 +426,11 @@ public:
 
         bool opened_on_source = opened && mode == Mode::SOURCE_SELECT;
         bool opened_on_target = opened && mode == Mode::TARGET_SELECT;
-        const source_id_t relevant_source_id = opened_on_source ? selected_source_value_index
-                                                                 : selected_source_index >= 0 ? (source_id_t)selected_source_index : 0;
+        // Always anchor to the persistent cursor so the list position doesn't
+        // jump when switching between unselected / source-select / target-select.
+        const source_id_t relevant_source_id = (source_id_t)selected_source_value_index;
 
         int available_rows = (tft->height() - pos.y) / tft->getRowHeight();
-
-        // Draw current/last note for the highlighted target
-        if (opened_on_target) {
-            MIDIOutputWrapper *w = midi_matrix_manager->get_target_for_id((target_id_t)selected_target_value_index);
-            if (w) {
-                tft->setTextColor(this->get_colour_for_target_id(selected_target_value_index), BLACK);
-                tft->printf("Current: %3s   Last: %3s\n", 
-                    (char*)get_note_name_c(w->current_note, w->default_channel),
-                    (char*)get_note_name_c(w->last_note, w->default_channel)
-                );
-            }
-            pos.y = tft->getCursorY();
-        }
 
         int lowest_y = pos.y;
         uint16_t halfbright_white = tft->halfbright_565(C_WHITE);
@@ -450,7 +456,8 @@ public:
 
         // Target column (right)
         tft->setCursor(0, pos.y);
-        target_id_t selected_target_scroll = opened_on_target ? (target_id_t)selected_target_value_index : 0;
+        // Always use the persistent target cursor as scroll anchor (no jump on mode switch).
+        target_id_t selected_target_scroll = (target_id_t)selected_target_value_index;
 
         int y = pos.y;
         for (target_id_t target_id = 0; target_id < midi_matrix_manager->targets_count; target_id++) {

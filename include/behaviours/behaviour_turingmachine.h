@@ -43,10 +43,14 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         this->sequencer = new SimpleSequencer(output_processor->get_available_outputs());
         
         // Create TuringMachine pattern(s)
-        TuringMachinePattern *tm_pattern = new TuringMachinePattern(output_processor->get_available_outputs());
-        tm_pattern->set_path_segment("pattern_0");
-        tm_pattern->set_steps(16);
-        this->sequencer->add_pattern(tm_pattern);
+        for (int i = 0 ; i < 4 ; i++) {
+            TuringMachinePattern *tm_pattern = new TuringMachinePattern(output_processor->get_available_outputs());
+            char pattern_name[32];
+            snprintf(pattern_name, 32, "TM Pattern %i", i+1);
+            tm_pattern->set_path_segment(pattern_name);
+            tm_pattern->set_steps(16);
+            this->sequencer->add_pattern(tm_pattern);
+        }
 
         // Add output nodes for multi-source routing via MIDI channels
         this->output_processor->addNode(new MIDINoteOutput("TuringMachine_Ch1", this, TURINGMACHINE_CHANNEL_1));
