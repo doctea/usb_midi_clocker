@@ -112,6 +112,7 @@ void setup_parameters() {
         parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand bar",    "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR,      EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand 2bar",   "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_BAR*2,    EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand phrase", "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_PHRASE,   EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
+        parameter_manager->addInput(makeVirtualParameterInput((char*)"Rand 2xPhrase", "Rands", RAND, 4.0f, 0.0f, PPQN*BEATS_PER_PHRASE*2, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         // Additional LFO sources at different speeds
         parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO 1bar",    "E-LFOs", LFO_LOCKED, 1.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
         parameter_manager->addInput(makeVirtualParameterInput((char*)"LFO 2bar",    "E-LFOs", LFO_LOCKED, 2.0f,  0.0f, 0, EXTENDED_VIRTUALS_AS_LIGHTWEIGHT));
