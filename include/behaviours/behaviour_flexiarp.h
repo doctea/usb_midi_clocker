@@ -164,7 +164,9 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
 
             this->sequencer->make_menu_items(
                 menu,
-                Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE | Euclidian::CombinePageOption::COMBINE_MODULATION_WITH_MUTATION,
+                Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE 
+                | Euclidian::CombinePageOption::COMBINE_MODULATION_WITH_MUTATION 
+                | Euclidian::CombinePageOption::COMBINE_PATTERN_MODULATION_WITH_PATTERN,
                 "FlexiArp"
             );
             this->output_processor->create_menu_items(true, "FlexiArp outputs", "FlexiArp");

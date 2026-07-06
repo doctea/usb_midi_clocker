@@ -156,7 +156,9 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
             this->sequencer->make_menu_items(
                 menu, 
-                Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE | Euclidian::CombinePageOption::COMBINE_MODULATION_WITH_MUTATION | Euclidian::CombinePageOption::COMBINE_PATTERN_MODULATION_WITH_PATTERN,
+                Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE 
+                | Euclidian::CombinePageOption::COMBINE_MODULATION_WITH_MUTATION 
+                | Euclidian::CombinePageOption::COMBINE_PATTERN_MODULATION_WITH_PATTERN,
                 "EuclidianDrums"
             );
             this->output_processor->create_menu_items(true, "Drum outputs", "EuclidianDrums");

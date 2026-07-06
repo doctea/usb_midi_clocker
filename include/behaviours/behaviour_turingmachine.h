@@ -24,6 +24,8 @@
     void turingmachine_shuffled_callback(uint32_t step, uint8_t track);
 #endif
 
+const int NUM_TURINGMACHINE_PATTERNS = 4;
+
 class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBase {
   SimpleSequencer *sequencer = nullptr;
   MIDIOutputProcessor *output_processor = nullptr;
@@ -33,18 +35,19 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
     source_id_t source_id_3 = -1;
     source_id_t source_id_4 = -1;
 
-    const int TURINGMACHINE_CHANNEL_1 = 1;
-    const int TURINGMACHINE_CHANNEL_2 = 2;
-    const int TURINGMACHINE_CHANNEL_3 = 3;
-    const int TURINGMACHINE_CHANNEL_4 = 4;
-
     VirtualBehaviour_TuringMachine() : DeviceBehaviourUltimateBase () {
         this->output_processor = new MIDIOutputProcessor(this);
         this->sequencer = new SimpleSequencer(output_processor->get_available_outputs());
-        
+       
         // Create TuringMachine pattern(s)
-        for (int i = 0 ; i < 4 ; i++) {
-            TuringMachinePattern *tm_pattern = new TuringMachinePattern(output_processor->get_available_outputs());
+        for (int i = 0 ; i < NUM_TURINGMACHINE_PATTERNS ; i++) {
+            char name[10];
+            snprintf(name, 10, "TM %i", i+1);
+            TuringMachinePattern *tm_pattern = new TuringMachinePattern(
+                output_processor->get_available_outputs(),
+                name,
+                "Seqs"
+            );
             char pattern_name[32];
             snprintf(pattern_name, 32, "TM Pattern %i", i+1);
             tm_pattern->set_path_segment(pattern_name);
@@ -53,15 +56,21 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         }
 
         // Add output nodes for multi-source routing via MIDI channels
-        this->output_processor->addNode(new MIDINoteOutput("TuringMachine_Ch1", this, TURINGMACHINE_CHANNEL_1));
-        this->output_processor->addNode(new MIDINoteOutput("TuringMachine_Ch2", this, TURINGMACHINE_CHANNEL_2));
-        this->output_processor->addNode(new MIDINoteOutput("TuringMachine_Ch3", this, TURINGMACHINE_CHANNEL_3));
-        this->output_processor->addNode(new MIDINoteOutput("TuringMachine_Ch4", this, TURINGMACHINE_CHANNEL_4));
+        for (int i = 0 ; i < NUM_TURINGMACHINE_PATTERNS ; i++) {
+            char label[32];
+            snprintf(label, 32, "TuringMachine_%i", i+1);
+            this->output_processor->addNode(new MIDINoteOutput(label, this, i+1));
+        }
 
         output_processor->configure_sequencer(sequencer);
         // Note: SimpleSequencer doesn't have initialise_patterns() or reset_patterns()
         // Those methods are specific to EuclidianSequencer
         output_processor->setup_parameters();
+
+        for (int i = 0 ; i < NUM_TURINGMACHINE_PATTERNS ; i++) {
+            // Add each TuringMachinePattern to the ParameterManager's available inputs for parameter mapping
+            parameter_manager->addInput((TuringMachinePattern*)this->sequencer->get_pattern(i));
+        }
 
         #ifdef USE_UCLOCK
             #ifdef ENABLE_SHUFFLE
@@ -103,14 +112,8 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         if (this->debug) Serial.printf(F("behaviour_turingmachine#sendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
-        if (channel == TURINGMACHINE_CHANNEL_1) {
-            midi_matrix_manager->processNoteOn(this->source_id, note, velocity, channel);
-        } else if (channel == TURINGMACHINE_CHANNEL_2) {
-            midi_matrix_manager->processNoteOn(this->source_id_2, note, velocity);
-        } else if (channel == TURINGMACHINE_CHANNEL_3) {
-            midi_matrix_manager->processNoteOn(this->source_id_3, note, velocity);
-        } else if (channel == TURINGMACHINE_CHANNEL_4) {
-            midi_matrix_manager->processNoteOn(this->source_id_4, note, velocity);
+        if (channel>=1 && channel <= NUM_TURINGMACHINE_PATTERNS) {
+            midi_matrix_manager->processNoteOn(this->source_id + (channel - 1), note, velocity, channel);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
         }
@@ -120,19 +123,12 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         if (this->debug) Serial.printf(F("behaviour_turingmachine#sendNoteOff(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
-        if (channel == TURINGMACHINE_CHANNEL_1) {
-            midi_matrix_manager->processNoteOff(this->source_id, note, velocity, channel);
-        } else if (channel == TURINGMACHINE_CHANNEL_2) {
-            midi_matrix_manager->processNoteOff(this->source_id_2, note, velocity);
-        } else if (channel == TURINGMACHINE_CHANNEL_3) {
-            midi_matrix_manager->processNoteOff(this->source_id_3, note, velocity);
-        } else if (channel == TURINGMACHINE_CHANNEL_4) {
-            midi_matrix_manager->processNoteOff(this->source_id_4, note, velocity);
+        if (channel>=1 && channel <= NUM_TURINGMACHINE_PATTERNS) {
+            midi_matrix_manager->processNoteOff(this->source_id + (channel - 1), note, velocity, channel);
         } else {
             midi_matrix_manager->processNoteOff(this->source_id, note, velocity);
         }
     }
-
 
     bool already_initialised = false;
     virtual ParameterList *initialise_parameters() override {
@@ -165,7 +161,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
 
             this->sequencer->make_menu_items(
                 menu,
-                0xFF,   // no combine pages for TuringMachine
+                0xFF,   // TODO: make proper CombinePageOption for TuringMachine
                 "TuringMachine"                  
             );
             this->output_processor->create_menu_items(true, "TuringMachine outputs", "TuringMachine");
