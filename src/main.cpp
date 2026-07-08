@@ -180,10 +180,26 @@ void setup() {
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
 
-  // Diagnostic: measure how large setup()'s stack frame is at function entry.
-  // Compare with/without setup_parameter_inputs_phase() in setup() to confirm
-  // register-pressure effect. Remove once root-cause is confirmed.
-  { extern unsigned long _estack; uint32_t _sp; asm volatile("mov %0, sp" : "=r"(_sp)); Serial.printf("setup() stack frame at entry: %u bytes\n", (uint32_t)&_estack - _sp); Serial.flush(); }
+  // Permanent stack-headroom sentinel.
+  // "static free" = _estack - _ebss = total bytes available for the stack at link time (fixed).
+  // "frame depth" = _estack - SP   = bytes already consumed by setup()'s prologue (runtime).
+  // If static free is low the build script (scripts/check_stack.py) should already have warned;
+  // this line ensures the number is always visible in the serial log for post-mortem analysis.
+  {
+    extern unsigned long _estack, _ebss;
+    uint32_t _sp;
+    asm volatile("mov %0, sp" : "=r"(_sp));
+    uint32_t static_free  = (uint32_t)&_estack - (uint32_t)&_ebss;
+    uint32_t frame_depth  = (uint32_t)&_estack - _sp;
+    Serial.printf("Stack: %u bytes static free, setup() frame depth %u bytes\n",
+                  static_free, frame_depth);
+    if (static_free < 8192)
+      Serial.printf("*** WARNING: only %u bytes of stack available - likely to crash! ***\n",
+                    static_free);
+    else if (static_free < 16384)
+      Serial.printf("*** CAUTION: stack headroom is low (%u bytes) ***\n", static_free);
+    Serial.flush();
+  }
   
   if (CrashReport) {
     #ifdef WAIT_FOR_SERIAL
