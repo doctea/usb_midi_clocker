@@ -1,5 +1,4 @@
-#ifndef MODWHEELRECEIVER_BEHAVIOUR__INCLUDED
-#define MODWHEELRECEIVER_BEHAVIOUR__INCLUDED
+#pragma once
 
 #include "midi/midi_mapper_matrix_manager.h"
 #include "behaviours/behaviour_base.h"
@@ -43,5 +42,3 @@ class ModwheelReceiver : public virtual DeviceBehaviourUltimateBase {
                 DeviceBehaviourUltimateBase::sendControlChange(cc_number, value, channel);
         }*/
 };
-
-#endif

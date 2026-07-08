@@ -27,7 +27,7 @@ void DeviceBehaviourUltimateBase::receive_control_change(uint8_t inChannel, uint
     //if (this->debug) Serial_printf(F("...DeviceBehaviourUltimateBase::receive_control_change(%i, %i, %i) done!\n"), this->get_label(), inChannel, inNumber, inValue);
 }
 
-void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int bend) {
+void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int16_t bend) {
     #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
         if (this->supports_advanced_pitch_bend() && this->handle_modulated_pitch_bend(inChannel, bend)) {
             return;

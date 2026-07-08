@@ -286,6 +286,18 @@ bool execute_command(const char *command_line) {
         } else if (strcmp(arg1, "system") == 0) {
             // show system settings
             filename = storage::get_system_settings_filename();
+        } else if (strcmp(arg1, "loop") == 0) {
+            // show loop settings
+            if (arg2[0] == '\0') {
+                Serial.println("Usage: show loop <project_number> <recording_number>");
+                return true;
+            }
+            int recording_number = atoi(arg2);
+            if (recording_number < 0) {
+                Serial.printf("Invalid recording number: %i\n", recording_number);
+                return true;
+            }
+            filename = (char*)midi_looper.get_loop_filename(project->current_project_number, recording_number);
         } else {
             Serial.printf("Unknown type: %s\n", arg1);
             return true;
@@ -549,7 +561,7 @@ bool execute_command(const char *command_line) {
         Serial.println("    showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
         Serial.println("    list <project_number> - List files on the SD card for the given project");
         Serial.println("    set project/scene <number> - Set the current project or scene number");
-        Serial.println("    show <scene|proj|system> [number] - Show the contents of a scene, project, or system settings file");
+        Serial.println("    show <scene|proj|system|loop> [number] - Show the contents of a scene, project, system settings, or loop file");
         Serial.println("    save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
         Serial.println("    load <scene|proj> <number> - Load a scene or project settings from the given slot number");
         Serial.println("    loadline - Load a line of text as if it were from a scene file (for testing parsing)");

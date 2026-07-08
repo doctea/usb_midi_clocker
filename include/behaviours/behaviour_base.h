@@ -233,8 +233,8 @@ class DeviceBehaviourUltimateBase :
     virtual void receive_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
     // called when a note_off message is received from the device
     virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
-    virtual void receive_control_change (uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
-    virtual void receive_pitch_bend(uint8_t inChannel, int bend);
+    virtual void receive_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
+    virtual void receive_pitch_bend(uint8_t inChannel, int16_t bend);
 
     virtual void init() {};
 
@@ -530,6 +530,19 @@ class DeviceBehaviourUltimateBase :
     }
     virtual int8_t get_effective_highest_note() {
         return max(effective_highest_note, effective_lowest_note);
+    }
+
+
+    // ParameterInput support; for registering sources of modulation that this device produces (eg from a MIDI device)
+    // for example, MIDI devices might have a Modwheel and a Pitch Bend wheel, and we want to be able to use those as modulation sources for other parameters in the system.
+    // might also be other sources of modulation available from the device, eg a CV input, or a touch sensor, or a button, etc.
+    // or perhaps virtual things like turning gates into modulation...
+    GenericList<ParameterInput*> *parameter_inputs = nullptr;
+    virtual GenericList<ParameterInput*> *get_modulation_sources() {
+        if (parameter_inputs==nullptr) {
+            parameter_inputs = new GenericList<ParameterInput*>();
+        }
+        return parameter_inputs;
     }
 
     // remap pitch if force octave is on, TODO: other tranposition modes

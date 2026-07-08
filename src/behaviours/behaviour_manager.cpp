@@ -85,6 +85,7 @@ void behaviour_manager_kill_all_current_notes () {
 
 //FLASHMEM
 void setup_behaviour_manager() {
+    { extern unsigned long _estack; uint32_t _sp; asm volatile("mov %0, sp" : "=r"(_sp)); Serial.printf("setup_behaviour_manager() frame depth from _estack: %u bytes\n", (uint32_t)&_estack - _sp); Serial.flush(); }
     behaviour_manager = DeviceBehaviourManager::getInstance();
 
     #ifdef ENABLE_PROGRESSION

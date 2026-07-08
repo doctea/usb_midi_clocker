@@ -386,7 +386,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             }
         }
     }
-    void processPitchBend(source_id_t source_id, int bend, uint8_t channel = 0) {
+    void processPitchBend(source_id_t source_id, int16_t bend, uint8_t channel = 0) {
         if (source_id==-1) return;
         for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
             if (is_connected(source_id, target_id)) {

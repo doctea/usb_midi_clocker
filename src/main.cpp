@@ -126,6 +126,41 @@ bool has_cv_clock_ticked();
 EXTMEM static char vlpp_pool[65536];           // tune this size
 static VLPP_ArenaBase vlpp_arena_obj(vlpp_pool, sizeof(vlpp_pool));
 
+// Extracted from setup() into its own FLASHMEM function so that its call sites
+// (and the constructors they pull in) do not contribute to setup()'s register-pressure
+// analysis. This keeps setup()'s stack frame smaller, avoiding overflow during the
+// deep load_loop() call chain that runs earlier in setup().
+FLASHMEM __attribute__((noinline)) static void setup_parameter_inputs_phase() {
+  #if defined(ENABLE_PARAMETERS) && defined(ENABLE_CV_INPUT)
+  tft_print((char*)"..setup cv input..\n");
+    setup_cv_input();
+    Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
+  #endif
+  #ifdef ENABLE_PARAMETERS
+    tft_print((char*)"..setup parameters..\n");
+    setup_parameters();
+    Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
+  #endif
+  /*#ifdef ENABLE_CV_OUTPUT
+      setup_cv_output();
+  #endif*/
+
+  #ifdef ENABLE_PARAMETERS
+    setup_pc_usb_pitchbend_parameter_inputs();
+  #endif
+
+  #ifdef ENABLE_CV_OUTPUT
+    tft_print((char*)"..setup cv output..\n");
+    setup_cv_output_parameter_inputs();
+    Debug_printf(F("after setup_cv_output_parameter_inputs(), free RAM is %u\n"), freeRam());
+  #endif
+  #if defined(ENABLE_SCREEN) && defined(ENABLE_PARAMETERS)
+    tft_print((char*)"..setup parameter menu..\n");
+    setup_parameter_menu();
+    Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
+  #endif
+}
+
 #ifndef GDB_DEBUG
 //FLASHMEM 
 #endif
@@ -144,6 +179,11 @@ void setup() {
     //tft_print("Connected serial!\n");
     Serial_println(F("Connected serial!")); Serial_flush();
   #endif
+
+  // Diagnostic: measure how large setup()'s stack frame is at function entry.
+  // Compare with/without setup_parameter_inputs_phase() in setup() to confirm
+  // register-pressure effect. Remove once root-cause is confirmed.
+  { extern unsigned long _estack; uint32_t _sp; asm volatile("mov %0, sp" : "=r"(_sp)); Serial.printf("setup() stack frame at entry: %u bytes\n", (uint32_t)&_estack - _sp); Serial.flush(); }
   
   if (CrashReport) {
     #ifdef WAIT_FOR_SERIAL
@@ -180,14 +220,13 @@ void setup() {
   storage::setup_sd();
   Serial_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
   */
-
   
   vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
 
   conductor = new Conductor();
 
   #ifdef ENABLE_ARRANGER
-  arranger = new Arranger();
+    arranger = new Arranger();
   #endif
 
   //tft_print((char*)"..USB device handler..");
@@ -195,7 +234,6 @@ void setup() {
   Serial_println(F("..USB device handler.."));
   setup_behaviour_manager();
   Serial_printf(F("after setup_behaviour_manager(), free RAM is %u\n"), freeRam());
-
 
   //Serial_println("..MIDIOutputWrapper manager..");
   //setup_midi_output_wrapper_manager();
@@ -248,29 +286,7 @@ void setup() {
   project->setup_project();
   Debug_printf(F("after setup_project(), free RAM is %u\n"), freeRam());
 
-  #if defined(ENABLE_PARAMETERS) && defined(ENABLE_CV_INPUT)
-  tft_print((char*)"..setup cv input..\n");
-    setup_cv_input();
-    Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
-  #endif
-  #ifdef ENABLE_PARAMETERS
-    tft_print((char*)"..setup parameters..\n");
-    setup_parameters();
-    Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
-  #endif
-  /*#ifdef ENABLE_CV_OUTPUT
-      setup_cv_output();
-  #endif*/
-  #ifdef ENABLE_CV_OUTPUT
-    tft_print((char*)"..setup cv output..\n");
-    setup_cv_output_parameter_inputs();
-    Debug_printf(F("after setup_cv_output_parameter_inputs(), free RAM is %u\n"), freeRam());
-  #endif
-  #if defined(ENABLE_SCREEN) && defined(ENABLE_PARAMETERS)
-    tft_print((char*)"..setup parameter menu..\n");
-    setup_parameter_menu();
-    Debug_printf(F("after setup_parameter_menu(), free RAM is %u\n"), freeRam());
-  #endif
+  setup_parameter_inputs_phase();
 
   #ifdef ENABLE_SCREEN
     Serial_println(F("...starting behaviour_manager#make_menu_items...")); Serial_flush();
@@ -310,7 +326,7 @@ void setup() {
     setup_cheapclock();
   #endif
 
-  tft_print((char*)"..PC USB..\n");
+  tft_print((char*)"..PC USB MIDI..\n");
   setup_pc_usb();
   Debug_printf(F("after setup_pc_usb(), free RAM is %u\n"), freeRam());
   

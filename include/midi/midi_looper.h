@@ -746,6 +746,12 @@ class MIDITrack {
 
         //#define DEBUG_LOOP_LOADER
 
+        const char *get_loop_filename(int project_number, int recording_number) {
+            static char filename[MAX_FILEPATH] = "";
+            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
+            return filename;
+        }
+
         // load file on disk into loop - linked-list-of-messages format
         bool load_loop(int project_number, int recording_number) {
             #ifdef ENABLE_SD
@@ -764,8 +770,7 @@ class MIDITrack {
             already_loading = true;
             global_load_lock = true;
 
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
+            const char *filename = get_loop_filename(project_number, recording_number);
             Serial.printf(F("load_loop: midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
 
             File f;
@@ -809,9 +814,10 @@ class MIDITrack {
                     //if (debug) Serial.printf("Read id %i\n", output->id);
                     line = line.remove(0,String(F("loop_data=")).length());
                     line = line.remove(line.length()-1,1);
-                    int MAX_LENGTH = (1+sizeof(midi_message)) * MAX_INSTRUCTIONS;
-                    char c_line[MAX_LENGTH];// = line.c_str();
-                    strncpy(c_line, line.c_str(), MAX_LENGTH);
+                    // static: avoids a 500-byte VLA on the stack each iteration;
+                    // safe because global_load_lock + already_loading prevent re-entrant calls
+                    static char c_line[(1+sizeof(midi_message)) * MAX_INSTRUCTIONS];
+                    strncpy(c_line, line.c_str(), sizeof(c_line));
                     midi_message m;
                     int messages_count = 0;
 
