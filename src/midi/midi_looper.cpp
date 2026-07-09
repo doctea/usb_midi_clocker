@@ -25,7 +25,7 @@
 //      quantizing (scale)
 
 #ifdef ENABLE_LOOPER
-    MIDITrack midi_loop_track;// = MIDITrack(); // = MIDITrack(&midi_out_bitbox_wrapper); //&MIDIOutputWrapper(midi_out_bitbox, 3));
+    EXTMEM MIDITrack midi_loop_track;// EXTMEM: move 6.9KB loop track buffer to PSRAM, freeing RAM1 stack space.
 #endif
 
 #ifdef ENABLE_DRUM_LOOPER

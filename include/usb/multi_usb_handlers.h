@@ -17,7 +17,10 @@ usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI
 usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 */
 
-#define NUM_USB_MIDI_DEVICES 16
+// Increase to add more simultaneous USB MIDI host devices (each costs ~1.8 KB RAM1).
+// Decrease to reclaim RAM1. Device objects midi01..midiNN must match this count
+// in src/usb/multi_usb_handlers.cpp.
+#define NUM_USB_MIDI_DEVICES 12
 
 // assign device to port and set appropriate handlers
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id);
@@ -49,10 +52,10 @@ extern use_MIDIDevice_BigBuffer midi09;
 extern use_MIDIDevice_BigBuffer midi10;
 extern use_MIDIDevice_BigBuffer midi11;
 extern use_MIDIDevice_BigBuffer midi12;
-extern use_MIDIDevice_BigBuffer midi13;
-extern use_MIDIDevice_BigBuffer midi14;
-extern use_MIDIDevice_BigBuffer midi15;
-extern use_MIDIDevice_BigBuffer midi16;
+// extern use_MIDIDevice_BigBuffer midi13;
+// extern use_MIDIDevice_BigBuffer midi14;
+// extern use_MIDIDevice_BigBuffer midi15;
+// extern use_MIDIDevice_BigBuffer midi16;
 
 //extern MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_MIDI_DEVICES];
 //extern uint64_t usb_midi_connected[NUM_USB_MIDI_DEVICES];

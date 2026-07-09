@@ -55,10 +55,10 @@ use_MIDIDevice_BigBuffer midi09(Usb);
 use_MIDIDevice_BigBuffer midi10(Usb);
 use_MIDIDevice_BigBuffer midi11(Usb);
 use_MIDIDevice_BigBuffer midi12(Usb);
-use_MIDIDevice_BigBuffer midi13(Usb);
-use_MIDIDevice_BigBuffer midi14(Usb);
-use_MIDIDevice_BigBuffer midi15(Usb);
-use_MIDIDevice_BigBuffer midi16(Usb);
+// use_MIDIDevice_BigBuffer midi13(Usb);
+// use_MIDIDevice_BigBuffer midi14(Usb);
+// use_MIDIDevice_BigBuffer midi15(Usb);
+// use_MIDIDevice_BigBuffer midi16(Usb);
 
 /*MIDIDevice_BigBuffer * usb_midi_device[NUM_USB_MIDI_DEVICES] = {
   &midi01, &midi02, &midi03, &midi04, &midi05, &midi06, &midi07, &midi08,
@@ -77,10 +77,10 @@ usb_midi_slot usb_midi_slots[NUM_USB_MIDI_DEVICES] = {
   { 0x00, 0x00, 0x0000, &midi10, nullptr },
   { 0x00, 0x00, 0x0000, &midi11, nullptr },
   { 0x00, 0x00, 0x0000, &midi12, nullptr },
-  { 0x00, 0x00, 0x0000, &midi13, nullptr },
-  { 0x00, 0x00, 0x0000, &midi14, nullptr },
-  { 0x00, 0x00, 0x0000, &midi15, nullptr },
-  { 0x00, 0x00, 0x0000, &midi16, nullptr }
+  // { 0x00, 0x00, 0x0000, &midi13, nullptr },
+  // { 0x00, 0x00, 0x0000, &midi14, nullptr },
+  // { 0x00, 0x00, 0x0000, &midi15, nullptr },
+  // { 0x00, 0x00, 0x0000, &midi16, nullptr }
 };
 
 //uint64_t usb_midi_connected[NUM_USB_MIDI_DEVICES] = { 0,0,0,0,0,0,0,0 };
