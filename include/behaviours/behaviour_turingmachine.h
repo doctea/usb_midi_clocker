@@ -31,9 +31,8 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
   MIDIOutputProcessor *output_processor = nullptr;
 
   public:
-    source_id_t source_id_2 = -1;
-    source_id_t source_id_3 = -1;
-    source_id_t source_id_4 = -1;
+    // for storing the next 3 source_ids (first is regular source_id variable in DeviceBehaviourUltimateBase) for the 4 TuringMachine patterns
+    source_id_t source_ids[NUM_TURINGMACHINE_PATTERNS-1] = { -1, -1, -1 };
 
     VirtualBehaviour_TuringMachine() : DeviceBehaviourUltimateBase () {
         this->output_processor = new MIDIOutputProcessor(this);
@@ -108,23 +107,30 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         sequencer->on_loop(ticks);
     }
 
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (this->debug) Serial.printf(F("behaviour_turingmachine#sendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
+    // virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+    //     if (this->debug) Serial.printf(F("behaviour_turingmachine#actualSendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
+    //     midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
+    // }
+
+    // virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+    //     if (this->debug) Serial.printf(F("behaviour_turingmachine#sendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
+    virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // Route to appropriate matrix source based on channel
-        if (channel>=1 && channel <= NUM_TURINGMACHINE_PATTERNS) {
-            midi_matrix_manager->processNoteOn(this->source_id + (channel - 1), note, velocity, channel);
+        if (channel>1 && channel <= NUM_TURINGMACHINE_PATTERNS) {
+            midi_matrix_manager->processNoteOn(this->source_ids[channel - 2], note, velocity);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
         }
     }
 
-    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+    // virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+    virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         if (this->debug) Serial.printf(F("behaviour_turingmachine#sendNoteOff(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
-        if (channel>=1 && channel <= NUM_TURINGMACHINE_PATTERNS) {
-            midi_matrix_manager->processNoteOff(this->source_id + (channel - 1), note, velocity, channel);
+        if (channel>1 && channel <= NUM_TURINGMACHINE_PATTERNS) {
+            midi_matrix_manager->processNoteOff(this->source_ids[channel - 2], note, velocity);
         } else {
             midi_matrix_manager->processNoteOff(this->source_id, note, velocity);
         }
