@@ -52,6 +52,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     enum class PopupRow : uint8_t {
         CONNECT_TOGGLE = 0,
         CHANNEL,
+        QUANTISE_MODE,
         JUMP_SOURCE,
         JUMP_TARGET,
         DISCONNECT_OTHER_SOURCES_TO_TARGET,
@@ -89,6 +90,8 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             case PopupRow::CONNECT_TOGGLE:
             case PopupRow::CHANNEL:
                 return sel_source >= 0 && sel_target >= 0;
+            case PopupRow::QUANTISE_MODE:
+                return sel_source >= 0 && sel_target >= 0 && midi_matrix_manager->get_connection_policy(sel_source, sel_target) != nullptr;
             case PopupRow::JUMP_SOURCE:
                 return sel_source >= 0 && midi_matrix_manager->get_source_page_index(sel_source) >= 0;
             case PopupRow::JUMP_TARGET:
@@ -108,6 +111,17 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         switch (row) {
             case PopupRow::CONNECT_TOGGLE:
                 return conn ? "Connected: yes" : "Connected: no";
+            case PopupRow::QUANTISE_MODE:
+                if (pol) {
+                    switch (pol->quantise_mode) {
+                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF: return "Quantise: off";
+                        case MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR: return "Quantise: inherit";
+                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE: return "Quantise: scale";
+                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD: return "Quantise: chord";
+                        default: return "Quantise: unknown";
+                    }
+                }
+                return "Quantise: --";
             case PopupRow::CHANNEL:
                 if (pol) {
                     if (pol->fixed_channel > 0)
@@ -288,7 +302,7 @@ public:
             if (selected_context_index < 0 || selected_context_index >= get_num_available())
                 return false;
             PopupRow row = (PopupRow)selected_context_index;
-            auto *pol = midi_matrix_manager->get_connection_policy_mut(sel_source, sel_target);
+            auto *pol = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
             if (pol == nullptr)
                 return false;
 
@@ -299,6 +313,21 @@ public:
                 case PopupRow::CHANNEL:
                     // Cycle: 0 (passthru) -> 1 -> 2 -> ... -> 16 -> 0
                     pol->fixed_channel = (pol->fixed_channel >= 16) ? 0 : pol->fixed_channel + 1;
+                    break;
+                case PopupRow::QUANTISE_MODE:
+                    // Cycle through the enum values
+                    switch (pol->quantise_mode) {
+                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF:
+                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR; break;
+                        case MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR:
+                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE; break;
+                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE:
+                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD; break;
+                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD:
+                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
+                        default:
+                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
+                    }
                     break;
                 case PopupRow::JUMP_SOURCE: {
                     if (!popup_row_enabled(row)) break;

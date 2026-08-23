@@ -104,6 +104,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     struct source_entry {
         char handle[LANGST_HANDEL_ROUT];    // 25 * 24 = 600 bytes
         uint8_t connection_count = 0;
+        uint8_t default_channel = 0;
         int16_t menu_page_index = -1;  // index into Menu::pages; -1 = no associated page
     };
     uint8_t sources_count = 0;
@@ -111,7 +112,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     source_entry *sources = nullptr;
 
     // assign a source_id for the given name
-    FLASHMEM source_id_t register_source(const char *handle) {
+    FLASHMEM source_id_t register_source(const char *handle, uint8_t default_channel = 0) {
         if (NUM_REGISTERED_SOURCES >= MAX_NUM_SOURCES || sources == nullptr) {
             Serial_printf(F("!! register_source('%s') failed: source table full (%u/%u) or uninitialised\n"),
                 handle ? handle : "(null)", (unsigned int)NUM_REGISTERED_SOURCES, (unsigned int)MAX_NUM_SOURCES);
@@ -120,14 +121,15 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         //Serial_printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
         strncpy(sources[NUM_REGISTERED_SOURCES].handle, handle, LANGST_HANDEL_ROUT);
         sources[NUM_REGISTERED_SOURCES].handle[LANGST_HANDEL_ROUT - 1] = '\0';
+        sources[NUM_REGISTERED_SOURCES].default_channel = default_channel;
         return NUM_REGISTERED_SOURCES++;
     }
     // assign a source_id for the midi track
     //FLASHMEM 
-    source_id_t register_source(MIDITrack *loop_track, const char *handle);
+    source_id_t register_source(MIDITrack *loop_track, const char *handle, uint8_t default_channel = 0);
     // assign a source_id for the device
     //FLASHMEM 
-    source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle);
+    source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle, uint8_t default_channel = 0);
 
     // get id of source for string
     FLASHMEM source_id_t get_source_id_for_handle(const char *handle) {
@@ -151,20 +153,14 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         return true;
     }
 
-    const connection_policy_t *get_connection_policy(source_id_t source_id, target_id_t target_id) const {
-        if (!is_valid_connection_id_pair(source_id, target_id))
-            return nullptr;
-        return &connection_policies[source_id][target_id];
-    }
-
-    connection_policy_t *get_connection_policy_mut(source_id_t source_id, target_id_t target_id) {
+    connection_policy_t *get_connection_policy(source_id_t source_id, target_id_t target_id) {
         if (!is_valid_connection_id_pair(source_id, target_id))
             return nullptr;
         return &connection_policies[source_id][target_id];
     }
 
     bool set_connection_policy(source_id_t source_id, target_id_t target_id, const connection_policy_t &policy) {
-        connection_policy_t *slot = get_connection_policy_mut(source_id, target_id);
+        connection_policy_t *slot = get_connection_policy(source_id, target_id);
         if (slot == nullptr)
             return false;
         *slot = policy;
@@ -185,6 +181,17 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         // applying dynamic quantisation here can create stuck notes when
         // harmony context changes between note-on and note-off.
 
+        if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_OFF) {
+            // do nothing
+        } else if (policy->quantise_mode == ConnectionQuantiseMode::INHERIT_BEHAVIOUR) {
+            if (conductor->get_global_quantise_mode()==QUANTISE_MODE_CHORD) event.pitch = ::quantise_pitch_to_chord(event.pitch, 3);
+            if (conductor->get_global_quantise_mode()==QUANTISE_MODE_SCALE) event.pitch = ::quantise_pitch_to_scale(event.pitch);
+        } else if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_SCALE) {
+            event.pitch = quantise_pitch_to_scale(event.pitch);
+        } else if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_CHORD) {
+            event.pitch = quantise_pitch_to_chord(event.pitch, 3);
+        }
+
         if (!is_valid_note(event.pitch))
             event.drop = true;
         return event;
@@ -204,6 +211,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         for (source_id_t source_id = 0 ; source_id < NUM_REGISTERED_SOURCES ; source_id++) {
             for (target_id_t target_id  = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
                 disconnect(source_id, target_id);
+                connection_policies[source_id][target_id] = connection_policy_t{};
             }
         }
     }
@@ -253,6 +261,13 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             // increment count if not already connected
             sources[source_id].connection_count++;
             targets[target_id].connection_count++;
+            connection_policy_t &policy = connection_policies[source_id][target_id];
+            policy = connection_policy_t{};
+            bool source_is_drums = sources[source_id].default_channel == GM_CHANNEL_DRUMS;
+            bool target_is_drums = targets[target_id].wrapper != nullptr
+                                && targets[target_id].wrapper->default_channel == GM_CHANNEL_DRUMS;
+            if (source_is_drums || target_is_drums)
+                policy.quantise_mode = ConnectionQuantiseMode::FORCE_OFF;
         }
         source_to_targets[source_id][target_id] = true;
         return true;
@@ -574,7 +589,13 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         //     }
         // }
         void harmony_changed_notification(scale_identity_t new_scale, chord_identity_t new_chord, bool requantise_immediately = true) {
-            //Serial_println(F("harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()"));
+            Serial_printf(
+                "harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()\n"
+                "\tto go from scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i "
+                "\tto         scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i\n", 
+                conductor->get_scale_root(), conductor->get_chord_type(), conductor->get_chord_degree(), conductor->get_chord_inversion(),
+                new_scale.root_note, new_chord.type, new_chord.degree, new_chord.inversion
+            );
             behaviour_manager_requantise_all_notes();
         }
 
@@ -650,39 +671,71 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
 
     // ---- saveloadlib settings ----
     //
-    // One child node per registered source; each emits one line:
-    //   midi_matrix~<src_handle>~targets=tgt1;tgt2;...
+    // One line per connection, with named policy fields for easy extension:
+    //   midi_matrix~<src_handle>~<target_handle>~connection=version=1;channel=0;quantise=0;note_map=0
+    // Legacy "targets=tgt1;tgt2;..." lines are still accepted when loading.
     // Scale settings are registered with SL_SCOPE_PROJECT;
     // connections are emitted/parsed dynamically (sources are registered AFTER
     // sl_setup_all runs, so static SourceNode children cannot be used).
     // reset_matrix() must be called before loading routing (done in project.h).
     char routing_line_buf[SL_MAX_LINE];  // shared scratch buf (singleton, single-threaded)
 
-    // Internal helper: emit one "<prefix~>src~targets=t1;t2" line per connected source.
+    void _load_connection_policy(const char* value, connection_policy_t& policy) {
+        policy = connection_policy_t{};
+        if (!value) return;
+
+        strncpy(routing_line_buf, value, SL_MAX_LINE - 1);
+        routing_line_buf[SL_MAX_LINE - 1] = '\0';
+        char* field = routing_line_buf;
+        while (*field) {
+            char* semi = strchr(field, ';');
+            if (semi) *semi = '\0';
+            char* equals = strchr(field, '=');
+            if (equals) {
+                *equals = '\0';
+                char* key = field;
+                char* field_value = equals + 1;
+                sl_trim_inplace(key);
+                sl_trim_inplace(field_value);
+                int parsed = atoi(field_value);
+                if (strcmp(key, "channel") == 0 && parsed >= 0 && parsed <= 16) {
+                    policy.fixed_channel = (uint8_t)parsed;
+                } else if (strcmp(key, "quantise") == 0 && parsed >= 0 && parsed <= (int)ConnectionQuantiseMode::FORCE_CHORD) {
+                    policy.quantise_mode = (ConnectionQuantiseMode)parsed;
+                } else if (strcmp(key, "note_map") == 0 && parsed >= 0 && parsed <= (int)ConnectionNoteMapMode::RESERVED) {
+                    policy.note_map_mode = (ConnectionNoteMapMode)parsed;
+                }
+            }
+            if (!semi) break;
+            field = semi + 1;
+        }
+    }
+
+    // Internal helper: emit one connection and its policy per line.
     // Used by both save_recursive overloads.
     void _emit_routing_lines(const char* prefix, size_t prefix_len,
                              void (*cb_noct)(const char*),
                              void (*cb_ctx)(const char*, void*), void* ctx) {
-        static char val_buf[SL_MAX_LINE];
         static char out[SL_MAX_LINE];
         for (source_id_t s = 0; s < (source_id_t)sources_count; s++) {
-            int pos = 0; bool first = true;
             for (target_id_t t = 0; t < (target_id_t)targets_count; t++) {
-                if (is_connected(s, t)) {
-                    if (!first && pos < SL_MAX_LINE - 2) val_buf[pos++] = ';';
-                    int w = snprintf(val_buf + pos, SL_MAX_LINE - pos - 1, "%s", targets[t].handle);
-                    if (w > 0) pos += w;
-                    first = false;
+                if (!is_connected(s, t)) continue;
+                const connection_policy_t *policy = this->get_connection_policy(s, t);
+                if (!policy) continue;
+                if (prefix_len == 0) {
+                    snprintf(out, SL_MAX_LINE,
+                             "%s~%s~connection=version=1;channel=%u;quantise=%u;note_map=%u",
+                             sources[s].handle, targets[t].handle,
+                             policy->fixed_channel, (uint8_t)policy->quantise_mode, (uint8_t)policy->note_map_mode);
+                } else {
+                    snprintf(out, SL_MAX_LINE,
+                             "%s~%s~%s~connection=version=1;channel=%u;quantise=%u;note_map=%u",
+                             prefix, sources[s].handle, targets[t].handle,
+                             policy->fixed_channel, (uint8_t)policy->quantise_mode, (uint8_t)policy->note_map_mode);
                 }
+                if (cb_noct) cb_noct(out);
+                if (cb_ctx)  cb_ctx(out, ctx);
             }
-            if (first) continue;  // source has no connections — omit
-            val_buf[pos] = '\0';
-            if (prefix_len == 0)
-                snprintf(out, SL_MAX_LINE, "%s~targets=%s", sources[s].handle, val_buf);
-            else
-                snprintf(out, SL_MAX_LINE, "%s~%s~targets=%s", prefix, sources[s].handle, val_buf);
-            if (cb_noct) cb_noct(out);
-            if (cb_ctx)  cb_ctx(out, ctx);
         }
     }
 
@@ -709,10 +762,24 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             _emit_routing_lines(prefix, strlen(prefix), nullptr, cb, ctx);
     }
 
-    // Override load_line to handle "src_handle~targets=t1;t2" without needing
-    // registered SourceNode children (sources registered too late for that).
+    // Override load_line to handle dynamic connections without needing registered
+    // SourceNode children (sources registered too late for that).
     virtual bool load_line(char** segments, int seg_count, const char* value,
                            sl_scope_t scope = SL_SCOPE_ALL) override {
+        if (seg_count == 3 && strcmp(segments[2], "connection") == 0) {
+            if (!(scope & SL_SCOPE_ROUTING)) return false;
+            source_id_t src_id = get_source_id_for_handle(segments[0]);
+            target_id_t tgt_id = get_target_id_for_handle(segments[1]);
+            connection_policy_t policy;
+            _load_connection_policy(value, policy);
+            if (connect(src_id, tgt_id)) {
+                set_connection_policy(src_id, tgt_id, policy);
+            } else {
+                Serial_printf(F("midi_matrix load routing: failed connection '%s' -> '%s' (src_id=%i tgt_id=%i)\n"),
+                              segments[0], segments[1], src_id, tgt_id);
+            }
+            return true;
+        }
         if (seg_count == 2 && strcmp(segments[1], "targets") == 0) {
             if (!(scope & SL_SCOPE_ROUTING)) return false;
             char src_handle_buf[SL_MAX_LABEL];

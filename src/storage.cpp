@@ -415,7 +415,11 @@ void setup_saveloadlib() {
     // Register settings with saveloadlib by calling setup_saveable_settings() on an instance of each ISaveableSettingHost subclass.
 
     // set up pool for allocation of settings -- improves speed significantly compared to slow EXTMEM new()
-    EXTMEM static SL_Arena<524288> sl_arena;
+    // Use the recommended SL_ArenaBase pattern: pool in EXTMEM, metadata (buf/capacity/used) in DTCM.
+    // Avoid `EXTMEM static SL_Arena<N>` because static-local + EXTMEM has unreliable constructor
+    // initialisation on Teensy 4.x (same class of bug as the OutputSelectorSnapshotCache EXTMEM issue).
+    EXTMEM static char sl_arena_pool[524288];
+    static SL_ArenaBase sl_arena(sl_arena_pool, sizeof(sl_arena_pool));
     sl_set_setting_arena(&sl_arena);
 
     // set up file read buffer for sl_load_from_file -- also much faster than EXTMEM new() on demand

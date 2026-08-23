@@ -72,17 +72,17 @@ MIDIMatrixManager* MIDIMatrixManager::getInstance() {
 }
 
 #ifdef ENABLE_LOOPER
-source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle) {
+source_id_t MIDIMatrixManager::register_source(MIDITrack *loop_track, const char *handle, uint8_t default_channel) {
     if (loop_track==nullptr) return -1;
-    source_id_t sid = this->register_source(handle);
+    source_id_t sid = this->register_source(handle, default_channel);
     if (sid >= 0)
         loop_track->source_id = sid;
     return sid;
 }
 #endif
-source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle) {
+source_id_t MIDIMatrixManager::register_source(DeviceBehaviourUltimateBase *device, const char *handle, uint8_t default_channel) {
     if (device==nullptr) return -1;
-    source_id_t sid = this->register_source(handle);
+    source_id_t sid = this->register_source(handle, default_channel);
     if (sid >= 0)
         device->source_id = sid;
     return sid;
@@ -136,7 +136,7 @@ void setup_midi_mapper_matrix_manager() {
                 snprintf(label, 29, "S%i : Bitbox : ch 3", i+1);
                 midi_matrix_manager->register_target(make_midioutputwrapper((const char*)label, behaviour_bitbox, 3));
                 snprintf(label, 29, "S%i : Bitbox : ch 10", i+1);
-                midi_matrix_manager->register_target(make_midioutputwrapper((const char*)label, behaviour_bitbox, 10));
+                midi_matrix_manager->register_target(make_midioutputwrapper((const char*)label, behaviour_bitbox, GM_CHANNEL_DRUMS));
             }
         #endif
         #ifdef ENABLE_NEUTRON
@@ -335,7 +335,7 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_DRUM_LOOPER
-        midi_matrix_manager->register_source(&drums_loop_track, "drumkit");
+        midi_matrix_manager->register_source(&drums_loop_track, "drumkit", GM_CHANNEL_DRUMS);
         midi_matrix_manager->register_target(&drums_loop_track, "loop_track_drums");
         // midi_matrix_manager->connect("drumkit", "USB : Bamble : drums");
         // midi_matrix_manager->connect("loop_track_drums", "USB : Bamble : drums");
@@ -344,8 +344,8 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_MICROLIDIAN
-        behaviour_microlidian->source_id     = midi_matrix_manager->register_source("ulidian ch10");
-        behaviour_microlidian->source_id_2   = midi_matrix_manager->register_source("ulidian ch1");
+        behaviour_microlidian->source_id     = midi_matrix_manager->register_source("ulidian ch10", GM_CHANNEL_DRUMS);
+        behaviour_microlidian->source_id_2   = midi_matrix_manager->register_source("ulidian ch1", 1);
         //behaviour_microlidian->target_id     = midi_matrix_manager->register_target(behaviour_microlidian, "ulidian ch10");
         /*#ifdef ENABLE_DRUMKIT
             // TODO: connect drumkit input to ulidian output
@@ -357,29 +357,29 @@ void setup_midi_mapper_matrix_manager() {
     #endif
 
     #ifdef ENABLE_EUCLIDIAN
-        behaviour_euclidianrhythms->source_id   = midi_matrix_manager->register_source("EucRhythms ch10");
-        behaviour_euclidianrhythms->source_id_2 = midi_matrix_manager->register_source("EucRhythms ch1");
-        behaviour_euclidianrhythms->source_id_3 = midi_matrix_manager->register_source("EucRhythms ch8");
-        behaviour_euclidianrhythms->source_id_4 = midi_matrix_manager->register_source("EucRhythms ch9");
+        behaviour_euclidianrhythms->source_id   = midi_matrix_manager->register_source("EucRhythms ch10", GM_CHANNEL_DRUMS);
+        behaviour_euclidianrhythms->source_id_2 = midi_matrix_manager->register_source("EucRhythms ch1", 1);
+        behaviour_euclidianrhythms->source_id_3 = midi_matrix_manager->register_source("EucRhythms ch8", 8);
+        behaviour_euclidianrhythms->source_id_4 = midi_matrix_manager->register_source("EucRhythms ch9", 9);
         //Serial.printf("ENABLE_EUCLIDIAN: connecting source_id=%i to target_id=%i\n", behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
         // midi_matrix_manager->connect(behaviour_euclidianrhythms->source_id, behaviour_sequencer_gates->target_id);
     #endif
 
     #ifdef ENABLE_TURINGMACHINE
-        behaviour_turingmachine->source_id     = midi_matrix_manager->register_source("TuringMachine Ch1");
-        behaviour_turingmachine->source_ids[0] = midi_matrix_manager->register_source("TuringMachine Ch2");
-        behaviour_turingmachine->source_ids[1] = midi_matrix_manager->register_source("TuringMachine Ch3");
-        behaviour_turingmachine->source_ids[2] = midi_matrix_manager->register_source("TuringMachine Ch4");
+        behaviour_turingmachine->source_id     = midi_matrix_manager->register_source("TuringMachine Ch1", 1);
+        behaviour_turingmachine->source_ids[0] = midi_matrix_manager->register_source("TuringMachine Ch2", 2);
+        behaviour_turingmachine->source_ids[1] = midi_matrix_manager->register_source("TuringMachine Ch3", 3);
+        behaviour_turingmachine->source_ids[2] = midi_matrix_manager->register_source("TuringMachine Ch4", 4);
     #endif
 
     #ifdef ENABLE_FLEXIARP
-        behaviour_flexiarp->source_id   = midi_matrix_manager->register_source("FlexiArp Ch1");
-        behaviour_flexiarp->source_id_2 = midi_matrix_manager->register_source("FlexiArp Ch2");
-        behaviour_flexiarp->source_id_3 = midi_matrix_manager->register_source("FlexiArp Ch3");
-        behaviour_flexiarp->source_id_4 = midi_matrix_manager->register_source("FlexiArp Ch4");
+        behaviour_flexiarp->source_id   = midi_matrix_manager->register_source("FlexiArp Ch1", 1);
+        behaviour_flexiarp->source_id_2 = midi_matrix_manager->register_source("FlexiArp Ch2", 2);
+        behaviour_flexiarp->source_id_3 = midi_matrix_manager->register_source("FlexiArp Ch3", 3);
+        behaviour_flexiarp->source_id_4 = midi_matrix_manager->register_source("FlexiArp Ch4", 4);
     #endif
 
-    behaviour_sequencer_gates->source_id = midi_matrix_manager->register_source("Gate Sequencer");
+    behaviour_sequencer_gates->source_id = midi_matrix_manager->register_source("Gate Sequencer", GM_CHANNEL_DRUMS);
 
     #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_PADS)
         midi_matrix_manager->register_source(behaviour_apcmini, "APCMini Pads");

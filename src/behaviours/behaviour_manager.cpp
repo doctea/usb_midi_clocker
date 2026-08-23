@@ -79,7 +79,7 @@ void behaviour_manager_kill_all_current_notes () {
             //behaviour_manager->debug = true;
             behaviour_manager->requantise_all_notes();
             //behaviour_manager->debug = false;
-        }        
+        }
     }
 #endif
 

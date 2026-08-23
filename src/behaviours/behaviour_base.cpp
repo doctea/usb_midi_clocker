@@ -66,7 +66,7 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
         return 0;
 
     if (note_tracker_count_held()==0) {
-        //Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: no notes to requantise\n", this->get_label());
+        // Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: no notes to requantise\n", this->get_label());
         return 0;
     }
     if (debug) { Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c()); }
@@ -121,7 +121,10 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
 
 void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
     //if (debug) Serial_printf("DeviceBehaviourUltimateBase#sendNoteOn");
-    // TODO: this is where ForceOctave check should go..?
+
+    // TODO: think the quantisation stuff should now be moved into the midi_matrix_mapper, or midiwrapper? 
+    // so that it can be dealt with on a per-source-target-connection basis, rather than per-behaviour?  
+    // (eg, a behaviour might have multiple sources and targets, and each source-target connection might have different quantisation settings)
 
     #ifdef ENABLE_SCALES
         int8_t quantised_note = midi_matrix_manager->do_quant(note, channel);

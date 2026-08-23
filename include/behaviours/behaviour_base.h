@@ -307,6 +307,23 @@ class DeviceBehaviourUltimateBase :
         // quantised_note should be the value that this desired note was last played as; 
         // so we can make it stop by sending the note off for that value, even if quantisation would normally
         // prevent it.
+        // TODO: except, now we are ALSO quantising inside of midi_matrix_mapper, so that will be blocking
+        // us sending the correct note off...
+        // so, we need to consider that sometimes the DeviceBehaviour actually needs to handle the sending of
+        // the note itself to a device; and sometimes it is just passing it back to the midi_matrix_mapper 
+        // to route and quantise it.  so, whatever solution we come up with needs to be able to handle both
+        // cases.  
+        // perhaps the concept of a 'notepipe' is needed to represent both internal connection routings and external interfaces, 
+        // and tranpose/quantise policies are applied at that level.
+        // part of the issue though is that MIDINoteOutputs are shared with Microlidian, which has no
+        // idea about this requantisation stuff, and those Outputs provide their own potential quantisation setting.
+        // so maybe we need to be able to turn that feature of the Output classes off, so that on Nexus6 they
+        // only generate raw notes, and all the quantisation is handled by the midi_matrix_mapper instead.
+        // TODO: so maybe we are looking at making the source-target-connection into a full-blown object that
+        // can handle quantisation, transposition, notelimits, and other policies, and the DeviceBehaviour just handles the actual sending of the note to the device, and the midi_matrix_mapper handles routing between sources and targets.  
+        // maybe some kinds of device will still want to handle requantisation events themselves, though; eg, Progression will probably
+        // want to regenerate chords properly instead of just requantising the notes....
+        // 
         int8_t quantised_note = note_tracker_get_transposed_note_for(note);
         if (debug) Serial_printf("\t\t note_tracker.get_transposed_note_for(%i) = %i (%s)\n", note, quantised_note, get_note_name_c(quantised_note));
 

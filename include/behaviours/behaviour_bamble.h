@@ -337,11 +337,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         #ifdef ENABLE_BAMBLE_INPUT
             virtual void self_register_midi_matrix_sources(MIDIMatrixManager *midi_matrix_manager) {
-                this->source_ids[0] = midi_matrix_manager->register_source(this, "bamble_input_ch1");
-                this->source_ids[1] = midi_matrix_manager->register_source(this, "bamble_input_ch2");
-                this->source_ids[2] = midi_matrix_manager->register_source(this, "bamble_input_ch3");
-                this->source_ids[3] = midi_matrix_manager->register_source(this, "bamble_input_ch4");
-                this->source_ids[4] = midi_matrix_manager->register_source(this, "bamble_input_ch16");
+                this->source_ids[0] = midi_matrix_manager->register_source(this, "bamble_input_ch1", 1);
+                this->source_ids[1] = midi_matrix_manager->register_source(this, "bamble_input_ch2", 2);
+                this->source_ids[2] = midi_matrix_manager->register_source(this, "bamble_input_ch3", 3);
+                this->source_ids[3] = midi_matrix_manager->register_source(this, "bamble_input_ch4", 4);
+                this->source_ids[4] = midi_matrix_manager->register_source(this, "bamble_input_ch16", 16);
             }
 
             // special version that uses source_ids array based on incoming channel to route

@@ -340,7 +340,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                     if (notes>0) {
                         requantised_notes += notes;
                     }
-                    if ((debug && micros()-behaviour_time>0) || device->debug) {
+                    if ((debug && micros()-behaviour_time>0) || device->debug || notes>0) {
                         Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, device->get_label()); Serial_flush();
                         Serial_printf("\trequantise_all_notes() took %i us for behaviour %i (%s) to process %i notes\n", micros()-behaviour_time, i, device->get_label(), notes); Serial_flush();
                     }
