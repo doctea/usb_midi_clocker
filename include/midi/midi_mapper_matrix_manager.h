@@ -36,6 +36,7 @@ void behaviour_manager_kill_all_current_notes();
 #define LANGST_HANDEL_ROUT 25   // longest possible name of a target handle / get roo to do it <3
 
 #include "midi/midi_mapper_matrix_types.h"
+#include "midi/midi_connection_note_state.h"
 
 #include "scales.h"
 
@@ -144,6 +145,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
     bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
     connection_policy_t connection_policies[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
+    MIDIConnectionNoteState active_connection_notes;
 
     bool is_valid_connection_id_pair(source_id_t source_id, target_id_t target_id) const {
         if (source_id < 0 || target_id < 0)
@@ -164,6 +166,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (slot == nullptr)
             return false;
         *slot = policy;
+        migrate_connection_notes(source_id, target_id);
         return true;
     }
 
@@ -175,11 +178,6 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
 
         if (policy->fixed_channel > 0)
             event.channel = policy->fixed_channel;
-
-        // NOTE: Quantise overrides are intentionally deferred for now.
-        // Without explicit per-connection note-on/note-off pairing state,
-        // applying dynamic quantisation here can create stuck notes when
-        // harmony context changes between note-on and note-off.
 
         if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_OFF) {
             // do nothing
@@ -195,6 +193,71 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (!is_valid_note(event.pitch))
             event.drop = true;
         return event;
+    }
+
+    int migrate_connection_notes(source_id_t only_source = -1, target_id_t only_target = -1) {
+        int changed = 0;
+
+        for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
+            MIDIConnectionNoteState::entry_t &entry = active_connection_notes.entries[index];
+            if (!entry.occupied
+                || (only_source >= 0 && entry.source_id != only_source)
+                || (only_target >= 0 && entry.target_id != only_target)) {
+                continue;
+            }
+            transformed_note_event_t next = apply_connection_policy_note(
+                entry.source_id, entry.target_id, entry.input_pitch, entry.input_channel
+            );
+            bool next_emitted = !next.drop;
+            if (entry.emitted == next_emitted
+                && (!entry.emitted || (entry.output_pitch == next.pitch && entry.output_channel == next.channel))) {
+                continue;
+            }
+            if (entry.emitted)
+                targets[entry.target_id].wrapper->sendNoteOff(entry.output_pitch, MIDI_MIN_VELOCITY, entry.output_channel);
+            ++changed;
+        }
+
+        for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
+            MIDIConnectionNoteState::entry_t &entry = active_connection_notes.entries[index];
+            if (!entry.occupied
+                || (only_source >= 0 && entry.source_id != only_source)
+                || (only_target >= 0 && entry.target_id != only_target)) {
+                continue;
+            }
+            transformed_note_event_t next = apply_connection_policy_note(
+                entry.source_id, entry.target_id, entry.input_pitch, entry.input_channel
+            );
+            bool next_emitted = !next.drop;
+            if (entry.emitted == next_emitted
+                && (!entry.emitted || (entry.output_pitch == next.pitch && entry.output_channel == next.channel))) {
+                continue;
+            }
+            if (next_emitted)
+                targets[entry.target_id].wrapper->sendNoteOn(next.pitch, entry.velocity, next.channel);
+            entry.output_pitch = next.pitch;
+            entry.output_channel = next.channel;
+            entry.emitted = next_emitted;
+        }
+
+        return changed;
+    }
+
+    int release_connection_notes(source_id_t only_source = -1, target_id_t only_target = -1) {
+        int released = 0;
+        for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
+            MIDIConnectionNoteState::entry_t &entry = active_connection_notes.entries[index];
+            if (!entry.occupied
+                || (only_source >= 0 && entry.source_id != only_source)
+                || (only_target >= 0 && entry.target_id != only_target)) {
+                continue;
+            }
+            if (entry.emitted)
+                targets[entry.target_id].wrapper->sendNoteOff(entry.output_pitch, MIDI_MIN_VELOCITY, entry.output_channel);
+            active_connection_notes.erase(entry);
+            ++released;
+        }
+        return released;
     }
 
     // Apply fixed-channel remap for non-note events (CC, pitchbend).
@@ -283,8 +346,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     void disconnect(source_id_t source_id, target_id_t target_id) {
         if (source_id==-1 || target_id==-1 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS || sources == nullptr) return;
         if (is_connected(source_id, target_id)) {
-            if (targets[target_id].wrapper!=nullptr) 
-                targets[target_id].wrapper->stop_all_notes();
+            release_connection_notes(source_id, target_id);
             // decrement counts, only if connected
             sources[source_id].connection_count--;
             targets[target_id].connection_count--;
@@ -345,9 +407,16 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send ON  to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 transformed_note_event_t event = apply_connection_policy_note(source_id, target_id, pitch, channel);
-                if (!event.drop) {
-                    targets[target_id].wrapper->sendNoteOn(event.pitch, velocity, event.channel);
+                MIDIConnectionNoteState::entry_t *entry = active_connection_notes.record(
+                    source_id, target_id, pitch, channel,
+                    event.pitch, event.channel, velocity, !event.drop
+                );
+                if (entry == nullptr) {
+                    Serial_printf(F("!! MIDI connection note ledger full; dropping Note On from source %i to target %i\n"), source_id, target_id);
+                    continue;
                 }
+                if (entry->emitted)
+                    targets[target_id].wrapper->sendNoteOn(entry->output_pitch, velocity, entry->output_channel);
                 //targets[target_id].wrapper->debug = false;
             }
         }
@@ -378,10 +447,13 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
-                transformed_note_event_t event = apply_connection_policy_note(source_id, target_id, pitch, channel);
-                if (!event.drop) {
-                    targets[target_id].wrapper->sendNoteOff(event.pitch, velocity, event.channel);
+                MIDIConnectionNoteState::entry_t entry;
+                if (!active_connection_notes.take(source_id, target_id, pitch, channel, entry)) {
+                    if (this->debug) Serial_printf(F("\tno paired Note On for source %i, target %i, pitch %i, channel %i; ignoring Note Off\n"), source_id, target_id, pitch, channel);
+                    continue;
                 }
+                if (entry.emitted)
+                    targets[target_id].wrapper->sendNoteOff(entry.output_pitch, velocity, entry.output_channel);
                 //targets[target_id].wrapper->debug = false;
             }
         }
@@ -416,16 +488,13 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             }
         }
     }
-    void stop_all_notes_for_source(source_id_t source_id, bool force = false) {
+    void stop_all_notes_for_source(source_id_t source_id, bool = false) {
         if (source_id==-1) return;
-        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-            if (is_connected(source_id, target_id)) {
-                this->stop_all_notes_for_target(target_id, force);
-            }
-        }
+        release_connection_notes(source_id);
     }
     void stop_all_notes_for_target(target_id_t target_id, bool force = false) {
         if (target_id==-1 || target_id >= NUM_REGISTERED_TARGETS) return;
+        release_connection_notes(-1, target_id);
         Serial_printf("stop_all_notes on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial_flush();
         targets[target_id].wrapper->stop_all_notes(force);
     }
@@ -543,6 +612,8 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     }
 
     #ifdef ENABLE_SCALES
+        quantise_mode_t previous_global_quantise_mode = QUANTISE_MODE_NONE;
+
         /////// scale and quantisation functions
         // getters & setters for quantisation on/offs
         // void set_global_quantise_on(bool v, bool requantise_immediately = true) {
@@ -588,15 +659,17 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         //         behaviour_manager_requantise_all_notes();
         //     }
         // }
-        void harmony_changed_notification(scale_identity_t new_scale, chord_identity_t new_chord, bool requantise_immediately = true) {
-            Serial_printf(
-                "harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()\n"
-                "\tto go from scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i "
-                "\tto         scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i\n", 
-                conductor->get_scale_root(), conductor->get_chord_type(), conductor->get_chord_degree(), conductor->get_chord_inversion(),
-                new_scale.root_note, new_chord.type, new_chord.degree, new_chord.inversion
-            );
-            behaviour_manager_requantise_all_notes();
+        void harmony_changed_notification(scale_identity_t, chord_identity_t, bool requantise_immediately = true) {
+            if (!requantise_immediately)
+                return;
+
+            migrate_connection_notes();
+
+            quantise_mode_t current_mode = conductor->get_global_quantise_mode();
+            quantise_mode_t prior_mode = previous_global_quantise_mode;
+            previous_global_quantise_mode = current_mode;
+            if (prior_mode != QUANTISE_MODE_NONE || current_mode != QUANTISE_MODE_NONE)
+                behaviour_manager_requantise_all_notes(true);
         }
 
         // int8_t get_global_scale_root() {
@@ -861,6 +934,9 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             conductor->register_harmony_change_callback([this](scale_identity_t new_scale, chord_identity_t new_chord1) {
                 this->harmony_changed_notification(new_scale, new_chord1);
             });
+            #ifdef ENABLE_SCALES
+                previous_global_quantise_mode = conductor->get_global_quantise_mode();
+            #endif
 
             // #ifdef ENABLE_SCALES
             //     set_global_scale_identity_target(&this->global_scale_identity);

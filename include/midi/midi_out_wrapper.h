@@ -332,11 +332,11 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
 
         virtual void actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) override {
             if (this->debug) Serial_printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
-            output->sendNoteOn(pitch, velocity, channel);
+            output->sendRoutedNoteOn(pitch, velocity, channel);
         }
 
         virtual void actual_sendNoteOff(int8_t pitch, int8_t velocity, int8_t channel) override {  
-            output->sendNoteOff(pitch, velocity, channel);
+            output->sendRoutedNoteOff(pitch, velocity, channel);
         }
 
         virtual void actual_sendControlChange(int8_t pitch, int8_t velocity, int8_t channel) override {

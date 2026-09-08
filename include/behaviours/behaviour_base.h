@@ -293,6 +293,19 @@ class DeviceBehaviourUltimateBase :
     virtual void sendNoteOffRaw(uint8_t note, uint8_t velocity, uint8_t channel) {
         this->actualSendNoteOff(note, velocity, channel);
     }
+    bool processing_routed_note = false;
+    virtual void sendRoutedNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
+        bool previous = processing_routed_note;
+        processing_routed_note = true;
+        this->sendNoteOn(note, velocity, channel);
+        processing_routed_note = previous;
+    }
+    virtual void sendRoutedNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
+        bool previous = processing_routed_note;
+        processing_routed_note = true;
+        this->sendNoteOff(note, velocity, channel);
+        processing_routed_note = previous;
+    }
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override;
     // tell the device to play a note off; handles quantisation and note tracking so that the correct note gets turned off even if quantisation would normally change it, and so that held notes get tracked properly
@@ -303,6 +316,14 @@ class DeviceBehaviourUltimateBase :
         
         // do nothing if passed an invalid note
         if (!is_valid_note(note)) return;
+
+        if (processing_routed_note) {
+            int8_t output_note = apply_note_limits(note, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
+            output_note += this->TUNING_OFFSET;
+            if (is_valid_note(output_note))
+                this->actualSendNoteOff(output_note, velocity, channel);
+            return;
+        }
 
         // quantised_note should be the value that this desired note was last played as; 
         // so we can make it stop by sending the note off for that value, even if quantisation would normally

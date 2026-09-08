@@ -305,6 +305,7 @@ public:
             auto *pol = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
             if (pol == nullptr)
                 return false;
+            auto updated_policy = *pol;
 
             switch (row) {
                 case PopupRow::CONNECT_TOGGLE:
@@ -312,22 +313,24 @@ public:
                     break;
                 case PopupRow::CHANNEL:
                     // Cycle: 0 (passthru) -> 1 -> 2 -> ... -> 16 -> 0
-                    pol->fixed_channel = (pol->fixed_channel >= 16) ? 0 : pol->fixed_channel + 1;
+                    updated_policy.fixed_channel = (updated_policy.fixed_channel >= 16) ? 0 : updated_policy.fixed_channel + 1;
+                    midi_matrix_manager->set_connection_policy(sel_source, sel_target, updated_policy);
                     break;
                 case PopupRow::QUANTISE_MODE:
                     // Cycle through the enum values
-                    switch (pol->quantise_mode) {
+                    switch (updated_policy.quantise_mode) {
                         case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF:
-                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR; break;
+                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR; break;
                         case MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR:
-                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE; break;
+                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE; break;
                         case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE:
-                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD; break;
+                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD; break;
                         case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD:
-                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
+                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
                         default:
-                            pol->quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
+                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
                     }
+                    midi_matrix_manager->set_connection_policy(sel_source, sel_target, updated_policy);
                     break;
                 case PopupRow::JUMP_SOURCE: {
                     if (!popup_row_enabled(row)) break;

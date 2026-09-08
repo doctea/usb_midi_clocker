@@ -122,14 +122,13 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
 void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
     //if (debug) Serial_printf("DeviceBehaviourUltimateBase#sendNoteOn");
 
-    // TODO: think the quantisation stuff should now be moved into the midi_matrix_mapper, or midiwrapper? 
-    // so that it can be dealt with on a per-source-target-connection basis, rather than per-behaviour?  
-    // (eg, a behaviour might have multiple sources and targets, and each source-target connection might have different quantisation settings)
+    // Notes delivered by the matrix have already had their connection policy applied.
+    // Locally generated notes retain behaviour-level quantisation and tracking.
 
+    int8_t quantised_note = note;
     #ifdef ENABLE_SCALES
-        int8_t quantised_note = midi_matrix_manager->do_quant(note, channel);
-    #else
-        int8_t quantised_note = note;
+        if (!processing_routed_note)
+            quantised_note = midi_matrix_manager->do_quant(note, channel);
     #endif
     if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i\n", this->get_label(), note, velocity, channel, quantised_note);
 
@@ -140,7 +139,8 @@ void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uin
     this->current_channel = channel;
 
     if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i, about to call held_note_on(%i, %i..)\n", this->get_label(), note, velocity, channel, quantised_note, note, quantised_note);
-    note_tracker_held_note_on(note, quantised_note, channel);
+    if (!processing_routed_note)
+        note_tracker_held_note_on(note, quantised_note, channel);
     
     quantised_note += this->TUNING_OFFSET;
     if (!is_valid_note(quantised_note)) return;
