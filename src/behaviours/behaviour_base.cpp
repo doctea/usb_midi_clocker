@@ -2,6 +2,19 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+void DeviceBehaviourUltimateBase::ensure_note_limit_parameters() {
+    if (note_limit_parameters_setup)
+        return;
+    note_limit_parameters_setup = true;
+
+    parameters->add(new BehaviourNoteLimitParameter(
+        "Lowest note", this, &this->lowest_note, &this->effective_lowest_note
+    ));
+    parameters->add(new BehaviourNoteLimitParameter(
+        "Highest note", this, &this->highest_note, &this->effective_highest_note
+    ));
+}
+
 
 // called when a receive_note_on message is received from the device; default behaviour is to pass it on to the midi_matrix_manager to route it
 void DeviceBehaviourUltimateBase::receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) {
@@ -78,6 +91,10 @@ int DeviceBehaviourUltimateBase::requantise_all_notes() {
     uint32_t start_foreach = micros();
     requantised_notes = note_tracker_foreach_note([this](int8_t note, int8_t old_transposed_note) {
         int8_t new_transposed_note = midi_matrix_manager->do_quant(note, this->current_channel);
+        new_transposed_note = apply_note_limits(
+            new_transposed_note, this->getLowestNoteMode(), this->getHighestNoteMode(),
+            get_effective_lowest_note(), get_effective_highest_note()
+        );
         if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes in foreach_requantised_note: note=%i (%s), old_transposed_note=%i (%s), new_transposed_note=%i (%s)\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), new_transposed_note, get_note_name_c(new_transposed_note));
         // note is the original note, transposed_note is the note that the original note was transposed to
         // if old transposed note is the same as the new transposed note, then we don't need to do anything
@@ -127,7 +144,7 @@ void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uin
 
     int8_t quantised_note = note;
     #ifdef ENABLE_SCALES
-        if (!processing_routed_note)
+        if (!is_processing_routed_note())
             quantised_note = midi_matrix_manager->do_quant(note, channel);
     #endif
     if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i\n", this->get_label(), note, velocity, channel, quantised_note);
@@ -139,7 +156,7 @@ void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uin
     this->current_channel = channel;
 
     if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i, about to call held_note_on(%i, %i..)\n", this->get_label(), note, velocity, channel, quantised_note, note, quantised_note);
-    if (!processing_routed_note)
+    if (!is_processing_routed_note())
         note_tracker_held_note_on(note, quantised_note, channel);
     
     quantised_note += this->TUNING_OFFSET;

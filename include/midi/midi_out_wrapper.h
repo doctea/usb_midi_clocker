@@ -10,11 +10,14 @@
 #include "midi_helpers.h"
 #include "bpm.h"
 
+#include "midi/midi_mapper_matrix_types.h"
+
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
 //#define DEBUG_MIDI_WRAPPER
 
 class MIDITrack;
+class DeviceBehaviourUltimateBase;
 
 // generic wrapper around a MIDI output object
 // tracks playing notes and provides methods to kill them so can eg kill all notes when transposition is changed
@@ -51,7 +54,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
 
         int8_t playing_notes[MIDI_NUM_NOTES];
 
-        int last_note = -1, current_note = -1;
+        int last_note = NOTE_OFF, current_note = NOTE_OFF;
         //int last_transposed_note = -1, current_transposed_note = -1;
 
         MIDIOutputWrapper(const char *label, int8_t channel = 1) {
@@ -95,7 +98,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
 
             this->last_note = in_pitch;
             if (this->current_note==in_pitch) 
-                current_note = -1;
+                current_note = NOTE_OFF;
 
             //int pitch = recalculate_pitch(in_pitch);
 
@@ -149,12 +152,42 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             return playing_notes[pitch]>0;
         }
 
+        virtual bool routes_to_behaviour(const DeviceBehaviourUltimateBase *behaviour) const {
+            return false;
+        }
+
+        virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) {
+            return routed_note_output_t{(int8_t)note, channel, true};
+        }
+
+        virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) {
+            this->actual_sendNoteOn(note, velocity, channel);
+        }
+
+        virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) {
+            this->actual_sendNoteOff(note, velocity, channel);
+        }
+
+        virtual void force_stop_all_notes_on_channel(uint8_t channel) {
+            if (channel == 0)
+                channel = default_channel;
+            this->actual_sendControlChange(midi::AllNotesOff, MIDI_MAX_VELOCITY, channel);
+            for (uint_fast8_t pitch = 0; pitch < MIDI_NUM_NOTES; pitch++)
+                this->actual_sendNoteOff(pitch, 0, channel);
+            memset(playing_notes, 0, sizeof(playing_notes));
+            current_note = NOTE_OFF;
+        }
+
         virtual void stop_all_notes(bool force = false) {
             if (this->always_force_stop_all) 
                 force = true;
             //this->debug = true;
             if (this->debug) Serial_printf(F("stop_all_notes in %s...\n"), label);
-            if (is_valid_note(this->current_note)) {
+            if (force) {
+                force_stop_all_notes_on_channel(default_channel);
+                return;
+            }
+            if (is_valid_note(this->current_note) && playing_notes[this->current_note] > 0) {
                 this->actual_sendNoteOff(this->current_note,0,default_channel);
                 //this->actual_sendNoteOff(this->current_transposed_note,0,default_channel);
             }
@@ -164,12 +197,9 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 //if (is_note_playing(pitch)) {
                     //if (this->debug) 
                 if (this->debug) Serial_printf("\tGot %i notes of pitch %i to stop on channel %i\t\n", playing_notes[pitch], pitch, default_channel);
-                if(force /*|| is_note_playing(pitch)*/) {
-                    if (this->debug) Serial_printf("\t\tforce, so actually sending...\n");
-                    sendNoteOff(pitch, 0, default_channel);
-                }
                 playing_notes[pitch] = 0;
             }
+            current_note = NOTE_OFF;
         }
 
 
@@ -332,6 +362,8 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
 
         virtual void actual_sendNoteOn(int8_t pitch, int8_t velocity, int8_t channel) override {
             if (this->debug) Serial_printf("MIDIOutputWrapper_Behaviour\t%s\t#actual_sendNoteOn(pitch=%i,\tvelocity=%i,\tchannel=%i)\n", output->get_label(), pitch, velocity, channel);
+            // The matrix has already applied and tracked connection quantisation.
+            // Keep virtual behaviour handling, but mark this as a routed delivery.
             output->sendRoutedNoteOn(pitch, velocity, channel);
         }
 
@@ -347,11 +379,41 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
             output->sendPitchBend(bend, channel);
         }
 
+        virtual bool routes_to_behaviour(const DeviceBehaviourUltimateBase *behaviour) const override {
+            return output == behaviour;
+        }
+
+        virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) override {
+            if (channel == 0)
+                channel = default_channel;
+            return output->resolve_routed_note_output(note, channel);
+        }
+
+        virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            output->send_resolved_routed_note_on(note, velocity, channel);
+        }
+
+        virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            output->send_resolved_routed_note_off(note, velocity, channel);
+        }
+
+        virtual void force_stop_all_notes_on_channel(uint8_t channel) override {
+            if (channel == 0)
+                channel = default_channel;
+            this->actual_sendControlChange(midi::AllNotesOff, MIDI_MAX_VELOCITY, channel);
+            for (uint_fast8_t pitch = 0; pitch < MIDI_NUM_NOTES; pitch++)
+                output->sendNoteOffRaw(pitch, 0, channel);
+            memset(playing_notes, 0, sizeof(playing_notes));
+            current_note = NOTE_OFF;
+        }
+
         virtual void stop_all_notes(bool force = false) {
             // this added when ensuring that disconnecting CVOutput behaviour stops all notes - *might not actually be necessary*
             if (this->debug) Serial_printf(F("MIDIOutputWrapper_Behaviour#stop_all_notes in %s...\n"), label);
-            MIDIOutputWrapper::stop_all_notes(force);
-            output->killCurrentNote();
+            bool effective_force = force || always_force_stop_all;
+            MIDIOutputWrapper::stop_all_notes(effective_force);
+            if (!effective_force)
+                output->killCurrentNote();
         }
 };
 

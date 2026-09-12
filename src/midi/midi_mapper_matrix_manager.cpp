@@ -54,6 +54,16 @@
 MIDIMatrixManager *midi_matrix_manager = nullptr;
 MIDIMatrixManager* MIDIMatrixManager::inst_ = nullptr;
 
+void begin_midi_matrix_target_transform_change(DeviceBehaviourUltimateBase *behaviour) {
+    if (midi_matrix_manager != nullptr)
+        midi_matrix_manager->begin_behaviour_transform_change(behaviour);
+}
+
+void end_midi_matrix_target_transform_change(DeviceBehaviourUltimateBase *behaviour) {
+    if (midi_matrix_manager != nullptr)
+        midi_matrix_manager->end_behaviour_transform_change(behaviour);
+}
+
 // Emergency boot-isolation switch: instantiate manager but skip registration graph setup.
 #ifndef SAFE_MINIMAL_MATRIX_BOOT
 #define SAFE_MINIMAL_MATRIX_BOOT 0

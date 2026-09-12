@@ -16,6 +16,8 @@ Fundamentally I guess the aim is to tie together and make useful, in a Eurorack 
 
 Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to SD with functions such as unlimited projects, per-project sequences that store and recall clock divisions and sequencer patterns, a MIDI looper, etc.  Option to auto-advance through these sequences/loops for rudimentary song chaining.
 
+Developer documentation: [MIDI note routing and quantisation](docs/midi-note-routing.md).
+
 # Use and contributing
 
 Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message or open an issue if you're thinking of giving it a try or need any assistance!

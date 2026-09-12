@@ -8,12 +8,15 @@
 #define MIDI_CONNECTION_NOTE_CAPACITY 128
 #endif
 
+// Runtime ledger for matrix-routed notes. Each entry remembers the exact
+// connection-level pitch/channel produced by one logical Note On, so Note Off
+// never has to re-run a transform against potentially changed harmony.
 class MIDIConnectionNoteState {
 public:
     struct entry_t {
-        source_id_t source_id = -1;
-        target_id_t target_id = -1;
-        int8_t input_pitch = NOTE_OFF;
+        int8_t source_id = -1;
+        int8_t target_id = -1;
+        int8_t input_pitch = -1;
         uint8_t input_channel = 0;
         int8_t output_pitch = -1;
         uint8_t output_channel = 0;
@@ -21,6 +24,8 @@ public:
         bool emitted = false;
         bool occupied = false;
     };
+
+    entry_t entries[MIDI_CONNECTION_NOTE_CAPACITY] = {};
 
     entry_t *record(source_id_t source_id, target_id_t target_id,
                     int8_t input_pitch, uint8_t input_channel,
@@ -31,8 +36,8 @@ public:
             if (entry.occupied)
                 continue;
 
-            entry.source_id = source_id;
-            entry.target_id = target_id;
+            entry.source_id = (int8_t)source_id;
+            entry.target_id = (int8_t)target_id;
             entry.input_pitch = input_pitch;
             entry.input_channel = input_channel;
             entry.output_pitch = output_pitch;
@@ -83,7 +88,6 @@ public:
         active_count = 0;
     }
 
-    entry_t entries[MIDI_CONNECTION_NOTE_CAPACITY] = {};
 
 private:
     uint16_t active_count = 0;

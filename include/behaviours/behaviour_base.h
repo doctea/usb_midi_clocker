@@ -70,6 +70,8 @@ class DeviceBehaviourUltimateBase :
     int8_t TUNING_OFFSET = 0;
     //MIDIOutputWrapper *wrapper = nullptr;
 
+    // Tracks only notes sent directly by this behaviour. Matrix-routed notes are
+    // paired per source-target connection by MIDIMatrixManager instead.
     NoteTracker note_tracker;
 
     DeviceBehaviourUltimateBase() = default;
@@ -167,26 +169,7 @@ class DeviceBehaviourUltimateBase :
     #endif
 
     bool note_limit_parameters_setup = false;
-    virtual void ensure_note_limit_parameters() {
-        if (note_limit_parameters_setup) return;
-        note_limit_parameters_setup = true;
-
-        parameters->add(new ProxyNoteParameter<int8_t>(
-            "Lowest note",
-            &this->lowest_note,
-            &this->effective_lowest_note,
-            MIDI_MIN_NOTE,
-            MIDI_MAX_NOTE
-        ));
-
-        parameters->add(new ProxyNoteParameter<int8_t>(
-            "Highest note",
-            &this->highest_note,
-            &this->effective_highest_note,
-            MIDI_MIN_NOTE,
-            MIDI_MAX_NOTE
-        ));
-    };
+    virtual void ensure_note_limit_parameters();
 
     // input/output indicator
     bool indicator_done = false;
@@ -293,18 +276,58 @@ class DeviceBehaviourUltimateBase :
     virtual void sendNoteOffRaw(uint8_t note, uint8_t velocity, uint8_t channel) {
         this->actualSendNoteOff(note, velocity, channel);
     }
-    bool processing_routed_note = false;
+
+    // This is call-stack state, not held-note state: it is nonzero only while a
+    // matrix wrapper is synchronously delivering a note through virtual methods.
+    uint8_t routed_note_dispatch_depth = 0;
+
+    class RoutedNoteDispatchScope {
+        DeviceBehaviourUltimateBase &behaviour;
+
+    public:
+        RoutedNoteDispatchScope(DeviceBehaviourUltimateBase &behaviour) : behaviour(behaviour) {
+            ++behaviour.routed_note_dispatch_depth;
+        }
+        ~RoutedNoteDispatchScope() {
+            --behaviour.routed_note_dispatch_depth;
+        }
+    };
+
+    bool is_processing_routed_note() const {
+        return routed_note_dispatch_depth > 0;
+    }
+
+    virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) {
+        routed_note_output_t result;
+        result.channel = channel;
+        result.pitch = apply_note_limits(
+            note, this->getLowestNoteMode(), this->getHighestNoteMode(),
+            get_effective_lowest_note(), get_effective_highest_note()
+        );
+        if (!is_valid_note(result.pitch))
+            return result;
+        result.pitch += this->TUNING_OFFSET;
+        result.emitted = is_valid_note(result.pitch);
+        return result;
+    }
+
+    virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) {
+        this->actualSendNoteOn(note, velocity, channel);
+    }
+    virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) {
+        this->actualSendNoteOff(note, velocity, channel);
+    }
+
+    // A behaviour-backed matrix target must still pass through virtual sendNote*
+    // overrides (voice allocation, trigger channels, etc.). The scope tells the
+    // base implementation not to quantise or track that delivery a second time.
     virtual void sendRoutedNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
-        bool previous = processing_routed_note;
-        processing_routed_note = true;
+        RoutedNoteDispatchScope scope(*this);
         this->sendNoteOn(note, velocity, channel);
-        processing_routed_note = previous;
     }
     virtual void sendRoutedNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) {
-        bool previous = processing_routed_note;
-        processing_routed_note = true;
+        RoutedNoteDispatchScope scope(*this);
         this->sendNoteOff(note, velocity, channel);
-        processing_routed_note = previous;
     }
     // tell the device to play a note on
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override;
@@ -317,34 +340,21 @@ class DeviceBehaviourUltimateBase :
         // do nothing if passed an invalid note
         if (!is_valid_note(note)) return;
 
-        if (processing_routed_note) {
+        // The matrix ledger has already selected and remembered the routed pitch.
+        // Apply only target-local transforms here; ordinary local notes use the
+        // behaviour NoteTracker path below.
+        if (is_processing_routed_note()) {
             int8_t output_note = apply_note_limits(note, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
+            if (!is_valid_note(output_note))
+                return;
             output_note += this->TUNING_OFFSET;
             if (is_valid_note(output_note))
                 this->actualSendNoteOff(output_note, velocity, channel);
             return;
         }
 
-        // quantised_note should be the value that this desired note was last played as; 
-        // so we can make it stop by sending the note off for that value, even if quantisation would normally
-        // prevent it.
-        // TODO: except, now we are ALSO quantising inside of midi_matrix_mapper, so that will be blocking
-        // us sending the correct note off...
-        // so, we need to consider that sometimes the DeviceBehaviour actually needs to handle the sending of
-        // the note itself to a device; and sometimes it is just passing it back to the midi_matrix_mapper 
-        // to route and quantise it.  so, whatever solution we come up with needs to be able to handle both
-        // cases.  
-        // perhaps the concept of a 'notepipe' is needed to represent both internal connection routings and external interfaces, 
-        // and tranpose/quantise policies are applied at that level.
-        // part of the issue though is that MIDINoteOutputs are shared with Microlidian, which has no
-        // idea about this requantisation stuff, and those Outputs provide their own potential quantisation setting.
-        // so maybe we need to be able to turn that feature of the Output classes off, so that on Nexus6 they
-        // only generate raw notes, and all the quantisation is handled by the midi_matrix_mapper instead.
-        // TODO: so maybe we are looking at making the source-target-connection into a full-blown object that
-        // can handle quantisation, transposition, notelimits, and other policies, and the DeviceBehaviour just handles the actual sending of the note to the device, and the midi_matrix_mapper handles routing between sources and targets.  
-        // maybe some kinds of device will still want to handle requantisation events themselves, though; eg, Progression will probably
-        // want to regenerate chords properly instead of just requantising the notes....
-        // 
+        // Direct behaviour send: release the pitch remembered at the matching
+        // local Note On rather than recalculating against current harmony.
         int8_t quantised_note = note_tracker_get_transposed_note_for(note);
         if (debug) Serial_printf("\t\t note_tracker.get_transposed_note_for(%i) = %i (%s)\n", note, quantised_note, get_note_name_c(quantised_note));
 
@@ -507,18 +517,22 @@ class DeviceBehaviourUltimateBase :
     int8_t effective_lowest_note = 0; // the actual lowest note being applied after taking into account things like force octave
     int8_t effective_highest_note = MIDI_MAX_NOTE; // the actual highest note being
 
+    virtual void begin_note_limit_change() {
+        begin_midi_matrix_target_transform_change(this);
+    }
+    virtual void end_note_limit_change() {
+        end_midi_matrix_target_transform_change(this);
+        #ifdef ENABLE_SCALES
+            DeviceBehaviourUltimateBase::requantise_all_notes();
+        #endif
+    }
+
     virtual void setLowestNote(int8_t note) {
         // don't allow highest note to be set higher than highest note
         if (note > this->getHighestNote())
             note = this->getHighestNote();
         if (!is_valid_note(note)) 
             note = MIDI_MIN_NOTE;
-        // if the currently playing note doesn't fit within the new bounds, kill it
-        //if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < note)
-        //if (note > getLowestNote()) // if new lower-note-limit is higher than existing lower-note-limit, force kill of note
-        // TODO: hmmm so, restricting this kill command as in the above two commented-out lines results in stuck notes on Neutron -- weird, why?
-            this->killCurrentNote();
-            //this->sendNoteOff(this->current_transposed_note, 0, 0);
         this->lowest_note = note;
     }
     virtual int8_t getLowestNote() {
@@ -529,10 +543,11 @@ class DeviceBehaviourUltimateBase :
     }
     // mode from NOTE_LIMIT_MODE enum (IGNORE or TRANSPOSE)
     virtual void setLowestNoteMode(NOTE_LIMIT_MODE mode) {
-        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note < this->getLowestNote())
-            this->killCurrentNote();
-            //this->sendNoteOff(this->current_transposed_note, 0, 0);
+        if (this->lowest_note_mode == mode)
+            return;
+        this->begin_note_limit_change();
         this->lowest_note_mode = mode;
+        this->end_note_limit_change();
     }
 
     virtual void setHighestNote(int8_t note) {
@@ -541,12 +556,6 @@ class DeviceBehaviourUltimateBase :
             note = this->getLowestNote();
         if (!is_valid_note(note)) 
             note = MIDI_MAX_NOTE;
-        // if the currently playing note doesn't fit within the new bounds, kill it
-        //if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > note)
-        //if (note < getHighestNote()) // if new higher-note-limit is lower than existing higher-note-limit, force kill of note
-        // TODO: hmmm so, restricting this kill command as in the above two commented-out lines results in stuck notes on Neutron -- weird, why?
-            this->killCurrentNote();
-            //this->sendNoteOff(this->current_transposed_note, MIDI_MIN_VELOCITY, this->current_channel);
         this->highest_note = note;
     }
     virtual int8_t getHighestNote() {
@@ -557,10 +566,11 @@ class DeviceBehaviourUltimateBase :
     }
     // mode from NOTE_LIMIT_MODE enum (IGNORE or TRANSPOSE)
     virtual void setHighestNoteMode(NOTE_LIMIT_MODE mode) {
-        if (is_valid_note(this->current_transposed_note) && this->current_transposed_note > this->getHighestNote())
-            this->killCurrentNote();
-            //this->sendNoteOff(this->current_transposed_note, 0, 0);
+        if (this->highest_note_mode == mode)
+            return;
+        this->begin_note_limit_change();
         this->highest_note_mode = mode;
+        this->end_note_limit_change();
     }
 
     virtual int8_t get_effective_lowest_note() {
@@ -650,6 +660,38 @@ class DeviceBehaviourUltimateBase :
     // }
 
     
+};
+
+class BehaviourNoteLimitParameter : public ProxyNoteParameter<int8_t> {
+    DeviceBehaviourUltimateBase *behaviour;
+
+public:
+    BehaviourNoteLimitParameter(const char *label, DeviceBehaviourUltimateBase *behaviour,
+                                int8_t *source, int8_t *target)
+        : ProxyNoteParameter<int8_t>(label, source, target, MIDI_MIN_NOTE, MIDI_MAX_NOTE),
+          behaviour(behaviour) {}
+
+    virtual void setTargetValueFromData(int8_t value, bool force = false) override {
+        if (*this->target == value) {
+            ProxyNoteParameter<int8_t>::setTargetValueFromData(value, force);
+            return;
+        }
+        behaviour->begin_note_limit_change();
+        ProxyNoteParameter<int8_t>::setTargetValueFromData(value, force);
+        behaviour->end_note_limit_change();
+    }
+
+    virtual void updateValueFromData(int8_t value) override {
+        if (*this->source == value && *this->target == value)
+            return;
+        behaviour->begin_note_limit_change();
+        ProxyNoteParameter<int8_t>::updateValueFromData(value);
+        behaviour->end_note_limit_change();
+    }
+
+    virtual void updateValueFromNormal(float value) override {
+        this->updateValueFromData(this->normalToData(value));
+    }
 };
 
 

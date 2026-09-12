@@ -217,6 +217,10 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         arranger->move_playlist(pos);
     }
 
+    // TODO: all this stuff that triggers bar/phrase/etc changes in arranger probably
+    // wants moving to the main do_tick call, rather than relying on this behaviour to advance it.
+    // TODO: make cadence configurable (so we can trigger on X beats, X bars, phrases, etc..)
+
     virtual void on_end_phrase(uint32_t phrase_number) override {
         if (debug) Serial_printf("on_end_phrase %2i\n", phrase_number);
         int8_t prev_section = arranger->current_section;

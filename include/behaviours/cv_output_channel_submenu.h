@@ -84,6 +84,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             ParameterList *per_channel_params,
             int8_t *effective_lowest_note,
             int8_t *effective_highest_note,
+            DeviceBehaviourUltimateBase *behaviour,
             float  *slew_base_normal, 
             bool show_header = true,
             bool scrollable = true
@@ -94,6 +95,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             per_channel_params_(per_channel_params),
             effective_lowest_note_(effective_lowest_note),
             effective_highest_note_(effective_highest_note),
+            behaviour_(behaviour),
             slew_base_normal_(slew_base_normal)
         {
             build_items();
@@ -138,6 +140,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
         ParameterList   *per_channel_params_   = nullptr;
         int8_t          *effective_lowest_note_  = nullptr;
         int8_t          *effective_highest_note_ = nullptr;
+        DeviceBehaviourUltimateBase *behaviour_ = nullptr;
         float           *slew_base_normal_       = nullptr;
         SubMenuItemBar  *summary_bar_  = nullptr;
 
@@ -294,7 +297,12 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             SubMenuItemBar *limits_bar = new SubMenuItemBar("Limits");
             limits_bar->add(new LambdaScaleNoteMenuItem<int8_t>(
                 "Lo",
-                [=](int8_t v) { *lowest_note_ = v; if (effective_lowest_note_) *effective_lowest_note_ = v; },
+                [=](int8_t v) {
+                    behaviour_->begin_note_limit_change();
+                    *lowest_note_ = v;
+                    if (effective_lowest_note_) *effective_lowest_note_ = v;
+                    behaviour_->end_note_limit_change();
+                },
                 [=]() -> int8_t { return *lowest_note_; },
                 nullptr,
                 (int8_t)MIDI_MIN_NOTE, (int8_t)MIDI_MAX_NOTE,
@@ -302,7 +310,12 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             ));
             limits_bar->add(new LambdaScaleNoteMenuItem<int8_t>(
                 "Hi",
-                [=](int8_t v) { *highest_note_ = v; if (effective_highest_note_) *effective_highest_note_ = v; },
+                [=](int8_t v) {
+                    behaviour_->begin_note_limit_change();
+                    *highest_note_ = v;
+                    if (effective_highest_note_) *effective_highest_note_ = v;
+                    behaviour_->end_note_limit_change();
+                },
                 [=]() -> int8_t { return *highest_note_; },
                 nullptr,
                 (int8_t)MIDI_MIN_NOTE, (int8_t)MIDI_MAX_NOTE,
@@ -310,13 +323,21 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             ));
             limits_bar->add(new NoteLimitModeControl<>(
                 "Lo Mode",
-                [=](NOTE_LIMIT_MODE v) { *lowest_mode_ = v; },
+                [=](NOTE_LIMIT_MODE v) {
+                    behaviour_->begin_note_limit_change();
+                    *lowest_mode_ = v;
+                    behaviour_->end_note_limit_change();
+                },
                 [=]() -> NOTE_LIMIT_MODE { return *lowest_mode_; },
                 nullptr, true, true
             ));
             limits_bar->add(new NoteLimitModeControl<>(
                 "Hi Mode",
-                [=](NOTE_LIMIT_MODE v) { *highest_mode_ = v; },
+                [=](NOTE_LIMIT_MODE v) {
+                    behaviour_->begin_note_limit_change();
+                    *highest_mode_ = v;
+                    behaviour_->end_note_limit_change();
+                },
                 [=]() -> NOTE_LIMIT_MODE { return *highest_mode_; },
                 nullptr, true, true
             ));

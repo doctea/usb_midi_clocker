@@ -155,6 +155,23 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         virtual bool transmits_midi_notes() override { return true;}
         virtual bool supports_note_limits() { return true; }
 
+        void set_per_channel_note_limit(int8_t *configured, int8_t *effective, int8_t value) {
+            if (*configured == value && *effective == value)
+                return;
+            this->begin_note_limit_change();
+            *configured = value;
+            *effective = value;
+            this->end_note_limit_change();
+        }
+
+        void set_per_channel_note_limit_mode(NOTE_LIMIT_MODE *mode, NOTE_LIMIT_MODE value) {
+            if (*mode == value)
+                return;
+            this->begin_note_limit_change();
+            *mode = value;
+            this->end_note_limit_change();
+        }
+
         virtual PitchBendSupport get_pitch_bend_support() const override {
             #if defined(ENABLE_ADVANCED_PITCHBEND) && defined(ENABLE_PARAMETERS)
                 return PitchBendSupport::MODULATED;
@@ -302,6 +319,25 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             );
         }
 
+        virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) override {
+            routed_note_output_t result = PolyphonicBehaviour::resolve_routed_note_output(note, channel);
+            if (!result.emitted || result.channel == 0 || result.channel > channel_count)
+                return result;
+            result.pitch = apply_per_channel_limits(result.pitch, result.channel - 1);
+            result.emitted = is_valid_note(result.pitch) && outputs[result.channel - 1] != nullptr;
+            return result;
+        }
+
+        virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (channel > 0 && channel <= channel_count && outputs[channel - 1] != nullptr)
+                outputs[channel - 1]->sendNoteOn(note, velocity, channel);
+        }
+
+        virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (channel > 0 && channel <= channel_count && outputs[channel - 1] != nullptr)
+                outputs[channel - 1]->sendNoteOff(note, velocity, channel);
+        }
+
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOn (%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
             if (channel > channel_count) {
@@ -402,22 +438,22 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             for (int i = 0 ; i < channel_count; i++) {
                 register_setting(new LSaveableSetting<int8_t>(
                     (String("Ch ") + String('A' + i) + " Lowest Note").c_str(), "ChLimits", nullptr,
-                    [=](int8_t v) { per_channel_lowest_note[i] = v; effective_per_channel_lowest_note[i] = v; },
+                    [=](int8_t v) { this->set_per_channel_note_limit(&per_channel_lowest_note[i], &effective_per_channel_lowest_note[i], v); },
                     [=]() -> int8_t { return per_channel_lowest_note[i]; }
                 ), SL_SCOPE_SCENE);
                 register_setting(new LSaveableSetting<int8_t>(
                     (String("Ch ") + String('A' + i) + " Highest Note").c_str(), "ChLimits", nullptr,
-                    [=](int8_t v) { per_channel_highest_note[i] = v; effective_per_channel_highest_note[i] = v; },
+                    [=](int8_t v) { this->set_per_channel_note_limit(&per_channel_highest_note[i], &effective_per_channel_highest_note[i], v); },
                     [=]() -> int8_t { return per_channel_highest_note[i]; }
                 ), SL_SCOPE_SCENE);
                 register_setting(new LSaveableSetting<NOTE_LIMIT_MODE>(
                     (String("Ch ") + String('A' + i) + " Lowest Note Mode").c_str(), "ChLimits", nullptr,
-                    [=](NOTE_LIMIT_MODE v) { this->per_channel_lowest_mode[i]  = v; },
+                    [=](NOTE_LIMIT_MODE v) { this->set_per_channel_note_limit_mode(&this->per_channel_lowest_mode[i], v); },
                     [=]() -> NOTE_LIMIT_MODE { return this->per_channel_lowest_mode[i];  }
                 ), SL_SCOPE_SCENE);
                 register_setting(new LSaveableSetting<NOTE_LIMIT_MODE>(
                     (String("Ch ") + String('A' + i) + " Highest Note Mode").c_str(), "ChLimits", nullptr,
-                    [=](NOTE_LIMIT_MODE v) { this->per_channel_highest_mode[i] = v; },
+                    [=](NOTE_LIMIT_MODE v) { this->set_per_channel_note_limit_mode(&this->per_channel_highest_mode[i], v); },
                     [=]() -> NOTE_LIMIT_MODE { return this->per_channel_highest_mode[i]; }
                 ), SL_SCOPE_SCENE);
             }
@@ -460,16 +496,18 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                     per_channel_parameters[i]->add(this->parameters->get(this->parameters->size() - 1));
 
                     // Per-channel lowest note proxy: base in per_channel_lowest_note[i], effective in effective_per_channel_lowest_note[i]
-                    this->parameters->add(new ProxyNoteParameter<int8_t>(
+                    this->parameters->add(new BehaviourNoteLimitParameter(
                         (String("Ch ") + String(chan_labels[i]) + " Lowest Note").c_str(),
+                        this,
                         &per_channel_lowest_note[i],
                         &effective_per_channel_lowest_note[i]
                     ));
                     per_channel_parameters[i]->add(this->parameters->get(this->parameters->size() - 1));
 
                     // Per-channel highest note proxy
-                    this->parameters->add(new ProxyNoteParameter<int8_t>(
+                    this->parameters->add(new BehaviourNoteLimitParameter(
                         (String("Ch ") + String(chan_labels[i]) + " Highest Note").c_str(),
+                        this,
                         &per_channel_highest_note[i],
                         &effective_per_channel_highest_note[i]
                     ));
@@ -524,6 +562,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                         per_channel_parameters[i],
                         &this->effective_per_channel_lowest_note[i],
                         &this->effective_per_channel_highest_note[i],
+                        this,
                         &this->slew_base_normal[i],
                         true,
                         false
