@@ -67,7 +67,7 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
 
         #ifdef USE_UCLOCK
             #ifdef ENABLE_SHUFFLE
-                uClock.setOnStep(flexiarp_shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
+                // uClock.setOnStep(flexiarp_shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
             #endif
         #endif
     }

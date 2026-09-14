@@ -74,8 +74,13 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
     #ifdef ENABLE_SHUFFLE
         virtual void on_step_shuffled(uint8_t track, uint32_t step) {
-            if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, %i)\n"), track, step);
+            // if (this->debug) 
+            // Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, step=%i) during tick %u (step %u)\n"), track, step % STEPS_PER_PHRASE, ticks, BPM_CURRENT_STEP_OF_PHRASE);
             sequencer->on_step_shuffled(track, step);
+            // Serial.printf(
+            //     "(behaviour_euclidianrhythms#on_step_shuffled ignoring track=%u, step=%u)\n",
+            //     track, step
+            // );
         }
     #endif
 
@@ -179,9 +184,48 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         register_child(this->output_processor);
     }
 
+    void debug_lock() {
+        Serial.println("Debugging Euclidian lock");
+        this->sequencer->set_mutation_count(0);
+        EuclidianPattern *pattern = (EuclidianPattern*)this->sequencer->get_pattern(10);
+        pattern->set_pulses(16);
+        pattern->set_steps(16);
+        pattern->set_locked(true);
+        pattern->set_shuffle_track(1);
+        this->sequencer->set_fills_enabled(false);
+    }
+
+    void debug_shuffle() {
+        Serial.println("Debugging Euclidian shuffle");
+        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2, 3);
+        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2+4, 3);
+        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2+8, 3);
+        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2+12, 3);
+        shuffle_pattern_wrapper.shuffle_patterns[1]->update_target();
+    }
+
+    void debug_simples() {
+        Serial.println("Debugging Euclidian simples");
+        for (int i = 0; i < this->sequencer->get_number_patterns(); i++) {
+            EuclidianPattern *pattern = (EuclidianPattern*)this->sequencer->get_pattern(i);
+            if (strcmp(pattern->get_output_label(), "Kick") == 0 || 
+                strcmp(pattern->get_output_label(), "Clap") == 0 || 
+                strcmp(pattern->get_output_label(), "CHH") == 0 ||
+                strcmp(pattern->get_output_label(), "OHH") == 0
+            ) 
+                continue;
+
+            BaseOutput *output = pattern->get_output();
+            if (output) {
+                output->set_enabled(false);
+            }
+        }
+    }
+
 };
 
 
 extern VirtualBehaviour_EuclidianRhythms *behaviour_euclidianrhythms;
+
 
 #endif

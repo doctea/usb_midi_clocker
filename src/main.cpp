@@ -689,11 +689,16 @@ void do_tick(uint32_t in_ticks) {
   if (last_processed_tick == in_ticks) {
     //if (debug) { 
       Serial_println(F("do_tick(): already done this tick, returning")); Serial_flush(); 
+      Serial.printf("do_tick(): already processed tick %u, returning\n", in_ticks);
     //}
     return;   // already did this tick
   }
 
   ::ticks = in_ticks;
+
+  static uint32_t last_ticked_at_millis = millis();
+  Serial.printf("- do_tick(): received tick %u at %u\t(interval was %u)\n", in_ticks, millis(), millis() - last_ticked_at_millis);
+  last_ticked_at_millis = millis();
 
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {
@@ -706,6 +711,10 @@ void do_tick(uint32_t in_ticks) {
     // last_processed_tick is updated to in_ticks at the bottom of do_tick(), so
     // it will be set to 0 there — naturally blocking the redundant uClock do_tick(0).
     in_ticks = ::ticks;
+  }
+
+  if (is_bpm_on_sixteenth(ticks)) {
+    Serial.printf("\n--- step %u \t(tick %u) ---\n", BPM_CURRENT_STEP_OF_PHRASE, ticks);
   }
 
   if (is_bpm_on_phrase(ticks)) {

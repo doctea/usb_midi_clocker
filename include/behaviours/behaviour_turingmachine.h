@@ -73,7 +73,7 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
 
         #ifdef USE_UCLOCK
             #ifdef ENABLE_SHUFFLE
-                uClock.setOnStep(turingmachine_shuffled_callback, 1);  // 1 shuffle track for TuringMachine
+                // uClock.setOnStep(turingmachine_shuffled_callback, 1);  // 1 shuffle track for TuringMachine
             #endif
         #endif
     }

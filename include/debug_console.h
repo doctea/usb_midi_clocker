@@ -8,6 +8,11 @@
 #include "project.h"
 #include "storage.h"
 
+void debug_euclidian_lock();
+void debug_euclidian_shuffle();
+void debug_euclidian_simples();
+void set_bpm(float new_bpm);
+
 bool pass_debug = true;
 
 char serial_buffer[1024];
@@ -574,6 +579,28 @@ bool execute_command(const char *command_line) {
         Serial.println("    stopnote <behaviour_label> <note_number> - Send a Note Off message for the given note number to the behaviour with the given label");
         Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
         return true;
+    } else if (strcmp(command, "debug-state") == 0) {
+        // Shortcuts to get into a particular state for debugging purposes
+        // lock the CHH Euclidian sequencer
+        if (strcmp(arg1, "lock") == 0) {
+            debug_euclidian_lock();
+        } else if (strcmp(arg1, "shuffle") == 0) {
+            debug_euclidian_shuffle();
+        } else if (strcmp(arg1, "simples") == 0) {
+            debug_euclidian_simples();
+        }
+        return true;
+    } else if (strcmp(command, "tempo") == 0) {
+        // Additional debug-euclidian commands can be handled here
+        if (arg1 != nullptr) {
+            int new_tempo = atoi(arg1);
+            if (new_tempo > 0) {
+                set_bpm(new_tempo); // Replace with actual function to set tempo
+                Serial.printf("Tempo set to %d\n", new_tempo);
+            } else {
+                Serial.println("Invalid tempo value");
+            }
+        }
     }
     return false;
 }
