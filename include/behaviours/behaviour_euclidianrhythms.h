@@ -197,21 +197,19 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
     void debug_shuffle() {
         Serial.println("Debugging Euclidian shuffle");
-        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2, 3);
-        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2+4, 3);
-        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2+8, 3);
-        shuffle_pattern_wrapper.shuffle_patterns[1]->set_step(2+12, 3);
-        shuffle_pattern_wrapper.shuffle_patterns[1]->update_target();
+        int8_t shuffle_75[] = {0, 12, 0, 12, 0, 12, 0, 12}; //, 12, 0, 12, 0, 12, 0, 12};
+        shuffle_pattern_wrapper[1]->set_steps(shuffle_75, sizeof(shuffle_75));
+        shuffle_pattern_wrapper[1]->update_target();
     }
 
     void debug_simples() {
         Serial.println("Debugging Euclidian simples");
         for (int i = 0; i < this->sequencer->get_number_patterns(); i++) {
             EuclidianPattern *pattern = (EuclidianPattern*)this->sequencer->get_pattern(i);
-            if (strcmp(pattern->get_output_label(), "Kick") == 0 || 
-                strcmp(pattern->get_output_label(), "Clap") == 0 || 
-                strcmp(pattern->get_output_label(), "CHH") == 0 ||
-                strcmp(pattern->get_output_label(), "OHH") == 0
+            if (strcmp(pattern->get_output_label(), "Kick") == 0
+                || strcmp(pattern->get_output_label(), "Clap") == 0 
+                || strcmp(pattern->get_output_label(), "CHH") == 0 
+                // || strcmp(pattern->get_output_label(), "OHH") == 0
             ) 
                 continue;
 

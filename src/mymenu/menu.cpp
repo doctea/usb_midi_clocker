@@ -22,6 +22,8 @@
 #include "mymenu/menu_usb.h"
 #include "mymenu/menu_behaviours.h"
 
+#include "mymenu/menu_uclockdebug.h"
+
 #include "submenuitem_bar.h"
 
 #include "behaviours/behaviour_beatstep.h"
@@ -464,6 +466,9 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(new LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN));  // pinned position indicator
 
     setup_menu_transport();
+
+    menu->add(new UClockDebugPanel());
+
     #ifdef ENABLE_TAPTEMPO
         setup_menu_taptempo();
     #endif
