@@ -5,11 +5,9 @@
 
     #ifdef ENABLE_SHUFFLE
         void shuffled_callback(uint32_t step, uint8_t track) {
-            Serial.printf("\n&&&&>>>at tick %i, shuffled_track_callback(%i, %i) calling on_step_shuffled\n", ticks, track, step);
             if (behaviour_euclidianrhythms!=nullptr) {
                 behaviour_euclidianrhythms->on_step_shuffled(track, step);
             }
-            Serial.printf("\n&&&&<<<at tick %i, shuffled_track_callback(%i, %i) finished\n\n", ticks, track, step);
         }
     #endif
 

@@ -448,6 +448,55 @@ void setup() {
 
 //long loop_counter = 0;
 
+#if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
+bool uclock_trace_output_enabled = false;
+
+static const char *uclock_trace_event_name(uint8_t type) {
+  using TraceType = umodular::clock::uClockClass;
+  switch (type) {
+    case TraceType::TRACE_START: return "start";
+    case TraceType::TRACE_EXTERNAL_PULSE: return "external_pulse";
+    case TraceType::TRACE_PHASE_ERROR: return "phase_error";
+    case TraceType::TRACE_PHASE_LOCK: return "phase_lock";
+    case TraceType::TRACE_TEMPO_CHANGE: return "tempo_change";
+    case TraceType::TRACE_STEP_FIRE: return "step_fire";
+    case TraceType::TRACE_STEP_PHASE_DIVERGED: return "step_phase_diverged";
+    case TraceType::TRACE_SHUFFLE_CHANGE: return "shuffle_change";
+    case TraceType::TRACE_SHUFFLE_STATE: return "shuffle_state";
+    case TraceType::TRACE_INTERNAL_REENTRY: return "internal_reentry";
+    case TraceType::TRACE_EXTERNAL_REENTRY: return "external_reentry";
+    case TraceType::TRACE_INVALID_STATE: return "invalid_state";
+    default: return "unknown";
+  }
+}
+
+static void drain_uclock_trace() {
+  if (!uclock_trace_output_enabled)
+    return;
+
+  umodular::clock::uClockClass::TraceEvent event;
+  for (uint8_t count = 0; count < 8 && uClock.popTraceEvent(event); count++) {
+    Serial.printf(
+      "UCLOCK,%lu,%s,tick=%lu,int=%lu,ext=%lu,track=%u,step=%lu,mc=%u,ms=%u,sh=%d,target=%d,value=%ld,state=%u,depth=%u,dropped=%lu\n",
+      (unsigned long)event.timestamp_us,
+      uclock_trace_event_name(event.type),
+      (unsigned long)event.tick,
+      (unsigned long)event.int_clock_tick,
+      (unsigned long)event.ext_clock_tick,
+      (unsigned int)event.track,
+      (unsigned long)event.step,
+      (unsigned int)event.mod_clock_counter,
+      (unsigned int)event.mod_step_counter,
+      (int)event.shuffle_value,
+      (int)event.shuffle_target,
+      (long)event.value,
+      (unsigned int)event.clock_state,
+      (unsigned int)event.handler_depth,
+      (unsigned long)uClock.getTraceDroppedCount());
+  }
+}
+#endif
+
 
 // -----------------------------------------------------------------------------
 // 
@@ -467,6 +516,10 @@ void loop() {
   read_viewer_serial();
   #endif
   update_serial();
+
+  #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
+  drain_uclock_trace();
+  #endif
 
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
   if (debug_stress_scene_load && ticks % 6 == 1)  {
@@ -700,7 +753,7 @@ void do_tick(uint32_t in_ticks) {
   ::ticks = in_ticks;
 
   static uint32_t last_ticked_at_millis = millis();
-  Serial.printf("- do_tick(): received tick %u at %u\t(interval was %u)\n", in_ticks, millis(), millis() - last_ticked_at_millis);
+  // Serial.printf("- do_tick(): received tick %u at %u\t(interval was %u)\n", in_ticks, millis(), millis() - last_ticked_at_millis);
   last_ticked_at_millis = millis();
 
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
@@ -716,9 +769,9 @@ void do_tick(uint32_t in_ticks) {
     in_ticks = ::ticks;
   }
 
-  if (is_bpm_on_sixteenth(ticks)) {
-    Serial.printf("\n--- step %u \t(tick %u) ---\n", BPM_CURRENT_STEP_OF_PHRASE, ticks);
-  }
+  // if (is_bpm_on_sixteenth(ticks)) {
+  //   Serial.printf("\n--- step %u \t(tick %u) ---\n", BPM_CURRENT_STEP_OF_PHRASE, ticks);
+  // }
 
   if (is_bpm_on_phrase(ticks)) {
     DEBUG_MAIN_PRINTLN(F("do_tick(): about to project.on_phrase()"));

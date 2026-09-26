@@ -20,17 +20,28 @@ public:
 
         tft->printf("PPQN: input %i, output %i, tempo %.2f\n", uClock.input_ppqn, uClock.output_ppqn, uClock.getTempo());
 
-        tft->printf("ticks: tick=%ul | int=%ul | ext=%ul\n", uClock.tick, uClock.int_clock_tick, uClock.ext_clock_tick);
-        tft->printf("ext_clock_us=%i, ext_interval=%ul\n", uClock.ext_clock_us, uClock.ext_interval);
+        tft->printf("ticks: tick=%lu | int=%lu | ext=%lu\n",
+                (unsigned long)uClock.tick,
+                (unsigned long)uClock.int_clock_tick,
+                (unsigned long)uClock.ext_clock_tick);
+        tft->printf("ext_clock_us=%lu, ext_interval=%lu\n",
+                (unsigned long)uClock.ext_clock_us,
+                (unsigned long)uClock.ext_interval);
 
         tft->printf("mod_clock_ref=%i, phase_lock_quarters=%u\n", uClock.mod_clock_ref, uClock.phase_lock_quarters);
         tft->printf("mod: step_ref=%i, clock_counter=%i\n", uClock.mod_step_ref, uClock.mod_clock_counter);
+    #ifdef UCLOCK_ENABLE_TRACE
+        tft->printf("trace: dropped=%lu, depth=%u/%u\n",
+                (unsigned long)uClock.getTraceDroppedCount(),
+                (unsigned int)uClock.getIntOverflowCounter(),
+                (unsigned int)uClock.getExtOverflowCounter());
+    #endif
 
         // for (uint8_t i=0; i < uClock.ext_interval_buffer_size; i++) {
         //     tft->printf("  ext interval buffer[%i]: %lu\n", i, uClock.ext_interval_buffer[i]);
         // }
 
-        for (int i = 0 ; i < 2 /*uClock.track_slots_size*/; i++) {
+        for (uint8_t i = 0; i < 2 && i < uClock.track_slots_size; i++) {
             //tft->printf("Track %i: step_counter=%i, mod_step_counter=%u\n", i, uClock.tracks[i].step_counter, uClock.tracks[i].mod_step_counter);
             tft->printf("Tr %i: s_c=", i);
             if (uClock.tracks[i].step_counter > uClock.tracks[0].step_counter)
@@ -39,7 +50,7 @@ public:
                 this->colours(false, RED);
             else
                 this->colours(false, C_WHITE);
-            tft->printf("%lu\n", uClock.tracks[i].step_counter);
+            tft->printf("%lu", (unsigned long)uClock.tracks[i].step_counter);
             this->colours(false, C_WHITE); // Reset text color after printing each track's step counter
             if (uClock.tracks[i].step_counter > uClock.tracks[0].step_counter)
                 tft->printf(" (>>)");   // ahead
@@ -53,34 +64,46 @@ public:
                 this->colours(false, RED);
             else
                 this->colours(false, C_WHITE);
-            tft->printf("%lu", uClock.tracks[i].mod_step_counter);
+            tft->printf("%u", (unsigned int)uClock.tracks[i].mod_step_counter);
             this->colours(false, C_WHITE); // Reset text color after printing each track's mod step counter           
             if (uClock.tracks[i].mod_step_counter > uClock.tracks[0].mod_step_counter)
                 tft->printf(" (>>)");   // ahead
             else if (uClock.tracks[i].mod_step_counter < uClock.tracks[0].mod_step_counter)
                 tft->printf(" (<<)");   // behind
 
+            tft->printf("\n");
+
             // display the current shuffle pattern template, and indicate which step is currently active
-            tft->printf(" shuffle_pattern=");
-            for (int j = 0; j < uClock.tracks[i].shuffle.tmplt.size; j++) {
+            tft->printf("[ ");
+            uint8_t shuffle_size = uClock.tracks[i].shuffle.tmplt.size;
+            bool has_fired_step = uClock.tracks[i].step_counter > 0;
+            uint8_t active_shuffle_step = shuffle_size > 0 && has_fired_step
+                ? (uClock.tracks[i].step_counter - 1) % shuffle_size
+                : 0;
+            for (uint8_t j = 0; j < shuffle_size; j++) {
+                bool is_current_step = has_fired_step && j == active_shuffle_step;
                 if (uClock.tracks[i].shuffle.tmplt.step[j]<0)
-                    this->colours(j == uClock.tracks[i].step_counter, RED);
+                    this->colours(is_current_step, RED);
                 else if (uClock.tracks[i].shuffle.tmplt.step[j]>0)
-                    this->colours(j == uClock.tracks[i].step_counter, GREEN);
+                    this->colours(is_current_step, GREEN);
                 else
-                    this->colours(j == uClock.tracks[i].step_counter, C_WHITE);
+                    this->colours(is_current_step, C_WHITE);
                 
-                tft->printf("%i ", uClock.tracks[i].shuffle.tmplt.step[j]);
+                tft->printf("%x ", abs(uClock.tracks[i].shuffle.tmplt.step[j]));
                 this->colours(false, C_WHITE);
             }
-            tft->printf("\n");
+            tft->printf("]\n");
 
         }
         // tft->printf("Track %i: step_counter=%i, mod_step_counter=%i\n", 1, uClock.tracks[1].step_counter, uClock.tracks[1].mod_step_counter);
 
         for (int i = 0 ; i < uClock.sync_callback_size; i++) {
             if (uClock.sync_callbacks[i].callback)
-                tft->printf("Sync Callback %i: tick=%ul, mod_counter=%u, sync_ref=%ul\n", i, uClock.sync_callbacks[i].tick, uClock.sync_callbacks[i].mod_counter, uClock.sync_callbacks[i].sync_ref);
+                tft->printf("Sync Callback %i: tick=%lu, mod_counter=%u, sync_ref=%u\n",
+                            i,
+                            (unsigned long)uClock.sync_callbacks[i].tick,
+                            (unsigned int)uClock.sync_callbacks[i].mod_counter,
+                            (unsigned int)uClock.sync_callbacks[i].sync_ref);
         }
 
         return tft->getCursorY();

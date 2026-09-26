@@ -13,6 +13,10 @@ void debug_euclidian_shuffle(uint8_t);
 void debug_euclidian_simples();
 void set_bpm(float new_bpm);
 
+#if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
+extern bool uclock_trace_output_enabled;
+#endif
+
 bool pass_debug = true;
 
 char serial_buffer[1024];
@@ -549,6 +553,26 @@ bool execute_command(const char *command_line) {
         Serial.println("Git commit: " COMMIT_INFO);
         Serial.println("Build env: " ENV_NAME);
         return true;
+#if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
+    } else if (strcmp(command, "uclocktrace") == 0) {
+        if (strcmp(arg1, "on") == 0) {
+            uclock_trace_output_enabled = true;
+            Serial.println("uClock trace output enabled");
+        } else if (strcmp(arg1, "off") == 0) {
+            uclock_trace_output_enabled = false;
+            Serial.println("uClock trace output disabled");
+        } else if (strcmp(arg1, "clear") == 0) {
+            uClock.clearTrace();
+            Serial.println("uClock trace cleared");
+        } else if (strcmp(arg1, "status") == 0) {
+            Serial.printf("uClock trace output: %s, overwritten records: %lu\n",
+                          uclock_trace_output_enabled ? "on" : "off",
+                          (unsigned long)uClock.getTraceDroppedCount());
+        } else {
+            Serial.println("Usage: uclocktrace <on|off|clear|status>");
+        }
+        return true;
+#endif
     } else if (strcmp(command, "help") == 0) {
         Serial.println("Available commands:");
         Serial.println("  == info/status ==");
@@ -580,6 +604,9 @@ bool execute_command(const char *command_line) {
         Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
         Serial.println("  == clock debugging commands ==");
         Serial.println("    debug-state <lock|shuffle0|shuffle1|simples1|all> - Set the clock to a particular debug state");
+    #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
+        Serial.println("    uclocktrace <on|off|clear|status> - Control structured uClock trace output");
+    #endif
         return true;
     } else if (strcmp(command, "debug-state") == 0) {
         // Shortcuts to get into a particular state for debugging purposes
