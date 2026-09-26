@@ -101,6 +101,10 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
         sequencer->on_loop(ticks);
     }
 
+    virtual void release_outputs() override {
+        sequencer->release_outputs();
+    }
+
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         if (this->debug) Serial.printf(F("behaviour_flexiarp#sendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         

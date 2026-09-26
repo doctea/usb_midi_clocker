@@ -282,6 +282,21 @@ void setup_menu_transport() {
         // #endif
         menu->add(project_multi_autoadvance);
 
+        ObjectMultiToggleControl *transport_release = new ObjectMultiToggleControl("Release outputs", true);
+        transport_release->addItem(new MultiToggleItemClass<Project>(
+            "MIDI Stop",
+            project,
+            &Project::setReleaseOutputsOnMidiStop,
+            &Project::isReleaseOutputsOnMidiStop
+        ));
+        transport_release->addItem(new MultiToggleItemClass<Project>(
+            "Clock loss",
+            project,
+            &Project::setReleaseOutputsOnExternalClockLoss,
+            &Project::isReleaseOutputsOnExternalClockLoss
+        ));
+        menu->add(transport_release);
+
         #ifdef ENABLE_SD
             project_fileviewer = new PageFileViewerMenuItem("Project");
             menu->add(project_fileviewer);

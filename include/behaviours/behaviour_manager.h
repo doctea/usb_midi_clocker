@@ -295,6 +295,13 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
             }
         }
 
+        void release_outputs() {
+            for (auto* behaviour : *behaviours) {
+                if (behaviour != nullptr)
+                    behaviour->release_outputs();
+            }
+        }
+
         #ifdef ENABLE_SCREEN
             //FLASHMEM 
             void create_all_behaviour_menu_items(Menu *menu);

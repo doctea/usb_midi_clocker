@@ -27,11 +27,17 @@ public:
         tft->printf("ext_clock_us=%lu, ext_interval=%lu\n",
                 (unsigned long)uClock.ext_clock_us,
                 (unsigned long)uClock.ext_interval);
+        tft->printf("external: %s budget=%u age=%luus accepted=%luus\n",
+            uClock.isExternalClockStalled() ? "waiting" : "active",
+            (unsigned int)uClock.getExternalTicksRemaining(),
+            (unsigned long)uClock.getExternalClockPulseAge(),
+            (unsigned long)uClock.getLastAcceptedExternalInterval());
 
         tft->printf("mod_clock_ref=%i, phase_lock_quarters=%u\n", uClock.mod_clock_ref, uClock.phase_lock_quarters);
         tft->printf("mod: step_ref=%i, clock_counter=%i\n", uClock.mod_step_ref, uClock.mod_clock_counter);
     #ifdef UCLOCK_ENABLE_TRACE
-        tft->printf("trace: dropped=%lu, depth=%u/%u\n",
+        tft->printf("trace: %s dropped=%lu, depth=%u/%u\n",
+            uClock.isTraceFrozen() ? "frozen" : "rolling",
                 (unsigned long)uClock.getTraceDroppedCount(),
                 (unsigned int)uClock.getIntOverflowCounter(),
                 (unsigned int)uClock.getExtOverflowCounter());
@@ -44,10 +50,10 @@ public:
         for (uint8_t i = 0; i < 2 && i < uClock.track_slots_size; i++) {
             //tft->printf("Track %i: step_counter=%i, mod_step_counter=%u\n", i, uClock.tracks[i].step_counter, uClock.tracks[i].mod_step_counter);
             tft->printf("Tr %i: s_c=", i);
-            if (uClock.tracks[i].step_counter > uClock.tracks[0].step_counter)
-                this->colours(false, GREEN);
-            else if (uClock.tracks[i].step_counter < uClock.tracks[0].step_counter)
+            if (uClock.tracks[i].step_counter < uClock.tracks[0].step_counter)
                 this->colours(false, RED);
+            else if (uClock.tracks[i].step_counter > uClock.tracks[0].step_counter)
+                this->colours(false, GREEN);
             else
                 this->colours(false, C_WHITE);
             tft->printf("%lu", (unsigned long)uClock.tracks[i].step_counter);
@@ -56,12 +62,14 @@ public:
                 tft->printf(" (>>)");   // ahead
             else if (uClock.tracks[i].step_counter < uClock.tracks[0].step_counter)
                 tft->printf(" (<<)");   // behind
+            else 
+                tft->printf(" (==)");   // in sync
 
             tft->printf(" mod_s_c=");
             if (uClock.tracks[i].mod_step_counter > uClock.tracks[0].mod_step_counter)
-                this->colours(false, GREEN);
-            else if (uClock.tracks[i].mod_step_counter < uClock.tracks[0].mod_step_counter)
                 this->colours(false, RED);
+            else if (uClock.tracks[i].mod_step_counter < uClock.tracks[0].mod_step_counter)
+                this->colours(false, GREEN);
             else
                 this->colours(false, C_WHITE);
             tft->printf("%u", (unsigned int)uClock.tracks[i].mod_step_counter);
@@ -70,6 +78,8 @@ public:
                 tft->printf(" (>>)");   // ahead
             else if (uClock.tracks[i].mod_step_counter < uClock.tracks[0].mod_step_counter)
                 tft->printf(" (<<)");   // behind
+            else
+                tft->printf(" (==)");   // in sync
 
             tft->printf("\n");
 

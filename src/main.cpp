@@ -340,6 +340,9 @@ void setup() {
   #ifdef USE_UCLOCK
     tft_print((char*)"Initialising uClock..\n");
     setup_uclock(do_tick);
+    uClock.setOnOutputPPQNEnd([](uint32_t) {
+      gate_manager->update();
+    });
   #else
     tft_print((char*)"..Cheap clock..\n");
     setup_cheapclock();
@@ -456,6 +459,7 @@ static const char *uclock_trace_event_name(uint8_t type) {
   switch (type) {
     case TraceType::TRACE_START: return "start";
     case TraceType::TRACE_EXTERNAL_PULSE: return "external_pulse";
+    case TraceType::TRACE_EXTERNAL_TIMING_DELTA: return "external_timing_delta";
     case TraceType::TRACE_PHASE_ERROR: return "phase_error";
     case TraceType::TRACE_PHASE_LOCK: return "phase_lock";
     case TraceType::TRACE_TEMPO_CHANGE: return "tempo_change";
@@ -465,6 +469,9 @@ static const char *uclock_trace_event_name(uint8_t type) {
     case TraceType::TRACE_SHUFFLE_STATE: return "shuffle_state";
     case TraceType::TRACE_INTERNAL_REENTRY: return "internal_reentry";
     case TraceType::TRACE_EXTERNAL_REENTRY: return "external_reentry";
+    case TraceType::TRACE_EXTERNAL_STALLED: return "external_stalled";
+    case TraceType::TRACE_EXTERNAL_RESUMED: return "external_resumed";
+    case TraceType::TRACE_EXTERNAL_CATCH_UP: return "external_catch_up";
     case TraceType::TRACE_INVALID_STATE: return "invalid_state";
     default: return "unknown";
   }
@@ -560,6 +567,11 @@ void loop() {
     if (debug_flag) { Serial_println(F("just did Usb.Task()")); Serial_flush(); }
   #endif
   //static unsigned long last_ticked_at_micros = 0;
+
+  #ifdef ENABLE_USB
+    // Bound device-MIDI latency before the expensive UI/CV/behaviour work.
+    read_usb_from_computer();
+  #endif
 
   bool ticked = false;
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
@@ -820,10 +832,6 @@ void do_tick(uint32_t in_ticks) {
   DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush();
   behaviour_manager->send_clocks();
   DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush();
-
-  DEBUG_MAIN_PRINTLN(F("in do_tick() about to gate_manager->update()")); Serial_flush();
-  gate_manager->update(); 
-  DEBUG_MAIN_PRINTLN(F("in do_tick() just did gate_manager->update()")); Serial_flush();
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 

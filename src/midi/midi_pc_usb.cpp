@@ -95,4 +95,6 @@ void setup_pc_usb() {
   usbMIDI.setHandleContinue(pc_usb_midi_handle_continue);
 
   set_global_restart_callback(&global_on_restart);
+  set_global_stop_callback(&global_on_stop);
+  set_external_clock_stall_callback(&global_on_external_clock_stall);
 }

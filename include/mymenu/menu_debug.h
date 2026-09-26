@@ -56,8 +56,8 @@ class DebugPanel : public MenuItem {
             tft->printf("  Tick:   %lu\n", ticks);
 
             #ifdef USE_UCLOCK
-                tft->printf("  uClock int overflow: %u\n", uClock.getIntOverflowCounter());
-                tft->printf("  uClock ext overflow: %u\n", uClock.getExtOverflowCounter());
+                tft->printf("  uClock int depth: %u\n", uClock.getIntOverflowCounter());
+                tft->printf("  uClock ext depth: %u\n", uClock.getExtOverflowCounter());
             #endif
             
             tft->print("  Serial: ");

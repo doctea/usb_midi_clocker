@@ -208,6 +208,7 @@ class DeviceBehaviourUltimateBase :
     virtual void on_end_beat(int beat_number) {};
     // called when the clock is restarted
     virtual void on_restart() {};
+    virtual void release_outputs() {};
     // called when we change phrase
     virtual void on_phrase(uint32_t phrase) {};
     virtual void on_end_phrase(uint32_t phrase) {};

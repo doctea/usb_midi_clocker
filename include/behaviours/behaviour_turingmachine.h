@@ -107,6 +107,10 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
         sequencer->on_loop(ticks);
     }
 
+    virtual void release_outputs() override {
+        sequencer->release_outputs();
+    }
+
     // virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
     //     if (this->debug) Serial.printf(F("behaviour_turingmachine#actualSendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
     //     midi_matrix_manager->processNoteOn(this->source_id, note, velocity);

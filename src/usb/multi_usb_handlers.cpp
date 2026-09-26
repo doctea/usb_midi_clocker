@@ -4,10 +4,22 @@
 #include "bpm.h"
 #include "debug.h"
 #include "behaviours/behaviour_manager.h"
+#include "interfaces/interfaces.h"
+#include "midi/midi_mapper_matrix_manager.h"
+#include "project.h"
+
+static void release_generated_outputs() {
+  behaviour_manager->release_outputs();
+  if (midi_matrix_manager != nullptr)
+    midi_matrix_manager->stop_all_notes();
+  if (gate_manager != nullptr)
+    gate_manager->stop_all_gates();
+}
 
 // call this when global clock should be reset
 // todo: should probably move this elsewhere..?
 void global_on_restart() {
+  release_generated_outputs();
   set_restart_on_next_bar(false);
 
   Serial_println(F("on_restart()==>"));
@@ -21,6 +33,16 @@ void global_on_restart() {
   behaviour_manager->on_restart();
 
   Serial.println(F("<==on_restart()"));
+}
+
+void global_on_stop() {
+  if (project != nullptr && project->isReleaseOutputsOnMidiStop())
+    release_generated_outputs();
+}
+
+void global_on_external_clock_stall(bool stalled) {
+  if (stalled && project != nullptr && project->isReleaseOutputsOnExternalClockLoss())
+    release_generated_outputs();
 }
 
 #ifdef ENABLE_USB

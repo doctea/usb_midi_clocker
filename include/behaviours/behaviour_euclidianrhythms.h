@@ -102,6 +102,10 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         sequencer->on_loop(ticks);
     }
 
+    virtual void release_outputs() override {
+        sequencer->release_outputs();
+    }
+
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_on ...
         //if (this->debug) 

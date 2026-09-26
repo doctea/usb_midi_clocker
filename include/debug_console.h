@@ -565,9 +565,14 @@ bool execute_command(const char *command_line) {
             uClock.clearTrace();
             Serial.println("uClock trace cleared");
         } else if (strcmp(arg1, "status") == 0) {
-            Serial.printf("uClock trace output: %s, overwritten records: %lu\n",
+            Serial.printf("uClock trace output: %s, frozen: %s, dropped records: %lu, external: %s, budget: %u, pulse age: %luus, accepted interval: %luus\n",
                           uclock_trace_output_enabled ? "on" : "off",
-                          (unsigned long)uClock.getTraceDroppedCount());
+                          uClock.isTraceFrozen() ? "yes" : "no",
+                          (unsigned long)uClock.getTraceDroppedCount(),
+                          uClock.isExternalClockStalled() ? "waiting" : "active",
+                          (unsigned int)uClock.getExternalTicksRemaining(),
+                          (unsigned long)uClock.getExternalClockPulseAge(),
+                          (unsigned long)uClock.getLastAcceptedExternalInterval());
         } else {
             Serial.println("Usage: uclocktrace <on|off|clear|status>");
         }
