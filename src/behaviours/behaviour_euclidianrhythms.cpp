@@ -16,8 +16,8 @@
     void debug_euclidian_lock() {
         behaviour_euclidianrhythms->debug_lock();
     }
-    void debug_euclidian_shuffle() {
-        behaviour_euclidianrhythms->debug_shuffle();
+    void debug_euclidian_shuffle(uint8_t index) {
+        behaviour_euclidianrhythms->debug_shuffle(index);
     }
     void debug_euclidian_simples() {
         behaviour_euclidianrhythms->debug_simples();

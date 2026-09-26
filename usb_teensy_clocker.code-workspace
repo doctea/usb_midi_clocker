@@ -36,6 +36,9 @@
 		},
 		{
 			"path": ".pio/libdeps/pcb_studio/LinkedList"
+		},
+		{
+			"path": "../my_libraries/foundling"
 		}
 	],
 	"settings": {
@@ -73,6 +76,20 @@
 			"cmath": "cpp",
 			"cstdlib": "cpp",
 			"string_view": "cpp"
-		}
+		},
+		"workbench.colorCustomizations": {
+			"activityBar.background": "#022002",
+			"titleBar.activeBackground": "#032D03",
+			"titleBar.activeForeground": "#F0FEF0",
+			"titleBar.inactiveBackground": "#022002",
+			"titleBar.inactiveForeground": "#F0FEF0",
+			"statusBar.background": "#022002",
+			"statusBar.foreground": "#F0FEF0",
+			"statusBar.debuggingBackground": "#022002",
+			"statusBar.debuggingForeground": "#F0FEF0",
+			"statusBar.noFolderBackground": "#022002",
+			"statusBar.noFolderForeground": "#F0FEF0"
+		},
+		"windowColors.baseColor": "#022002"
 	}
 }

@@ -9,7 +9,7 @@
 #include "storage.h"
 
 void debug_euclidian_lock();
-void debug_euclidian_shuffle();
+void debug_euclidian_shuffle(uint8_t);
 void debug_euclidian_simples();
 void set_bpm(float new_bpm);
 
@@ -578,17 +578,32 @@ bool execute_command(const char *command_line) {
         Serial.println("    playnote <behaviour_label> <note_number> - Send a Note On message for the given note number to the behaviour with the given label");
         Serial.println("    stopnote <behaviour_label> <note_number> - Send a Note Off message for the given note number to the behaviour with the given label");
         Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
+        Serial.println("  == clock debugging commands ==");
+        Serial.println("    debug-state <lock|shuffle0|shuffle1|simples1|all> - Set the clock to a particular debug state");
         return true;
     } else if (strcmp(command, "debug-state") == 0) {
         // Shortcuts to get into a particular state for debugging purposes
         // lock the CHH Euclidian sequencer
         if (strcmp(arg1, "lock") == 0) {
             debug_euclidian_lock();
-        } else if (strcmp(arg1, "shuffle") == 0) {
-            debug_euclidian_shuffle();
-        } else if (strcmp(arg1, "simples") == 0) {
+        } else if (strcmp(arg1, "shuffle0") == 0) {
+            debug_euclidian_shuffle(0);
+        } else if (strcmp(arg1, "shuffle1") == 0) {
+            debug_euclidian_shuffle(1);
+        } else if (strcmp(arg1, "simples1") == 0) {
+            debug_euclidian_simples();
+        } else if (strcmp(arg1, "all") ==0) {
+            debug_euclidian_lock();
+            debug_euclidian_shuffle(0);
+            debug_euclidian_shuffle(1);
             debug_euclidian_simples();
         }
+        return true;
+    } else if (strcmp(command, "restart-internal") == 0) {
+        // so we wanna switch to internal clock, stop, and start..
+        change_clock_mode(ClockMode::CLOCK_INTERNAL);
+        clock_stop();
+        clock_start();
         return true;
     } else if (strcmp(command, "tempo") == 0) {
         // Additional debug-euclidian commands can be handled here

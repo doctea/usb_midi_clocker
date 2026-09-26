@@ -42,6 +42,9 @@
     #include "cv_output.h"
 #endif
 
+#include "mymenu/menu_uclockdebug.h"
+#include "mymenu/menu_bpm.h"
+
 //#define DEBUG_TICKS
 //#define DEBUG_SEQUENCER
 

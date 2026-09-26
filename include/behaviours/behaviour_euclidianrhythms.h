@@ -192,14 +192,16 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         pattern->set_steps(16);
         pattern->set_locked(true);
         pattern->set_shuffle_track(1);
+        this->sequencer->set_add_phrase_enabled(false);
+        this->sequencer->set_mutation_count(0);
         this->sequencer->set_fills_enabled(false);
     }
 
-    void debug_shuffle() {
-        Serial.println("Debugging Euclidian shuffle");
+    void debug_shuffle(uint8_t index) {
+        Serial.printf("Debugging Euclidian shuffle %d\n", index);
         int8_t shuffle_75[] = {0, 12, 0, 12, 0, 12, 0, 12}; //, 12, 0, 12, 0, 12, 0, 12};
-        shuffle_pattern_wrapper[1]->set_steps(shuffle_75, sizeof(shuffle_75));
-        shuffle_pattern_wrapper[1]->update_target();
+        shuffle_pattern_wrapper[index]->set_steps(shuffle_75, sizeof(shuffle_75));
+        shuffle_pattern_wrapper[index]->update_target();
     }
 
     void debug_simples() {

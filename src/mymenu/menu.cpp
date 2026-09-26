@@ -132,13 +132,19 @@ DisplayTranslator_Configured display_translator = DisplayTranslator_Configured()
 
 void setup_menu_transport() {
     conductor->make_menu_items(menu, COMBINE_NONE);
+    
+    int current_page = menu->get_selected_page_index();
+
+    menu->select_page_by_name("Main");
+    menu->add(new UClockDebugPanel());
+
     #ifdef ENABLE_CLOCK_INPUT_CV
         // go back a page and add this selector at the end so that it's in the main page clock menu
         // todo: but should probably put this on a separate settings page somewhere?
-        menu->select_page(menu->get_number_pages()-2);
         menu->add(&external_ppqn_selector); // external clock ppqn selector
-        menu->select_page(menu->get_number_pages()-1);
     #endif
+
+    menu->select_page(current_page);
 }
 
 #ifdef ENABLE_TAPTEMPO
@@ -466,8 +472,6 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(new LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN));  // pinned position indicator
 
     setup_menu_transport();
-
-    menu->add(new UClockDebugPanel());
 
     #ifdef ENABLE_TAPTEMPO
         setup_menu_taptempo();
