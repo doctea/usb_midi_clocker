@@ -565,6 +565,7 @@ bool execute_command(const char *command_line) {
             uClock.clearTrace();
             Serial.println("uClock trace cleared");
         } else if (strcmp(arg1, "status") == 0) {
+            ExternalClockDiagnostics clock_diagnostics = get_external_clock_diagnostics();
             Serial.printf("uClock trace output: %s, frozen: %s, dropped records: %lu, external: %s, budget: %u, pulse age: %luus, accepted interval: %luus\n",
                           uclock_trace_output_enabled ? "on" : "off",
                           uClock.isTraceFrozen() ? "yes" : "no",
@@ -573,6 +574,18 @@ bool execute_command(const char *command_line) {
                           (unsigned int)uClock.getExternalTicksRemaining(),
                           (unsigned long)uClock.getExternalClockPulseAge(),
                           (unsigned long)uClock.getLastAcceptedExternalInterval());
+            Serial.printf("External clocks: source=%u, input PPQN=%u, received=%lu, expected=%lu, delivered=%lu, outstanding=%ld, rejected=%lu, overflow=%lu\n",
+                          (unsigned int)clock_diagnostics.source,
+                          (unsigned int)clock_diagnostics.input_ppqn,
+                          (unsigned long)clock_diagnostics.received_pulses,
+                          (unsigned long)clock_diagnostics.expected_sync_ticks,
+                          (unsigned long)clock_diagnostics.delivered_sync_ticks,
+                          (long)clock_diagnostics.expected_sync_ticks - (long)clock_diagnostics.delivered_sync_ticks,
+                          (unsigned long)clock_diagnostics.rejected_pulses,
+                          (unsigned long)clock_diagnostics.adapter_overflow);
+            Serial.printf("Internal tap slew: correction=%ldus, remaining ticks=%u\n",
+                          (long)uClock.getInternalPhaseCorrectionUs(),
+                          (unsigned int)uClock.getInternalPhaseSlewTicksRemaining());
         } else {
             Serial.println("Usage: uclocktrace <on|off|clear|status>");
         }

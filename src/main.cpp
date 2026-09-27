@@ -118,11 +118,19 @@ void do_tick(uint32_t ticks);
   // todo: probably move this elsewhere?  maybe into the midihelpers library to be a 'default tapper'?
   #include "taptempo.h"
   TapTempoTracker *tapper = new TapTempoTracker();
+
+  static void sync_internal_clock_to_tap(uint32_t observed_at_us, float estimated_bpm) {
+    if (clock_mode != CLOCK_INTERNAL)
+      return;
+    if (estimated_bpm >= BPM_MINIMUM && estimated_bpm <= BPM_MAXIMUM)
+      set_bpm(estimated_bpm);
+    uClock.syncInternalClockToBeat(observed_at_us);
+  }
 #endif
 
 IntervalTimer myTimer;
 void checkClock();
-bool has_cv_clock_ticked();
+bool take_cv_clock_tick(uint32_t &observed_at_us);
 
 
 // Buffer in EXTMEM (one slow PSRAM malloc); metadata in fast DTCM
@@ -340,6 +348,9 @@ void setup() {
   #ifdef USE_UCLOCK
     tft_print((char*)"Initialising uClock..\n");
     setup_uclock(do_tick);
+    #ifdef ENABLE_TAPTEMPO
+      tapper->set_tap_observation_callback(sync_internal_clock_to_tap);
+    #endif
     uClock.setOnOutputPPQNEnd([](uint32_t) {
       gate_manager->update();
     });
@@ -443,7 +454,6 @@ void setup() {
   Serial_println("Finished setup()!");
 
   #ifdef ENABLE_CLOCK_INPUT_CV
-    set_check_cv_clock_ticked_callback(has_cv_clock_ticked);
     myTimer.begin(checkClock, 250); 
   #endif
 
@@ -576,6 +586,15 @@ void loop() {
   bool ticked = false;
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
+    #ifdef ENABLE_CLOCK_INPUT_CV
+      uint32_t cv_clock_observed_at_us = 0;
+      bool cv_clock_received = false;
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        cv_clock_received = take_cv_clock_tick(cv_clock_observed_at_us);
+      }
+      if (cv_clock_received)
+        clock_receive_external_pulse_at(CLOCK_EXTERNAL_CV, cv_clock_observed_at_us);
+    #endif
     if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
@@ -700,9 +719,10 @@ void loop() {
     }
 
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
-    {      
+    {
       if (debug_flag) { Serial_println(F("about to read_usb_from_computer();..")); Serial_flush(); }
-      read_usb_from_computer();   // this is what sets should tick flag so should do this as early as possible before main loop start (or as late as possible in previous loop)
+      // we do this again here because it reduces latency; i have AI's assurance that it should not cause any problems (lol)
+      read_usb_from_computer();
       if (debug_flag) { Serial_println(F("just did read_usb_from_computer();..")); Serial_flush(); }
     }
   #endif

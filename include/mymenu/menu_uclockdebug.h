@@ -4,6 +4,7 @@
 
 #ifdef USE_UCLOCK
 
+#include "clock.h"
 #include "uClock.h"
 class UClockDebugPanel : public MenuItem {
 public:
@@ -32,9 +33,21 @@ public:
             (unsigned int)uClock.getExternalTicksRemaining(),
             (unsigned long)uClock.getExternalClockPulseAge(),
             (unsigned long)uClock.getLastAcceptedExternalInterval());
+        ExternalClockDiagnostics clock_diagnostics = get_external_clock_diagnostics();
+        tft->printf("Ext clk: rx=%lu expected=%lu delivered=%lu\n",
+            (unsigned long)clock_diagnostics.received_pulses,
+            (unsigned long)clock_diagnostics.expected_sync_ticks,
+            (unsigned long)clock_diagnostics.delivered_sync_ticks);
+        tft->printf("outstanding=%ld rejected=%lu overflow=%lu\n",
+            (long)clock_diagnostics.expected_sync_ticks - (long)clock_diagnostics.delivered_sync_ticks,
+            (unsigned long)clock_diagnostics.rejected_pulses,
+            (unsigned long)clock_diagnostics.adapter_overflow);
 
         tft->printf("mod_clock_ref=%i, phase_lock_quarters=%u\n", uClock.mod_clock_ref, uClock.phase_lock_quarters);
         tft->printf("mod: step_ref=%i, clock_counter=%i\n", uClock.mod_step_ref, uClock.mod_clock_counter);
+        tft->printf("tap slew: correction=%ldus remaining=%u\n",
+            (long)uClock.getInternalPhaseCorrectionUs(),
+            (unsigned int)uClock.getInternalPhaseSlewTicksRemaining());
     #ifdef UCLOCK_ENABLE_TRACE
         tft->printf("trace: %s dropped=%lu, depth=%u/%u\n",
             uClock.isTraceFrozen() ? "frozen" : "rolling",

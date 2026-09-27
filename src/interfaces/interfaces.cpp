@@ -109,10 +109,12 @@ GateManager *gate_manager = new GateManager();
 #include "clock.h"
 #include <uClock.h>
 volatile bool cv_clock_ticked_flag;
+volatile uint32_t cv_clock_ticked_at_us;
 bool has_gone_off = true;
 
-bool has_cv_clock_ticked() {
+bool take_cv_clock_tick(uint32_t &observed_at_us) {
     if (cv_clock_ticked_flag) {
+        observed_at_us = cv_clock_ticked_at_us;
         cv_clock_ticked_flag = false;
         return true;
     }
@@ -122,12 +124,14 @@ bool has_cv_clock_ticked() {
 void checkClock() {
     MCP23S17SharedInputBankInterface *mcp_interface = (MCP23S17SharedInputBankInterface*)gate_manager->banks[BANK_EXTRA_2];
     if (clock_mode==CLOCK_EXTERNAL_CV && mcp_interface->check_gate(7) && has_gone_off) {
-        Serial.println("cv clock ticked!");
-        cv_clock_ticked_flag = true;
+        if (cv_clock_ticked_flag) {
+            clock_report_external_event_overflow();
+        } else {
+            cv_clock_ticked_at_us = micros();
+            cv_clock_ticked_flag = true;
+        }
         has_gone_off = false;
-        uClock.clockMe();
     } else if (clock_mode==CLOCK_EXTERNAL_CV && !mcp_interface->check_gate(7) && !has_gone_off) {
-        cv_clock_ticked_flag = false;
         has_gone_off = true;
     }
 }
