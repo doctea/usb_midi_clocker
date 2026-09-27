@@ -147,6 +147,7 @@ FLASHMEM __attribute__((noinline)) static void setup_parameter_inputs_phase() {
     setup_cv_input();
     Debug_printf(F("after setup_cv_input(), free RAM is %u\n"), freeRam());
   #endif
+
   #ifdef ENABLE_PARAMETERS
     tft_print((char*)"..setup parameters..\n");
     setup_parameters();

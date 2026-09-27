@@ -20,10 +20,6 @@
     #include "uclock.h"
 #endif
 
-#ifdef ENABLE_SHUFFLE
-    void turingmachine_shuffled_callback(uint32_t step, uint8_t track);
-#endif
-
 const int NUM_TURINGMACHINE_PATTERNS = 4;
 
 class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBase {
@@ -70,12 +66,6 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
             // Add each TuringMachinePattern to the ParameterManager's available inputs for parameter mapping
             parameter_manager->addInput((TuringMachinePattern*)this->sequencer->get_pattern(i));
         }
-
-        #ifdef USE_UCLOCK
-            #ifdef ENABLE_SHUFFLE
-                // uClock.setOnStep(turingmachine_shuffled_callback, 1);  // 1 shuffle track for TuringMachine
-            #endif
-        #endif
     }
 
     virtual const char *get_label() override {
@@ -87,13 +77,6 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
     }
 
     virtual bool transmits_midi_notes() override { return true; }
-
-    #ifdef ENABLE_SHUFFLE
-        virtual void on_step_shuffled(uint8_t track, uint32_t step) {
-            if (this->debug) Serial.printf(F("behaviour_turingmachine#on_step_shuffled(%i, %i)\n"), track, step);
-            sequencer->on_step_shuffled(track, step);
-        }
-    #endif
 
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 

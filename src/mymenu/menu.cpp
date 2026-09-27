@@ -47,6 +47,10 @@
 
 #include "menu_io.h"
 
+#ifdef ENABLE_SHUFFLE
+    #include "sequencer/shuffle.h"
+#endif
+
 //DisplayTranslator *tft;
 #ifdef TFT_ST7789_T3_BIG
     DisplayTranslator_STeensy_Big *tft;
@@ -487,14 +491,16 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(new LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN));  // pinned position indicator
 
     setup_menu_transport();
-
     #ifdef ENABLE_TAPTEMPO
         setup_menu_taptempo();
     #endif
+    #ifdef ENABLE_SHUFFLE
+        setup_menu_shuffle();
+    #endif
     setup_menu_project();
-#if !SAFE_DISABLE_MATRIX_UI_BOOT
-    setup_menu_midi();
-#endif
+    #if !SAFE_DISABLE_MATRIX_UI_BOOT
+        setup_menu_midi();
+    #endif
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
         setup_menu_sequencer();
     #endif

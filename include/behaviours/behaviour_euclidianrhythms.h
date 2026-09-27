@@ -19,9 +19,6 @@
     #include "uclock.h"
 #endif
 
-#ifdef ENABLE_SHUFFLE
-    void shuffled_callback(uint32_t step, uint8_t track);
-#endif
 
 class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
@@ -45,23 +42,31 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
         sequencer->reset_patterns();
         output_processor->setup_parameters();
         
-        #ifdef USE_UCLOCK
-            #ifdef ENABLE_SHUFFLE
-                uClock.setOnStep(shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
-            #endif
-            /*int8_t shuff[] = { 
-                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
-                (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
-            };*/
-            /*int8_t shuff[] = { 
-                (int8_t)-2, (int8_t)2, (int8_t)3, (int8_t)3, (int8_t)3, (int8_t)-3, (int8_t)-2, (int8_t)3, 
-                (int8_t)1, (int8_t)3, (int8_t)3, (int8_t)1, (int8_t)-2, (int8_t)-2, (int8_t)-1, (int8_t)0
-            };
-            uClock.setTrackShuffleTemplate(1, shuff, 16);
-            uClock.setTrackShuffle(1, true);
-            */
-            //uClock.setShuffle(true);
-        #endif
+        // registering the shuffle callback is now done within the sequencer itself 
+        // (with a TODO note that it should probably be optional so that we can decide to register
+        // from behaviours etc if we want to know about shuffle events and/or do anything differently)
+
+        // #ifdef USE_UCLOCK
+        //     #ifdef ENABLE_SHUFFLE
+        //         shuffle_pattern_wrapper.register_shuffle_callback(
+        //             [=](uint32_t step, uint8_t track) {
+        //                 this->on_step_shuffled(track, step);
+        //             }
+        //         );
+        //     #endif
+        //     /*int8_t shuff[] = { 
+        //         (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0, 
+        //         (int8_t)0, (int8_t)0, (int8_t)3, (int8_t)0, (int8_t)0, (int8_t)-3, (int8_t)0, (int8_t)0
+        //     };*/
+        //     /*int8_t shuff[] = { 
+        //         (int8_t)-2, (int8_t)2, (int8_t)3, (int8_t)3, (int8_t)3, (int8_t)-3, (int8_t)-2, (int8_t)3, 
+        //         (int8_t)1, (int8_t)3, (int8_t)3, (int8_t)1, (int8_t)-2, (int8_t)-2, (int8_t)-1, (int8_t)0
+        //     };
+        //     uClock.setTrackShuffleTemplate(1, shuff, 16);
+        //     uClock.setTrackShuffle(1, true);
+        //     */
+        //     //uClock.setShuffle(true);
+        // #endif
     }
 
     virtual const char *get_label() override {
@@ -71,18 +76,6 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual int getType() override {
         return BehaviourType::virt;
     }
-
-    #ifdef ENABLE_SHUFFLE
-        virtual void on_step_shuffled(uint8_t track, uint32_t step) {
-            // if (this->debug) 
-            // Serial.printf(F("behaviour_euclidianrhythms#on_step_shuffled(%i, step=%i) during tick %u (step %u)\n"), track, step % STEPS_PER_PHRASE, ticks, BPM_CURRENT_STEP_OF_PHRASE);
-            sequencer->on_step_shuffled(track, step);
-            // Serial.printf(
-            //     "(behaviour_euclidianrhythms#on_step_shuffled ignoring track=%u, step=%u)\n",
-            //     track, step
-            // );
-        }
-    #endif
 
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 

@@ -20,10 +20,6 @@
     #include "uclock.h"
 #endif
 
-#ifdef ENABLE_SHUFFLE
-    void flexiarp_shuffled_callback(uint32_t step, uint8_t track);
-#endif
-
 /*
 Sooo, we have 4 flexiarp output nodes.
 These can be triggered by any of the 4 patterns in the flexiarp sequencer.
@@ -64,12 +60,6 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
         sequencer->initialise_patterns();
         sequencer->reset_patterns();
         output_processor->setup_parameters();
-
-        #ifdef USE_UCLOCK
-            #ifdef ENABLE_SHUFFLE
-                // uClock.setOnStep(flexiarp_shuffled_callback, NUMBER_SHUFFLE_PATTERNS);
-            #endif
-        #endif
     }
 
     virtual const char *get_label() override {
@@ -81,13 +71,6 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
     }
 
     virtual bool transmits_midi_notes() override { return true; }
-
-    #ifdef ENABLE_SHUFFLE
-        virtual void on_step_shuffled(uint8_t track, uint32_t step) {
-            if (this->debug) Serial.printf(F("behaviour_flexiarp#on_step_shuffled(%i, %i)\n"), track, step);
-            sequencer->on_step_shuffled(track, step);
-        }
-    #endif
 
     virtual void on_tick(uint32_t ticks) override {
         if (sequencer->is_running()) 

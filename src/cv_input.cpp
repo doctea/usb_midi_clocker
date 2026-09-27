@@ -13,6 +13,10 @@
     #include "devices/ADCPimoroni24v.h"
 #endif
 
+#ifdef ENABLE_SHUFFLE
+    #include "sequencer/shuffle.h"
+#endif
+
 #include "behaviours/behaviour_base.h"
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_manager.h"
@@ -48,6 +52,7 @@ void setup_cv_input() {
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
 //FLASHMEM 
 void setup_parameters() {
+
     //Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
     //tft_print("..setup_parameters...");
 
@@ -161,6 +166,10 @@ void setup_parameters() {
         parameter_manager->addParameters(b->get_parameters());
     }
     //Serial.println("finished allParameters.");
+
+    #ifdef ENABLE_SHUFFLE
+        parameter_manager->addParameters(shuffle_pattern_wrapper.getParameters());
+    #endif
 
     //Serial.println("about to parameter_manager->setDefaultParameterConnections()..");
     parameter_manager->setDefaultParameterConnections();
