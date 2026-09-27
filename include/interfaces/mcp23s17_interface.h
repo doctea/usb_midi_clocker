@@ -66,11 +66,16 @@ class MCP23S17BankInterface : public BankInterface {
                 return;            
             }
             if (!combine_writes) {
-                mcp->write1(gate_number, state);
+                ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                    mcp->write1(gate_number, state);
+                    this->current_states[gate_number] = state;
+                }
             } else {
-                dirty = true;
+                ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                    this->current_states[gate_number] = state;
+                    dirty = true;
+                }
             }
-            this->current_states[gate_number] = state;
 
             // for debug, output inversed gates on shifted up gate numbers
             /*if (gate_number<4) {
@@ -91,18 +96,18 @@ class MCP23S17BankInterface : public BankInterface {
             if (!combine_writes)
                 return;
 
-            if (!dirty) 
-                return;
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                if (!dirty)
+                    return;
 
-            uint_fast16_t v = 0;
-            for (uint_fast8_t i = 0 ; i < num_gates ; i++) {
-                if (current_states[(num_gates-1)-i])
-                    v += (1 << (i));
+                uint_fast16_t v = 0;
+                for (uint_fast8_t i = 0 ; i < num_gates ; i++) {
+                    if (current_states[(num_gates-1)-i])
+                        v += (1 << (i));
+                }
+                mcp->write16(v);
+                dirty = false;
             }
-
-            mcp->write16(v);
-
-            dirty = false;
         }
 };
 
@@ -144,7 +149,10 @@ class MCP23S17SharedInputBankInterface : public BankInterface {
         }
         virtual bool check_gate(int gate_number) override {
             //return this->current_states[gate_number];
-            bool v = mcp->read1(start_gate + this->remap_pins[gate_number]);
+            bool v = false;
+            ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+                v = mcp->read1(start_gate + this->remap_pins[gate_number]);
+            }
             if (v) {
                 //Serial.printf("MCP23S17SharedInputBankInterface::check_gate(%i) = %i\n", gate_number, v);
             } else {
