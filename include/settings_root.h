@@ -14,6 +14,7 @@
 
 #include "storage.h"
 #include "project.h"
+#include "system_settings.h"
 #include "behaviours/behaviour_manager.h"
 #include "midi/midi_mapper_matrix_manager.h"
 #include "conductor.h"
@@ -26,6 +27,9 @@ class SettingsRoot : public SHDynamic<16, 16> {
         }
 
         virtual void setup_saveable_settings() override {
+            // Global system configuration
+            register_child(&system_settings);
+
             // Clock, BPM, time signature, global scale/key, global chord
             register_child(conductor);
 

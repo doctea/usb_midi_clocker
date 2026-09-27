@@ -22,6 +22,7 @@
 #endif
 #ifdef USE_UCLOCK
     #include "uClock.h"
+    #include "mymenu/menu_uclockdebug.h"
 #endif
 #ifdef ENABLE_STORAGE
     #include "saveloadlib.h"
@@ -116,6 +117,13 @@ class DebugPanel : public MenuItem {
 //FLASHMEM // void setup_debug_menu() causes a section type conflict with void Menu::start()
 #endif
 void setup_debug_menu() {
+
+    // -- Set up the uClock debug page
+    #ifdef USE_UCLOCK
+        menu->add(new UClockDebugPanel());
+    #endif
+
+    // -- Set up the Behaviours/USB debug page
     menu->add_page("Behaviours/USB", TFT_CYAN, false, "Debug");
 
     #ifdef ENABLE_USB
@@ -126,8 +134,7 @@ void setup_debug_menu() {
     BehavioursPanel *behaviours_panel = new BehavioursPanel();
     menu->add(behaviours_panel);
 
-    ////
-
+    // -- Set up the general debug page
     menu->add_page("Debug", TFT_CYAN, false, "Debug");
     menu->remember_opened_page();
 

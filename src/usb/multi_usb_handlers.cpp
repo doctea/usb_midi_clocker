@@ -6,7 +6,7 @@
 #include "behaviours/behaviour_manager.h"
 #include "interfaces/interfaces.h"
 #include "midi/midi_mapper_matrix_manager.h"
-#include "project.h"
+#include "system_settings.h"
 
 static void release_generated_outputs() {
   behaviour_manager->release_outputs();
@@ -36,12 +36,12 @@ void global_on_restart() {
 }
 
 void global_on_stop() {
-  if (project != nullptr && project->isReleaseOutputsOnMidiStop())
+  if (system_settings.isReleaseOutputsOnMidiStop())
     release_generated_outputs();
 }
 
 void global_on_external_clock_stall(bool stalled) {
-  if (stalled && project != nullptr && project->isReleaseOutputsOnExternalClockLoss())
+  if (stalled && system_settings.isReleaseOutputsOnExternalClockLoss())
     release_generated_outputs();
 }
 

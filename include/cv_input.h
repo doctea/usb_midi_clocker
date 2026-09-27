@@ -29,6 +29,7 @@
 //FLASHMEM 
 void setup_cv_input();
 //FLASHMEM
+void setup_parameter_inputs();
 void setup_parameters();
 #ifdef ENABLE_SCREEN
 void setup_parameter_menu();

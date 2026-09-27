@@ -42,7 +42,6 @@
     #include "cv_output.h"
 #endif
 
-#include "mymenu/menu_uclockdebug.h"
 #include "mymenu/menu_bpm.h"
 
 //#define DEBUG_TICKS
@@ -149,7 +148,8 @@ FLASHMEM __attribute__((noinline)) static void setup_parameter_inputs_phase() {
   #endif
 
   #ifdef ENABLE_PARAMETERS
-    tft_print((char*)"..setup parameters..\n");
+    tft_print((char*)"..setup parameter inputs..\n");
+    setup_parameter_inputs();
     setup_parameters();
     Debug_printf(F("after setup_parameters(), free RAM is %u\n"), freeRam());
   #endif
@@ -236,18 +236,6 @@ void setup() {
   uint32_t start_millis = millis();
 
   Serial_printf(F("At start of setup(), free RAM is %u\n"), freeRam()); Serial_flush();
-
-
-  // this crashes when run from here...?  but kinda need it activated before setup_behaviour_manager() so that we can load cvoutputparameter calibration?
-  // TODO: so: we need to be able to run something like "post-setup initialisation" on parameters at the end of setup, after everything else is set 
-  //    this would load calibration for cvoutputparameters; and maybe also set up the default connections for parameters; and maybe also send the initial values to the cv outputs
-  //    ..maybe we can do this at the end of setup_parameters()?
-  //    1:30am WAIT WUT its actually loading the calibration values for the cvoutputparameters successfully now?!
-  //    next day: wasn't working again so implemented load_all_parameters() in parameter_manager
-  /*tft_print((char*)"..storage..\n");
-  storage::setup_sd();
-  Serial_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
-  */
   
   vlpp_set_arena(&vlpp_arena_obj);   // call BEFORE sl_setup_all() / menus / etc.
 
@@ -531,25 +519,25 @@ void loop() {
   }
 
   #ifdef ENABLE_REMOTE_VIEWER
-  read_viewer_serial();
+    read_viewer_serial();
   #endif
   update_serial();
 
   #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
-  drain_uclock_trace();
+    drain_uclock_trace();
   #endif
 
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
-  if (debug_stress_scene_load && ticks % 6 == 1)  {
-    OnPress(':');
-    OnPress('L');
-    OnPress('J');
-    OnPress('K');
-    OnPress('L');
-    OnPress('J');
-    OnPress('K');
-    OnPress(':');
-  }
+    if (debug_stress_scene_load && ticks % 6 == 1)  {
+      OnPress(':');
+      OnPress('L');
+      OnPress('J');
+      OnPress('K');
+      OnPress('L');
+      OnPress('J');
+      OnPress('K');
+      OnPress(':');
+    }
   #endif
 
   //#ifdef ENABLE_PROFILER
@@ -596,6 +584,7 @@ void loop() {
       if (cv_clock_received)
         clock_receive_external_pulse_at(CLOCK_EXTERNAL_CV, cv_clock_observed_at_us);
     #endif
+
     if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
     ticked = update_clock_ticks();
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Config.h"
 
 #include "menuitems.h"

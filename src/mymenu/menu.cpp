@@ -136,13 +136,11 @@ DisplayTranslator_Configured display_translator = DisplayTranslator_Configured()
 
 void setup_menu_transport() {
     conductor->make_menu_items(menu, COMBINE_NONE);
-    
+        
     int current_page = menu->get_selected_page_index();
 
-    menu->select_page_by_name("Main");
-    menu->add(new UClockDebugPanel());
-
     #ifdef ENABLE_CLOCK_INPUT_CV
+        menu->select_page_by_name("Main");
         // go back a page and add this selector at the end so that it's in the main page clock menu
         // todo: but should probably put this on a separate settings page somewhere?
         menu->add(&external_ppqn_selector); // external clock ppqn selector
@@ -285,21 +283,6 @@ void setup_menu_transport() {
         //     ));
         // #endif
         menu->add(project_multi_autoadvance);
-
-        ObjectMultiToggleControl *transport_release = new ObjectMultiToggleControl("Release outputs", true);
-        transport_release->addItem(new MultiToggleItemClass<Project>(
-            "MIDI Stop",
-            project,
-            &Project::setReleaseOutputsOnMidiStop,
-            &Project::isReleaseOutputsOnMidiStop
-        ));
-        transport_release->addItem(new MultiToggleItemClass<Project>(
-            "Clock loss",
-            project,
-            &Project::setReleaseOutputsOnExternalClockLoss,
-            &Project::isReleaseOutputsOnExternalClockLoss
-        ));
-        menu->add(transport_release);
 
         #ifdef ENABLE_SD
             project_fileviewer = new PageFileViewerMenuItem("Project");

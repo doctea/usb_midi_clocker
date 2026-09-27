@@ -51,7 +51,7 @@ void setup_cv_input() {
 
 // initialise the input voltage ParameterInputs that can be mapped to Parameters
 //FLASHMEM 
-void setup_parameters() {
+void setup_parameter_inputs() {
 
     //Serial.println(F("==== begin setup_parameters ====")); Serial_flush();
     //tft_print("..setup_parameters...");
@@ -150,6 +150,9 @@ void setup_parameters() {
     parameter_manager->addInput(barlock5);
     parameter_manager->addInput(barlock6);
 
+}
+
+void setup_parameters() {
     // get the available target parameters
     // todo: dynamically pull them from other things that could have parameters available
 
@@ -168,13 +171,11 @@ void setup_parameters() {
     //Serial.println("finished allParameters.");
 
     #ifdef ENABLE_SHUFFLE
-        parameter_manager->addParameters(shuffle_pattern_wrapper.getParameters());
+        shuffle_pattern_wrapper.getParameters();
     #endif
 
     //Serial.println("about to parameter_manager->setDefaultParameterConnections()..");
     parameter_manager->setDefaultParameterConnections();
-
-    tft_print("done.\n");
 }
 
 #ifdef ENABLE_CV_OUTPUT

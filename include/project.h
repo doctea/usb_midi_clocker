@@ -98,8 +98,6 @@ class Project : public SHDynamic<0, 8> {
         bool load_sequencer_settings = true;
         bool load_behaviour_options = true;
         bool load_parameter_input_options = true;
-        bool release_outputs_on_midi_stop = true;
-        bool release_outputs_on_external_clock_loss = false;
 
         Project() {
             //initialise_scene_slots();
@@ -125,13 +123,6 @@ class Project : public SHDynamic<0, 8> {
                 ), SL_SCOPE_PROJECT, false);
             #endif
 
-            // todo: move this to a system-specific configuration section
-            register_setting(new VarSetting<bool>(
-                "release_outputs_on_midi_stop", "MIDI Configuration", &this->release_outputs_on_midi_stop
-            ), SL_SCOPE_SYSTEM, false);
-            register_setting(new VarSetting<bool>(
-                "release_outputs_on_external_clock_loss", "MIDI Configuration", &this->release_outputs_on_external_clock_loss
-            ), SL_SCOPE_SYSTEM, false);
         }
 
         FLASHMEM void setup_project() {
@@ -176,19 +167,6 @@ class Project : public SHDynamic<0, 8> {
         bool isLoadParameterInputOptions() {
             return this->load_parameter_input_options;
         }
-        void setReleaseOutputsOnMidiStop(bool value) {
-            this->release_outputs_on_midi_stop = value;
-        }
-        bool isReleaseOutputsOnMidiStop() {
-            return this->release_outputs_on_midi_stop;
-        }
-        void setReleaseOutputsOnExternalClockLoss(bool value) {
-            this->release_outputs_on_external_clock_loss = value;
-        }
-        bool isReleaseOutputsOnExternalClockLoss() {
-            return this->release_outputs_on_external_clock_loss;
-        }
-
         void notify_behaviours_for_project_change(int8_t project_number) {
             behaviour_manager->notify_behaviours_for_project_change(project_number);
         }
