@@ -6,6 +6,9 @@
 
 #include "clock.h"
 #include "uClock.h"
+
+using ClockState = umodular::clock::uClockClass::ClockState;
+
 class UClockDebugPanel : public MenuItem {
 public:
     UClockDebugPanel() : MenuItem("Debug") {
@@ -17,7 +20,13 @@ public:
         // live stats
         pos.y = header("uClock:", pos, selected, opened);
 
-        tft->printf("clock_state: %i, tick_immediately: %i\n", uClock.clock_state, uClock.tick_immediately);
+        tft->printf("clock_state: %i (%s)\n", uClock.clock_state, 
+            uClock.clock_state == ClockState::STOPPED  ? "STOPPED" :
+            uClock.clock_state == ClockState::PAUSED   ? "PAUSED" :
+            uClock.clock_state == ClockState::STARTING ? "STARTING" :
+            uClock.clock_state == ClockState::SYNCING  ? "SYNCING" :
+            uClock.clock_state == ClockState::STARTED  ? "STARTED" : "UNKNOWN"
+        );
 
         tft->printf("PPQN: input %i, output %i, tempo %.2f\n", uClock.input_ppqn, uClock.output_ppqn, uClock.getTempo());
 
