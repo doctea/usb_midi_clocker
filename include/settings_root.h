@@ -19,6 +19,9 @@
 #include "midi/midi_mapper_matrix_manager.h"
 #include "conductor.h"
 #include "arranger.h"
+#ifdef ENABLE_SHUFFLE
+    #include "sequencer/shuffle.h"
+#endif
 
 class SettingsRoot : public SHDynamic<16, 16> {
     public:
@@ -50,5 +53,10 @@ class SettingsRoot : public SHDynamic<16, 16> {
             
             // Scene / pattern-scope settings (clock multipliers, sequence data)
             register_child(&storage::current_state);
+
+            #ifdef ENABLE_SHUFFLE
+                // Shuffle templates are shared by scene and project saves.
+                register_child(&shuffle_pattern_wrapper);
+            #endif
         }
 };

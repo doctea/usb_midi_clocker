@@ -7,11 +7,12 @@
 
 #include "submenuitem.h"
 
-#include "mymenu/menu_looper.h"
-#include "mymenu/menu_sequencer.h"
 #include "mymenu/menu_conductor.h"
-#include "mymenu/menu_taptempo.h"
+#include "mymenu/menu_looper.h"
 #include "mymenu/menu_midi_matrix.h"
+#include "mymenu/menu_project.h"
+#include "mymenu/menu_sequencer.h"
+#include "mymenu/menu_taptempo.h"
 
 #include "mymenu/menu_taptempo.h"
 
@@ -78,29 +79,6 @@ Menu *menu; // = Menu();
     //extern Bounce pushButtonC;
 #endif
 
-
-
-#ifdef ENABLE_CLOCK_INPUT_CV
-    ExternalPPQNSelectorControl external_ppqn_selector = ExternalPPQNSelectorControl("Ext Clock PPQN", external_cv_ppqn);
-#endif
-
-#ifdef ENABLE_TAPTEMPO
-    TapTempoControl *tapper_control = nullptr;
-    extern TapTempoTracker *tapper;
-#endif
-
-// make these global so that we can toggle it from input_keyboard
-ObjectMultiToggleControl *project_multi_recall_options = nullptr;
-ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
-
-#ifdef ENABLE_SEQUENCER
-    #include "mymenu/menu_gatedisplay.h"
-    #include "mymenu/menu_sequencer_display.h"
-    SequencerStatus sequencer_status = SequencerStatus("Pattern");
-    TriggerSequencerDisplay trigger_sequencer_display = TriggerSequencerDisplay("Trigger Sequencer");
-    ClockSequencerDisplay   clock_sequencer_display   = ClockSequencerDisplay("Clock Sequencer");
-#endif
-
 #ifdef ENABLE_DRUM_LOOPER
     LooperStatus            drum_looper_status  =   LooperStatus("Drum looper", &drums_loop_track);
     LooperQuantizeControl   drum_loop_quantizer_setting = LooperQuantizeControl("Drum Loop quant",   &drums_loop_track);   // todo: make this part of the LooperStatus object
@@ -115,14 +93,6 @@ ObjectMultiToggleControl *project_multi_autoadvance = nullptr;
     );
 #endif
 
-MidiMatrixSelectorControl *midi_matrix_selector = nullptr;
-
-#ifdef ENABLE_SD
-    #include "menuitems_pageviewer.h"
-    extern PageFileViewerMenuItem *sequence_fileviewer;
-    extern PageFileViewerMenuItem *project_fileviewer;
-#endif
-
 /*MenuItem test_item_1 = MenuItem("test 1");
 MenuItem test_item_2 = MenuItem("test 2");
 MenuItem test_item_3 = MenuItem("test 3");*/
@@ -134,290 +104,28 @@ DisplayTranslator_Configured display_translator = DisplayTranslator_Configured()
 //#include "menuitems_numbers.h"
 //int8_t shuffle_data = 0;
 
+// add Conductor menus
 void setup_menu_transport() {
     conductor->make_menu_items(menu, COMBINE_NONE);
         
     int current_page = menu->get_selected_page_index();
 
-    #ifdef ENABLE_CLOCK_INPUT_CV
-        menu->select_page_by_name("Main");
-        // go back a page and add this selector at the end so that it's in the main page clock menu
-        // todo: but should probably put this on a separate settings page somewhere?
-        menu->add(&external_ppqn_selector); // external clock ppqn selector
-    #endif
-
     menu->select_page(current_page);
 }
 
 #ifdef ENABLE_TAPTEMPO
+
+    TapTempoControl *tapper_control = nullptr;
+    extern TapTempoTracker *tapper;
+
     void setup_menu_taptempo() {
         tapper_control = new TapTempoControl("Tap tempo", tapper);
         // go back a page and add this selector at the end so that it's in the main page clock menu
         // todo: but should probably put this on its own page or something somewhere?
-        menu->select_page(menu->get_number_pages()-2);
+        int current_page = menu->get_selected_page_index();
+        menu->select_page_by_name("Main");
         menu->add(tapper_control);   
-        menu->select_page(menu->get_number_pages()-1);
-    }
-#endif
-
-#if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
-    void setup_menu_project() {
-        menu->add_page("Project", C_WHITE, true, "Project");
-
-        //menu->add(new SeparatorMenuItem("Project"));
-
-        ActionConfirmItem *project_save = new ActionConfirmItem("Save settings", &save_project_settings);
-        LambdaNumberControl<int> *project_selector = new LambdaNumberControl<int>(
-            "Project number", 
-            [=](int project_number) -> void { project->setProjectNumber(project_number); },
-            [=]() -> int { return project->getProjectNumber(); },
-            nullptr, 
-            0, 
-            100
-        );
-
-        menu->add(project_save);       // save project settings button
-        menu->add(project_selector);   // save project selector button
-
-        // project loading options (whether to load or hold matrix settings, clock, sequence, behaviour options)
-        project_multi_recall_options = new ObjectMultiToggleControl("Recall options", true);
-        MultiToggleItemClass<Project> *load_matrix = new MultiToggleItemClass<Project> (
-            "MIDI Mappings",
-            project,
-            &Project::setLoadMatrixMappings,
-            &Project::isLoadMatrixMappings
-        );
-        #ifdef ENABLE_CLOCKS
-            MultiToggleItemClass<Project> *load_clock = new MultiToggleItemClass<Project> (
-                "Clock Settings",
-                project,
-                &Project::setLoadClockSettings,
-                &Project::isLoadClockSettings    
-            );
-        #endif
-        #ifdef ENABLE_SEQUENCER
-            MultiToggleItemClass<Project> *load_scene = new MultiToggleItemClass<Project> (
-                "Sequence Settings",
-                project,
-                &Project::setLoadSequencerSettings,
-                &Project::isLoadSequencerSettings    
-            );
-        #endif
-        MultiToggleItemClass<Project> *load_behaviour_settings = new MultiToggleItemClass<Project> {
-            "Behaviour Options",
-            project,
-            &Project::setLoadBehaviourOptions,
-            &Project::isLoadBehaviourOptions
-        };
-        #ifdef ENABLE_PARAMETERS
-            MultiToggleItemClass<Project> *load_parameter_input_settings = new MultiToggleItemClass<Project> {
-                "Parameter Input Options",
-                project,
-                &Project::setLoadParameterInputOptions,
-                &Project::isLoadParameterInputOptions
-            };
-        #endif
-
-        project_multi_recall_options->addItem(load_matrix);
-        #ifdef ENABLE_CLOCKS
-            project_multi_recall_options->addItem(load_clock);
-        #endif
-        #ifdef ENABLE_SEQUENCER
-            project_multi_recall_options->addItem(load_scene);
-        #endif
-        project_multi_recall_options->addItem(load_behaviour_settings);
-        #ifdef ENABLE_PARAMETERS
-            project_multi_recall_options->addItem(load_parameter_input_settings);
-        #endif
-        //menu->add(&project_load_matrix_mappings);
-        menu->add(project_multi_recall_options);
-
-        // options for whether to auto-advance looper/sequencer/beatstep
-        project_multi_autoadvance = new ObjectMultiToggleControl("Auto-advance", true);
-        #ifdef ENABLE_SEQUENCER
-            MultiToggleItemClass<Project> *auto_advance_scene = new MultiToggleItemClass<Project> (
-                "Sequence",
-                project,
-                &Project::set_auto_advance_scene,
-                &Project::is_auto_advance_scene
-            );
-            project_multi_autoadvance->addItem(auto_advance_scene);
-        #endif
-        #ifdef ENABLE_LOOPER
-            MultiToggleItemClass<Project> *auto_advance_looper = new MultiToggleItemClass<Project> (
-                "Looper",
-                project,
-                &Project::set_auto_advance_looper,
-                &Project::is_auto_advance_looper
-            );
-            project_multi_autoadvance->addItem(auto_advance_looper);
-        #endif
-        #if defined(ENABLE_BEATSTEP) && defined(ENABLE_BEATSTEP_SYSEX)
-            project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
-                #ifdef ENABLE_BEATSTEP_2
-                    "Beatstep 1",
-                #else
-                    "Beatstep",
-                #endif
-                behaviour_beatstep,
-                &DeviceBehaviour_Beatstep::set_auto_advance_pattern,                &DeviceBehaviour_Beatstep::is_auto_advance_pattern
-            ));
-            #ifdef ENABLE_BEATSTEP_2
-                project_multi_autoadvance->addItem(new MultiToggleItemClass<DeviceBehaviour_Beatstep> (
-                    "Beatstep 2",
-                    behaviour_beatstep_2,
-                    &DeviceBehaviour_Beatstep::set_auto_advance_pattern,                    &DeviceBehaviour_Beatstep::is_auto_advance_pattern
-                ));
-            #endif
-        #endif
-        // #ifdef ENABLE_PROGRESSION
-        //     project_multi_autoadvance->addItem(new MultiToggleItemLambda (
-        //         "Prog.Pls",
-        //         [=] (bool v) -> void { arranger->get_playback_mode() == LOOP_PLAYLIST; },
-        //         [=] () -> bool { return behaviour_progression->advance_progression_playlist; }
-        //     ));
-        //     project_multi_autoadvance->addItem(new MultiToggleItemLambda (
-        //         "Prog.Bar",
-        //         [=] (bool v) -> void { behaviour_progression->advance_progression_bar = v; },
-        //         [=] () -> bool { return behaviour_progression->advance_progression_bar; }
-        //     ));
-        // #endif
-        menu->add(project_multi_autoadvance);
-
-        #ifdef ENABLE_SD
-            project_fileviewer = new PageFileViewerMenuItem("Project");
-            menu->add(project_fileviewer);
-        #endif
-    }
-#endif
-
-#include "behaviours/behaviour_cvoutput.h"
-#include "mymenu/menuitems_notedisplay.h"
-
-void setup_menu_midi() {
-    menu->add_page("MIDI", C_WHITE, true, "Settings");
-    menu->remember_opened_page(-1, true);
-    menu->add(new SeparatorMenuItem("MIDI"));
-
-    // Matrix manager can be intentionally deferred until after USB init.
-    // Avoid dereferencing it during early menu construction.
-    if (midi_matrix_manager == nullptr) {
-        menu->add(new LambdaActionItem("MIDI Matrix (loading)", [=]() -> void {
-            menu_set_last_message("Matrix manager not ready yet", YELLOW);
-        }));
-        return;
-    }
-
-    SubMenuItemBar *midi_matrix_bar = new SubMenuItemBar("Panic", false, false);
-    midi_matrix_bar->add(new LambdaActionItem("PANIC", [=]() -> void { midi_matrix_manager->stop_all_notes(); } )); 
-    midi_matrix_bar->add(new LambdaActionConfirmItem("{HARD}", [=]() -> void { midi_matrix_manager->stop_all_notes_force(); } ));
-    midi_matrix_bar->add(new LambdaActionConfirmItem("reset", [=]() -> void { midi_matrix_manager->reset_matrix(); } ));
-    menu->add(midi_matrix_bar);
-
-    if (midi_matrix_selector == nullptr)
-        midi_matrix_selector = new MidiMatrixSelectorControl("MIDI Matrix");
-    if (midi_matrix_selector != nullptr)
-        menu->add(midi_matrix_selector);
-    else
-        menu->add(new LambdaActionItem("MIDI Matrix (alloc fail)", [=]() -> void {
-            menu_set_last_message("Matrix UI alloc failed", RED);
-        }));
-
-    menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
-
-    // debuggery stuff ...
-    //behaviour_cvoutput_2->debug = true;
-    /*
-    menu->add(new NoteDisplay("CV Output 1 notes", &behaviour_cvoutput_1->note_tracker));
-    menu->add(new NoteHarmonyDisplay(
-        (const char*)"CV Output 1 harmony", 
-        &midi_matrix_manager->global_scale_type, 
-        &midi_matrix_manager->global_scale_root, 
-        &behaviour_cvoutput_1->note_tracker,
-        &midi_matrix_manager->global_quantise_on
-    ));
-    menu->add(new HarmonyStatus("CV Output 1 harmony (oldskool)", &behaviour_cvoutput_1->last_transposed_note, &behaviour_cvoutput_1->current_transposed_note));
-    menu->add(new NoteDisplay("CV Output 2 notes", &behaviour_cvoutput_2->note_tracker));
-    menu->add(new NoteHarmonyDisplay(
-        (const char*)"CV Output 2 harmony", 
-        &midi_matrix_manager->global_scale_type, 
-        &midi_matrix_manager->global_scale_root, 
-        &behaviour_cvoutput_2->note_tracker,
-        &midi_matrix_manager->global_quantise_on
-    ));
-    menu->add(new HarmonyStatus("CV Output 2 harmony (oldskool)", &behaviour_cvoutput_2->last_transposed_note, &behaviour_cvoutput_2->current_transposed_note));
-    */
-
-    // TODO: this stuff actually now belongs in Conductor menu items..
-    // TOOD: but there is still logic in the midi_matrix_manager for requantising everything
-    // TODO: so we need to preserve that logic but make it fire on a callback when conductor notifies it
-    // menu->add_page("Quantiser");
-    // menu->remember_opened_page();
-    
-    // LambdaScaleMenuItemBar *global_quantise_bar = new LambdaScaleMenuItemBar(
-    //     "Global Scale", 
-    //     [](scale_index_t t)   { conductor->set_scale_type(t); },
-    //     []() -> scale_index_t { return conductor->get_scale_type(); },
-    //     [](int8_t r)          { conductor->set_scale_root(r); },
-    //     []() -> int8_t        { return conductor->get_scale_root(); },
-    //     false, true, true
-    // );
-    // global_quantise_bar->add(new LambdaToggleControl("Quantise",
-    //     [=](bool v) -> void { conductor->set_global_quantise_on(v); },
-    //     [=]() -> bool { return conductor->is_global_quantise_on(); }
-    // ));
-    // menu->add(global_quantise_bar);
-
-    // LambdaChordSubMenuItemBar *global_chord_bar = new LambdaChordSubMenuItemBar(
-    //     "Global Chord", 
-    //     [=](int8_t degree) -> void { conductor->set_chord_degree(degree); },
-    //     [=]() -> int8_t { return conductor->get_chord_degree(); },
-    //     [=](CHORD::Type chord_type) -> void { conductor->set_chord_type(chord_type); }, 
-    //     [=]() -> CHORD::Type { return conductor->get_chord_type(); },
-    //     [=](int8_t inversion) -> void { conductor->set_chord_inversion(inversion); },
-    //     [=]() -> int8_t { return conductor->get_chord_inversion(); },
-    //     false, true, true
-    // );
-    // global_chord_bar->add(new LambdaToggleControl("Quantise",
-    //     [=](bool v) -> void { conductor->set_global_quantise_chord_on(v); },
-    //     [=]() -> bool { return conductor->is_global_quantise_chord_on(); }
-    // ));
-    // menu->add(global_chord_bar);
-}
-
-#ifdef ENABLE_SEQUENCER
-    void setup_menu_sequencer() {
-        // sequencer
-        menu->add_page("Sequencer", C_WHITE, true, "Project");
-        //menu->add(&project_auto_advance_sequencer);
-        menu->add(new SeparatorMenuItem("Sequencer"));
-        menu->add(&sequencer_status);
-
-        SubMenuItemBar *save_load_bar = new SubMenuItemBar("Sequence load/save", false, true);
-        save_load_bar->add(new LambdaNumberControl<int>(
-            "Slot", 
-            [=](int slot_number) -> void { project->select_scene_number(slot_number); },
-            [=]() -> int { return sequencer_status.get_selected_slot(); },
-            nullptr, 
-            0, 
-            NUM_SEQUENCES-1
-        ));
-        save_load_bar->add(new LambdaActionConfirmItem("Save", [=] () -> void { sequencer_status.save_to_slot_number(sequencer_status.get_selected_slot()); }));
-        save_load_bar->add(new LambdaActionConfirmItem("Load", [=] () -> void { sequencer_status.load_slot_number(sequencer_status.get_selected_slot()); }));
-        menu->add(save_load_bar);
-
-        menu->add(&clock_sequencer_display);
-
-        menu->add(new ObjectActionConfirmItem<VirtualBehaviour_SequencerGates>("Clear sequencer pattern", behaviour_sequencer_gates, &VirtualBehaviour_SequencerGates::sequencer_clear_pattern));
-        menu->add(&trigger_sequencer_display);
-        
-        menu->add(new ActionItem("[debug] Reset cache", apcdisplay_initialise_last_sent, false));
-        //menu->add(new ActionItem("[debug] Clear display", apcmini_clear_display, false));
-
-        #ifdef ENABLE_SD
-            sequence_fileviewer = new PageFileViewerMenuItem("Sequence");
-            menu->add(sequence_fileviewer);
-        #endif
+        menu->select_page(current_page);
     }
 #endif
 
@@ -474,48 +182,32 @@ void setup_menu(bool button_high_state) {
     menu->add_pinned(new LoopMarkerPanel(LOOP_LENGTH_TICKS, PPQN));  // pinned position indicator
 
     setup_menu_transport();
+
     #ifdef ENABLE_TAPTEMPO
         setup_menu_taptempo();
     #endif
-    #ifdef ENABLE_SHUFFLE
-        setup_menu_shuffle();
-    #endif
-    setup_menu_project();
+
     #if !SAFE_DISABLE_MATRIX_UI_BOOT
         setup_menu_midi();
     #endif
+    
+    setup_menu_project();
+    
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
         setup_menu_sequencer();
     #endif
+
+    #ifdef ENABLE_SHUFFLE
+        setup_menu_shuffle();
+    #endif
+
     #ifdef ENABLE_CV_GATE_OUTPUT
         setup_gate_manager_menus();
     #endif
+
     #ifdef ENABLE_LOOPER
         setup_menu_looper();
     #endif
-   
-    /*Serial.println(F("...starting behaviour_manager#make_menu_items..."));
-    behaviour_manager->create_all_behaviour_menu_items(menu);
-    Serial.println(F("...finished behaviour_manager#make_menu_items..."));*/
-
-    // todo: probably don't need this stuff anymore {
-    #if defined(ENABLE_CRAFTSYNTH_USB) && defined(ENABLE_CRAFTSYNTH_CLOCKTOGGLE)
-        menu->add(&craftsynth_clock_toggle);
-    #endif
-
-    #ifdef ENABLE_PROFILER
-        //DirectNumberControl(const char* label, DataType *target_variable, DataType start_value, DataType min_value, DataType max_value, void (*on_change_handler)(DataType last_value, DataType new_value) = nullptr) 
-        DirectNumberControl<uint32_t> *average = new DirectNumberControl<uint32_t>(
-            "averages micros per loop", 
-            &average_loop_micros, 
-            average_loop_micros,
-            (uint32_t)0, 
-            (uint32_t)(2^64)
-        );
-        average->readOnly = true;
-        menu->add(average);
-    #endif
-    // }
 
     Serial.println(F("Exiting setup_menu"));
     Serial_flush();

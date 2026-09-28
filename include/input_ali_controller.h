@@ -22,7 +22,7 @@
 
     #ifdef ENABLE_SCREEN
         void toggle_autoadvance(bool on = false);
-        void toggle_recall(bool on = false);
+        // void toggle_recall(bool on = false);
         #include "screenshot.h"
         #include "mymenu.h"
         #include "midi/midi_mapper_matrix_manager.h"
@@ -287,10 +287,10 @@
                 Serial_println(F("Toggling (a)uto-advances"));
                 toggle_autoadvance(key=='A');
                 break;
-            case 'Q': case 'q':
-                Serial_println(F("Toggling Re(q)all"));
-                toggle_recall(key=='Q');
-                break;
+            // case 'Q': case 'q':
+            //     Serial_println(F("Toggling Re(q)all"));
+            //     toggle_recall(key=='Q');
+            //     break;
             #endif
             case 'r'            : 
                 Serial_println(F("Setting (r)estart_on_next_bar"));
@@ -352,7 +352,7 @@
                     if (modifiers==0) {
                         Serial_printf(F("%i pressed -- loading project %i!\n"), key, key - adjust);
                         //input_keyboard.queue_setProjectNumber(key - adjust);
-                        project->setProjectNumber(key - adjust);
+                        project->loadProjectNumber(key - adjust);
                     } else {
                         Serial_printf(F("Ignoring %i with modifiers %i\n"), key, modifiers);
                     }

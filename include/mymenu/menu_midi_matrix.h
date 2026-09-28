@@ -1,5 +1,4 @@
-#ifndef MENU_MIDI_MATRIX__INCLUDED
-#define MENU_MIDI_MATRIX__INCLUDED
+#pragma once
 
 #include "Config.h"
 #include "midi/midi_outs.h"
@@ -7,6 +6,8 @@
 #include "midi/midi_mapper_matrix_manager.h"
 
 #include "menuitems.h"
+
+void setup_menu_midi();
 
 class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
 
@@ -580,4 +581,4 @@ public:
     }
 };
 
-#endif
+

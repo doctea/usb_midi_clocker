@@ -236,7 +236,7 @@ bool execute_command(const char *command_line) {
                 Serial.printf("Invalid project number: %i\n", number);
                 return true;
             }
-            project->setProjectNumber(number);
+            project->loadProjectNumber(number);
             Serial.printf("Current project set to %i\n", number);
             return true;
         } else if (strcmp(arg1, "scene") == 0) {

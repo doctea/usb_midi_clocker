@@ -2,6 +2,8 @@
 
 #ifdef ENABLE_SEQUENCER
 
+void setup_menu_sequencer();
+
 #include "mymenu/menu_slotcontroller.h"
 
 #include "storage.h"

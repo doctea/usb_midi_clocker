@@ -83,6 +83,7 @@ class Project : public SHDynamic<0, 8> {
     #endif
     public:
         ISaveableSettingHost* save_tree = nullptr;  // set by setup_saveloadlib() after construction
+        int selected_project_number = 0;
         int current_project_number = 0;
 
         int selected_scene_number = 0;
@@ -126,7 +127,7 @@ class Project : public SHDynamic<0, 8> {
         }
 
         FLASHMEM void setup_project() {
-            setProjectNumber(this->current_project_number);
+            loadProjectNumber(this->current_project_number);
 
             initialise_scene_slots();
             #ifdef ENABLE_LOOPER
@@ -171,7 +172,7 @@ class Project : public SHDynamic<0, 8> {
             behaviour_manager->notify_behaviours_for_project_change(project_number);
         }
 
-        void setProjectNumber(int number) {
+        void loadProjectNumber(int number) {
             if (this->debug) Serial_printf(F("Project#setProjectNumber(%i)...\n"), number);
             //if (this->current_project_number!=number) {
                 this->current_project_number = number;
@@ -187,6 +188,13 @@ class Project : public SHDynamic<0, 8> {
         }
         int getProjectNumber() {
             return this->current_project_number;
+        }
+
+        int getSelectedProjectNumber() {
+            return this->selected_project_number;
+        }
+        void selectProjectNumber(int project_number) {
+            this->selected_project_number = project_number;
         }
 
         ////////////// clocks / sequences
@@ -365,33 +373,36 @@ class Project : public SHDynamic<0, 8> {
 
 
         bool save_project_settings() {
-            return this->save_project_settings(current_project_number);
+            return this->save_project_settings(this->getSelectedProjectNumber());
         }
-        bool save_project_settings(int save_to_project_number) {
+        bool save_project_settings(int save_to_project_number, bool switch_to = true) {
             #ifdef ENABLE_SD
-            
-            make_project_folders(save_to_project_number);
+                make_project_folders(save_to_project_number);
 
-            char filename[MAX_FILEPATH] = "";
-            snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
-            Serial.printf(F("save_project_settings(%i) writing to `%s`\n"), save_to_project_number, filename);
-            if (SD.exists(filename)) {
-                Serial.printf(F("%s exists, deleting first!\n"), filename);
-                SD.remove(filename);
-            }
+                char filename[MAX_FILEPATH] = "";
+                snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
+                Serial.printf(F("save_project_settings(%i) writing to `%s`\n"), save_to_project_number, filename);
+                if (SD.exists(filename)) {
+                    Serial.printf(F("%s exists, deleting first!\n"), filename);
+                    SD.remove(filename);
+                }
 
-            // Save entire tree, scoped to SL_SCOPE_PROJECT | SL_SCOPE_ROUTING.
-            // SL_SCOPE_ROUTING is included so midi_matrix connection lines are saved;
-            // scale/project settings use SL_SCOPE_PROJECT.
+                // Save entire tree, scoped to SL_SCOPE_PROJECT | SL_SCOPE_ROUTING.
+                // SL_SCOPE_ROUTING is included so midi_matrix connection lines are saved;
+                // scale/project settings use SL_SCOPE_PROJECT.
 
-            uint32_t micros_start = micros();
-            if (!sl_save_to_file(save_tree, filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING))) {
-                Serial.printf(F("Error saving project settings to %s\n"), filename);
-                return false;
-            }
-            Serial.printf(F("Saved project settings in %lu microseconds.\n"), micros() - micros_start);
+                uint32_t micros_start = micros();
+                if (!sl_save_to_file(save_tree, filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING))) {
+                    Serial.printf(F("Error saving project settings to %s\n"), filename);
+                    return false;
+                }
+                Serial.printf(F("Saved project settings in %lu microseconds.\n"), micros() - micros_start);
 
-            update_project_filename(filename);
+                if (switch_to) {
+                    this->current_project_number = save_to_project_number;
+                }
+
+                update_project_filename(filename);
             #endif
             return true;
         }

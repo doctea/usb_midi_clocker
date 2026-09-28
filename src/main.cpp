@@ -414,7 +414,7 @@ void setup() {
   // Re-apply project at end of setup: this runs load + behaviour notification
   // after all major systems are initialized, so migration/save-back paths can
   // execute with a fully ready save tree.
-  project->setProjectNumber(project->current_project_number);
+  project->loadProjectNumber(project->current_project_number);
 
   #ifdef USE_UCLOCK
     Serial_println("Starting uClock..."); Serial_flush();

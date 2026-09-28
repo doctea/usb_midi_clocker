@@ -11,6 +11,11 @@
 #include "system_settings.h"
 #include "storage.h"
 
+#ifdef ENABLE_CLOCK_INPUT_CV
+    #include "mymenu/menu_clock_source.h"
+    ExternalPPQNSelectorControl external_ppqn_selector = ExternalPPQNSelectorControl("Ext Clock PPQN", external_cv_ppqn);
+#endif
+
 void setup_system_settings_menu() {
     menu->add_page("System", C_WHITE, true, "Settings");
 
@@ -37,6 +42,9 @@ void setup_system_settings_menu() {
         &SystemSettings::isReleaseOutputsOnExternalClockLoss
     ));
     menu->add(transport_release);
+
+    menu->add(&external_ppqn_selector); // external clock ppqn selector
+    // todo: other external clock settings, e.g. which gate inputs to use for reset+clock
 
     #ifdef ENABLE_SD
         system_settings_fileviewer = new PageFileViewerMenuItem("System");

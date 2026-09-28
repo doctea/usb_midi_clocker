@@ -120,6 +120,7 @@ void setup_debug_menu() {
 
     // -- Set up the uClock debug page
     #ifdef USE_UCLOCK
+        menu->add_page("uClock", TFT_CYAN, false, "Debug");
         menu->add(new UClockDebugPanel());
     #endif
 
