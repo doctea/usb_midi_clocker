@@ -7,6 +7,9 @@
 
 #include "project.h"
 #include "storage.h"
+#ifdef ENABLE_USB
+    #include <USBHost_t36.h>
+#endif
 
 void debug_euclidian_lock();
 void debug_euclidian_shuffle(uint8_t);
@@ -133,6 +136,15 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "free_ram") == 0) {
         debug_free_ram();
         return true;
+#ifdef ENABLE_USB
+    } else if (strcmp(command, "usb_pool") == 0) {
+        uint32_t devices, pipes, transfers, strings;
+        USBHost::countFree(devices, pipes, transfers, strings);
+        Serial.printf("USB free pools: devices=%lu, pipes=%lu, transfers=%lu, strings=%lu\n",
+                      (unsigned long)devices, (unsigned long)pipes,
+                      (unsigned long)transfers, (unsigned long)strings);
+        return true;
+#endif
     } else if (strcmp(command, "crashlog") == 0) {
         dump_crashreport_log();
         return true;

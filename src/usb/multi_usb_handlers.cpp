@@ -107,6 +107,15 @@ usb_midi_slot usb_midi_slots[NUM_USB_MIDI_DEVICES] = {
 
 //uint64_t usb_midi_connected[NUM_USB_MIDI_DEVICES] = { 0,0,0,0,0,0,0,0 };
 
+static void disconnect_usb_midi_slot(uint8_t idx) {
+  DeviceBehaviourUSBBase *behaviour = usb_midi_slots[idx].behaviour;
+  usb_midi_slots[idx].behaviour = nullptr;
+  if (behaviour != nullptr && behaviour->device == usb_midi_slots[idx].device) {
+    Serial.printf(F("Disconnecting usb_midi_slot %i behaviour\n"), idx);
+    behaviour->disconnect_device();
+  }
+}
+
 // assign device to port and set appropriate handlers
 void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x00000000) {
   uint16_t vid, pid;
@@ -133,10 +142,7 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x00000000) {
   usb_midi_slots[idx].packed_id = packed_id;
 
   // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
-  if (usb_midi_slots[idx].behaviour!=nullptr) {
-    Serial.printf(F("Disconnecting usb_midi_slot %i behaviour\n"), idx);
-    usb_midi_slots[idx].behaviour->disconnect_device();
-  }
+  disconnect_usb_midi_slot(idx);
 
   if (packed_id==0) {
     usb_midi_slots[idx].packed_id = 0;
@@ -156,13 +162,24 @@ void setup_usb_midi_device(uint8_t idx, uint32_t packed_id = 0x00000000) {
 
 
 void update_usb_midi_device_connections() {
+  uint32_t packed_ids[NUM_USB_MIDI_DEVICES];
+  // only the ID snapshot is done with IRQs off; connect/disconnect work needs the USB ISR running
   #ifdef IRQ_PROTECT_USB_CHANGES
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   #endif
   {
     for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
+      packed_ids[port] = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
+    }
+  }
+  for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
+    if (usb_midi_slots[port].packed_id != packed_ids[port]) {
+      disconnect_usb_midi_slot(port);
+    }
+  }
+  for (int port = 0 ; port < NUM_USB_MIDI_DEVICES ; port++) {
       //Serial_printf("update_usb_midi_device_connections() checking port %i/%i\n", port+1, NUM_USB_MIDI_DEVICES);
-      uint32_t packed_id = (usb_midi_slots[port].device->idVendor()<<16) | (usb_midi_slots[port].device->idProduct());
+      uint32_t packed_id = packed_ids[port];
       //Serial.printf("packed %04X and %04X to %08X\n", usb_midi_slots[port].device->idVendor(),  usb_midi_slots[port].device->idProduct(), packed_id);
       if (usb_midi_slots[port].packed_id != packed_id) {
         // device at this port has changed since we last saw it -- ie, disconnection or connection
@@ -173,8 +190,6 @@ void update_usb_midi_device_connections() {
         setup_usb_midi_device(port, packed_id);
         Serial_println(F("-----"));
       }
-    }
-    //Serial_println("finished loop in update_usb_midi_device_connections");
   }
   //Serial_println("returning from update_usb_midi_device_connections");
 }

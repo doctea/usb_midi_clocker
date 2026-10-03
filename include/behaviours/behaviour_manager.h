@@ -82,12 +82,6 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
 
         #ifdef ENABLE_USB
             bool attempt_usb_device_connect(uint8_t idx, uint32_t packed_id) {
-                #ifdef IRQ_PROTECT_USB_CHANGES
-                    //bool irqs_enabled = __irq_enabled();
-                    //__disable_irq();
-                    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-                #endif
-
                 // loop over the registered behaviours and if the correct one is found, set it up
                 // todo: replace with hashmap lookup?
                 unsigned int i = 0;
@@ -104,10 +98,6 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                     ++i;
                 }
                 Debug_printf(F("Didn't find a behaviour for usbmidi device #%u with %08X!\n"), idx, packed_id);
-                #ifdef IRQ_PROTECT_USB_CHANGES
-                    }
-                    //if (irqs_enabled) __enable_irq();
-                #endif
 
                 return false;
             }
@@ -115,11 +105,7 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
 
         #ifdef ENABLE_USBSERIAL
             bool attempt_usbserial_device_connect(uint8_t idx, uint32_t packed_id) {
-                #ifdef IRQ_PROTECT_USB_CHANGES
-                    //bool irqs_enabled = __irq_enabled();
-                    //__disable_irq();
-                    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-                #endif
+                // must run with IRQs enabled: connect_device() calls USBSerial begin(), which waits on the USB ISR
                 Serial_printf(F("attempt_usbserial_device_connect(idx=%i, packed_id=%08x)...\n"), idx, packed_id); Serial_flush();
                 // loop over the registered behaviours and if the correct one is found, set it up
                 unsigned int i = 0;
@@ -145,10 +131,6 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
                     }
                     ++i;
                 }
-                #ifdef IRQ_PROTECT_USB_CHANGES
-                    }
-                    //if (irqs_enabled) __enable_irq();
-                #endif
                 Serial_printf(F("Didn't find a behaviour for usbserial device #%u with %08X (%s)!\n"), idx, packed_id, usb_serial_slots[idx].usbdevice->product()); Serial_flush();
                 return false;
             }

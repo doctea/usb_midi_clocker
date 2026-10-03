@@ -795,15 +795,15 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             previous_global_quantise_mode = current_mode;
             if (prior_mode != QUANTISE_MODE_NONE || current_mode != QUANTISE_MODE_NONE) {
                 uint32_t timestamp = micros();
-                Serial_printf(
-                    "harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()\n"
-                    "\tto go from scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i "
-                    "\tto         scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i\n",
-                    conductor->get_scale_root(), conductor->get_chord_type(), conductor->get_chord_degree(), conductor->get_chord_inversion(),
-                    new_scale.root_note, new_chord.type, new_chord.degree, new_chord.inversion
-                );
+                // Serial_printf(
+                //     "harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()\n"
+                //     "\tto go from scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i "
+                //     "\tto         scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i\n",
+                //     conductor->get_scale_root(), conductor->get_chord_type(), conductor->get_chord_degree(), conductor->get_chord_inversion(),
+                //     new_scale.root_note, new_chord.type, new_chord.degree, new_chord.inversion
+                // );
                 behaviour_manager_requantise_all_notes(true);
-                Serial_printf("- behaviour_manager_requantise_all_notes took %u us\n", micros() - timestamp);
+                // Serial_printf("- behaviour_manager_requantise_all_notes took %u us\n", micros() - timestamp);
             }
         }
 

@@ -5,6 +5,11 @@
 
 #include <Arduino.h>
 
+#if defined(__IMXRT1062__)
+  #include <Watchdog_t4.h>
+  static WDT_T4<WDT1> runtime_watchdog;
+#endif
+
 #include "BootConfig.h"
 #include "Config.h"
 
@@ -446,6 +451,12 @@ void setup() {
     myTimer.begin(checkClock, 250); 
   #endif
 
+  #if defined(__IMXRT1062__)
+    WDT_timings_t watchdog_config;
+    watchdog_config.timeout = 8;
+    runtime_watchdog.begin(watchdog_config);
+  #endif
+
 }
 
 //long loop_counter = 0;
@@ -737,6 +748,10 @@ void loop() {
     average_loop_micros = micros() - start_loop_micros_stamp;
   #endif
   if(debug_flag) { Serial_println(F("reached end of loop()!")); Serial_flush(); }
+
+  #if defined(__IMXRT1062__)
+    runtime_watchdog.feed();
+  #endif
 }
 
 // (should be) called inside interrupt
