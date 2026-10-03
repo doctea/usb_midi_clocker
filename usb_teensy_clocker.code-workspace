@@ -39,6 +39,12 @@
 		},
 		{
 			"path": "../my_libraries/foundling"
+		},
+		{
+			"path": "../Compulidian"
+		},
+		{
+			"path": "../my_libraries/USBHost_t36"
 		}
 	],
 	"settings": {
