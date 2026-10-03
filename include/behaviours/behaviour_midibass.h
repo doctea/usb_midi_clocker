@@ -19,7 +19,11 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         byte drone_channel = 0;     // channel that we should drone on
 
         int8_t machinegun = 0;
-        int8_t machinegun_current_note = NOTE_OFF;
+        int8_t machinegun_current_note = NOTE_OFF;  // exact pitch sent to device (incl. TUNING_OFFSET), so the kill always matches
+        uint8_t machinegun_channel = 0;
+        int8_t held_source_note = NOTE_OFF;         // pitch as received, used to match the incoming note off
+        int8_t held_output_note = NOTE_OFF;         // resolved pitch to retrigger while held_source_note is held
+        uint8_t held_channel = 0;
 
         void set_machinegun(int8_t value) {
             this->machinegun = value;
@@ -58,7 +62,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void kill_drone_note() {            
             if (is_valid_note(last_drone_note)) {
                 if (this->debug) Serial.printf(F("\t\tkill_drone_note(%i, %i, %i)>>>>\n"), last_drone_note, 0, drone_channel);
-                DeviceBehaviourUltimateBase::sendNoteOff(last_drone_note, MIDI_MIN_VELOCITY, drone_channel);
+                // raw send: routed drone notes aren't in note_tracker, so the tracked sendNoteOff would drop it
+                this->actualSendNoteOff(last_drone_note + this->TUNING_OFFSET, MIDI_MIN_VELOCITY, drone_channel);
                 if (this->debug) Serial.printf(F("\t\t<<<< after kill_drone_note(%i, %i, %i)\n"), last_drone_note, 0, drone_channel);
             }
             last_drone_note = NOTE_OFF;
@@ -76,6 +81,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         virtual void killCurrentNote() override {
             this->kill_drone_note();
             this->kill_machinegun_note();
+            held_source_note = held_output_note = NOTE_OFF;
             DeviceBehaviourUltimateBase::killCurrentNote();
         }
 
@@ -83,38 +89,32 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
         //virtual void on_tick(uint32_t ticks) override {
         virtual void on_pre_clock(uint32_t ticks) override {    // both drone and machinegun seem to work if we do on_pre_clock here?
             //MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-            int note = NOTE_OFF;
+            int8_t note;
+            uint8_t channel;
             if (is_valid_note(last_drone_note)) {
-                //if (this->debug) Serial.printf("%s#on_tick(%i) with last_drone_note %s\n", this->get_label(), ticks%24, get_note_name_c(last_drone_note));
                 note = last_drone_note;
+                channel = drone_channel;
             } else {
-                //MIDIOutputWrapper *wrapper = midi_matrix_manager->get_target_for_id(this->target_id);
-                //if (wrapper!=nullptr && is_valid_note(current_transposed_note))
-                //    note = current_transposed_note;
-                //if (this->debug) Serial.printf("%s#on_tick(%i) with current_transposed_note %s\n", this->get_label(), ticks%24, get_note_name_c(note));
-                //if (is_valid_note(this->note))
-                note = current_transposed_note;
+                note = held_output_note;
+                channel = held_channel;
             }
-            if (machinegun && is_valid_note(note)) { //wrapper->current_transposed_note)) {
-                //if (this->debug) Serial.printf("%s#on_tick(%i) with machinegun %i and note %s\n", this->get_label(), ticks%24, machinegun, get_note_name_c(note));
+            if (machinegun && is_valid_note(note)) {
                 int div = machinegun;
                 int qt = ticks % PPQN;
                 int vel = MIDI_MAX_VELOCITY; //constrain(64+(127/qt), 64, 127);   // todo: add some clever velocity stuff here?
                 if ((qt+1) % (PPQN/div) == 0) {
                     if (debug) Serial.printf("%s:\tqt %i means should kill the note %s?\n", this->get_label(), qt, get_note_name_c(note));
-                    /// TODO: fix this workaround -- for some reason only necessary for MIDIBassProxy, as Neutron works OK?! 
-                    //      if this workaround isn't in place then we don't seem to send out note offs for machine gun properly, like machinegun_current_note doesn't get set properly..?
-                    int prev_note = this->machinegun_current_note;
-                    this->machinegun_current_note = note;
                     kill_machinegun_note();
-                    this->machinegun_current_note = prev_note;
                 } else if (qt % (PPQN/div)==0) {
                     if (debug) Serial.printf("%s:\tqt %i means should start the note %s?\n", this->get_label(), qt, get_note_name_c(note));
-                    DeviceBehaviourUltimateBase::sendNoteOn(note, vel, drone_channel);
-                    this->machinegun_current_note = note;
-                } 
-            } else {
-                //if (this->debug) Serial.printf("%s#on_tick(%i) isn't machinegun or isn't valid note %s\n", this->get_label(), ticks%24, get_note_name_c(note));
+                    kill_machinegun_note();
+                    int8_t output_note = note + this->TUNING_OFFSET;
+                    if (!is_valid_note(output_note)) return;
+                    // raw send: pitch is already resolved, and must not disturb note_tracker/current_transposed_note
+                    this->actualSendNoteOn(output_note, vel, channel);
+                    this->machinegun_current_note = output_note;
+                    this->machinegun_channel = channel;
+                }
             }
         }
 
@@ -143,7 +143,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             }
 
             if (this->debug) Serial.printf("%s#kill_machinegun_note(): note is %s, killing!\n", this->get_label(), get_note_name_c(this->machinegun_current_note));
-            DeviceBehaviourUltimateBase::sendNoteOff(this->machinegun_current_note, MIDI_MIN_VELOCITY, drone_channel);
+            this->actualSendNoteOff(this->machinegun_current_note, MIDI_MIN_VELOCITY, this->machinegun_channel);
             this->machinegun_current_note = NOTE_OFF;
         }
 
@@ -158,26 +158,50 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
 
                 if (!is_valid_note(last_drone_note) && new_bar) {
-                    if (this->machinegun)
-                        this->machinegun_current_note = pitch;
+                    if (this->machinegun) {
+                        kill_machinegun_note();
+                        this->machinegun_current_note = pitch + this->TUNING_OFFSET;
+                        this->machinegun_channel = channel;
+                    }
                     last_drone_note = pitch;
                     //if (this->debug) Serial.printf(F("\tDeviceBehaviour_Neutron#sendNoteOn(%i, %i, %i) got new last_drone_note: %i\n"), pitch, velocity, channel, last_drone_note);
                     new_bar = false;
                     drone_channel = channel;
                     this->send_drone_note();
                 }
-            } else 
+            } else {
+                // only one machinegun note is ever owned, so release any previous one before it is forgotten
+                if (this->machinegun)
+                    kill_machinegun_note();
+                this->current_transposed_note = NOTE_OFF;
                 DeviceBehaviourUltimateBase::sendNoteOn(pitch, velocity, channel);
+                if (is_valid_note(this->current_transposed_note)) {
+                    held_source_note = pitch;
+                    held_output_note = this->current_transposed_note;
+                    held_channel = channel;
+                    if (this->machinegun) {
+                        this->machinegun_current_note = held_output_note + this->TUNING_OFFSET;
+                        this->machinegun_channel = channel;
+                    }
+                }
+            }
         }
 
         virtual void sendNoteOff(byte pitch, byte velocity, byte channel = 0) override {
             if (drone_enabled) {
                 //
                 pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
-                if (!is_valid_note(last_drone_note) && machinegun>0 && pitch==this->machinegun_current_note)
+                if (!is_valid_note(last_drone_note) && machinegun>0 && pitch + this->TUNING_OFFSET == this->machinegun_current_note)
                     kill_machinegun_note();
-            } else
+            } else {
                 DeviceBehaviourUltimateBase::sendNoteOff(pitch, velocity, channel);
+                if (pitch == held_source_note) {
+                    // explicit kill: the base note off recalculates pitch, which may differ if limits/offset changed while held
+                    kill_machinegun_note();
+                    held_source_note = NOTE_OFF;
+                    held_output_note = NOTE_OFF;
+                }
+            }
         }
 
         virtual void setup_saveable_settings() override {

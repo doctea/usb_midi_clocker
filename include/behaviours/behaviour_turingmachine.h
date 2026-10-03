@@ -131,14 +131,10 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
 
         DeviceBehaviourUltimateBase::initialise_parameters();
 
-        // Fetch parameters from each pattern and add to behaviour's parameter list
+        // Pattern parameters stay owned by their patterns (saved via the sequencer subtree), as with FlexiArp;
+        // getParameters() is still called so they get registered with parameter_manager.
         for (unsigned int i = 0 ; i < sequencer->get_number_patterns() ; i++) {
-            ParameterList *pattern_parameters = sequencer->get_pattern(i)->getParameters(i);
-            if (pattern_parameters != nullptr) {
-                for (auto* p : *pattern_parameters) {
-                    this->parameters->add(p);
-                }
-            }
+            sequencer->get_pattern(i)->getParameters(i);
         }
 
         output_processor->setup_parameters();

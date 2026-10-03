@@ -40,8 +40,9 @@
             [=](int8_t v) -> void { this->set_machinegun(v); },
             [=]() -> int8_t { return this->get_machinegun(); },
             nullptr,
-            (int8_t)0, 
-            (int8_t)4
+            (int8_t)0,
+            (int8_t)4,
+            true
         );
         bar->add(machinegun_mode);
 
