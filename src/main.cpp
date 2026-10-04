@@ -97,6 +97,9 @@ void do_tick(uint32_t ticks);
 #include "ParameterManager.h"
 
 #include "behaviours/behaviour_manager.h"
+#if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
+  #include "midi/midi_apcmini_display.h"
+#endif
 
 #include "input_keyboard.h"
 #include "input_ali_controller.h"
@@ -696,6 +699,10 @@ void loop() {
     behaviour_manager->do_loops();
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_loops()")); Serial_flush(); }
   }
+
+  #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
+    apcdisplay_flush_pending();
+  #endif
 
   #ifdef ENABLE_TAPTEMPO
     // do tap tempo update 

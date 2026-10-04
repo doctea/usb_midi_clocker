@@ -229,6 +229,12 @@ void update_usb_midi_device_connections() {
 void setup_multi_usb() { // error: void setup_multi_usb() causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
   Serial.print(F("Arduino initialising usb/midi...")); Serial_flush();
 
+  for (unsigned int port = 0; port < NUM_USB_MIDI_DEVICES; port++) {
+    if (!usb_midi_slots[port].device->beginTransmitQueues()) {
+      Serial.printf("USB MIDI port %u: transmit queue allocation failed; congestion protection unavailable\n", port);
+    }
+  }
+
   Usb.begin();
   Serial.println(F("Usb.begin() returned")); Serial_flush();
   for (unsigned int i = 0 ; i < 5 ; i++) {

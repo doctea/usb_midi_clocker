@@ -9,3 +9,78 @@ in the development cycle.
 
 More information about PlatformIO Unit Testing:
 - https://docs.platformio.org/page/plus/unit-testing.html
+
+Standalone USB MIDI host regressions
+
+From the project directory, using Node.js and g++ with UBSan support:
+
+	node test/apc_display_host_test.js
+	node test/usb_reconnect_host_test.js
+
+These compile extracted production functions with mocked USB hardware, without
+running PlatformIO or installing firmware dependencies. The display/transmit
+test expects USBHost_t36 at ../my_libraries/USBHost_t36; USBHOST_T36_DIR can
+override that location.
+
+USB MIDI congestion handling
+
+All MIDIDeviceBase send methods retain the direct transmit-buffer path when
+uncongested. When buffers are busy, ordinary MIDI messages use a 32-packet FIFO.
+USBHOST_MIDI_TX_QUEUE_SIZE can override that capacity via a global build flag;
+it must be consistent in the library and application translation units.
+MIDI realtime messages (clock, start, continue, stop, sensing, reset) use a
+separate 16-packet FIFO, bypass ordinary software backlog, and immediately try
+to flush partial USB packets. Each FIFO preserves its own ordering; realtime
+can interleave with SysEx. Already submitted USB packets cannot be overtaken.
+
+Completion and timer callbacks drain at most 16 messages per invocation. Sends
+never spin waiting for USB progress. Default packet storage costs 192 bytes per device,
+plus bookkeeping. Disconnect clears queued messages so they cannot reach a
+replacement device. send_now() explicitly flushes partial packets; it does not
+wait for delivery.
+
+The smaller static ordinary queue saves 4,608 bytes of RAM1 across 12 MIDI slots
+compared with the original 128-packet queues, retaining realtime capacity and
+latency behavior. The host test runs both capacities in static and allocated modes.
+The firmware's 8 KB error / 16 KB warning stack thresholds are unchanged; a
+fresh firmware link must confirm the actual remaining stack reserve.
+
+Optional startup-allocated queue storage
+
+The library defaults to inline static queue arrays; it does not require PSRAM,
+a custom linker, startup allocation, or allocator calls from standard users.
+Define USBHOST_MIDI_TX_QUEUE_ALLOCATOR to opt into pointer-backed storage, using
+the named malloc-compatible allocator. Define it globally for both the library
+and application. Call beginTransmitQueues() once per device in setup(), with
+interrupts enabled and memory initialized, before Usb.begin(); never call it
+from an interrupt. It is idempotent and returns false on allocation failure.
+Failure leaves the direct send path usable, but congested writes are counted as
+drops without dereferencing missing storage. usb_tx reports queue_ready.
+
+Each device makes one allocation for both queues and retains it for its entire
+driver lifetime, including across disconnects. Sending, completion, timers, and
+reconnecting do not allocate/free. Only pointers and bookkeeping remain inline.
+No queued data is submitted directly to USB DMA; it is copied into the existing
+USB transmit buffers, so software queues do not need DMA memory placement.
+
+pcb_studio opts into USBHOST_MIDI_TX_QUEUE_ALLOCATOR=malloc and capacity 128.
+Its linker places the normal heap in RAM2, separate from RAM1 stack, just like
+the standard Teensy 4.1 linker. Queue packet storage is 576 bytes per device
+(6,912 bytes total plus allocator overhead); the two pointers cost 8 bytes per
+device on Teensy. This preserves the larger backlog without requiring PSRAM.
+Other profiles keep the compact static default. On Teensy 4.1, extmem_malloc
+can be chosen explicitly instead for PSRAM with the core's internal-heap fallback;
+malloc was selected here to keep the frequently accessed queues in internal RAM.
+On other targets, check heap placement before assuming it frees stack space.
+
+Queues are finite: sustained overload or a stalled endpoint can still exhaust
+them. The usb_tx console command shows per-slot pending messages, pending
+realtime messages, total dropped messages, and realtime drops (a subset of total).
+Drop counts persist for the slot's driver lifetime, including across reconnects.
+Pending counts exclude packets already in the two hardware transmit buffers.
+trySendNoteOn() reports admission failure without incrementing drop counts,
+allowing the APC display to retain/coalesce pending LED state and retry.
+
+Hardware validation: test high-tempo playback, simultaneous CC/note bursts,
+APC display changes, and hub reconnects; compare usb_tx drop counters before
+and after. Host tests validate logic, not physical USB delivery latency.

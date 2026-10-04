@@ -17,7 +17,7 @@ usb_midi_device[3] is 09E8:0028 aka AKAI PROFESSIONAL,LP:APC MINI
 usb_midi_device[4] is 09E8:006B aka Akai:Akai MPK49
 */
 
-// Increase to add more simultaneous USB MIDI host devices (each costs ~1.8 KB RAM1).
+// Increase to add more simultaneous USB MIDI host devices (each costs ~2.0 KB RAM1 with default TX queues).
 // Decrease to reclaim RAM1. Device objects midi01..midiNN must match this count
 // in src/usb/multi_usb_handlers.cpp.
 #define NUM_USB_MIDI_DEVICES 12

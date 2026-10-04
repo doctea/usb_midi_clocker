@@ -17,21 +17,31 @@
 #include "project.h"
 
 #include "behaviours/behaviour_apcmini.h"
+#include <util/atomic.h>
 
 apc_gate_page_t apc_gate_page = CLOCKS;
 
 int8_t apc_note_last_sent[MIDI_NUM_NOTES] = {};
+struct APCPendingNote {
+  int8_t value = 0;
+  int8_t channel = 1;
+  bool dirty = false;
+};
+static APCPendingNote apc_pending_notes[MIDI_NUM_NOTES];
+static uint8_t apc_next_pending_note = 0;
+static uint32_t apc_last_flush_micros = 0;
 
 // cached send note on
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
-  if (!behaviour_apcmini->is_connected()) return;
+  if (behaviour_apcmini == nullptr || !behaviour_apcmini->is_connected()) return;
 
-  if (!is_valid_note(pitch)) return;
+  if (!is_valid_note(pitch) || value < 0 || channel < 1 || channel > 16) return;
 
-  if (force || value != apc_note_last_sent[pitch]) {
-    behaviour_apcmini->device->sendNoteOn(pitch, value, channel);
-
-    apc_note_last_sent[pitch] = value;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    APCPendingNote &pending = apc_pending_notes[pitch];
+    pending.value = value;
+    pending.channel = channel;
+    pending.dirty = pending.dirty || force || value != apc_note_last_sent[pitch];
   }
 }
 //cached send note off
@@ -39,8 +49,40 @@ void apcdisplay_sendNoteOff(int8_t pitch, int8_t value, int8_t channel, bool for
   apcdisplay_sendNoteOn(pitch, 0 /*value*/, channel, force);
 }
 void apcdisplay_initialise_last_sent() {
-  for(uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++)
-    apc_note_last_sent[i] = -1;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    for(uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
+      apc_note_last_sent[i] = -1;
+      apc_pending_notes[i] = APCPendingNote{};
+    }
+    apc_next_pending_note = 0;
+    apc_last_flush_micros = micros();
+  }
+}
+
+void apcdisplay_flush_pending() {
+  if (!__irq_enabled() || behaviour_apcmini == nullptr || !behaviour_apcmini->is_connected()) return;
+  uint32_t now = micros();
+  if (uint32_t(now - apc_last_flush_micros) < 1000) return;
+  apc_last_flush_micros = now;
+
+  uint8_t sent = 0;
+  for (uint16_t checked = 0; checked < MIDI_NUM_NOTES && sent < 4; checked++) {
+    uint8_t pitch = apc_next_pending_note;
+    APCPendingNote pending;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      pending = apc_pending_notes[pitch];
+    }
+    if (pending.dirty) {
+      if (!behaviour_apcmini->device->trySendNoteOn(pitch, pending.value, pending.channel)) return;
+      ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        apc_note_last_sent[pitch] = pending.value;
+        if (apc_pending_notes[pitch].value == pending.value && apc_pending_notes[pitch].channel == pending.channel)
+          apc_pending_notes[pitch].dirty = false;
+      }
+      sent++;
+    }
+    apc_next_pending_note = (pitch + 1) % MIDI_NUM_NOTES;
+  }
 }
 
 // x,y addressing for apcmini grid

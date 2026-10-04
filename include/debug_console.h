@@ -9,6 +9,7 @@
 #include "storage.h"
 #ifdef ENABLE_USB
     #include <USBHost_t36.h>
+    #include "usb/multi_usb_handlers.h"
 #endif
 
 void debug_euclidian_lock();
@@ -143,6 +144,18 @@ bool execute_command(const char *command_line) {
         Serial.printf("USB free pools: devices=%lu, pipes=%lu, transfers=%lu, strings=%lu\n",
                       (unsigned long)devices, (unsigned long)pipes,
                       (unsigned long)transfers, (unsigned long)strings);
+        return true;
+    } else if (strcmp(command, "usb_tx") == 0) {
+        for (unsigned int port = 0; port < NUM_USB_MIDI_DEVICES; port++) {
+            MIDIDeviceBase *device = usb_midi_slots[port].device;
+            Serial.printf("USB MIDI port=%u id=%04X:%04X queue_ready=%u pending=%u realtime_pending=%u dropped=%lu realtime_dropped=%lu\n",
+                          port, device->idVendor(), device->idProduct(),
+                          (unsigned int)device->hasTransmitQueueStorage(),
+                          (unsigned int)device->getTransmitPendingCount(),
+                          (unsigned int)device->getRealtimeTransmitPendingCount(),
+                          (unsigned long)device->getTransmitDropCount(),
+                          (unsigned long)device->getRealtimeTransmitDropCount());
+        }
         return true;
 #endif
     } else if (strcmp(command, "crashlog") == 0) {
