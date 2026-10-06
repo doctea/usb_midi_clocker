@@ -28,6 +28,8 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
 
     bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };
 
+    // todo: this is actually an 'auto-assign voice' channel, not a 'round robin'; 
+    // todo: so we should rename it, and also add a real round-robin channel mechanism
     const int8_t CHANNEL_ROUND_ROBIN = max_voice_count + 1;
 
     int8_t find_slot_for(int8_t note) {

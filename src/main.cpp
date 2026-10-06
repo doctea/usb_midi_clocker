@@ -82,6 +82,9 @@ void do_tick(uint32_t ticks);
 
 #ifdef ENABLE_USB
   #include "usb/multi_usb_handlers.h"
+  #define RECORD_USB_PHASE(phase) USBHost::setDiagnosticPhase(USBHost::DiagnosticPhase::phase)
+#else
+  #define RECORD_USB_PHASE(phase) do {} while (0)
 #endif
 #ifdef ENABLE_USBSERIAL
   #include "usb/multi_usbserial_handlers.h"
@@ -304,6 +307,16 @@ void setup() {
 
   tft_print((char*)"..storage..\n");
   storage::setup_sd();
+  #ifdef ENABLE_USB
+    USBHost::beginDiagnosticProgress();
+    bool usb_watchdog_reset = false;
+    #if defined(__IMXRT1062__)
+      usb_watchdog_reset = runtime_watchdog.expired();
+    #endif
+    if (storage::log_usb_diagnostics_after_reset(usb_watchdog_reset)) {
+      Serial.println("Previous USB diagnostics appended to usb_debug.log");
+    }
+  #endif
   Debug_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
 
   tft_print((char*)"..setup project..\n");
@@ -522,6 +535,7 @@ static void drain_uclock_trace() {
 // 
 // -----------------------------------------------------------------------------
 void loop() {
+  RECORD_USB_PHASE(SerialIO);
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
     if (Serial.getReadError() || Serial.getWriteError()) {
@@ -540,9 +554,11 @@ void loop() {
   #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
     drain_uclock_trace();
   #endif
+  RECORD_USB_PHASE(Loop);
 
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
     if (debug_stress_scene_load && ticks % 6 == 1)  {
+      RECORD_USB_PHASE(MenuInputs);
       OnPress(':');
       OnPress('L');
       OnPress('J');
@@ -551,6 +567,7 @@ void loop() {
       OnPress('J');
       OnPress('K');
       OnPress(':');
+      RECORD_USB_PHASE(Loop);
     }
   #endif
 
@@ -573,34 +590,43 @@ void loop() {
 
   #ifdef ENABLE_USB
     if (debug_flag) { Serial_println(F("about to Usb.Task()")); Serial_flush(); }
+    RECORD_USB_PHASE(USBTask);
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
     {
       Usb.Task();
     }
+    RECORD_USB_PHASE(Loop);
     if (debug_flag) { Serial_println(F("just did Usb.Task()")); Serial_flush(); }
   #endif
   //static unsigned long last_ticked_at_micros = 0;
 
   #ifdef ENABLE_USB
     // Bound device-MIDI latency before the expensive UI/CV/behaviour work.
+    RECORD_USB_PHASE(PCUSBRead);
     read_usb_from_computer();
+    RECORD_USB_PHASE(Loop);
   #endif
 
+  RECORD_USB_PHASE(ClockUpdate);
   bool ticked = false;
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
     #ifdef ENABLE_CLOCK_INPUT_CV
       uint32_t cv_clock_observed_at_us = 0;
       bool cv_clock_received = false;
+      RECORD_USB_PHASE(CVClock);
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         cv_clock_received = take_cv_clock_tick(cv_clock_observed_at_us);
       }
       if (cv_clock_received)
         clock_receive_external_pulse_at(CLOCK_EXTERNAL_CV, cv_clock_observed_at_us);
+      RECORD_USB_PHASE(ClockUpdate);
     #endif
 
     if (debug_flag) { Serial_println(F("about to update_clock_ticks")); Serial_flush(); }
+    RECORD_USB_PHASE(ClockTicks);
     ticked = update_clock_ticks();
+    RECORD_USB_PHASE(ClockUpdate);
     if (debug_flag) { Serial_println(F("just did update_clock_ticks")); Serial_flush(); }
 
     #ifdef USE_UCLOCK
@@ -618,11 +644,14 @@ void loop() {
     #ifdef ENABLE_SCREEN
       if (playing && ticked) {
           if (debug_flag) { Serial_println(F("about to menu->update_ticks")); Serial_flush(); }
+          RECORD_USB_PHASE(MenuTicks);
           menu->update_ticks(ticks);
+          RECORD_USB_PHASE(ClockUpdate);
           if (debug_flag) { Serial_println(F("just did menu->update_ticks")); Serial_flush(); }
       }
     #endif
   }
+  RECORD_USB_PHASE(Loop);
   
   if (!playing || (clock_mode!=CLOCK_INTERNAL || ticked) || (micros() + average_loop_micros) < (last_ticked_at_micros + micros_per_tick)) {
     // hmm actually if we just ticked then we potentially have MORE time to work with than if we havent just ticked..!
@@ -633,11 +662,15 @@ void loop() {
       {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
         #ifdef ENABLE_REMOTE_VIEWER
+        RECORD_USB_PHASE(ViewerCommands);
         dispatch_viewer_commands();
+        RECORD_USB_PHASE(Loop);
         #endif
         static bool first_run = true;
         if (!first_run) {
+          RECORD_USB_PHASE(MenuInputs);
           menu->update_inputs();
+          RECORD_USB_PHASE(Loop);
         }
         first_run = false;
         if (debug_flag) { Serial_println(F("just did menu->update_inputs")); Serial_flush(); }
@@ -648,7 +681,9 @@ void loop() {
         if (debug_flag) menu->debug = true;
         //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
         {
+          RECORD_USB_PHASE(MenuDisplay);
           menu->display(); //update(ticks);
+          RECORD_USB_PHASE(Loop);
           if (debug_flag) { Serial_println(F("just did menu->display")); Serial_flush(); }
           //Serial_printf("display() took %ums..", millis()-before_display);
           last_drawn = millis();
@@ -665,7 +700,9 @@ void loop() {
           //__disable_irq();
           //parameter_manager->throttled_update_cv_inputs(TIME_BETWEEN_CV_INPUT_UPDATES);
           if (debug_flag) { Serial_println(F("about to parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
+          RECORD_USB_PHASE(CVInputs);
           parameter_manager->throttled_update_cv_input__all(TIME_BETWEEN_CV_INPUT_UPDATES, false, false);
+          RECORD_USB_PHASE(Loop);
           if (debug_flag) { Serial_println(F("just did parameter_manager->throttled_update_cv_input__all")); Serial_flush(); }
           //__enable_irq();                              
         //}
@@ -681,7 +718,9 @@ void loop() {
   {
     if (!playing) {
       if (debug_flag) { Serial_println(F("about to gate_manager->update();")); Serial_flush(); }
+      RECORD_USB_PHASE(GateUpdate);
       gate_manager->update(); 
+      RECORD_USB_PHASE(Loop);
       if (debug_flag) { Serial_println(F("just did gate_manager->update();")); Serial_flush(); }
     }
   }
@@ -689,24 +728,32 @@ void loop() {
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
   {
     if (debug_flag) { Serial_println(F("about to behaviour_manager->do_reads()..")); Serial_flush(); }
+    RECORD_USB_PHASE(BehaviourReads);
     behaviour_manager->do_reads();
+    RECORD_USB_PHASE(Loop);
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_reads()")); Serial_flush(); }
   }
 
   ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   { 
     if (debug_flag) { Serial_println(F("about to behaviour_manager->do_loops()..")); Serial_flush(); }
+    RECORD_USB_PHASE(BehaviourLoops);
     behaviour_manager->do_loops();
+    RECORD_USB_PHASE(Loop);
     if (debug_flag) { Serial_println(F("just did behaviour_manager->do_loops()")); Serial_flush(); }
   }
 
   #if defined(ENABLE_APCMINI) && defined(ENABLE_APCMINI_DISPLAY)
+    RECORD_USB_PHASE(APCDisplay);
     apcdisplay_flush_pending();
+    RECORD_USB_PHASE(Loop);
   #endif
 
   #ifdef ENABLE_TAPTEMPO
     // do tap tempo update 
+    RECORD_USB_PHASE(TapTempo);
     tapper->clock_tempo_update();
+    RECORD_USB_PHASE(Loop);
     //if (ticked)
     //  tapper->tick(ticks);
   #endif
@@ -715,11 +762,15 @@ void loop() {
     //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
     {
       if (debug_flag) { Serial_println(F("about to update_usb_midi_device_connections();..")); Serial_flush(); }
+      RECORD_USB_PHASE(MIDIReconnect);
       update_usb_midi_device_connections();
+      RECORD_USB_PHASE(Loop);
       if (debug_flag) { Serial_println(F("just did update_usb_midi_device_connections();..")); Serial_flush(); }
       #ifdef ENABLE_USBSERIAL
         if (debug_flag) { Serial_println(F("about to update_usbserial_device_connections();..")); Serial_flush(); }
+        RECORD_USB_PHASE(SerialReconnect);
         update_usbserial_device_connections();
+        RECORD_USB_PHASE(Loop);
         if (debug_flag) { Serial_println(F("just did update_usbserial_device_connections();..")); Serial_flush(); }
       #endif 
       //Serial_println("finished calling update_usb_xxx_device_connections.."); Serial_flush();
@@ -730,7 +781,9 @@ void loop() {
     {
       if (debug_flag) { Serial_println(F("about to read_usb_from_computer();..")); Serial_flush(); }
       // we do this again here because it reduces latency; i have AI's assurance that it should not cause any problems (lol)
+      RECORD_USB_PHASE(PCUSBRead);
       read_usb_from_computer();
+      RECORD_USB_PHASE(Loop);
       if (debug_flag) { Serial_println(F("just did read_usb_from_computer();..")); Serial_flush(); }
     }
   #endif
@@ -738,7 +791,9 @@ void loop() {
   #if defined(ENABLE_TYPING_KEYBOARD) or defined(ENABLE_CONTROLLER_KEYBOARD)
     // process any events that are waiting from the usb keyboard handler
     if (debug_flag) { Serial_println(F("about to process_key_buffer();..")); Serial_flush(); }
+    RECORD_USB_PHASE(Keyboard);
     process_key_buffer();
+    RECORD_USB_PHASE(Loop);
     if (debug_flag) { Serial_println(F("just did process_key_buffer();..")); Serial_flush(); }
   #endif
 
@@ -756,6 +811,7 @@ void loop() {
   #endif
   if(debug_flag) { Serial_println(F("reached end of loop()!")); Serial_flush(); }
 
+  RECORD_USB_PHASE(LoopComplete);
   #if defined(__IMXRT1062__)
     runtime_watchdog.feed();
   #endif

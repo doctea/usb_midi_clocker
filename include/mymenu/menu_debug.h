@@ -135,6 +135,15 @@ void setup_debug_menu() {
     BehavioursPanel *behaviours_panel = new BehavioursPanel();
     menu->add(behaviours_panel);
 
+    #ifdef ENABLE_USB
+        menu->add_page("USB Debug", TFT_CYAN, false, "Debug");
+        SubMenuItemBar *usb_debug_bar = new SubMenuItemBar("USB diagnostics");
+        usb_debug_bar->add(new ActionItem("Dump status", dump_usb_diagnostics));
+        usb_debug_bar->add(new ActionConfirmItem("Clear error", USBHost::clearDiagnosticInfo));
+        menu->add(usb_debug_bar);
+        menu->add(new USBHostDebugPanel());
+    #endif
+
     // -- Set up the general debug page
     menu->add_page("Debug", TFT_CYAN, false, "Debug");
     menu->remember_opened_page();

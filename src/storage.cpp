@@ -55,6 +55,9 @@ Total storage used in project 0: 180877 bytes
 #ifdef ENABLE_SD
   #include "SD.h"
 #endif
+#ifdef ENABLE_USB
+  #include <USBHost_t36.h>
+#endif
 
 //#include "SdFat.h"
 #include <SPI.h>
@@ -80,6 +83,68 @@ namespace storage {
       }
       return val;
   }
+
+  #ifdef ENABLE_USB
+  bool log_usb_diagnostics_after_reset(bool watchdog_reset) {
+    const auto progress = USBHost::getPreviousDiagnosticProgress();
+    const auto error = USBHost::getDiagnosticInfo();
+    if (!watchdog_reset && progress.phase == USBHost::DiagnosticPhase::None &&
+        !(error.previous_boot && error.count > 0)) return false;
+    #ifdef ENABLE_SD
+      if (!SD.mediaPresent()) {
+        Serial.println("USB reset snapshot: SD unavailable");
+        return false;
+      }
+      File file = SD.open("usb_debug.log", FILE_WRITE);
+      if (!file) {
+        Serial.println("USB reset snapshot: cannot open usb_debug.log");
+        return false;
+      }
+      file.println("----- USB reset snapshot -----");
+      file.printf("Watchdog reset: %s\n", watchdog_reset ? "yes" : "no/unknown");
+      file.printf("Previous phase: %s at %lu ms\n", USBHost::diagnosticPhaseName(progress.phase),
+                  (unsigned long)progress.at_ms);
+      file.println("Phase is last foreground operation, not proof of fault location.");
+      if (error.previous_boot && error.count > 0) {
+        file.printf("Prior USB error records=%lu last=%s at=%lu ms state=%u detail=%08lX\n",
+                    (unsigned long)error.count, USBHost::diagnosticErrorName(error.error),
+                    (unsigned long)error.at_ms, error.state, (unsigned long)error.detail);
+        file.printf("Device=%04X:%04X address=%u hub=%u port=%u\n",
+                    error.vid, error.pid, error.address, error.hub, error.port);
+      } else {
+        file.println("No retained USB error event.");
+      }
+      file.println("-----");
+      const bool saved = !file.getWriteError();
+      file.close();
+      return saved;
+    #else
+      return false;
+    #endif
+  }
+
+  void dump_usb_diagnostic_log() {
+    #ifdef ENABLE_SD
+      File file = SD.open("usb_debug.log", FILE_READ);
+      if (file) {
+        while (file.available()) Serial.write(file.read());
+        file.close();
+        return;
+      }
+    #endif
+    Serial.println("USB diagnostic log unavailable");
+  }
+
+  void clear_usb_diagnostic_log() {
+    #ifdef ENABLE_SD
+      if (SD.mediaPresent() && SD.remove("usb_debug.log")) {
+        Serial.println("Deleted usb_debug.log");
+        return;
+      }
+    #endif
+    Serial.println("USB diagnostic log not deleted");
+  }
+  #endif
 
   void log_crashreport() {
     #ifdef ENABLE_SD

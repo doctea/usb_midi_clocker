@@ -170,6 +170,11 @@ namespace storage {
   FLASHMEM void dump_crashreport_log();
   FLASHMEM void clear_crashreport_log();
   FLASHMEM void force_crash();
+  #ifdef ENABLE_USB
+    FLASHMEM bool log_usb_diagnostics_after_reset(bool watchdog_reset);
+    FLASHMEM void dump_usb_diagnostic_log();
+    FLASHMEM void clear_usb_diagnostic_log();
+  #endif
 
   void make_project_folders(int project_number);
 

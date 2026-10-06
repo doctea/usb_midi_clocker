@@ -59,7 +59,11 @@ static uint32_t micros() { return fake_micros; }
 static bool is_valid_note(int8_t note) { return note >= 0; }
 enum apc_gate_page_t { CLOCKS };
 struct Pipe_t {};
-struct Transfer_t { const void *buffer; };
+struct Transfer_t {
+    struct { uint32_t token = 0; } qtd;
+    const void *buffer;
+    Transfer_t(const void *value = nullptr) : buffer(value) {}
+};
 template<typename... Args> static void println(Args...) {}
 template<typename... Args> static void print(Args...) {}
 static void print_hexbytes(const void *, uint32_t) {}
@@ -70,6 +74,11 @@ struct USBDriverTimer {
     void start(unsigned value) { active = true; delay = value; }
 };
 struct MIDIDeviceBase {
+    struct TransmitDiagnosticInfo {
+        uint32_t timer_callbacks, submissions, completions, errors;
+        uint16_t queued;
+        uint8_t realtime_queued, buffer1_count, buffer2_count, packet_capacity;
+    };
     Pipe_t pipe;
     Pipe_t *txpipe = &pipe, *rxpipe = &pipe;
     uint32_t tx_buffer1[128] = {}, tx_buffer2[128] = {};

@@ -144,7 +144,36 @@ bool execute_command(const char *command_line) {
         Serial.printf("USB free pools: devices=%lu, pipes=%lu, transfers=%lu, strings=%lu\n",
                       (unsigned long)devices, (unsigned long)pipes,
                       (unsigned long)transfers, (unsigned long)strings);
+        if (devices == UINT32_MAX || pipes == UINT32_MAX || transfers == UINT32_MAX || strings == UINT32_MAX)
+            Serial.println("USB free-list corruption: UINT32_MAX counts are invalid; run usb_debug for details");
         return true;
+    } else if (strcmp(command, "usb_debug") == 0) {
+        dump_usb_diagnostics();
+        return true;
+    } else if (strcmp(command, "usb_debug_log") == 0) {
+        storage::dump_usb_diagnostic_log();
+        return true;
+    } else if (strcmp(command, "usb_debug_clearerror") == 0) {
+        USBHost::clearDiagnosticInfo();
+        return true;
+    } else if (strcmp(command, "usb_debug_clearlog") == 0) {
+        storage::clear_usb_diagnostic_log();
+        return true;
+#if defined(__IMXRT1062__)
+    } else if (strcmp(command, "usb_debug_test") == 0) {
+        if (strcmp(arg1, "reset") != 0 && strcmp(arg1, "watchdog") != 0) {
+            Serial.println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");
+            return true;
+        }
+        Serial.println("Writing retention test marker; rebooting (watchdog: within 8 seconds)");
+        Serial.flush();
+        USBHost::setDiagnosticPhase(USBHost::DiagnosticPhase::RetentionTest);
+        if (strcmp(arg1, "watchdog") == 0) {
+            for (;;) { __asm__ volatile("nop"); }
+        }
+        reset_teensy();
+        return true;
+#endif
     } else if (strcmp(command, "usb_tx") == 0) {
         for (unsigned int port = 0; port < NUM_USB_MIDI_DEVICES; port++) {
             MIDIDeviceBase *device = usb_midi_slots[port].device;
@@ -647,6 +676,11 @@ bool execute_command(const char *command_line) {
         Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
         Serial.println("  == clock debugging commands ==");
         Serial.println("    debug-state <lock|shuffle0|shuffle1|simples1|all> - Set the clock to a particular debug state");
+        Serial.println("  == USB debugging commands ==");
+        Serial.println("    usb_debug - Show the current USB host diagnostic information");
+        Serial.println("    usb_debug_clearerror - Clear the retained USB host error");
+        Serial.println("    usb_debug_clearlog - Clear the retained USB host log");
+        Serial.println("    usb_debug_test - Run the USB host diagnostic test (requires hub connection)");
     #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
         Serial.println("    uclocktrace <on|off|clear|status> - Control structured uClock trace output");
     #endif

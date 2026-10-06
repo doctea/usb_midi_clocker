@@ -606,7 +606,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     void stop_all_notes_for_target(target_id_t target_id, bool force = false) {
         if (target_id==-1 || target_id >= NUM_REGISTERED_TARGETS) return;
         force = force || targets[target_id].wrapper->always_force_stop_all;
-        Serial_printf("stop_all_notes on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial_flush();
+        Serial_printf("stop_all_notes_for_target on target_id=%i wrapper %s\n", target_id, targets[target_id].wrapper->label); Serial_flush();
         if (!force) {
             release_connection_notes(-1, target_id);
             targets[target_id].wrapper->stop_all_notes(false);

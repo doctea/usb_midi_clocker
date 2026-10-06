@@ -23,6 +23,7 @@
  * SOFTWARE.
  */
 #include <stdlib.h>
+#include <new>
 
 #include "wiring.h"
 
@@ -53,6 +54,16 @@ void * operator new[](size_t size)
         if (new_obj) return new_obj;
     }
     return extmem_malloc(size);
+}
+
+void * operator new(size_t size, const std::nothrow_t &) noexcept
+{
+    return ::operator new(size);
+}
+
+void * operator new[](size_t size, const std::nothrow_t &) noexcept
+{
+    return ::operator new[](size);
 }
 
 void operator delete(void * ptr)

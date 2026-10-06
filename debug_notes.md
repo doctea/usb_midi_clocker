@@ -4,6 +4,129 @@ Kinda got this working in conjunction with TeensyDebug and Platformio in VSCode 
 
 .. I saw 'kind of working' because it worked up to a point, but was a bit flakey, sometimes breakpoints didn't break, and basically did not allow me to figure out anything that I didn't already know, as when the code crashed it would seem to start the debugger too late?  IDK, YMMV
 
+## RAM1 Stack Reserve
+
+The stack guard remains at 8 KB minimum, with a warning below 16 KB. The
+[custom linker script](linker/imxrt1062_t41_alt.ld) keeps read-only C++
+construction vtables (`.rodata._ZTC*`) and VTTs (`.rodata._ZTT*`) in flash
+instead of copying them into RAM1. These support virtual-base construction and
+destruction; normal runtime vtables remain in RAM1. This requires no PSRAM.
+Rebuild to measure the resulting reserve; an existing ELF retains its old layout.
+
+## USB Host Diagnostics
+
+The separate Debug > USB Debug page shows free host pools, pending MIDI output,
+transmit drops, queue-storage failures, and the latest detected host error.
+Dump status prints these details to Serial; the console command is `usb_debug`.
+Clear error clears the retained error, not the controller's halted state,
+MIDI transmit-drop counters, previous phase, or SD log. The Behaviours/USB page
+is unchanged.
+
+One fixed-size record captures pool exhaustion, failed control queuing, fatal
+enumeration transfers/descriptors, halted driver endpoint transfers, and EHCI
+system errors. Optional enumeration-string descriptor stalls are not counted.
+`Endpoint transfer halted` includes bulk/interrupt failures and driver-owned
+control requests, including hub controls that use the shared enumeration
+callback. Detail is the raw failing qTD token for transfer errors, received
+byte count for invalid descriptors, or USBSTS for system errors. A rejected
+hub port-control submission records `Control queue failed`, with setup word1
+in detail. Address/hub/port are useful before VID/PID have been discovered.
+Zero VID/PID alone does not identify a fault: pool/controller errors may have
+no device context. Use the error count and reason; when no event exists the
+serial dump now says so instead of printing a default zero device identity.
+
+`countFree()` also records unaligned free-list links and walks that exceed the
+number of contributed nodes (including cycles). An affected count is
+`UINT32_MAX`, displayed as CORRUPT rather than usable capacity. The error names
+the affected pool; detail is the suspect link address. IRQ state is preserved,
+and pool push/pop operations use short IRQ-preserving critical sections.
+This catches the observed pipe link `0x1` without dereferencing it, but does
+not repair a damaged list or validate every aligned pointer. The original
+corrupting writer still needs to be identified if the problem recurs.
+
+Transfer returns now make a bounded, IRQ-protected scan before changing the
+free list. A descriptor already on the list is not inserted twice; the retained
+error is `Transfer double free`, with the caller's return PC in `detail` rather
+than a descriptor address. Resolve it against the ELF from that exact build.
+The scan also rejects an already unaligned or overlong list without changing it.
+It adds no allocation or ownership registry, does not repair existing corruption,
+and does not establish that a duplicate return caused earlier failures.
+
+The captured duplicate-return PC `0x600637CB` resolved to the final qTD walk in
+`delete_Pipe()` in the matching firmware. A regression reproduced a related
+queueing defect: a real error-halted qTD was mistaken for the dummy tail because
+both have the Halted bit set. Each pipe now tracks its actual dummy in a formerly
+unused word, without changing the ARM pipe size. Queueing uses that pointer and
+assigns every qTD its pipe owner; error recovery resets to the actual dummy.
+After removing a pipe from the hardware schedule, teardown frees its software
+followup entries and the dummy, not potentially stale hardware qTD links.
+Host checks cover callback requeueing and stale-head teardown while preserving
+another pipe. Physical peripheral reset/unplug/reconnect recovery still needs
+hardware testing; these fixes do not guarantee every unresponsive device emits
+a hub disconnect event.
+
+A separate regression reproduced a hub port-control submission failure leaving
+`sending_control_transfer` latched with no future callback. Port helpers now
+retain the pending bit and release the busy flag when queueing fails. The
+existing `USBHost::Task()` hook retries pending work, preserving IRQ state and
+the original request priority. This does not recover an accepted request that
+never completes, or a stopped hub interrupt poll.
+
+The currently reported problematic peripheral is `2e8a:10c1`, not the earlier
+`1337:117E` attribution. Its reset can stop MIDI output and downstream hotplug
+while the already-connected keyboard keeps working; reconnecting the hub
+restores operation. The queue-rejection fix is not yet established as the cause
+of this hardware failure. Rebuild/upload, Clear error, reproduce, and collect
+the full `usb_debug` output before unplugging the hub. No recorded error still
+does not rule out a silent active-transfer stall.
+
+On Teensy 4, the error record uses uncleared DMAMEM and is cache-flushed only when
+an error is captured or cleared. A second small record tracks the foreground
+phase around USB polling, MIDI reads/reconnects, behaviour reads/loops, and
+serial I/O, clock/menu tick updates, gates, tap tempo, viewer commands, and
+UI/CV/APC work. Other loop work covers the remaining gaps, not a specific call.
+Each phase change flushes one RAM2 cache line. It captures the
+last entered phase even if a call never returns an error; it is not a stack trace
+or proof that the foreground call itself caused the hang (an ISR may have stalled).
+The previous-boot phase is copied before loop markers overwrite it, and shown on
+USB Debug and in `usb_debug`. There is no heap allocation or per-message trace.
+
+The clock/menu block now distinguishes CV clock handling, clock tick polling,
+and menu tick callbacks. Existing phase numbers and the older Clock/menu tick
+update label are preserved. The narrower labels still name foreground work,
+not an interrupt that may have interrupted it.
+
+These records are intended to survive watchdog/software resets, not power loss.
+The phase timestamp is the prior retained foreground uptime. An error timestamp
+is the uptime when that error was detected; the error can survive several resets
+without another detection, so the two timestamps need not share a boot.
+The error count counts detections, including repeated checks of one damaged list,
+not necessarily separate failures. Before a fresh reproduction, use Clear error
+on Debug > USB Debug; this does not delete the SD log or previous phase.
+On normal startup after SD
+initialization, an available previous snapshot is appended to `usb_debug.log`.
+A detected watchdog reset with no retained phase is logged explicitly too.
+The log contains the phase and any retained USB error, not post-reboot pool/queue
+values masquerading as pre-reset values. No SD writes are done in loop markers,
+USB interrupts, or watchdog callbacks; the eight-second watchdog is unchanged.
+Without a usable SD card, the copied previous phase remains available in the UI.
+
+Retention test (both commands reboot and lose unsaved changes):
+
+1. Rebuild/upload, then run `usb_debug_test reset` in the serial console.
+2. After reboot, run `usb_debug`; the previous phase should be `Retention test`.
+3. Run `usb_debug_test watchdog`; it stops feeding without disabling interrupts
+  and should reboot within eight seconds. Check for `Retention test` again.
+4. Run `usb_debug_log` to dump the appended SD snapshots; use
+  `usb_debug_clearlog` to delete that file without clearing RAM diagnostics.
+5. Reproduce the hub freeze, then inspect `usb_debug` / `usb_debug_log` after
+  reboot. Record the phase, watchdog status, and any USB error details.
+
+If the deliberate tests lose the marker, retention is not working on that reset
+path; SD archiving after boot cannot recover it. Verify retention on actual
+hardware before relying on the freeze's saved phase. A cold boot or firmware
+upload may invalidate retained data; perform these tests on the same firmware.
+
 ## Enabling Dual Serial connections with MIDI 
 
 Add this to /mnt/c/Users/_YOUR_USERNAME_HERE_/.platformio/packages/framework-arduinoteensy/cores/teensy4/usb_desc.h around line 587:

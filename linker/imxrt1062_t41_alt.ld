@@ -49,6 +49,7 @@ SECTIONS
 
     .text.progmem : {
         *(.progmem*)
+        *(.rodata._ZTC* .rodata._ZTT*)
         . = ALIGN(4);
     } > FLASH
 

@@ -16,11 +16,34 @@ From the project directory, using Node.js and g++ with UBSan support:
 
 	node test/apc_display_host_test.js
 	node test/usb_reconnect_host_test.js
+	node test/menu_page_host_test.js
 
 These compile extracted production functions with mocked USB hardware, without
 running PlatformIO or installing firmware dependencies. The display/transmit
 test expects USBHost_t36 at ../my_libraries/USBHost_t36; USBHOST_T36_DIR can
 override that location.
+
+The reconnect test also compiles the actual main-loop USB polling wrapper,
+previous-phase panel/dump, and boot-time SD snapshot functions. It checks a
+simulated interrupted call, logger append/failure handling, and builds with
+SD enabled and disabled. The library's tests/enumeration_host_test.js checks
+retained record magic/phase validation, cache flushing, IRQ preservation, and
+simulated warm-boot snapshot isolation. It also exercises real hub port-control
+helpers under rejected/busy submissions and foreground retry, plus driver-owned
+control halt capture at setup/data/status stages without counting optional
+enumeration-string stalls. These are not physical retention or hub recovery
+tests; see debug_notes.md for usb_debug_test reset/watchdog hardware checks.
+
+The menu test expects mymenu and foundling at ../my_libraries. It uses C++11
+with exceptions disabled and UBSan to check flat-list resizing,
+debug-page membership, insertion failure, selection preservation, and retry.
+MENU_TEST_SANITIZERS=address,undefined optionally enables AddressSanitizer too.
+MENU_TEST_ARM_CXX can point to arm-none-eabi-g++ to additionally reproduce the
+custom-linker error from libstdc++ nothrow wrappers and verify the production
+allocator overloads avoid it. When using a Windows compiler from WSL, set TMPDIR
+to a Windows-accessible temporary directory and provide the compiler's WSL path.
+Flat-list arrays use new[]/delete[] so application allocator overrides apply;
+usb_teensy_clocker's override reserves internal RAM before spilling into PSRAM.
 
 USB MIDI congestion handling
 
