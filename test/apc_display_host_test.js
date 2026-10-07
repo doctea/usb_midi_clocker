@@ -20,7 +20,10 @@ const sendNow = extract(path.join(library, 'USBHost_t36.h'), '    void send_now(
 const noteMethods = extract(path.join(library, 'USBHost_t36.h'), '    void sendNoteOff(', '    bool trySendNoteOn(');
 const sendMethods = extract(path.join(library, 'USBHost_t36.h'), '    void sendPolyPressure(', '    void send_now(void)');
 const sysexMethods = extract(path.join(library, 'midi.cpp'), 'void MIDIDeviceBase::send_sysex_buffer_has_term(', 'bool MIDIDeviceBase::read(');
+const displayDeclarations = extract(path.resolve(__dirname, '../include/midi/midi_apcmini_display.h'), 'void apcmini_update_position_display(unsigned long ticks);', 'void set_apc_gate_page(');
 const display = extract(path.resolve(__dirname, '../src/midi/midi_apcmini_display.cpp'), 'apc_gate_page_t apc_gate_page =', '// x,y addressing for apcmini grid');
+const positionDisplay = extract(path.resolve(__dirname, '../src/midi/midi_apcmini_display.cpp'), 'void apcmini_update_position_display(', '\n\n#ifdef ENABLE_CLOCKS');
+const behaviourLoop = extract(path.resolve(__dirname, '../include/behaviours/behaviour_apcmini.h'), '        virtual void loop(unsigned long ticks) override {', '        bool process_note_on_clock_page(');
 const startup = extract(path.resolve(__dirname, '../src/usb/multi_usb_handlers.cpp'), 'void setup_multi_usb()', '\n#endif');
 const source = `
 #include <cassert>
@@ -54,8 +57,18 @@ struct AtomicSnapshot {
 };
 #define ATOMIC_BLOCK(state) for (AtomicSnapshot snapshot; snapshot.active; snapshot.active = false)
 #define MIDI_NUM_NOTES 128
+#define PPQN 24
+#define APCMINI_DISPLAY_WIDTH 8
+#define START_BEAT_INDICATOR 64
+#define APCMINI_GREEN 1
+#define APCMINI_OFF 0
+#define ENABLE_APCMINI_DISPLAY
+#define TIME_BETWEEN_APC_REFRESH_MS 50
+using byte = uint8_t;
+struct ClockGates { int duration = 3; } clock_gates;
+static ClockGates *behaviour_clock_gates = &clock_gates;
 static uint32_t fake_micros = 0;
-static uint32_t micros() { return fake_micros; }
+static unsigned long millis() { return fake_micros / 1000; }
 static bool is_valid_note(int8_t note) { return note >= 0; }
 enum apc_gate_page_t { CLOCKS };
 struct Pipe_t {};
@@ -113,13 +126,25 @@ static bool queue_Data_Transfer(Pipe_t *, uint32_t *buffer, uint32_t bytes, MIDI
 ${tx}
 ${txComplete}
 ${sysexMethods}
-struct APCBehaviour {
+${displayDeclarations}
+static void apcmini_update_clock_display();
+struct BaseBehaviour { virtual void loop(unsigned long ticks) = 0; };
+struct APCBehaviour : BaseBehaviour {
     MIDIDeviceBase *device = nullptr;
+    bool redraw_immediately = false;
+    unsigned long last_updated_display = 0;
     bool is_connected() { return device != nullptr; }
+${behaviourLoop}
 };
 static APCBehaviour behaviour;
 static APCBehaviour *behaviour_apcmini = &behaviour;
+static unsigned grid_redraws = 0;
+static void apcmini_update_clock_display() {
+    ++grid_redraws;
+    behaviour.last_updated_display = millis();
+}
 ${display}
+${positionDisplay}
 static unsigned tests = 0;
 static unsigned usb_starts = 0, usb_tasks = 0;
 struct QuietSerial {
@@ -155,16 +180,16 @@ static void timer_tick(MIDIDeviceBase &device) {
     device.timer_event(&device.txtimer); irq_enabled = true;
 }
 static void complete_pending(MIDIDeviceBase &device) {
-    for (unsigned round = 0; device.getTransmitPendingCount() && round < 1000; ++round) {
+    for (unsigned round = 0; (device.getTransmitPendingCount() || device.tx1_count || device.tx2_count) && round < 1000; ++round) {
+        timer_tick(device);
         if (device.tx1_count == device.tx_size / 4) {
             Transfer_t completion{device.tx_buffer1}; device.tx_data(&completion);
         }
         if (device.tx2_count == device.tx_size / 4) {
             Transfer_t completion{device.tx_buffer2}; device.tx_data(&completion);
         }
-        timer_tick(device);
     }
-    assert(device.getTransmitPendingCount() == 0); timer_tick(device);
+    assert(device.getTransmitPendingCount() == 0 && device.tx1_count == 0 && device.tx2_count == 0);
 }
 int main() {
     MIDIDeviceBase device;
@@ -231,14 +256,11 @@ int main() {
     reset(device);
     for (unsigned note = 0; note < 12; ++note) apcdisplay_sendNoteOn(note, 1, 1, false);
     fake_micros = 1000; apcdisplay_flush_pending();
-    assert(packets.size() == 1 && device.tx1_count == 4 && apc_pending_notes[4].dirty);
+    assert(packets.size() == 2 && device.tx1_count == 4 && device.tx2_count == 4 && apc_pending_notes[8].dirty);
     apcdisplay_flush_pending();
-    assert(packets.size() == 1 && device.tx2_count == 0); ++tests;
-    fake_micros += 1000; apcdisplay_flush_pending();
-    assert(packets.size() == 2 && device.tx2_count == 4);
-    fake_micros += 1000; apcdisplay_flush_pending();
     assert(apc_note_last_sent[8] == -1 && apc_pending_notes[8].dirty && packets.size() == 2); ++tests;
-    device.tx1_count = 0; fake_micros += 1000; apcdisplay_flush_pending();
+    Transfer_t grid_completion{device.tx_buffer1}; device.tx_data(&grid_completion);
+    apcdisplay_flush_pending();
     assert(packets.size() == 3 && apc_note_last_sent[11] == 1 && !apc_pending_notes[11].dirty); ++tests;
     reset(device); queue_available = false;
     for (unsigned note = 0; note < 4; ++note) apcdisplay_sendNoteOn(note, 1, 1, false);
@@ -262,6 +284,53 @@ int main() {
     reset(device); fake_micros = 0xFFFFFF00; apcdisplay_initialise_last_sent();
     apcdisplay_sendNoteOn(0, 1, 1, false); fake_micros += 1000; apcdisplay_flush_pending();
     assert(apc_note_last_sent[0] == 1 && irq_enabled); ++tests;
+    reset(device); behaviour.redraw_immediately = true; grid_redraws = 0;
+    behaviour.loop(0);
+    assert(grid_redraws == 1 && !behaviour.redraw_immediately);
+    assert(apc_pending_notes[START_BEAT_INDICATOR].value == APCMINI_GREEN); ++tests;
+    fake_micros = 51000; behaviour.loop(0);
+    assert(grid_redraws == 2 && behaviour.last_updated_display == 51); ++tests;
+    behaviour.redraw_immediately = true; behaviour.loop(0);
+    assert(grid_redraws == 3 && !behaviour.redraw_immediately); ++tests;
+    reset(device); apcmini_update_position_display(1);
+    fake_micros = 1000; apcdisplay_flush_pending(); complete_pending(device);
+    assert(apc_note_last_sent[START_BEAT_INDICATOR] == APCMINI_GREEN); ++tests;
+    fake_micros += 1000; apcdisplay_flush_pending(); complete_pending(device);
+    apcmini_update_position_display(6); fake_micros += 1000;
+    apcdisplay_flush_pending(); complete_pending(device);
+    assert(apc_note_last_sent[START_BEAT_INDICATOR] == APCMINI_OFF); ++tests;
+    apcmini_update_position_display(PPQN + 1); fake_micros += 1000;
+    apcdisplay_flush_pending(); complete_pending(device);
+    assert(apc_note_last_sent[START_BEAT_INDICATOR] == APCMINI_OFF);
+    assert(apc_note_last_sent[START_BEAT_INDICATOR + 1] == APCMINI_GREEN); ++tests;
+    reset(device);
+    for (unsigned note = 0; note < 64; ++note) apcdisplay_sendNoteOn(note, 1);
+    apcdisplay_sendNoteOn(START_BEAT_INDICATOR, APCMINI_GREEN);
+    apcdisplay_flush_pending();
+    assert(packets[0][0] == 0x01409009 && apc_note_last_sent[START_BEAT_INDICATOR] == APCMINI_GREEN);
+    assert(apc_pending_notes[7].dirty && irq_enabled); ++tests;
+    apcdisplay_sendNoteOff(START_BEAT_INDICATOR);
+    Transfer_t beat_completion{device.tx_buffer1}; device.tx_data(&beat_completion);
+    apcdisplay_flush_pending();
+    assert(packets[2][0] == 0x00409009 && apc_note_last_sent[START_BEAT_INDICATOR] == APCMINI_OFF); ++tests;
+    reset(device); device.tx_size = 512;
+    for (unsigned note = 0; note < 40; ++note) apcdisplay_sendNoteOn(note, 1);
+    apcdisplay_flush_pending();
+    assert(device.tx1_count == 16 && apc_pending_notes[16].dirty); ++tests;
+    apcdisplay_flush_pending();
+    assert(device.tx1_count == 32 && apc_pending_notes[32].dirty); ++tests;
+    reset(device); apcdisplay_sendNoteOn(60, 5); apcdisplay_flush_pending();
+    assert(apc_note_last_sent[60] == 5 && !apc_pending_notes[60].dirty);
+    timer_tick(device);
+    Transfer_t failed_led{device.tx_buffer1}; failed_led.qtd.token = 0x40;
+    device.tx_data(&failed_led);
+    assert(device.getTransmitDiagnosticInfo().errors == 1); ++tests;
+    apcdisplay_flush_pending(); timer_tick(device);
+    assert(packets.size() == 2 && packets[1] == std::vector<uint32_t>({0x053C9009}));
+    assert(apc_note_last_sent[60] == 5 && !apc_pending_notes[60].dirty && !apc_pending_notes[61].valid); ++tests;
+    apcdisplay_sendNoteOn(60, 3); device.tx_data(&failed_led);
+    apcdisplay_flush_pending(); timer_tick(device);
+    assert(packets.back() == std::vector<uint32_t>({0x033C9009})); ++tests;
     reset(device); irq_enabled = false;
     for (unsigned message = 0; message < 39; ++message) device.write_packed(message);
     assert(!irq_enabled && device.tx_queue_count == 31 && device.getTransmitDropCount() == 0);

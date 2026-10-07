@@ -85,18 +85,15 @@ class DeviceBehaviour_APCMini : virtual public DeviceBehaviourUSBBase, virtual p
             #ifdef ENABLE_APCMINI_DISPLAY
                 static unsigned long last_processed_tick;
 
-                if (last_processed_tick != ticks) {
+                if (redraw_immediately || last_processed_tick != ticks) {
                     //Serial.println("about to call apcmini_update_position_display()"); Serial_flush();
                     apcmini_update_position_display(ticks);
-                
-                    if (redraw_immediately || millis() - last_updated_display > TIME_BETWEEN_APC_REFRESH_MS) {
-                        //Serial.println(F("redraw_immediately is set!"));
-                        //Serial.println("about to call apcmini_update_clock_display()"); Serial_flush();
-                        apcmini_update_clock_display();
-                        redraw_immediately = false;
-                    }
                     last_processed_tick = ticks;
+                }
 
+                if (redraw_immediately || millis() - last_updated_display > TIME_BETWEEN_APC_REFRESH_MS) {
+                    apcmini_update_clock_display();
+                    redraw_immediately = false;
                 }
             #endif
             //Serial.println(F("finished apcmini_loop"));

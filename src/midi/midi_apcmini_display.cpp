@@ -26,10 +26,11 @@ struct APCPendingNote {
   int8_t value = 0;
   int8_t channel = 1;
   bool dirty = false;
+  bool valid = false;
 };
 static APCPendingNote apc_pending_notes[MIDI_NUM_NOTES];
 static uint8_t apc_next_pending_note = 0;
-static uint32_t apc_last_flush_micros = 0;
+static uint32_t apc_last_tx_errors = 0;
 
 // cached send note on
 void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool force) {
@@ -41,6 +42,7 @@ void apcdisplay_sendNoteOn(int8_t pitch, int8_t value, int8_t channel, bool forc
     APCPendingNote &pending = apc_pending_notes[pitch];
     pending.value = value;
     pending.channel = channel;
+    pending.valid = true;
     pending.dirty = pending.dirty || force || value != apc_note_last_sent[pitch];
   }
 }
@@ -55,25 +57,34 @@ void apcdisplay_initialise_last_sent() {
       apc_pending_notes[i] = APCPendingNote{};
     }
     apc_next_pending_note = 0;
-    apc_last_flush_micros = micros();
+    apc_last_tx_errors = behaviour_apcmini != nullptr && behaviour_apcmini->is_connected()
+      ? behaviour_apcmini->device->getTransmitDiagnosticInfo().errors : 0;
   }
 }
 
 void apcdisplay_flush_pending() {
   if (!__irq_enabled() || behaviour_apcmini == nullptr || !behaviour_apcmini->is_connected()) return;
-  uint32_t now = micros();
-  if (uint32_t(now - apc_last_flush_micros) < 1000) return;
-  apc_last_flush_micros = now;
+  uint32_t tx_errors = behaviour_apcmini->device->getTransmitDiagnosticInfo().errors;
+  if (tx_errors != apc_last_tx_errors) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+      for (uint16_t pitch = 0; pitch < MIDI_NUM_NOTES; pitch++) {
+        if (apc_pending_notes[pitch].valid) {
+          apc_note_last_sent[pitch] = -1;
+          apc_pending_notes[pitch].dirty = true;
+        }
+      }
+      apc_last_tx_errors = tx_errors;
+    }
+  }
 
   uint8_t sent = 0;
-  for (uint16_t checked = 0; checked < MIDI_NUM_NOTES && sent < 4; checked++) {
-    uint8_t pitch = apc_next_pending_note;
+  auto flush_note = [&sent](uint8_t pitch) {
     APCPendingNote pending;
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       pending = apc_pending_notes[pitch];
     }
     if (pending.dirty) {
-      if (!behaviour_apcmini->device->trySendNoteOn(pitch, pending.value, pending.channel)) return;
+      if (!behaviour_apcmini->device->trySendNoteOn(pitch, pending.value, pending.channel)) return false;
       ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
         apc_note_last_sent[pitch] = pending.value;
         if (apc_pending_notes[pitch].value == pending.value && apc_pending_notes[pitch].channel == pending.channel)
@@ -81,6 +92,15 @@ void apcdisplay_flush_pending() {
       }
       sent++;
     }
+    return true;
+  };
+  for (uint8_t indicator = 0; indicator < APCMINI_DISPLAY_WIDTH; indicator++) {
+    if (!flush_note(START_BEAT_INDICATOR + indicator)) return;
+  }
+  for (uint16_t checked = 0; checked < MIDI_NUM_NOTES && sent < 16; checked++) {
+    uint8_t pitch = apc_next_pending_note;
+    if ((pitch < START_BEAT_INDICATOR || pitch >= START_BEAT_INDICATOR + APCMINI_DISPLAY_WIDTH)
+      && !flush_note(pitch)) return;
     apc_next_pending_note = (pitch + 1) % MIDI_NUM_NOTES;
   }
 }
@@ -104,29 +124,16 @@ byte get_colour(byte lev) {
   return colour_intensity[lev];
 }
 
-void apcmini_update_position_display(int ticks) {
+void apcmini_update_position_display(unsigned long ticks) {
   if (behaviour_apcmini==nullptr) return;
-  //Serial.println("apcmini_update_position_display behaviour_apcmini isn't nullptr");
-
   if (behaviour_apcmini->device==nullptr) return;
 
   byte beat_counter = (byte)((ticks/PPQN) % APCMINI_DISPLAY_WIDTH);
-  if (is_bpm_on_beat(ticks)) {
-    //#define DEBUG_TICKS yes
-    #ifdef DEBUG_TICKS
-        Serial.print(F("apcmini w/"));
-        /*Serial.print(ticks);
-        Serial.print(F("\tCounter is "));*/
-        Serial.print(beat_counter);
-        Serial.print(F(" "));
-    #endif
-    //Serial.printf("On %i\n", beat_counter);
-    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_GREEN);
-  } else if (is_bpm_on_beat(ticks,behaviour_clock_gates->duration)) {
-    //Serial.printf("Off %i (ticks %i with duration %i)\n", beat_counter, ticks, duration);
-    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF);
-    //apcdisplay_sendNoteOff(START_BEAT_INDICATOR + beat_counter, APCMINI_OFF, 1);
-      //behaviour_apcmini->device->send_now();
+  int beat_phase = ticks % PPQN;
+  bool beat_on = beat_phase == 0 || beat_phase < behaviour_clock_gates->duration;
+  for (byte indicator = 0; indicator < APCMINI_DISPLAY_WIDTH; indicator++) {
+    apcdisplay_sendNoteOn(START_BEAT_INDICATOR + indicator,
+      indicator == beat_counter && beat_on ? APCMINI_GREEN : APCMINI_OFF);
   }
 }
 
