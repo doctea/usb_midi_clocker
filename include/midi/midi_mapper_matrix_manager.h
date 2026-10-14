@@ -794,7 +794,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             quantise_mode_t prior_mode = previous_global_quantise_mode;
             previous_global_quantise_mode = current_mode;
             if (prior_mode != QUANTISE_MODE_NONE || current_mode != QUANTISE_MODE_NONE) {
-                uint32_t timestamp = micros();
+                // uint32_t timestamp = micros();
                 // Serial_printf(
                 //     "harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()\n"
                 //     "\tto go from scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i "

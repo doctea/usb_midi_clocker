@@ -86,19 +86,23 @@
                 tft->printf("TX queued:%lu RT:%lu\n", (unsigned long)pending, (unsigned long)realtime);
                 tft->printf("TX drops:%lu RT:%lu\n", (unsigned long)dropped, (unsigned long)realtime_dropped);
                 tft->printf("Missing TX queues:%u\n", missing_queues);
-                const auto info = USBHost::getDiagnosticInfo();
-                tft->printf("Error records:%lu (%s)\n", (unsigned long)info.count,
-                            info.previous_boot ? "last boot" : "this boot");
-                tft->println(USBHost::diagnosticErrorName(info.error));
-                if (info.count > 0) {
-                    tft->printf("At:%lu ms state:%u\n", (unsigned long)info.at_ms, info.state);
-                    tft->printf("%04X:%04X address:%u\n", info.vid, info.pid, info.address);
-                    tft->printf("Hub:%u port:%u\n", info.hub, info.port);
-                    tft->printf("Detail:%08lX\n", (unsigned long)info.detail);
-                }
-                const auto progress = USBHost::getPreviousDiagnosticProgress();
-                tft->printf("Prev: %s\n", USBHost::diagnosticPhaseName(progress.phase));
-                tft->printf("At:%lu ms\n", (unsigned long)progress.at_ms);
+                #if USBHOST_T36_ENABLE_DIAGNOSTICS
+                    const auto info = USBHost::getDiagnosticInfo();
+                    tft->printf("Error records:%lu (%s)\n", (unsigned long)info.count,
+                                info.previous_boot ? "last boot" : "this boot");
+                    tft->println(USBHost::diagnosticErrorName(info.error));
+                    if (info.count > 0) {
+                        tft->printf("At:%lu ms state:%u\n", (unsigned long)info.at_ms, info.state);
+                        tft->printf("%04X:%04X address:%u\n", info.vid, info.pid, info.address);
+                        tft->printf("Hub:%u port:%u\n", info.hub, info.port);
+                        tft->printf("Detail:%08lX\n", (unsigned long)info.detail);
+                    }
+                    const auto progress = USBHost::getPreviousDiagnosticProgress();
+                    tft->printf("Prev: %s\n", USBHost::diagnosticPhaseName(progress.phase));
+                    tft->printf("At:%lu ms\n", (unsigned long)progress.at_ms);
+                #else
+                    tft->println("Detailed diagnostics disabled");
+                #endif
                 return tft->getCursorY();
             }
     };

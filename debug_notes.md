@@ -15,16 +15,41 @@ Rebuild to measure the resulting reserve; an existing ELF retains its old layout
 
 ## USB Host Diagnostics
 
-The separate Debug > USB Debug page shows free host pools, pending MIDI output,
-transmit drops, queue-storage failures, and the latest detected host error.
-Dump status prints these details to Serial; the console command is `usb_debug`.
-Clear error clears the retained error, not the controller's halted state,
-MIDI transmit-drop counters, previous phase, or SD log. The Behaviours/USB page
-is unchanged.
+The Debug > USB Debug page shows free host pools, pending MIDI output, transmit
+drops, and queue-storage failures. With detailed tracing enabled it also shows
+the latest detected host error and previous phase. Dump status prints the
+available details to Serial; the console command is `usb_debug`. Clear error
+clears the retained error, not the controller's halted state, MIDI transmit-drop
+counters, previous phase, or SD log. The Behaviours/USB page is unchanged.
 
-One fixed-size record captures pool exhaustion, failed control queuing, fatal
-enumeration transfers/descriptors, halted driver endpoint transfers, and EHCI
-system errors. Optional enumeration-string descriptor stalls are not counted.
+Detailed tracing is controlled by `USBHOST_T36_ENABLE_DIAGNOSTICS` (default
+`0`). Define it as `1` in the consuming firmware build to enable retained error
+and foreground-phase records, controller/queue-head/hub snapshots, detailed
+MIDI counters, and SD reset snapshots. Apply the define to the whole build so
+the application and USBHost_t36 compile with the same setting. It is independent
+of `USBHOST_PRINT_DEBUG` and `USBHOST_T36_QTD_CERR`. With tracing off, `usb_debug`
+still reports the controller fault latch, pool health, MIDI queue/drop counts,
+and always-on MIDI transfer errors; detailed record APIs are inert and phase
+markers, retained records, snapshots, and reset-log writes compile out. Pool
+corruption/double-free checks and controller/teardown safety behavior remain on.
+
+Pipe teardown fails closed if schedule removal or controller-stop waits time
+out: it latches a host error, disables controller interrupts/schedules, and
+retains potentially DMA-visible descriptors. This exceptional state requires a
+reboot; it deliberately does not return uncertain memory to the pools.
+
+The `CERR=3` retry setting remains separate and unchanged. Host regressions
+cover both diagnostics settings and `CERR=0/3`, but do not verify hardware DMA
+quiescence or prove the physical USB fault is universally resolved. After the
+next firmware upload, repeatedly reset the previously problematic peripheral
+and exercise hub unplug/replug while checking MIDI/APC output and the keyboard.
+Collect `usb_debug` output before replugging if a failure recurs; a fault latch
+means the controller intentionally stopped and should be rebooted.
+
+When detailed tracing is enabled, one fixed-size record captures pool
+exhaustion, failed control queuing, fatal enumeration transfers/descriptors,
+halted driver endpoint transfers, and EHCI system errors. Optional
+enumeration-string descriptor stalls are not counted.
 `Endpoint transfer halted` includes bulk/interrupt failures and driver-owned
 control requests, including hub controls that use the shared enumeration
 callback. Detail is the raw failing qTD token for transfer errors, received
@@ -35,19 +60,21 @@ Zero VID/PID alone does not identify a fault: pool/controller errors may have
 no device context. Use the error count and reason; when no event exists the
 serial dump now says so instead of printing a default zero device identity.
 
-`countFree()` also records unaligned free-list links and walks that exceed the
-number of contributed nodes (including cycles). An affected count is
-`UINT32_MAX`, displayed as CORRUPT rather than usable capacity. The error names
-the affected pool; detail is the suspect link address. IRQ state is preserved,
-and pool push/pop operations use short IRQ-preserving critical sections.
+`countFree()` detects unaligned free-list links and walks that exceed the number
+of contributed nodes (including cycles). With detailed tracing enabled it also
+records the fault. An affected count is `UINT32_MAX`, displayed as CORRUPT
+rather than usable capacity. The error names the affected pool; detail is the
+suspect link address. IRQ state is preserved, and pool push/pop operations use
+short IRQ-preserving critical sections.
 This catches the observed pipe link `0x1` without dereferencing it, but does
 not repair a damaged list or validate every aligned pointer. The original
 corrupting writer still needs to be identified if the problem recurs.
 
 Transfer returns now make a bounded, IRQ-protected scan before changing the
-free list. A descriptor already on the list is not inserted twice; the retained
-error is `Transfer double free`, with the caller's return PC in `detail` rather
-than a descriptor address. Resolve it against the ELF from that exact build.
+free list. A descriptor already on the list is not inserted twice; when detailed
+tracing is enabled, the retained error is `Transfer double free`, with the
+caller's return PC in `detail` rather than a descriptor address. Resolve it
+against the ELF from that exact build.
 The scan also rejects an already unaligned or overlong list without changing it.
 It adds no allocation or ownership registry, does not repair existing corruption,
 and does not establish that a duplicate return caused earlier failures.
@@ -80,8 +107,9 @@ of this hardware failure. Rebuild/upload, Clear error, reproduce, and collect
 the full `usb_debug` output before unplugging the hub. No recorded error still
 does not rule out a silent active-transfer stall.
 
-On Teensy 4, the error record uses uncleared DMAMEM and is cache-flushed only when
-an error is captured or cleared. A second small record tracks the foreground
+With detailed tracing enabled on Teensy 4, the error record uses uncleared
+DMAMEM and is cache-flushed only when an error is captured or cleared. A second
+small record tracks the foreground
 phase around USB polling, MIDI reads/reconnects, behaviour reads/loops, and
 serial I/O, clock/menu tick updates, gates, tap tempo, viewer commands, and
 UI/CV/APC work. Other loop work covers the remaining gaps, not a specific call.
@@ -111,7 +139,8 @@ values masquerading as pre-reset values. No SD writes are done in loop markers,
 USB interrupts, or watchdog callbacks; the eight-second watchdog is unchanged.
 Without a usable SD card, the copied previous phase remains available in the UI.
 
-Retention test (both commands reboot and lose unsaved changes):
+Retention test (requires `USBHOST_T36_ENABLE_DIAGNOSTICS=1`; both commands reboot
+and lose unsaved changes):
 
 1. Rebuild/upload, then run `usb_debug_test reset` in the serial console.
 2. After reboot, run `usb_debug`; the previous phase should be `Retention test`.

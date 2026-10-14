@@ -30,31 +30,30 @@ TODO: perhaps we want to update the FlexiArp Output UI so that it instead shows 
 Orrrr, maybe we just need to limit the MIDI channel to the actual source_id (1-4) and not allow any other values.
 */
 
+const int NUM_FLEXIARP_PATTERNS = 4;
+
 class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
   EuclidianSequencer *sequencer = nullptr;
   MIDIOutputProcessor *output_processor = nullptr;
 
   public:
-    source_id_t source_id_2 = -1;
-    source_id_t source_id_3 = -1;
-    source_id_t source_id_4 = -1;
-
-    // FlexiArp output sources (each becomes a matrix source)
-    const int FLEXIARP_OUTPUT_MIDI_1 = 1;
-    const int FLEXIARP_OUTPUT_MIDI_2 = 2;
-    const int FLEXIARP_OUTPUT_MIDI_3 = 3;
-    const int FLEXIARP_OUTPUT_MIDI_4 = 4;
+    // for storing the next 3 source_ids (first is regular source_id variable in DeviceBehaviourUltimateBase) for the 4 FlexiArp patterns
+    source_id_t source_ids[NUM_FLEXIARP_PATTERNS-1] = { -1, -1, -1 };
 
     VirtualBehaviour_FlexiArp() : DeviceBehaviourUltimateBase () {
         this->output_processor = new MIDIOutputProcessor(this);
-        this->sequencer = new EuclidianSequencer(output_processor->get_available_outputs(), 4);
-        
+        this->sequencer = new EuclidianSequencer(output_processor->get_available_outputs(), NUM_FLEXIARP_PATTERNS);
+
+        // Patterns are created automatically by the EuclidianSequencer based on the number specified (NUM_FLEXIARP_PATTERNS)
+
         // Create FlexiArpOutput nodes (one per source, each is independent arpeggiator instance)
         // These output nodes will receive events from sequencer patterns
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch1", this, FLEXIARP_OUTPUT_MIDI_1));
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch2", this, FLEXIARP_OUTPUT_MIDI_2));
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch3", this, FLEXIARP_OUTPUT_MIDI_3));
-        this->output_processor->addNode(new FlexiArpOutput("FlexiArp Ch4", this, FLEXIARP_OUTPUT_MIDI_4));
+        // Add output nodes for multi-source routing via MIDI channels
+        for (int i = 0 ; i < NUM_FLEXIARP_PATTERNS ; i++) {
+            char label[32];
+            snprintf(label, 32, "FlexiArp Ch%i", i+1);
+            this->output_processor->addNode(new FlexiArpOutput(label, this, i+1));
+        }
 
         output_processor->configure_sequencer(sequencer);
         sequencer->initialise_patterns();
@@ -88,35 +87,22 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
         sequencer->release_outputs();
     }
 
-    virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (this->debug) Serial.printf(F("behaviour_flexiarp#sendNoteOn(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
-        
+    virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // Route to appropriate matrix source based on channel
-        if (channel == FLEXIARP_OUTPUT_MIDI_1) {
-            midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
-        } else if (channel == FLEXIARP_OUTPUT_MIDI_2) {
-            midi_matrix_manager->processNoteOn(this->source_id_2, note, velocity);
-        } else if (channel == FLEXIARP_OUTPUT_MIDI_3) {
-            midi_matrix_manager->processNoteOn(this->source_id_3, note, velocity);
-        } else if (channel == FLEXIARP_OUTPUT_MIDI_4) {
-            midi_matrix_manager->processNoteOn(this->source_id_4, note, velocity);
+        if (channel>1 && channel <= NUM_FLEXIARP_PATTERNS) {
+            midi_matrix_manager->processNoteOn(this->source_ids[channel - 2], note, velocity);
         } else {
             midi_matrix_manager->processNoteOn(this->source_id, note, velocity);
         }
     }
 
-    virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+    // virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
+    virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         if (this->debug) Serial.printf(F("behaviour_flexiarp#sendNoteOff(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
-        if (channel == FLEXIARP_OUTPUT_MIDI_1) {
-            midi_matrix_manager->processNoteOff(this->source_id, note, velocity);
-        } else if (channel == FLEXIARP_OUTPUT_MIDI_2) {
-            midi_matrix_manager->processNoteOff(this->source_id_2, note, velocity);
-        } else if (channel == FLEXIARP_OUTPUT_MIDI_3) {
-            midi_matrix_manager->processNoteOff(this->source_id_3, note, velocity);
-        } else if (channel == FLEXIARP_OUTPUT_MIDI_4) {
-            midi_matrix_manager->processNoteOff(this->source_id_4, note, velocity);
+        if (channel>1 && channel <= NUM_FLEXIARP_PATTERNS) {
+            midi_matrix_manager->processNoteOff(this->source_ids[channel - 2], note, velocity);
         } else {
             midi_matrix_manager->processNoteOff(this->source_id, note, velocity);
         }
@@ -129,6 +115,9 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
             return this->parameters;
 
         DeviceBehaviourUltimateBase::initialise_parameters();
+
+        // TODO: this differs from the behaviour_turingmachine implementation; investigate if this causes 
+        // any issues with parameter initialisation or saving, and unify behaviour if necessary
 
         // EuclidianSequencer::getParameters() returns a valid list
         ParameterList *sequencer_parameters = sequencer->getParameters();

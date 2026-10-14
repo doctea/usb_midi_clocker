@@ -58,13 +58,13 @@ void apcdisplay_initialise_last_sent() {
     }
     apc_next_pending_note = 0;
     apc_last_tx_errors = behaviour_apcmini != nullptr && behaviour_apcmini->is_connected()
-      ? behaviour_apcmini->device->getTransmitDiagnosticInfo().errors : 0;
+      ? behaviour_apcmini->device->getTransmitErrorCount() : 0;
   }
 }
 
 void apcdisplay_flush_pending() {
   if (!__irq_enabled() || behaviour_apcmini == nullptr || !behaviour_apcmini->is_connected()) return;
-  uint32_t tx_errors = behaviour_apcmini->device->getTransmitDiagnosticInfo().errors;
+  uint32_t tx_errors = behaviour_apcmini->device->getTransmitErrorCount();
   if (tx_errors != apc_last_tx_errors) {
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
       for (uint16_t pitch = 0; pitch < MIDI_NUM_NOTES; pitch++) {

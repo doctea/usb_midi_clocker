@@ -131,6 +131,9 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
 
         DeviceBehaviourUltimateBase::initialise_parameters();
 
+        // TODO: this differs from the behaviour_flexiarp implementation; investigate if this causes 
+        // any issues with parameter initialisation or saving, and unify behaviour if necessary
+
         // Pattern parameters stay owned by their patterns (saved via the sequencer subtree), as with FlexiArp;
         // getParameters() is still called so they get registered with parameter_manager.
         for (unsigned int i = 0 ; i < sequencer->get_number_patterns() ; i++) {

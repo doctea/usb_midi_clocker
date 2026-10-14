@@ -159,7 +159,7 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "usb_debug_clearlog") == 0) {
         storage::clear_usb_diagnostic_log();
         return true;
-#if defined(__IMXRT1062__)
+#if defined(__IMXRT1062__) && USBHOST_T36_ENABLE_DIAGNOSTICS
     } else if (strcmp(command, "usb_debug_test") == 0) {
         if (strcmp(arg1, "reset") != 0 && strcmp(arg1, "watchdog") != 0) {
             Serial.println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");

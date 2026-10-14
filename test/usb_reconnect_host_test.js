@@ -31,6 +31,10 @@ const source = `
 #include <iostream>
 #include <string>
 #include <vector>
+#define ENABLE_USB
+#ifndef USBHOST_T36_ENABLE_DIAGNOSTICS
+#define USBHOST_T36_ENABLE_DIAGNOSTICS 1
+#endif
 #define F(value) value
 #define NUM_USB_MIDI_DEVICES 4
 static bool interrupts_enabled = true;
@@ -75,6 +79,7 @@ struct MIDIDeviceBase {
     uint32_t getTransmitDropCount() const { return drops; }
     uint32_t getRealtimeTransmitDropCount() const { return realtime_drops; }
     TransmitDiagnosticInfo getTransmitDiagnosticInfo() const { return tx_diagnostics; }
+    uint32_t getTransmitErrorCount() const { return tx_diagnostics.errors; }
 };
 struct USBHub {
     struct PortDiagnosticInfo {
@@ -120,11 +125,15 @@ struct USBHost {
 ${extract('../my_libraries/USBHost_t36/USBHost_t36.h', '    enum class DiagnosticError', '    static void begin();')}
     static bool halted;
     static bool corrupt_pool;
+    static volatile HostFault host_fault;
+    static volatile bool cleanup_stop_confirmed;
+    #if USBHOST_T36_ENABLE_DIAGNOSTICS
     static DiagnosticInfo diagnostic;
     static DiagnosticProgress previous_progress;
     static ControllerDiagnosticInfo controller;
     static PipeDiagnosticInfo pipe_diagnostics[2];
     static uint32_t pipe_count;
+    #endif
     static bool hadSystemError() { return halted; }
     static void countFree(uint32_t &devices, uint32_t &pipes, uint32_t &transfers, uint32_t &strings) {
         devices = 29; pipes = corrupt_pool ? UINT32_MAX : 66; transfers = 145; strings = 23;
@@ -132,6 +141,11 @@ ${extract('../my_libraries/USBHost_t36/USBHost_t36.h', '    enum class Diagnosti
 };
 bool USBHost::halted = false;
 bool USBHost::corrupt_pool = false;
+volatile USBHost::HostFault USBHost::host_fault = USBHost::HostFault::None;
+volatile bool USBHost::cleanup_stop_confirmed = false;
+${extract('../my_libraries/USBHost_t36/ehci.cpp', 'const char *USBHost::getHostFaultReason()', '\nbool USBHost::stop_controller_for_cleanup(')}
+static USBHost::DiagnosticPhase recorded_phase = USBHost::DiagnosticPhase::None;
+#if USBHOST_T36_ENABLE_DIAGNOSTICS
 USBHost::DiagnosticInfo USBHost::diagnostic = {};
 USBHost::DiagnosticProgress USBHost::previous_progress = {};
 USBHost::ControllerDiagnosticInfo USBHost::controller = {};
@@ -144,11 +158,11 @@ uint32_t USBHost::getAsyncPipeDiagnostics(PipeDiagnosticInfo *info, uint32_t cap
     return count;
 }
 USBHost::DiagnosticProgress USBHost::getPreviousDiagnosticProgress() { return previous_progress; }
-static USBHost::DiagnosticPhase recorded_phase = USBHost::DiagnosticPhase::None;
 void USBHost::setDiagnosticPhase(DiagnosticPhase phase) { recorded_phase = phase; }
 USBHost::DiagnosticInfo USBHost::getDiagnosticInfo() { return diagnostic; }
 void USBHost::clearDiagnosticInfo() { diagnostic = DiagnosticInfo{}; }
-${extract('src/main.cpp', '  #define RECORD_USB_PHASE(phase)', '\n#else')}
+#endif
+${extract('src/main.cpp', '#if defined(ENABLE_USB) && USBHOST_T36_ENABLE_DIAGNOSTICS', '\n#ifdef ENABLE_USBSERIAL')}
 void check_marker_phase_names() {
     ${markerCalls.join('\n    ')}
 }
@@ -205,8 +219,10 @@ ${extract('src/main.cpp', '  RECORD_USB_PHASE(ClockUpdate);', '\n  if (!playing 
 #undef USE_UCLOCK
 #undef ENABLE_CLOCK_INPUT_CV
 #undef ENABLE_SCREEN
-${extract('../my_libraries/USBHost_t36/memory.cpp', 'const char *USBHost::diagnosticPhaseName(', 'USBHost::DiagnosticInfo USBHost::getDiagnosticInfo()')}
-${extract('../my_libraries/USBHost_t36/memory.cpp', 'const char *USBHost::diagnosticErrorName(', '// Memory allocation for Device_t, Pipe_t and Transfer_t structures.')}
+#if USBHOST_T36_ENABLE_DIAGNOSTICS
+${extract('../my_libraries/USBHost_t36/diagnostics.cpp', 'const char *USBHost::diagnosticPhaseName(', 'USBHost::DiagnosticInfo USBHost::getDiagnosticInfo()')}
+${extract('../my_libraries/USBHost_t36/diagnostics.cpp', 'const char *USBHost::diagnosticErrorName(', '\n#endif')}
+#endif
 constexpr int FILE_WRITE = 1, FILE_READ = 0;
 struct File {
     static std::string output;
@@ -309,6 +325,7 @@ static void require_binding(unsigned port, DeviceBehaviourUSBBase &behaviour) {
     assert(interrupts_enabled);
 }
 int main() {
+    #if USBHOST_T36_ENABLE_DIAGNOSTICS
     run_usb_task_slice();
     assert(recorded_phase == USBHost::DiagnosticPhase::Loop && interrupts_enabled); ++tests;
     Usb.stall = true;
@@ -332,6 +349,11 @@ int main() {
     const unsigned before_menu_ticks = menu_ticks.calls;
     assert(run_clock_update_slice() && recorded_phase == USBHost::DiagnosticPhase::Loop);
     assert(menu_ticks.calls == before_menu_ticks); ++tests;
+    #else
+    check_marker_phase_names();
+    run_usb_task_slice();
+    assert(recorded_phase == USBHost::DiagnosticPhase::None && interrupts_enabled); ++tests;
+    #endif
     reset(); devices[0].packed_id = id_apcmini; update_usb_midi_device_connections();
     require_binding(0, apcmini); ++tests;
     devices[0].packed_id = 0; update_usb_midi_device_connections();
@@ -385,6 +407,7 @@ int main() {
     reset(); devices[0].packed_id = 0x88889999; update_usb_midi_device_connections();
     assert(usb_midi_slots[0].packed_id == 0x88889999 && usb_midi_slots[0].behaviour == nullptr);
     assert(!apcmini.is_connected() && !beatstep.is_connected()); ++tests;
+    #if USBHOST_T36_ENABLE_DIAGNOSTICS
     USBHostDebugPanel panel;
     assert(!panel.flags.selectable);
     assert(panel.display(Coord{0, 40}, false, false) < 240);
@@ -485,7 +508,30 @@ int main() {
     assert(Serial.output.find("last=Pipe free-list corrupt") != std::string::npos); ++tests;
     USBHost::corrupt_pool = false;
     USBHost::diagnostic.error = USBHost::DiagnosticError::EnumerationTransfer;
-#ifdef ENABLE_SD
+    #else
+    USBHostDebugPanel panel;
+    assert(panel.display(Coord{0, 40}, false, false) < 240);
+    assert(display.output.find("Free devices:29 pipes:66") != std::string::npos);
+    assert(display.output.find("Detailed diagnostics disabled") != std::string::npos);
+    Serial.output.clear(); dump_usb_diagnostics();
+    assert(Serial.output.find("USB detailed diagnostics disabled") != std::string::npos);
+    assert(Serial.output.find("USB MIDI port=0") != std::string::npos); ++tests;
+    #endif
+    assert(Serial.output.find("USB fault reason=none cleanup_stop_confirmed=0") != std::string::npos); ++tests;
+    for (const auto fault : {USBHost::HostFault::AsyncAdvanceTimeout, USBHost::HostFault::PeriodicFrameTimeout}) {
+        for (const bool stopped : {false, true}) {
+            USBHost::host_fault = fault;
+            USBHost::cleanup_stop_confirmed = stopped;
+            Serial.output.clear(); dump_usb_diagnostics();
+            const std::string reason = fault == USBHost::HostFault::AsyncAdvanceTimeout
+                ? "async-doorbell-timeout" : "periodic-frame-timeout-after-restart";
+            const std::string expected = "USB fault reason=" + reason + " cleanup_stop_confirmed=" + (stopped ? "1" : "0");
+            assert(Serial.output.find(expected) != std::string::npos); ++tests;
+        }
+    }
+    USBHost::host_fault = USBHost::HostFault::None;
+    USBHost::cleanup_stop_confirmed = false;
+#if defined(ENABLE_SD) && USBHOST_T36_ENABLE_DIAGNOSTICS
     File::output = "older snapshot\\n";
     assert(storage::log_usb_diagnostics_after_reset(true));
     assert(File::output.find("older snapshot\\n") == 0);
@@ -515,9 +561,13 @@ int main() {
     storage::clear_usb_diagnostic_log(); assert(File::output.empty()); ++tests;
 #else
     File::output = "untouched";
+    const unsigned opens_before_disabled_log = SD.opens;
     assert(!storage::log_usb_diagnostics_after_reset(true));
+    assert(SD.opens == opens_before_disabled_log && File::output == "untouched"); ++tests;
+#ifndef ENABLE_SD
     storage::dump_usb_diagnostic_log(); storage::clear_usb_diagnostic_log();
     assert(SD.opens == 0 && File::output == "untouched"); ++tests;
+#endif
 #endif
     std::cout << "PASS: " << tests << " USB MIDI rebinding/diagnostic cases ("
 #ifdef ENABLE_SD
@@ -525,15 +575,16 @@ int main() {
 #else
               << "SD disabled"
 #endif
-              << ")\\n";
+              << ", diagnostics=" << USBHOST_T36_ENABLE_DIAGNOSTICS << ")\\n";
 }
 `;
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'usb-midi-reconnect-'));
 try {
-    for (const withSD of [true, false]) {
-        const executable = path.join(directory, `test-${withSD ? 'sd' : 'no-sd'}${process.platform === 'win32' ? '.exe' : ''}`);
+    for (const diagnostics of [false, true]) for (const withSD of [true, false]) {
+        const executable = path.join(directory, `test-${withSD ? 'sd' : 'no-sd'}-${diagnostics ? 'diag' : 'quiet'}${process.platform === 'win32' ? '.exe' : ''}`);
         const build = spawnSync(process.env.CXX || 'g++', [
+            `-DUSBHOST_T36_ENABLE_DIAGNOSTICS=${diagnostics ? 1 : 0}`,
             '-std=c++11', '-Wall', '-Wextra', '-Werror', '-fsanitize=undefined',
             ...(withSD ? [] : ['-DUSB_DIAGNOSTICS_TEST_NO_SD']),
             '-x', 'c++', '-', '-o', executable,

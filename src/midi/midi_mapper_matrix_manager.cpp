@@ -384,9 +384,9 @@ void setup_midi_mapper_matrix_manager() {
 
     #ifdef ENABLE_FLEXIARP
         behaviour_flexiarp->source_id   = midi_matrix_manager->register_source("FlexiArp Ch1", 1);
-        behaviour_flexiarp->source_id_2 = midi_matrix_manager->register_source("FlexiArp Ch2", 2);
-        behaviour_flexiarp->source_id_3 = midi_matrix_manager->register_source("FlexiArp Ch3", 3);
-        behaviour_flexiarp->source_id_4 = midi_matrix_manager->register_source("FlexiArp Ch4", 4);
+        behaviour_flexiarp->source_ids[0] = midi_matrix_manager->register_source("FlexiArp Ch2", 2);
+        behaviour_flexiarp->source_ids[1] = midi_matrix_manager->register_source("FlexiArp Ch3", 3);
+        behaviour_flexiarp->source_ids[2] = midi_matrix_manager->register_source("FlexiArp Ch4", 4);
     #endif
 
     behaviour_sequencer_gates->source_id = midi_matrix_manager->register_source("Gate Sequencer", GM_CHANNEL_DRUMS);

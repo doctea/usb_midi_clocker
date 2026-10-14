@@ -82,6 +82,8 @@ void do_tick(uint32_t ticks);
 
 #ifdef ENABLE_USB
   #include "usb/multi_usb_handlers.h"
+#endif
+#if defined(ENABLE_USB) && USBHOST_T36_ENABLE_DIAGNOSTICS
   #define RECORD_USB_PHASE(phase) USBHost::setDiagnosticPhase(USBHost::DiagnosticPhase::phase)
 #else
   #define RECORD_USB_PHASE(phase) do {} while (0)
@@ -307,7 +309,7 @@ void setup() {
 
   tft_print((char*)"..storage..\n");
   storage::setup_sd();
-  #ifdef ENABLE_USB
+  #if defined(ENABLE_USB) && USBHOST_T36_ENABLE_DIAGNOSTICS
     USBHost::beginDiagnosticProgress();
     bool usb_watchdog_reset = false;
     #if defined(__IMXRT1062__)
