@@ -450,7 +450,11 @@ void setup_behaviour_manager() {
     void DeviceBehaviourManager::create_single_behaviour_menu_items(Menu *menu, DeviceBehaviourUltimateBase *behaviour) {
             Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: calling make_menu_items on behaviour '%s'...\n"), behaviour->get_label()); Serial_flush(); 
             //debug_free_ram();
+            const unsigned int first_custom_page = menu->pages->size();
             MenuItemList *menuitems = behaviour->make_menu_items();
+            // Some behaviours create their own pages instead of returning menu items.
+            if (behaviour->routing_page_index < 0 && menu->pages->size() > first_custom_page)
+                behaviour->routing_page_index = first_custom_page;
             Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: done calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
 
             uint16_t group_colour = C_WHITE;
@@ -463,12 +467,15 @@ void setup_behaviour_manager() {
                 // todo: get the page group from the behaviour itself, so that can group multiple behaviours together
                 int page_idx = menu->add_page(behaviour->get_label(), group_colour, behaviour->is_page_scrollable(), "Behaviours");
 
-                // Wire up matrix jump indices so the popup's "Jump to source/target page" rows work
+                // Owner page index: every endpoint owned by this behaviour (not just the
+                // primary source_id/target_id) resolves its jump target through this
+                behaviour->routing_page_index = page_idx;
+                // primary endpoints registered without an owner (eg via a non-behaviour wrapper) belong to this behaviour
                 if (midi_matrix_manager != nullptr) {
-                    if (behaviour->source_id >= 0)
-                        midi_matrix_manager->set_source_page_index(behaviour->source_id, page_idx);
-                    if (behaviour->target_id >= 0)
-                        midi_matrix_manager->set_target_page_index(behaviour->target_id, page_idx);
+                    if (behaviour->source_id >= 0 && midi_matrix_manager->get_source_owner(behaviour->source_id) == nullptr)
+                        midi_matrix_manager->set_source_owner(behaviour->source_id, behaviour);
+                    if (behaviour->target_id >= 0 && midi_matrix_manager->get_target_owner(behaviour->target_id) == nullptr)
+                        midi_matrix_manager->set_target_owner(behaviour->target_id, behaviour);
                 }
 
                 // add a separator bar

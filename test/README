@@ -17,11 +17,28 @@ From the project directory, using Node.js and g++ with UBSan support:
 	node test/apc_display_host_test.js
 	node test/usb_reconnect_host_test.js
 	node test/menu_page_host_test.js
+	node test/routing_page_host_test.js
+	node test/midi_connections_host_test.js
 
 These compile extracted production functions with mocked USB hardware, without
 running PlatformIO or installing firmware dependencies. The display/transmit
 test expects USBHost_t36 at ../my_libraries/USBHost_t36; USBHOST_T36_DIR can
 override that location.
+
+The routing-page test compiles production behaviour-page setup, endpoint page
+lookup, and popup availability checks with mock menus. It covers behaviours
+that create custom pages without returning items (including Euclidian's four
+source roles), standard-page precedence, explicit destinations, and no-page
+behaviours. It does not build or upload firmware.
+
+The connection test builds test/native/midi_connection_store_test.cpp with the
+Arduino-free MIDIConnectionStore and policy parser/formatter. It also compiles
+the production matrix public implementation, wrapper note refcount methods, and
+popup actions against mock transports/menus. It covers the exact 128-route limit,
+slot reuse and delivery order, disallowed routes, pause/resume note cleanup and
+shared-pitch refcounts, activity timestamps, channel-policy migration, version 2
+save/load round trips, version 1 and legacy loading, malformed policy logging,
+and popup pause/jump/failure feedback. Firmware builds/uploads remain manual.
 
 The reconnect test also compiles the actual main-loop USB polling wrapper,
 previous-phase panel/dump, and boot-time SD snapshot functions. It checks a

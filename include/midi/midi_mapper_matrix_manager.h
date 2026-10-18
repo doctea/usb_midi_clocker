@@ -37,6 +37,7 @@ void behaviour_manager_kill_all_current_notes();
 
 #include "midi/midi_mapper_matrix_types.h"
 #include "midi/midi_connection_note_state.h"
+#include "midi/midi_connection_store.h"
 
 #include "scales.h"
 
@@ -47,23 +48,11 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     public:
     static MIDIMatrixManager* getInstance();
 
-    enum class ConnectionQuantiseMode : uint8_t {
-        INHERIT_BEHAVIOUR = 0,
-        FORCE_OFF = 1,
-        FORCE_SCALE = 2,
-        FORCE_CHORD = 3,
-    };
-
-    enum class ConnectionNoteMapMode : uint8_t {
-        NONE = 0,
-        RESERVED = 1,
-    };
-
-    struct connection_policy_t {
-        uint8_t fixed_channel = 0;  // 0 = passthru, 1-16 = remap to this channel
-        ConnectionQuantiseMode quantise_mode = ConnectionQuantiseMode::INHERIT_BEHAVIOUR;
-        ConnectionNoteMapMode note_map_mode = ConnectionNoteMapMode::NONE;
-    };
+    using ConnectionQuantiseMode = MIDIConnectionQuantiseMode;
+    using ConnectionNoteMapMode = MIDIConnectionNoteMapMode;
+    using connection_policy_t = MIDIConnectionPolicy;
+    using connection_store_t = MIDIConnectionStore<MAX_NUM_SOURCES, MAX_NUM_TARGETS>;
+    using connection_t = connection_store_t::connection_t;
 
     struct transformed_note_event_t {
         int8_t pitch;
@@ -107,30 +96,40 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         uint8_t connection_count = 0;
         uint8_t default_channel = 0;
         int16_t menu_page_index = -1;  // index into Menu::pages; -1 = no associated page
+        MIDIEndpointOwner *owner = nullptr;
+        const char *role = nullptr;    // short display name within owner (eg "ch10"); nullptr = use handle
+        uint32_t last_activity_ms = 0;
+        bool has_activity = false;
     };
     uint8_t sources_count = 0;
 
     source_entry *sources = nullptr;
 
     // assign a source_id for the given name
-    FLASHMEM source_id_t register_source(const char *handle, uint8_t default_channel = 0) {
+    // role must point to storage that outlives the matrix (eg a string literal)
+    FLASHMEM source_id_t register_source(const char *handle, uint8_t default_channel = 0, MIDIEndpointOwner *owner = nullptr, const char *role = nullptr) {
         if (NUM_REGISTERED_SOURCES >= MAX_NUM_SOURCES || sources == nullptr) {
             Serial_printf(F("!! register_source('%s') failed: source table full (%u/%u) or uninitialised\n"),
                 handle ? handle : "(null)", (unsigned int)NUM_REGISTERED_SOURCES, (unsigned int)MAX_NUM_SOURCES);
             return -1;
         }
         //Serial_printf(F("midi_mapper_matrix_manager#register_source() registering handle '%s'\n"), handle);
-        strncpy(sources[NUM_REGISTERED_SOURCES].handle, handle, LANGST_HANDEL_ROUT);
-        sources[NUM_REGISTERED_SOURCES].handle[LANGST_HANDEL_ROUT - 1] = '\0';
-        sources[NUM_REGISTERED_SOURCES].default_channel = default_channel;
+        // sources table is CALLOC'd so default member initialisers haven't run; reset explicitly
+        source_entry &entry = sources[NUM_REGISTERED_SOURCES];
+        entry = source_entry{};
+        strncpy(entry.handle, handle, LANGST_HANDEL_ROUT);
+        entry.handle[LANGST_HANDEL_ROUT - 1] = '\0';
+        entry.default_channel = default_channel;
+        entry.owner = owner;
+        entry.role = role;
         return NUM_REGISTERED_SOURCES++;
     }
     // assign a source_id for the midi track
     //FLASHMEM 
-    source_id_t register_source(MIDITrack *loop_track, const char *handle, uint8_t default_channel = 0);
-    // assign a source_id for the device
+    source_id_t register_source(MIDITrack *loop_track, const char *handle, uint8_t default_channel = 0, MIDIEndpointOwner *owner = nullptr, const char *role = nullptr);
+    // assign a source_id for the device; the device becomes the source's owner
     //FLASHMEM 
-    source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle, uint8_t default_channel = 0);
+    source_id_t register_source(DeviceBehaviourUltimateBase *device, const char *handle, uint8_t default_channel = 0, const char *role = nullptr);
 
     // get id of source for string
     FLASHMEM source_id_t get_source_id_for_handle(const char *handle) {
@@ -142,9 +141,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         return -1;
     }
 
-    bool source_to_targets[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};  // 24*24 = 576 bytes
-    bool disallow_map[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
-    connection_policy_t connection_policies[MAX_NUM_SOURCES][MAX_NUM_TARGETS] = {};
+    connection_store_t connections;
     // Authoritative Note On/Off pairing for matrix-routed notes. Behaviour-local
     // notes use DeviceBehaviourUltimateBase::note_tracker instead.
     MIDIConnectionNoteState active_connection_notes;
@@ -160,38 +157,83 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         return true;
     }
 
-    connection_policy_t *get_connection_policy(source_id_t source_id, target_id_t target_id) {
+    const connection_t *find_connection(source_id_t source_id, target_id_t target_id) const {
         if (!is_valid_connection_id_pair(source_id, target_id))
             return nullptr;
-        return &connection_policies[source_id][target_id];
+        return connections.find(source_id, target_id);
+    }
+
+    const connection_policy_t *get_connection_policy(source_id_t source_id, target_id_t target_id) const {
+        const connection_t *connection = find_connection(source_id, target_id);
+        return connection != nullptr ? &connection->policy : nullptr;
     }
 
     bool set_connection_policy(source_id_t source_id, target_id_t target_id, const connection_policy_t &policy) {
-        connection_policy_t *slot = get_connection_policy(source_id, target_id);
-        if (slot == nullptr)
+        connection_t *connection = connections.find(source_id, target_id);
+        if (!is_valid_connection_id_pair(source_id, target_id) || connection == nullptr
+            || !midi_connection_policy_valid(policy)) {
+            Serial_printf(F("!! set_connection_policy: invalid or absent connection %i -> %i, or invalid policy\n"), source_id, target_id);
             return false;
-        *slot = policy;
-        migrate_connection_notes(source_id, target_id);
+        }
+        connection->policy = policy;
+        if (policy.paused)
+            release_connection_notes(source_id, target_id);
+        else
+            migrate_connection_notes(source_id, target_id);
         return true;
     }
 
+    bool set_paused(source_id_t source_id, target_id_t target_id, bool paused) {
+        const connection_policy_t *policy = get_connection_policy(source_id, target_id);
+        if (policy == nullptr) {
+            Serial_printf(F("!! set_paused: absent connection %i -> %i\n"), source_id, target_id);
+            return false;
+        }
+        connection_policy_t updated = *policy;
+        updated.paused = paused;
+        return set_connection_policy(source_id, target_id, updated);
+    }
+
+    template <typename Fn> void for_each_connection_from(source_id_t source_id, const Fn &fn) {
+        connections.for_each_from(source_id, [&fn](const connection_t &entry) { fn(entry); });
+    }
+    template <typename Fn> void for_each_connection_to(target_id_t target_id, const Fn &fn) const {
+        connections.for_each_to(target_id, fn);
+    }
+
+    uint16_t held_notes_for_connection(source_id_t source_id, target_id_t target_id) const {
+        uint16_t count = 0;
+        for (const auto &entry : active_connection_notes.entries)
+            if (entry.occupied && entry.emitted && entry.source_id == source_id && entry.target_id == target_id)
+                ++count;
+        return count;
+    }
+
+    void stamp_connection_activity(connection_t &connection, uint32_t now) {
+        connection.last_activity_ms = targets[connection.target].last_activity_ms = now;
+        connection.has_activity = targets[connection.target].has_activity = true;
+    }
+
     transformed_note_event_t apply_connection_policy_note(source_id_t source_id, target_id_t target_id, int8_t pitch, uint8_t channel) {
-        transformed_note_event_t event = { pitch, channel, false };
         const connection_policy_t *policy = get_connection_policy(source_id, target_id);
         if (policy == nullptr)
-            return event;
+            return transformed_note_event_t{pitch, channel, false};
+        return apply_connection_policy_note(*policy, pitch, channel);
+    }
 
-        if (policy->fixed_channel > 0)
-            event.channel = policy->fixed_channel;
+    transformed_note_event_t apply_connection_policy_note(const connection_policy_t &policy, int8_t pitch, uint8_t channel) {
+        transformed_note_event_t event = { pitch, channel, false };
+        if (policy.fixed_channel > 0)
+            event.channel = policy.fixed_channel;
 
-        if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_OFF) {
+        if (policy.quantise_mode == ConnectionQuantiseMode::FORCE_OFF) {
             // do nothing
-        } else if (policy->quantise_mode == ConnectionQuantiseMode::INHERIT_BEHAVIOUR) {
+        } else if (policy.quantise_mode == ConnectionQuantiseMode::INHERIT_BEHAVIOUR) {
             if (conductor->get_global_quantise_mode()==QUANTISE_MODE_CHORD) event.pitch = ::quantise_pitch_to_chord(event.pitch, 3);
             if (conductor->get_global_quantise_mode()==QUANTISE_MODE_SCALE) event.pitch = ::quantise_pitch_to_scale(event.pitch);
-        } else if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_SCALE) {
+        } else if (policy.quantise_mode == ConnectionQuantiseMode::FORCE_SCALE) {
             event.pitch = quantise_pitch_to_scale(event.pitch);
-        } else if (policy->quantise_mode == ConnectionQuantiseMode::FORCE_CHORD) {
+        } else if (policy.quantise_mode == ConnectionQuantiseMode::FORCE_CHORD) {
             event.pitch = quantise_pitch_to_chord(event.pitch, 3);
         }
 
@@ -363,26 +405,30 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     // Apply fixed-channel remap for non-note events (CC, pitchbend).
     uint8_t apply_connection_policy_channel(source_id_t source_id, target_id_t target_id, uint8_t channel) {
         const connection_policy_t *policy = get_connection_policy(source_id, target_id);
-        if (policy && policy->fixed_channel > 0)
-            return policy->fixed_channel;
-        return channel;
+        return policy != nullptr ? apply_connection_policy_channel(*policy, channel) : channel;
+    }
+    uint8_t apply_connection_policy_channel(const connection_policy_t &policy, uint8_t channel) {
+        return policy.fixed_channel > 0 ? policy.fixed_channel : channel;
     }
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
-        // todo: could optimise by checking connected_to_source_count() and connected_to_target_count()
-        for (source_id_t source_id = 0 ; source_id < NUM_REGISTERED_SOURCES ; source_id++) {
-            for (target_id_t target_id  = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-                disconnect(source_id, target_id);
-                connection_policies[source_id][target_id] = connection_policy_t{};
-            }
+        release_connection_notes();
+        connections.clear();
+        for (source_id_t source_id = 0; source_id < NUM_REGISTERED_SOURCES; ++source_id) {
+            sources[source_id].connection_count = 0;
+            sources[source_id].has_activity = false;
+        }
+        for (target_id_t target_id = 0; target_id < NUM_REGISTERED_TARGETS; ++target_id) {
+            targets[target_id].connection_count = 0;
+            targets[target_id].has_activity = false;
         }
     }
     // is this source id connected to target id
     bool is_connected(source_id_t source_id, target_id_t target_id) {
         if (source_id < 0 || target_id < 0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS)
             return false;
-        return source_to_targets[source_id][target_id];
+        return connections.find(source_id, target_id) != nullptr;
     }
 
     // toggle a connection - return false if connection is now broken, true if it is now made
@@ -391,17 +437,20 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             this->disconnect(source_id, target_id);
             return false;
         } else {
-            this->connect(source_id, target_id);
-            return true;
+            return this->connect(source_id, target_id);
         }
     }
 
     // don't allow source X to connect to target Y -- eg to avoid loopbacks
     void disallow(source_id_t source_id, target_id_t target_id) {
-        disallow_map[source_id][target_id] = true;
+        if (!is_valid_connection_id_pair(source_id, target_id) || !connections.disallow(source_id, target_id)) {
+            Serial_printf(F("!! disallow: invalid pair or disallow table full (%i -> %i)\n"), source_id, target_id);
+            return;
+        }
+        disconnect(source_id, target_id);
     }
     bool is_allowed(source_id_t source_id, target_id_t target_id) {
-        return !disallow_map[source_id][target_id];
+        return is_valid_connection_id_pair(source_id, target_id) && connections.allowed(source_id, target_id);
     }
     
     // connect source to target)
@@ -416,23 +465,27 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     }
 
     bool connect(source_id_t source_id, target_id_t target_id) {
-        if (source_id<0 || target_id<0 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS || sources == nullptr)
+        if (!is_valid_connection_id_pair(source_id, target_id) || sources == nullptr) {
+            Serial_printf(F("!! connect: invalid endpoints %i -> %i\n"), source_id, target_id);
             return false;
-        if (!is_allowed(source_id, target_id))
-            return false;
-        if (!source_to_targets[source_id][target_id]) {
-            // increment count if not already connected
-            sources[source_id].connection_count++;
-            targets[target_id].connection_count++;
-            connection_policy_t &policy = connection_policies[source_id][target_id];
-            policy = connection_policy_t{};
-            bool source_is_drums = sources[source_id].default_channel == GM_CHANNEL_DRUMS;
-            bool target_is_drums = targets[target_id].wrapper != nullptr
-                                && targets[target_id].wrapper->default_channel == GM_CHANNEL_DRUMS;
-            if (source_is_drums || target_is_drums)
-                policy.quantise_mode = ConnectionQuantiseMode::FORCE_OFF;
         }
-        source_to_targets[source_id][target_id] = true;
+        if (!is_allowed(source_id, target_id)) {
+            Serial_printf(F("!! connect: disallowed connection %i -> %i\n"), source_id, target_id);
+            return false;
+        }
+        if (is_connected(source_id, target_id)) return true;
+        connection_policy_t policy;
+        bool source_is_drums = sources[source_id].default_channel == GM_CHANNEL_DRUMS;
+        bool target_is_drums = targets[target_id].wrapper != nullptr
+                            && targets[target_id].wrapper->default_channel == GM_CHANNEL_DRUMS;
+        if (source_is_drums || target_is_drums)
+            policy.quantise_mode = ConnectionQuantiseMode::FORCE_OFF;
+        if (connections.connect(source_id, target_id, policy) == nullptr) {
+            Serial_printf(F("!! connect: connection table full (%i -> %i)\n"), source_id, target_id);
+            return false;
+        }
+        sources[source_id].connection_count++;
+        targets[target_id].connection_count++;
         return true;
     }
 
@@ -444,23 +497,23 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         );
     }
     void disconnect(source_id_t source_id, target_id_t target_id) {
-        if (source_id==-1 || target_id==-1 || source_id >= NUM_REGISTERED_SOURCES || target_id >= NUM_REGISTERED_TARGETS || sources == nullptr) return;
+        if (!is_valid_connection_id_pair(source_id, target_id) || sources == nullptr) return;
         if (is_connected(source_id, target_id)) {
             release_connection_notes(source_id, target_id);
             // decrement counts, only if connected
             sources[source_id].connection_count--;
             targets[target_id].connection_count--;
+            connections.disconnect(source_id, target_id);
         }
-        source_to_targets[source_id][target_id] = false;
     }
 
     uint8_t connected_to_source_count(source_id_t source_id) {
-        if (source_id==-1 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return 0;
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return 0;
 
         return sources[source_id].connection_count;
     }
     uint8_t connected_to_target_count(target_id_t target_id) {
-        if (target_id==-1 || target_id >= NUM_REGISTERED_TARGETS) return 0;
+        if (target_id < 0 || target_id >= NUM_REGISTERED_TARGETS) return 0;
 
         return targets[target_id].connection_count;
     }
@@ -488,12 +541,11 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     // Note On calculates the mutable connection transform once and records its
     // result. Note Off below consumes that result; it must not quantise again.
     void processNoteOn(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
-        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i (%s),\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i)\n"), source_id, this->sources[source_id].handle, pitch, get_note_name_c(pitch), velocity, channel);
-
-        if (source_id<0) {
-            if (this->debug) Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) {
+            Serial_printf(F("!! midi_mapper_matrix_manager#processNoteOn() passed source_id of %i!\n"), source_id);
             return;
         }
+        if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOn(source_id=%i (%s),\tpitch=%i (%s),\tvelocity=%i,\tchannel=%i)\n"), source_id, this->sources[source_id].handle, pitch, get_note_name_c(pitch), velocity, channel);
         if (!is_valid_note(pitch)) { 
             if (this->debug) Serial_printf("!! midi_mapper_matrix_manager#processNoteOff() passed invalid pitch %s (%i) - ignoring\n", get_note_name_c(pitch), pitch);
             return;
@@ -504,32 +556,37 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (debug) Serial_printf(F("=> quantised to %i (%s)\n"), pitch, get_note_name_c(pitch));
         if (!is_valid_note(pitch)) return;*/
 
-        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-            if (is_connected(source_id, target_id)) {
+        const uint32_t now = millis();
+        sources[source_id].last_activity_ms = now;
+        sources[source_id].has_activity = true;
+        connections.for_each_from(source_id, [&](connection_t &connection) {
+            if (!connection.policy.paused) {
+                const target_id_t target_id = connection.target;
+                stamp_connection_activity(connection, now);
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send ON  to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
-                transformed_note_event_t event = apply_connection_policy_note(source_id, target_id, pitch, channel);
+                transformed_note_event_t event = apply_connection_policy_note(connection.policy, pitch, channel);
                 MIDIConnectionNoteState::entry_t *entry = active_connection_notes.record(
                     source_id, target_id, pitch, channel,
                     event.pitch, event.channel, velocity, !event.drop
                 );
                 if (entry == nullptr) {
                     Serial_printf(F("!! MIDI connection note ledger full; dropping Note On from source %i to target %i\n"), source_id, target_id);
-                    continue;
+                    return;
                 }
                 if (entry->emitted)
                     targets[target_id].wrapper->sendNoteOn(entry->output_pitch, velocity, entry->output_channel);
                 //targets[target_id].wrapper->debug = false;
             }
-        }
+        });
     }
     // Match by the original source pitch/channel, then release the output that
     // was recorded by processNoteOn even if harmony or policy has since changed.
     void processNoteOff(source_id_t source_id, int8_t pitch, uint8_t velocity, uint8_t channel = 0) {
         if (this->debug) Serial_printf(F("midi_mapper_matrix_manager#processNoteOff(source_id=%i,\tpitch=%i,\tvelocity=%i,\tchannel=%i)\n"), source_id, pitch, velocity, channel);
 
-        if (source_id<0) {
-            if (this->debug) Serial_printf(F("\t!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) {
+            Serial_printf(F("\t!! midi_mapper_matrix_manager#processNoteOff() passed source_id of %i!\n"), source_id);
             return;
         }
         if (!is_valid_note(pitch)) {
@@ -546,51 +603,72 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             return;
         }
 
-        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-            if (is_connected(source_id, target_id)) {
+        const uint32_t now = millis();
+        sources[source_id].last_activity_ms = now;
+        sources[source_id].has_activity = true;
+        connections.for_each_from(source_id, [&](connection_t &connection) {
+            if (!connection.policy.paused) {
+                const target_id_t target_id = connection.target;
+                stamp_connection_activity(connection, now);
                 //targets[target_id].wrapper->debug = true;
                 if (this->debug) Serial_printf(F("\t%s\tshould send to\t%s\t(target_id=%i)\n"), sources[source_id].handle, targets[target_id].handle, target_id);
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 MIDIConnectionNoteState::entry_t entry;
                 if (!active_connection_notes.take(source_id, target_id, pitch, channel, entry)) {
                     if (this->debug) Serial_printf(F("\tno paired Note On for source %i, target %i, pitch %i, channel %i; ignoring Note Off\n"), source_id, target_id, pitch, channel);
-                    continue;
+                    return;
                 }
                 if (entry.emitted)
                     targets[target_id].wrapper->sendNoteOff(entry.output_pitch, velocity, entry.output_channel);
                 //targets[target_id].wrapper->debug = false;
             }
-        }
+        });
     }
     void processControlChange(source_id_t source_id, int8_t cc, uint8_t value, uint8_t channel = 0) {
-        if (source_id==-1) return;
-        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-            if (is_connected(source_id, target_id)) {
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) {
+            Serial_printf(F("!! processControlChange: invalid source %i\n"), source_id);
+            return;
+        }
+        const uint32_t now = millis();
+        sources[source_id].last_activity_ms = now;
+        sources[source_id].has_activity = true;
+        connections.for_each_from(source_id, [&](connection_t &connection) {
+            if (!connection.policy.paused) {
+                const target_id_t target_id = connection.target;
+                stamp_connection_activity(connection, now);
                 /*Serial_printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
                     source_id, cc, value, channel, source_id, target_id
                 ); Serial_flush();
                 if (targets[target_id].wrapper==nullptr) {
                     Serial_printf("target_id %i has a nullptr wrapper!\n", target_id); Serial_flush();
                 }*/
-                targets[target_id].wrapper->sendControlChange(cc, value, apply_connection_policy_channel(source_id, target_id, channel));
+                targets[target_id].wrapper->sendControlChange(cc, value, apply_connection_policy_channel(connection.policy, channel));
                 //Serial_println("successfully sent!"); Serial_flush();
             }
-        }
+        });
     }
     void processPitchBend(source_id_t source_id, int16_t bend, uint8_t channel = 0) {
-        if (source_id==-1) return;
-        for (target_id_t target_id = 0 ; target_id < NUM_REGISTERED_TARGETS ; target_id++) {
-            if (is_connected(source_id, target_id)) {
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) {
+            Serial_printf(F("!! processPitchBend: invalid source %i\n"), source_id);
+            return;
+        }
+        const uint32_t now = millis();
+        sources[source_id].last_activity_ms = now;
+        sources[source_id].has_activity = true;
+        connections.for_each_from(source_id, [&](connection_t &connection) {
+            if (!connection.policy.paused) {
+                const target_id_t target_id = connection.target;
+                stamp_connection_activity(connection, now);
                 /*Serial_printf("midi_matrix_manager#processControlChange(%i, %i, %i, %i): %i is connected to %i!\n",
                     source_id, cc, value, channel, source_id, target_id
                 ); Serial_flush();
                 if (targets[target_id].wrapper==nullptr) {
                     Serial_printf("target_id %i has a nullptr wrapper!\n", target_id); Serial_flush();
                 }*/
-                targets[target_id].wrapper->sendPitchBend(bend, apply_connection_policy_channel(source_id, target_id, channel));
+                targets[target_id].wrapper->sendPitchBend(bend, apply_connection_policy_channel(connection.policy, channel));
                 //Serial_println("successfully sent!"); Serial_flush();
             }
-        }
+        });
     }
     void stop_all_notes_for_source(source_id_t source_id, bool force = false) {
         if (source_id==-1) return;
@@ -659,6 +737,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         uint8_t connection_count = 0;
         MIDIOutputWrapper *wrapper = nullptr;
         int16_t menu_page_index = -1;  // index into Menu::pages; -1 = no associated page
+        MIDIEndpointOwner *owner = nullptr;
+        const char *role = nullptr;    // short display name within owner (eg "Voice A"); nullptr = use handle
+        uint32_t last_activity_ms = 0;
+        bool has_activity = false;
     };
 
     uint8_t targets_count = 0;
@@ -672,24 +754,102 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (target_id >= 0 && target_id < NUM_REGISTERED_TARGETS && target_id < MAX_NUM_TARGETS)
             targets[target_id].menu_page_index = page_index;
     }
+    // explicit per-endpoint page index wins; otherwise fall back to the owner's page
     int16_t get_source_page_index(source_id_t source_id) const {
-        if (source_id >= 0 && source_id < NUM_REGISTERED_SOURCES && source_id < MAX_NUM_SOURCES && sources != nullptr)
-            return sources[source_id].menu_page_index;
+        if (source_id >= 0 && source_id < NUM_REGISTERED_SOURCES && source_id < MAX_NUM_SOURCES && sources != nullptr) {
+            if (sources[source_id].menu_page_index >= 0)
+                return sources[source_id].menu_page_index;
+            if (sources[source_id].owner != nullptr)
+                return sources[source_id].owner->routing_page_index;
+        }
         return -1;
     }
     int16_t get_target_page_index(target_id_t target_id) const {
-        if (target_id >= 0 && target_id < NUM_REGISTERED_TARGETS && target_id < MAX_NUM_TARGETS)
-            return targets[target_id].menu_page_index;
+        if (target_id >= 0 && target_id < NUM_REGISTERED_TARGETS && target_id < MAX_NUM_TARGETS) {
+            if (targets[target_id].menu_page_index >= 0)
+                return targets[target_id].menu_page_index;
+            if (targets[target_id].owner != nullptr)
+                return targets[target_id].owner->routing_page_index;
+        }
         return -1;
+    }
+
+    //// endpoint ownership
+    MIDIEndpointOwner *get_source_owner(source_id_t source_id) const {
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return nullptr;
+        return sources[source_id].owner;
+    }
+    MIDIEndpointOwner *get_target_owner(target_id_t target_id) const {
+        if (target_id < 0 || target_id >= NUM_REGISTERED_TARGETS) return nullptr;
+        return targets[target_id].owner;
+    }
+    void set_source_owner(source_id_t source_id, MIDIEndpointOwner *owner, const char *role = nullptr) {
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return;
+        sources[source_id].owner = owner;
+        if (role != nullptr) sources[source_id].role = role;
+    }
+    void set_target_owner(target_id_t target_id, MIDIEndpointOwner *owner, const char *role = nullptr) {
+        if (target_id < 0 || target_id >= NUM_REGISTERED_TARGETS) return;
+        targets[target_id].owner = owner;
+        if (role != nullptr) targets[target_id].role = role;
+    }
+    // short label for an endpoint within its owner's context; falls back to the full handle/label
+    const char *get_role_for_source_id(source_id_t source_id) {
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return nullptr;
+        return sources[source_id].role != nullptr ? sources[source_id].role : get_label_for_source_id(source_id);
+    }
+    const char *get_role_for_target_id(target_id_t target_id) {
+        if (target_id < 0 || target_id >= NUM_REGISTERED_TARGETS) return nullptr;
+        return targets[target_id].role != nullptr ? targets[target_id].role : get_label_for_target_id(target_id);
+    }
+
+    template<typename F> void for_each_source_of(const MIDIEndpointOwner *owner, F fn) {
+        if (owner == nullptr || sources == nullptr) return;
+        for (source_id_t i = 0; i < NUM_REGISTERED_SOURCES; i++)
+            if (sources[i].owner == owner) fn(i);
+    }
+    template<typename F> void for_each_target_of(const MIDIEndpointOwner *owner, F fn) {
+        if (owner == nullptr) return;
+        for (target_id_t i = 0; i < NUM_REGISTERED_TARGETS; i++)
+            if (targets[i].owner == owner) fn(i);
+    }
+    uint8_t count_sources_of(const MIDIEndpointOwner *owner) {
+        uint8_t n = 0;
+        for_each_source_of(owner, [&n](source_id_t) { n++; });
+        return n;
+    }
+    uint8_t count_targets_of(const MIDIEndpointOwner *owner) {
+        uint8_t n = 0;
+        for_each_target_of(owner, [&n](target_id_t) { n++; });
+        return n;
+    }
+    bool owns_endpoints(const MIDIEndpointOwner *owner) {
+        return count_sources_of(owner) > 0 || count_targets_of(owner) > 0;
+    }
+
+    // built-in ports that have no behaviour (serial MIDI, PC USB, drum looper...);
+    // the 'MIDI Ports' page shows one section per entry
+    static const uint8_t MAX_PORT_OWNERS = 16;
+    MIDIEndpointOwner *port_owners[MAX_PORT_OWNERS] = {};
+    uint8_t port_owners_count = 0;
+    MIDIEndpointOwner *register_port_owner(MIDIEndpointOwner *owner) {
+        if (owner == nullptr) return nullptr;
+        if (port_owners_count >= MAX_PORT_OWNERS) {
+            Serial_printf(F("!! register_port_owner('%s') failed: table full\n"), owner->get_endpoint_owner_label());
+            return owner;
+        }
+        port_owners[port_owners_count++] = owner;
+        return owner;
     }
 
     FLASHMEM target_id_t register_target(MIDIOutputWrapper *target) {
         return this->register_target(target, target->label);
     }
-    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle, uint8_t channel = 1) {
-        return this->register_target(make_midioutputwrapper(handle, target, channel));
+    FLASHMEM target_id_t register_target(MIDITrack *target, const char *handle, uint8_t channel = 1, MIDIEndpointOwner *owner = nullptr, const char *role = nullptr) {
+        return this->register_target(make_midioutputwrapper(handle, target, channel), handle, owner, role);
     }
-    FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle) {
+    // owner defaults to the wrapper's own owner (eg the behaviour it delivers to)
+    FLASHMEM target_id_t register_target(MIDIOutputWrapper *target, const char *handle, MIDIEndpointOwner *owner = nullptr, const char *role = nullptr) {
         if (NUM_REGISTERED_TARGETS >= MAX_NUM_TARGETS) {
             Serial_printf(F("!! register_target('%s') failed: target table full (%u/%u)\n"),
                 handle ? handle : "(null)", (unsigned int)NUM_REGISTERED_TARGETS, (unsigned int)MAX_NUM_TARGETS);
@@ -699,6 +859,8 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         strncpy(targets[NUM_REGISTERED_TARGETS].handle, handle, LANGST_HANDEL_ROUT);
         targets[NUM_REGISTERED_TARGETS].handle[LANGST_HANDEL_ROUT - 1] = '\0';
         targets[NUM_REGISTERED_TARGETS].wrapper = target;
+        targets[NUM_REGISTERED_TARGETS].owner = owner != nullptr ? owner : (target != nullptr ? target->get_owner() : nullptr);
+        targets[NUM_REGISTERED_TARGETS].role = role;
         Serial_printf(F("midi_mapper_matrix_manager#register_target() registering handle '%s' as target_id %i\n"), handle, NUM_REGISTERED_TARGETS);
         if (target==nullptr) {
             Serial_printf(F("WARNING: register_target for handle %s (target_id %i) passed a null target wrapper!!!\n"), target, NUM_REGISTERED_TARGETS);
@@ -880,7 +1042,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     // ---- saveloadlib settings ----
     //
     // One line per connection, with named policy fields for easy extension:
-    //   midi_matrix~<src_handle>~<target_handle>~connection=version=1;channel=0;quantise=0;note_map=0
+    //   midi_matrix~<src_handle>~<target_handle>~connection=version=2;channel=0;quantise=0;note_map=0;paused=0
     // Legacy "targets=tgt1;tgt2;..." lines are still accepted when loading.
     // Scale settings are registered with SL_SCOPE_PROJECT;
     // connections are emitted/parsed dynamically (sources are registered AFTER
@@ -888,35 +1050,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     // reset_matrix() must be called before loading routing (done in project.h).
     char routing_line_buf[SL_MAX_LINE];  // shared scratch buf (singleton, single-threaded)
 
-    void _load_connection_policy(const char* value, connection_policy_t& policy) {
-        policy = connection_policy_t{};
-        if (!value) return;
-
-        strncpy(routing_line_buf, value, SL_MAX_LINE - 1);
-        routing_line_buf[SL_MAX_LINE - 1] = '\0';
-        char* field = routing_line_buf;
-        while (*field) {
-            char* semi = strchr(field, ';');
-            if (semi) *semi = '\0';
-            char* equals = strchr(field, '=');
-            if (equals) {
-                *equals = '\0';
-                char* key = field;
-                char* field_value = equals + 1;
-                sl_trim_inplace(key);
-                sl_trim_inplace(field_value);
-                int parsed = atoi(field_value);
-                if (strcmp(key, "channel") == 0 && parsed >= 0 && parsed <= 16) {
-                    policy.fixed_channel = (uint8_t)parsed;
-                } else if (strcmp(key, "quantise") == 0 && parsed >= 0 && parsed <= (int)ConnectionQuantiseMode::FORCE_CHORD) {
-                    policy.quantise_mode = (ConnectionQuantiseMode)parsed;
-                } else if (strcmp(key, "note_map") == 0 && parsed >= 0 && parsed <= (int)ConnectionNoteMapMode::RESERVED) {
-                    policy.note_map_mode = (ConnectionNoteMapMode)parsed;
-                }
-            }
-            if (!semi) break;
-            field = semi + 1;
-        }
+    bool _load_connection_policy(const char* value, connection_policy_t& policy) {
+        if (midi_parse_connection_policy(value, policy)) return true;
+        Serial_printf(F("!! midi_matrix load routing: invalid connection policy '%s'\n"), value ? value : "(null)");
+        return false;
     }
 
     // Internal helper: emit one connection and its policy per line.
@@ -926,24 +1063,28 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                              void (*cb_ctx)(const char*, void*), void* ctx) {
         static char out[SL_MAX_LINE];
         for (source_id_t s = 0; s < (source_id_t)sources_count; s++) {
-            for (target_id_t t = 0; t < (target_id_t)targets_count; t++) {
-                if (!is_connected(s, t)) continue;
-                const connection_policy_t *policy = this->get_connection_policy(s, t);
-                if (!policy) continue;
+            connections.for_each_from(s, [&](const connection_t &connection) {
+                const target_id_t t = connection.target;
+                char policy[96];
+                if (!midi_format_connection_policy(policy, sizeof(policy), connection.policy)) {
+                    Serial_println(F("!! midi_matrix save routing: policy buffer too small"));
+                    return;
+                }
+                int length;
                 if (prefix_len == 0) {
-                    snprintf(out, SL_MAX_LINE,
-                             "%s~%s~connection=version=1;channel=%u;quantise=%u;note_map=%u",
-                             sources[s].handle, targets[t].handle,
-                             policy->fixed_channel, (uint8_t)policy->quantise_mode, (uint8_t)policy->note_map_mode);
+                    length = snprintf(out, SL_MAX_LINE, "%s~%s~connection=%s",
+                             sources[s].handle, targets[t].handle, policy);
                 } else {
-                    snprintf(out, SL_MAX_LINE,
-                             "%s~%s~%s~connection=version=1;channel=%u;quantise=%u;note_map=%u",
-                             prefix, sources[s].handle, targets[t].handle,
-                             policy->fixed_channel, (uint8_t)policy->quantise_mode, (uint8_t)policy->note_map_mode);
+                    length = snprintf(out, SL_MAX_LINE, "%s~%s~%s~connection=%s",
+                             prefix, sources[s].handle, targets[t].handle, policy);
+                }
+                if (length < 0 || static_cast<size_t>(length) >= SL_MAX_LINE) {
+                    Serial_println(F("!! midi_matrix save routing: connection line too long"));
+                    return;
                 }
                 if (cb_noct) cb_noct(out);
                 if (cb_ctx)  cb_ctx(out, ctx);
-            }
+            });
         }
     }
 
@@ -979,7 +1120,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             source_id_t src_id = get_source_id_for_handle(segments[0]);
             target_id_t tgt_id = get_target_id_for_handle(segments[1]);
             connection_policy_t policy;
-            _load_connection_policy(value, policy);
+            if (!_load_connection_policy(value, policy)) return true;
             if (connect(src_id, tgt_id)) {
                 set_connection_policy(src_id, tgt_id, policy);
             } else {
@@ -1064,7 +1205,6 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             if (sources == nullptr) {
                 Serial_println(F("!! MIDIMatrixManager: failed to allocate sources table"));
             }
-            memset(disallow_map, 0, sizeof(bool)*MAX_NUM_SOURCES*MAX_NUM_TARGETS);
 
             conductor->register_harmony_change_callback([this](scale_identity_t new_scale, chord_identity_t new_chord1) {
                 this->harmony_changed_notification(new_scale, new_chord1);

@@ -1,6 +1,8 @@
 #ifndef MATRIX_MAPPER_TYPES__INCLUDED
 #define MATRIX_MAPPER_TYPES__INCLUDED
 
+#include "midi/midi_endpoint.h"
+
 typedef int source_id_t;
 typedef int target_id_t;
 

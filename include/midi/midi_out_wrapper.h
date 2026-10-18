@@ -156,6 +156,11 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             return false;
         }
 
+        // the owner this wrapper delivers to, if known (used to auto-assign target ownership)
+        virtual MIDIEndpointOwner *get_owner() {
+            return nullptr;
+        }
+
         virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) {
             return routed_note_output_t{(int8_t)note, channel, true};
         }
@@ -381,6 +386,10 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
 
         virtual bool routes_to_behaviour(const DeviceBehaviourUltimateBase *behaviour) const override {
             return output == behaviour;
+        }
+
+        virtual MIDIEndpointOwner *get_owner() override {
+            return output;
         }
 
         virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) override {

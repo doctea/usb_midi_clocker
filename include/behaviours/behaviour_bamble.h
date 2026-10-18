@@ -289,11 +289,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
         virtual void self_register_midi_matrix_targets(MIDIMatrixManager *midi_matrix_manager) {
             // register multiple inputs / outputs
 
-            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 1", this, 1));
-            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 2", this, 2));
-            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 3", this, 3));
-            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 4", this, 4));
-            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",this, 10));
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 1", this, 1), "USB : Bamble : ch 1", nullptr, "ch1");
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 2", this, 2), "USB : Bamble : ch 2", nullptr, "ch2");
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 3", this, 3), "USB : Bamble : ch 3", nullptr, "ch3");
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : ch 4", this, 4), "USB : Bamble : ch 4", nullptr, "ch4");
+            midi_matrix_manager->register_target(make_midioutputwrapper((const char*)"USB : Bamble : drums",this, 10), "USB : Bamble : drums", nullptr, "drums");
         }
 
         //FLASHMEM // error: virtual MenuItemList* DeviceBehaviour_Bamble::make_menu_items() causes a section type conflict with virtual void DeviceBehaviour_Bamble::add_adhsr_parameters(const char*, int, int)
@@ -337,11 +337,11 @@ class DeviceBehaviour_Bamble : virtual public DeviceBehaviourUSBBase, public Div
 
         #ifdef ENABLE_BAMBLE_INPUT
             virtual void self_register_midi_matrix_sources(MIDIMatrixManager *midi_matrix_manager) {
-                this->source_ids[0] = midi_matrix_manager->register_source(this, "bamble_input_ch1", 1);
-                this->source_ids[1] = midi_matrix_manager->register_source(this, "bamble_input_ch2", 2);
-                this->source_ids[2] = midi_matrix_manager->register_source(this, "bamble_input_ch3", 3);
-                this->source_ids[3] = midi_matrix_manager->register_source(this, "bamble_input_ch4", 4);
-                this->source_ids[4] = midi_matrix_manager->register_source(this, "bamble_input_ch16", 16);
+                this->source_ids[0] = midi_matrix_manager->register_source(this, "bamble_input_ch1", 1, "In ch1");
+                this->source_ids[1] = midi_matrix_manager->register_source(this, "bamble_input_ch2", 2, "In ch2");
+                this->source_ids[2] = midi_matrix_manager->register_source(this, "bamble_input_ch3", 3, "In ch3");
+                this->source_ids[3] = midi_matrix_manager->register_source(this, "bamble_input_ch4", 4, "In ch4");
+                this->source_ids[4] = midi_matrix_manager->register_source(this, "bamble_input_ch16", 16, "In ch16");
             }
 
             // special version that uses source_ids array based on incoming channel to route

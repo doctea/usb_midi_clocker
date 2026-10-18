@@ -22,6 +22,8 @@
 
 #include "file_manager/file_manager_interfaces.h"
 
+#define MAX_BEHAVIOUR_LABEL 40
+
 #ifdef ENABLE_SCREEN
     #include "mymenu/menuitems_harmony.h"
 #endif
@@ -51,7 +53,8 @@ class DeviceBehaviourUltimateBase :
         public virtual IMIDIProxiedCCTarget, 
         public virtual IMIDINoteAndCCTarget, 
         public virtual IMIDIPitchBendTarget,
-        public virtual SHDynamic<4, 4> 
+        public virtual SHDynamic<4, 4>,
+        public MIDIEndpointOwner
     {
     public:
 
@@ -191,6 +194,27 @@ class DeviceBehaviourUltimateBase :
 
     virtual bool is_connected() {
         return false;
+    }
+
+    // MIDIEndpointOwner
+    virtual const char *get_endpoint_owner_label() override {
+        return this->get_label();
+    }
+    #ifdef ENABLE_SCREEN
+        virtual uint16_t get_endpoint_owner_colour() override {
+            return this->colour;
+        }
+    #endif
+    virtual bool is_endpoint_owner_online() override {
+        switch (this->getType()) {
+            case BehaviourType::usb:
+            case BehaviourType::serial:
+            case BehaviourType::usbserial:
+            case BehaviourType::usbserialmidi:
+                return this->is_connected();
+            default:
+                return true;
+        }
     }
 
     virtual void read() {};

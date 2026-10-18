@@ -46,12 +46,14 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     }; 
 
     uint16_t get_colour_for_target_id(target_id_t target_id) {
+        if (target_id < 0) return C_WHITE;
         return target_colours[target_id % (sizeof(target_colours)/sizeof(target_colours[0]))];
     }
 
     // Context panel rows (inline controls to avoid menu-diving)
     enum class PopupRow : uint8_t {
         CONNECT_TOGGLE = 0,
+        PAUSE_TOGGLE,
         CHANNEL,
         QUANTISE_MODE,
         JUMP_SOURCE,
@@ -76,6 +78,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     // These are set when we enter TARGET_SELECT / CONTEXT_PANEL
     source_id_t sel_source = -1;
     target_id_t sel_target = -1;
+    Mode context_return_mode = Mode::TARGET_SELECT;  // which list the context panel was opened from
 
     char ctx_scratch[40];
 
@@ -89,8 +92,9 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     bool popup_row_enabled(PopupRow row) const {
         switch (row) {
             case PopupRow::CONNECT_TOGGLE:
-            case PopupRow::CHANNEL:
                 return sel_source >= 0 && sel_target >= 0;
+            case PopupRow::PAUSE_TOGGLE:
+            case PopupRow::CHANNEL:
             case PopupRow::QUANTISE_MODE:
                 return sel_source >= 0 && sel_target >= 0 && midi_matrix_manager->get_connection_policy(sel_source, sel_target) != nullptr;
             case PopupRow::JUMP_SOURCE:
@@ -100,7 +104,8 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
                 return sel_target >= 0 && midi_matrix_manager->connected_to_target_count(sel_target) > 1;
             case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
-                return sel_source >= 0 && midi_matrix_manager->connected_to_source_count(sel_source) > 1;
+                // with no target selected, every connection from the source is "other"
+                return sel_source >= 0 && midi_matrix_manager->connected_to_source_count(sel_source) > (sel_target >= 0 ? 1 : 0);
             default:
                 return false;
         }
@@ -112,6 +117,8 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         switch (row) {
             case PopupRow::CONNECT_TOGGLE:
                 return conn ? "Connected: yes" : "Connected: no";
+            case PopupRow::PAUSE_TOGGLE:
+                return pol ? (pol->paused ? "Paused: yes" : "Paused: no") : "Paused: --";
             case PopupRow::QUANTISE_MODE:
                 if (pol) {
                     switch (pol->quantise_mode) {
@@ -139,7 +146,7 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
                 return "Disconnect other sources->target";
             case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
-                return "Disconnect other targets<-source";
+                return sel_target >= 0 ? "Disconnect other targets<-source" : "Disconnect all targets<-source";
             default:
                 return "";
         }
@@ -164,9 +171,24 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     }
 
     void enter_context_panel() {
+        context_return_mode = mode;
         selected_context_index = 0;
         selected_value_index = 0;
         mode = Mode::CONTEXT_PANEL;
+    }
+
+    void toggle_connection_with_feedback(source_id_t source, target_id_t target) {
+        const bool was_connected = midi_matrix_manager->is_connected(source, target);
+        const bool connected = midi_matrix_manager->toggle_connect(source, target);
+        char msg[MENU_MESSAGE_MAX];
+        if (!was_connected && !connected) {
+            menu_set_last_message("Cannot connect: routing full or disallowed", RED);
+            return;
+        }
+        snprintf(msg, MENU_MESSAGE_MAX, connected ? "%-5.18s <-> %-5.18s" : "%-5.18s </> %-5.18s",
+            midi_matrix_manager->get_label_for_source_id(source),
+            midi_matrix_manager->get_label_for_target_id(target));
+        menu_set_last_message(msg, GREEN);
     }
 
     // Returns true when button_right is meaningful given current state
@@ -216,17 +238,7 @@ public:
             selected_value_index = new_value;
             sel_target = (target_id_t)new_value;
             // Toggle the connection
-            char msg[MENU_MESSAGE_MAX];
-            if (midi_matrix_manager->toggle_connect(selected_source_index, new_value)) {
-                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s <-> %-5.18s",
-                    midi_matrix_manager->get_label_for_source_id(selected_source_index),
-                    midi_matrix_manager->get_label_for_target_id(new_value));
-            } else {
-                snprintf(msg, MENU_MESSAGE_MAX, "%-5.18s </> %-5.18s",
-                    midi_matrix_manager->get_label_for_source_id(selected_source_index),
-                    midi_matrix_manager->get_label_for_target_id(new_value));
-            }
-            menu_set_last_message(msg, GREEN);
+            toggle_connection_with_feedback(selected_source_index, new_value);
         } else if (mode == Mode::CONTEXT_PANEL) {
             selected_context_index = new_value;
         }
@@ -303,15 +315,27 @@ public:
             if (selected_context_index < 0 || selected_context_index >= get_num_available())
                 return false;
             PopupRow row = (PopupRow)selected_context_index;
-            auto *pol = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
-            if (pol == nullptr)
+            if (!popup_row_enabled(row))
                 return false;
-            auto updated_policy = *pol;
+            // only connection rows need a policy; panel can be opened from source mode with no target
+            MIDIMatrixManager::connection_policy_t updated_policy;
+            if (row == PopupRow::CHANNEL || row == PopupRow::QUANTISE_MODE) {
+                auto *pol = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
+                if (pol == nullptr)
+                    return false;
+                updated_policy = *pol;
+            }
 
             switch (row) {
                 case PopupRow::CONNECT_TOGGLE:
-                    midi_matrix_manager->toggle_connect(sel_source, sel_target);
+                    toggle_connection_with_feedback(sel_source, sel_target);
                     break;
+                case PopupRow::PAUSE_TOGGLE: {
+                    const auto *policy = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
+                    if (policy != nullptr)
+                        midi_matrix_manager->set_paused(sel_source, sel_target, !policy->paused);
+                    break;
+                }
                 case PopupRow::CHANNEL:
                     // Cycle: 0 (passthru) -> 1 -> 2 -> ... -> 16 -> 0
                     updated_policy.fixed_channel = (updated_policy.fixed_channel >= 16) ? 0 : updated_policy.fixed_channel + 1;
@@ -376,6 +400,14 @@ public:
 
     virtual bool button_back() override {
         if (mode == Mode::CONTEXT_PANEL) {
+            if (context_return_mode == Mode::SOURCE_SELECT) {
+                mode = Mode::SOURCE_SELECT;
+                sel_source = -1;
+                sel_target = -1;
+                selected_value_index = selected_source_value_index;
+                actual_value_index = selected_source_value_index;
+                return true;
+            }
             mode = Mode::TARGET_SELECT;
             selected_value_index = selected_target_value_index;
             return true;
@@ -518,7 +550,9 @@ public:
                     && midi_matrix_manager->is_connected(selected_source_index, target_id_actual);
                 if (connected_here && selected_source_index >= 0) {
                     const auto *pol = midi_matrix_manager->get_connection_policy(selected_source_index, target_id_actual);
-                    if (pol && pol->fixed_channel > 0)
+                    if (pol && pol->paused)
+                        snprintf(ctx_scratch, sizeof(ctx_scratch), "[P]%-16.16s", tgt_base);
+                    else if (pol && pol->fixed_channel > 0)
                         snprintf(ctx_scratch, sizeof(ctx_scratch), "[%2u]%-14.14s", pol->fixed_channel, tgt_base);
                     else
                         snprintf(ctx_scratch, sizeof(ctx_scratch), "%-19.19s", tgt_base);
@@ -580,5 +614,4 @@ public:
         return lowest_y;
     }
 };
-
 

@@ -2,6 +2,45 @@
 
 This document describes note ownership after quantisation became a per-connection policy.
 
+## Connections and pause
+
+The matrix stores up to 128 configured source-target connections in
+`MIDIConnectionStore`, with a sorted linked list per source. MIDI events visit
+only that source's configured connections, in ascending target order as before.
+Disallowed feedback pairs are kept separately and survive a routing reset.
+If connection capacity is exhausted, existing connections remain unchanged;
+the matrix popup reports the failure and the serial log identifies the pair.
+
+In the matrix's target selection, press **[>]** to open the connection popup.
+**Paused: yes/no** suspends or resumes an existing connection. A paused route
+remains connected for counts, display, and project saving, but carries no Note
+On, Note Off, CC, or pitch-bend events. Pausing immediately releases its recorded
+notes, including dropped-note ledger entries. Other sources holding the same
+target pitch retain the existing wrapper refcount protection.
+
+Resume does not replay previously held keys: a new Note On is required.
+Connection policy changes while paused do not start notes. Channel, quantise,
+and pause controls are disabled until a connection exists; disconnected pairs
+no longer have policy storage. Disconnecting removes the policy; reconnecting
+creates the usual defaults, including quantisation off for drum endpoints.
+
+Each endpoint and connection records its latest event timestamp and whether it
+has received an event. Paused routes do not update connection/target activity,
+but input activity is still recorded on their source. Held-note counts are
+queried from the existing ledger rather than maintained in a second counter.
+
+Project routing is saved as:
+
+```text
+midi_matrix~<source>~<target>~connection=version=2;channel=0;quantise=0;note_map=0;paused=1
+```
+
+Version 1 connection lines load as unpaused; legacy `targets=a;b;...` lines still
+load using normal connection defaults. Malformed known policy fields or
+unsupported versions are logged and skipped without replacing an existing
+connection. Unknown fields are ignored for extension. Older firmware does not
+understand pause, so it cannot preserve paused state when loading these files.
+
 ## Two note paths
 
 There are two distinct paths through `DeviceBehaviourUltimateBase`:
@@ -119,7 +158,7 @@ The behaviour `NoteTracker` remains necessary for this direct path. On a harmony
 
 | Concern | Owner |
 |---|---|
-| Per-connection quantise mode and fixed channel | `MIDIMatrixManager::connection_policies` |
+| Per-connection quantise mode, fixed channel, and pause | `MIDIMatrixManager::connections` (`MIDIConnectionStore`) |
 | Routed input to resolved connection pitch/channel | `MIDIConnectionNoteState` |
 | Routed output pitch refcounts shared by sources | `MIDIOutputWrapper::playing_notes` |
 | Direct behaviour input to globally quantised pitch | `DeviceBehaviourUltimateBase::note_tracker` |
