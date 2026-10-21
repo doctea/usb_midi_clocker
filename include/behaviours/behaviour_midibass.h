@@ -64,6 +64,8 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
                 if (this->debug) Serial.printf(F("\t\tkill_drone_note(%i, %i, %i)>>>>\n"), last_drone_note, 0, drone_channel);
                 // raw send: routed drone notes aren't in note_tracker, so the tracked sendNoteOff would drop it
                 this->actualSendNoteOff(last_drone_note + this->TUNING_OFFSET, MIDI_MIN_VELOCITY, drone_channel);
+                if (this->current_transposed_note == last_drone_note && this->current_channel == drone_channel)
+                    this->current_transposed_note = NOTE_OFF;
                 if (this->debug) Serial.printf(F("\t\t<<<< after kill_drone_note(%i, %i, %i)\n"), last_drone_note, 0, drone_channel);
             }
             last_drone_note = NOTE_OFF;
@@ -74,6 +76,7 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             //DeviceBehaviourSerialBase::sendNoteOff(last_drone_note, 0, drone_channel);
             if (is_valid_note(last_drone_note)) {
                 if (this->debug) Serial.printf(F("\t\tsend_drone_note sending (p=%s, v=%i, c=%i)\n"), get_note_name_c(last_drone_note), 127, drone_channel);
+                RoutedNoteDispatchScope scope(*this);
                 DeviceBehaviourUltimateBase::sendNoteOn(last_drone_note, MIDI_MAX_VELOCITY, drone_channel);
             }
         }
@@ -118,11 +121,10 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             }
         }
 
-        virtual void on_bar(int bar) override {
-            //if (this->debug) Serial.printf(F("begin>=DeviceBehaviour_Neutron#on_bar(%i)\n"), bar);
+        virtual void on_bar_prepare(int bar) override {
+            if (is_valid_note(last_drone_note))
+                this->kill_drone_note();
             new_bar = true;
-            last_drone_note = NOTE_OFF;
-            //Serial.println("end<=DeviceBehaviour_Neutron#on_bar()");
         }
         virtual void on_end_bar(int bar) override {
             if (this->debug) Serial.printf(F("%s#on_end_bar!\n"), this->get_label());
@@ -147,15 +149,46 @@ class MIDIBassBehaviour : virtual public DeviceBehaviourUltimateBase {
             this->machinegun_current_note = NOTE_OFF;
         }
 
+        // When note limits change, the matrix migrates held routed notes by sending resolved
+        // pitches straight to the device, bypassing sendNoteOn/Off below. In drone mode the
+        // routed notes were never played (the drone owns the one sounding note), so report
+        // them as not emitted and the migration leaves them alone.
+        virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) override {
+            if (drone_enabled)
+                return routed_note_output_t{};
+            return DeviceBehaviourUltimateBase::resolve_routed_note_output(note, channel);
+        }
+        // Outside drone mode, keep the held/machinegun note in step with a migrated note.
+        virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            DeviceBehaviourUltimateBase::send_resolved_routed_note_off(note, velocity, channel);
+            if (is_valid_note(held_output_note) && note == held_output_note + this->TUNING_OFFSET) {
+                kill_machinegun_note();
+                held_output_note = NOTE_OFF;
+            }
+        }
+        virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            DeviceBehaviourUltimateBase::send_resolved_routed_note_on(note, velocity, channel);
+            // the migration releases all changed notes before restarting them, so a held source
+            // note without an output is the one being moved
+            if (is_valid_note(held_source_note) && !is_valid_note(held_output_note)) {
+                held_output_note = note - this->TUNING_OFFSET;
+                held_channel = channel;
+                if (this->machinegun) {
+                    this->machinegun_current_note = note;
+                    this->machinegun_channel = channel;
+                }
+            }
+        }
+
         virtual void sendNoteOn(byte pitch, byte velocity, byte channel = 0) override {
             if (this->debug) Serial.printf("%s#sendNoteOn\t(p=%3s,\tv=%3i,\tc=%2i)\n", this->get_label(), get_note_name_c(pitch), velocity, channel);
 
             if (drone_enabled) {
-                drone_channel = channel;
-
                 // do drone stuff
                 //if (this->debug) Serial.printf(F("DeviceBehaviour_Neutron#sendNoteOn in DRONE mode!\n"));
                 pitch = apply_note_limits(pitch, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());
+                if (!is_valid_note(pitch))
+                    return;
 
                 if (!is_valid_note(last_drone_note) && new_bar) {
                     if (this->machinegun) {

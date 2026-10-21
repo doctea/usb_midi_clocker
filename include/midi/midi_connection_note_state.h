@@ -23,6 +23,7 @@ public:
         uint8_t velocity = 0;
         bool emitted = false;
         bool occupied = false;
+        uint32_t started_ms = 0;
     };
 
     entry_t entries[MIDI_CONNECTION_NOTE_CAPACITY] = {};
@@ -30,7 +31,7 @@ public:
     entry_t *record(source_id_t source_id, target_id_t target_id,
                     int8_t input_pitch, uint8_t input_channel,
                     int8_t output_pitch, uint8_t output_channel,
-                    uint8_t velocity, bool emitted) {
+                    uint8_t velocity, bool emitted, uint32_t started_ms = 0) {
         for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
             entry_t &entry = entries[index];
             if (entry.occupied)
@@ -45,6 +46,7 @@ public:
             entry.velocity = velocity;
             entry.emitted = emitted;
             entry.occupied = true;
+            entry.started_ms = started_ms;
             ++active_count;
             return &entry;
         }

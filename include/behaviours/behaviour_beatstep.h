@@ -104,6 +104,12 @@ RECALL COMMAND:
 
 */
 
+// automatically enable external sync
+// The first byte (0xF0) and last byte (0xF7) are handled automatically by the Teensy MIDI library.
+// todo: doesnt seem to work as expected, might need a different sequence or timing
+// const byte extSyncOn[]  = {0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x01, 0x5B, 0x01};
+// const byte extSyncOff[] = {0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x01, 0x5B, 0x00};
+
 class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual public DividedClockedBehaviour {
     using DividedClockedBehaviour::on_restart;
     
@@ -195,6 +201,17 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
 
             return parameters;
         }
+
+        // uint32_t queued_send_ext = 0;
+        // virtual void connect_device(MIDIDeviceBase *device) {
+        //     DeviceBehaviourUSBBase::connect_device(device);
+
+        //     // attempt to set the device to use external sync
+        //     if (this->device != nullptr) {
+        //         Serial.printf("Beatstep: Connecting device %p and sending external sync on\n", device);
+        //         this->queued_send_ext = millis() + (5 * 1000);
+        //     }
+        // }
 
         #ifdef ENABLE_BEATSTEP_SYSEX
             // thank you to https://www.untergeek.de/2014/11/taming-arturias-beatstep-sysex-codes-for-programming-via-ipad/ for this info
@@ -406,6 +423,13 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
                     //Serial.printf("loop() dequeued %02x,%02x\n", req->cc, req->pp);
                     this->process_sysex_request(*req);
                 }
+
+                // if (this->queued_send_ext>0 && millis() >= this->queued_send_ext) {
+                //     Serial.printf("Sending external sync on after delay\n");
+                //     this->device->sendSysEx(sizeof(extSyncOn), extSyncOn);
+                //     this->queued_send_ext = 0;
+                // }
+
                 return DividedClockedBehaviour::loop(ticks);
             }
 

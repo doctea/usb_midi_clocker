@@ -19,6 +19,8 @@ From the project directory, using Node.js and g++ with UBSan support:
 	node test/menu_page_host_test.js
 	node test/routing_page_host_test.js
 	node test/midi_connections_host_test.js
+	node test/playback_tick_host_test.js
+	node test/midibass_host_test.js
 
 These compile extracted production functions with mocked USB hardware, without
 running PlatformIO or installing firmware dependencies. The display/transmit
@@ -30,6 +32,19 @@ lookup, and popup availability checks with mock menus. It covers behaviours
 that create custom pages without returning items (including Euclidian's four
 source roles), standard-page precedence, explicit destinations, and no-page
 behaviours. It does not build or upload firmware.
+It also checks that every supported matrix target ID has a non-black colour,
+including IDs beyond the original 30-colour palette.
+
+The playback-tick test compiles the production do_tick function with mock
+clock/behaviour dispatch and debug logging off. Across 768 ticks it verifies
+that clocks and behaviours are still dispatched without unconditional serial
+flushes. It does not measure real USB serial blocking or UI latency.
+
+The MIDIBass test compiles the production drone/machinegun behaviour, base
+Note On, and manager bar dispatch with mock transports. It checks source-first
+and target-first registration, eight bars of sustain/release, machinegun modes
+0..4, current/drone display state, ignored-note channels, and cleanup when an
+end-bar callback is missed. It does not validate physical Neutron envelopes.
 
 The connection test builds test/native/midi_connection_store_test.cpp with the
 Arduino-free MIDIConnectionStore and policy parser/formatter. It also compiles
@@ -39,6 +54,15 @@ slot reuse and delivery order, disallowed routes, pause/resume note cleanup and
 shared-pitch refcounts, activity timestamps, channel-policy migration, version 2
 save/load round trips, version 1 and legacy loading, malformed policy logging,
 and popup pause/jump/failure feedback. Firmware builds/uploads remain manual.
+
+The same runner tests the note recorder and console, including the real notes
+command parser/dispatch: timestamp ages and wrap, source/target/owner filtering,
+bounded history/overwrites, pairing mismatches, old/new quantisation migrations,
+shared-pitch suppression and counter saturation, target-transform handoffs,
+project reset/panic evidence, and ledger-full reporting. It runs both native and
+mock Arduino critical-section variants; assertions check that serial output and
+transport sends occur outside the diagnostic IRQ guards. These mocks do not
+verify physical MIDI delivery or interrupt latency on hardware.
 
 The reconnect test also compiles the actual main-loop USB polling wrapper,
 previous-phase panel/dump, and boot-time SD snapshot functions. It checks a

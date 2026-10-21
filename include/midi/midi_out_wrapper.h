@@ -11,6 +11,7 @@
 #include "bpm.h"
 
 #include "midi/midi_mapper_matrix_types.h"
+#include "midi/midi_note_diagnostics.h"
 
 #define MAX_LENGTH_OUTPUT_WRAPPER_LABEL 40
 
@@ -46,6 +47,7 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
 
     public:
         bool debug = false;
+        MIDINoteTraceContext *note_trace_context = nullptr;
 
         bool always_force_stop_all = false;
 
@@ -79,6 +81,8 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
                 //if (this->debug) Serial_printf("\tplaying_notes[%i] is already %i -- increasing by 1\n", pitch, playing_notes[pitch]);
                 playing_notes[current_note]++;
             } else {
+                if (note_trace_context != nullptr)
+                    note_trace_context->record(MIDINoteTraceKind::REFCOUNT_LIMIT, in_pitch, channel, playing_notes[in_pitch], millis());
                 //if (this->debug) Serial_printf("\talready playing %i notes at pitch %i, so not counting a new one\n", playing_notes[pitch], pitch);
             }
 
@@ -90,6 +94,8 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             }
 
             this->log_message_on(in_pitch, velocity, channel);
+            if (note_trace_context != nullptr)
+                note_trace_context->record(MIDINoteTraceKind::SEND_ON, in_pitch, channel, playing_notes[in_pitch], millis());
             this->actual_sendNoteOn(in_pitch, velocity, channel);
         }
 
@@ -109,6 +115,9 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             if (playing_notes[in_pitch]>0) playing_notes[in_pitch]--;
             if (playing_notes[in_pitch]<0) playing_notes[in_pitch] = 0;
             if (playing_notes[in_pitch]>0) {
+                if (note_trace_context != nullptr)
+                    note_trace_context->record(MIDINoteTraceKind::SUPPRESSED_OFF, in_pitch,
+                        channel == 0 ? default_channel : channel, playing_notes[in_pitch], millis());
                 if (this->debug) Serial_printf("\tMIDIOutputWrapper#sendNoteOff - playing_notes[%3i]: not sending note off because count is\tP%i\n", in_pitch, playing_notes[in_pitch]);
                 return;
             }
@@ -123,6 +132,8 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             }
 
             this->log_message_off(in_pitch, velocity, channel);
+            if (note_trace_context != nullptr)
+                note_trace_context->record(MIDINoteTraceKind::SEND_OFF, in_pitch, channel, playing_notes[in_pitch], millis());
             this->actual_sendNoteOff(in_pitch, velocity, channel);
 
             //this->last_transposed_note = in_pitch;
@@ -161,15 +172,23 @@ class MIDIOutputWrapper : virtual public IMIDINoteAndCCTarget {
             return nullptr;
         }
 
+        virtual MIDINoteTargetDebugState get_note_debug_state() {
+            return MIDINoteTargetDebugState{};
+        }
+
         virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) {
             return routed_note_output_t{(int8_t)note, channel, true};
         }
 
         virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) {
+            if (note_trace_context != nullptr)
+                note_trace_context->record(MIDINoteTraceKind::SEND_ON, note, channel, -1, millis());
             this->actual_sendNoteOn(note, velocity, channel);
         }
 
         virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) {
+            if (note_trace_context != nullptr)
+                note_trace_context->record(MIDINoteTraceKind::SEND_OFF, note, channel, -1, millis());
             this->actual_sendNoteOff(note, velocity, channel);
         }
 
@@ -392,6 +411,17 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
             return output;
         }
 
+        virtual MIDINoteTargetDebugState get_note_debug_state() override {
+            MIDINoteTargetDebugState state;
+            state.behaviour = true;
+            state.tuning = output->TUNING_OFFSET;
+            state.low = output->get_effective_lowest_note();
+            state.high = output->get_effective_highest_note();
+            state.low_mode = static_cast<uint8_t>(output->getLowestNoteMode());
+            state.high_mode = static_cast<uint8_t>(output->getHighestNoteMode());
+            return state;
+        }
+
         virtual routed_note_output_t resolve_routed_note_output(uint8_t note, uint8_t channel) override {
             if (channel == 0)
                 channel = default_channel;
@@ -399,10 +429,14 @@ class MIDIOutputWrapper_Behaviour : public MIDIOutputWrapper {
         }
 
         virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (note_trace_context != nullptr)
+                note_trace_context->record(MIDINoteTraceKind::SEND_ON, note, channel, -1, millis());
             output->send_resolved_routed_note_on(note, velocity, channel);
         }
 
         virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (note_trace_context != nullptr)
+                note_trace_context->record(MIDINoteTraceKind::SEND_OFF, note, channel, -1, millis());
             output->send_resolved_routed_note_off(note, velocity, channel);
         }
 
@@ -432,4 +466,3 @@ MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDITrack *output, 
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, MIDIDeviceBase *output, int8_t channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *output, int8_t channel = 1);
 MIDIOutputWrapper *make_midioutputwrapper(const char *label, DeviceBehaviourUltimateBase *behaviour, int8_t channel = 1);
-

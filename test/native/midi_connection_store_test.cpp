@@ -329,6 +329,244 @@ static void popup_tests() {
     assert(!matrix.is_connected(3, 49) && last_colour == RED);
 }
 
+static bool has_trace(const MIDINoteTrace &trace, MIDINoteTraceKind kind, int source = -2, int target = -2) {
+    for (uint16_t index = 0; index < trace.count(); ++index) {
+        const auto &event = trace.at(index);
+        if (event.kind == kind && (source == -2 || event.source == source)
+            && (target == -2 || event.target == target)) return true;
+    }
+    return false;
+}
+
+static bool output_contains(const char *text) {
+    for (const auto &line : warnings)
+        if (line.find(text) != std::string::npos) return true;
+    return false;
+}
+
+static void diagnostic_ring_tests() {
+    MIDINoteTrace trace;
+    MIDINoteTraceEvent event;
+    trace.record(event);
+    assert(trace.count() == 0);
+    trace.enabled = true;
+    for (unsigned int index = 0; index < MIDINoteTrace::CAPACITY + 5; ++index) {
+        event.time_ms = index;
+        trace.record(event);
+    }
+    assert(trace.count() == MIDINoteTrace::CAPACITY && trace.overwritten == 5);
+    assert(trace.at(0).time_ms == 5 && trace.at(trace.count() - 1).time_ms == MIDINoteTrace::CAPACITY + 4);
+    trace.enabled = false;
+    trace.record(event);
+    assert(trace.count() == MIDINoteTrace::CAPACITY && trace.overwritten == 5);
+    trace.clear();
+    assert(trace.count() == 0 && trace.overwritten == 0 && !trace.enabled);
+    trace.enabled = true;
+    trace.source_filter = 1;
+    trace.target_filter = 2;
+    event.source = 0;
+    event.target = 2;
+    trace.record(event);
+    assert(trace.count() == 0);
+    event.source = 1;
+    trace.record(event);
+    assert(trace.count() == 1);
+    event.source = event.target = -1;
+    event.kind = MIDINoteTraceKind::RESET;
+    trace.record(event);
+    assert(trace.count() == 2);
+    MIDINoteTraceContext first{&trace, event}, nested{&trace, event};
+    MIDINoteTraceContext *slot = nullptr;
+    {
+        MIDINoteTraceScope outer(slot, &first);
+        assert(slot == &first);
+        {
+            MIDINoteTraceScope inner(slot, &nested);
+            assert(slot == &nested);
+        }
+        assert(slot == &first);
+    }
+    assert(slot == nullptr);
+}
+
+static void diagnostic_routing_tests() {
+    Fixture matrix;
+    matrix.connect(0, 0);
+    matrix.processNoteOn(0, 50, 100, 1);
+    assert(!matrix.note_trace);
+    matrix.processNoteOff(0, 50, 0, 1);
+    assert(matrix.enable_note_trace());
+    now_ms = 100;
+    auto policy = *matrix.get_connection_policy(0, 0);
+    policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE;
+    policy.fixed_channel = 4;
+    transpose = 2;
+    matrix.set_connection_policy(0, 0, policy);
+    matrix.processNoteOn(0, 60, 100, 1);
+    const auto &on = matrix.note_trace->at(matrix.note_trace->count() - 1);
+    assert(on.kind == MIDINoteTraceKind::SEND_ON && on.source == 0 && on.target == 0);
+    assert(on.input_pitch == 60 && on.input_channel == 1 && on.output_pitch == 62 && on.output_channel == 4);
+    assert(on.started_ms == 100 && on.time_ms == 100 && on.refcount == 1 && on.fixed_channel == 4);
+    assert(matrix.active_connection_notes.entries[0].started_ms == 100);
+    // A release arriving at a different pitch is evidence, not an excuse to
+    // change quantisation or guess which held note to stop.
+    matrix.processNoteOff(0, 62, 0, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::UNMATCHED_OFF, 0, 0));
+    assert(matrix.active_connection_notes.count() == 1);
+    transpose = 3;
+    now_ms = 150;
+    matrix.migrate_connection_notes();
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::MIGRATE, 0, 0));
+    assert(matrix.active_connection_notes.entries[0].started_ms == 100);
+    now_ms = 200;
+    matrix.processNoteOff(0, 60, 0, 1);
+    const auto &off = matrix.note_trace->at(matrix.note_trace->count() - 1);
+    assert(off.kind == MIDINoteTraceKind::SEND_OFF && off.output_pitch == 63);
+    assert(off.output_channel == 4 && off.started_ms == 100 && matrix.active_connection_notes.count() == 0);
+    assert(matrix.outputs[0].note_trace_context == nullptr);
+    transpose = 0;
+    matrix.connect(1, 0);
+    policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF;
+    policy.fixed_channel = 0;
+    matrix.set_connection_policy(0, 0, policy);
+    matrix.processNoteOn(0, 60, 100, 1);
+    matrix.processNoteOn(1, 60, 100, 1);
+    matrix.processNoteOff(0, 60, 0, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::SUPPRESSED_OFF, 0, 0));
+    matrix.processNoteOff(1, 60, 0, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::SEND_OFF, 1, 0));
+    for (int index = 0; index < 9; ++index) matrix.processNoteOn(0, 64, 100, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::REFCOUNT_LIMIT));
+    matrix.set_paused(0, 0, true);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::PAUSE_RELEASE, 0, 0));
+    matrix.processNoteOn(0, 64, 100, 1);
+    matrix.processNoteOff(0, 64, 0, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::PAUSED_ON));
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::PAUSED_OFF));
+    matrix.set_paused(0, 0, false);
+    matrix.processNoteOn(0, 60, 100, 1);
+    matrix.disconnect(0, 0);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::DISCONNECT, 0, 0));
+    matrix.reset_matrix();
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::RESET));
+    assert(matrix.note_trace->count() > 0);
+    // Switching routes/projects must preserve source-attributed release evidence.
+    matrix.connect(0, 0);
+    matrix.processNoteOn(0, 60, 100, 1);
+    matrix.reset_matrix();
+    matrix.connect(1, 0);
+    matrix.processNoteOn(1, 61, 100, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::CLEANUP, 0, 0));
+    assert(matrix.active_connection_notes.count() == 1);
+    matrix.stop_all_notes_for_target(0, true);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::PANIC_DISCARD, 1, 0));
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::PANIC_CHANNEL, -1, 0));
+}
+
+static void diagnostic_console_tests() {
+    Fixture matrix;
+    matrix.connect(0, 0);
+    now_ms = UINT32_MAX - 5;
+    matrix.processNoteOn(0, 60, 100, 1);
+    now_ms = 10;
+    warnings.clear();
+    execute_midi_note_debug_command(&matrix, "held", "0 0");
+    assert(output_contains("held_age_ms=16") && output_contains("in=60/ch1 out=60/ch1"));
+    assert(output_contains("target_wide_refs") && output_contains("pitch=60 refs=1"));
+    assert(!matrix.note_trace && matrix.active_connection_notes.count() == 1);
+    const auto events_before = matrix.outputs[0].events.size();
+    assert(execute_command(" notes on 0 0\r\n"));
+    assert(matrix.note_trace && matrix.note_trace->enabled);
+    for (const char *invalid : {"not-an-id", "50", "-2", "0 50", "0 0 extra", "0x2", "99999999999999999999999999"}) {
+        execute_midi_note_debug_command(&matrix, "on", invalid);
+        assert(matrix.note_trace->enabled && matrix.note_trace->source_filter == 0 && matrix.note_trace->target_filter == 0);
+    }
+    matrix.connect(1, 0);
+    matrix.processNoteOn(1, 65, 100, 1);
+    assert(!has_trace(*matrix.note_trace, MIDINoteTraceKind::PAIRED_ON, 1, 0));
+    matrix.processNoteOff(0, 60, 0, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::PAIRED_OFF, 0, 0));
+    execute_midi_note_debug_command(&matrix, "off", "");
+    const auto saved_count = matrix.note_trace->count();
+    matrix.processNoteOff(1, 65, 0, 1);
+    assert(matrix.note_trace->count() == saved_count);
+    execute_midi_note_debug_command(&matrix, "dump", "");
+    assert(!matrix.note_trace->enabled && matrix.note_trace->count() == saved_count);
+    assert(matrix.outputs[0].events.size() == events_before + 3);
+    assert(output_contains("SEND means wrapper handoff attempt"));
+    execute_midi_note_debug_command(&matrix, "clear", "");
+    assert(matrix.note_trace->count() == 0);
+    execute_midi_note_debug_command(&matrix, "on", "");
+    assert(matrix.note_trace->source_filter == -1 && matrix.note_trace->target_filter == -1);
+    DeviceBehaviourUltimateBase owner;
+    matrix.set_source_owner(0, &owner, "ch2");
+    matrix.processNoteOn(0, 67, 100, 1);
+    warnings.clear();
+    execute_midi_note_debug_command(&matrix, "owner", "Mock");
+    assert(output_contains("in=67/ch1") && output_contains("role=ch2"));
+    warnings.clear();
+    execute_midi_note_debug_command(&matrix, "owner", "Missing");
+    assert(output_contains("unknown or ambiguous"));
+    execute_midi_note_debug_command(&matrix, "list", "");
+    assert(output_contains("src=0 [source0]") && output_contains("tgt=0 [target0]"));
+    assert(!matrix.enable_note_trace(50, -1));
+    BehaviourDebugWrapper behaviour_wrapper;
+    behaviour_wrapper.output = &owner;
+    const auto state = behaviour_wrapper.get_note_debug_state();
+    assert(state.behaviour && state.tuning == 2 && state.low == 24 && state.high == 100 && state.high_mode == 1);
+}
+
+static void diagnostic_target_and_overflow_tests() {
+    Fixture matrix;
+    matrix.enable_note_trace();
+    matrix.connect(0, 0);
+    DeviceBehaviourUltimateBase target;
+    matrix.outputs[0].behaviour = &target;
+    matrix.processNoteOn(0, 60, 100, 1);
+    matrix.begin_behaviour_transform_change(&target);
+    matrix.outputs[0].target_transpose = 2;
+    matrix.end_behaviour_transform_change(&target);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::TARGET_MIGRATE, 0, 0));
+    const auto &resolved = matrix.note_trace->at(matrix.note_trace->count() - 2);
+    assert(resolved.kind == MIDINoteTraceKind::SEND_ON && resolved.output_pitch == 62 && resolved.refcount == -1);
+    assert(matrix.note_trace->at(matrix.note_trace->count() - 1).kind == MIDINoteTraceKind::MIGRATE_RESULT);
+    matrix.reset_matrix();
+    matrix.connect(0, 0);
+    for (int index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index)
+        matrix.processNoteOn(0, index % 100, 100, 1);
+    matrix.processNoteOn(0, 1, 100, 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::LEDGER_FULL, 0, 0));
+    assert(matrix.note_trace->overwritten > 0);
+    assert(matrix.active_connection_notes.count() == MIDI_CONNECTION_NOTE_CAPACITY);
+}
+
+static void diagnostic_collapsed_pitch_tests() {
+    Fixture matrix;
+    matrix.enable_note_trace();
+    collapse_scale_pairs = true;
+    for (int source = 0; source < 2; ++source) {
+        matrix.connect(source, 0);
+        auto policy = *matrix.get_connection_policy(source, 0);
+        policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE;
+        matrix.set_connection_policy(source, 0, policy);
+        matrix.processNoteOn(source, 60 + source, 100, 1);
+    }
+    assert(matrix.outputs[0].playing_notes[60] == 2);
+    transpose = 2;
+    matrix.migrate_connection_notes();
+    assert(matrix.outputs[0].playing_notes[60] == 0 && matrix.outputs[0].playing_notes[62] == 2);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::MIGRATE, 0, 0));
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::MIGRATE, 1, 0));
+    matrix.processNoteOff(1, 61, 0, 1);
+    assert(matrix.outputs[0].playing_notes[62] == 1);
+    assert(has_trace(*matrix.note_trace, MIDINoteTraceKind::SUPPRESSED_OFF, 1, 0));
+    matrix.processNoteOff(0, 60, 0, 1);
+    assert(matrix.outputs[0].playing_notes[62] == 0 && matrix.active_connection_notes.count() == 0);
+    assert(matrix.outputs[0].events.back().type == 'F' && matrix.outputs[0].events.back().pitch == 62);
+    collapse_scale_pairs = false;
+    transpose = 0;
+}
+
 int main() {
     store_tests();
     parser_tests();
@@ -337,5 +575,11 @@ int main() {
     policy_migration_tests();
     persistence_tests();
     popup_tests();
+    diagnostic_ring_tests();
+    diagnostic_routing_tests();
+    diagnostic_console_tests();
+    diagnostic_target_and_overflow_tests();
+    diagnostic_collapsed_pitch_tests();
     std::cout << "MIDI connection tests passed: sparse capacity/order, pause/refcounts, activity, policy migration, save/load, popup\n";
+    std::cout << "MIDI note diagnostic tests passed: attribution, pairing/migration, timestamps/wrap, refcounts, cleanup, bounded recorder and console\n";
 }

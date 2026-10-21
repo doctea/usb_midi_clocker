@@ -5,7 +5,7 @@
 
 #include <Arduino.h>
 
-#if defined(__IMXRT1062__)
+#if defined(ENABLE_USB_WATCHDOG)
   #include <Watchdog_t4.h>
   static WDT_T4<WDT1> runtime_watchdog;
 #endif
@@ -312,7 +312,7 @@ void setup() {
   #if defined(ENABLE_USB) && USBHOST_T36_ENABLE_DIAGNOSTICS
     USBHost::beginDiagnosticProgress();
     bool usb_watchdog_reset = false;
-    #if defined(__IMXRT1062__)
+    #if defined(ENABLE_USB_WATCHDOG)
       usb_watchdog_reset = runtime_watchdog.expired();
     #endif
     if (storage::log_usb_diagnostics_after_reset(usb_watchdog_reset)) {
@@ -469,7 +469,7 @@ void setup() {
     myTimer.begin(checkClock, 250); 
   #endif
 
-  #if defined(__IMXRT1062__)
+  #if defined(ENABLE_USB_WATCHDOG)
     WDT_timings_t watchdog_config;
     watchdog_config.timeout = 8;
     runtime_watchdog.begin(watchdog_config);
@@ -814,7 +814,7 @@ void loop() {
   if(debug_flag) { Serial_println(F("reached end of loop()!")); Serial_flush(); }
 
   RECORD_USB_PHASE(LoopComplete);
-  #if defined(__IMXRT1062__)
+  #if defined(ENABLE_USB_WATCHDOG)
     runtime_watchdog.feed();
   #endif
 }
@@ -919,9 +919,9 @@ void do_tick(uint32_t in_ticks) {
     drums_loop_track.process_tick(ticks);
   #endif
 
-  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()")); Serial_flush();
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->send_clocks()"));
   behaviour_manager->send_clocks();
-  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()")); Serial_flush();
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->send_clocks()"));
 
   // done doesn't end properly for usb behaviours if do_end_bar here!
 
@@ -937,10 +937,10 @@ void do_tick(uint32_t in_ticks) {
     }
   #endif*/
 
-  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()")); Serial_flush();
+  DEBUG_MAIN_PRINTLN(F("in do_tick() about to behaviour_manager->do_ticks()"));
   parameter_manager->tick_sh();
   behaviour_manager->do_ticks(in_ticks);
-  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()")); Serial_flush();
+  DEBUG_MAIN_PRINTLN(F("in do_tick() just did behaviour_manager->do_ticks()"));
 
   //parameter_manager->update_mixers();
 

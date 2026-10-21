@@ -16,6 +16,10 @@ class MIDIEndpointOwner {
         virtual uint16_t get_endpoint_owner_colour() { return 0xFFFF; }
         // false when the owner represents an absent device (eg unplugged USB device)
         virtual bool is_endpoint_owner_online() { return true; }
+        // true when the owner derives its source pitches from the current harmony and re-issues
+        // them itself on harmony change (eg chord generators); the matrix then leaves their held
+        // notes alone rather than re-quantising them per connection
+        virtual bool regenerates_notes_on_harmony_change() { return false; }
 };
 
 // Lightweight owner for built-in endpoints that have no behaviour.

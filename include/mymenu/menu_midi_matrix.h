@@ -11,8 +11,9 @@ void setup_menu_midi();
 
 class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
 
+    // Repeat the populated palette; sizing it to MAX_NUM_TARGETS adds black entries.
     // https://ankiewicz.com/color/hex/00cccc <- colour palette picker
-    const uint16_t target_colours[MAX_NUM_TARGETS] = {
+    const uint16_t target_colours[30] = {
         0xF800,        //#define ST77XX_RED        
         0xDCDD,        //#define ST77XX_GREEN      
         0x0679,        //#define ST77XX_BLUE       
@@ -614,4 +615,3 @@ public:
         return lowest_y;
     }
 };
-

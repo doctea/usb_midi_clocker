@@ -7,6 +7,7 @@
 
 #include "project.h"
 #include "storage.h"
+#include "midi/midi_note_debug_console.h"
 #ifdef ENABLE_USB
     #include <USBHost_t36.h>
     #include "usb/multi_usb_handlers.h"
@@ -97,7 +98,10 @@ bool execute_command(const char *command_line) {
 
     Serial.printf("Received command: '%s', arg1: '%s', arg2: '%s'\n", command, arg1, arg2);
     
-    if (strcmp(command, "debug") == 0) {
+    if (strcmp(command, "notes") == 0) {
+        execute_midi_note_debug_command(midi_matrix_manager, arg1, arg2);
+        return true;
+    } else if (strcmp(command, "debug") == 0) {
         if (strcmp(arg1, "on") == 0) {
             pass_debug = true;
             Serial.println("Debug output enabled");
@@ -159,7 +163,7 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "usb_debug_clearlog") == 0) {
         storage::clear_usb_diagnostic_log();
         return true;
-#if defined(__IMXRT1062__) && USBHOST_T36_ENABLE_DIAGNOSTICS
+#if defined(ENABLE_USB_WATCHDOG) && USBHOST_T36_ENABLE_DIAGNOSTICS
     } else if (strcmp(command, "usb_debug_test") == 0) {
         if (strcmp(arg1, "reset") != 0 && strcmp(arg1, "watchdog") != 0) {
             Serial.println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");
@@ -656,6 +660,7 @@ bool execute_command(const char *command_line) {
         Serial.println("    info - show build info");
         Serial.println("    help - Show this help message");
         Serial.println("  == debug/crashlog commands ==");
+        Serial.println("    notes list|status|on [src|-1] [tgt|-1]|off|clear|dump|held [src|-1] [tgt|-1]|owner <label>");
         Serial.println("    crashlog - Dump the crash report log (if any)");
         Serial.println("    clearcrashlog - Clear the crash report log (if any)");
         Serial.println("  == saveload/file commands ==");

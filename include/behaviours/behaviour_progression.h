@@ -415,33 +415,16 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     }
 
 
-    virtual int requantise_all_notes() override {
-        bool already_playing = this->chord_player->is_playing_chord;
-        if (debug) Serial_println("behaviour_progression#requantise_all_notes()...");
+    // Progression builds its chord/bass/topline pitches from the harmony, so it re-issues them
+    // itself; the matrix leaves its held notes alone rather than re-quantising them.
+    virtual bool regenerates_notes_on_harmony_change() override { return true; }
 
-        if (already_playing) {
-            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: already playing chord %i -- gonna stop!\n", arranger->current_chord.degree);
-            if (debug) Serial_println("behaviour_progression#requantise_all_notes() is playing...");
-            // TODO: this is a big hack -- need to sort this out properly
-            // chord player needs to be able to stop the existing chord without applying quantisation..
-            // so we temporarily disable quantisation, stop the chord, then restore the quantisation mode and re-play the chord to apply the new quantisation settings
-            quantise_mode_t initial_global_quantise_mode = conductor->get_global_quantise_mode();
-
-            conductor->set_global_quantise_mode(QUANTISE_MODE_NONE);
-            this->chord_player->stop_chord();
-            
-            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: now gonna re-play chord %i!\n", arranger->current_chord.degree);
-            conductor->set_global_quantise_mode(initial_global_quantise_mode);
-            this->chord_player->play_chord(arranger->current_chord);
-
-            if (debug) Serial_printf("behaviour_progression#requantise_all_notes: played chord %i!\n", arranger->current_chord.degree);
-            if (debug) Serial_println("behaviour_progression#requantise_all_notes() done.");
-
-            return 4;   // assume there were 4 notes to requantise in this chord
-        }
-
-        if (debug) Serial_println("behaviour_progression#requantise_all_notes() isn't playing...");
-        return 0;   
+    virtual void on_harmony_changed() override {
+        if (!this->chord_player->is_playing_chord)
+            return;
+        if (debug) Serial_printf("behaviour_progression#on_harmony_changed: re-playing chord %i\n", arranger->current_chord.degree);
+        this->chord_player->stop_chord();
+        this->chord_player->play_chord(arranger->current_chord);
     }
 
     // changes section, but leaves reseting the bar to the caller to deal with (or not)

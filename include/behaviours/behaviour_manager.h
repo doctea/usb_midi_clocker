@@ -216,6 +216,9 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
 
         void do_bar(int bar) {
             for (auto* b : *behaviours) {
+                b->on_bar_prepare(bar);
+            }
+            for (auto* b : *behaviours) {
                 b->on_bar(bar);
             }
         }
@@ -314,28 +317,12 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
         }
 
         #ifdef ENABLE_SCALES
-            //PROGMEM
-            void requantise_all_notes() {
-                uint32_t time = millis();
-                const uint_fast8_t size = behaviours->size();
-                int8_t requantised_notes = 0;
-                if (debug) { 
-                    Serial_printf("requantise_all_notes() processing %i behaviours...\n", size); Serial_flush(); 
-                }
-                uint_fast8_t i = 0;
+            // Connection policies quantise routed notes; this only lets behaviours that
+            // generate notes from the harmony (eg Progression) re-issue them.
+            void notify_harmony_changed() {
                 for (auto* device : *behaviours) {
-                    uint32_t behaviour_time = micros();
-                    int8_t notes = device->requantise_all_notes();
-                    if (notes>0) {
-                        requantised_notes += notes;
-                    }
-                    if ((debug && micros()-behaviour_time>0) || device->debug || notes>0) {
-                        Serial_printf("\trequantised %i notes from behaviour %i %s\n", notes, i, device->get_label()); Serial_flush();
-                        Serial_printf("\trequantise_all_notes() took %i us for behaviour %i (%s) to process %i notes\n", micros()-behaviour_time, i, device->get_label(), notes); Serial_flush();
-                    }
-                    ++i;
+                    device->on_harmony_changed();
                 }
-                if (debug) { Serial_printf("..requantise_all_notes took %i ms to process %i behaviours with %i notes.\n", millis()-time, size, requantised_notes); Serial_flush(); }
             }
         #endif
 

@@ -4,6 +4,35 @@ Kinda got this working in conjunction with TeensyDebug and Platformio in VSCode 
 
 .. I saw 'kind of working' because it worked up to a point, but was a bit flakey, sometimes breakpoints didn't break, and basically did not allow me to figure out anything that I didn't already know, as when the code crashed it would seem to start the debugger too late?  IDK, YMMV
 
+## Open observations (2026-10-19)
+
+- **Intermittent stuck notes on Neutron:** reported with Prog.Bass and a
+  TuringMachine output both routed to Neutron. BeatStep -> Neutron did not show
+  the symptom despite higher message frequency. It is not currently reproducible.
+  Cause and relationship to recent routing changes are unknown; interaction with
+  seqlib's independent quantisation is a hypothesis, not a diagnosis. The latest
+  supplied endpoint listing shows `Prog.Bass` as source 2, `TuringMachine Ch1` as
+  source 24, and `S3 : Neutron : ch 1` as target 2; earlier discussion mentioned
+  TuringMachine 2, so verify the actual connected role rather than assuming one.
+  Follow the [note capture procedure](docs/midi-note-routing.md#capturing-an-intermittent-stuck-note)
+  when it recurs, capturing all sources to the target before cleanup.
+- **Blank matrix target rows:** Bass Proxy, Arp Chords, and Arp Trigger occupy
+  rows but appear black/empty rather than showing their labels. Selecting them
+  still shows their names in messages. Found a 30-colour palette declared with
+  50 entries, leaving targets 30-49 black. Fixed the palette size so target
+  colours cycle through populated entries; host tests cover all 50 target IDs.
+  Hardware confirmation pending.
+- **Playback-only UI pauses:** brief, regularly recurring UI freezes while
+  playback is active; not reported while stopped. Frequency, clock/tempo
+  correlation, affected controls, and whether musical output also stalls remain
+  unmeasured. Found and removed four unconditional `Serial_flush()` calls in
+  `do_tick()` outside compiled-out debug logging; these could block the clock
+  interrupt on serial traffic even with debug logging off. Host tests check
+  that normal playback ticks still dispatch clocks/behaviours without flushing.
+  This removes a concrete blocking hazard, but whether it fully explains the
+  observed freezes requires hardware confirmation. No connection to the new
+  note diagnostics has been established.
+
 ## RAM1 Stack Reserve
 
 The stack guard remains at 8 KB minimum, with a warning below 16 KB. The

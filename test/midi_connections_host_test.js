@@ -21,6 +21,10 @@ function method(text, marker) {
 const manager = read(path.join('include', 'midi', 'midi_mapper_matrix_manager.h'));
 const wrapper = read(path.join('include', 'midi', 'midi_out_wrapper.h'));
 const ui = read(path.join('include', 'mymenu', 'menu_midi_matrix.h'));
+const consoleHeader = read(path.join('include', 'debug_console.h'));
+const commandStart = consoleHeader.indexOf('bool execute_command(');
+const commandEnd = consoleHeader.indexOf('} else if (strcmp(command, "debug")', commandStart);
+if (commandStart < 0 || commandEnd < 0) throw new Error('Cannot locate notes console dispatch');
 const classStart = manager.indexOf('class MIDIMatrixManager :');
 const classEnd = manager.indexOf('\n    private:', classStart);
 if (classStart < 0 || classEnd < 0) throw new Error('Cannot locate matrix public implementation');
@@ -33,12 +37,21 @@ const fixture = `
 #include <vector>
 #include <cstdio>
 #include <cctype>
+#include <memory>
+#include <new>
+#ifdef ARDUINO
+    #include <util/atomic.h>
+#else
+    static unsigned diagnostic_irq_depth = 0;
+#endif
+#include "midi/midi_note_diagnostics.h"
 #include "midi/midi_connection_store.h"
 #include "midi/midi_connection_note_state.h"
 #define FLASHMEM
 #define F(text) text
 static std::vector<std::string> warnings;
 static void Serial_printf(const char *format, ...) {
+    assert(diagnostic_irq_depth == 0);
     char text[512];
     va_list args;
     va_start(args, format);
@@ -65,15 +78,22 @@ static bool is_valid_note(int pitch) { return pitch >= 0 && pitch < 128; }
 static const char *get_note_name_c(int) { return "note"; }
 enum { QUANTISE_MODE_NONE, QUANTISE_MODE_SCALE, QUANTISE_MODE_CHORD };
 static int transpose = 0;
-static int8_t quantise_pitch_to_scale(int8_t pitch) { return pitch + transpose; }
+static bool collapse_scale_pairs = false;
+static int8_t quantise_pitch_to_scale(int8_t pitch) { return (collapse_scale_pairs ? pitch - pitch % 2 : pitch) + transpose; }
 static int8_t quantise_pitch_to_chord(int8_t pitch, int) { return pitch + transpose; }
 struct Conductor {
-    int get_global_quantise_mode() { return QUANTISE_MODE_NONE; }
+    int mode = QUANTISE_MODE_NONE;
+    int get_global_quantise_mode() { return mode; }
 } conductor_instance;
 static Conductor *conductor = &conductor_instance;
 class DeviceBehaviourUltimateBase : public MIDIEndpointOwner {
 public:
     const char *get_endpoint_owner_label() override { return "Mock"; }
+    int8_t TUNING_OFFSET = 2;
+    int8_t get_effective_lowest_note() { return 24; }
+    int8_t get_effective_highest_note() { return 100; }
+    int getLowestNoteMode() { return 0; }
+    int getHighestNoteMode() { return 1; }
 };
 class MIDITrack {};
 class HardwareSerial {};
@@ -92,6 +112,7 @@ struct NoteTarget {
 class MIDIOutputWrapper : public NoteTarget {
 public:
     bool debug = false, always_force_stop_all = false;
+    MIDINoteTraceContext *note_trace_context = nullptr;
     int8_t default_channel = 1;
     const char *label = "Mock";
     int8_t playing_notes[128] = {};
@@ -99,8 +120,8 @@ public:
     std::vector<Event> events;
     void log_message_on(int, int, int) {}
     void log_message_off(int, int, int) {}
-    void actual_sendNoteOn(int p, int v, int c) { events.push_back({'N', p, v, c}); }
-    void actual_sendNoteOff(int p, int v, int c) { events.push_back({'F', p, v, c}); }
+    void actual_sendNoteOn(int p, int v, int c) { assert(diagnostic_irq_depth == 0); events.push_back({'N', p, v, c}); }
+    void actual_sendNoteOff(int p, int v, int c) { assert(diagnostic_irq_depth == 0); events.push_back({'F', p, v, c}); }
     void actual_sendControlChange(int p, int v, int c) { events.push_back({'C', p, v, c}); }
     void actual_sendPitchBend(int b, int c) { events.push_back({'B', b, 0, c}); }
     ${method(wrapper, 'virtual void sendNoteOn(uint8_t')}
@@ -108,12 +129,19 @@ public:
     ${method(wrapper, 'virtual void sendControlChange(uint8_t')}
     ${method(wrapper, 'virtual void sendPitchBend(int')}
     MIDIEndpointOwner *get_owner() { return nullptr; }
-    bool routes_to_behaviour(DeviceBehaviourUltimateBase *) { return false; }
-    routed_note_output_t resolve_routed_note_output(int8_t p, uint8_t c) { return {p, c, true}; }
-    void send_resolved_routed_note_off(int8_t p, uint8_t v, uint8_t c) { sendNoteOff(p, v, c); }
-    void send_resolved_routed_note_on(int8_t p, uint8_t v, uint8_t c) { sendNoteOn(p, v, c); }
+    DeviceBehaviourUltimateBase *behaviour = nullptr;
+    int target_transpose = 0;
+    bool routes_to_behaviour(DeviceBehaviourUltimateBase *candidate) { return behaviour == candidate; }
+    routed_note_output_t resolve_routed_note_output(int8_t p, uint8_t c) { return {static_cast<int8_t>(p + target_transpose), c, true}; }
+    ${method(wrapper, 'virtual MIDINoteTargetDebugState get_note_debug_state(')}
+    ${method(wrapper, 'virtual void send_resolved_routed_note_off(')}
+    ${method(wrapper, 'virtual void send_resolved_routed_note_on(')}
     void stop_all_notes(bool) {}
     void force_stop_all_notes_on_channel(uint8_t) {}
+};
+struct BehaviourDebugWrapper : MIDIOutputWrapper {
+    DeviceBehaviourUltimateBase *output = nullptr;
+    ${method(wrapper.slice(wrapper.indexOf('class MIDIOutputWrapper_Behaviour :')), 'virtual MIDINoteTargetDebugState get_note_debug_state(')}
 };
 static MIDIOutputWrapper *make_midioutputwrapper(const char *, MIDITrack *, uint8_t) {
     return nullptr;
@@ -138,6 +166,14 @@ static void sl_trim_inplace(char *text) {
 }
 ${manager.slice(classStart, classEnd)}
 };
+${read(path.join('include', 'midi', 'midi_note_debug_console.h')).replace('#pragma once', '').replace('#include "midi/midi_mapper_matrix_manager.h"', '')}
+struct SerialConsole {
+    template <typename... Args> void printf(const char *format, Args... args) { Serial_printf(format, args...); }
+} Serial;
+${consoleHeader.slice(commandStart, commandEnd)}
+    }
+    return false;
+}
 static constexpr unsigned MENU_MESSAGE_MAX = 128;
 static constexpr int RED = 1, GREEN = 2;
 static std::string last_message;
@@ -183,18 +219,37 @@ struct Popup : Selector {
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'midi-connections-test-'));
 try {
     fs.writeFileSync(path.join(directory, 'matrix_fixture.h'), fixture);
-    const executable = path.join(directory, process.platform === 'win32' ? 'test.exe' : 'test');
-    const compile = spawnSync('g++', ['-std=c++11', '-Wall', '-Wextra', '-Werror',
-        '-fsanitize=undefined', '-I', path.join(root, 'include'), '-I', directory,
-        path.join(__dirname, 'native', 'midi_connection_store_test.cpp'), '-o', executable],
-        { encoding: 'utf8' });
-    if (compile.error) throw compile.error;
-    if (compile.status !== 0) throw new Error(compile.stdout + compile.stderr);
-    const run = spawnSync(executable, [], { encoding: 'utf8' });
-    if (run.error) throw run.error;
-    if (run.status !== 0) throw new Error(run.stdout + run.stderr);
-    process.stdout.write(run.stdout);
+    fs.mkdirSync(path.join(directory, 'util'));
+    fs.writeFileSync(path.join(directory, 'util', 'atomic.h'), `
+#pragma once
+static unsigned diagnostic_irq_depth = 0;
+struct DiagnosticAtomicTest {
+    unsigned previous;
+    bool active = true;
+    DiagnosticAtomicTest() : previous(diagnostic_irq_depth) { ++diagnostic_irq_depth; }
+    ~DiagnosticAtomicTest() { diagnostic_irq_depth = previous; }
+};
+#define ATOMIC_RESTORESTATE 0
+#define ATOMIC_BLOCK(mode) for (DiagnosticAtomicTest guard; guard.active; guard.active = false)
+`);
+    for (const arduino of [false, true]) {
+        const executable = path.join(directory, process.platform === 'win32' ? 'test.exe' : 'test');
+        const compile = spawnSync('g++', ['-std=c++11', '-Wall', '-Wextra', '-Werror',
+            '-fsanitize=undefined', ... (arduino ? ['-DARDUINO'] : []),
+            '-I', path.join(root, 'include'), '-I', directory,
+            path.join(__dirname, 'native', 'midi_connection_store_test.cpp'), '-o', executable],
+            { encoding: 'utf8' });
+        if (compile.error) throw compile.error;
+        if (compile.status !== 0) throw new Error(compile.stdout + compile.stderr);
+        const run = spawnSync(executable, [], { encoding: 'utf8' });
+        if (run.error) throw run.error;
+        if (run.status !== 0) throw new Error(run.stdout + run.stderr);
+        process.stdout.write(`${arduino ? 'IRQ-guard mock' : 'Native'}:\n${run.stdout}`);
+    }
 } finally {
+    const atomicHeader = path.join(directory, 'util', 'atomic.h');
+    if (fs.existsSync(atomicHeader)) fs.unlinkSync(atomicHeader);
+    if (fs.existsSync(path.join(directory, 'util'))) fs.rmdirSync(path.join(directory, 'util'));
     for (const name of fs.readdirSync(directory)) fs.unlinkSync(path.join(directory, name));
     fs.rmdirSync(directory);
 }

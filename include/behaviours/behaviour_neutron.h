@@ -17,7 +17,6 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, virtua
     using DeviceBehaviourSerialBase::receives_midi_notes;
     using DeviceBehaviourSerialBase::transmits_midi_notes;
     //using ClockedBehaviour::transmits_midi_notes;
-    //using MIDIBassBehaviour::on_bar;
 
     using MIDIBassBehaviour::sendNoteOff;
     using MIDIBassBehaviour::sendNoteOn;
@@ -40,7 +39,6 @@ class DeviceBehaviour_Neutron : virtual public DeviceBehaviourSerialBase, virtua
         }
 
         virtual void on_bar(int bar) override {
-            MIDIBassBehaviour::on_bar(bar);
             ClockedBehaviour::on_bar(bar);
         }
 

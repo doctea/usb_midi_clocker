@@ -71,83 +71,40 @@ void DeviceBehaviourUltimateBase::receive_pitch_bend(uint8_t inChannel, int16_t 
     }
 }*/
 
-#ifdef ENABLE_SCALES
-//PROGMEM
-int DeviceBehaviourUltimateBase::requantise_all_notes() {
-    // don't requantise drum notes
+// Note limits can change while this behaviour holds notes it generated itself (eg a drone note);
+// routed notes are migrated by the matrix, so only the local NoteTracker entries are handled here.
+int DeviceBehaviourUltimateBase::reapply_local_note_limits() {
+    // don't touch drum notes
     if (this->current_channel==GM_CHANNEL_DRUMS)
         return 0;
 
-    if (note_tracker_count_held()==0) {
-        // Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: no notes to requantise\n", this->get_label());
+    if (note_tracker_count_held()==0)
         return 0;
-    }
-    if (debug) { Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c()); }
 
-    if (debug) { Serial.printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes starting requantisation of %i held notes...\n", this->get_label(), note_tracker_count_held()); Serial_flush(); }
+    if (debug) { Serial_printf("%20s\t: DeviceBehaviourUltimateBase#reapply_local_note_limits starting with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c()); }
 
-    int requantised_notes = 0;
-    
-    uint32_t start_foreach = micros();
-    requantised_notes = note_tracker_foreach_note([this](int8_t note, int8_t old_transposed_note) {
-        int8_t new_transposed_note = midi_matrix_manager->do_quant(note, this->current_channel);
-        new_transposed_note = apply_note_limits(
-            new_transposed_note, this->getLowestNoteMode(), this->getHighestNoteMode(),
+    return note_tracker_foreach_note([this](int8_t note, int8_t old_transposed_note) {
+        int8_t new_transposed_note = apply_note_limits(
+            note, this->getLowestNoteMode(), this->getHighestNoteMode(),
             get_effective_lowest_note(), get_effective_highest_note()
         );
-        if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes in foreach_requantised_note: note=%i (%s), old_transposed_note=%i (%s), new_transposed_note=%i (%s)\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), new_transposed_note, get_note_name_c(new_transposed_note));
-        // note is the original note, transposed_note is the note that the original note was transposed to
-        // if old transposed note is the same as the new transposed note, then we don't need to do anything
-        /*if (!is_valid_note(new_transposed_note)) {
-            note_tracker.held_note_off(note);
-        } else {
-            note_tracker.held_notes[note].transposed_note = new_transposed_note;
-        }*/
-        // if the new transposed note is the same as the old transposed note, then we don't need to do anything
-        if (old_transposed_note==new_transposed_note) {
-            if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) doesn't need to be stopped as didn't change!\n", this->get_label(), note, get_note_name_c(note)); 
+        if (old_transposed_note==new_transposed_note)
             return;
-        }
-        // if the new transposed note is invalid, then we need to stop the old note without starting a new one
-        if (!is_valid_note(new_transposed_note)) {
-            if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to invalid note; stopping old_transposed_note %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), this->current_channel); 
-            // TODO: this is really hacky, we need to disable quantisation temporarily to stop the old note off, otherwise it will get re-quantised to the new (invalid) note and won't stop... we should really add a 'raw' note off function that doesn't apply quantisation at all
-            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
-            return;
-        }
-        // if the new transposed note is valid, then we need to stop the old note and start the new one
-        if (is_valid_note(new_transposed_note)) {
-            if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) re-quantised to new_transposed_note %i (%s); stopping old_transposed_note %i (%s) on channel %i)\n", this->get_label(), note, get_note_name_c(note), new_transposed_note, get_note_name_c(new_transposed_note), old_transposed_note, get_note_name_c(old_transposed_note), this->current_channel); 
-            this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+        if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#reapply_local_note_limits: note %i (%s) moves from %i (%s) to %i (%s) on channel %i\n", this->get_label(), note, get_note_name_c(note), old_transposed_note, get_note_name_c(old_transposed_note), new_transposed_note, get_note_name_c(new_transposed_note), this->current_channel);
+        this->sendNoteOff(note, MIDI_MIN_VELOCITY, this->current_channel);
+        if (is_valid_note(new_transposed_note))
             this->sendNoteOn(note, MIDI_MAX_VELOCITY, this->current_channel);
-            return;
-        } else {
-            if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: note %i (%s) doesn't need to be stopped as new transposed note is invalid...?\n", this->get_label(), note, get_note_name_c(note));
-            return;
-        }
-        if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes: NOTE SURE WHAT TO DO!  note %i (%s) re-quantised to %i (%s) (stopping then starting on channel %i)\n", this->get_label(), note, get_note_name_c(note), new_transposed_note, get_note_name_c(new_transposed_note), this->current_channel);
     });
-    if (debug) if (requantised_notes>0) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes 'foreach' took %i us to process %i notes\n", this->get_label(), micros()-start_foreach, requantised_notes);
-    if (debug) Serial_printf("%20s\t: DeviceBehaviourUltimateBase#requantise_all_notes finishing with\t%i held notes (%s)\n", this->get_label(), note_tracker_count_held(), note_tracker_get_held_notes_c());
-
-    return requantised_notes;
-
 }
-#endif
-
 
 void DeviceBehaviourUltimateBase::sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
     //if (debug) Serial_printf("DeviceBehaviourUltimateBase#sendNoteOn");
 
-    // Notes delivered by the matrix have already had their connection policy applied.
-    // Locally generated notes retain behaviour-level quantisation and tracking.
+    // Note quantisation is applied per-connection by the MIDI matrix, not here.
+    // Routed deliveries are tracked by the matrix ledger; local notes use the NoteTracker.
 
     int8_t quantised_note = note;
-    #ifdef ENABLE_SCALES
-        if (!is_processing_routed_note())
-            quantised_note = midi_matrix_manager->do_quant(note, channel);
-    #endif
-    if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i) -> quantised_note %i\n", this->get_label(), note, velocity, channel, quantised_note);
+    if (debug) Serial_printf("%20s:\tDeviceBehaviourUltimateBase#sendNoteOn(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
 
     // quantised_note = this->recalculate_pitch(quantised_note);
     quantised_note = apply_note_limits(quantised_note, this->getLowestNoteMode(), this->getHighestNoteMode(), get_effective_lowest_note(), get_effective_highest_note());

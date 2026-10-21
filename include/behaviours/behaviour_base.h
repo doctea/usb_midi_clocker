@@ -226,13 +226,14 @@ class DeviceBehaviourUltimateBase :
     virtual void send_clock(uint32_t ticks) {};
     // called every tick, after clocks sent
     virtual void on_tick(uint32_t ticks) {};
+    // Prepare every receiver before any bar callback can generate routed notes.
+    virtual void on_bar_prepare(int bar_number) {};
     // called when new bar starts
     virtual void on_bar(int bar_number) {};
     virtual void on_end_bar(int bar_number) {};
     virtual void on_end_beat(int beat_number) {};
     // called when the clock is restarted
     virtual void on_restart() {};
-    virtual void release_outputs() {};
     // called when we change phrase
     virtual void on_phrase(uint32_t phrase) {};
     virtual void on_end_phrase(uint32_t phrase) {};
@@ -243,12 +244,19 @@ class DeviceBehaviourUltimateBase :
     virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
     virtual void receive_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
     virtual void receive_pitch_bend(uint8_t inChannel, int16_t bend);
-
+    
+    virtual void release_outputs() {};
+    
     virtual void init() {};
 
     #ifdef ENABLE_SCALES
-        virtual int requantise_all_notes();
+        // Called after the global harmony changes. Note quantisation belongs to matrix connection
+        // policies, so only behaviours that generate notes from the harmony need to act here.
+        virtual void on_harmony_changed() {}
     #endif
+
+    // Re-applies note limits to notes this behaviour generated itself and is still holding.
+    virtual int reapply_local_note_limits();
 
     // abstracted note_tracker access so that we can override to eg track multiple channels separately if we need to
     virtual bool note_tracker_foreach_note(NoteTracker::foreach_func_def func) {
@@ -345,7 +353,7 @@ class DeviceBehaviourUltimateBase :
 
     // A behaviour-backed matrix target must still pass through virtual sendNote*
     // overrides (voice allocation, trigger channels, etc.). The scope tells the
-    // base implementation not to quantise or track that delivery a second time.
+    // base implementation not to track that delivery a second time.
     virtual void sendRoutedNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) {
         RoutedNoteDispatchScope scope(*this);
         this->sendNoteOn(note, velocity, channel);
@@ -547,9 +555,7 @@ class DeviceBehaviourUltimateBase :
     }
     virtual void end_note_limit_change() {
         end_midi_matrix_target_transform_change(this);
-        #ifdef ENABLE_SCALES
-            DeviceBehaviourUltimateBase::requantise_all_notes();
-        #endif
+        DeviceBehaviourUltimateBase::reapply_local_note_limits();
     }
 
     virtual void setLowestNote(int8_t note) {

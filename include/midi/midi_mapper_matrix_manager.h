@@ -23,7 +23,7 @@ void setup_midi_mapper_matrix_manager();
 void behaviour_manager_kill_all_current_notes();
 
 #ifdef ENABLE_SCALES
-    void behaviour_manager_requantise_all_notes(bool force = false);
+    void behaviour_manager_notify_harmony_changed();
 #endif
 
 //#include "behaviours/behaviour_bamble.h"
@@ -38,6 +38,9 @@ void behaviour_manager_kill_all_current_notes();
 #include "midi/midi_mapper_matrix_types.h"
 #include "midi/midi_connection_note_state.h"
 #include "midi/midi_connection_store.h"
+#include "midi/midi_note_diagnostics.h"
+#include <memory>
+#include <new>
 
 #include "scales.h"
 
@@ -148,6 +151,81 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     routed_note_output_t target_transform_snapshot[MIDI_CONNECTION_NOTE_CAPACITY] = {};
     DeviceBehaviourUltimateBase *target_transform_behaviour = nullptr;
     uint8_t target_transform_change_depth = 0;
+    std::unique_ptr<MIDINoteTrace> note_trace;
+
+    bool enable_note_trace(int source = -1, int target = -1) {
+        if (source < -1 || source >= sources_count || target < -1 || target >= targets_count) {
+            Serial_println(F("!! note trace: invalid source or target filter"));
+            return false;
+        }
+        if (!note_trace) note_trace.reset(new (std::nothrow) MIDINoteTrace);
+        if (!note_trace) {
+            Serial_println(F("!! note trace: allocation failed"));
+            return false;
+        }
+        note_trace->configure(source, target);
+        return true;
+    }
+
+    MIDINoteTraceEvent make_note_trace_event(MIDINoteTraceKind kind, int source, int target,
+            int8_t input_pitch = -1, uint8_t input_channel = 0, int8_t output_pitch = -1,
+            uint8_t output_channel = 0, uint8_t velocity = 0, bool emitted = false, uint32_t started_ms = 0) {
+        MIDINoteTraceEvent event;
+        event.kind = kind;
+        event.source = source;
+        event.target = target;
+        event.time_ms = millis();
+        event.started_ms = started_ms;
+        event.input_pitch = input_pitch;
+        event.input_channel = input_channel;
+        event.output_pitch = output_pitch;
+        event.output_channel = output_channel;
+        event.velocity = velocity;
+        event.emitted = emitted;
+        event.global_quantise = conductor->get_global_quantise_mode();
+        const auto *policy = get_connection_policy(source, target);
+        if (policy != nullptr) {
+            event.fixed_channel = policy->fixed_channel;
+            event.quantise = static_cast<uint8_t>(policy->quantise_mode);
+            event.note_map = static_cast<uint8_t>(policy->note_map_mode);
+            event.paused = policy->paused;
+        }
+        return event;
+    }
+
+    void trace_note(MIDINoteTraceKind kind, int source, int target,
+            int8_t input_pitch = -1, uint8_t input_channel = 0, int8_t output_pitch = -1,
+            uint8_t output_channel = 0, uint8_t velocity = 0, bool emitted = false, uint32_t started_ms = 0) {
+        if (note_trace && note_trace->accepts(source, target))
+            note_trace->record(make_note_trace_event(kind, source, target, input_pitch, input_channel,
+                output_pitch, output_channel, velocity, emitted, started_ms));
+    }
+
+    void trace_note(MIDINoteTraceKind kind, const MIDIConnectionNoteState::entry_t &entry) {
+        trace_note(kind, entry.source_id, entry.target_id, entry.input_pitch, entry.input_channel,
+            entry.output_pitch, entry.output_channel, entry.velocity, entry.emitted, entry.started_ms);
+    }
+
+    void dispatch_connection_note(const MIDIConnectionNoteState::entry_t &entry,
+            const routed_note_output_t &output, uint8_t velocity, bool on, bool resolved = false) {
+        MIDIOutputWrapper *wrapper = targets[entry.target_id].wrapper;
+        const bool recording = note_trace && note_trace->accepts(entry.source_id, entry.target_id);
+        MIDINoteTraceContext context{note_trace.get(), MIDINoteTraceEvent{}};
+        if (recording) {
+            context.event = make_note_trace_event(on ? MIDINoteTraceKind::DISPATCH_ON : MIDINoteTraceKind::DISPATCH_OFF,
+                entry.source_id, entry.target_id, entry.input_pitch, entry.input_channel,
+                output.pitch, output.channel, velocity, output.emitted, entry.started_ms);
+            note_trace->record(context.event);
+        }
+        MIDINoteTraceScope scope(wrapper->note_trace_context, recording ? &context : nullptr);
+        if (resolved) {
+            if (on) wrapper->send_resolved_routed_note_on(output.pitch, velocity, output.channel);
+            else wrapper->send_resolved_routed_note_off(output.pitch, velocity, output.channel);
+        } else {
+            if (on) wrapper->sendNoteOn(output.pitch, velocity, output.channel);
+            else wrapper->sendNoteOff(output.pitch, velocity, output.channel);
+        }
+    }
 
     bool is_valid_connection_id_pair(source_id_t source_id, target_id_t target_id) const {
         if (source_id < 0 || target_id < 0)
@@ -176,8 +254,9 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             return false;
         }
         connection->policy = policy;
+        trace_note(MIDINoteTraceKind::POLICY, source_id, target_id);
         if (policy.paused)
-            release_connection_notes(source_id, target_id);
+            release_connection_notes(source_id, target_id, true, nullptr, MIDINoteTraceKind::PAUSE_RELEASE);
         else
             migrate_connection_notes(source_id, target_id);
         return true;
@@ -257,7 +336,8 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                                         const ResolveNext &resolve_next,
                                         const SendOff &send_off,
                                         const SendOn &send_on,
-                                        const Commit &commit) {
+                                        const Commit &commit,
+                                        MIDINoteTraceKind reason = MIDINoteTraceKind::MIGRATE) {
         int changed = 0;
 
         for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
@@ -270,6 +350,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             if (routed_note_outputs_match(previous, next))
                 continue;
 
+            trace_note(reason, entry);
             if (previous.emitted)
                 send_off(entry, previous);
             ++changed;
@@ -287,17 +368,26 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
 
             if (next.emitted)
                 send_on(entry, next);
+            trace_note(MIDINoteTraceKind::MIGRATE_RESULT, entry.source_id, entry.target_id,
+                entry.input_pitch, entry.input_channel, next.pitch, next.channel,
+                entry.velocity, next.emitted, entry.started_ms);
             commit(entry, next);
         }
 
         return changed;
     }
 
-    int migrate_connection_notes(source_id_t only_source = -1, target_id_t only_target = -1) {
+    bool source_regenerates_on_harmony_change(source_id_t source_id) const {
+        if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || sources == nullptr) return false;
+        return sources[source_id].owner != nullptr && sources[source_id].owner->regenerates_notes_on_harmony_change();
+    }
+
+    int migrate_connection_notes(source_id_t only_source = -1, target_id_t only_target = -1, bool skip_regenerating_sources = false) {
         return migrate_active_connection_notes(
-            [only_source, only_target](const MIDIConnectionNoteState::entry_t &entry, uint16_t) {
+            [this, only_source, only_target, skip_regenerating_sources](const MIDIConnectionNoteState::entry_t &entry, uint16_t) {
                 return (only_source < 0 || entry.source_id == only_source)
-                    && (only_target < 0 || entry.target_id == only_target);
+                    && (only_target < 0 || entry.target_id == only_target)
+                    && !(skip_regenerating_sources && source_regenerates_on_harmony_change(entry.source_id));
             },
             [](const MIDIConnectionNoteState::entry_t &entry, uint16_t) {
                 return routed_note_output_t(entry.output_pitch, entry.output_channel, entry.emitted);
@@ -309,12 +399,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 return routed_note_output_t(event.pitch, event.channel, !event.drop);
             },
             [this](const MIDIConnectionNoteState::entry_t &entry, const routed_note_output_t &previous) {
-                targets[entry.target_id].wrapper->sendNoteOff(
-                    previous.pitch, MIDI_MIN_VELOCITY, previous.channel
-                );
+                dispatch_connection_note(entry, previous, MIDI_MIN_VELOCITY, false);
             },
             [this](const MIDIConnectionNoteState::entry_t &entry, const routed_note_output_t &next) {
-                targets[entry.target_id].wrapper->sendNoteOn(next.pitch, entry.velocity, next.channel);
+                dispatch_connection_note(entry, next, entry.velocity, true);
             },
             [](MIDIConnectionNoteState::entry_t &entry, const routed_note_output_t &next) {
                 entry.output_pitch = next.pitch;
@@ -362,23 +450,21 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 );
             },
             [this](const MIDIConnectionNoteState::entry_t &entry, const routed_note_output_t &previous) {
-                targets[entry.target_id].wrapper->send_resolved_routed_note_off(
-                    previous.pitch, MIDI_MIN_VELOCITY, previous.channel
-                );
+                dispatch_connection_note(entry, previous, MIDI_MIN_VELOCITY, false, true);
             },
             [this](const MIDIConnectionNoteState::entry_t &entry, const routed_note_output_t &next) {
-                targets[entry.target_id].wrapper->send_resolved_routed_note_on(
-                    next.pitch, entry.velocity, next.channel
-                );
+                dispatch_connection_note(entry, next, entry.velocity, true, true);
             },
-            [](MIDIConnectionNoteState::entry_t &, const routed_note_output_t &) {}
+            [](MIDIConnectionNoteState::entry_t &, const routed_note_output_t &) {},
+            MIDINoteTraceKind::TARGET_MIGRATE
         );
         target_transform_behaviour = nullptr;
         return changed;
     }
 
     int release_connection_notes(source_id_t only_source = -1, target_id_t only_target = -1,
-                                 bool emit_note_offs = true, uint32_t *channel_mask = nullptr) {
+                                 bool emit_note_offs = true, uint32_t *channel_mask = nullptr,
+                                 MIDINoteTraceKind reason = MIDINoteTraceKind::CLEANUP) {
         int released = 0;
         for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
             MIDIConnectionNoteState::entry_t &entry = active_connection_notes.entries[index];
@@ -387,6 +473,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 || (only_target >= 0 && entry.target_id != only_target)) {
                 continue;
             }
+            trace_note(emit_note_offs ? reason : MIDINoteTraceKind::PANIC_DISCARD, entry);
             if (entry.emitted) {
                 uint8_t output_channel = entry.output_channel;
                 if (output_channel == 0)
@@ -394,7 +481,8 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 if (channel_mask != nullptr && output_channel <= 16)
                     *channel_mask |= (uint32_t)1 << output_channel;
                 if (emit_note_offs)
-                    targets[entry.target_id].wrapper->sendNoteOff(entry.output_pitch, MIDI_MIN_VELOCITY, entry.output_channel);
+                    dispatch_connection_note(entry, routed_note_output_t(entry.output_pitch, entry.output_channel, true),
+                        MIDI_MIN_VELOCITY, false);
             }
             active_connection_notes.erase(entry);
             ++released;
@@ -413,6 +501,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
 
     // reset all connections (eg loading preset)
     void reset_matrix() {
+        trace_note(MIDINoteTraceKind::RESET, -1, -1);
         release_connection_notes();
         connections.clear();
         for (source_id_t source_id = 0; source_id < NUM_REGISTERED_SOURCES; ++source_id) {
@@ -486,6 +575,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         }
         sources[source_id].connection_count++;
         targets[target_id].connection_count++;
+        trace_note(MIDINoteTraceKind::CONNECT, source_id, target_id);
         return true;
     }
 
@@ -499,6 +589,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     void disconnect(source_id_t source_id, target_id_t target_id) {
         if (!is_valid_connection_id_pair(source_id, target_id) || sources == nullptr) return;
         if (is_connected(source_id, target_id)) {
+            trace_note(MIDINoteTraceKind::DISCONNECT, source_id, target_id);
             release_connection_notes(source_id, target_id);
             // decrement counts, only if connected
             sources[source_id].connection_count--;
@@ -557,6 +648,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (!is_valid_note(pitch)) return;*/
 
         const uint32_t now = millis();
+        trace_note(MIDINoteTraceKind::SOURCE_ON, source_id, -1, pitch, channel, -1, 0, velocity);
         sources[source_id].last_activity_ms = now;
         sources[source_id].has_activity = true;
         connections.for_each_from(source_id, [&](connection_t &connection) {
@@ -568,15 +660,20 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 transformed_note_event_t event = apply_connection_policy_note(connection.policy, pitch, channel);
                 MIDIConnectionNoteState::entry_t *entry = active_connection_notes.record(
                     source_id, target_id, pitch, channel,
-                    event.pitch, event.channel, velocity, !event.drop
+                    event.pitch, event.channel, velocity, !event.drop, now
                 );
                 if (entry == nullptr) {
+                    trace_note(MIDINoteTraceKind::LEDGER_FULL, source_id, target_id, pitch, channel,
+                        event.pitch, event.channel, velocity);
                     Serial_printf(F("!! MIDI connection note ledger full; dropping Note On from source %i to target %i\n"), source_id, target_id);
                     return;
                 }
+                trace_note(MIDINoteTraceKind::PAIRED_ON, *entry);
                 if (entry->emitted)
-                    targets[target_id].wrapper->sendNoteOn(entry->output_pitch, velocity, entry->output_channel);
+                    dispatch_connection_note(*entry, routed_note_output_t(entry->output_pitch, entry->output_channel, true), velocity, true);
                 //targets[target_id].wrapper->debug = false;
+            } else {
+                trace_note(MIDINoteTraceKind::PAUSED_ON, source_id, connection.target, pitch, channel, -1, 0, velocity);
             }
         });
     }
@@ -604,6 +701,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         }
 
         const uint32_t now = millis();
+        trace_note(MIDINoteTraceKind::SOURCE_OFF, source_id, -1, pitch, channel, -1, 0, velocity);
         sources[source_id].last_activity_ms = now;
         sources[source_id].has_activity = true;
         connections.for_each_from(source_id, [&](connection_t &connection) {
@@ -615,12 +713,16 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 if (this->debug) Serial_printf(F("\tsource %i aka %s\tshould send OFF to\t%i aka %s\t(source_id=%i)\n"), source_id, sources[source_id].handle, target_id, targets[target_id].handle);
                 MIDIConnectionNoteState::entry_t entry;
                 if (!active_connection_notes.take(source_id, target_id, pitch, channel, entry)) {
+                    trace_note(MIDINoteTraceKind::UNMATCHED_OFF, source_id, target_id, pitch, channel, -1, 0, velocity);
                     if (this->debug) Serial_printf(F("\tno paired Note On for source %i, target %i, pitch %i, channel %i; ignoring Note Off\n"), source_id, target_id, pitch, channel);
                     return;
                 }
+                trace_note(MIDINoteTraceKind::PAIRED_OFF, entry);
                 if (entry.emitted)
-                    targets[target_id].wrapper->sendNoteOff(entry.output_pitch, velocity, entry.output_channel);
+                    dispatch_connection_note(entry, routed_note_output_t(entry.output_pitch, entry.output_channel, true), velocity, false);
                 //targets[target_id].wrapper->debug = false;
+            } else {
+                trace_note(MIDINoteTraceKind::PAUSED_OFF, source_id, connection.target, pitch, channel, -1, 0, velocity);
             }
         });
     }
@@ -697,8 +799,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         if (default_channel <= 16)
             channel_mask |= (uint32_t)1 << default_channel;
         for (uint8_t channel = 0; channel <= 16; channel++) {
-            if (channel_mask & ((uint32_t)1 << channel))
+            if (channel_mask & ((uint32_t)1 << channel)) {
+                trace_note(MIDINoteTraceKind::PANIC_CHANNEL, -1, target_id, -1, 0, -1, channel);
                 targets[target_id].wrapper->force_stop_all_notes_on_channel(channel);
+            }
         }
     }
 
@@ -950,22 +1054,17 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             if (!requantise_immediately)
                 return;
 
-            migrate_connection_notes();
-
             quantise_mode_t current_mode = conductor->get_global_quantise_mode();
             quantise_mode_t prior_mode = previous_global_quantise_mode;
             previous_global_quantise_mode = current_mode;
-            if (prior_mode != QUANTISE_MODE_NONE || current_mode != QUANTISE_MODE_NONE) {
-                // uint32_t timestamp = micros();
-                // Serial_printf(
-                //     "harmony_changed_notification() about to call behaviour_manager_requantise_all_notes()\n"
-                //     "\tto go from scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i "
-                //     "\tto         scale_root=%i,\tchord_type=%i,\tchord_degree=%i,\tchord_inversion=%i\n",
-                //     conductor->get_scale_root(), conductor->get_chord_type(), conductor->get_chord_degree(), conductor->get_chord_inversion(),
-                //     new_scale.root_note, new_chord.type, new_chord.degree, new_chord.inversion
-                // );
-                behaviour_manager_requantise_all_notes(true);
-                // Serial_printf("- behaviour_manager_requantise_all_notes took %u us\n", micros() - timestamp);
+            const bool notify_behaviours = prior_mode != QUANTISE_MODE_NONE || current_mode != QUANTISE_MODE_NONE;
+
+            // Connection policies own note quantisation, so held routed notes are re-pitched here.
+            // Sources that regenerate their own notes are left for their behaviour to re-issue.
+            migrate_connection_notes(-1, -1, notify_behaviours);
+
+            if (notify_behaviours) {
+                behaviour_manager_notify_harmony_changed();
             }
         }
 

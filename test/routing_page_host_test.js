@@ -24,6 +24,9 @@ const ui = read(path.join('include', 'mymenu', 'menu_midi_matrix.h'));
 const rowsStart = ui.indexOf('enum class PopupRow');
 const rowsEnd = ui.indexOf('enum class Mode', rowsStart);
 if (rowsStart < 0 || rowsEnd < 0) throw new Error('Cannot locate popup rows');
+const paletteStart = ui.indexOf('const uint16_t target_colours[');
+const paletteEnd = ui.indexOf('uint16_t get_colour_for_target_id(', paletteStart);
+if (paletteStart < 0 || paletteEnd < 0) throw new Error('Cannot locate matrix palette');
 const source = `
 #include <cassert>
 #include <cstdint>
@@ -38,6 +41,11 @@ void debug_free_ram() {}
 constexpr uint16_t C_WHITE = 0xFFFF;
 using source_id_t = int;
 using target_id_t = int;
+constexpr int MAX_NUM_TARGETS = 50;
+struct MatrixColours {
+    ${ui.slice(paletteStart, paletteEnd)}
+    ${method(ui, 'uint16_t get_colour_for_target_id(')}
+};
 template <class T> struct List {
     std::vector<T> values;
     unsigned int size() const { return values.size(); }
@@ -117,6 +125,11 @@ struct Popup {
     ${method(ui, 'bool popup_row_enabled(')}
 };
 int main() {
+    MatrixColours colours;
+    assert(colours.get_colour_for_target_id(-1) == C_WHITE);
+    for (int target = 0; target < MAX_NUM_TARGETS; ++target)
+        assert(colours.get_colour_for_target_id(target) != 0);
+    assert(colours.get_colour_for_target_id(30) == colours.get_colour_for_target_id(0));
     DeviceBehaviourManager behaviours;
     for (int preceding_pages : {0, 3}) {
         for (bool standard_page : {false, true}) {
