@@ -183,6 +183,8 @@ void setup_menu(bool button_high_state) {
 
     setup_menu_transport();
 
+    setup_menu_project();
+
     #ifdef ENABLE_TAPTEMPO
         setup_menu_taptempo();
     #endif
@@ -190,9 +192,7 @@ void setup_menu(bool button_high_state) {
     #if !SAFE_DISABLE_MATRIX_UI_BOOT
         setup_menu_midi();
     #endif
-    
-    setup_menu_project();
-    
+        
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
         setup_menu_sequencer();
     #endif

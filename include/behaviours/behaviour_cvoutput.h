@@ -70,6 +70,32 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         // Last note played per channel; persists after NoteOff so collapsed sub-menu can show it
         int8_t last_channel_note[channel_count] = { NOTE_OFF, NOTE_OFF, NOTE_OFF, NOTE_OFF };
 
+        uint8_t get_channel_midi_mode(uint8_t index) const {
+            if (index >= channel_count || outputs[index] == nullptr || !outputs[index]->midi_notes_enabled)
+                return 0;
+            return allow_voice_for_auto[index] ? 2 : 1;
+        }
+
+        virtual bool is_voice_allowed_for_auto(int8_t index) const override {
+            return index >= 0 && index < channel_count && get_channel_midi_mode(index) == 2;
+        }
+
+        void set_channel_midi_mode(uint8_t index, uint8_t mode) {
+            if (index >= channel_count || mode > 2) {
+                Serial_printf("CVOutput: invalid MIDI mode index=%u mode=%u\n", index, mode);
+                return;
+            }
+            if (outputs[index] == nullptr || get_channel_midi_mode(index) == mode) return;
+            this->begin_note_limit_change();
+            allow_voice_for_auto[index] = mode == 2;
+            outputs[index]->set_midi_notes_enabled(mode != 0);
+            if (mode == 0)
+                last_channel_note[index] = NOTE_OFF;
+            this->end_note_limit_change();
+            if (!outputs[index]->is_note_active())
+                voices[index] = NOTE_OFF;
+        }
+
         GateManager *gate_manager = nullptr;
         int8_t gate_bank = -1, gate_offset = 0;
 
@@ -324,26 +350,32 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             if (!result.emitted || result.channel == 0 || result.channel > channel_count)
                 return result;
             result.pitch = apply_per_channel_limits(result.pitch, result.channel - 1);
-            result.emitted = is_valid_note(result.pitch) && outputs[result.channel - 1] != nullptr;
+            result.emitted = is_valid_note(result.pitch) && get_channel_midi_mode(result.channel - 1) != 0;
             return result;
         }
 
         virtual void send_resolved_routed_note_on(uint8_t note, uint8_t velocity, uint8_t channel) override {
-            if (channel > 0 && channel <= channel_count && outputs[channel - 1] != nullptr)
+            if (channel > 0 && channel <= channel_count && get_channel_midi_mode(channel - 1) != 0) {
+                last_channel_note[channel - 1] = note;
                 outputs[channel - 1]->sendNoteOn(note, velocity, channel);
+            }
         }
 
         virtual void send_resolved_routed_note_off(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (channel > 0 && channel <= channel_count && outputs[channel - 1] != nullptr)
                 outputs[channel - 1]->sendNoteOff(note, velocity, channel);
+            #ifdef ENABLE_SCALES
+                if (channel > 0 && channel <= channel_count) park_channel(channel - 1);
+            #endif
         }
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOn (%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
-            if (channel > channel_count) {
+            if (channel == 0 || channel > channel_count) {
                 // this shouldn't happen?
                 Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOn (%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
+                if (get_channel_midi_mode(channel - 1) == 0) return;
                 const int8_t limited_note = apply_per_channel_limits(note, channel - 1);
                 if (!is_valid_note(limited_note)) return;
                 last_channel_note[channel - 1] = limited_note;
@@ -353,7 +385,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
 
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (debug) Serial_printf("DeviceBehaviour_CVOutput#actualSendNoteOff(%i aka %s, %i, %i)\n", note, get_note_name_c(note), velocity, channel);
-            if (channel > channel_count) {
+            if (channel == 0 || channel > channel_count) {
                 // this shouldn't happen?
                 Serial_printf("WARNING: DeviceBehaviour_CVOutput#actualSendNoteOff(%i, %i, %i) got invalid channel!\n", note, velocity, channel);
             } else {
@@ -374,7 +406,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             if (ch_idx < 0 || ch_idx >= channel_count) return;
             if (outputs[ch_idx] == nullptr) return;
             if (!outputs[ch_idx]->get_park_enabled()) return;
-            if (!allow_voice_for_auto[ch_idx]) return;          // only pool channels
+            if (get_channel_midi_mode(ch_idx) == 0) return;
             if (outputs[ch_idx]->is_note_active()) return;      // don't park if note is still sounding
             if (conductor == nullptr) return;
             if (conductor->get_global_quantise_mode() == QUANTISE_MODE_NONE) return;
@@ -388,7 +420,11 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         }
         #endif
 
-        using PolyphonicBehaviour::sendNoteOn;
+        virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
+            if (channel == CHANNEL_ROUND_ROBIN ||
+                (channel > 0 && channel <= channel_count && get_channel_midi_mode(channel - 1) != 0))
+                PolyphonicBehaviour::sendNoteOn(note, velocity, channel);
+        }
         using PolyphonicBehaviour::sendNoteOff;
         using PolyphonicBehaviour::killCurrentNote;
 
@@ -410,6 +446,18 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             DeviceBehaviourUltimateBase::setup_saveable_settings();
             PolyphonicBehaviour::setup_saveable_settings();
 
+            for (int i = 0; i < channel_count; ++i) {
+                register_setting(new LSaveableSetting<bool>(
+                    (String("Ch ") + String(static_cast<char>('A' + i)) + " MIDI Enabled").c_str(), "MIDI", nullptr,
+                    [=](bool v) { set_channel_midi_mode(i, v ? (allow_voice_for_auto[i] ? 2 : 1) : 0); },
+                    [=]() -> bool { return get_channel_midi_mode(i) != 0; }
+                ), SL_SCOPE_SCENE);
+                register_setting(new LSaveableSetting<bool>(
+                    (String("Ch ") + String(static_cast<char>('A' + i)) + " Park").c_str(), "MIDI", nullptr,
+                    [=](bool v) { if (outputs[i]) outputs[i]->set_park_enabled(v); },
+                    [=]() -> bool { return outputs[i] && outputs[i]->get_park_enabled(); }
+                ), SL_SCOPE_SCENE);
+            }
             // todo: save velocity output and pitch output? actually, seems like that already didn't exist in main branch
             // todo: so, just investigate whether we actually need it and document how it connects to what we have here
 
@@ -554,6 +602,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                         item_label,
                         outputs[i],
                         &this->allow_voice_for_auto[i],
+                        [=](uint8_t mode) { this->set_channel_midi_mode(i, mode); },
                         &this->last_channel_note[i],
                         &this->per_channel_lowest_note[i],
                         &this->per_channel_highest_note[i],

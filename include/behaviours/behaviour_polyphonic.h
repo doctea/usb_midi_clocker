@@ -28,6 +28,10 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
 
     bool allow_voice_for_auto[max_voice_count] = { true, true, true, true };
 
+    virtual bool is_voice_allowed_for_auto(int8_t index) const {
+        return index >= 0 && index < max_voice_count && allow_voice_for_auto[index];
+    }
+
     // todo: this is actually an 'auto-assign voice' channel, not a 'round robin'; 
     // todo: so we should rename it, and also add a real round-robin channel mechanism
     const int8_t CHANNEL_ROUND_ROBIN = max_voice_count + 1;
@@ -35,7 +39,7 @@ class PolyphonicBehaviour : virtual public DeviceBehaviourUltimateBase {
     int8_t find_slot_for(int8_t note) {
         int8_t note_slot = -1;
         for (int_fast8_t i = 0 ; i < max_voice_count ; i++) {
-            if (!allow_voice_for_auto[i])
+            if (!is_voice_allowed_for_auto(i))
                 continue;
             if (voices[i]==note) {
                 note_slot = i;

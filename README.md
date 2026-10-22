@@ -18,6 +18,32 @@ Uses a TFT screen and a rotary encoder and buttons to control options.  Saves to
 
 Developer documentation: [MIDI note routing and quantisation](docs/midi-note-routing.md).
 
+## CV output MIDI modes and calibration
+
+Each CV channel's **Pooled** selector has three modes:
+
+- **On**: accepts pooled voice allocation and notes routed to its dedicated endpoint.
+- **Direct**: accepts only notes routed to its dedicated endpoint.
+- **Off**: ignores MIDI notes and pitch bend, clears held pitch/gate, and uses a
+  zero-voltage base with modulation still connected (useful for LFO-only outputs).
+
+**Park** applies to idle On and Direct channels, never Off channels. With Park
+enabled, the last pitch is retained and can follow scale/chord changes. With
+Park disabled, releasing a note clears its base voltage to zero. MIDI enable
+and Park are saved per scene; old Pooled=false scenes retain Direct behavior.
+
+On the calibration page, **Output** shows the last commanded output voltage,
+not the last MIDI/base value; **Input** remains the measured feedback voltage.
+Editing Output or Check V locks and writes the requested voltage immediately,
+without adding MIDI pitch or modulation. Unlock to resume normal output.
+
+Simple calibration's Fine +/- works directly or accepts the current binary
+search before fine-tuning. **Step** selects 1..4096 DAC codes per press (one code
+is only about 0.15 mV over a 10 V span). Too High/Too Low reduce to single-code
+steps rather than stalling between adjacent codes. At DAC limits, reverse
+direction or Accept; fine adjustments saturate rather than wrapping. Save or
+Revert ends calibration and restores normal modulated output.
+
 # Use and contributing
 
 Both are encouraged, I would love to have this be useful to others and to accept contributions to add features, fix bugs, make it easier to use, tweakable for your needs.  Drop me a message or open an issue if you're thinking of giving it a try or need any assistance!

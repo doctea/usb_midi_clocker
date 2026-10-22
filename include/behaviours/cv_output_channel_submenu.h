@@ -2,7 +2,7 @@
 
 // Per-channel sub-menu for DeviceBehaviour_CVOutput.
 // Each instance shows all per-channel controls for one CV output channel:
-//   Pooled toggle, Gate toggle, current note display, per-channel note limits,
+//   MIDI mode, Gate toggle, current note display, per-channel note limits,
 //   Slew toggle, Slew rate, CV polarity/invert settings, and modulation (LowMemory controls).
 //
 // Shared lowmemory controls (parameter_amount_controls + slot_rows) must be initialised
@@ -14,6 +14,7 @@
 #include "submenuitem.h"
 #include "submenuitem_bar.h"
 #include "menuitems_lambda.h"
+#include "menuitems_lambda_selector.h"
 
 #include "mymenu/menuitems_scale.h"
 #include "mymenu/menuitem_notelimit.h"
@@ -76,6 +77,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             const char *label,
             CVOutputParameter<DACClass> *output,
             bool *pool_flag,
+            vl::Func<void(uint8_t)> set_midi_mode,
             int8_t *last_note,
             int8_t *lowest_note,
             int8_t *highest_note,
@@ -90,6 +92,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
             bool scrollable = true
         ) : SubMenuItem(label, show_header, scrollable),
             output_(output), pool_flag_(pool_flag), last_note_(last_note),
+            set_midi_mode_(set_midi_mode),
             lowest_note_(lowest_note), highest_note_(highest_note),
             lowest_mode_(lowest_mode), highest_mode_(highest_mode),
             per_channel_params_(per_channel_params),
@@ -133,6 +136,7 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
         CVOutputParameter<DACClass> *output_   = nullptr;
         bool            *pool_flag_    = nullptr;
         int8_t          *last_note_    = nullptr;
+        vl::Func<void(uint8_t)> set_midi_mode_;
         int8_t          *lowest_note_  = nullptr;
         int8_t          *highest_note_ = nullptr;
         NOTE_LIMIT_MODE *lowest_mode_  = nullptr;
@@ -166,8 +170,11 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
 
             // Col 2: pool membership
             summary_bar_->add(new CallbackMenuItem("Pool",
-                [=]() -> const char* { return (pool_flag_ && *pool_flag_) ? "On" : "Off"; },
-                [=]() -> uint16_t    { return (pool_flag_ && *pool_flag_) ? GREEN : GREY;  }
+                [=]() -> const char* {
+                    if (!output_->midi_notes_enabled) return "Off";
+                    return (pool_flag_ && *pool_flag_) ? "On" : "Direct";
+                },
+                [=]() -> uint16_t { return output_->midi_notes_enabled ? GREEN : GREY; }
             ));
 
             // Col 3: gate output
@@ -251,11 +258,18 @@ class CVOutputChannelSubMenuItem : public SubMenuItem {
         void build_items() {
             SubMenuItemBar *settings_bar = new SubMenuItemBar("Settings");
 
-            // 1. Pool membership toggle ("Pooled" = included in auto-voice assign)
-            settings_bar->add(new LambdaToggleControl("Pooled",
-                [=](bool v) { *pool_flag_ = v; },
-                [=]() -> bool { return *pool_flag_; }
-            ));
+            auto *midi_mode = new LambdaSelectorControl<uint8_t>("Pooled",
+                [=](uint8_t v) { set_midi_mode_(v); },
+                [=]() -> uint8_t {
+                    return !output_->midi_notes_enabled ? 0 : (*pool_flag_ ? 2 : 1);
+                },
+                nullptr,
+                true
+            );
+            midi_mode->add_available_value(0, "Off");
+            midi_mode->add_available_value(1, "Direct");
+            midi_mode->add_available_value(2, "On");
+            settings_bar->add(midi_mode);
 
             // 2. Gate output toggle
             settings_bar->add(new LambdaToggleControl("Gate",

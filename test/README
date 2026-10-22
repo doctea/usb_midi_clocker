@@ -12,6 +12,19 @@ More information about PlatformIO Unit Testing:
 
 Standalone USB MIDI host regressions
 
+CV output regressions (Python 3 and g++, no firmware upload):
+
+    python3 test/cvoutput_midi_host_test.py
+    python3 ../my_libraries/parameters/test_cvoutput.py
+
+The CV MIDI test compiles production routing, pool eligibility, mode changes,
+Park policy, and scene-setting callbacks against mock outputs. It checks
+On/Direct/Off, active-note cleanup, dedicated-note preservation, legacy
+Pooled=false compatibility, and scene round trips. The library test compiles
+the real DAC conversion, MIDI/lock guards, and feedback calibration state,
+including fine-step bounds, adjacent search codes, lock isolation, voltage
+readout, and modulation-only zero base. These do not measure physical CVs.
+
 From the project directory, using Node.js and g++ with UBSan support:
 
 	node test/apc_display_host_test.js
