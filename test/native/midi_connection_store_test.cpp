@@ -329,6 +329,169 @@ static void popup_tests() {
     assert(!matrix.is_connected(3, 49) && last_colour == RED);
 }
 
+static void routing_model_tests() {
+    Fixture matrix;
+    MIDIRoutingModel model(matrix);
+    MIDIPortOwner sender("sender"), receiver("receiver");
+    matrix.set_source_owner(0, &sender);
+    matrix.set_source_owner(1, &sender);
+    matrix.set_target_owner(0, &receiver);
+    matrix.set_target_owner(1, &receiver);
+
+    // store slots are filled out of source order; inbound listing must still be sorted
+    assert(model.connect(0, 2) == MIDIRouteConnectResult::CONNECTED);
+    assert(model.connect(3, 0) == MIDIRouteConnectResult::CONNECTED);
+    assert(model.connect(0, 0) == MIDIRouteConnectResult::CONNECTED);
+    assert(model.connect(1, 0) == MIDIRouteConnectResult::CONNECTED);
+    assert(model.connect(1, 0) == MIDIRouteConnectResult::ALREADY_CONNECTED);
+    assert(model.connect(-1, 0) == MIDIRouteConnectResult::INVALID);
+    matrix.disallow(2, 3);
+    assert(model.connect(2, 3) == MIDIRouteConnectResult::DISALLOWED);
+    assert(strstr(MIDIRoutingModel::connect_result_message(MIDIRouteConnectResult::FULL), "full") != nullptr);
+
+    MIDIRouteRow rows[8];
+    assert(model.list_from_source(0, rows, 8) == 2 && rows[0].target == 0 && rows[1].target == 2);
+    assert(model.list_to_target(0, rows, 8) == 3);
+    assert(rows[0].source == 0 && rows[1].source == 1 && rows[2].source == 3);
+    assert(rows[2].policy.quantise_mode == MIDIConnectionQuantiseMode::FORCE_OFF);
+    assert(model.list_to_target(0, rows, 2) == 2 && rows[0].source == 0 && rows[1].source == 1);
+    assert(model.list_to_target(2, rows, 0) == 0);
+    assert(model.list_outbound(&sender, rows, 8) == 3);
+    assert(rows[0].source == 0 && rows[0].target == 0 && rows[1].target == 2 && rows[2].source == 1);
+    assert(model.list_outbound(&sender, rows, 2) == 2);
+    assert(model.list_inbound(&receiver, rows, 8) == 3 && rows[2].source == 3);
+    assert(model.list_inbound(nullptr, rows, 8) == 0);
+
+    now_ms = 500;
+    matrix.processNoteOn(0, 60, 100, 1);
+    MIDIRouteRow row;
+    assert(model.get_row(0, 0, row) && row.held_notes == 1 && row.has_activity && row.last_activity_ms == 500);
+    assert(!model.get_row(2, 0, row));
+    MIDIRouteSummary summary = model.summarise_outbound(&sender);
+    assert(summary.total == 3 && summary.paused == 0 && summary.held_notes == 2);
+    assert(summary.can_pause_all() && !summary.can_resume_all());
+
+    // bulk pause releases held notes, leaves other routes alone, and is idempotent
+    assert(model.set_paused_from_source(0, true) == 2);
+    assert(matrix.held_notes_for_connection(0, 0) == 0 && matrix.held_notes_for_connection(0, 2) == 0);
+    assert(model.set_paused_from_source(0, true) == 0);
+    summary = model.summarise_from_source(0);
+    assert(summary.paused == 2 && !summary.can_pause_all() && summary.can_resume_all());
+    assert(!matrix.get_connection_policy(1, 0)->paused && !matrix.get_connection_policy(3, 0)->paused);
+    assert(model.set_paused_to_target(0, false) == 1);
+    assert(!matrix.get_connection_policy(0, 0)->paused && matrix.get_connection_policy(0, 2)->paused);
+    assert(model.set_paused_outbound(&sender, true) == 2);
+    assert(matrix.get_connection_policy(1, 0)->paused && !matrix.get_connection_policy(3, 0)->paused);
+    assert(model.set_paused_inbound(&receiver, false) == 2);
+    assert(matrix.get_connection_policy(0, 2)->paused);
+    assert(model.set_paused_from_source(2, true) == 0 && model.set_paused_to_target(-1, true) == 0);
+    assert(matrix.connections.count() == 4);
+
+    // single-route policy edits
+    assert(model.toggle_pause(0, 0) && matrix.get_connection_policy(0, 0)->paused);
+    assert(model.toggle_pause(0, 0) && !matrix.get_connection_policy(0, 0)->paused);
+    assert(!model.toggle_pause(2, 0));
+    assert(model.cycle_channel(0, 0) && matrix.get_connection_policy(0, 0)->fixed_channel == 1);
+    assert(model.cycle_channel(0, 0, -1) && model.cycle_channel(0, 0, -1));
+    assert(matrix.get_connection_policy(0, 0)->fixed_channel == 16);
+    assert(model.cycle_channel(0, 0) && matrix.get_connection_policy(0, 0)->fixed_channel == 0);
+    assert(model.cycle_quantise(0, 0) && matrix.get_connection_policy(0, 0)->quantise_mode == MIDIConnectionQuantiseMode::FORCE_SCALE);
+    assert(model.cycle_quantise(0, 0, -1) && model.cycle_quantise(0, 0, -1));
+    assert(matrix.get_connection_policy(0, 0)->quantise_mode == MIDIConnectionQuantiseMode::FORCE_OFF);
+    assert(MIDIRoutingModel::next_quantise_mode(MIDIConnectionQuantiseMode::FORCE_OFF, -1) == MIDIConnectionQuantiseMode::FORCE_CHORD);
+    assert(MIDIRoutingModel::next_quantise_mode(MIDIConnectionQuantiseMode::FORCE_CHORD) == MIDIConnectionQuantiseMode::FORCE_OFF);
+    assert(!model.cycle_channel(2, 0) && !model.cycle_quantise(2, 0));
+
+    char badge[24];
+    MIDIConnectionPolicy policy;
+    MIDIRoutingModel::format_policy_badge(badge, sizeof(badge), policy);
+    assert(badge[0] == '\0');
+    policy.paused = true;
+    policy.fixed_channel = 3;
+    policy.quantise_mode = MIDIConnectionQuantiseMode::FORCE_SCALE;
+    MIDIRoutingModel::format_policy_badge(badge, sizeof(badge), policy);
+    assert(strcmp(badge, "|| c3 Qs") == 0);
+    MIDIRoutingModel::format_policy_badge(badge, 4, policy);
+    assert(strlen(badge) == 3);
+    assert(strcmp(MIDIRoutingModel::quantise_mode_label(MIDIConnectionQuantiseMode::INHERIT_BEHAVIOUR), "inherit") == 0);
+
+    // add-candidates exclude disallowed pairs and flag existing routes
+    MIDIRouteCandidate candidates[8];
+    assert(model.target_candidates_for_source(2, candidates, 8) == 3);
+    assert(candidates[2].id == 2 && !candidates[0].connected);
+    assert(model.target_candidates_for_source(0, candidates, 8) == 4);
+    assert(candidates[0].connected && !candidates[1].connected && candidates[2].connected && candidates[2].paused);
+    assert(model.source_candidates_for_target(3, candidates, 8) == 3 && candidates[2].id == 3);
+    assert(model.target_candidates_for_source(0, candidates, 2) == 2);
+
+    matrix.set_target_page_index(2, 9);
+    assert(model.target_page(2) == 9 && model.source_page(0) == -1);
+
+    // same-owner routes: refused for a device/behaviour owner, allowed for port groupings
+    DeviceBehaviourUltimateBase device;
+    matrix.set_source_owner(2, &device);
+    matrix.set_target_owner(3, &device);
+    matrix.set_target_owner(2, &device);
+    assert(model.connect(2, 2) == MIDIRouteConnectResult::DISALLOWED && !matrix.connect(2, 2));
+    assert(model.target_candidates_for_source(2, candidates, 8) == 2);
+    assert(candidates[0].id == 0 && candidates[1].id == 1);
+    assert(model.connect(1, 3) == MIDIRouteConnectResult::CONNECTED);
+    assert(model.connect(0, 1) == MIDIRouteConnectResult::CONNECTED);   // sender -> receiver
+    MIDIPortOwner port("MIDI Port 1");
+    matrix.set_source_owner(3, &port);
+    matrix.set_target_owner(1, &port);
+    assert(model.connect(3, 1) == MIDIRouteConnectResult::CONNECTED);
+    assert(model.disconnect(1, 3) && model.disconnect(0, 1) && model.disconnect(3, 1));
+    matrix.set_source_owner(2, nullptr);
+    matrix.set_source_owner(3, nullptr);
+    matrix.set_target_owner(2, nullptr);
+    matrix.set_target_owner(3, nullptr);
+    matrix.set_target_owner(1, &receiver);
+
+    assert(model.disconnect_others_to_target(0, 1) == 2);
+    assert(!matrix.is_connected(0, 0) && matrix.is_connected(1, 0) && !matrix.is_connected(3, 0));
+    assert(model.disconnect_others_from_source(0) == 1 && matrix.connected_to_source_count(0) == 0);
+    assert(!model.disconnect(0, 0));
+    assert(matrix.connected_to_target_count(0) == 1);
+}
+
+static void popup_bulk_pause_tests() {
+    Fixture matrix;
+    Popup popup;
+    assert(matrix.connect(0, 0) && matrix.connect(0, 1) && matrix.connect(1, 1));
+    popup.sel_source = 0;
+    popup.button_right();
+    assert(popup.sel_target == -1);
+    assert(popup.popup_row_enabled(Popup::PopupRow::PAUSE_ALL_FROM_SOURCE));
+    assert(!popup.popup_row_enabled(Popup::PopupRow::RESUME_ALL_FROM_SOURCE));
+    assert(!popup.popup_row_enabled(Popup::PopupRow::PAUSE_ALL_TO_TARGET));
+    assert(strcmp(popup.popup_row_label(Popup::PopupRow::PAUSE_ALL_FROM_SOURCE), "Pause all from source (2)") == 0);
+    assert(strcmp(popup.popup_row_label(Popup::PopupRow::PAUSE_ALL_TO_TARGET), "Pause all to target") == 0);
+    popup.selected_value_index = static_cast<int>(Popup::PopupRow::PAUSE_ALL_FROM_SOURCE);
+    popup.button_select();
+    assert(last_message == "Paused 2 routes" && last_colour == GREEN);
+    assert(matrix.get_connection_policy(0, 0)->paused && matrix.get_connection_policy(0, 1)->paused);
+    assert(!matrix.get_connection_policy(1, 1)->paused);
+    assert(!popup.popup_row_enabled(Popup::PopupRow::PAUSE_ALL_FROM_SOURCE));
+    assert(strcmp(popup.popup_row_label(Popup::PopupRow::RESUME_ALL_FROM_SOURCE), "Resume all from source (2)") == 0);
+
+    popup.button_back();
+    popup.mode = Popup::Mode::TARGET_SELECT;
+    popup.sel_source = 0;
+    popup.selected_value_index = 1;
+    popup.button_right();
+    assert(popup.sel_target == 1);
+    assert(popup.popup_row_enabled(Popup::PopupRow::PAUSE_ALL_TO_TARGET));
+    assert(popup.popup_row_enabled(Popup::PopupRow::RESUME_ALL_TO_TARGET));
+    popup.selected_value_index = static_cast<int>(Popup::PopupRow::RESUME_ALL_TO_TARGET);
+    popup.button_select();
+    assert(last_message == "Resumed 1 route");
+    assert(!matrix.get_connection_policy(0, 1)->paused && matrix.get_connection_policy(0, 0)->paused);
+    popup.selected_value_index = static_cast<int>(Popup::PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET);
+    popup.button_select();
+    assert(matrix.is_connected(0, 1) && !matrix.is_connected(1, 1));
+}
+
 static bool has_trace(const MIDINoteTrace &trace, MIDINoteTraceKind kind, int source = -2, int target = -2) {
     for (uint16_t index = 0; index < trace.count(); ++index) {
         const auto &event = trace.at(index);
@@ -567,6 +730,223 @@ static void diagnostic_collapsed_pitch_tests() {
     transpose = 0;
 }
 
+struct RoutingTestOwner : MIDIEndpointOwner {
+    const char *label;
+    bool online = true;
+    explicit RoutingTestOwner(const char *label) : label(label) {}
+    const char *get_endpoint_owner_label() override { return label; }
+    bool is_endpoint_owner_online() override { return online; }
+};
+
+static std::string row_text(ActionListSource &source, uint8_t index) {
+    char text[41];
+    source.row_text(index, text, sizeof(text));
+    return text;
+}
+
+static int find_entry(MIDIOwnerRoutesSource &routes, MIDIOwnerRoutesSource::entry_t::Kind kind,
+        MIDIRouteDirection direction, int endpoint = -1, int far = -1) {
+    for (uint8_t index = 0; index < routes.count(); ++index) {
+        const MIDIOwnerRoutesSource::entry_t &e = routes.entry(index);
+        if (e.kind == kind && e.direction == direction && (endpoint < 0 || e.endpoint == endpoint) && (far < 0 || e.far == far))
+            return index;
+    }
+    return -1;
+}
+
+static void move_to(ActionListNavigator &nav, int index) {
+    assert(index >= 0);
+    for (int step = 0; step < 64 && nav.cursor() != index; ++step) nav.move(1);
+    assert(nav.cursor() == index);
+}
+
+static bool ends_with(const std::string &text, const std::string &suffix) {
+    return text.size() >= suffix.size() && text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+static void routing_lists_tests() {
+    typedef MIDIOwnerRoutesSource::entry_t E;
+    const MIDIRouteDirection IN = MIDIRouteDirection::INBOUND, OUT = MIDIRouteDirection::OUTBOUND;
+    Fixture matrix;
+    static const char *target_labels[] = {"target0", "target1", "target2", "target3"};
+    for (int index = 0; index < 4; ++index) matrix.outputs[index].label = target_labels[index];
+    RoutingTestOwner synth("synth"), other("other"), nothing("nothing");
+    matrix.set_target_owner(0, &synth, "Voice A");
+    matrix.set_target_owner(1, &synth, "Voice B");
+    matrix.set_source_owner(0, &synth);
+    matrix.set_source_owner(1, &other);
+    assert(matrix.connect(1, 0) && matrix.connect(2, 0) && matrix.connect(1, 1) && matrix.connect(0, 2));
+
+    // layout: per-target groups when there are several targets, a single source needs no group heading
+    MIDIOwnerRoutesSource routes(&matrix, &synth);
+    const E::Kind expected[] = {E::SECTION, E::ENDPOINT, E::ROUTE, E::ROUTE, E::ADD, E::ENDPOINT, E::ROUTE, E::ADD,
+        E::PAUSE_ALL, E::SECTION, E::ROUTE, E::ADD, E::PAUSE_ALL};
+    assert(routes.count() == sizeof(expected) / sizeof(expected[0]));
+    for (uint8_t index = 0; index < routes.count(); ++index) assert(routes.entry(index).kind == expected[index]);
+    assert(routes.entry(2).far == 1 && routes.entry(3).far == 2 && routes.entry(6).endpoint == 1);
+    assert(routes.entry(10).direction == OUT && routes.entry(10).far == 2);
+    assert(strcmp(routes.title(), "synth routing") == 0);
+    assert(row_text(routes, 0) == "Inputs <- 3");
+    assert(row_text(routes, 1) == " Voice A:");
+    assert(row_text(routes, 2).compare(0, 10, "   source1") == 0 && ends_with(row_text(routes, 2), "source1"));
+    assert(row_text(routes, 4) == "  + Add input...");
+    assert(row_text(routes, 8) == " Pause all inputs (3)");
+    assert(row_text(routes, 9) == "Outputs -> 1" && row_text(routes, 11) == "  + Add output...");
+    assert(!routes.row_selectable(0) && !routes.row_selectable(1) && routes.row_selectable(2) && routes.row_selectable(4));
+    assert(routes.row_colour(0) == 0 && routes.row_colour(2) == 0xFFFF);
+
+    // badges, held notes, activity and paused dimming come from the live matrix
+    MIDIConnectionPolicy policy = *matrix.get_connection_policy(2, 0);
+    policy.paused = true;
+    policy.fixed_channel = 3;
+    assert(matrix.set_connection_policy(2, 0, policy));
+    assert(ends_with(row_text(routes, 3), " || c3") && routes.row_dimmed(3) && !routes.row_dimmed(2));
+    assert(row_text(routes, 0) == "Inputs <- 2 live, 1 paused");
+    const uint32_t quiet = routes.generation();
+    now_ms = 10000;
+    matrix.processNoteOn(1, 60, 100, 1);
+    assert(routes.generation() != quiet);
+    assert(row_text(routes, 2).compare(0, 3, "  *") == 0 && ends_with(row_text(routes, 2), " ~1"));
+    now_ms += MIDI_ROUTE_ACTIVITY_MS;
+    assert(row_text(routes, 2).compare(0, 3, "   ") == 0);
+    matrix.processNoteOff(1, 60, 0, 1);
+    assert(!ends_with(row_text(routes, 2), "~1"));
+    now_ms += MIDI_ROUTE_ACTIVITY_MS;
+
+    // compact summaries
+    char line[41];
+    midi_routing_format_owner_summary(matrix, &synth, IN, line, sizeof(line));
+    assert(strcmp(line, "<- source1, ||source2, source1") == 0);
+    midi_routing_format_owner_summary(matrix, &synth, OUT, line, sizeof(line));
+    assert(strcmp(line, "-> target2") == 0);
+    midi_routing_format_owner_summary(matrix, &synth, IN, line, 16);
+    assert(strcmp(line, "<- source1 +2") == 0);
+    midi_routing_format_owner_summary(matrix, &synth, IN, line, 8);
+    assert(strcmp(line, "<- +3") == 0);
+    midi_routing_format_owner_summary(matrix, &nothing, IN, line, sizeof(line));
+    assert(strcmp(line, "<- (none)") == 0);
+
+    // route editor: channel/quantise cycling both ways, pause, jump, disconnect pops back
+    ActionListNavigator nav;
+    nav.reset(&routes);
+    assert(nav.cursor() == 2);
+    assert(!nav.select() && nav.get_depth() == 2);
+    MIDIRouteEditSource &editor = MIDIOwnerRoutesSource::editor();
+    assert(nav.current() == &editor && nav.cursor() == MIDIRouteEditSource::PAUSE);
+    assert(strcmp(editor.title(), "source1 -> target0") == 0);
+    assert(row_text(editor, MIDIRouteEditSource::STATUS) == "Live, 0 held");
+    assert(row_text(editor, MIDIRouteEditSource::CHANNEL) == "Channel: default");
+    assert(!editor.row_enabled(MIDIRouteEditSource::JUMP));
+    move_to(nav, MIDIRouteEditSource::CHANNEL);
+    nav.select();
+    assert(matrix.get_connection_policy(1, 0)->fixed_channel == 1 && row_text(editor, MIDIRouteEditSource::CHANNEL) == "Channel: 1");
+    assert(nav.right() && matrix.get_connection_policy(1, 0)->fixed_channel == 0);
+    move_to(nav, MIDIRouteEditSource::QUANTISE);
+    assert(row_text(editor, MIDIRouteEditSource::QUANTISE) == "Quantise: inherit");
+    nav.select();
+    assert(row_text(editor, MIDIRouteEditSource::QUANTISE) == "Quantise: scale");
+    nav.right();
+    assert(matrix.get_connection_policy(1, 0)->quantise_mode == MIDIConnectionQuantiseMode::INHERIT_BEHAVIOUR);
+    move_to(nav, MIDIRouteEditSource::PAUSE);
+    nav.select();
+    assert(matrix.get_connection_policy(1, 0)->paused && row_text(editor, MIDIRouteEditSource::PAUSE) == "Resume");
+    assert(row_text(editor, MIDIRouteEditSource::STATUS) == "Paused, 0 held");
+    nav.select();
+    assert(!matrix.get_connection_policy(1, 0)->paused);
+    matrix.set_source_page_index(1, 7);
+    assert(editor.row_enabled(MIDIRouteEditSource::JUMP) && row_text(editor, MIDIRouteEditSource::JUMP) == "Go to source1");
+    move_to(nav, MIDIRouteEditSource::JUMP);
+    routing_ui_jump = -1;
+    nav.select();
+    assert(routing_ui_jump == 7 && nav.get_depth() == 2);
+    move_to(nav, MIDIRouteEditSource::DISCONNECT);
+    assert(!nav.select());
+    assert(!matrix.is_connected(1, 0) && routing_ui_message == "Disconnected" && !routing_ui_error);
+    assert(nav.get_depth() == 1 && nav.current() == &routes);
+    assert(routes.count() == 12 && routes.row_selectable((uint8_t)nav.cursor()));
+    assert(!editor.row_enabled(MIDIRouteEditSource::PAUSE) && row_text(editor, MIDIRouteEditSource::STATUS) == "Disconnected");
+
+    // right on a route jumps to the far end's page, or reports that there is none
+    const int route_from_2 = find_entry(routes, E::ROUTE, IN, 0, 2);
+    move_to(nav, route_from_2);
+    routing_ui_jump = -1;
+    assert(!nav.right() && routing_ui_jump == -1 && routing_ui_error);
+    matrix.set_source_page_index(2, 4);
+    assert(nav.right() && routing_ui_jump == 4);
+
+    // picker: same-owner and disallowed ends are hidden, ticks toggle routes
+    move_to(nav, find_entry(routes, E::ADD, IN, 1));
+    nav.select();
+    MIDIRoutePickerSource &picker = MIDIOwnerRoutesSource::picker();
+    assert(nav.current() == &picker && strcmp(picker.title(), "Inputs to Voice B") == 0);
+    assert(picker.count() == 3);
+    assert(row_text(picker, 0) == "[x] source1" && row_text(picker, 1) == "[ ] source2" && row_text(picker, 2) == "[ ] source3");
+    nav.move(1);
+    nav.select();
+    assert(matrix.is_connected(2, 1) && routing_ui_message == "Connected" && !routing_ui_error);
+    assert(row_text(picker, 1) == "[x] source2");
+    nav.select();
+    assert(!matrix.is_connected(2, 1) && routing_ui_message == "Disconnected");
+    assert(nav.back() && nav.current() == &routes);
+    move_to(nav, find_entry(routes, E::ADD, OUT, 0));
+    nav.select();
+    assert(strcmp(picker.title(), "Outputs from source0") == 0 && picker.count() == 2);
+    assert(row_text(picker, 0) == "[x] target2" && row_text(picker, 1) == "[ ] target3");
+    nav.back();
+
+    // pause all / resume all per section, leaving the other direction alone
+    const int pause_inputs = find_entry(routes, E::PAUSE_ALL, IN);
+    move_to(nav, pause_inputs);
+    assert(row_text(routes, (uint8_t)pause_inputs) == " Pause all inputs (1)");
+    nav.select();
+    assert(routing_ui_message == "Paused 1 route");
+    assert(matrix.get_connection_policy(1, 1)->paused && matrix.get_connection_policy(2, 0)->paused);
+    assert(!matrix.get_connection_policy(0, 2)->paused);
+    assert(row_text(routes, (uint8_t)pause_inputs) == " Resume all inputs (2)");
+    nav.select();
+    assert(routing_ui_message == "Resumed 2 routes" && !matrix.get_connection_policy(2, 0)->paused);
+
+    // an owner without endpoints, offline owners, and the shared row buffer switching owners
+    MIDIOwnerRoutesSource empty(&matrix, &nothing);
+    assert(empty.count() == 1 && row_text(empty, 0) == "No MIDI routing" && !empty.row_selectable(0));
+    nav.reset(&empty);
+    assert(nav.cursor() == ActionListNavigator::NO_ROW && !nav.select());
+    assert(routes.count() == 12 && routes.entry(0).kind == E::SECTION);
+    other.online = false;
+    assert(routes.row_dimmed((uint8_t)find_entry(routes, E::ROUTE, IN, 1, 1)));
+    MIDIOwnerRoutesSource other_routes(&matrix, &other);
+    assert(strcmp(other_routes.title(), "other routing (offline)") == 0);
+    assert(other_routes.count() == 4 && other_routes.entry(1).kind == E::ROUTE && other_routes.entry(1).far == 1);
+    assert(routes.count() == 12);
+
+    // ports occupied by behaviours list them first; selecting or [>] jumps to the behaviour's page
+    MIDIPortOwner port("MIDI Port 2");
+    RoutingTestOwner neutron("Neutron");
+    assert(port.add_linked_owner("Out", &neutron) && port.add_linked_owner("In", &other));
+    assert(!port.add_linked_owner("In+Out", &synth) && port.get_linked_owner_count() == 2);
+    midi_routing_format_link(port.get_linked_owner(0), line, sizeof(line));
+    assert(strcmp(line, "Out used by Neutron") == 0);
+    MIDIOwnerRoutesSource port_routes(&matrix, &port);
+    assert(port_routes.count() == 2 && port_routes.entry(0).kind == E::LINK && port_routes.entry(1).kind == E::LINK);
+    assert(row_text(port_routes, 1).find("In used by other") != std::string::npos);
+    assert(port_routes.row_selectable(0) && port_routes.row_dimmed(1) && !port_routes.row_dimmed(0));
+    nav.reset(&port_routes);
+    assert(nav.cursor() == 0);
+    routing_ui_jump = -1;
+    routing_ui_error = false;
+    assert(!nav.select() && routing_ui_jump == -1 && routing_ui_error);
+    neutron.routing_page_index = 9;
+    nav.select();
+    assert(routing_ui_jump == 9 && nav.get_depth() == 1);
+    other.routing_page_index = 5;
+    move_to(nav, 1);
+    assert(nav.right() && routing_ui_jump == 5);
+    // links come before the port's own routes
+    matrix.set_target_owner(3, &port, "Out");
+    MIDIOwnerRoutesSource port_with_routes(&matrix, &port);
+    assert(port_with_routes.count() > 2 && port_with_routes.entry(0).kind == E::LINK && port_with_routes.entry(2).kind == E::SECTION);
+}
+
 int main() {
     store_tests();
     parser_tests();
@@ -575,11 +955,16 @@ int main() {
     policy_migration_tests();
     persistence_tests();
     popup_tests();
+    routing_model_tests();
+    popup_bulk_pause_tests();
+    routing_lists_tests();
     diagnostic_ring_tests();
     diagnostic_routing_tests();
     diagnostic_console_tests();
     diagnostic_target_and_overflow_tests();
     diagnostic_collapsed_pitch_tests();
     std::cout << "MIDI connection tests passed: sparse capacity/order, pause/refcounts, activity, policy migration, save/load, popup\n";
+    std::cout << "MIDI routing model tests passed: listings, summaries, bulk pause, policy cycling, candidates, popup bulk actions\n";
+    std::cout << "MIDI routing panel list tests passed: owner layout, badges/held/activity, compact summaries, route editor, picker, section pause, shared buffer\n";
     std::cout << "MIDI note diagnostic tests passed: attribution, pairing/migration, timestamps/wrap, refcounts, cleanup, bounded recorder and console\n";
 }

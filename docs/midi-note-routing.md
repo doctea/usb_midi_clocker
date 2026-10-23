@@ -8,6 +8,16 @@ The matrix stores up to 128 configured source-target connections in
 `MIDIConnectionStore`, with a sorted linked list per source. MIDI events visit
 only that source's configured connections, in ascending target order as before.
 Disallowed feedback pairs are kept separately and survive a routing reset.
+Routes from one owner's source to the same owner's target are refused too
+(`MIDIEndpointOwner::allows_self_routing()` returns false by default). For a
+single device or behaviour, such a route is a feedback loop, or recursion for
+proxies that re-emit their input. Built-in port groupings (`MIDIPortOwner`, such
+as "MIDI Port 1") allow it, because their input and output jacks can be different
+devices. Different ports have different owners, so MIDI 1 -> MIDI 2 is never
+affected. Saved projects containing such a self-route skip it on load and log a
+"disallowed connection" warning.
+Multiple routes between the same pair, eg differing only by channel, are not
+supported. Multi-channel devices register one target per channel instead.
 If connection capacity is exhausted, existing connections remain unchanged;
 the matrix popup reports the failure and the serial log identifies the pair.
 
@@ -23,6 +33,69 @@ Connection policy changes while paused do not start notes. Channel, quantise,
 and pause controls are disabled until a connection exists; disconnected pairs
 no longer have policy storage. Disconnecting removes the policy; reconnecting
 creates the usual defaults, including quantisation off for drum endpoints.
+
+The popup also offers **Pause all / Resume all from source** (opened from either
+list) and **to target** (opened from target selection). Each pauses or resumes
+every route in that scope that is not already in the requested state, shows how
+many routes it would change, and is disabled when there is nothing to change.
+Bulk actions apply the same per-route cleanup as the single toggle; the state is
+stored only as each route's own `paused` flag, not as a separate mute.
+
+Queries and edits used by routing UIs live in `MIDIRoutingModel`
+(`include/midi/midi_routing_model.h`). It holds no state of its own and covers:
+
+- listing routes from a source, to a target, or per owner;
+- summaries of route, pause and held-note counts;
+- connect with a specific failure reason, and disconnect;
+- toggling pause, and stepping the channel and quantise settings either way;
+- disconnecting all other routes, and bulk pause or resume;
+- add-connection candidates, which exclude disallowed pairs and flag routes that
+  already exist;
+- shared policy badge text such as `|| c3 Qs`.
+
+The matrix popup and the per-owner routing panels both use it.
+
+### Routing panels
+
+Every behaviour that owns a matrix source or target shows a **MIDI routing**
+panel on its page, just below the separator. Behaviours that only build custom
+pages get an extra standard page holding the panel, and that page becomes their
+routing jump target. The **MIDI Ports** page (group Settings) has one panel per
+built-in MIDI port, covering its input and output jacks. A port whose jacks are
+used by a behaviour (eg the Neutron) lists that first, as `Out used by Neutron`
+in the behaviour's colour; select it or press right to jump to the behaviour's
+page. A port whose jacks are all used by behaviours still gets a panel.
+
+When closed, the panel shows one summary line per direction, for example
+`<- Prog.Bass, ||TuringMachine +1` or `-> (none)`. `||` marks a paused route.
+
+When opened, it expands in place on the page as a fixed-height scrolling window,
+and the page scrolls if needed so the whole window is visible. It lists
+**Inputs** and then **Outputs**. If the owner has several endpoints,
+routes are grouped under each endpoint. Each route row shows:
+
+- `*` if an event passed in the last 250 ms;
+- the far endpoint's label in its owner's colour, dimmed if the route is paused
+  or the far owner is offline;
+- the policy badge (eg `|| c3 Qs`);
+- `~N` if N notes are currently held on that route.
+
+Each endpoint has an **+ Add** row, and each direction has one Pause all /
+Resume all row.
+
+Controls:
+
+- **Select** on a route opens its editor: status, Paused, Channel, Quantise,
+  Jump to the far page, and Disconnect. Select steps a setting forward;
+  **[>]** steps it back.
+- **[>]** on a route row jumps straight to the far endpoint's page.
+- **Select** on **+ Add** opens a picker of permitted endpoints. `[x]` marks
+  existing routes, and selecting a row connects or disconnects it.
+- **Back** goes up one level and closes the panel from the top level.
+
+Edits use the same `MIDIRoutingModel` operations as the matrix popup, including
+note cleanup on pause and disconnect. Only one panel can be open at a time, so
+all panels share a single row buffer, editor and picker.
 
 Each endpoint and connection records its latest event timestamp and whether it
 has received an event. Paused routes do not update connection/target activity,

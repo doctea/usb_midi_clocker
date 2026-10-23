@@ -254,6 +254,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             return false;
         }
         connection->policy = policy;
+        ++routing_revision;
         trace_note(MIDINoteTraceKind::POLICY, source_id, target_id);
         if (policy.paused)
             release_connection_notes(source_id, target_id, true, nullptr, MIDINoteTraceKind::PAUSE_RELEASE);
@@ -282,6 +283,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
 
     uint16_t held_notes_for_connection(source_id_t source_id, target_id_t target_id) const {
         uint16_t count = 0;
+        if (active_connection_notes.count() == 0) return 0;
         for (const auto &entry : active_connection_notes.entries)
             if (entry.occupied && entry.emitted && entry.source_id == source_id && entry.target_id == target_id)
                 ++count;
@@ -504,6 +506,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         trace_note(MIDINoteTraceKind::RESET, -1, -1);
         release_connection_notes();
         connections.clear();
+        ++routing_revision;
         for (source_id_t source_id = 0; source_id < NUM_REGISTERED_SOURCES; ++source_id) {
             sources[source_id].connection_count = 0;
             sources[source_id].has_activity = false;
@@ -539,7 +542,10 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         disconnect(source_id, target_id);
     }
     bool is_allowed(source_id_t source_id, target_id_t target_id) {
-        return is_valid_connection_id_pair(source_id, target_id) && connections.allowed(source_id, target_id);
+        if (!is_valid_connection_id_pair(source_id, target_id) || !connections.allowed(source_id, target_id))
+            return false;
+        MIDIEndpointOwner *owner = get_source_owner(source_id);
+        return owner == nullptr || owner != get_target_owner(target_id) || owner->allows_self_routing();
     }
     
     // connect source to target)
@@ -575,6 +581,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         }
         sources[source_id].connection_count++;
         targets[target_id].connection_count++;
+        ++routing_revision;
         trace_note(MIDINoteTraceKind::CONNECT, source_id, target_id);
         return true;
     }
@@ -595,6 +602,7 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
             sources[source_id].connection_count--;
             targets[target_id].connection_count--;
             connections.disconnect(source_id, target_id);
+            ++routing_revision;
         }
     }
 
@@ -815,6 +823,9 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
     void stop_all_notes_force() {
         this->stop_all_notes(true);
     }
+
+    // bumped on every connect/disconnect/policy change/reset, so views can cache route lists
+    uint32_t routing_revision = 0;
 
     const char *get_label_for_source_id(source_id_t source_id) {
         if (source_id < 0 || source_id >= NUM_REGISTERED_SOURCES || source_id >= MAX_NUM_SOURCES || this->sources == nullptr)

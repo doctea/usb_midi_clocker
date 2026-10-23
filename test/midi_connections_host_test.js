@@ -166,6 +166,13 @@ static void sl_trim_inplace(char *text) {
 }
 ${manager.slice(classStart, classEnd)}
 };
+${read(path.join('include', 'midi', 'midi_routing_model.h')).replace('#pragma once', '').replace('#include "midi/midi_mapper_matrix_manager.h"', '')}
+${read(path.join('include', 'midi', 'midi_routing_lists.h')).replace('#pragma once', '').replace('#include "midi/midi_routing_model.h"', '')}
+static std::string routing_ui_message;
+static bool routing_ui_error = false;
+static int routing_ui_jump = -1;
+void midi_routing_ui_message(const char *text, bool error) { routing_ui_message = text; routing_ui_error = error; }
+void midi_routing_ui_jump_to_page(int16_t page_index) { routing_ui_jump = page_index; }
 ${read(path.join('include', 'midi', 'midi_note_debug_console.h')).replace('#pragma once', '').replace('#include "midi/midi_mapper_matrix_manager.h"', '')}
 struct SerialConsole {
     template <typename... Args> void printf(const char *format, Args... args) { Serial_printf(format, args...); }
@@ -205,10 +212,12 @@ struct Popup : Selector {
     int get_num_available() { return static_cast<int>(PopupRow::_COUNT); }
     void setter(int) {}
     ${method(ui, 'int wrap_index(')}
+    ${method(ui, 'MIDIRoutingModel routing()')}
     ${method(ui, 'bool popup_row_enabled(')}
     ${method(ui, 'const char *popup_row_label(')}
     ${method(ui, 'void popup_disconnect_others_to_target(')}
     ${method(ui, 'void popup_disconnect_others_from_source(')}
+    ${method(ui, 'void popup_set_paused_bulk(')}
     ${method(ui, 'void enter_context_panel(')}
     ${method(ui, 'void toggle_connection_with_feedback(')}
     ${method(ui, 'virtual bool button_select(')}
@@ -237,6 +246,7 @@ struct DiagnosticAtomicTest {
         const compile = spawnSync('g++', ['-std=c++11', '-Wall', '-Wextra', '-Werror',
             '-fsanitize=undefined', ... (arduino ? ['-DARDUINO'] : []),
             '-I', path.join(root, 'include'), '-I', directory,
+            '-I', path.resolve(root, '..', 'my_libraries', 'mymenu', 'include'),
             path.join(__dirname, 'native', 'midi_connection_store_test.cpp'), '-o', executable],
             { encoding: 'utf8' });
         if (compile.error) throw compile.error;

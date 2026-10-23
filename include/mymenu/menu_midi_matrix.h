@@ -4,6 +4,7 @@
 #include "midi/midi_outs.h"
 #include "midi/midi_out_wrapper.h"
 #include "midi/midi_mapper_matrix_manager.h"
+#include "midi/midi_routing_model.h"
 
 #include "menuitems.h"
 
@@ -59,6 +60,10 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         QUANTISE_MODE,
         JUMP_SOURCE,
         JUMP_TARGET,
+        PAUSE_ALL_FROM_SOURCE,
+        RESUME_ALL_FROM_SOURCE,
+        PAUSE_ALL_TO_TARGET,
+        RESUME_ALL_TO_TARGET,
         DISCONNECT_OTHER_SOURCES_TO_TARGET,
         DISCONNECT_OTHER_TARGETS_FROM_SOURCE,
         _COUNT
@@ -90,6 +95,8 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
         return idx;
     }
 
+    MIDIRoutingModel routing() const { return MIDIRoutingModel(*midi_matrix_manager); }
+
     bool popup_row_enabled(PopupRow row) const {
         switch (row) {
             case PopupRow::CONNECT_TOGGLE:
@@ -97,11 +104,19 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
             case PopupRow::PAUSE_TOGGLE:
             case PopupRow::CHANNEL:
             case PopupRow::QUANTISE_MODE:
-                return sel_source >= 0 && sel_target >= 0 && midi_matrix_manager->get_connection_policy(sel_source, sel_target) != nullptr;
+                return sel_source >= 0 && sel_target >= 0 && routing().is_connected(sel_source, sel_target);
             case PopupRow::JUMP_SOURCE:
-                return sel_source >= 0 && midi_matrix_manager->get_source_page_index(sel_source) >= 0;
+                return sel_source >= 0 && routing().source_page(sel_source) >= 0;
             case PopupRow::JUMP_TARGET:
-                return sel_target >= 0 && midi_matrix_manager->get_target_page_index(sel_target) >= 0;
+                return sel_target >= 0 && routing().target_page(sel_target) >= 0;
+            case PopupRow::PAUSE_ALL_FROM_SOURCE:
+                return sel_source >= 0 && routing().summarise_from_source(sel_source).can_pause_all();
+            case PopupRow::RESUME_ALL_FROM_SOURCE:
+                return sel_source >= 0 && routing().summarise_from_source(sel_source).can_resume_all();
+            case PopupRow::PAUSE_ALL_TO_TARGET:
+                return sel_target >= 0 && routing().summarise_to_target(sel_target).can_pause_all();
+            case PopupRow::RESUME_ALL_TO_TARGET:
+                return sel_target >= 0 && routing().summarise_to_target(sel_target).can_resume_all();
             case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
                 return sel_target >= 0 && midi_matrix_manager->connected_to_target_count(sel_target) > 1;
             case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
@@ -122,15 +137,26 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
                 return pol ? (pol->paused ? "Paused: yes" : "Paused: no") : "Paused: --";
             case PopupRow::QUANTISE_MODE:
                 if (pol) {
-                    switch (pol->quantise_mode) {
-                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF: return "Quantise: off";
-                        case MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR: return "Quantise: inherit";
-                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE: return "Quantise: scale";
-                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD: return "Quantise: chord";
-                        default: return "Quantise: unknown";
-                    }
+                    snprintf(ctx_scratch, sizeof(ctx_scratch), "Quantise: %s", MIDIRoutingModel::quantise_mode_label(pol->quantise_mode));
+                    return ctx_scratch;
                 }
                 return "Quantise: --";
+            case PopupRow::PAUSE_ALL_FROM_SOURCE:
+            case PopupRow::RESUME_ALL_FROM_SOURCE:
+            case PopupRow::PAUSE_ALL_TO_TARGET:
+            case PopupRow::RESUME_ALL_TO_TARGET: {
+                const bool from_source = row == PopupRow::PAUSE_ALL_FROM_SOURCE || row == PopupRow::RESUME_ALL_FROM_SOURCE;
+                const bool pause = row == PopupRow::PAUSE_ALL_FROM_SOURCE || row == PopupRow::PAUSE_ALL_TO_TARGET;
+                if ((from_source ? sel_source : sel_target) < 0)
+                    return pause ? (from_source ? "Pause all from source" : "Pause all to target")
+                                 : (from_source ? "Resume all from source" : "Resume all to target");
+                const MIDIRouteSummary summary = from_source ? routing().summarise_from_source(sel_source)
+                                                             : routing().summarise_to_target(sel_target);
+                snprintf(ctx_scratch, sizeof(ctx_scratch), "%s all %s (%u)",
+                    pause ? "Pause" : "Resume", from_source ? "from source" : "to target",
+                    (unsigned int)(pause ? summary.live() : summary.paused));
+                return ctx_scratch;
+            }
             case PopupRow::CHANNEL:
                 if (pol) {
                     if (pol->fixed_channel > 0)
@@ -155,20 +181,21 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
 
     void popup_disconnect_others_to_target() {
         if (sel_target < 0) return;
-        for (source_id_t s = 0; s < midi_matrix_manager->sources_count; s++) {
-            if (s == sel_source) continue;
-            if (midi_matrix_manager->is_connected(s, sel_target))
-                midi_matrix_manager->disconnect(s, sel_target);
-        }
+        routing().disconnect_others_to_target(sel_target, sel_source);
     }
 
     void popup_disconnect_others_from_source() {
         if (sel_source < 0) return;
-        for (target_id_t t = 0; t < midi_matrix_manager->targets_count; t++) {
-            if (t == sel_target) continue;
-            if (midi_matrix_manager->is_connected(sel_source, t))
-                midi_matrix_manager->disconnect(sel_source, t);
-        }
+        routing().disconnect_others_from_source(sel_source, sel_target);
+    }
+
+    void popup_set_paused_bulk(bool from_source, bool paused) {
+        const uint8_t changed = from_source ? routing().set_paused_from_source(sel_source, paused)
+                                            : routing().set_paused_to_target(sel_target, paused);
+        char msg[MENU_MESSAGE_MAX];
+        snprintf(msg, MENU_MESSAGE_MAX, "%s %u route%s", paused ? "Paused" : "Resumed",
+            (unsigned int)changed, changed == 1 ? "" : "s");
+        menu_set_last_message(msg, GREEN);
     }
 
     void enter_context_panel() {
@@ -179,13 +206,18 @@ class MidiMatrixSelectorControl : /*virtual*/ public SelectorControl<int> {
     }
 
     void toggle_connection_with_feedback(source_id_t source, target_id_t target) {
-        const bool was_connected = midi_matrix_manager->is_connected(source, target);
-        const bool connected = midi_matrix_manager->toggle_connect(source, target);
-        char msg[MENU_MESSAGE_MAX];
-        if (!was_connected && !connected) {
-            menu_set_last_message("Cannot connect: routing full or disallowed", RED);
-            return;
+        bool connected = false;
+        if (routing().is_connected(source, target)) {
+            routing().disconnect(source, target);
+        } else {
+            const MIDIRouteConnectResult result = routing().connect(source, target);
+            if (result != MIDIRouteConnectResult::CONNECTED && result != MIDIRouteConnectResult::ALREADY_CONNECTED) {
+                menu_set_last_message(MIDIRoutingModel::connect_result_message(result), RED);
+                return;
+            }
+            connected = true;
         }
+        char msg[MENU_MESSAGE_MAX];
         snprintf(msg, MENU_MESSAGE_MAX, connected ? "%-5.18s <-> %-5.18s" : "%-5.18s </> %-5.18s",
             midi_matrix_manager->get_label_for_source_id(source),
             midi_matrix_manager->get_label_for_target_id(target));
@@ -318,63 +350,43 @@ public:
             PopupRow row = (PopupRow)selected_context_index;
             if (!popup_row_enabled(row))
                 return false;
-            // only connection rows need a policy; panel can be opened from source mode with no target
-            MIDIMatrixManager::connection_policy_t updated_policy;
-            if (row == PopupRow::CHANNEL || row == PopupRow::QUANTISE_MODE) {
-                auto *pol = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
-                if (pol == nullptr)
-                    return false;
-                updated_policy = *pol;
-            }
 
             switch (row) {
                 case PopupRow::CONNECT_TOGGLE:
                     toggle_connection_with_feedback(sel_source, sel_target);
                     break;
-                case PopupRow::PAUSE_TOGGLE: {
-                    const auto *policy = midi_matrix_manager->get_connection_policy(sel_source, sel_target);
-                    if (policy != nullptr)
-                        midi_matrix_manager->set_paused(sel_source, sel_target, !policy->paused);
+                case PopupRow::PAUSE_TOGGLE:
+                    routing().toggle_pause(sel_source, sel_target);
                     break;
-                }
                 case PopupRow::CHANNEL:
-                    // Cycle: 0 (passthru) -> 1 -> 2 -> ... -> 16 -> 0
-                    updated_policy.fixed_channel = (updated_policy.fixed_channel >= 16) ? 0 : updated_policy.fixed_channel + 1;
-                    midi_matrix_manager->set_connection_policy(sel_source, sel_target, updated_policy);
+                    routing().cycle_channel(sel_source, sel_target);
                     break;
                 case PopupRow::QUANTISE_MODE:
-                    // Cycle through the enum values
-                    switch (updated_policy.quantise_mode) {
-                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF:
-                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR; break;
-                        case MIDIMatrixManager::ConnectionQuantiseMode::INHERIT_BEHAVIOUR:
-                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE; break;
-                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_SCALE:
-                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD; break;
-                        case MIDIMatrixManager::ConnectionQuantiseMode::FORCE_CHORD:
-                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
-                        default:
-                            updated_policy.quantise_mode = MIDIMatrixManager::ConnectionQuantiseMode::FORCE_OFF; break;
-                    }
-                    midi_matrix_manager->set_connection_policy(sel_source, sel_target, updated_policy);
+                    routing().cycle_quantise(sel_source, sel_target);
                     break;
-                case PopupRow::JUMP_SOURCE: {
-                    if (!popup_row_enabled(row)) break;
-                    int pg = midi_matrix_manager->get_source_page_index(sel_source);
-                    if (pg >= 0) menu->jump_to_page_with_return(pg);
+                case PopupRow::JUMP_SOURCE:
+                    menu->jump_to_page_with_return(routing().source_page(sel_source));
                     break;
-                }
-                case PopupRow::JUMP_TARGET: {
-                    if (!popup_row_enabled(row)) break;
-                    int pg = midi_matrix_manager->get_target_page_index(sel_target);
-                    if (pg >= 0) menu->jump_to_page_with_return(pg);
+                case PopupRow::JUMP_TARGET:
+                    menu->jump_to_page_with_return(routing().target_page(sel_target));
                     break;
-                }
+                case PopupRow::PAUSE_ALL_FROM_SOURCE:
+                    popup_set_paused_bulk(true, true);
+                    break;
+                case PopupRow::RESUME_ALL_FROM_SOURCE:
+                    popup_set_paused_bulk(true, false);
+                    break;
+                case PopupRow::PAUSE_ALL_TO_TARGET:
+                    popup_set_paused_bulk(false, true);
+                    break;
+                case PopupRow::RESUME_ALL_TO_TARGET:
+                    popup_set_paused_bulk(false, false);
+                    break;
                 case PopupRow::DISCONNECT_OTHER_SOURCES_TO_TARGET:
-                    if (popup_row_enabled(row)) popup_disconnect_others_to_target();
+                    popup_disconnect_others_to_target();
                     break;
                 case PopupRow::DISCONNECT_OTHER_TARGETS_FROM_SOURCE:
-                    if (popup_row_enabled(row)) popup_disconnect_others_from_source();
+                    popup_disconnect_others_from_source();
                     break;
                 default: break;
             }

@@ -34,6 +34,7 @@ From the project directory, using Node.js and g++ with UBSan support:
 	node test/midi_connections_host_test.js
 	node test/playback_tick_host_test.js
 	node test/midibass_host_test.js
+	node test/actionlist_host_test.js
 
 These compile extracted production functions with mocked USB hardware, without
 running PlatformIO or installing firmware dependencies. The display/transmit
@@ -66,7 +67,23 @@ popup actions against mock transports/menus. It covers the exact 128-route limit
 slot reuse and delivery order, disallowed routes, pause/resume note cleanup and
 shared-pitch refcounts, activity timestamps, channel-policy migration, version 2
 save/load round trips, version 1 and legacy loading, malformed policy logging,
-and popup pause/jump/failure feedback. Firmware builds/uploads remain manual.
+and popup pause/jump/failure feedback. It also compiles the production
+MIDIRoutingModel and covers its sorted per-endpoint and per-owner listings,
+truncation, summaries, idempotent source/target/owner bulk pause and resume,
+channel/quantise cycling in both directions, connect results, add-candidates,
+disconnect-others, badge formatting, and the popup's bulk pause rows. Firmware
+builds/uploads remain manual.
+It also compiles the display-free routing panel lists (midi_routing_lists.h):
+per-owner Inputs/Outputs layout, route rows with badges, held counts and
+activity markers, compact summaries with truncation, the route editor (pause,
+channel, quantise, jump, disconnect), the add-connection picker, section
+pause/resume, rebuilding of the shared row buffer, and port "used by" link rows
+(formatting, ordering, dimming, and jumping to the behaviour's page).
+
+The ActionList test compiles mymenu's display-independent ActionListNavigator
+(menuitems_actionlist_core.h, expected at ../my_libraries/mymenu) and covers
+heading skip and wrap, empty lists, disabled rows, push/pop/back, select
+results, the depth limit, cursor clamping after list changes, and scrolling.
 
 The same runner tests the note recorder and console, including the real notes
 command parser/dispatch: timestamp ages and wrap, source/target/owner filtering,

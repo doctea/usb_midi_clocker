@@ -36,6 +36,9 @@ class DeviceBehaviourSerialBase : virtual public DeviceBehaviourUltimateBase {
             return BehaviourType::serial;
         }
 
+        virtual int8_t get_serial_midi_input_port() override { return input_device != nullptr ? input_midi_number : -1; }
+        virtual int8_t get_serial_midi_output_port() override { return output_device != nullptr ? output_midi_number : -1; }
+
         //FLASHMEM
         virtual void connect_device_output(midi::MidiInterface<midi::SerialMIDI<HardwareSerial>> *device) {
             if (device==nullptr) return;

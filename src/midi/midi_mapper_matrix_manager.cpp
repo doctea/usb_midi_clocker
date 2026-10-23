@@ -5,6 +5,8 @@
 
 #include "midi/midi_mapper_matrix_manager.h"
 
+#include "behaviours/behaviour_manager.h"
+
 #include "behaviours/behaviour_bamble.h"
 #include "behaviours/behaviour_craftsynth.h"
 #include "behaviours/behaviour_skulptsynth.h"
@@ -145,6 +147,9 @@ void setup_midi_mapper_matrix_manager() {
     for (int i = 0 ; i < NUM_MIDI_OUTS ; i++) {
         char label[30];
 
+        // every port gets an owner, so the MIDI Ports page can show what occupies its jacks
+        get_serial_port_owner(i);
+
         Serial.printf("Checking/setting up midi_out_serial[%i].. ", i); Serial_flush();
 
         // first check all the possible serial output devices that have behaviours or names/known channels we can set up
@@ -266,6 +271,22 @@ void setup_midi_mapper_matrix_manager() {
         if (!midi_in_used[i]) {
             snprintf(label, 30, "midi_in_%i", i+1);
             midi_matrix_manager->register_source(label, 0, get_serial_port_owner(i), "In");
+        }
+    }
+    // record which behaviours occupy each port's jacks (serial devices connect in setup_behaviour_manager)
+    if (behaviour_manager != nullptr && behaviour_manager->behaviours != nullptr) {
+        for (unsigned int b = 0 ; b < behaviour_manager->behaviours->size() ; b++) {
+            DeviceBehaviourUltimateBase *behaviour = behaviour_manager->behaviours->get(b);
+            const int8_t in_port = behaviour->get_serial_midi_input_port();
+            const int8_t out_port = behaviour->get_serial_midi_output_port();
+            if (in_port >= 0 && in_port < NUM_MIDI_OUTS && in_port == out_port) {
+                serial_port_owners[in_port]->add_linked_owner("In+Out", behaviour);
+                continue;
+            }
+            if (in_port >= 0 && in_port < NUM_MIDI_OUTS)
+                serial_port_owners[in_port]->add_linked_owner("In", behaviour);
+            if (out_port >= 0 && out_port < NUM_MIDI_OUTS)
+                serial_port_owners[out_port]->add_linked_owner("Out", behaviour);
         }
     }
     /// ---- end of TRS MIDI setup
@@ -446,7 +467,7 @@ void setup_midi_mapper_matrix_manager() {
     behaviour_midibassproxy->setHighestNoteMode(NOTE_LIMIT_MODE::TRANSPOSE);
     behaviour_midibassproxy->setLowestNote(1*12);
     behaviour_midibassproxy->setLowestNoteMode(NOTE_LIMIT_MODE::TRANSPOSE);
-    midi_matrix_manager->disallow(behaviour_midibassproxy->source_id, behaviour_midibassproxy->target_id);  // don't allow it to connect to itself
+    // routing it to itself is refused by the matrix's same-owner rule (MIDIEndpointOwner::allows_self_routing)
 
     midi_matrix_manager->register_source(behaviour_arpeggiator, "Arpeggiator");
     //MIDIOutputWrapper *arp_wrapper = make_midioutputwrapper("Arp Chords", behaviour_arpeggiator);

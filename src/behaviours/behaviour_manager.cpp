@@ -338,6 +338,7 @@ void setup_behaviour_manager() {
     #include "menuitems.h"
     #include "menuitems_lambda.h"
     #include "menuitems_quickpage.h"
+    #include "mymenu/menu_midi_routing.h"
 
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
@@ -450,10 +451,21 @@ void setup_behaviour_manager() {
                 behaviour->routing_page_index = first_custom_page;
             Serial_printf(F("\tDeviceBehaviourManager::make_menu_items: done calling make_menu_items on behaviour '%s'\n"), behaviour->get_label()); Serial_flush(); 
 
+            // primary endpoints registered without an owner (eg via a non-behaviour wrapper) belong to this behaviour
+            if (midi_matrix_manager != nullptr) {
+                if (behaviour->source_id >= 0 && midi_matrix_manager->get_source_owner(behaviour->source_id) == nullptr)
+                    midi_matrix_manager->set_source_owner(behaviour->source_id, behaviour);
+                if (behaviour->target_id >= 0 && midi_matrix_manager->get_target_owner(behaviour->target_id) == nullptr)
+                    midi_matrix_manager->set_target_owner(behaviour->target_id, behaviour);
+            }
+            // nullptr when the behaviour owns no matrix endpoints
+            MenuItem *routing_panel = make_midi_routing_panel(behaviour);
+
             uint16_t group_colour = C_WHITE;
             if (
                 menuitems->size()>0 || 
-                (behaviour->has_parameters() && behaviour->show_dedicated_parameters_page())
+                (behaviour->has_parameters() && behaviour->show_dedicated_parameters_page()) ||
+                routing_panel != nullptr
             ) {
                 group_colour = behaviour->colour = menu->get_next_colour();
 
@@ -463,17 +475,13 @@ void setup_behaviour_manager() {
                 // Owner page index: every endpoint owned by this behaviour (not just the
                 // primary source_id/target_id) resolves its jump target through this
                 behaviour->routing_page_index = page_idx;
-                // primary endpoints registered without an owner (eg via a non-behaviour wrapper) belong to this behaviour
-                if (midi_matrix_manager != nullptr) {
-                    if (behaviour->source_id >= 0 && midi_matrix_manager->get_source_owner(behaviour->source_id) == nullptr)
-                        midi_matrix_manager->set_source_owner(behaviour->source_id, behaviour);
-                    if (behaviour->target_id >= 0 && midi_matrix_manager->get_target_owner(behaviour->target_id) == nullptr)
-                        midi_matrix_manager->set_target_owner(behaviour->target_id, behaviour);
-                }
 
                 // add a separator bar
                 SeparatorMenuItem *separator = new SeparatorMenuItem(behaviour->get_label());
                 menu->add(separator, group_colour);
+
+                if (routing_panel != nullptr)
+                    menu->add(routing_panel, group_colour);
             }
 
             if (menuitems->size()>0) {

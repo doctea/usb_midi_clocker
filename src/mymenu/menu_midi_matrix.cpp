@@ -3,6 +3,7 @@
 #include "behaviours/behaviour_cvoutput.h"
 #include "mymenu/menuitems_notedisplay.h"
 #include "mymenu/menu_midi_matrix.h"
+#include "mymenu/menu_midi_routing.h"
 
 MidiMatrixSelectorControl *midi_matrix_selector = nullptr;
 
@@ -36,6 +37,8 @@ void setup_menu_midi() {
         }));
 
     menu->add(new ToggleControl<bool>("Debug", &midi_matrix_manager->debug));
+
+    setup_menu_midi_ports();
 
     // debuggery stuff ...
     //behaviour_cvoutput_2->debug = true;

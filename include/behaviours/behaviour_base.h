@@ -196,6 +196,10 @@ class DeviceBehaviourUltimateBase :
         return false;
     }
 
+    // 0-based serial MIDI port numbers whose jacks this behaviour occupies; -1 = none
+    virtual int8_t get_serial_midi_input_port() { return -1; }
+    virtual int8_t get_serial_midi_output_port() { return -1; }
+
     // MIDIEndpointOwner
     virtual const char *get_endpoint_owner_label() override {
         return this->get_label();

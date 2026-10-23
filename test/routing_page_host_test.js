@@ -57,7 +57,11 @@ struct MenuItemList {
 struct SeparatorMenuItem {
     explicit SeparatorMenuItem(const char *) {}
 };
+struct MenuItem {
+    virtual ~MenuItem() {}
+};
 struct Menu {
+    int routing_panels = 0;
     List<int> storage;
     List<int> *pages = &storage;
     uint16_t get_next_colour() { return C_WHITE; }
@@ -67,6 +71,7 @@ struct Menu {
         return index;
     }
     void add(SeparatorMenuItem *item, uint16_t) { delete item; }
+    void add(MenuItem *item, uint16_t) { ++routing_panels; delete item; }
     void add(MenuItemList *, uint16_t) {}
 };
 struct DeviceBehaviourUltimateBase : MIDIEndpointOwner {
@@ -109,8 +114,16 @@ struct MIDIMatrixManager {
     void *get_connection_policy(int, int) { return nullptr; }
     int connected_to_target_count(int) { return 0; }
     int connected_to_source_count(int) { return 0; }
+    bool owns_endpoints(const MIDIEndpointOwner *owner) {
+        for (auto &entry : storage) if (entry.owner == owner) return true;
+        for (auto &entry : targets) if (entry.owner == owner) return true;
+        return false;
+    }
 };
 MIDIMatrixManager *midi_matrix_manager;
+MenuItem *make_midi_routing_panel(MIDIEndpointOwner *owner) {
+    return midi_matrix_manager != nullptr && midi_matrix_manager->owns_endpoints(owner) ? new MenuItem() : nullptr;
+}
 struct ParameterManager {
     void addParameterSubMenuItems(Menu *, const char *, void *, uint16_t) {}
 } parameters;
@@ -119,9 +132,23 @@ struct DeviceBehaviourManager {
     void create_single_behaviour_menu_items(Menu *, DeviceBehaviourUltimateBase *);
 };
 ${method(manager, 'void DeviceBehaviourManager::create_single_behaviour_menu_items(')}
+struct MIDIRouteSummary {
+    bool can_pause_all() const { return false; }
+    bool can_resume_all() const { return false; }
+};
+struct MIDIRoutingModel {
+    MIDIMatrixManager &matrix;
+    explicit MIDIRoutingModel(MIDIMatrixManager &matrix) : matrix(matrix) {}
+    bool is_connected(int, int) { return false; }
+    int16_t source_page(int source) const { return matrix.get_source_page_index(source); }
+    int16_t target_page(int target) const { return matrix.get_target_page_index(target); }
+    MIDIRouteSummary summarise_from_source(int) { return {}; }
+    MIDIRouteSummary summarise_to_target(int) { return {}; }
+};
 struct Popup {
     ${ui.slice(rowsStart, rowsEnd)}
     int sel_source = -1, sel_target = -1;
+    ${method(ui, 'MIDIRoutingModel routing()')}
     ${method(ui, 'bool popup_row_enabled(')}
 };
 int main() {
@@ -144,9 +171,11 @@ int main() {
             for (auto &entry : matrix.storage) entry.owner = &euclidian;
             matrix.targets[0].owner = &euclidian;
             behaviours.create_single_behaviour_menu_items(&menu, &euclidian);
-            const int expected = preceding_pages + (standard_page ? 5 : 0);
+            // owning endpoints always earns a standard page (holding the routing panel) after any custom pages
+            const int expected = preceding_pages + 5;
             assert(euclidian.routing_page_index == expected);
-            assert(menu.pages->size() == static_cast<unsigned>(preceding_pages + 5 + standard_page));
+            assert(menu.pages->size() == static_cast<unsigned>(preceding_pages + 5 + 1));
+            assert(menu.routing_panels == 1);
             Popup popup;
             for (int channel = 0; channel < 4; ++channel) {
                 popup.sel_source = channel;
@@ -170,6 +199,17 @@ int main() {
     empty.custom_pages = 2;
     behaviours.create_single_behaviour_menu_items(&menu, &empty);
     assert(empty.routing_page_index == 0);
+
+    // a behaviour with no menu items still gets a page for its routing panel, and
+    // its primary target is claimed before deciding
+    Menu routing_menu;
+    MIDIMatrixManager routing_matrix;
+    midi_matrix_manager = &routing_matrix;
+    DeviceBehaviourUltimateBase bare(&routing_menu);
+    bare.target_id = 0;
+    behaviours.create_single_behaviour_menu_items(&routing_menu, &bare);
+    assert(routing_matrix.targets[0].owner == &bare);
+    assert(bare.routing_page_index == 0 && routing_menu.pages->size() == 1 && routing_menu.routing_panels == 1);
 }
 `;
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'routing-page-test-'));
