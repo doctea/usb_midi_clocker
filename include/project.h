@@ -12,8 +12,8 @@
 
 #include "mymenu/menu_fileviewers.h"
 
-#define NUM_SCENE_SLOTS_PER_PROJECT   8
-#define NUM_LOOP_SLOTS_PER_PROJECT      8
+#define NUM_SCENE_SLOTS_PER_PROJECT   16
+#define NUM_LOOP_SLOTS_PER_PROJECT    8
 
 using namespace storage;
 

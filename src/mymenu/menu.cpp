@@ -129,17 +129,17 @@ void setup_menu_transport() {
     }
 #endif
 
-#ifdef ENABLE_LOOPER
-    void setup_menu_looper() {
-        // looper stuff
-        menu->add_page("Looper", C_WHITE, true, "Project");  // should this be somewhere else? isnt it already handled as a behaviour..?
-        menu->add(behaviour_midilooper->make_menu_items());
-        #ifdef ENABLE_DRUM_LOOPER
-            menu->add(&drum_looper_status);
-            menu->add(&drum_loop_quantizer_setting);
-        #endif
-    }
-#endif
+// #ifdef ENABLE_LOOPER
+//     void setup_menu_looper() {
+//         // looper stuff
+//         menu->add_page("Looper", C_WHITE, true, "Project");  // should this be somewhere else? isnt it already handled as a behaviour..?
+//         menu->add(behaviour_midilooper->make_menu_items());
+//         #ifdef ENABLE_DRUM_LOOPER
+//             menu->add(&drum_looper_status);
+//             menu->add(&drum_loop_quantizer_setting);
+//         #endif
+//     }
+// #endif
 
 #ifndef GDB_DEBUG
 //FLASHMEM // causes a section type conflict with 'void Menu::add(MenuItemList*, uint16_t)'
@@ -183,18 +183,18 @@ void setup_menu(bool button_high_state) {
 
     setup_menu_transport();
 
-    setup_menu_project();
-
     #ifdef ENABLE_TAPTEMPO
         setup_menu_taptempo();
     #endif
 
-    #if !SAFE_DISABLE_MATRIX_UI_BOOT
-        setup_menu_midi();
-    #endif
+    setup_menu_project();
         
     #if defined(ENABLE_CLOCKS) || defined(ENABLE_SEQUENCER)
         setup_menu_sequencer();
+    #endif
+
+    #if !SAFE_DISABLE_MATRIX_UI_BOOT
+        setup_menu_midi();
     #endif
 
     #ifdef ENABLE_SHUFFLE
@@ -205,9 +205,9 @@ void setup_menu(bool button_high_state) {
         setup_gate_manager_menus();
     #endif
 
-    #ifdef ENABLE_LOOPER
-        setup_menu_looper();
-    #endif
+    // #ifdef ENABLE_LOOPER
+    //     setup_menu_looper();
+    // #endif
 
     Serial.println(F("Exiting setup_menu"));
     Serial_flush();
