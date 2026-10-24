@@ -263,26 +263,33 @@ class DeviceBehaviourUltimateBase :
     virtual int reapply_local_note_limits();
 
     // abstracted note_tracker access so that we can override to eg track multiple channels separately if we need to
-    virtual bool note_tracker_foreach_note(NoteTracker::foreach_func_def func) {
-        return note_tracker.foreach_note(func);
+    virtual bool note_tracker_foreach_note(NoteTracker::foreach_func_def func, NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->foreach_note(func);
     }
-    virtual int8_t note_tracker_get_transposed_note_for(int8_t note) {
-        return note_tracker.get_transposed_note_for(note);
+    virtual int8_t note_tracker_get_transposed_note_for(int8_t note, NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->get_transposed_note_for(note);
     }
-    virtual bool is_note_held(int8_t note, int8_t channel) {
-        return note_tracker.is_note_held(note);
+    virtual bool is_note_held(int8_t note, int8_t channel, NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->is_note_held(note);
     }
-    virtual bool note_tracker_held_note_on(int8_t note, int8_t transposed_note, int8_t channel) {
-        return note_tracker.held_note_on(note, transposed_note);
+    virtual bool note_tracker_held_note_on(int8_t note, int8_t transposed_note, int8_t channel, NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->held_note_on(note, transposed_note);
     }
-    virtual bool note_tracker_held_note_off(int8_t note, int8_t channel) {
-        return note_tracker.held_note_off(note);
+    virtual bool note_tracker_held_note_off(int8_t note, int8_t channel, NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->held_note_off(note);
     }
-    virtual int8_t note_tracker_count_held() {
-        return note_tracker.count_held();
+    virtual int8_t note_tracker_count_held(NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->count_held();
     }
-    virtual const char *note_tracker_get_held_notes_c() {
-        return note_tracker.get_held_notes_c();
+    virtual const char *note_tracker_get_held_notes_c(NoteTracker *tracker = nullptr) {
+        if (tracker == nullptr) tracker = &note_tracker;
+        return tracker->get_held_notes_c();
     }
 
     virtual void killCurrentNote() {

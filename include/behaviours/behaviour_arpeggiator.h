@@ -1,6 +1,9 @@
 #pragma once
 
-// #include "behaviour_midibass.h"
+#include "behaviour_base.h"
+#include "midi/midi_mapper_matrix_manager.h"
+
+#include "midi_helpers.h"
 
 // todo:
 //  more features, like clock-based triggering and arpeggiation patterns
@@ -18,11 +21,13 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
 
     target_id_t target_id_trigger = -1;
 
+    NoteTracker chord_note_tracker;
+
     bool transmits_midi_notes() override { return true; };
     bool receives_midi_notes()  override { return true; };
     bool supports_note_limits() override { return true; };
 
-    VirtualBehaviour_Arpeggiator() : DeviceBehaviourUltimateBase() {
+    VirtualBehaviour_Arpeggiator() : VirtualBehaviourBase() {
         //this->debug = true;
     }
 
@@ -48,7 +53,7 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
         if (is_valid_note(current_note)) {
             trigger_note_off();
         }
-        int8_t note = note_tracker.get_held_note_index(current_index);
+        int8_t note = chord_note_tracker.get_held_note_index(current_index);
         routed_note_output_t r = this->resolve_routed_note_output(note, 0);
         if (r.emitted) {
             current_index++;
@@ -65,6 +70,14 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
         }
     }
    
+    virtual void killCurrentNote() {
+        this->chord_note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
+            this->chord_note_tracker.held_note_off(note);
+        });
+        this->trigger_note_off();
+        VirtualBehaviourBase::killCurrentNote();
+    }
+
     // @@TODO: re-enable triggering based on clock instead of trigger input;
     // can probably use re-use the same timing info as used in the CVInput triggerer
     // maybe we could even use a shuffle pattern for the arpeggiation too?
@@ -84,7 +97,7 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
 
         if (channel==MIDI_CHANNEL_CHORDS) {
             if (debug) Serial.printf("Arpeggiator#sendNoteOn: channel 1: holding chord note\n");
-            note_tracker.held_note_on(note, note);
+            chord_note_tracker.held_note_on(note, note);
         } else if (channel==MIDI_CHANNEL_TRIGGER) {
             if (debug) Serial.printf("Arpeggiator#sendNoteOn: channel 2, so triggering next note\n");
             this->trigger_next_note_on();
@@ -97,7 +110,7 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
 
         if (channel==MIDI_CHANNEL_CHORDS) {
             if (debug) Serial.printf("Arpeggiator#sendNoteOff: channel 1, so releasing chord note\n");
-            note_tracker.held_note_off(note);
+            chord_note_tracker.held_note_off(note);
         } else if (channel==MIDI_CHANNEL_TRIGGER) {
             if (debug) Serial.printf("Arpeggiator#sendNoteOff: channel 2, so stopping note\n");
             this->trigger_note_off();
@@ -110,12 +123,12 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
         virtual MenuItemList *make_menu_items() override {
             MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
 
-            menuitems->add(new NoteDisplay("Notes", &this->note_tracker));
+            menuitems->add(new NoteDisplay("Notes", &this->chord_note_tracker));
             menuitems->add(new NoteHarmonyDisplay(
                 (const char*)"Harmony", 
                 &conductor->global_scale_identity.scale_number, 
                 &conductor->global_scale_identity.root_note, 
-                &this->note_tracker,
+                &this->chord_note_tracker,
                 &conductor->global_quantise_mode
             ));
             menuitems->add(new CallbackMenuItem(
