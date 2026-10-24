@@ -1,5 +1,4 @@
-#ifndef BEHAVIOUR_DRUMKIT__INCLUDED
-#define BEHAVIOUR_DRUMKIT__INCLUDED
+#pragma once
 
 #include <Arduino.h>
 
@@ -46,5 +45,3 @@ class DeviceBehaviour_DrumKit : virtual public DeviceBehaviourSerialBase {
 };
 
 extern DeviceBehaviour_DrumKit *behaviour_drumkit;
-
-#endif

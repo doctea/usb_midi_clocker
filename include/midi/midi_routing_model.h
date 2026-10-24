@@ -146,6 +146,10 @@ class MIDIRoutingModel {
         return true;
     }
 
+    bool disconnect_others(source_id_t source, target_id_t target) {
+        return disconnect_others_to_target(target, source) > 0 || disconnect_others_from_source(source, target) > 0;
+    }
+
     bool toggle_pause(source_id_t source, target_id_t target) {
         const MIDIConnectionPolicy *policy = matrix.get_connection_policy(source, target);
         return policy != nullptr && matrix.set_paused(source, target, !policy->paused);
@@ -216,6 +220,36 @@ class MIDIRoutingModel {
     uint8_t set_paused_inbound(const MIDIEndpointOwner *owner, bool paused) {
         uint8_t changed = 0;
         matrix.for_each_target_of(owner, [&](target_id_t target) { changed += set_paused_to_target(target, paused); });
+        return changed;
+    }
+
+    uint8_t disconnect_from_source(source_id_t source) {
+        int8_t targets[MAX_NUM_TARGETS];
+        const uint8_t count = collect_targets_from(source, targets);
+        uint8_t changed = 0;
+        for (uint8_t index = 0; index < count; ++index)
+            if (disconnect(source, targets[index])) ++changed;
+        return changed;
+    }
+
+    uint8_t disconnect_to_target(target_id_t target) {
+        int8_t sources[MAX_NUM_SOURCES];
+        const uint8_t count = collect_sources_to(target, sources);
+        uint8_t changed = 0;
+        for (uint8_t index = 0; index < count; ++index)
+            if (disconnect(sources[index], target)) ++changed;
+        return changed;
+    }
+
+    uint8_t disconnect_outbound(const MIDIEndpointOwner *owner) {
+        uint8_t changed = 0;
+        matrix.for_each_source_of(owner, [&](source_id_t source) { changed += disconnect_from_source(source); });
+        return changed;
+    }
+
+    uint8_t disconnect_inbound(const MIDIEndpointOwner *owner) {
+        uint8_t changed = 0;
+        matrix.for_each_target_of(owner, [&](target_id_t target) { changed += disconnect_to_target(target); });
         return changed;
     }
 

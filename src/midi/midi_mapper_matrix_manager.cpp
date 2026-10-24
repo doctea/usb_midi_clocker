@@ -264,6 +264,7 @@ void setup_midi_mapper_matrix_manager() {
         #ifdef ENABLE_DRUMKIT
             if (&ENABLE_DRUMKIT==midi_out_serial[i]) {
                 midi_in_used[i] = true;
+                behaviour_drumkit->source_id = midi_matrix_manager->register_source("drumkit", 0, behaviour_drumkit);
             }
         #endif
 

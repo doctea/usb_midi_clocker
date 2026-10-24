@@ -149,9 +149,17 @@ class MIDIRouteEditSource : public ActionListSource {
             const bool connected = model().get_row(source, target, row);
             switch (index) {
                 case STATUS:
-                    if (!connected) snprintf(out, size, "Disconnected");
-                    else snprintf(out, size, "%s%s, %u held", row.policy.paused ? "Paused" : "Live",
-                        midi_routing_text::recently_active(row) ? " *" : "", (unsigned)row.held_notes);
+                    if (!connected) {
+                        snprintf(out, size, "Disconnected");
+                    } else {
+                        snprintf(
+                            out, size, 
+                            "%s%s - %u held", 
+                            row.policy.paused ? "Paused" : "Live",
+                            midi_routing_text::recently_active(row) ? "*" : " ", 
+                            (unsigned)row.held_notes
+                        );
+                    }
                     break;
                 case PAUSE:
                     snprintf(out, size, "%s", connected && row.policy.paused ? "Resume" : "Pause");
@@ -314,7 +322,7 @@ class MIDIRoutePickerSource : public ActionListSource {
 class MIDIOwnerRoutesSource : public ActionListSource {
     public:
         struct entry_t {
-            enum Kind : uint8_t { SECTION, ENDPOINT, ROUTE, ADD, PAUSE_ALL, EMPTY, TRUNCATED, LINK };
+            enum Kind : uint8_t { SECTION, ENDPOINT, ROUTE, ADD, PAUSE_ALL, DISCONNECT_ALL, EMPTY, TRUNCATED, LINK };
             Kind kind = EMPTY;
             MIDIRouteDirection direction = MIDIRouteDirection::INBOUND;
             int8_t endpoint = -1;   // owner's target (inbound) or source (outbound); link index for LINK
@@ -344,12 +352,17 @@ class MIDIOwnerRoutesSource : public ActionListSource {
 
         virtual bool row_selectable(uint8_t index) override {
             const entry_t::Kind kind = entry(index).kind;
-            return kind == entry_t::ROUTE || kind == entry_t::ADD || kind == entry_t::PAUSE_ALL || kind == entry_t::LINK;
+            return     kind == entry_t::ROUTE 
+                    || kind == entry_t::ADD 
+                    || kind == entry_t::PAUSE_ALL 
+                    || kind == entry_t::DISCONNECT_ALL
+                    || kind == entry_t::LINK;
         }
 
         virtual bool row_enabled(uint8_t index) override {
             const entry_t &e = entry(index);
             if (e.kind == entry_t::PAUSE_ALL) return summary(e.direction).total > 0;
+            if (e.kind == entry_t::DISCONNECT_ALL) return summary(e.direction).total > 0;
             return true;
         }
 
@@ -412,6 +425,10 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                         snprintf(out, size, " Resume all %s (%u)", inbound ? "inputs" : "outputs", (unsigned)s.paused);
                     break;
                 }
+                case entry_t::DISCONNECT_ALL: {
+                    snprintf(out, size, " Disconnect all %s (%u)", inbound ? "inputs" : "outputs", (unsigned)summary(e.direction).total);
+                    break;
+                }
                 case entry_t::TRUNCATED:
                     snprintf(out, size, "  (more routes not shown)");
                     break;
@@ -442,6 +459,16 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                     char message[32];
                     snprintf(message, sizeof(message), "%s %u route%s", pause ? "Paused" : "Resumed",
                         (unsigned)changed, changed == 1 ? "" : "s");
+                    midi_routing_ui_message(message, false);
+                    break;
+                }
+                case entry_t::DISCONNECT_ALL: {
+                    // @@TODO: "are you sure?"
+                    MIDIRoutingModel model(*matrix);
+                    const uint8_t changed = e.direction == MIDIRouteDirection::INBOUND
+                        ? model.disconnect_inbound(owner) : model.disconnect_outbound(owner);
+                    char message[32];
+                    snprintf(message, sizeof(message), "Disconnected %u route%s", (unsigned)changed, changed == 1 ? "" : "s");
                     midi_routing_ui_message(message, false);
                     break;
                 }
@@ -559,16 +586,25 @@ class MIDIOwnerRoutesSource : public ActionListSource {
             const bool several = (inbound ? matrix->count_targets_of(owner) : matrix->count_sources_of(owner)) > 1;
             MIDIRoutingModel model(*matrix);
             auto add_endpoint = [&](int8_t endpoint) {
-                if (several) add(entry_t::ENDPOINT, direction, endpoint);
+                if (several) 
+                    add(entry_t::ENDPOINT, direction, endpoint);
                 MIDIRouteRow rows[16];
-                const uint8_t found = inbound ? model.list_to_target(endpoint, rows, 16) : model.list_from_source(endpoint, rows, 16);
+
+                const uint8_t found = inbound ? 
+                        model.list_to_target(endpoint, rows, 16)  : 
+                        model.list_from_source(endpoint, rows, 16);
+
                 for (uint8_t i = 0; i < found; ++i)
                     add(entry_t::ROUTE, direction, endpoint, (int8_t)(inbound ? rows[i].source : rows[i].target));
+
                 add(entry_t::ADD, direction, endpoint);
             };
-            if (inbound) matrix->for_each_target_of(owner, [&](target_id_t target) { add_endpoint((int8_t)target); });
-            else matrix->for_each_source_of(owner, [&](source_id_t source) { add_endpoint((int8_t)source); });
+            if (inbound) 
+                matrix->for_each_target_of(owner, [&](target_id_t target) { add_endpoint((int8_t)target); });
+            else 
+                matrix->for_each_source_of(owner, [&](source_id_t source) { add_endpoint((int8_t)source); });
             add(entry_t::PAUSE_ALL, direction);
+            add(entry_t::DISCONNECT_ALL, direction);
         }
 
         MIDIRouteSummary summary(MIDIRouteDirection direction) {
