@@ -353,6 +353,7 @@ class MIDIOwnerRoutesSource : public ActionListSource {
         virtual bool row_selectable(uint8_t index) override {
             const entry_t::Kind kind = entry(index).kind;
             return     kind == entry_t::ROUTE 
+                    || kind == entry_t::ENDPOINT    // make endpoint selectable so it can double up as the 'add' button 
                     || kind == entry_t::ADD 
                     || kind == entry_t::PAUSE_ALL 
                     || kind == entry_t::DISCONNECT_ALL
@@ -402,8 +403,13 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                     break;
                 }
                 case entry_t::ENDPOINT:
-                    snprintf(out, size, " %s:", inbound ? midi_routing_text::target_role(*matrix, e.endpoint)
-                                                        : midi_routing_text::source_role(*matrix, e.endpoint));
+                    // endpoint row, acts as the 'add' button for new routes
+                    snprintf(
+                        out, size, 
+                        " %s:   [+ %s..]", 
+                        inbound ? midi_routing_text::target_role(*matrix, e.endpoint)
+                                : midi_routing_text::source_role(*matrix, e.endpoint),
+                        inbound ? "input" : "output");
                     break;
                 case entry_t::ROUTE: {
                     MIDIRouteRow row;
@@ -414,9 +420,10 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                     midi_routing_text::format_route(out, size, "  ", far_label(e), row);
                     break;
                 }
-                case entry_t::ADD:
-                    snprintf(out, size, "  + Add %s...", inbound ? "input" : "output");
-                    break;
+                // case entry_t::ADD:
+                //     Dedicated 'add' row - now handled by the ENDPOINT row acting as the 'add' button.
+                //     snprintf(out, size, "  + Add %s...", inbound ? "input" : "output");
+                //     break;
                 case entry_t::PAUSE_ALL: {
                     const MIDIRouteSummary s = summary(e.direction);
                     if (s.can_pause_all())
@@ -447,6 +454,8 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                     editor().open(matrix, route_source(e), route_target(e), e.direction);
                     nav.push(&editor());
                     break;
+                case entry_t::ENDPOINT:
+                // fall through to ADD row so that the endpoint row acts as the add button
                 case entry_t::ADD:
                     picker().open(matrix, e.endpoint, e.direction);
                     nav.push(&picker());
@@ -586,7 +595,8 @@ class MIDIOwnerRoutesSource : public ActionListSource {
             const bool several = (inbound ? matrix->count_targets_of(owner) : matrix->count_sources_of(owner)) > 1;
             MIDIRoutingModel model(*matrix);
             auto add_endpoint = [&](int8_t endpoint) {
-                if (several) 
+                // if (several) 
+                // The endpoint row now acts as the 'add' button for new routes, so we always need it
                     add(entry_t::ENDPOINT, direction, endpoint);
                 MIDIRouteRow rows[16];
 
@@ -597,7 +607,8 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                 for (uint8_t i = 0; i < found; ++i)
                     add(entry_t::ROUTE, direction, endpoint, (int8_t)(inbound ? rows[i].source : rows[i].target));
 
-                add(entry_t::ADD, direction, endpoint);
+                // the ENDPOINT row itself now serves as the 'add' button for new routes
+                // add(entry_t::ADD, direction, endpoint);
             };
             if (inbound) 
                 matrix->for_each_target_of(owner, [&](target_id_t target) { add_endpoint((int8_t)target); });
