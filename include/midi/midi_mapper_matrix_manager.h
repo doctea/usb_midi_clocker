@@ -464,9 +464,13 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
         return changed;
     }
 
-    int release_connection_notes(source_id_t only_source = -1, target_id_t only_target = -1,
-                                 bool emit_note_offs = true, uint32_t *channel_mask = nullptr,
-                                 MIDINoteTraceKind reason = MIDINoteTraceKind::CLEANUP) {
+    int release_connection_notes(
+        source_id_t only_source = -1, 
+        target_id_t only_target = -1,
+        bool emit_note_offs = true, 
+        uint32_t *channel_mask = nullptr,
+        MIDINoteTraceKind reason = MIDINoteTraceKind::CLEANUP
+    ) {
         int released = 0;
         for (uint16_t index = 0; index < MIDI_CONNECTION_NOTE_CAPACITY; ++index) {
             MIDIConnectionNoteState::entry_t &entry = active_connection_notes.entries[index];
@@ -483,8 +487,12 @@ class MIDIMatrixManager : public SHDynamic<0, 8> {
                 if (channel_mask != nullptr && output_channel <= 16)
                     *channel_mask |= (uint32_t)1 << output_channel;
                 if (emit_note_offs)
-                    dispatch_connection_note(entry, routed_note_output_t(entry.output_pitch, entry.output_channel, true),
-                        MIDI_MIN_VELOCITY, false);
+                    dispatch_connection_note(
+                        entry, 
+                        routed_note_output_t(entry.output_pitch, entry.output_channel, true),
+                        MIDI_MIN_VELOCITY, 
+                        false
+                    );
             }
             active_connection_notes.erase(entry);
             ++released;

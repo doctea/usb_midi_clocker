@@ -70,7 +70,12 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
         }
     }
    
-    virtual void killCurrentNote() {
+    virtual void notify_project_changed(int project_number) override {
+        this->killCurrentNote();
+        current_index = 0;
+    }
+
+    virtual void killCurrentNote() override {
         this->chord_note_tracker.foreach_note([=](int8_t note, int8_t transposed_note) {
             this->chord_note_tracker.held_note_off(note);
         });
