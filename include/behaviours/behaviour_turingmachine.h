@@ -153,8 +153,8 @@ class VirtualBehaviour_TuringMachine : virtual public DeviceBehaviourUltimateBas
 
             this->sequencer->make_menu_items(
                 menu,
-                0xFF,   // TODO: make proper CombinePageOption for TuringMachine
-                "TuringMachine"                  
+                0xFF,   // TODO: make proper CombinePageOption for TuringMachine (its different from Euclidians)
+                "TuringMachine"
             );
             this->output_processor->create_menu_items(true, "TuringMachine outputs", "TuringMachine");
 

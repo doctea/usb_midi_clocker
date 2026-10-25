@@ -146,7 +146,9 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
 
             this->sequencer->make_menu_items(
                 menu,
-                Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE 
+                // FlexiArp only has 4 tracks so we can combine the circle page with the grid
+                Euclidian::CombinePageOption::COMBINE_CIRCLE_WITH_GRID      
+                | Euclidian::CombinePageOption::COMBINE_LOCKS_WITH_CIRCLE 
                 | Euclidian::CombinePageOption::COMBINE_MODULATION_WITH_MUTATION 
                 | Euclidian::CombinePageOption::COMBINE_PATTERN_MODULATION_WITH_PATTERN,
                 "FlexiArp"

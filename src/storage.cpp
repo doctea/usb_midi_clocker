@@ -490,7 +490,7 @@ void setup_saveloadlib() {
 	// Use the recommended SL_ArenaBase pattern: pool in EXTMEM, metadata (buf/capacity/used) in DTCM.
 	// Avoid `EXTMEM static SL_Arena<N>` because static-local + EXTMEM has unreliable constructor
 	// initialisation on Teensy 4.x (same class of bug as the OutputSelectorSnapshotCache EXTMEM issue).
-	EXTMEM static char sl_arena_pool[SAVELOAD_LIB_ARENA_POOL_SIZE];
+	EXTMEM static char sl_arena_pool[SL_LIB_ARENA_POOL_SIZE];
 	static SL_ArenaBase sl_arena(sl_arena_pool, sizeof(sl_arena_pool));
 	sl_set_setting_arena(&sl_arena);
 
