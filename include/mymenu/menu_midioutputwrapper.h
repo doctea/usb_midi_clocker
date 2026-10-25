@@ -70,7 +70,7 @@ class MIDIOutputWrapperDebugMenuItem : public MenuItem {
                         type_name = "Off";
                     else 
                         type_name = "??";
-                    tft->printf("%5u: %3s   ", current->ticks, (char*)type_name);
+                    tft->printf("%5lu: %3s   ", current->ticks, (char*)type_name);
                     tft->printf("%2i  ", current->channel);
                     tft->printf("%3i %3s", current->pitch, (char*)get_note_name_c(current->pitch));
                     tft->printf("  %i\n", current->velocity);

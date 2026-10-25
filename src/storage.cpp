@@ -490,7 +490,7 @@ void setup_saveloadlib() {
 	// Use the recommended SL_ArenaBase pattern: pool in EXTMEM, metadata (buf/capacity/used) in DTCM.
 	// Avoid `EXTMEM static SL_Arena<N>` because static-local + EXTMEM has unreliable constructor
 	// initialisation on Teensy 4.x (same class of bug as the OutputSelectorSnapshotCache EXTMEM issue).
-	EXTMEM static char sl_arena_pool[524288];
+	EXTMEM static char sl_arena_pool[SAVELOAD_LIB_ARENA_POOL_SIZE];
 	static SL_ArenaBase sl_arena(sl_arena_pool, sizeof(sl_arena_pool));
 	sl_set_setting_arena(&sl_arena);
 
@@ -504,7 +504,7 @@ void setup_saveloadlib() {
 
 	uint32_t start_time = millis();
 	sl_setup_all(settings_root);
-	Serial.printf("setup_saveloadlib: Finished sl_setup_all in %i millis.\n", millis()-start_time);
+	if (Serial) Serial.printf("setup_saveloadlib: Finished sl_setup_all in %i millis.\n", millis()-start_time);
 
 	//sl_validate_tree(settings_root, Serial);
 

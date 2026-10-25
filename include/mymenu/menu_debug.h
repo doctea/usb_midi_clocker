@@ -61,7 +61,7 @@ class DebugPanel : public MenuItem {
                 tft->printf("  uClock ext depth: %u\n", uClock.getExtOverflowCounter());
             #endif
             
-            tft->print("  Serial: ");
+            tft->print("  USB host serial: ");
             tft->print(Serial?"connected\n":"not connected\n");
 
             // build info
@@ -85,12 +85,12 @@ class DebugPanel : public MenuItem {
                 // loop over the cvoutput_configs array
                 for (size_t i = 0 ; i < cvoutput_configs_size ; i++) {
                     if (i==0) {
-                        tft->printf("  DAC8574  version: %s", (char*)DAC8574_LIB_VERSION);
+                        tft->printf("  DAC8574  version: %-6s", (char*)DAC8574_LIB_VERSION);
                     } else {
                         tft->print ("\n                          ");
                     }
                     cvoutput_config_t config = cvoutput_configs[i];
-                    tft->printf("@ 0x%2x bank %i", config.address, config.dac_extended_address);
+                    tft->printf("@ 0x%2x ext %i", config.address, config.dac_extended_address);
                 }
                 tft->println();
             #endif

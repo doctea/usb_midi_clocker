@@ -41,8 +41,14 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
     source_id_t source_ids[NUM_FLEXIARP_PATTERNS-1] = { -1, -1, -1 };
 
     VirtualBehaviour_FlexiArp() : DeviceBehaviourUltimateBase () {
+
         this->output_processor = new MIDIOutputProcessor(this);
-        this->sequencer = new EuclidianSequencer(output_processor->get_available_outputs(), NUM_FLEXIARP_PATTERNS);
+        
+        this->sequencer = new EuclidianSequencer(
+            output_processor->get_available_outputs(), 
+            "FlexiPat ", 
+            NUM_FLEXIARP_PATTERNS
+        );
 
         // Patterns are created automatically by the EuclidianSequencer based on the number specified (NUM_FLEXIARP_PATTERNS)
 

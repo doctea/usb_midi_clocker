@@ -83,16 +83,16 @@ void setup_behaviour_manager() {
 
     #ifdef ENABLE_PROGRESSION
         behaviour_progression = new VirtualBehaviour_Progression();
-        behaviour_manager->registerBehaviour(behaviour_progression);
+        behaviour_manager->registerBehaviour(behaviour_progression, false);
     #endif
 
     #ifdef ENABLE_CLOCKS
         behaviour_clock_gates = new VirtualBehaviour_ClockGates(gate_manager, BANK_CLOCK);
-        behaviour_manager->registerBehaviour(behaviour_clock_gates);
+        behaviour_manager->registerBehaviour(behaviour_clock_gates, false);
     #endif
     #ifdef ENABLE_SEQUENCER
         behaviour_sequencer_gates = new VirtualBehaviour_SequencerGates(gate_manager, BANK_SEQ);
-        behaviour_manager->registerBehaviour(behaviour_sequencer_gates);
+        behaviour_manager->registerBehaviour(behaviour_sequencer_gates, false);
     #endif
 
     #ifdef ENABLE_EUCLIDIAN

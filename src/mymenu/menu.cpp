@@ -193,12 +193,12 @@ void setup_menu(bool button_high_state) {
         setup_menu_sequencer();
     #endif
 
-    #if !SAFE_DISABLE_MATRIX_UI_BOOT
-        setup_menu_midi();
-    #endif
-
     #ifdef ENABLE_SHUFFLE
         setup_menu_shuffle();
+    #endif
+    
+    #if !SAFE_DISABLE_MATRIX_UI_BOOT
+        setup_menu_midi();
     #endif
 
     #ifdef ENABLE_CV_GATE_OUTPUT

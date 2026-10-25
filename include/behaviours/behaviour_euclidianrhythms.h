@@ -34,7 +34,11 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
 
     VirtualBehaviour_EuclidianRhythms() : DeviceBehaviourUltimateBase () {
         this->output_processor = new FullDrumKitAndBassMIDIOutputProcessor(this);
-        this->sequencer = new EuclidianSequencer(output_processor->nodes);
+        this->sequencer = new EuclidianSequencer(
+            output_processor->get_available_outputs(), 
+            "DrumPat ",
+            20
+        );
         this->output_processor->addNode(new MIDIDrumOutput("Misc8", this, 0, MISC_CHANNEL_8));
         this->output_processor->addNode(new MIDIDrumOutput("Misc9", this, 0, MISC_CHANNEL_9));
         output_processor->configure_sequencer(sequencer);

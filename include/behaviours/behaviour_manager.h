@@ -41,43 +41,70 @@ class DeviceBehaviourManager : public SHDynamic<48, 0> {
             }
         }
 
-        void registerBehaviour(DeviceBehaviourUSBBase *behaviour) {
+        int start_sort_at = 0;
+        template<typename T>
+        void registerSorted(T *behaviour, LinkedList<T*> *list, bool sort = true) {
+            if (behaviour == nullptr) {
+                Debug_println(F("registerSorted passed a nullptr!")); Serial_flush();
+                return;
+            }
+            if (!sort) {
+                list->add(start_sort_at, behaviour);
+                start_sort_at++;
+                return;
+            }
+            // Insert in sorted order based on some criteria, e.g., label
+            uint16_t position = 0;
+            for (auto* b : *list) {
+                if (sort && position < start_sort_at) {
+                    ++position;
+                    continue;
+                }
+                if (strcmp(behaviour->get_label(), b->get_label()) < 0) {
+                    break;
+                }
+                ++position;
+            }
+            list->add(position, behaviour);
+        }
+
+        void registerBehaviour(DeviceBehaviourUSBBase *behaviour, bool sort = true) {
             if (behaviour==nullptr) {
                 Debug_println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
                 return;
             }
-            this->behaviours_usb->add(behaviour);
-            this->behaviours->add(behaviour);
+            this->registerSorted<DeviceBehaviourUSBBase>(behaviour, this->behaviours_usb, sort);
+            this->registerSorted<DeviceBehaviourUltimateBase>(behaviour, this->behaviours, sort);
         }
-        void registerBehaviour(DeviceBehaviourSerialBase *behaviour) {
+        void registerBehaviour(DeviceBehaviourSerialBase *behaviour, bool sort = true) {
             if (behaviour==nullptr) {
-                Serial.println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
+                Debug_println(F("registerBehaviour<DeviceBehaviourSerialBase> passed a nullptr!")); Serial_flush();
                 return;
             }
-            Debug_printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
-            this->behaviours_serial->add(behaviour);
+            Debug_printf(F("registerBehaviour<DeviceBehaviourSerialBase> for %ith item passed %p\n"), behaviours_serial->size(), behaviour); Serial_flush();
+            this->registerSorted<DeviceBehaviourSerialBase>(behaviour, this->behaviours_serial, sort);
             Debug_println(F("Added item to behaviours_serial."));
-            this->behaviours->add(behaviour);
+            this->registerSorted<DeviceBehaviourUltimateBase>(behaviour, this->behaviours, sort);
             Debug_println(F("Added item to behaviours."));
         }
         #ifdef ENABLE_USBSERIAL
-            void registerBehaviour(DeviceBehaviourUSBSerialBase *behaviour) {
+            void registerBehaviour(DeviceBehaviourUSBSerialBase *behaviour, bool sort = true) {
                 if (behaviour==nullptr) {
-                    Debug_println(F("registerBehaviour<DeviceBehaviourUSBBase> passed a nullptr!")); Serial_flush();
+                    Debug_println(F("registerBehaviour<DeviceBehaviourUSBSerialBase> passed a nullptr!")); Serial_flush();
                     return;
                 }
-                this->behaviours_usbserial->add(behaviour);
-                this->behaviours->add(behaviour);
+                this->registerSorted<DeviceBehaviourUSBSerialBase>(behaviour, this->behaviours_usbserial, sort);
+                this->registerSorted<DeviceBehaviourUltimateBase>(behaviour, this->behaviours, sort);
             }
         #endif
-        void registerBehaviour(DeviceBehaviourUltimateBase *behaviour) {
+        void registerBehaviour(DeviceBehaviourUltimateBase *behaviour, bool sort = true) {
             if (behaviour==nullptr) {
                 Debug_println(F("registerBehaviour<DeviceBehaviourUltimateBase> passed a nullptr!")); Serial_flush();
                 return;
             }
             Debug_printf(F("registerBehaviour<DeviceBehaviourUltimateBase> for %ith item passed %p\n"), behaviours->size(), behaviour); Serial_flush();
-            this->behaviours_virtual->add(behaviour);
-            this->behaviours->add(behaviour);
+            this->registerSorted<DeviceBehaviourUltimateBase>(behaviour, this->behaviours_virtual, sort);
+            this->registerSorted<DeviceBehaviourUltimateBase>(behaviour, this->behaviours, sort);
         }
 
         #ifdef ENABLE_USB

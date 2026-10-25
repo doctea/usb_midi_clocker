@@ -5,6 +5,15 @@
 // Rendering lives in mymenu/menu_midi_routing.h; these only produce row text and
 // perform edits through MIDIRoutingModel, so they can be tested on the host.
 
+// // take two strings and add them together into a formatted menu line with the second item right-justified
+// // todo: this lives in menuitems.cpp but should probably be somewhere else
+// void format_menu_line(
+//     char* out, size_t out_size,
+//     const char* label,
+//     const char* button_text,
+//     const char* fmt_string = " %s: "
+// );
+
 #include <stdio.h>
 #include <string.h>
 
@@ -403,13 +412,15 @@ class MIDIOwnerRoutesSource : public ActionListSource {
                     break;
                 }
                 case entry_t::ENDPOINT:
-                    // endpoint row, acts as the 'add' button for new routes
-                    snprintf(
-                        out, size, 
-                        " %s:   [+ %s..]", 
+                    // endpoint row, also acts as the 'add' button for new routes
+                    
+                    format_menu_line(
+                        out, 
+                        size-1,
                         inbound ? midi_routing_text::target_role(*matrix, e.endpoint)
-                                : midi_routing_text::source_role(*matrix, e.endpoint),
-                        inbound ? "input" : "output");
+                                : midi_routing_text::source_role(*matrix, e.endpoint), 
+                        "[ + Add.. ] "
+                    );
                     break;
                 case entry_t::ROUTE: {
                     MIDIRouteRow row;
