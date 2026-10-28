@@ -196,7 +196,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
 
         Serial_printf("dump_grid:");
             for (int x = 0 ; x < CHORDS_PER_SECTION ; x++) {
-                Serial_printf("{ %i %i=%5s %i }, ", arranger->song_sections[arranger->current_section].grid[x].degree, arranger->song_sections[arranger->current_section].grid[x].type, chords[arranger->song_sections[arranger->current_section].grid[x].type].label, arranger->song_sections[arranger->current_section].grid[x].inversion);
+                Serial_printf(
+                    "{ %i %i=%5s %i }, ", 
+                    arranger->song_sections[arranger->current_section].grid[x].degree, 
+                    arranger->song_sections[arranger->current_section].grid[x].type, 
+                    chords[arranger->song_sections[arranger->current_section].grid[x].type].label, 
+                    arranger->song_sections[arranger->current_section].grid[x].inversion
+                );
             }
             Serial_println("]");
         Serial_println("------");
@@ -220,6 +226,30 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     // TODO: all this stuff that triggers bar/phrase/etc changes in arranger probably
     // wants moving to the main do_tick call, rather than relying on this behaviour to advance it.
     // TODO: make cadence configurable (so we can trigger on X beats, X bars, phrases, etc..)
+    
+    virtual void on_bar(int bar_number) override {
+        if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, arranger->current_bar);
+        arranger->on_bar(bar_number);
+
+        if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, arranger->current_bar);
+        if (debug) dump_grid();
+        if (debug) Serial_printf("=======\n");
+    }
+
+    virtual void on_tick(uint32_t tick) override {
+        if (/*!is_bpm_on_bar(tick) &&*/ is_bpm_on_half_bar(tick)) {
+            //if (debug) 
+            Serial_printf("on half bar! tick=%2i\n", tick);
+            // on half bar, so if we have a second chord set for this bar, we could trigger it here
+            int8_t bar_number = arranger->current_bar;
+            if (arranger->song_sections[arranger->current_section].grid_second[bar_number].degree > 0) {
+                //if (debug) 
+                Serial_printf("Triggering second chord for bar %2i\n", bar_number);
+                //set_current_chord(arranger->song_sections[arranger->current_section].grid_second[bar_number]);
+                arranger->change_chord(arranger->song_sections[arranger->current_section].grid_second[bar_number]);
+            }            
+        }
+    }
 
     virtual void on_end_phrase(uint32_t phrase_number) override {
         if (debug) Serial_printf("on_end_phrase %2i\n", phrase_number);
@@ -242,17 +272,6 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
         arranger->move_bar(new_bar);
     }
 
-    virtual void on_bar(int bar_number) override {
-        if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, arranger->current_bar);
-        arranger->on_bar(bar_number);
-
-        if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, arranger->current_bar);
-        if (debug) dump_grid();
-        if (debug) Serial_printf("=======\n");
-    }
-
-
-
     virtual int8_t get_cell_colour_for(uint8_t x, uint8_t y) {
         if (/*y==0 ||*/ x>=8 || y>=8) return 0;
         if (current_mode==MODE::DEGREE) {
@@ -264,7 +283,13 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
                     return APCMINI_OFF;
                 }
             }
-            return arranger->song_sections[arranger->current_section].grid[x].degree == (8-y);
+            if (arranger->song_sections[arranger->current_section].grid[x].degree == (8-y)) {
+                return APCMINI_GREEN;
+            } else if (arranger->song_sections[arranger->current_section].grid_second[x].degree == (8-y)) {
+                return APCMINI_YELLOW;
+            } //else if (arranger->song_sections[arranger->current_section].grid_third[x].degree == (8-y)) {
+            //     return APCMINI_RED;
+            // }
         } else if (current_mode==MODE::QUALITY) {
             return arranger->song_sections[arranger->current_section].grid[x].type == (7-y);
         } else if (current_mode==MODE::INVERSION) {
@@ -296,7 +321,17 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             if (current_mode==MODE::DEGREE) {
                 int new_degree = row + 1;
                 if (new_degree>0 && new_degree<=PITCHES_PER_SCALE) {
-                    arranger->song_sections[arranger->current_section].grid[col].degree = new_degree;
+                    if (!shifted) {
+                        arranger->song_sections[arranger->current_section].grid[col].degree = new_degree;
+                    } else {
+                        Serial_printf("Setting second grid degree for col %i to %i\n", col, new_degree);
+                        if (arranger->song_sections[arranger->current_section].grid_second[col].degree == new_degree) {
+                            // if its already the same degree, deselect it
+                            arranger->song_sections[arranger->current_section].grid_second[col].degree = 0;
+                        } else {
+                            arranger->song_sections[arranger->current_section].grid_second[col].degree = new_degree;
+                        }
+                    }
                     mark_song_as_modified();
                     return true;
                 }

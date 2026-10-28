@@ -88,6 +88,28 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
     }
     // todo: show current lock status
 
+
+    // show the current chord playing
+    scale_identity_t current_scale = conductor->global_scale_identity;
+    chord_identity_t current_chord = arranger->get_current_chord();
+    int current_chord_root = current_scale.root_note + scales[current_scale.scale_number]->valid_chromatic_pitches[current_chord.degree-1];
+    tft->printf("% 8s ", get_chord_name(current_scale, current_chord));
+    
+    // show the notes from the current chord
+    tft->setTextSize(0);
+    int16_t position_x = tft->getCursorX();
+    for (size_t i = 0 ; i < PITCHES_PER_CHORD ; i++) {
+        int note = get_quantise_pitch_chord_note(current_chord_root, current_chord.type, i, get_global_scale_root(), get_global_scale_type(), current_chord.inversion, false);
+        if (note >= 0) {
+            tft->printf("%2s ", get_note_name_c(note, 1, false));
+        } else {
+            tft->printf("   ");
+        }
+    }
+    tft->printf("inv %i %3s", current_chord.inversion, current_scale.get_degree_roman(current_chord.degree));
+    tft->println();
+    tft->println();
+
     y = tft->getCursorY() - 4;
     return y;
 }

@@ -15,6 +15,8 @@ class ProgressionPinnedMenuItem : /*virtual public SubMenuItemBar,*/ virtual pub
             //this->setup_progression_bar();
         };
 
+        chord_instance_t chord_instance;
+
         //void setup_progression_bar();
 
         //using SubMenuItemBar::display;
