@@ -3,6 +3,7 @@
 #include "behaviours/behaviour_manager.h"
 
 #include "behaviours/behaviour_apcmini.h"
+#include "behaviours/behaviour_apc40mkii.h"
 #include "behaviours/behaviour_bamble.h"
 #include "behaviours/behaviour_beatstep.h"
 #include "behaviours/behaviour_keystep.h"
@@ -123,6 +124,11 @@ void setup_behaviour_manager() {
             behaviour_apcmini->loop_track = behaviour_midilooper->track;
         #endif
         behaviour_manager->registerBehaviour(behaviour_apcmini);
+    #endif
+
+    #ifdef ENABLE_APC40MKII
+        behaviour_apc40mkii = new DeviceBehaviour_APC40MKII();
+        behaviour_manager->registerBehaviour(behaviour_apc40mkii);
     #endif
 
     #ifdef ENABLE_BAMBLE

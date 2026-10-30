@@ -175,6 +175,10 @@
     #define ENABLE_APCMINI
     #define ENABLE_APCMINI_DISPLAY
 
+    #ifdef PCB_STUDIO
+        #define ENABLE_APC40MKII
+    #endif
+
     #define ENABLE_BEATSTEP
     //#define ENABLE_BEATSTEP_2       // experimental support for having two beatsteps attached
     #define ENABLE_BEATSTEP_SYSEX   // extra beatstep functionality
