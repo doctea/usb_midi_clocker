@@ -1,6 +1,9 @@
 #include <Arduino.h>
 
 #include "debug.h"
+#if defined(ARDUINO_TEENSY41)
+  #include <smalloc.h>
+#endif
 
 #if defined(__arm__) && defined(CORE_TEENSY)
   extern unsigned long _heap_start;
@@ -11,13 +14,23 @@
     return (char *)&_heap_end - __brkval;
   }
   #ifdef ARDUINO_TEENSY41
-    // cribbed from https://forum.pjrc.com/index.php?threads/how-to-display-free-ram.33443/post-312421
-    // but it doesn't seem to work? always reports all the RAM as free
-    extern char _extram_start[], _extram_end[];
-    extern uint8_t external_psram_size;
     int freeExtRam() {
-      auto psram = _extram_start + (external_psram_size << 20) - _extram_end;
-      return psram;
+      static uint32_t last_sample_ms = 0;
+      static int cached_free_bytes = 0;
+      static bool has_sample = false;
+      const uint32_t now_ms = millis();
+      if (!has_sample || now_ms - last_sample_ms >= 1000) {
+        size_t free_bytes = 0;
+        if (sm_malloc_stats_pool(&extmem_smalloc_pool, nullptr, nullptr,
+                                 &free_bytes, nullptr) < 0) {
+          cached_free_bytes = 0;
+        } else {
+          cached_free_bytes = static_cast<int>(free_bytes);
+        }
+        last_sample_ms = now_ms;
+        has_sample = true;
+      }
+      return cached_free_bytes;
     }
   #endif
 

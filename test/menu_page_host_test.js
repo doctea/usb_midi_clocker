@@ -5,6 +5,7 @@ const { spawnSync } = require('child_process');
 
 const libraries = path.resolve(__dirname, '..', '..', 'my_libraries');
 const header = fs.readFileSync(path.join(libraries, 'mymenu', 'include', 'menu.h'), 'utf8');
+const menuitemsHeader = fs.readFileSync(path.join(libraries, 'mymenu', 'include', 'menuitems.h'), 'utf8');
 const allocator = fs.readFileSync(path.join(__dirname, '..', 'src', 'new.cpp'), 'utf8');
 function extract(startMarker, endMarker, text = header) {
     const start = text.indexOf(startMarker);
@@ -37,13 +38,20 @@ void *operator new[](size_t bytes) {
 }
 void operator delete[](void *pointer) noexcept { std::free(pointer); }
 ${extract('void * operator new(size_t size, const std::nothrow_t &)', 'void operator delete(void * ptr)', allocator)}
+#include "menu_arena.h"
+#define MENU_ITEM_ARENA
+MenuItemArena *menu_item_arena = nullptr;
 #include "GenericList.h"
 static constexpr uint16_t C_WHITE = 0xFFFF;
 struct MenuItem {
+${extract('        static void *operator new(size_t size)', '    #endif\n\n        bool debug', menuitemsHeader)}
+    static unsigned destructor_count;
+    ~MenuItem() { ++destructor_count; }
     bool is_openable() const { return true; }
     bool is_selectable() const { return true; }
     const char *get_label() const { return "test"; }
 };
+unsigned MenuItem::destructor_count = 0;
 ${extract('class MenuItemList {', '\nclass Menu {')}
 struct Menu {
     GenericList<page_t*> *pages = new GenericList<page_t*>;
@@ -65,6 +73,42 @@ ${extract('        int add_page(const char *title,', '        FLASHMEM void setu
     }
 };
 int main() {
+    alignas(max_align_t) unsigned char arena_storage[256];
+    MenuItemArena arena(reinterpret_cast<char*>(arena_storage), sizeof(arena_storage));
+    menu_item_set_arena(&arena);
+    arena.begin_allocations();
+    MenuItem *arena_item = new MenuItem();
+    assert(arena.owns(arena_item));
+    assert(reinterpret_cast<uintptr_t>(arena_item) % alignof(max_align_t) == 0);
+    const size_t arena_bytes_after_item = arena.bytes_used();
+    delete arena_item;
+    assert(MenuItem::destructor_count == 1);
+    assert(arena.bytes_used() == arena_bytes_after_item);
+
+    MenuItem *nothrow_arena_item = new (std::nothrow) MenuItem();
+    assert(nothrow_arena_item != nullptr && arena.owns(nothrow_arena_item));
+    delete nothrow_arena_item;
+    assert(MenuItem::destructor_count == 2);
+
+    MenuItem *arena_array = new MenuItem[2];
+    assert(arena.owns(arena_array));
+    delete[] arena_array;
+    assert(MenuItem::destructor_count == 4);
+
+    const uint32_t fallback_count = arena.heap_fallback_count();
+    void *overflow_fallback = menu_item_allocate(sizeof(arena_storage) * 2);
+    assert(overflow_fallback != nullptr && !arena.owns(overflow_fallback));
+    assert(arena.heap_fallback_count() == fallback_count + 1);
+    menu_item_deallocate(overflow_fallback);
+
+    arena.close_allocations();
+    MenuItem *runtime_item = new MenuItem();
+    assert(runtime_item != nullptr && !arena.owns(runtime_item));
+    delete runtime_item;
+    assert(MenuItem::destructor_count == 5);
+    assert(arena.heap_fallback_count() == fallback_count + 1);
+    menu_item_set_arena(nullptr);
+
     MenuItem entries[20];
     {
         GenericList<MenuItem*> list;
@@ -140,7 +184,7 @@ int main() {
     assert(menu.insert_page("Inserted", 2, C_WHITE, true, "Default") == 2);
     assert(menu.selected_page == menu.pages->get(2));
     assert(menu.pages->get(13) == last_page);
-    std::cout << "List resizing, page registration, and allocation-failure checks passed\\n";
+    std::cout << "MenuItem arena, list resizing, page registration, and allocation-failure checks passed\\n";
 }
 `;
 
@@ -196,7 +240,8 @@ try {
     const sanitizers = process.env.MENU_TEST_SANITIZERS || 'undefined';
     const compile = spawnSync('g++', ['-std=c++11', '-fno-exceptions', '-Wall', '-Wextra', '-Werror',
         `-fsanitize=${sanitizers}`, '-fno-omit-frame-pointer',
-        '-I', path.join(libraries, 'foundling', 'include'), file, '-o', executable],
+        '-I', path.join(libraries, 'foundling', 'include'),
+        '-I', path.join(libraries, 'mymenu', 'include'), file, '-o', executable],
         { encoding: 'utf8' });
     if (compile.error) throw compile.error;
     if (compile.status !== 0) throw new Error(compile.stdout + compile.stderr);

@@ -346,9 +346,42 @@ void setup_behaviour_manager() {
     #include "menuitems_quickpage.h"
     #include "mymenu/menu_midi_routing.h"
 
+    #if defined(MENU_STARTUP_PROFILE)
+        static const uint8_t BEHAVIOUR_MENU_PROFILE_TOP_COUNT = 8;
+        struct BehaviourMenuProfileEntry {
+            const char *label;
+            uint32_t elapsed_us;
+        };
+        static BehaviourMenuProfileEntry behaviour_menu_profile_top[BEHAVIOUR_MENU_PROFILE_TOP_COUNT];
+        static uint8_t behaviour_menu_profile_top_count = 0;
+
+        static void record_behaviour_menu_profile(const char *label, uint32_t elapsed_us) {
+            uint8_t position = 0;
+            while (position < behaviour_menu_profile_top_count &&
+                   behaviour_menu_profile_top[position].elapsed_us >= elapsed_us)
+                ++position;
+            if (position >= BEHAVIOUR_MENU_PROFILE_TOP_COUNT)
+                return;
+
+            if (behaviour_menu_profile_top_count < BEHAVIOUR_MENU_PROFILE_TOP_COUNT)
+                ++behaviour_menu_profile_top_count;
+            for (uint8_t index = behaviour_menu_profile_top_count - 1; index > position; --index)
+                behaviour_menu_profile_top[index] = behaviour_menu_profile_top[index - 1];
+            behaviour_menu_profile_top[position].label = label;
+            behaviour_menu_profile_top[position].elapsed_us = elapsed_us;
+        }
+    #endif
+
     //FLASHMEM  causes a section type conflict with virtual void DeviceBehaviourUltimateBase::setup_callbacks()
     void DeviceBehaviourManager::create_all_behaviour_menu_items(Menu *menu) {
         Serial_println("Starting create_all_behaviour_menu_items"); Serial_flush();
+
+        #if defined(MENU_STARTUP_PROFILE)
+            behaviour_menu_profile_top_count = 0;
+            uint32_t behaviour_menu_started_at_us = micros();
+            uint32_t behaviour_creation_total_us = 0;
+            uint16_t behaviour_creation_count = 0;
+        #endif
 
         menu->add_page("QuickJumpBehaviours", C_WHITE, true, "Navigation");
         CustomQuickPagesMenuItem *quickjump = new CustomQuickPagesMenuItem("QuickJump to Behaviours");
@@ -378,7 +411,16 @@ void setup_behaviour_manager() {
             // TODO: we want to do something here where we can tell whether a behaviour should get an entire page or whether it can be combined
             // and then if it can be combined (eg if it only has very basic controls on it) then skip it in this loop and create a combined page
             // for them all later...
+            #if defined(MENU_STARTUP_PROFILE)
+                uint32_t behaviour_started_at_us = micros();
+            #endif
             this->create_single_behaviour_menu_items(menu, behaviour);
+            #if defined(MENU_STARTUP_PROFILE)
+                uint32_t behaviour_elapsed_us = micros() - behaviour_started_at_us;
+                behaviour_creation_total_us += behaviour_elapsed_us;
+                ++behaviour_creation_count;
+                record_behaviour_menu_profile(behaviour->get_label(), behaviour_elapsed_us);
+            #endif
 
             // add page to behaviour quickjump, so long as isn't itself
             if (started_page < menu->get_selected_page()) {
@@ -392,6 +434,21 @@ void setup_behaviour_manager() {
             ++i;
         }
         tft_print("\n");
+
+        #if defined(MENU_STARTUP_PROFILE)
+            uint32_t behaviour_menu_elapsed_us = micros() - behaviour_menu_started_at_us;
+            Serial_printf(
+                "Behaviour menu profile: loop=%lu us, create_single total=%lu us, behaviours=%u\n",
+                (unsigned long)behaviour_menu_elapsed_us,
+                (unsigned long)behaviour_creation_total_us,
+                behaviour_creation_count);
+            for (uint8_t index = 0; index < behaviour_menu_profile_top_count; ++index) {
+                Serial_printf("  slow[%u] %s: %lu us\n",
+                    index + 1,
+                    behaviour_menu_profile_top[index].label,
+                    (unsigned long)behaviour_menu_profile_top[index].elapsed_us);
+            }
+        #endif
 
         // create a page for holding recall/save options from every behaviour
         // TODO: rebuild recall-parameter UI using saveloadlib settings tree

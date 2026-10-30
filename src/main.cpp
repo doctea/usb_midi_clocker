@@ -20,6 +20,10 @@
 
 #include "ram_stuff.h"
 
+#ifdef MENU_ITEM_ARENA
+  #include <menu_arena.h>
+#endif
+
 #include "debug.h"
 #ifdef ENABLE_STORAGE
   #include "storage.h"
@@ -149,6 +153,11 @@ bool take_cv_clock_tick(uint32_t &observed_at_us);
 EXTMEM static char vlpp_pool[65536];           // tune this size
 static VLPP_ArenaBase vlpp_arena_obj(vlpp_pool, sizeof(vlpp_pool));
 
+#ifdef MENU_ITEM_ARENA
+EXTMEM static char menu_item_pool[524288];
+static MenuItemArena menu_item_arena_obj(menu_item_pool, sizeof(menu_item_pool));
+#endif
+
 // Extracted from setup() into its own FLASHMEM function so that its call sites
 // (and the constructors they pull in) do not contribute to setup()'s register-pressure
 // analysis. This keeps setup()'s stack frame smaller, avoiding overflow during the
@@ -191,6 +200,11 @@ FLASHMEM __attribute__((noinline)) static void setup_parameter_inputs_phase() {
 #endif
 void setup() {
   setup_psram_overclock();
+
+  #ifdef MENU_ITEM_ARENA
+    menu_item_set_arena(&menu_item_arena_obj);
+    menu_item_arena_obj.begin_allocations();
+  #endif
 
   #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
     debug.begin(SerialUSB1);
@@ -473,6 +487,17 @@ void setup() {
     WDT_timings_t watchdog_config;
     watchdog_config.timeout = 8;
     runtime_watchdog.begin(watchdog_config);
+  #endif
+
+  #ifdef MENU_ITEM_ARENA
+    menu_item_arena_obj.close_allocations();
+    Serial.printf("MenuItem arena: %lu/%lu bytes used, peak %lu, %lu allocations, %lu heap fallbacks (%lu bytes)\n",
+                  (unsigned long)menu_item_arena_obj.bytes_used(),
+                  (unsigned long)menu_item_arena_obj.bytes_capacity(),
+                  (unsigned long)menu_item_arena_obj.peak_bytes_used(),
+                  (unsigned long)menu_item_arena_obj.allocation_count(),
+                  (unsigned long)menu_item_arena_obj.heap_fallback_count(),
+                  (unsigned long)menu_item_arena_obj.heap_fallback_bytes());
   #endif
 
 }

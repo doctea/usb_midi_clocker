@@ -31,6 +31,9 @@
 #include "__version.h"
 
 #include "ram_stuff.h"
+#ifdef MENU_ITEM_ARENA
+    #include <menu_arena.h>
+#endif
 
 extern bool debug_flag, debug_stress_scene_load;
 
@@ -51,6 +54,19 @@ class DebugPanel : public MenuItem {
             #ifdef ARDUINO_TEENSY41
                 tft->printf("  Free extRAM: %u bytes\n", freeExtRam());
                 tft->printf("  PSRAM clock: %i MHz\n", psram_clocked_at);
+            #endif
+
+            #ifdef MENU_ITEM_ARENA
+                MenuItemArena *arena = menu_item_get_arena();
+                if (arena != nullptr) {
+                    tft->printf("  Menu arena: %lu/%lu KB\n",
+                        (unsigned long)(arena->bytes_used() / 1024),
+                        (unsigned long)(arena->bytes_capacity() / 1024));
+                    tft->printf("  Alloc/fallback: %lu/%lu (%lu B)\n",
+                        (unsigned long)arena->allocation_count(),
+                        (unsigned long)arena->heap_fallback_count(),
+                        (unsigned long)arena->heap_fallback_bytes());
+                }
             #endif
 
             tft->printf("  Uptime: %02luh %02lum %02lus\n", time/60/60, (time/60)%60, (time)%60);
