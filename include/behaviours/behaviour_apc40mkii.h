@@ -15,7 +15,8 @@
 
 // use parameter library adapter to handle cc events
 #include "midi/midi_cc_source.h"
-
+#define APC40_ENABLE_PARAMETERS 1
+#include <APC40ParameterInputs.h>
 
 void apc40mkii_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apc40mkii_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
@@ -33,114 +34,7 @@ class APC40USBHostTransport : public APC40Transport {
         virtual void close() override;
         virtual bool isConnected() const override;
         virtual bool sendMessage(const uint8_t *data, std::size_t size) override;
-        void receiveMidiMessage(uint8_t status, uint8_t channel, uint8_t data1, uint8_t data2);
-};
-
-// todo: probably move this into the apc40mkii library
-class APC40LogicalKnobParameterInput : public MIDIParameterInputBase {
-    private:
-        APC40Controller &controller;
-        const APC40TrackKnobBank bank;
-        const uint8_t track;
-
-    public:
-        APC40LogicalKnobParameterInput(char *name, const char *group_name,
-                APC40Controller &controller, APC40TrackKnobBank bank, uint8_t track)
-            : MIDIParameterInputBase(name, group_name), controller(controller), bank(bank), track(track) {
-            this->loop();
-        }
-
-        APC40TrackKnobBank get_bank() const { return this->bank; }
-        uint8_t get_track() const { return this->track; }
-
-        uint8_t get_value() const {
-            APC40VirtualEncoderState state;
-            return this->controller.getTrackKnobState(this->bank, this->track, state) ? state.value : 0;
-        }
-
-        bool set_value(uint8_t value) {
-            APC40VirtualEncoderState state;
-            if (!this->controller.getTrackKnobState(this->bank, this->track, state)) {
-                return false;
-            }
-            value = value > 127 ? 127 : value;
-            const APC40EncoderPolarity polarity = this->input_type == BIPOLAR
-                ? APC40EncoderPolarity::Bipolar : APC40EncoderPolarity::Unipolar;
-            if (state.value == value && state.polarity == polarity &&
-                    state.ringMode == APC40EncoderRingMode::Automatic) {
-                return true;
-            }
-            state.value = value;
-            state.polarity = polarity;
-            state.ringMode = APC40EncoderRingMode::Automatic;
-            return this->controller.setTrackKnobState(this->bank, this->track, state);
-        }
-
-        virtual void loop() override {
-            this->set_value(this->get_value());
-        }
-
-        virtual const char *getInputValue() override {
-            static char formatted_value[20];
-            snprintf(formatted_value, sizeof(formatted_value), "[%3u]",
-                static_cast<unsigned>(this->get_value()));
-            return formatted_value;
-        }
-
-        virtual const char *getOutputValue() override {
-            static char formatted_value[20];
-            const float value = this->input_type == BIPOLAR
-                ? this->get_normal_value_bipolar() : this->get_normal_value_unipolar();
-            snprintf(formatted_value, sizeof(formatted_value), "[%-4i%%]",
-                static_cast<int>(value * 100.0f));
-            return formatted_value;
-        }
-
-        virtual bool supports_bipolar_input() override {
-            return true;
-        }
-
-        virtual float get_normal_value_unipolar() override {
-            return static_cast<float>(this->get_value()) / 127.0f;
-        }
-
-        virtual float get_normal_value_bipolar() override {
-            const float bipolar = (static_cast<float>(this->get_value()) - 64.0f) / 63.0f;
-            return constrain(bipolar, -1.0f, 1.0f);
-        }
-
-        virtual const char *getInputInfo() override {
-            static char input_info[24];
-            const char *bank_name = "Unknown";
-            switch (this->bank) {
-                case APC40TrackKnobBank::Pan: bank_name = "Pan"; break;
-                case APC40TrackKnobBank::Sends: bank_name = "Sends"; break;
-                case APC40TrackKnobBank::User: bank_name = "User"; break;
-            }
-            snprintf(input_info, sizeof(input_info), "%s knob %u", bank_name,
-                static_cast<unsigned>(this->track + 1));
-            return input_info;
-        }
-};
-
-// todo: probably move this into the apc40mkii library
-class APC40CueKnobParameterInput : public MIDICCParameterInput {
-    public:
-        APC40CueKnobParameterInput(char *name, const char *group_name)
-            : MIDICCParameterInput(name, group_name, APC40MKII::tracks::CC_CUE_LEVEL,
-                APC40MKII::tracks::CHAN_KNOBS) {}
-
-        virtual bool responds_to_cc(byte, byte) override { return false; }
-        virtual void receive_control_change(byte, byte, byte) override {}
-
-        void apply_delta(int16_t delta) {
-            const int value = static_cast<int>(this->currentValue) + delta;
-            this->currentValue = static_cast<int8_t>(constrain(value, 0, 127));
-        }
-
-        virtual const char *getInputInfo() override {
-            return "APC40 relative Cue";
-        }
+        bool receiveMidiMessage(uint8_t status, uint8_t channel, uint8_t data1, uint8_t data2);
 };
 
 class APC40TempoKnobWrapper {
@@ -154,11 +48,13 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
     private:
         APC40USBHostTransport apc_transport;
         APC40Controller apc_controller;
-        APC40LogicalKnobParameterInput *track_knob_inputs[3][8] = {};
-        MIDICCParameterInput *track_fader_inputs[8] = {};
+
         APC40CueKnobParameterInput *cue_knob_input = nullptr;
+        APC40LogicalKnobParameterInput *track_knob_inputs[3][8] = {};
         APC40TempoKnobWrapper *tempo_knob_input = nullptr;
 
+        MIDICCParameterInput *track_fader_inputs[8] = {};
+        
     public:
 
         uint16_t vid = 0x09e8, pid = 0x0029;
@@ -181,44 +77,47 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
             // set up the track fader banks
             this->apc_controller.setup_banks();
             // initialise the CCs that this device can translate into ParameterInputs
-            // todo: probably fetch these from the APC40MKII library instead of hardcoding them here
-            static const char *const knob_groups[] = {"APC40 Pan", "APC40 Sends", "APC40 User"};
-            static const char *const knob_names[3][8] = {
-                {"PanKnob1", "PanKnob2", "PanKnob3", "PanKnob4", "PanKnob5", "PanKnob6", "PanKnob7", "PanKnob8"},
-                {"SendsKnob1", "SendsKnob2", "SendsKnob3", "SendsKnob4", "SendsKnob5", "SendsKnob6", "SendsKnob7", "SendsKnob8"},
-                {"UserKnob1", "UserKnob2", "UserKnob3", "UserKnob4", "UserKnob5", "UserKnob6", "UserKnob7", "UserKnob8"}
-            };
+            // processed as logical knob inputs so that the APC40MKII library can correctly bank them
             for (uint8_t bank = 0; bank < 3; ++bank) {
                 for (uint8_t track = 0; track < 8; ++track) {
                     this->track_knob_inputs[bank][track] = new APC40LogicalKnobParameterInput(
-                        (char *)knob_names[bank][track],
-                        knob_groups[bank], this->apc_controller,
-                        static_cast<APC40TrackKnobBank>(bank), track
+                        this->apc_controller,
+                        static_cast<APC40TrackKnobBank>(bank), 
+                        track
                     );
                     this->addParameterInput(this->track_knob_inputs[bank][track]);
                 }
             }
             
             // initialise the track fader inputs
-            static const char *const fader_names[] = {
-                "TrackFader1", "TrackFader2", "TrackFader3", "TrackFader4",
-                "TrackFader5", "TrackFader6", "TrackFader7", "TrackFader8"
-            };
+            // added as normal midi CC inputs BUT they actually get updated via the
+            // APC40MKII library with the callback onTrackFaderChanged so that the MIDI channel is 
+            // irrelevant for the actual fader value updates.
             for (uint8_t track = 0; track < 8; ++track) {
-                this->track_fader_inputs[track] = new MIDICCParameterInput(
-                    (char *)fader_names[track], "APC40 Faders",
-                    (byte)APC40MKII::tracks::CC_FADER, (byte)(track + 1));
-                this->addParameterInput(this->track_fader_inputs[track]);
+                this->track_fader_inputs[track] = this->addCCParameterInput(
+                    APC40Controller::getTrackFaderName(track),
+                    "APC40 Faders",
+                    (byte)APC40MKII::tracks::CC_FADER, 
+                    (byte)(track + 1)
+                );
             }
 
-            this->addCCParameterInput("MasterFader", "APC40 Faders", (byte)APC40MKII::tracks::CC_FADER_MASTER,
-                (byte)APC40MKII::tracks::CHAN_FADER_MASTER);
+            // Master fader.  normal cc input, handled as a regular MIDI CC input via midi_cc_source
+            this->addCCParameterInput(
+                "MasterFader", 
+                "APC40 Faders", 
+                (byte)APC40MKII::tracks::CC_FADER_MASTER,
+                (byte)APC40MKII::tracks::CHAN_FADER_MASTER
+            );
                         
-            // Cue knob
-            this->cue_knob_input = new APC40CueKnobParameterInput((char *)"CueKnob", "APC40MKII");
+            // Cue knob.  logical input, handled via the APC40MKII library
+            this->cue_knob_input = new APC40CueKnobParameterInput(
+                (char *)"CueKnob", 
+                "APC40MKII"
+            );
             this->addParameterInput(this->cue_knob_input);
 
-            // Crossfader 
+            // Crossfader. regular input, handled as a normal MIDI CC input via midi_cc_source
             // todo: make this output bipolar by default..
             // think will need to implement bipolar mode for MIDICCParameterInput inputs,
             // or maybe a new class for that
@@ -229,8 +128,8 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                 (byte)APC40MKII::CHAN_CROSSFADER
             );
 
-            // Tempo knob - uses deltas, directly bound to the APC40MKII tempo encoder and
-            // set_bpm adjustment
+            // Tempo knob - uses deltas, directly bound to the APC40MKII tempo encoder.
+            // Wrapper calls the set_bpm adjustment. logical input handled via the APC40MKII library
             this->tempo_knob_input = new APC40TempoKnobWrapper();
 
             // todo: add support for other APC40MKII controls
@@ -312,12 +211,16 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
 
         virtual void receive_control_change(uint8_t channel, uint8_t number, uint8_t value) override {
             Serial.printf("APC40MKII CC received: channel=%d, number=%d, value=%d\n", channel, number, value);
-            this->apc_transport.receiveMidiMessage(0xB0, channel, number, value);
 
-            // const bool is_track_fader = number == APC40MKII::tracks::CC_FADER;
-            // if (!is_track_fader) {
-            //     MIDI_CC_Source::update_parameter_inputs_cc(number, value, channel);
-            // }
+            // so this will pick up the actual messages sent from the hardware, then sends to the 
+            // APC40MKII transport to handle things like banked encoders.
+            // the apc40mkii will then process the message accordingly and update the relevant 
+            // APC40LogicalKnobParameterInput controls directly..
+
+            // pass anything not handled by the APC40MKII transport to the regular MIDI CC input chain
+            if (!this->apc_transport.receiveMidiMessage(0xB0, channel, number, value)) {
+                MIDI_CC_Source::update_parameter_inputs_cc(number, value, channel);
+            }
         }
 };
 

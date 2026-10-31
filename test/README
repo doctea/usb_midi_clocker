@@ -48,7 +48,10 @@ The APC40 MKII adapter test also uses Node.js and g++:
 It compiles the production adapter and transport with the real APC40 library.
 It checks bank/track identity, app-originated values, independent inactive banks,
 automatic unipolar/bipolar rings, redundant-feedback suppression, relative Cue
-deltas and clamping, fader channels, and retained state after reconnect.
+deltas and clamping, tempo deltas, fader channels, stable group/name labels,
+and retained state after reconnect. It loads the opt-in APC parameter adapter
+and checks that handled events bypass the raw CC scan while unhandled events
+(including master/crossfader inputs) still reach it.
 APC40MKII_DIR, PARAMETERS_DIR and FOUNDLING_DIR can override the sibling library
 locations. It does not verify physical LED rings or build/upload firmware.
 

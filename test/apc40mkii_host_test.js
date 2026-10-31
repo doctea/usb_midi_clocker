@@ -14,6 +14,7 @@ function withoutIncludes(filename) {
 const parameterInput = withoutIncludes(path.join(parameters, 'include/parameter_inputs/ParameterInput.h'));
 const midiInput = withoutIncludes(path.join(parameters, 'include/parameter_inputs/MIDIParameterInput.h'));
 const midiSource = withoutIncludes(path.join(parameters, 'include/midi/midi_cc_source.h'));
+const apcInputs = withoutIncludes(path.join(apcLibrary, 'src/APC40ParameterInputs.h'));
 const behaviour = withoutIncludes(path.join(root, 'include/behaviours/behaviour_apc40mkii.h'));
 const transport = withoutIncludes(path.join(root, 'src/behaviours/behaviour_apc40mkii.cpp'));
 const source = `
@@ -27,6 +28,7 @@ const source = `
 #include "APC40Controller.h"
 using byte = uint8_t;
 #define ENABLE_APC40MKII
+#define APC40_ENABLE_PARAMETERS 1
 #define FLASHMEM
 #define F(text) text
 #define Debug_printf(...) ((void)0)
@@ -45,6 +47,7 @@ ParameterManager *parameter_manager = &manager;
 ${parameterInput}
 ${midiInput}
 ${midiSource}
+${apcInputs}
 struct MIDIDeviceBase {
     std::vector<std::vector<uint8_t>> sent;
     void sendSysEx(std::size_t size, const uint8_t *data, bool) {
@@ -79,6 +82,9 @@ struct DeviceBehaviourUSBBase {
 struct SerialMock {
     template<typename... Args> void printf(const char *, Args...) {}
 } Serial;
+static float bpm = 120.0f;
+static float get_bpm() { return bpm; }
+static void set_bpm(float value) { bpm = value; }
 ${behaviour}
 ${transport}
 static bool close_to(float actual, float expected) {
@@ -94,6 +100,12 @@ static MIDIParameterInputBase *find_input(DeviceBehaviour_APC40MKII &behaviour, 
     assert(false);
     return nullptr;
 }
+class RawScanProbe : public MIDIParameterInputBase {
+public:
+    unsigned scans = 0;
+    RawScanProbe() : MIDIParameterInputBase((char *)"Probe", "Test") {}
+    bool responds_to_cc(byte, byte) override { ++scans; return false; }
+};
 int main() {
     DeviceBehaviour_APC40MKII behaviour;
     assert(manager.inputs.size() == 35);
@@ -103,6 +115,9 @@ int main() {
     assert(pan && sends && user);
     assert(sends->get_bank() == APC40TrackKnobBank::Sends && sends->get_track() == 0);
     assert(user->get_track() == 7);
+    assert(std::strcmp(pan->get_group_and_name(), "APC40 Pan:PanKnob1") == 0);
+    assert(std::strcmp(sends->get_group_and_name(), "APC40 Sends:SendsKnob1") == 0);
+    assert(std::strcmp(user->get_group_and_name(), "APC40 User:UserKnob8") == 0);
     assert(!behaviour.get_track_knob_input(APC40TrackKnobBank::Pan, 8));
     assert(!behaviour.get_track_knob_input(static_cast<APC40TrackKnobBank>(3), 0));
     assert(pan->supports_bipolar_input());
@@ -113,6 +128,8 @@ int main() {
     MIDIDeviceBase device;
     behaviour.device = &device;
     behaviour.init();
+    RawScanProbe probe;
+    behaviour.addParameterInput(&probe);
     assert(sent_cc(device, APC40MKII::tracks::CC_KNOB_1 + 8, 2));
     device.sent.clear();
     assert(sends->set_value(42));
@@ -122,6 +139,7 @@ int main() {
     device.sent.clear();
     behaviour.receive_control_change(1, APC40MKII::tracks::CC_KNOB_1, 99);
     assert(sends->get_value() == 99 && pan->get_value() == 0);
+    assert(probe.scans == 0);
     assert(device.sent.empty());
     assert(sends->set_value(64));
     assert(sent_cc(device, APC40MKII::tracks::CC_KNOB_1, 64));
@@ -152,6 +170,15 @@ int main() {
     assert(close_to(user->get_normal_value_bipolar(), 1.0f));
     behaviour.receive_control_change(2, APC40MKII::tracks::CC_KNOB_8, 10);
     assert(user->get_value() == 127);
+    assert(probe.scans == 1);
+    probe.scans = 0;
+    behaviour.receive_control_change(1, APC40MKII::tempo::CC_TEMPO, 1);
+    assert(close_to(bpm, 121.0f));
+    behaviour.receive_control_change(1, APC40MKII::tempo::CC_TEMPO, 127);
+    assert(close_to(bpm, 120.0f) && probe.scans == 0);
+    behaviour.receive_control_change(2, APC40MKII::tempo::CC_TEMPO, 1);
+    assert(close_to(bpm, 120.0f) && probe.scans == 1);
+    probe.scans = 0;
     auto *cue = find_input(behaviour, "CueKnob");
     assert(!cue->responds_to_cc(APC40MKII::tracks::CC_CUE_LEVEL, 1));
     behaviour.receive_control_change(1, APC40MKII::tracks::CC_CUE_LEVEL, 5);
@@ -163,16 +190,26 @@ int main() {
     for (unsigned turn = 0; turn < 3; ++turn)
         behaviour.receive_control_change(1, APC40MKII::tracks::CC_CUE_LEVEL, 63);
     assert(close_to(cue->get_normal_value_unipolar(), 1.0f));
+    assert(probe.scans == 0);
     behaviour.receive_control_change(2, APC40MKII::tracks::CC_CUE_LEVEL, 127);
     assert(close_to(cue->get_normal_value_unipolar(), 1.0f));
+    assert(probe.scans == 1);
+    probe.scans = 0;
     behaviour.receive_control_change(1, APC40MKII::tracks::CC_FADER, 11);
     behaviour.receive_control_change(8, APC40MKII::tracks::CC_FADER, 88);
     assert(close_to(find_input(behaviour, "TrackFader1")->get_normal_value_unipolar(), 11.0f / 127.0f));
     assert(close_to(find_input(behaviour, "TrackFader8")->get_normal_value_unipolar(), 88.0f / 127.0f));
+    assert(probe.scans == 0);
+    behaviour.receive_control_change(9, APC40MKII::tracks::CC_FADER, 55);
+    assert(probe.scans == 1);
+    probe.scans = 0;
     behaviour.receive_control_change(1, APC40MKII::tracks::CC_FADER_MASTER, 70);
     behaviour.receive_control_change(1, APC40MKII::CC_CROSSFADER, 60);
     assert(close_to(find_input(behaviour, "MasterFader")->get_normal_value_unipolar(), 70.0f / 127.0f));
     assert(close_to(find_input(behaviour, "Crossfader")->get_normal_value_unipolar(), 60.0f / 127.0f));
+    assert(probe.scans == 2);
+    behaviour.receive_control_change(1, 100, 55);
+    assert(probe.scans == 3);
     behaviour.disconnect_device();
     device.sent.clear();
     assert(user->set_value(23));

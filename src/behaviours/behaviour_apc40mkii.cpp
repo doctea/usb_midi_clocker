@@ -59,20 +59,20 @@ bool APC40USBHostTransport::sendMessage(const uint8_t *data, std::size_t size) {
     return true;
 }
 
-void APC40USBHostTransport::receiveMidiMessage(
+bool APC40USBHostTransport::receiveMidiMessage(
     uint8_t status, uint8_t channel,
     uint8_t data1, uint8_t data2
 ) {
     if (!this->onMessage || channel < 1 || channel > 16 ||
             data1 > 127 || data2 > 127 ||
             (status != 0x80 && status != 0x90 && status != 0xB0)) {
-        return;
+        return false;
     }
 
     const uint8_t message[] = {
         static_cast<uint8_t>(status | (channel - 1)), data1, data2
     };
-    this->onMessage(message, sizeof(message));
+    return this->onMessage(message, sizeof(message));
 }
 
 DeviceBehaviour_APC40MKII *behaviour_apc40mkii;
