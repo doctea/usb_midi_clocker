@@ -9,49 +9,146 @@
 
 #include "behaviours/behaviour_base_usb.h"
 #include "usb/multi_usb_handlers.h"
+#include <APC40Controller.h>
+#include <APC40Transport.h>
+#include <APC40Constants.h>
 
 // use parameter library adapter to handle cc events
 #include "midi/midi_cc_source.h"
+
 
 void apc40mkii_note_on(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apc40mkii_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity);
 void apc40mkii_control_change(uint8_t inChannel, uint8_t inNumber, uint8_t inValue);
 
-#define SYSEX_MESSAGE_TYPE_INTRODUCTION_IDENTIFIER 0x60
-
-#define SYSEX_APPLICATION_IDENTIFIER_MODE_0 0x40
-#define SYSEX_APPLICATION_IDENTIFIER_MODE_1 0x41
-#define SYSEX_APPLICATION_IDENTIFIER_MODE_2 0x42
 
 
-#define APC40MKII_KNOB_CUE_CC_1      47
-#define APC40MKII_KNOB_TOP_CC_1      48
-#define APC40MKII_KNOB_TOP_CC_2      49
-#define APC40MKII_KNOB_TOP_CC_3      50
-#define APC40MKII_KNOB_TOP_CC_4      51
-#define APC40MKII_KNOB_TOP_CC_5      52
-#define APC40MKII_KNOB_TOP_CC_6      53
-#define APC40MKII_KNOB_TOP_CC_7      54
-#define APC40MKII_KNOB_TOP_CC_8      55
-#define APC40MKII_KNOB_TOP_CC_MASTER 56
+class APC40USBHostTransport : public APC40Transport {
+    private:
+        MIDIDeviceBase *device = nullptr;
 
-// master fader is cc 14 on ch1
-#define APC40MKII_MASTER_FADER_CC 14
+    public:
+        void set_device(MIDIDeviceBase *connected_device);
+        virtual bool open() override;
+        virtual void close() override;
+        virtual bool isConnected() const override;
+        virtual bool sendMessage(const uint8_t *data, std::size_t size) override;
+        void receiveMidiMessage(uint8_t status, uint8_t channel, uint8_t data1, uint8_t data2);
+};
 
-// crossfader CC = 15 on ch1
-#define APC40MKII_CROSSFADER_CC 15
+class APC40LogicalKnobParameterInput : public MIDIParameterInputBase {
+    private:
+        APC40Controller &controller;
+        const APC40TrackKnobBank bank;
+        const uint8_t track;
 
-// faders are CC 7, on channel 1-8
-#define APC40MKII_FADER_CC 7
-// device knobs are CC 16-23 on channel determined by the channel selector buttons
-// channel selector buttons are cc 23 on channel of the channel 1-8
-#define APC40MKII_TEMPO_KNOB_CC 13
+    public:
+        APC40LogicalKnobParameterInput(char *name, const char *group_name,
+                APC40Controller &controller, APC40TrackKnobBank bank, uint8_t track)
+            : MIDIParameterInputBase(name, group_name), controller(controller), bank(bank), track(track) {
+            this->loop();
+        }
 
-// tempo knob is CC 13 on channel 1, with values of 127=anti-clockwise, 1=clockwise
-// APC40MKII CC received: channel=1, number=13, value=1
+        APC40TrackKnobBank get_bank() const { return this->bank; }
+        uint8_t get_track() const { return this->track; }
 
+        uint8_t get_value() const {
+            APC40VirtualEncoderState state;
+            return this->controller.getTrackKnobState(this->bank, this->track, state) ? state.value : 0;
+        }
+
+        bool set_value(uint8_t value) {
+            APC40VirtualEncoderState state;
+            if (!this->controller.getTrackKnobState(this->bank, this->track, state)) {
+                return false;
+            }
+            value = value > 127 ? 127 : value;
+            const APC40EncoderPolarity polarity = this->input_type == BIPOLAR
+                ? APC40EncoderPolarity::Bipolar : APC40EncoderPolarity::Unipolar;
+            if (state.value == value && state.polarity == polarity &&
+                    state.ringMode == APC40EncoderRingMode::Automatic) {
+                return true;
+            }
+            state.value = value;
+            state.polarity = polarity;
+            state.ringMode = APC40EncoderRingMode::Automatic;
+            return this->controller.setTrackKnobState(this->bank, this->track, state);
+        }
+
+        virtual void loop() override {
+            this->set_value(this->get_value());
+        }
+
+        virtual const char *getInputValue() override {
+            static char formatted_value[20];
+            snprintf(formatted_value, sizeof(formatted_value), "[%3u]",
+                static_cast<unsigned>(this->get_value()));
+            return formatted_value;
+        }
+
+        virtual const char *getOutputValue() override {
+            static char formatted_value[20];
+            const float value = this->input_type == BIPOLAR
+                ? this->get_normal_value_bipolar() : this->get_normal_value_unipolar();
+            snprintf(formatted_value, sizeof(formatted_value), "[%-4i%%]",
+                static_cast<int>(value * 100.0f));
+            return formatted_value;
+        }
+
+        virtual bool supports_bipolar_input() override {
+            return true;
+        }
+
+        virtual float get_normal_value_unipolar() override {
+            return static_cast<float>(this->get_value()) / 127.0f;
+        }
+
+        virtual float get_normal_value_bipolar() override {
+            const float bipolar = (static_cast<float>(this->get_value()) - 64.0f) / 63.0f;
+            return constrain(bipolar, -1.0f, 1.0f);
+        }
+
+        virtual const char *getInputInfo() override {
+            static char input_info[24];
+            const char *bank_name = "Unknown";
+            switch (this->bank) {
+                case APC40TrackKnobBank::Pan: bank_name = "Pan"; break;
+                case APC40TrackKnobBank::Sends: bank_name = "Sends"; break;
+                case APC40TrackKnobBank::User: bank_name = "User"; break;
+            }
+            snprintf(input_info, sizeof(input_info), "%s knob %u", bank_name,
+                static_cast<unsigned>(this->track + 1));
+            return input_info;
+        }
+};
+
+class APC40CueKnobParameterInput : public MIDICCParameterInput {
+    public:
+        APC40CueKnobParameterInput(char *name, const char *group_name)
+            : MIDICCParameterInput(name, group_name, APC40MKII::tracks::CC_CUE_LEVEL,
+                APC40MKII::tracks::CHAN_KNOBS) {}
+
+        virtual bool responds_to_cc(byte, byte) override { return false; }
+        virtual void receive_control_change(byte, byte, byte) override {}
+
+        void apply_delta(int16_t delta) {
+            const int value = static_cast<int>(this->currentValue) + delta;
+            this->currentValue = static_cast<int8_t>(constrain(value, 0, 127));
+        }
+
+        virtual const char *getInputInfo() override {
+            return "APC40 relative Cue";
+        }
+};
 
 class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual public MIDI_CC_Source {
+    private:
+        APC40USBHostTransport apc_transport;
+        APC40Controller apc_controller;
+        APC40LogicalKnobParameterInput *track_knob_inputs[3][8] = {};
+        MIDICCParameterInput *track_fader_inputs[8] = {};
+        APC40CueKnobParameterInput *cue_knob_input = nullptr;
+
     public:
 
         uint16_t vid = 0x09e8, pid = 0x0029;
@@ -64,24 +161,50 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
 
         bool apc40mkii_shift_held = false;
 
-        DeviceBehaviour_APC40MKII() : DeviceBehaviourUSBBase() {
-            // initialise the CCs that this device can translate into ParameterInputs
-            this->addCCParameterInput("TopKnob1", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_1, (byte)1);
-            this->addCCParameterInput("TopKnob2", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_2, (byte)1);
-            this->addCCParameterInput("TopKnob3", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_3, (byte)1);
-            this->addCCParameterInput("TopKnob4", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_4, (byte)1);
-            this->addCCParameterInput("TopKnob5", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_5, (byte)1);
-            this->addCCParameterInput("TopKnob6", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_6, (byte)1);
-            this->addCCParameterInput("TopKnob7", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_7, (byte)1);
-            this->addCCParameterInput("TopKnob8", "APC40 Knobs", (byte)APC40MKII_KNOB_TOP_CC_8, (byte)1);
-            
-            this->addCCParameterInput("MasterFader", "APC40 Faders", (byte)APC40MKII_MASTER_FADER_CC, (byte)1);
-                        
-            this->addCCParameterInput("CueKnob", "APC40MKII", (byte)APC40MKII_KNOB_CUE_CC_1, (byte)1);
-            // todo: make this output bipolar by default?
-            this->addCCParameterInput("Crossfader", "APC40MKII", (byte)APC40MKII_CROSSFADER_CC, (byte)1);
+        APC40LogicalKnobParameterInput *get_track_knob_input(APC40TrackKnobBank bank, uint8_t track) const {
+            const uint8_t bank_index = static_cast<uint8_t>(bank);
+            return bank_index < 3 && track < 8 ? this->track_knob_inputs[bank_index][track] : nullptr;
+        }
 
-            // @@TODO: set up the 3 banks of fixed knobs..
+        DeviceBehaviour_APC40MKII() : DeviceBehaviourUSBBase(), apc_controller(apc_transport) {
+            this->apc_controller.setup_banks();
+            // initialise the CCs that this device can translate into ParameterInputs
+            static const char *const knob_groups[] = {"APC40 Pan", "APC40 Sends", "APC40 User"};
+            static const char *const knob_names[3][8] = {
+                {"PanKnob1", "PanKnob2", "PanKnob3", "PanKnob4", "PanKnob5", "PanKnob6", "PanKnob7", "PanKnob8"},
+                {"SendsKnob1", "SendsKnob2", "SendsKnob3", "SendsKnob4", "SendsKnob5", "SendsKnob6", "SendsKnob7", "SendsKnob8"},
+                {"UserKnob1", "UserKnob2", "UserKnob3", "UserKnob4", "UserKnob5", "UserKnob6", "UserKnob7", "UserKnob8"}
+            };
+            static const char *const fader_names[] = {
+                "TrackFader1", "TrackFader2", "TrackFader3", "TrackFader4",
+                "TrackFader5", "TrackFader6", "TrackFader7", "TrackFader8"
+            };
+            for (uint8_t bank = 0; bank < 3; ++bank) {
+                for (uint8_t track = 0; track < 8; ++track) {
+                    this->track_knob_inputs[bank][track] = new APC40LogicalKnobParameterInput(
+                        (char *)knob_names[bank][track],
+                        knob_groups[bank], this->apc_controller,
+                        static_cast<APC40TrackKnobBank>(bank), track
+                    );
+                    this->addParameterInput(this->track_knob_inputs[bank][track]);
+                }
+            }
+            
+            for (uint8_t track = 0; track < 8; ++track) {
+                this->track_fader_inputs[track] = new MIDICCParameterInput(
+                    (char *)fader_names[track], "APC40 Faders",
+                    (byte)APC40MKII::tracks::CC_FADER, (byte)(track + 1));
+                this->addParameterInput(this->track_fader_inputs[track]);
+            }
+
+            this->addCCParameterInput("MasterFader", "APC40 Faders", (byte)APC40MKII::tracks::CC_FADER_MASTER,
+                (byte)APC40MKII::tracks::CHAN_FADER_MASTER);
+                        
+            this->cue_knob_input = new APC40CueKnobParameterInput((char *)"CueKnob", "APC40MKII");
+            this->addParameterInput(this->cue_knob_input);
+            // todo: make this output bipolar by default?
+            this->addCCParameterInput("Crossfader", "APC40MKII", (byte)APC40MKII::CC_CROSSFADER,
+                (byte)APC40MKII::CHAN_CROSSFADER);
         }
 
         FLASHMEM 
@@ -92,53 +215,42 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
             this->device->setHandleControlChange(apc40mkii_control_change);
             this->device->setHandleNoteOn(apc40mkii_note_on);
             this->device->setHandleNoteOff(apc40mkii_note_off);
-
-            // APC40 MkI Smart Mode Handshake Array
-            // byte apc_handshake[] = {
-            //     0xF0, 0x47, 0x7F, 0x29, 
-            //     SYSEX_MESSAGE_TYPE_INTRODUCTION_IDENTIFIER, 0x00, 0x04, SYSEX_APPLICATION_IDENTIFIER_MODE_2, 0x00, 0x00, 0x00, 0xF7};
-            Serial.printf("Sending APC40 MkII handshake SysEx\n");          
-            // this->device->sendSysEx(sizeof(apc_handshake), apc_handshake, true);
-
-            this->send_sysex_command(
-                SYSEX_MESSAGE_TYPE_INTRODUCTION_IDENTIFIER,
-                4,
-                (const byte[]){
-                    SYSEX_APPLICATION_IDENTIFIER_MODE_1, // mode
-                    0x09, // major version
-                    0x07, // minor version
-                    0x01  // bugfix level
-                }
-            );
-
         };
 
         virtual void send_sysex_command(byte message_identifier, int16_t size, const byte *data) {
-            byte sysex[size + 7];
-            // sysex[0] = 0xF0;
-            sysex[0] = 0x47;
-            sysex[1] = 0x7F;
-            sysex[2] = 0x29;
-            sysex[3] = message_identifier;
-            sysex[4] = size >> 8; // MSB of size
-            sysex[5] = size & 0xFF; // LSB of size
-            for (int i = 0; i < size; i++) {
-                sysex[6 + i] = data[i];
-            }
-            // sysex[size + 7] = 0xF7;
-            this->device->sendSysEx(size + 6, sysex, false);
+            this->apc_controller.device.send_sysex_command(message_identifier, size, data);
         }
 
         FLASHMEM
         virtual void init() override {
             DeviceBehaviourUSBBase::init();
-            // apc40mkii_display_initialise_last_sent();
-            // apc40mkii_clear_display(true);
-            // redraw_immediately = true;
-            //apc40mkii_update_clock_display();
+            for (auto &bank_inputs : this->track_knob_inputs) {
+                for (auto *input : bank_inputs) {
+                    input->loop();
+                }
+            }
+            this->apc_controller.onCueEncoderDelta = [this](int16_t delta) {
+                this->cue_knob_input->apply_delta(delta);
+            };
+            this->apc_controller.onTrackFaderChanged = [this](uint8_t track, uint8_t value) {
+                if (track < 8 && this->track_fader_inputs[track] != nullptr) {
+                    this->track_fader_inputs[track]->receive_control_change(
+                        APC40MKII::tracks::CC_FADER, value,
+                        track + 1
+                    );
+                }
+            };
+            this->apc_transport.set_device(this->device);
+            this->apc_controller.init();
+        }
+
+        virtual void disconnect_device() override {
+            this->apc_transport.set_device(nullptr);
+            DeviceBehaviourUSBBase::disconnect_device();
         }
 
         virtual void receive_note_on(byte inChannel, byte inNumber, byte inVelocity) override {
+            this->apc_transport.receiveMidiMessage(0x90, inChannel, inNumber, inVelocity);
             Debug_printf(F("apc40mkii_note_on for %i, %i, %i\n"), inChannel, inNumber, inVelocity);
 
             // if (inNumber==APC40_BUTTON_SHIFT) {
@@ -149,6 +261,7 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         }
 
         virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) override {
+            this->apc_transport.receiveMidiMessage(0x80, inChannel, inNumber, inVelocity);
             // if (inNumber==APC40_BUTTON_SHIFT) {
             //     apc40mkii_shift_held = false;
             //     Serial.print("APC40MKII Shift button released\n");
@@ -157,26 +270,13 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         }
 
         virtual void receive_control_change(uint8_t channel, uint8_t number, uint8_t value) override {
-            // #ifdef ENABLE_BPM
-            //     if (number==tempo_fader_cc/*APCMINI_FADER_CC_MASTER*/) {   // 56 == "master" fader set bpm 
-            //         if (clock_mode==CLOCK_INTERNAL)
-            //             set_bpm(map(value, 0, 127, BPM_MINIMUM, BPM_MAXIMUM)); // scale CC value
-            //     }
-            // #endif
-
             Serial.printf("APC40MKII CC received: channel=%d, number=%d, value=%d\n", channel, number, value);
+            this->apc_transport.receiveMidiMessage(0xB0, channel, number, value);
 
-            int steps = 0;
-            if (value > 64) {
-                // Turning Left (CC values 127, 126, 125...)
-                steps = value - 128; // Results in negative step: -1, -2, -3...
-            } else {
-                // Turning Right (CC values 1, 2, 3...)
-                steps = value;       // Results in positive step: 1, 2, 3...
+            const bool is_track_fader = number == APC40MKII::tracks::CC_FADER;
+            if (!is_track_fader) {
+                MIDI_CC_Source::update_parameter_inputs_cc(number, value, channel);
             }
-            Serial.printf("APC40MKII CC steps calculated: %d\n", steps);
-
-            MIDI_CC_Source::update_parameter_inputs_cc(number, value, channel);
         }
 };
 

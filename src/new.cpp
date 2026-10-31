@@ -27,6 +27,15 @@
 
 #include "wiring.h"
 
+#if !defined(__EXCEPTIONS)
+namespace std {
+    [[noreturn]] void __throw_bad_function_call()
+    {
+        abort();
+    }
+}
+#endif
+
 // Replacement functions that use EXTMEM instead of RAM2 for new/delete
 
 // with thanks to KurtE and Beermat 

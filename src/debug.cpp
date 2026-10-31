@@ -20,8 +20,9 @@
       static bool has_sample = false;
       const uint32_t now_ms = millis();
       if (!has_sample || now_ms - last_sample_ms >= 1000) {
+        size_t total_bytes = 0;
         size_t free_bytes = 0;
-        if (sm_malloc_stats_pool(&extmem_smalloc_pool, nullptr, nullptr,
+        if (sm_malloc_stats_pool(&extmem_smalloc_pool, &total_bytes, nullptr,
                                  &free_bytes, nullptr) < 0) {
           cached_free_bytes = 0;
         } else {

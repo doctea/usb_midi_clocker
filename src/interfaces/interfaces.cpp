@@ -175,8 +175,9 @@ void set_sequence_gate(int gate_number, bool state) {
             }
     };
 
-    const char *gate_labels[16] = {
-        " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", "10", "11", "12", "13", "14", "15", "16"
+    const char *gate_labels[32] = {
+        " 1", " 2", " 3", " 4", " 5", " 6", " 7", " 8", " 9", "10", "11", "12", "13", "14", "15", "16",
+        "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32"
     };
 
     #include "mymenu/menu_gatedisplay.h"
@@ -192,9 +193,15 @@ void set_sequence_gate(int gate_number, bool state) {
         char label[MENU_C_MAX];
         for (int bank = 0 ; bank < this->num_banks ; bank++) {
             snprintf(label, MENU_C_MAX, "Bank %i: %s", bank, bank==BANK_CLOCK ? "Clocks" : "Sequences");
-            ObjectMultiToggleControl *gate_toggles = new ObjectMultiToggleControl(label, true);
-
-            Serial.printf("Creating gate toggles for bank %i (%s)\n", bank, label); Serial_flush();
+            Serial.printf("Creating gate toggles for bank %i (%s), size=%u\n", bank, label,
+                static_cast<unsigned>(sizeof(ObjectMultiToggleControl))); Serial_flush();
+            ObjectMultiToggleControl *gate_toggles = new (std::nothrow) ObjectMultiToggleControl(label, true);
+            if (gate_toggles == nullptr) {
+                Serial.printf("GateManager: allocation failed for bank %i\n", bank); Serial_flush();
+                debug_free_ram();
+                return;
+            }
+            Serial.printf("Gate toggle control allocated at %p\n", static_cast<void *>(gate_toggles)); Serial_flush();
             for (int gate = 0 ; gate < this->banks[bank]->num_gates ; gate++) {
                 //snprintf(label, MENU_C_MAX, "G%2i", gate);
                 gate_toggles->addItem(new GateMultiToggleItem(gate_labels[gate_count++], bank, gate));

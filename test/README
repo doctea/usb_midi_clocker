@@ -41,6 +41,17 @@ running PlatformIO or installing firmware dependencies. The display/transmit
 test expects USBHost_t36 at ../my_libraries/USBHost_t36; USBHOST_T36_DIR can
 override that location.
 
+The APC40 MKII adapter test also uses Node.js and g++:
+
+	node test/apc40mkii_host_test.js
+
+It compiles the production adapter and transport with the real APC40 library.
+It checks bank/track identity, app-originated values, independent inactive banks,
+automatic unipolar/bipolar rings, redundant-feedback suppression, relative Cue
+deltas and clamping, fader channels, and retained state after reconnect.
+APC40MKII_DIR, PARAMETERS_DIR and FOUNDLING_DIR can override the sibling library
+locations. It does not verify physical LED rings or build/upload firmware.
+
 The routing-page test compiles production behaviour-page setup, endpoint page
 lookup, and popup availability checks with mock menus. It covers behaviours
 that create custom pages without returning items (including Euclidian's four
@@ -108,10 +119,15 @@ tests; see debug_notes.md for usb_debug_test reset/watchdog hardware checks.
 The menu test expects mymenu and foundling at ../my_libraries. It uses C++11
 with exceptions disabled and UBSan to check flat-list resizing,
 debug-page membership, insertion failure, selection preservation, and retry.
+It also compiles GateManager's production gate-menu loop, checking all labels
+for two/four eight-gate banks and safe return on control allocation failure.
+It checks freeExtRam's required SMalloc output pointers, sampling cache, and
+failed/empty/full pool results using a host allocator stub.
 MENU_TEST_SANITIZERS=address,undefined optionally enables AddressSanitizer too.
 MENU_TEST_ARM_CXX can point to arm-none-eabi-g++ to additionally reproduce the
-custom-linker error from libstdc++ nothrow wrappers and verify the production
-allocator overloads avoid it. When using a Windows compiler from WSL, set TMPDIR
+custom-linker errors from libstdc++ nothrow wrappers and std::function's empty
+callback guard. It verifies that the production allocation and no-exceptions
+callback overrides avoid those errors. When using a Windows compiler from WSL, set TMPDIR
 to a Windows-accessible temporary directory and provide the compiler's WSL path.
 Flat-list arrays use new[]/delete[] so application allocator overrides apply;
 usb_teensy_clocker's override reserves internal RAM before spilling into PSRAM.
