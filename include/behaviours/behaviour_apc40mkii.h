@@ -143,7 +143,7 @@ class APC40CueKnobParameterInput : public MIDICCParameterInput {
         }
 };
 
-class APC40TempoKnobInput {
+class APC40TempoKnobWrapper {
     public:
     void apply_delta(int16_t delta) {
         set_bpm(get_bpm() + (float)delta);
@@ -157,7 +157,7 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         APC40LogicalKnobParameterInput *track_knob_inputs[3][8] = {};
         MIDICCParameterInput *track_fader_inputs[8] = {};
         APC40CueKnobParameterInput *cue_knob_input = nullptr;
-        APC40TempoKnobInput *tempo_knob_input = nullptr;
+        APC40TempoKnobWrapper *tempo_knob_input = nullptr;
 
     public:
 
@@ -177,6 +177,8 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         }
 
         DeviceBehaviour_APC40MKII() : DeviceBehaviourUSBBase(), apc_controller(apc_transport) {
+
+            // set up the track fader banks
             this->apc_controller.setup_banks();
             // initialise the CCs that this device can translate into ParameterInputs
             // todo: probably fetch these from the APC40MKII library instead of hardcoding them here
@@ -185,10 +187,6 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                 {"PanKnob1", "PanKnob2", "PanKnob3", "PanKnob4", "PanKnob5", "PanKnob6", "PanKnob7", "PanKnob8"},
                 {"SendsKnob1", "SendsKnob2", "SendsKnob3", "SendsKnob4", "SendsKnob5", "SendsKnob6", "SendsKnob7", "SendsKnob8"},
                 {"UserKnob1", "UserKnob2", "UserKnob3", "UserKnob4", "UserKnob5", "UserKnob6", "UserKnob7", "UserKnob8"}
-            };
-            static const char *const fader_names[] = {
-                "TrackFader1", "TrackFader2", "TrackFader3", "TrackFader4",
-                "TrackFader5", "TrackFader6", "TrackFader7", "TrackFader8"
             };
             for (uint8_t bank = 0; bank < 3; ++bank) {
                 for (uint8_t track = 0; track < 8; ++track) {
@@ -201,6 +199,11 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                 }
             }
             
+            // initialise the track fader inputs
+            static const char *const fader_names[] = {
+                "TrackFader1", "TrackFader2", "TrackFader3", "TrackFader4",
+                "TrackFader5", "TrackFader6", "TrackFader7", "TrackFader8"
+            };
             for (uint8_t track = 0; track < 8; ++track) {
                 this->track_fader_inputs[track] = new MIDICCParameterInput(
                     (char *)fader_names[track], "APC40 Faders",
@@ -211,9 +214,14 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
             this->addCCParameterInput("MasterFader", "APC40 Faders", (byte)APC40MKII::tracks::CC_FADER_MASTER,
                 (byte)APC40MKII::tracks::CHAN_FADER_MASTER);
                         
+            // Cue knob
             this->cue_knob_input = new APC40CueKnobParameterInput((char *)"CueKnob", "APC40MKII");
             this->addParameterInput(this->cue_knob_input);
-            // todo: make this output bipolar by default?
+
+            // Crossfader 
+            // todo: make this output bipolar by default..
+            // think will need to implement bipolar mode for MIDICCParameterInput inputs,
+            // or maybe a new class for that
             this->addCCParameterInput(
                 "Crossfader", 
                 "APC40MKII", 
@@ -221,7 +229,9 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                 (byte)APC40MKII::CHAN_CROSSFADER
             );
 
-            this->tempo_knob_input = new APC40TempoKnobInput();
+            // Tempo knob - uses deltas, directly bound to the APC40MKII tempo encoder and
+            // set_bpm adjustment
+            this->tempo_knob_input = new APC40TempoKnobWrapper();
 
             // todo: add support for other APC40MKII controls
             // todo: add support for play/record/session buttons
@@ -266,6 +276,11 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                     );
                 }
             };
+            // this->apc_controller.onDeviceEncoderChanged = [this](uint8_t bank, uint8_t encoder, int8_t value) {
+            //     if (this->device_encoder_inputs[encoder] != nullptr) {
+            //         this->device_encoder_inputs[encoder]->apply_delta(value);
+            //     }
+            // };
             this->apc_transport.set_device(this->device);
             this->apc_controller.init();
         }
