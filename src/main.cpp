@@ -12,6 +12,7 @@
 
 #include "BootConfig.h"
 #include "Config.h"
+#include "transport_state.h"
 
 #if defined(GDB_DEBUG) or defined(USB_MIDI16_DUAL_SERIAL)
   #include "TeensyDebug.h"
@@ -57,6 +58,8 @@
 //#define DEBUG_SEQUENCER
 
 //void on_restart();
+TransportState transport_state;
+
 void do_tick(uint32_t ticks);
 
 #ifdef USE_UCLOCK

@@ -239,7 +239,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     virtual void on_tick(uint32_t tick) override {
         if (/*!is_bpm_on_bar(tick) &&*/ is_bpm_on_half_bar(tick)) {
             //if (debug) 
-            Serial_printf("on half bar! tick=%2i\n", tick);
+            // Serial_printf("on half bar! tick=%2i\n", tick);
             // on half bar, so if we have a second chord set for this bar, we could trigger it here
             int8_t bar_number = arranger->current_bar;
             if (arranger->song_sections[arranger->current_section].grid_second[bar_number].degree > 0) {

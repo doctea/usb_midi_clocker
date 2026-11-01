@@ -9,6 +9,8 @@
 
 #include "behaviours/behaviour_base_usb.h"
 #include "usb/multi_usb_handlers.h"
+#include "clock.h"
+#include "transport_state.h"
 #include <APC40Controller.h>
 #include <APC40Transport.h>
 #include <APC40Constants.h>
@@ -54,6 +56,29 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         APC40TempoKnobWrapper *tempo_knob_input = nullptr;
 
         MIDICCParameterInput *track_fader_inputs[8] = {};
+        MIDICCParameterInput *master_fader_input = nullptr;
+        MIDICCParameterInput *crossfader_input = nullptr;
+
+        void synchronize_transport_state() {
+            this->apc_controller.setPlayState(playing);
+            this->apc_controller.setRecordState(transport_state.record_enabled);
+        }
+
+        #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+            APC40ParameterInputMap midi_learn_inputs;
+            uint32_t midi_learn_revision = 0;
+
+            void synchronize_midi_learn_state() {
+                const uint32_t revision = parameter_manager->get_midi_learn_revision();
+                if (revision != this->midi_learn_revision) {
+                    this->apc_controller.setMIDILearnDeviceState(false);
+                    this->midi_learn_revision = revision;
+                }
+                this->apc_controller.setMIDILearnHostState(
+                    parameter_manager->is_midi_learn_active()
+                );
+            }
+        #endif
         
     public:
 
@@ -66,6 +91,21 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         virtual bool receives_midi_notes() { return true; }
 
         bool apc40mkii_shift_held = false;
+
+        std::function<void()> on_session_pressed;
+
+        void set_session_state(bool active) {
+            this->apc_controller.setSessionState(active);
+        }
+
+        bool get_record_enabled() const {
+            return transport_state.record_enabled;
+        }
+
+        void set_record_enabled(bool enabled) {
+            transport_state.record_enabled = enabled;
+            this->apc_controller.setRecordState(enabled);
+        }
 
         APC40LogicalKnobParameterInput *get_track_knob_input(APC40TrackKnobBank bank, uint8_t track) const {
             const uint8_t bank_index = static_cast<uint8_t>(bank);
@@ -86,6 +126,10 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                         track
                     );
                     this->addParameterInput(this->track_knob_inputs[bank][track]);
+                    #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                        this->midi_learn_inputs.bind(this->track_knob_inputs[bank][track]->get_control_id(),
+                            this->track_knob_inputs[bank][track]);
+                    #endif
                 }
             }
             
@@ -100,10 +144,14 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                     (byte)APC40MKII::tracks::CC_FADER, 
                     (byte)(track + 1)
                 );
+                #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                    this->midi_learn_inputs.bind({APC40ControlKind::TrackFader, 0, track},
+                        this->track_fader_inputs[track]);
+                #endif
             }
 
             // Master fader.  normal cc input, handled as a regular MIDI CC input via midi_cc_source
-            this->addCCParameterInput(
+            this->master_fader_input = this->addCCParameterInput(
                 "MasterFader", 
                 "APC40 Faders", 
                 (byte)APC40MKII::tracks::CC_FADER_MASTER,
@@ -121,19 +169,23 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
             // todo: make this output bipolar by default..
             // think will need to implement bipolar mode for MIDICCParameterInput inputs,
             // or maybe a new class for that
-            this->addCCParameterInput(
+            this->crossfader_input = this->addCCParameterInput(
                 "Crossfader", 
                 "APC40MKII", 
                 (byte)APC40MKII::CC_CROSSFADER,
                 (byte)APC40MKII::CHAN_CROSSFADER
             );
+            #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                this->midi_learn_inputs.bind({APC40ControlKind::MasterFader, 0, 0}, this->master_fader_input);
+                this->midi_learn_inputs.bind({APC40ControlKind::Crossfader, 0, 0}, this->crossfader_input);
+                this->midi_learn_inputs.bind({APC40ControlKind::CueEncoder, 0, 0}, this->cue_knob_input);
+            #endif
 
             // Tempo knob - uses deltas, directly bound to the APC40MKII tempo encoder.
             // Wrapper calls the set_bpm adjustment. logical input handled via the APC40MKII library
             this->tempo_knob_input = new APC40TempoKnobWrapper();
 
             // todo: add support for other APC40MKII controls
-            // todo: add support for play/record/session buttons
             // todo: shift support?
             // todo: device knobs and all the rest...
         }
@@ -155,17 +207,52 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         FLASHMEM
         virtual void init() override {
             DeviceBehaviourUSBBase::init();
+
+            this->apc_controller.onPlayPressed = [this] {
+                if (playing)
+                    clock_stop();
+                else
+                    clock_continue();
+                this->apc_controller.setPlayState(playing);
+            };
+            this->apc_controller.onRecordPressed = [this] {
+                this->set_record_enabled(!transport_state.record_enabled);
+            };
+            this->apc_controller.onSessionPressed = [this] {
+                #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                    this->synchronize_midi_learn_state();
+                    this->apc_controller.setMIDILearnDeviceState(!this->apc_controller.midiLearnDeviceState);
+                #endif
+                if (this->on_session_pressed)
+                    this->on_session_pressed();
+            };
+            #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                this->apc_controller.setMillisProvider([] { return millis(); });
+                this->apc_controller.onLearnCandidate = [this](const APC40ControlEvent& event) {
+                    const bool assigned = parameter_manager->propose_midi_learn(
+                        this->midi_learn_inputs.resolve(event.control));
+                    this->synchronize_midi_learn_state();
+                    return assigned;
+                };
+                this->synchronize_midi_learn_state();
+            #endif
+
             for (auto &bank_inputs : this->track_knob_inputs) {
+                // TODO: why do we do this?
+                // Loop through each input in the bank and call its loop method.
+                // This ensures that any internal state or processing for the input is updated regularly.
                 for (auto *input : bank_inputs) {
                     input->loop();
                 }
             }
+
             this->apc_controller.onCueEncoderDelta = [this](int16_t delta) {
                 this->cue_knob_input->apply_delta(delta);
             };
             this->apc_controller.onTempoEncoderDelta = [this](int16_t delta) {
                 this->tempo_knob_input->apply_delta(delta);
             };
+
             this->apc_controller.onTrackFaderChanged = [this](uint8_t track, uint8_t value) {
                 if (track < 8 && this->track_fader_inputs[track] != nullptr) {
                     this->track_fader_inputs[track]->receive_control_change(
@@ -175,13 +262,19 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                     );
                 }
             };
-            // this->apc_controller.onDeviceEncoderChanged = [this](uint8_t bank, uint8_t encoder, int8_t value) {
-            //     if (this->device_encoder_inputs[encoder] != nullptr) {
-            //         this->device_encoder_inputs[encoder]->apply_delta(value);
-            //     }
-            // };
+
+            this->synchronize_transport_state();
             this->apc_transport.set_device(this->device);
             this->apc_controller.init();
+        }
+
+        virtual void loop(uint32_t ticks) override {
+            DeviceBehaviourUSBBase::loop(ticks);
+            this->synchronize_transport_state();
+            #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                this->synchronize_midi_learn_state();
+            #endif
+            this->apc_controller.loop();
         }
 
         virtual void disconnect_device() override {
@@ -190,6 +283,10 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         }
 
         virtual void receive_note_on(byte inChannel, byte inNumber, byte inVelocity) override {
+            #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                // TODO: not sure we actually need this here?
+                this->synchronize_midi_learn_state();
+            #endif
             this->apc_transport.receiveMidiMessage(0x90, inChannel, inNumber, inVelocity);
             Debug_printf(F("apc40mkii_note_on for %i, %i, %i\n"), inChannel, inNumber, inVelocity);
 
@@ -197,7 +294,7 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
             //     apc40mkii_shift_held = true;            
             //     Serial.print("APC40MKII Shift button pressed\n");
             // }
-            Serial.printf("APC40MKII Note On received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
+            if (Serial) Serial.printf("APC40MKII Note On received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
         }
 
         virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) override {
@@ -206,11 +303,15 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
             //     apc40mkii_shift_held = false;
             //     Serial.print("APC40MKII Shift button released\n");
             // }
-            Serial.printf("APC40MKII Note Off received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
+            if (Serial) Serial.printf("APC40MKII Note Off received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
         }
 
         virtual void receive_control_change(uint8_t channel, uint8_t number, uint8_t value) override {
-            Serial.printf("APC40MKII CC received: channel=%d, number=%d, value=%d\n", channel, number, value);
+            if (Serial) Serial.printf("APC40MKII CC received: channel=%d, number=%d, value=%d\n", channel, number, value);
+            #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                // @@TODO: not sure we need this or here either?
+                this->synchronize_midi_learn_state();
+            #endif
 
             // so this will pick up the actual messages sent from the hardware, then sends to the 
             // APC40MKII transport to handle things like banked encoders.

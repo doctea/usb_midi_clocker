@@ -44,6 +44,8 @@ override that location.
 The APC40 MKII adapter test also uses Node.js and g++:
 
 	node test/apc40mkii_host_test.js
+	node test/apc40mkii_host_test.js --learn
+	node test/apc40mkii_host_test.js --learn-lifecycle-only
 
 It compiles the production adapter and transport with the real APC40 library.
 It checks bank/track identity, app-originated values, independent inactive banks,
@@ -52,6 +54,20 @@ deltas and clamping, tempo deltas, fader channels, stable group/name labels,
 and retained state after reconnect. It loads the opt-in APC parameter adapter
 and checks that handled events bypass the raw CC scan while unhandled events
 (including master/crossfader inputs) still reach it.
+Transport-button checks cover stop/continue routing, once-per-press recording,
+software-driven LEDs while paused, disabled-learning SESSION plus its app hook, and
+reconnect restoration without actions. Clock functions are mocked; the test
+does not validate physical clock timing or note cleanup on pause.
+The enabled variant compiles the actual gated manager methods, learn widget,
+modulation-row constructor, adapter and transport. It checks all 24 track-knob
+assignments, all faders and their value updates/raw fallback, Cue, one-shot
+completion, target replacement, cancellation between messages, SESSION blinking,
+and reconnect requiring re-arming. It also checks optional device-bank input
+state and map bounds; Nexus6 still registers its original 35 inputs, so
+unregistered device knobs are rejected without ending capture. The lifecycle-only
+variant isolates manager/menu checks. FloatParameter, display, and other menu
+controls are fixtures; row wiring/proportions and learning methods are production
+code. Both enabled and disabled variants check the row's column count and widths.
 APC40MKII_DIR, PARAMETERS_DIR and FOUNDLING_DIR can override the sibling library
 locations. It does not verify physical LED rings or build/upload firmware.
 

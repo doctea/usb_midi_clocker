@@ -603,7 +603,7 @@ class MIDIOwnerRoutesSource : public ActionListSource {
         void build_section(MIDIRouteDirection direction) {
             const bool inbound = direction == MIDIRouteDirection::INBOUND;
             add(entry_t::SECTION, direction);
-            const bool several = (inbound ? matrix->count_targets_of(owner) : matrix->count_sources_of(owner)) > 1;
+            // const bool several = (inbound ? matrix->count_targets_of(owner) : matrix->count_sources_of(owner)) > 1;
             MIDIRoutingModel model(*matrix);
             auto add_endpoint = [&](int8_t endpoint) {
                 // if (several) 
