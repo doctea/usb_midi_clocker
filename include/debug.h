@@ -11,7 +11,7 @@ int freeRam();
 void debug_free_ram();
 
 #ifdef ARDUINO_TEENSY41
-    int freeExtRam();
+    int freeExtRam(bool recount = false);
 #endif
 
 void reset_teensy();

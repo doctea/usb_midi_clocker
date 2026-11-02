@@ -52,7 +52,7 @@ class DebugPanel : public MenuItem {
             tft->printf("  Free RAM: %u bytes\n", freeRam());
 
             #ifdef ARDUINO_TEENSY41
-                tft->printf("  Free extRAM: %u bytes\n", freeExtRam());
+                tft->printf("  Free extRAM: %u bytes at boot\n", freeExtRam(false));
                 tft->printf("  PSRAM clock: %i MHz\n", psram_clocked_at);
             #endif
 

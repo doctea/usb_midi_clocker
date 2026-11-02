@@ -54,12 +54,14 @@ MenuItemList *DeviceBehaviour_Bamble::make_menu_items() {
     // Euclidian settings bar /////////////////////////////////////////////////
     SubMenuItemBar *euclidian_options = new SubMenuItemBar("Euclidian settings");
 
-    ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t> *euclidian_mode_control = new ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t>(
-        "Mode",
-        this,
-        &DeviceBehaviour_Bamble::setDemoMode,
-        &DeviceBehaviour_Bamble::getDemoMode
-    );
+    ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t> *euclidian_mode_control 
+            = new ObjectSelectorControl<DeviceBehaviour_Bamble,int8_t>
+        (
+            "Mode",
+            this,
+            &DeviceBehaviour_Bamble::setDemoMode,
+            &DeviceBehaviour_Bamble::getDemoMode
+        );
     euclidian_mode_control->flags.go_back_on_select = true;
     euclidian_mode_control->add_available_value(0, "Standby");
     euclidian_mode_control->add_available_value(1, "Euclidian");

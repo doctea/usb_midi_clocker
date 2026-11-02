@@ -15,6 +15,19 @@
 
             virtual int display(Coord pos, bool selected, bool opened) override {
                 tft->setCursor(pos.x,pos.y);
+
+                header("USB hubs:", pos, selected, opened);
+                USBHub *hubs[] = { &hub1, &hub2, &hub3, &hub4 };
+                for (unsigned int hub_index = 0; hub_index < sizeof(hubs) / sizeof(hubs[0]); ++hub_index) {
+                    USBHub *hub = hubs[hub_index];
+                    char buf[100];
+                    if (hub->idProduct()>0) {
+                        snprintf(buf, 100, "  Hub %i: %04X:%04X %s", hub_index, hub->MAXPORTS, hub->idVendor(), hub->idProduct(), hub->manufacturer());
+                        tft->println(buf);
+                    }
+                }
+                
+                pos.y = tft->getCursorY();
                 header("MIDI-USB devices:", pos, selected, opened);
                 colours(opened);
                 tft->setTextSize(1);
@@ -24,7 +37,7 @@
                         connected++;
                         char buf[100];
                         //snprintf(buf, 100, "%i %19s %04X:%04X (%s)\n", i, usb_midi_slots[i].device->product(), usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct(), usb_midi_slots[i].device->serialNumber());
-                        snprintf(buf, 100, "%i %19s %04X:%04X\n", i, usb_midi_slots[i].device->product(), usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct());
+                        snprintf(buf, 100, "  %i %19s %04X:%04X\n", i, usb_midi_slots[i].device->product(), usb_midi_slots[i].device->idVendor(), usb_midi_slots[i].device->idProduct());
                         tft->printf(buf);
                     }            
                 }
@@ -35,7 +48,7 @@
                         if (usb_serial_slots[i].packed_id && usb_serial_slots[i].usbdevice && usb_serial_slots[i].usbdevice->idVendor()>0) {
                             connected++;
                             char buf[100];
-                            snprintf(buf, 100, "%i %19s\n", i, usb_serial_slots[i].usbdevice->product());
+                            snprintf(buf, 100, "  %i %19s\n", i, usb_serial_slots[i].usbdevice->product());
                             tft->printf(buf);
                         }
                     }

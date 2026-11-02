@@ -14,12 +14,12 @@
     return (char *)&_heap_end - __brkval;
   }
   #ifdef ARDUINO_TEENSY41
-    int freeExtRam() {
+    int freeExtRam(bool recount = false) {
       static uint32_t last_sample_ms = 0;
       static int cached_free_bytes = 0;
       static bool has_sample = false;
       const uint32_t now_ms = millis();
-      if (!has_sample || now_ms - last_sample_ms >= 1000) {
+      if (recount || !has_sample) {// || now_ms - last_sample_ms >= 1000) {
         size_t total_bytes = 0;
         size_t free_bytes = 0;
         if (sm_malloc_stats_pool(&extmem_smalloc_pool, &total_bytes, nullptr,

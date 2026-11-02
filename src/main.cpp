@@ -503,6 +503,8 @@ void setup() {
                   (unsigned long)menu_item_arena_obj.heap_fallback_bytes());
   #endif
 
+  // passes true so that value is recounted
+  if (Serial) Serial.printf("Free extRAM at boot: %i bytes\n", freeExtRam(true));
 }
 
 //long loop_counter = 0;
