@@ -44,7 +44,13 @@ override that location.
 The APC40 MKII adapter test also uses Node.js and g++:
 
 	node test/apc40mkii_host_test.js
+	node test/apc40mkii_host_test.js --device-knobs
+	node test/apc40mkii_host_test.js --clip-pads
+	node test/apc40mkii_host_test.js --track-buttons
+	node test/apc40mkii_host_test.js --general-buttons
+	node test/apc40mkii_host_test.js --extended
 	node test/apc40mkii_host_test.js --learn
+	node test/apc40mkii_host_test.js --learn-base
 	node test/apc40mkii_host_test.js --learn-lifecycle-only
 
 It compiles the production adapter and transport with the real APC40 library.
@@ -58,16 +64,26 @@ Transport-button checks cover stop/continue routing, once-per-press recording,
 software-driven LEDs while paused, disabled-learning SESSION plus its app hook, and
 reconnect restoration without actions. Clock functions are mocked; the test
 does not validate physical clock timing or note cleanup on pause.
-The enabled variant compiles the actual gated manager methods, learn widget,
+The four feature-profile variants compile each optional source family by itself
+and check its registration count, accessor availability, and note state updates
+where applicable. With no profile flags, the app's local configuration enables
+device knobs by default, for 99 sources. The `--learn-base` variant explicitly
+disables optional APC sources and checks the 35-source baseline, regular
+knob/fader learning, and that unbound button candidates leave the learn target
+armed. The `--learn` variant compiles
+the actual gated manager methods, learn widget,
 modulation-row constructor, adapter and transport. It checks all 24 track-knob
-assignments, all faders and their value updates/raw fallback, Cue, one-shot
-completion, target replacement, cancellation between messages, SESSION blinking,
-and reconnect requiring re-arming. It also checks optional device-bank input
-state and map bounds; Nexus6 still registers its original 35 inputs, so
-unregistered device knobs are rejected without ending capture. The lifecycle-only
-variant isolates manager/menu checks. FloatParameter, display, and other menu
-controls are fixtures; row wiring/proportions and learning methods are production
-code. Both enabled and disabled variants check the row's column count and widths.
+and 64 device-knob assignments, all faders and their value updates/raw fallback,
+Cue, button/pad capture, momentary and toggle note semantics, one-shot completion,
+target replacement, cancellation between messages, SESSION blinking, and
+reconnect requiring re-arming. `--extended` preserves the legacy umbrella and
+opts into 217 sources, including all 64 device knobs and registered button/pad
+inputs. The extended map tests note-map bounds and capacity. The
+lifecycle-only variant isolates manager/menu checks.
+FloatParameter, display, and other menu controls are fixtures; row
+wiring/proportions and learning methods are production code. Both enabled and
+disabled variants check the row's column count and widths. The host test does not
+verify physical LED rings or build/upload firmware.
 APC40MKII_DIR, PARAMETERS_DIR and FOUNDLING_DIR can override the sibling library
 locations. It does not verify physical LED rings or build/upload firmware.
 

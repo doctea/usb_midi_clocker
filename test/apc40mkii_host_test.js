@@ -21,7 +21,17 @@ const learnControl = fs.readFileSync(path.join(parameters, 'include/mymenu_items
 const modulationRow = fs.readFileSync(path.join(parameters, 'include/mymenu_items/ParameterMenuItems.h'), 'utf8')
     .match(/class ParameterModSlotRow[\s\S]*?\n};/)[0];
 const lifecycleOnly = process.argv.includes('--learn-lifecycle-only');
-const learnEnabled = lifecycleOnly || process.argv.includes('--learn');
+const learnBaseOnly = process.argv.includes('--learn-base');
+const learnEnabled = lifecycleOnly || learnBaseOnly || process.argv.includes('--learn');
+const featureProfiles = [
+    ['--device-knobs', 'ENABLE_APC40_DEVICE_KNOBS'],
+    ['--clip-pads', 'ENABLE_APC40_CLIP_PADS'],
+    ['--track-buttons', 'ENABLE_APC40_TRACK_BUTTONS'],
+    ['--general-buttons', 'ENABLE_APC40_GENERAL_BUTTONS']
+].filter(([argument]) => process.argv.includes(argument));
+if (featureProfiles.length > 1) throw new Error('Select only one APC40 feature profile at a time');
+const extendedEnabled = process.argv.includes('--extended') ||
+    (process.argv.includes('--learn') && !lifecycleOnly && !learnBaseOnly);
 const apcInputs = withoutIncludes(path.join(apcLibrary, 'src/APC40ParameterInputs.h'));
 const behaviour = withoutIncludes(path.join(root, 'include/behaviours/behaviour_apc40mkii.h'));
 const transport = withoutIncludes(path.join(root, 'src/behaviours/behaviour_apc40mkii.cpp'));
@@ -81,7 +91,14 @@ struct ParameterManager {
 } manager;
 ParameterManager *parameter_manager = &manager;
 ${midiSource}
+#ifndef APC40_INPUT_FEATURES_CONFIGURED_EXTERNALLY
+#define ENABLE_APC40_DEVICE_KNOBS
+#endif
 ${apcInputs}
+#ifndef APC40_HAS_NOTE_INPUTS
+static_assert(sizeof(APC40ParameterInputMap) < 1024,
+    "the APC control map without note inputs should stay compact");
+#endif
 struct DisplayMock {
     std::string text;
     void setTextSize(int) {}
@@ -260,7 +277,26 @@ public:
 int main() {
     test_modulation_row_layout();
     DeviceBehaviour_APC40MKII behaviour;
-    assert(manager.inputs.size() == 35);
+    unsigned expected_inputs = 35;
+#ifdef ENABLE_APC40_DEVICE_KNOBS
+    expected_inputs += 64;
+#endif
+#ifdef ENABLE_APC40_CLIP_PADS
+    expected_inputs += 40;
+#endif
+#ifdef ENABLE_APC40_TRACK_BUTTONS
+    expected_inputs += 48;
+#endif
+#ifdef ENABLE_APC40_GENERAL_BUTTONS
+    expected_inputs += 30;
+#endif
+    assert(manager.inputs.size() == expected_inputs);
+#ifndef APC40_HAS_NOTE_INPUTS
+    APC40ParameterInputMap default_map;
+    const APC40ControlId disabled_note{APC40ControlKind::Pad, 0, 0};
+    assert(!default_map.bind(disabled_note, nullptr));
+    assert(default_map.resolve(disabled_note) == nullptr);
+#endif
     auto *pan = behaviour.get_track_knob_input(APC40TrackKnobBank::Pan, 0);
     auto *sends = behaviour.get_track_knob_input(APC40TrackKnobBank::Sends, 0);
     auto *user = behaviour.get_track_knob_input(APC40TrackKnobBank::User, 7);
@@ -272,6 +308,47 @@ int main() {
     assert(std::strcmp(user->get_group_and_name(), "APC40 User:UserKnob8") == 0);
     assert(!behaviour.get_track_knob_input(APC40TrackKnobBank::Pan, 8));
     assert(!behaviour.get_track_knob_input(static_cast<APC40TrackKnobBank>(3), 0));
+#ifdef ENABLE_APC40_DEVICE_KNOBS
+    auto *device_knob = behaviour.get_device_knob_input(7, 7);
+    assert(device_knob && device_knob == behaviour.get_device_knob_input(7, 7));
+    assert(!behaviour.get_device_knob_input(8, 0) && !behaviour.get_device_knob_input(0, 8));
+    assert(std::strcmp(device_knob->get_group_and_name(), "APC40 Device8:Device8Knob8") == 0);
+    APC40ParameterInputMap device_map;
+    assert(device_map.bind(device_knob->get_control_id(), device_knob));
+    assert(device_map.resolve(device_knob->get_control_id()) == device_knob);
+#else
+    assert(behaviour.get_device_knob_input(0, 0) == nullptr);
+#endif
+#ifdef ENABLE_APC40_CLIP_PADS
+    auto *pad_input = behaviour.get_note_input(
+        {APC40ControlKind::Pad, 0, APC40MKII::scene::CLIP_LAUNCH_1_1});
+    assert(pad_input);
+    assert(pad_input->get_mode() == APC40NoteParameterInputMode::Momentary);
+    assert(std::strcmp(pad_input->get_name(), "Clip 1.1") == 0);
+#else
+    assert(behaviour.get_note_input({APC40ControlKind::Pad, 0,
+        APC40MKII::scene::CLIP_LAUNCH_1_1}) == nullptr);
+#endif
+#ifdef ENABLE_APC40_TRACK_BUTTONS
+    auto *track_button_input = behaviour.get_note_input(
+        {APC40ControlKind::Button, 0, APC40MKII::tracks::BUTTON_RECORD});
+    assert(track_button_input);
+    assert(std::strcmp(track_button_input->get_name(), "T1 Record") == 0);
+#else
+    assert(behaviour.get_note_input({APC40ControlKind::Button, 0,
+        APC40MKII::tracks::BUTTON_RECORD}) == nullptr);
+#endif
+#ifdef ENABLE_APC40_GENERAL_BUTTONS
+    auto *general_button_input = behaviour.get_note_input(
+        {APC40ControlKind::Button, 0, APC40MKII::tempo::NOTE_BUTTON_METRONOME});
+    assert(general_button_input);
+#else
+    assert(behaviour.get_note_input({APC40ControlKind::Button, 0,
+        APC40MKII::tempo::NOTE_BUTTON_METRONOME}) == nullptr);
+#endif
+#if defined(ENABLE_APC40_CLIP_PADS) || defined(ENABLE_APC40_TRACK_BUTTONS)
+    assert(behaviour.get_note_input({APC40ControlKind::TrackKnob, 0, 0}) == nullptr);
+#endif
     assert(pan->supports_bipolar_input());
     assert(sends->set_value(37) && sends->get_value() == 37);
     assert(pan->get_value() == 0);
@@ -287,6 +364,55 @@ int main() {
     assert(sent_button(device, APC40MKII::transport::NOTE_BUTTON_RECORD, true));
     assert(sent_button(device, APC40MKII::transport::NOTE_BUTTON_SESSION, false));
     assert(sent_cc(device, APC40MKII::tracks::CC_KNOB_1 + 8, 2));
+#ifdef ENABLE_APC40_DEVICE_KNOBS
+    assert(device_knob->set_value(42));
+    device.sent.clear();
+    behaviour.receive_note_on(1, APC40MKII::device::NOTE_BUTTON_8, 127);
+    assert(sent_cc(device, APC40MKII::device::CC_KNOB_8, 42));
+    behaviour.receive_control_change(1, APC40MKII::device::CC_KNOB_8, 76);
+    assert(device_knob->get_value() == 76 && close_to(device_knob->get_normal_value_unipolar(), 76.0f / 127.0f));
+#endif
+#ifdef ENABLE_APC40_CLIP_PADS
+    behaviour.receive_note_on(1, APC40MKII::device::NOTE_BUTTON_1, 127);
+    behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 127);
+    assert(pad_input->is_active() && pad_input->get_normal_value_unipolar() == 1.0f);
+    behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 127);
+    assert(pad_input->is_active());
+    behaviour.receive_note_off(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 0);
+    assert(!pad_input->is_active() && pad_input->get_normal_value_unipolar() == 0.0f);
+    behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 127);
+    behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 0);
+    assert(!pad_input->is_active());
+#endif
+#ifdef ENABLE_APC40_TRACK_BUTTONS
+    track_button_input->set_mode(APC40NoteParameterInputMode::Toggle);
+    behaviour.receive_note_on(1, APC40MKII::tracks::BUTTON_RECORD, 127);
+    assert(track_button_input->is_active());
+    behaviour.receive_note_on(1, APC40MKII::tracks::BUTTON_RECORD, 127);
+    assert(track_button_input->is_active());
+    behaviour.receive_note_off(1, APC40MKII::tracks::BUTTON_RECORD, 0);
+    assert(track_button_input->is_active());
+    behaviour.receive_note_on(1, APC40MKII::tracks::BUTTON_RECORD, 127);
+    assert(!track_button_input->is_active());
+    behaviour.receive_note_off(1, APC40MKII::tracks::BUTTON_RECORD, 0);
+    track_button_input->set_mode(APC40NoteParameterInputMode::Momentary);
+    behaviour.receive_note_on(1, APC40MKII::tracks::BUTTON_RECORD, 127);
+    assert(track_button_input->is_active());
+    track_button_input->set_mode(APC40NoteParameterInputMode::Toggle);
+    assert(track_button_input->is_active());
+    behaviour.receive_note_off(1, APC40MKII::tracks::BUTTON_RECORD, 0);
+    assert(track_button_input->is_active());
+    behaviour.receive_note_on(1, APC40MKII::tracks::BUTTON_RECORD, 127);
+    assert(!track_button_input->is_active());
+    behaviour.receive_note_off(1, APC40MKII::tracks::BUTTON_RECORD, 0);
+    track_button_input->set_mode(APC40NoteParameterInputMode::Momentary);
+#endif
+#ifdef ENABLE_APC40_GENERAL_BUTTONS
+    behaviour.receive_note_on(1, APC40MKII::tempo::NOTE_BUTTON_METRONOME, 127);
+    assert(general_button_input->is_active());
+    behaviour.receive_note_off(1, APC40MKII::tempo::NOTE_BUTTON_METRONOME, 0);
+    assert(!general_button_input->is_active());
+#endif
     assert(stop_calls == 0 && continue_calls == 0);
     device.sent.clear();
     behaviour.loop(0);
@@ -466,7 +592,6 @@ int main() {
         assert(sent_button(device, APC40MKII::transport::NOTE_BUTTON_SESSION, false));
         behaviour.receive_control_change(2, 48, 7);
         behaviour.receive_control_change(1, 100, 7);
-        behaviour.receive_control_change(1, 16, 7);
         assert(manager.is_midi_learn_active() && target.assignments == 0);
         behaviour.receive_control_change(1, 55, 71);
         assert(target.connections[1].parameter_input == user && target.assignments == 1);
@@ -533,24 +658,73 @@ int main() {
         behaviour.receive_control_change(1, 47, 127);
         assert(!manager.is_midi_learn_active() && target.connections[0].parameter_input == cue);
 
+    #ifdef ENABLE_APC40_EXTENDED_INPUTS
+        for (uint8_t bank = 0; bank < 8; ++bank) {
+            const uint8_t bank_note = static_cast<uint8_t>(APC40MKII::device::NOTE_BUTTON_1 + bank);
+            behaviour.receive_note_on(1, bank_note, 127);
+            behaviour.receive_note_off(1, bank_note, 0);
+            for (uint8_t knob = 0; knob < 8; ++knob) {
+                assert(manager.start_midi_learn(&target, 0));
+                arm();
+                behaviour.receive_control_change(1,
+                    static_cast<uint8_t>(APC40MKII::device::CC_KNOB_1 + knob), 66);
+                assert(!manager.is_midi_learn_active());
+                assert(target.connections[0].parameter_input ==
+                    behaviour.get_device_knob_input(bank, knob));
+            }
+        }
+
+        assert(manager.start_midi_learn(&target, 0));
+        arm();
+        behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 127);
+        assert(!manager.is_midi_learn_active() && target.connections[0].parameter_input == pad_input);
+        assert(pad_input->is_active());
+        behaviour.receive_note_off(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 0);
+        assert(!pad_input->is_active());
+
+        assert(manager.start_midi_learn(&target, 0));
+        arm();
+        behaviour.receive_note_on(1, APC40MKII::tracks::BUTTON_RECORD, 127);
+        assert(!manager.is_midi_learn_active() && target.connections[0].parameter_input == track_button_input);
+        behaviour.receive_note_off(1, APC40MKII::tracks::BUTTON_RECORD, 0);
+        assert(!track_button_input->is_active());
+    #else
+        const unsigned assignments_before_unmapped_note = target.assignments;
+        assert(manager.start_midi_learn(&target, 0));
+        arm();
+        behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 127);
+        assert(manager.is_midi_learn_active() &&
+            target.assignments == assignments_before_unmapped_note);
+        manager.stop_midi_learn();
+    #endif
+
         APC40USBHostTransport map_transport;
         APC40Controller map_controller(map_transport);
         map_controller.setup_banks();
         APC40ParameterInputMap map;
-        APC40LogicalKnobParameterInput device_knob((char *)"Device8Knob8", "APC40 Device8",
+        APC40LogicalKnobParameterInput mapped_device_knob((char *)"Device8Knob8", "APC40 Device8",
             map_controller, APC40ControlId{APC40ControlKind::DeviceKnob, 7, 7});
-        assert(device_knob.set_value(42) && device_knob.get_value() == 42);
-        device_knob.input_type = BIPOLAR;
-        device_knob.loop();
+        assert(mapped_device_knob.set_value(42) && mapped_device_knob.get_value() == 42);
+        mapped_device_knob.input_type = BIPOLAR;
+        mapped_device_knob.loop();
         APC40VirtualEncoderState state;
-        assert(map_controller.getKnobState(device_knob.get_control_id(), state));
+        assert(map_controller.getKnobState(mapped_device_knob.get_control_id(), state));
         assert(state.value == 42 && state.polarity == APC40EncoderPolarity::Bipolar);
-        assert(std::strcmp(device_knob.getInputInfo(), "Device 8 knob 8") == 0);
-        assert(map.bind(device_knob.get_control_id(), &device_knob));
-        assert(map.resolve(device_knob.get_control_id()) == &device_knob);
+        assert(std::strcmp(mapped_device_knob.getInputInfo(), "Device 8 knob 8") == 0);
+    #ifdef ENABLE_APC40_DEVICE_KNOBS
+        assert(map.bind(mapped_device_knob.get_control_id(), &mapped_device_knob));
+        assert(map.resolve(mapped_device_knob.get_control_id()) == &mapped_device_knob);
+    #else
+        assert(!map.bind(mapped_device_knob.get_control_id(), &mapped_device_knob));
+        assert(map.resolve(mapped_device_knob.get_control_id()) == nullptr);
+    #endif
         assert(map.bind({APC40ControlKind::TrackKnob, 0, 0}, pan));
         assert(map.resolve({APC40ControlKind::TrackKnob, 0, 0}) == pan);
         assert(map.resolve({APC40ControlKind::DeviceKnob, 0, 0}) == nullptr);
+    #ifdef ENABLE_APC40_EXTENDED_INPUTS
+        const APC40ControlId note_control{APC40ControlKind::Button, 3, 101};
+        assert(map.bind_note(note_control, pad_input) && map.resolve(note_control) == pad_input);
+        assert(!map.bind_note({APC40ControlKind::Button, 16, 101}, pad_input));
         assert(!map.bind({APC40ControlKind::DeviceKnob, 8, 0}, pan));
         assert(!map.bind({APC40ControlKind::TrackKnob, 3, 0}, pan));
         assert(!map.bind({APC40ControlKind::TrackFader, 0, 8}, pan));
@@ -559,8 +733,23 @@ int main() {
         assert(!map_controller.getKnobState({APC40ControlKind::DeviceKnob, 8, 0}, state));
         assert(!map_controller.setKnobState({APC40ControlKind::TrackKnob, 0, 8}, state));
         assert(!map_controller.getKnobState({APC40ControlKind::TrackFader, 0, 0}, state));
-        assert(map.bind(device_knob.get_control_id(), nullptr));
-        assert(map.resolve(device_knob.get_control_id()) == nullptr);
+    #ifdef ENABLE_APC40_DEVICE_KNOBS
+        assert(map.bind(mapped_device_knob.get_control_id(), nullptr));
+        assert(map.resolve(mapped_device_knob.get_control_id()) == nullptr);
+    #endif
+        APC40ParameterInputMap full_note_map;
+        for (uint8_t channel = 0; channel < 16; ++channel) {
+            for (uint8_t note = 0; note < 8; ++note) {
+                assert(full_note_map.bind_note({APC40ControlKind::Button, channel, note}, pad_input));
+            }
+        }
+        assert(full_note_map.resolve({APC40ControlKind::Button, 15, 7}) == pad_input);
+        assert(!full_note_map.bind_note({APC40ControlKind::Pad, 0, 0}, pad_input));
+        behaviour.receive_note_on(1, APC40MKII::scene::CLIP_LAUNCH_1_1, 127);
+        assert(pad_input->is_active());
+        behaviour.disconnect_device();
+        assert(!pad_input->is_active());
+    #endif
         std::cout << "MIDI learn bank identity, fader fallback, target changes and reconnect checks passed\\n";
     #endif
     std::cout << "APC40 MKII buttons, banked inputs, feedback, Cue, faders and reconnect checks passed\\n";
@@ -582,6 +771,9 @@ try {
     const compile = spawnSync(process.env.CXX || 'g++', [
         '-std=c++17', '-Wall', '-Wextra', '-Wno-unused-parameter', '-Wno-unknown-pragmas',
         ...(learnEnabled ? ['-DENABLE_PARAMETERS_MIDI_LEARN', '-DMENU_PERF_PARTIAL_UPDATES=1'] : []),
+        ...(featureProfiles.length || learnBaseOnly ? ['-DAPC40_INPUT_FEATURES_CONFIGURED_EXTERNALLY'] : []),
+        ...featureProfiles.map(([, macro]) => `-D${macro}`),
+        ...(extendedEnabled ? ['-DENABLE_APC40_EXTENDED_INPUTS'] : []),
         ...(lifecycleOnly ? ['-DAPC40_TEST_LIFECYCLE_ONLY'] : []),
         '-fsanitize=undefined', '-fno-sanitize-recover=undefined',
         '-I', path.join(apcLibrary, 'src'), '-I', path.join(foundling, 'include'),
