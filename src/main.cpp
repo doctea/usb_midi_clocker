@@ -690,7 +690,7 @@ void loop() {
     #ifdef ENABLE_SCREEN
       ///Serial_println("going into menu->display and then pausing 1000ms: "); Serial_flush();
       static unsigned long last_drawn;
-      bool screen_was_drawn = false;      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
+      // bool screen_was_drawn = false;      //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) 
       {
         if (debug_flag) { Serial_println(F("about to menu->update_inputs")); Serial_flush(); }
         #ifdef ENABLE_REMOTE_VIEWER
@@ -719,7 +719,7 @@ void loop() {
           if (debug_flag) { Serial_println(F("just did menu->display")); Serial_flush(); }
           //Serial_printf("display() took %ums..", millis()-before_display);
           last_drawn = millis();
-          screen_was_drawn = true;
+          // screen_was_drawn = true;
         }
       }
       //delay(1000); Serial_println("exiting sleep after menu->display"); Serial_flush();
@@ -854,7 +854,7 @@ void do_tick(uint32_t in_ticks) {
   uint32_t start_time = micros();
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
 
-  bool debug = debug_flag;
+  // bool debug = debug_flag;
   /*#ifdef DEBUG_TICKS
       unsigned int delta = millis()-last_ticked_at_micros;
 
@@ -884,9 +884,9 @@ void do_tick(uint32_t in_ticks) {
 
   ::ticks = in_ticks;
 
-  static uint32_t last_ticked_at_millis = millis();
-  // Serial.printf("- do_tick(): received tick %u at %u\t(interval was %u)\n", in_ticks, millis(), millis() - last_ticked_at_millis);
-  last_ticked_at_millis = millis();
+  // static uint32_t last_ticked_at_millis = millis();
+  // // Serial.printf("- do_tick(): received tick %u at %u\t(interval was %u)\n", in_ticks, millis(), millis() - last_ticked_at_millis);
+  // last_ticked_at_millis = millis();
 
   // original restart check+code went here? -- seems like better timing with bamble etc when call this here
   if (is_restart_on_next_bar() && is_bpm_on_bar(ticks)) {

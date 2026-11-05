@@ -6,27 +6,17 @@
 
 #pragma once
 
-#include "Config.h"
-#include "midi/midi_outs.h"
-#include "midi/midi_out_wrapper.h"
-#include "midi_helpers.h"
-#include "midi/midi_looper.h"
+#include <new>
+#include <memory>
+
+#include "shared_debug.h"
 
 #include "conductor.h"
+#include "midi/midi_outs.h"
+#include "midi/midi_out_wrapper.h"
 
+#include "midi_helpers.h"
 #include "Drums.h"
-
-#include "LinkedList.h"
-
-void setup_midi_mapper_matrix_manager();
-
-void behaviour_manager_kill_all_current_notes();
-
-#ifdef ENABLE_SCALES
-    void behaviour_manager_notify_harmony_changed();
-#endif
-
-//#include "behaviours/behaviour_bamble.h"
 
 #define MAX_NUM_SOURCES 50
 #define MAX_NUM_TARGETS 50
@@ -39,10 +29,15 @@ void behaviour_manager_kill_all_current_notes();
 #include "midi/midi_connection_note_state.h"
 #include "midi/midi_connection_store.h"
 #include "midi/midi_note_diagnostics.h"
-#include <memory>
-#include <new>
 
 #include "scales.h"
+
+void setup_midi_mapper_matrix_manager();
+void behaviour_manager_kill_all_current_notes();
+
+#ifdef ENABLE_SCALES
+    void behaviour_manager_notify_harmony_changed();
+#endif
 
 class MIDITrack;
 class DeviceBehaviourUltimateBase;

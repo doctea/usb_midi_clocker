@@ -138,6 +138,9 @@ bool execute_command(const char *command_line) {
         Serial.println("Resetting device...");
         reset_teensy(); // This is a Teensy-specific function to reset the device
         return true;
+    } else if (strcmp(command, "FLASH") == 0) {
+        asm("bkpt #251"); // run bootloader
+        return true;
     } else if (strcmp(command, "free_ram") == 0) {
         debug_free_ram();
         return true;
@@ -163,21 +166,21 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "usb_debug_clearlog") == 0) {
         storage::clear_usb_diagnostic_log();
         return true;
-#if defined(ENABLE_USB_WATCHDOG) && USBHOST_T36_ENABLE_DIAGNOSTICS
-    } else if (strcmp(command, "usb_debug_test") == 0) {
-        if (strcmp(arg1, "reset") != 0 && strcmp(arg1, "watchdog") != 0) {
-            Serial.println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");
+    #if defined(ENABLE_USB_WATCHDOG) && USBHOST_T36_ENABLE_DIAGNOSTICS
+        } else if (strcmp(command, "usb_debug_test") == 0) {
+            if (strcmp(arg1, "reset") != 0 && strcmp(arg1, "watchdog") != 0) {
+                Serial.println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");
+                return true;
+            }
+            Serial.println("Writing retention test marker; rebooting (watchdog: within 8 seconds)");
+            Serial.flush();
+            USBHost::setDiagnosticPhase(USBHost::DiagnosticPhase::RetentionTest);
+            if (strcmp(arg1, "watchdog") == 0) {
+                for (;;) { __asm__ volatile("nop"); }
+            }
+            reset_teensy();
             return true;
-        }
-        Serial.println("Writing retention test marker; rebooting (watchdog: within 8 seconds)");
-        Serial.flush();
-        USBHost::setDiagnosticPhase(USBHost::DiagnosticPhase::RetentionTest);
-        if (strcmp(arg1, "watchdog") == 0) {
-            for (;;) { __asm__ volatile("nop"); }
-        }
-        reset_teensy();
-        return true;
-#endif
+    #endif
     } else if (strcmp(command, "usb_tx") == 0) {
         for (unsigned int port = 0; port < NUM_USB_MIDI_DEVICES; port++) {
             MIDIDeviceBase *device = usb_midi_slots[port].device;
@@ -652,17 +655,13 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "help") == 0) {
         Serial.println("Available commands:");
         Serial.println("  == info/status ==");
-        Serial.printf("     debug on/off - Enable or disable debug output (currently %s)\n", pass_debug ? "on" : "off");
+        Serial.println("    info - show build info");
+        Serial.println("    free_ram - Check available RAM");
         Serial.println("    ping - Check if the device is responsive");
         Serial.println("    status - Get the current status of the device");
         Serial.println("    reset - Reset the device");
-        Serial.println("    free_ram - Check available RAM");
-        Serial.println("    info - show build info");
+        Serial.println("    FLASH - reset in bootloader/ready-to-flash mode");
         Serial.println("    help - Show this help message");
-        Serial.println("  == debug/crashlog commands ==");
-        Serial.println("    notes list|status|on [src|-1] [tgt|-1]|off|clear|dump|held [src|-1] [tgt|-1]|owner <label>");
-        Serial.println("    crashlog - Dump the crash report log (if any)");
-        Serial.println("    clearcrashlog - Clear the crash report log (if any)");
         Serial.println("  == saveload/file commands ==");
         Serial.println("    showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
         Serial.println("    list <project_number> - List files on the SD card for the given project");
@@ -679,6 +678,11 @@ bool execute_command(const char *command_line) {
         Serial.println("    playnote <behaviour_label> <note_number> - Send a Note On message for the given note number to the behaviour with the given label");
         Serial.println("    stopnote <behaviour_label> <note_number> - Send a Note Off message for the given note number to the behaviour with the given label");
         Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
+        Serial.println("  == debug/crashlog commands ==");
+        Serial.printf("     debug on/off - Enable or disable debug output (currently %s)\n", pass_debug ? "on" : "off");
+        Serial.println("    notes list|status|on [src|-1] [tgt|-1]|off|clear|dump|held [src|-1] [tgt|-1]|owner <label>");
+        Serial.println("    crashlog - Dump the crash report log (if any)");
+        Serial.println("    clearcrashlog - Clear the crash report log (if any)");
         Serial.println("  == clock debugging commands ==");
         Serial.println("    debug-state <lock|shuffle0|shuffle1|simples1|all> - Set the clock to a particular debug state");
         Serial.println("  == USB debugging commands ==");
@@ -686,9 +690,9 @@ bool execute_command(const char *command_line) {
         Serial.println("    usb_debug_clearerror - Clear the retained USB host error");
         Serial.println("    usb_debug_clearlog - Clear the retained USB host log");
         Serial.println("    usb_debug_test - Run the USB host diagnostic test (requires hub connection)");
-    #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
-        Serial.println("    uclocktrace <on|off|clear|status> - Control structured uClock trace output");
-    #endif
+        #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
+            Serial.println("    uclocktrace <on|off|clear|status> - Control structured uClock trace output");
+        #endif
         return true;
     } else if (strcmp(command, "debug-state") == 0) {
         // Shortcuts to get into a particular state for debugging purposes

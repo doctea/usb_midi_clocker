@@ -91,23 +91,41 @@ int ProgressionPinnedMenuItem::display(Coord pos, bool selected, bool opened) {
 
     // show the current chord playing
     scale_identity_t current_scale = conductor->global_scale_identity;
-    chord_identity_t current_chord = arranger->get_current_chord();
+    // chord_identity_t current_chord = arranger->get_current_chord();
+    chord_identity_t current_chord = conductor->global_chord_identity;
     int current_chord_root = current_scale.root_note + scales[current_scale.scale_number]->valid_chromatic_pitches[current_chord.degree-1];
     tft->printf("% 8s ", get_chord_name(current_scale, current_chord));
     
     // show the notes from the current chord
     tft->setTextSize(0);
     int16_t position_x = tft->getCursorX();
+    
+    tft->printf(
+        "%-4s %-4s", 
+        current_scale.get_degree_roman(current_chord),
+        current_chord.get_inversion_label()
+    );
+
+    tft->println();
+    tft->setCursor(position_x, tft->getCursorY());
     for (size_t i = 0 ; i < PITCHES_PER_CHORD ; i++) {
-        int note = get_quantise_pitch_chord_note(current_chord_root, current_chord.type, i, get_global_scale_root(), get_global_scale_type(), current_chord.inversion, false);
+        int note = get_quantise_pitch_chord_note(
+            current_chord_root, 
+            current_chord.type, 
+            i, 
+            get_global_scale_root(), 
+            get_global_scale_type(), 
+            current_chord.inversion, 
+            true,
+            false
+        );
         if (note >= 0) {
-            tft->printf("%2s ", get_note_name_c(note, 1, false));
+            tft->printf("%-2s ", get_note_name_c(note, 1, false));
         } else {
             tft->printf("   ");
         }
     }
-    tft->printf("inv %i %3s", current_chord.inversion, current_scale.get_degree_roman(current_chord.degree));
-    tft->println();
+    tft->setTextSize(0);
     tft->println();
 
     y = tft->getCursorY() - 4;

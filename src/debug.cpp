@@ -14,7 +14,7 @@
     return (char *)&_heap_end - __brkval;
   }
   #ifdef ARDUINO_TEENSY41
-    int freeExtRam(bool recount = false) {
+    int freeExtRam(bool recount) {
       static uint32_t last_sample_ms = 0;
       static int cached_free_bytes = 0;
       static bool has_sample = false;
