@@ -36,6 +36,9 @@
 		{
 			"path": "../Compulidian"
 		},
+		{
+			"path": "../my_libraries/apc40mkii"
+		}
 	],
 	"settings": {
 		"files.associations": {
