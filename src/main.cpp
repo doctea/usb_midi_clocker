@@ -215,6 +215,9 @@ void setup() {
 
   Serial.begin(115200);
   Serial.setTimeout(0);
+  #ifdef ENABLE_SERIAL_OUTPUT_QUEUE
+    (void)foundling::serial_output();
+  #endif
   #ifdef WAIT_FOR_SERIAL
     //tft_print("\nWaiting for serial connection..");
     while (!Serial);
@@ -541,7 +544,7 @@ static void drain_uclock_trace() {
 
   umodular::clock::uClockClass::TraceEvent event;
   for (uint8_t count = 0; count < 8 && uClock.popTraceEvent(event); count++) {
-    Serial.printf(
+    Serial_printf(
       "UCLOCK,%lu,%s,tick=%lu,int=%lu,ext=%lu,track=%u,step=%lu,mc=%u,ms=%u,sh=%d,target=%d,value=%ld,state=%u,depth=%u,dropped=%lu\n",
       (unsigned long)event.timestamp_us,
       uclock_trace_event_name(event.type),
@@ -568,6 +571,9 @@ static void drain_uclock_trace() {
 // -----------------------------------------------------------------------------
 void loop() {
   RECORD_USB_PHASE(SerialIO);
+  #ifdef ENABLE_SERIAL_OUTPUT_QUEUE
+    foundling::serial_output().drain();
+  #endif
   //ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
   {
     if (Serial.getReadError() || Serial.getWriteError()) {
