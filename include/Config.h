@@ -136,12 +136,6 @@
 // enable MIDI looping for drumkit - experimental
 //#define ENABLE_DRUM_LOOPER
 
-// enable Neutron behaviour
-#ifdef PCB_STUDIO
-    //#define ENABLE_NEUTRON    // now done in ConfigMidi.h
-    #define DEFAULT_NEUTRON_OCTAVE 3    // set to -1 for 'disabled'
-#endif
-
 #ifdef PCB_GO
     #define ENABLE_TD3    
 #endif
@@ -163,10 +157,6 @@
     //#define ENABLE_MIDIMUSO_4PV   MIDI4
     #define ENABLE_MIDIMUSO_4MV MIDI4
 #endif
-
-// so i can see how this is working while devving the cv output stuff
-// TODO: disable this when not needed
-//#define ENABLE_MIDIMUSO_4MV MIDI4
 
 // serial MIDI devices
 // these are now defined in ConfigMidi.h instead
