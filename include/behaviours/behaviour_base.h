@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <shared_debug.h>
 
 #include <MIDI.h>
 #include <USBHost_t36.h>

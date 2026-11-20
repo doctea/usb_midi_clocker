@@ -1,5 +1,6 @@
 #pragma once
 
+#include <shared_debug.h>
 #include "behaviour_base.h"
 #include "midi/midi_mapper_matrix_manager.h"
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <shared_debug.h>
 #include "behaviours/behaviour_base.h"
 
 #include "parameters/Parameter.h"

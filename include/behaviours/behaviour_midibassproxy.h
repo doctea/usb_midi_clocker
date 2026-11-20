@@ -1,5 +1,6 @@
 #pragma once
 
+#include <shared_debug.h>
 #include "behaviour_midibass.h"
 
 class MIDIBassBehaviourProxy : virtual public MIDIBassBehaviour {

@@ -1,6 +1,7 @@
 #ifndef BEHAVIOUR_BASE_SERIAL__INCLUDED
 #define BEHAVIOUR_BASE_SERIAL__INCLUDED
 
+#include <shared_debug.h>
 #include "behaviours/behaviour_base.h"
 
 #include "midi/midi_mapper_matrix_types.h"

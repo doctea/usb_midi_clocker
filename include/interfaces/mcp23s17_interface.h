@@ -1,5 +1,6 @@
 #ifdef ENABLE_GATES_MCP23S17
 
+#include <shared_debug.h>
 #include "interfaces.h"
 #include "MCP23S17.h"   //RobTillaart/MCP23S17
 #include "SPI.h"

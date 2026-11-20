@@ -1,4 +1,5 @@
 #ifdef SERIAL_THEREMIN_HACK
+#include <shared_debug.h>
 /*
 #include "USBHost_t36.h"
 #include "usb/multi_usb_handlers.h"

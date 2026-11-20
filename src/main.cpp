@@ -215,14 +215,13 @@ void setup() {
 
   Serial.begin(115200);
   Serial.setTimeout(0);
-  #ifdef ENABLE_SERIAL_OUTPUT_QUEUE
-    foundling::serial_output().begin();
-  #endif
   #ifdef WAIT_FOR_SERIAL
     //tft_print("\nWaiting for serial connection..");
     while (!Serial);
-    //tft_print("Connected serial!\n");
     Serial_println(F("Connected serial!")); Serial_flush();
+  #endif
+  #ifdef ENABLE_SERIAL_OUTPUT_QUEUE
+    foundling::serial_output().begin();
   #endif
 
   // Permanent stack-headroom sentinel.

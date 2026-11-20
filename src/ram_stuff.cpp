@@ -1,6 +1,7 @@
 #include "ram_stuff.h"
 
 #include <Arduino.h>
+#include <shared_debug.h>
 
 int psram_clocked_at = 88; // in MHz
 
