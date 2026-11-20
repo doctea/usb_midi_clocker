@@ -93,12 +93,12 @@ uint32_t hex2int(char *hex) {
 				!(error.previous_boot && error.count > 0)) return false;
 			#ifdef ENABLE_SD
 				if (!SD.mediaPresent()) {
-					Serial.println("USB reset snapshot: SD unavailable");
+					Serial_println("USB reset snapshot: SD unavailable");
 					return false;
 				}
 				File file = SD.open("usb_debug.log", FILE_WRITE);
 				if (!file) {
-					Serial.println("USB reset snapshot: cannot open usb_debug.log");
+					Serial_println("USB reset snapshot: cannot open usb_debug.log");
 					return false;
 				}
 				file.println("----- USB reset snapshot -----");
@@ -138,17 +138,17 @@ uint32_t hex2int(char *hex) {
 				return;
 			}
 		#endif
-		Serial.println("USB diagnostic log unavailable");
+		Serial_println("USB diagnostic log unavailable");
 	}
 
 	void clear_usb_diagnostic_log() {
 		#ifdef ENABLE_SD
 			if (SD.mediaPresent() && SD.remove("usb_debug.log")) {
-			Serial.println("Deleted usb_debug.log");
+			Serial_println("Deleted usb_debug.log");
 			return;
 			}
 		#endif
-		Serial.println("USB diagnostic log not deleted");
+		Serial_println("USB diagnostic log not deleted");
 	}
 #endif
 
@@ -177,11 +177,11 @@ void dump_crashreport_log() {
 				Serial.print("\r\n");
 			}
 		} else {
-			Serial.println("dump_crashreport_log: crashreport.log not found");
+			Serial_println("dump_crashreport_log: crashreport.log not found");
 			messages_log_add("crashreport.log not found");
 		}
 	#else
-		Serial.println("dump_crashreport_log: SD not enabled");
+		Serial_println("dump_crashreport_log: SD not enabled");
 		messages_log_add("SD not enabled");
 	#endif
 }
@@ -199,7 +199,7 @@ void clear_crashreport_log() {
 			}
 		}
 	#else
-		Serial.println("clear_crashreport_log: SD not enabled");
+		Serial_println("clear_crashreport_log: SD not enabled");
 		messages_log_add("SD not enabled");
 	#endif
 }
@@ -300,10 +300,10 @@ FLASHMEM void setup_sd() {
 	#ifdef ENABLE_SD
 		SD.begin(chipSelect);
 		//SD.setMediaDetectPin(0xFF); // disable media detect
-		Serial.printf("setup_sd() SD card initialised, media present: %i\n", SD.mediaPresent());
+		Serial_printf("setup_sd() SD card initialised, media present: %i\n", SD.mediaPresent());
 		storage_initialised = true;
 	#else
-		Serial.println("setup_sd() SD not enabled");
+		Serial_println("setup_sd() SD not enabled");
 	#endif
 	// Register savestate settings so current_state can save/load via saveloadlib
 	current_state.setup_saveable_settings();
@@ -315,15 +315,15 @@ bool save_scene(int project_number, uint8_t scene_number, savestate *input, bool
 
 		char filename[MAX_FILEPATH] = "";
 		snprintf(filename, MAX_FILEPATH, FILEPATH_SCENE_FORMAT, project_number, scene_number);
-		if (debug) Serial.printf(F("save_scene(%i, %i) writing to %s\n"), project_number, scene_number, filename);
+		if (debug) Serial_printf(F("save_scene(%i, %i) writing to %s\n"), project_number, scene_number, filename);
 		if (SD.exists(filename)) SD.remove(filename);
 
 		uint32_t micros_start = micros();
 		if (!sl_save_to_file(project->save_tree, filename, SL_SCOPE_SCENE)) {
-			if (debug) Serial.printf(F("save_scene: sl_save_to_file failed for %s\n"), filename);
+			if (debug) Serial_printf(F("save_scene: sl_save_to_file failed for %s\n"), filename);
 			return false;
 		}
-		Serial.printf("save_scene took %lu micros\n", micros() - micros_start);
+		Serial_printf("save_scene took %lu micros\n", micros() - micros_start);
 
 		update_scene_filename(String(filename));
 		messages_log_add(String("Saved scene ") + String(project_number) + ":" + String(scene_number));
@@ -353,12 +353,12 @@ char *get_system_settings_filename() {
 bool save_system_settings(bool debug) {
 	#ifdef ENABLE_SD
 		if (settings_root == nullptr) {
-			Serial.println(F("save_system_settings: settings_root is null"));
+			Serial_println(F("save_system_settings: settings_root is null"));
 			return false;
 		}
 
 		char *filename = get_system_settings_filename();
-		if (debug) Serial.printf(F("save_system_settings() writing to %s\n"), filename);
+		if (debug) Serial_printf(F("save_system_settings() writing to %s\n"), filename);
 		if (SD.exists(filename)) {
 			SD.remove(filename);
 		}
@@ -366,10 +366,10 @@ bool save_system_settings(bool debug) {
 		uint32_t micros_start = micros();
 		bool ok = sl_save_to_file(settings_root, filename, SL_SCOPE_SYSTEM);
 		if (ok) {
-			Serial.printf(F("Saved system settings in %lu microseconds.\n"), micros() - micros_start);
+			Serial_printf(F("Saved system settings in %lu microseconds.\n"), micros() - micros_start);
 			messages_log_add(String("Saved system settings"));
 		} else {
-			Serial.printf(F("Failed to save system settings to %s\n"), filename);
+			Serial_printf(F("Failed to save system settings to %s\n"), filename);
 			messages_log_add(String("Failed to save system settings"));
 		}
 		update_system_settings_filename(String(filename));
@@ -382,12 +382,12 @@ bool save_system_settings(bool debug) {
 bool load_system_settings(bool debug) {
 	#ifdef ENABLE_SD
 		if (settings_root == nullptr) {
-			Serial.println(F("load_system_settings: settings_root is null"));
+			Serial_println(F("load_system_settings: settings_root is null"));
 			return false;
 		}
 
 		char *filename = get_system_settings_filename();
-		if (debug) Serial.printf(F("load_system_settings() opening %s\n"), filename);
+		if (debug) Serial_printf(F("load_system_settings() opening %s\n"), filename);
 
 		if (!SD.exists(filename)) {
 			messages_log_add(String("System settings file does not exist: ") + String(filename));
@@ -398,10 +398,10 @@ bool load_system_settings(bool debug) {
 		uint32_t micros_start = micros();
 		bool ok = sl_load_from_file(filename, SL_SCOPE_SYSTEM);
 		if (ok) {
-			Serial.printf(F("Loaded system settings in %lu microseconds.\n"), micros() - micros_start);
+			Serial_printf(F("Loaded system settings in %lu microseconds.\n"), micros() - micros_start);
 			messages_log_add(String("Loaded system settings"));
 		} else {
-			Serial.printf(F("Failed to load system settings from %s (missing or unreadable).\n"), filename);
+			Serial_printf(F("Failed to load system settings from %s (missing or unreadable).\n"), filename);
 			messages_log_add(String("No system settings file found"));
 		}
 		update_system_settings_filename(String(filename));
@@ -454,14 +454,14 @@ bool copy_file(const char *sourceFile, const char *destnFile) {
 
 	if (!myOrigFile.open(sourceFile, FILE_READ)) {
 		//SD.errorHalt("opening source file for read failed");
-		Serial.printf(F("Error opening source file for copy '%s'\n"), sourceFile);
+		Serial_printf(F("Error opening source file for copy '%s'\n"), sourceFile);
 		//if (irqs_enabled) __enable_irq();
 		return false;
 	}
 
 	if (!myDestFile.open(destnFile, FILE_WRITE)) {
 		//SD.errorHalt("opening destn file for write failed");
-		Serial.printf(F("Error opening dest file for copy '%s'\n"), destnFile);
+		Serial_printf(F("Error opening dest file for copy '%s'\n"), destnFile);
 		//if (irqs_enabled) __enable_irq();
 		return false;
 	}		
@@ -504,7 +504,7 @@ void setup_saveloadlib() {
 
 	uint32_t start_time = millis();
 	sl_setup_all(settings_root);
-	if (Serial) Serial.printf("setup_saveloadlib: Finished sl_setup_all in %i millis.\n", millis()-start_time);
+	Serial_printf("setup_saveloadlib: Finished sl_setup_all in %i millis.\n", millis()-start_time);
 
 	//sl_validate_tree(settings_root, Serial);
 

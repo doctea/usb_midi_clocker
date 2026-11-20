@@ -66,7 +66,7 @@ bool VirtualBehaviour_ClockGates::should_trigger_clock(unsigned long ticks, byte
 
       #ifdef PIN_CLOCK_RESET_PHRASE
         if (is_bpm_on_phrase(ticks)) {
-          Serial.printf("On phrase! %i\n", ticks);
+          Serial_printf("On phrase! %i\n", ticks);
           cv_out_clock_pin_on(PIN_CLOCK_RESET);
         } else if (is_bpm_on_phrase(ticks,duration)) {
           cv_out_clock_pin_off(PIN_CLOCK_RESET);

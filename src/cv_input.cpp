@@ -199,8 +199,8 @@ void setup_parameters() {
 // set up the menus to provide control over the ParameterInputs and VoltageSources
 //FLASHMEM 
 void setup_parameter_menu() {
-    Serial.println(F("==== setup_parameter_menu starting ===="));
-    Serial.println(F("Adding ParameterSelectorControls for available_inputs..."));
+    Serial_println(F("==== setup_parameter_menu starting ===="));
+    Serial_println(F("Adding ParameterSelectorControls for available_inputs..."));
     // ask ParameterManager to add all the menu items for the ParameterInputs
     parameter_manager->addAllParameterInputMenuItems(menu);
 
@@ -218,6 +218,6 @@ void setup_parameter_menu() {
     //DirectNumberControl<int> *mixer_profile = new DirectNumberControl<int>("Mixer profiling", &parameter_manager->profile_update_mixers, parameter_manager->profile_update_mixers, (int)0, (int)1000000, nullptr);
     //menu->add(mixer_profile);
 
-    Serial.println(F("setup_parameter_menu done =================="));
+    Serial_println(F("setup_parameter_menu done =================="));
 }
 #endif

@@ -137,7 +137,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
         }
 
         virtual void set_calibration_parameter_input(int channel, const char *input_name) {
-            Serial.printf("DeviceBehaviour_CVOutput#set_calibration_parameter_input(%i, %s)\n", channel, input_name);
+            Serial_printf("DeviceBehaviour_CVOutput#set_calibration_parameter_input(%i, %s)\n", channel, input_name);
             if (channel < channel_count) {
                 if (outputs[channel] != nullptr) outputs[channel]->set_calibration_parameter_input(input_name);
             }
@@ -147,15 +147,15 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             DeviceBehaviourUltimateBase::init();
 
             if (debug && Serial) 
-                Serial.println("DeviceBehaviour_CVOutput#init()..");
+                Serial_println("DeviceBehaviour_CVOutput#init()..");
 
             if (dac_output!=nullptr) {
-                if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput telling dac_output to start..");
+                if (debug && Serial) Serial_println("DeviceBehaviour_CVOutput telling dac_output to start..");
                 Wire.begin();
                 dac_output->begin();
-                if (debug && Serial) Serial.println("DeviceBehaviour_CVOutput#init() finished.");
+                if (debug && Serial) Serial_println("DeviceBehaviour_CVOutput#init() finished.");
             } else {
-                if (debug && Serial) Serial.printf("WARNING: DeviceBehaviour_CVOutput '%s' has null dac_output!\n", this->label);
+                if (debug && Serial) Serial_printf("WARNING: DeviceBehaviour_CVOutput '%s' has null dac_output!\n", this->label);
                 messages_log_add("WARNING: CVOutputBehaviour couldn't initialise DAC output due to nullness!");
             }
 
@@ -578,9 +578,6 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
             return false;
         }
 
-        // CV output channel sub-menus are compact enough that scrolling is not needed.
-        virtual bool is_page_scrollable() override { return false; }
-
         #ifdef ENABLE_SCREEN
             virtual MenuItemList *make_menu_items() override {
                 MenuItemList *menuitems = DeviceBehaviourUltimateBase::make_menu_items();
@@ -612,9 +609,7 @@ class DeviceBehaviour_CVOutput : virtual public DeviceBehaviourUltimateBase, vir
                         &this->effective_per_channel_lowest_note[i],
                         &this->effective_per_channel_highest_note[i],
                         this,
-                        &this->slew_base_normal[i],
-                        true,
-                        false
+                        &this->slew_base_normal[i]
                     ));
                 }
 

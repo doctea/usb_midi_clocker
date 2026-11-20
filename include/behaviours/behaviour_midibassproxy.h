@@ -18,11 +18,11 @@ class MIDIBassBehaviourProxy : virtual public MIDIBassBehaviour {
     }
 
     virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (this->debug) Serial.printf("%s#actualSendNoteOn(%i, %i, %i) (calling receive_note_on!)\n", this->get_label(), note, velocity, channel);
+        if (this->debug) Serial_printf("%s#actualSendNoteOn(%i, %i, %i) (calling receive_note_on!)\n", this->get_label(), note, velocity, channel);
         this->receive_note_on(channel, note, velocity);
     }
     virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (this->debug) Serial.printf("%s#actualSendNoteOff(%i, %i, %i)  (calling receive_note_off!)\n", this->get_label(), note, velocity, channel);
+        if (this->debug) Serial_printf("%s#actualSendNoteOff(%i, %i, %i)  (calling receive_note_off!)\n", this->get_label(), note, velocity, channel);
         this->receive_note_off(channel, note, velocity);
     }
     virtual void actualSendControlChange(uint8_t cc, uint8_t value, uint8_t channel) override {

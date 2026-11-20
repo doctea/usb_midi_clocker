@@ -228,7 +228,7 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
     // TODO: make cadence configurable (so we can trigger on X beats, X bars, phrases, etc..)
     
     virtual void on_bar(int bar_number) override {
-        if (debug) Serial.printf("on_bar %2i with current_bar %2i\n", bar_number, arranger->current_bar);
+        if (debug) Serial_printf("on_bar %2i with current_bar %2i\n", bar_number, arranger->current_bar);
         arranger->on_bar(bar_number);
 
         if (debug) Serial_printf("=======\non_end_bar %2i (going into bar number %i)\n", BPM_CURRENT_BAR % 8, arranger->current_bar);
@@ -788,9 +788,9 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             limit_ranges_bar->add(new LambdaNumberControl<int8_t>(
                 "Chord octave", 
                 [=] (int8_t octave) -> void { 
-                    if(debug) Serial.printf("-----\nchanging chord_octave from %i to %i\n", chord_octave, octave);
+                    if(debug) Serial_printf("-----\nchanging chord_octave from %i to %i\n", chord_octave, octave);
                     this->change_chord_octave(octave);
-                    if (debug) Serial.printf("done changing chord_octave, now %i\n-----\n", chord_octave);
+                    if (debug) Serial_printf("done changing chord_octave, now %i\n-----\n", chord_octave);
                 },
                 [=] () -> int8_t { return this->chord_octave; },
                 nullptr,
@@ -799,9 +799,9 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             limit_ranges_bar->add(new LambdaNumberControl<int8_t>(
                 "Bass octave", 
                 [=] (int8_t octave) -> void { 
-                    if(debug) Serial.printf("-----\nchanging bass_octave from %i to %i\n", bass_octave, octave);
+                    if(debug) Serial_printf("-----\nchanging bass_octave from %i to %i\n", bass_octave, octave);
                     this->change_bass_octave(octave);
-                    if (debug) Serial.printf("done changing bass_octave, now %i\n-----\n", bass_octave);
+                    if (debug) Serial_printf("done changing bass_octave, now %i\n-----\n", bass_octave);
                 },
                 [=] () -> int8_t { return this->bass_octave; },
                 nullptr,
@@ -810,9 +810,9 @@ class VirtualBehaviour_Progression : virtual public VirtualBehaviourBase {
             limit_ranges_bar->add(new LambdaNumberControl<int8_t>(
                 "Topline octave", 
                 [=] (int8_t octave) -> void { 
-                    if(debug) Serial.printf("-----\nchanging topline_octave from %i to %i\n", topline_octave, octave);
+                    if(debug) Serial_printf("-----\nchanging topline_octave from %i to %i\n", topline_octave, octave);
                     this->change_topline_octave(octave);
-                    if(debug) Serial.printf("changing topline_octave from %i to %i\n-----\n", topline_octave, octave);
+                    if(debug) Serial_printf("changing topline_octave from %i to %i\n-----\n", topline_octave, octave);
                 },
                 [=] () -> int8_t { return this->topline_octave; },
                 nullptr,

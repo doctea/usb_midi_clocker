@@ -40,7 +40,7 @@ class Project : public SHDynamic<0, 8> {
 
     void initialise_scene_slots() {
         #ifdef ENABLE_SD
-            Serial.println(F("initialise_scene_slots starting.."));
+            Serial_println(F("initialise_scene_slots starting.."));
             for (unsigned int i = 0 ; i < NUM_SCENE_SLOTS_PER_PROJECT ; i++) {
                 scene_slot_has_file[i] = SD.exists(storage::get_scene_filename(this->current_project_number, i));
                 Serial_printf(F("\tscene_slot_has_file[i] = %i for %s\n"), scene_slot_has_file[i], get_scene_filename(this->current_project_number, i));
@@ -50,7 +50,7 @@ class Project : public SHDynamic<0, 8> {
             for (unsigned int i = 0 ; i < NUM_SCENE_SLOTS_PER_PROJECT ; i++) {
                 scene_slot_has_file[i] = false;
             }
-            Serial.println("ENABLE_SD not defined, so pattern slots not initialised");
+            Serial_println("ENABLE_SD not defined, so pattern slots not initialised");
         #endif
     }
     #ifdef ENABLE_LOOPER
@@ -77,7 +77,7 @@ class Project : public SHDynamic<0, 8> {
             for (unsigned int i = 0 ; i < NUM_LOOP_SLOTS_PER_PROJECT ; i++) {
                 loop_slot_has_file[i] = false;
             }
-            Serial.println("ENABLE_SD not defined, so loop slots not initialised");
+            Serial_println("ENABLE_SD not defined, so loop slots not initialised");
         #endif
     }
     #endif
@@ -236,7 +236,7 @@ class Project : public SHDynamic<0, 8> {
         }
 
         bool load_scene(int selected_scene_number, bool debug = false) {
-            if (debug) { Serial.printf(F("load for selected_scene_number %i\n"), selected_scene_number); Serial_flush(); }
+            if (debug) { Serial_printf(F("load for selected_scene_number %i\n"), selected_scene_number); Serial_flush(); }
             uint32_t micros_start = micros();
             bool result = storage::load_scene(current_project_number, selected_scene_number, &storage::current_state, debug);
             if (result)
@@ -248,7 +248,7 @@ class Project : public SHDynamic<0, 8> {
         }
         bool save_scene(int selected_scene_number, bool debug = false) {
             //this->debug = true;
-            if (debug) { Serial.printf(F("save for selected_scene_number %i\n"), selected_scene_number); Serial_flush(); }
+            if (debug) { Serial_printf(F("save for selected_scene_number %i\n"), selected_scene_number); Serial_flush(); }
             bool result = storage::save_scene(current_project_number, selected_scene_number, &storage::current_state, debug);
             if (result) {
                 scene_slot_has_file[selected_scene_number] = true;
@@ -260,7 +260,7 @@ class Project : public SHDynamic<0, 8> {
         //////// loops/recordings
         #ifdef ENABLE_LOOPER
         bool select_loop_number(int sn) {
-            Serial.printf(F("select_loop_number %i\n"), sn);
+            Serial_printf(F("select_loop_number %i\n"), sn);
             selected_loop_number = sn % NUM_LOOP_SLOTS_PER_PROJECT;
             return selected_loop_number == sn;
         }
@@ -315,7 +315,7 @@ class Project : public SHDynamic<0, 8> {
                 return this->load_loop(selected_loop_number);
             }
             bool load_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf(F("load_loop(): load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
+                Serial_printf(F("load_loop(): load for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::load_scene(selected_loop_number, &storage::current_state);
                 bool result = track->load_loop(current_project_number, selected_loop_number);
                 if (result)
@@ -323,7 +323,7 @@ class Project : public SHDynamic<0, 8> {
                 return result;
             }
             bool save_loop(int selected_loop_number, MIDITrack *track) {
-                Serial.printf(F("save for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
+                Serial_printf(F("save for selected_loop_number project %i / loop %i\n"), current_project_number, selected_loop_number);
                 //bool result = storage::save_scene(selected_loop_number, &storage::current_state);
                 bool result = track->save_loop(current_project_number, selected_loop_number);
                 if (result) {
@@ -357,7 +357,7 @@ class Project : public SHDynamic<0, 8> {
             #ifdef ENABLE_LOOPER
                 if (auto_advance_looper) {
                     this->selected_loop_number = slot % NUM_LOOP_SLOTS_PER_PROJECT;
-                    Serial.printf("on_phrase loading loop_number %i\n", selected_loop_number);
+                    Serial_printf("on_phrase loading loop_number %i\n", selected_loop_number);
                     this->load_loop(this->selected_loop_number);
                     //Serial.println("done!");
                 }
@@ -381,9 +381,9 @@ class Project : public SHDynamic<0, 8> {
 
                 char filename[MAX_FILEPATH] = "";
                 snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, save_to_project_number);
-                Serial.printf(F("save_project_settings(%i) writing to `%s`\n"), save_to_project_number, filename);
+                Serial_printf(F("save_project_settings(%i) writing to `%s`\n"), save_to_project_number, filename);
                 if (SD.exists(filename)) {
-                    Serial.printf(F("%s exists, deleting first!\n"), filename);
+                    Serial_printf(F("%s exists, deleting first!\n"), filename);
                     SD.remove(filename);
                 }
 
@@ -393,10 +393,10 @@ class Project : public SHDynamic<0, 8> {
 
                 uint32_t micros_start = micros();
                 if (!sl_save_to_file(save_tree, filename, (sl_scope_t)(SL_SCOPE_PROJECT | SL_SCOPE_ROUTING))) {
-                    Serial.printf(F("Error saving project settings to %s\n"), filename);
+                    Serial_printf(F("Error saving project settings to %s\n"), filename);
                     return false;
                 }
-                Serial.printf(F("Saved project settings in %lu microseconds.\n"), micros() - micros_start);
+                Serial_printf(F("Saved project settings in %lu microseconds.\n"), micros() - micros_start);
 
                 if (switch_to) {
                     this->current_project_number = save_to_project_number;
@@ -414,13 +414,13 @@ class Project : public SHDynamic<0, 8> {
             // has a registered root. In that case, skip loading so we don't
             // reset routing and then silently drop all lines.
             if (SL_ROOT == nullptr) {
-                Serial.printf(F("load_project_settings(%i): saveload root not ready yet, deferring load.\n"), project_number);
+                Serial_printf(F("load_project_settings(%i): saveload root not ready yet, deferring load.\n"), project_number);
                 return false;
             }
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_PROJECT_SETTINGS_FORMAT, project_number);
-            Serial.printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
+            Serial_printf(F("load_project_settings(%i) opening %s\n"), project_number, filename);
             sl_scope_t load_scope = SL_SCOPE_PROJECT;
             if (this->load_matrix_mappings) {
                 midi_matrix_manager->reset_matrix();  // disconnect before applying routing from file
@@ -430,9 +430,9 @@ class Project : public SHDynamic<0, 8> {
             uint32_t micros_start = micros();
             bool loaded_ok = sl_load_from_file(filename, load_scope);
             if (loaded_ok) {
-                Serial.printf(F("Loaded project settings in %u microseconds.\n"), micros() - micros_start);
+                Serial_printf(F("Loaded project settings in %u microseconds.\n"), micros() - micros_start);
             } else {
-                Serial.printf(F("Failed to load project settings from %s (missing or unreadable).\n"), filename);
+                Serial_printf(F("Failed to load project settings from %s (missing or unreadable).\n"), filename);
             }
 
             update_project_filename(filename);

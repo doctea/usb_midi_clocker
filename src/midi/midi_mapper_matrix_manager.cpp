@@ -150,7 +150,7 @@ void setup_midi_mapper_matrix_manager() {
         // every port gets an owner, so the MIDI Ports page can show what occupies its jacks
         get_serial_port_owner(i);
 
-        Serial.printf("Checking/setting up midi_out_serial[%i].. ", i); Serial_flush();
+        Serial_printf("Checking/setting up midi_out_serial[%i].. ", i); Serial_flush();
 
         // first check all the possible serial output devices that have behaviours or names/known channels we can set up
         #ifdef ENABLE_BITBOX

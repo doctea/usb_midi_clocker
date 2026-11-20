@@ -27,20 +27,20 @@ source_id_t pc_usb_sources[NUM_PC_SOURCES];
     for (int i=0; i<NUM_PC_SOURCES; i++) {
       char buf[32];
       snprintf(buf, sizeof(buf), "PCUSB Bend %i", i+1);
-      Serial.printf("setup_pc_usb_pitchbend_parameter_inputs %i/%i: creating %s\n", i+1, NUM_PC_SOURCES, buf);
-      Serial.flush();
+      Serial_printf("setup_pc_usb_pitchbend_parameter_inputs %i/%i: creating %s\n", i+1, NUM_PC_SOURCES, buf);
+      Serial_flush();
       pb_inputs[i] = new MIDIPitchBendParameterInput(buf, "PC USB", 0);
-      Serial.printf("setup_pc_usb_pitchbend_parameter_inputs %i/%i: created %s, adding to parameter_manage at %p..\n", i+1, NUM_PC_SOURCES, buf, parameter_manager);
-      Serial.flush();
+      Serial_printf("setup_pc_usb_pitchbend_parameter_inputs %i/%i: created %s, adding to parameter_manage at %p..\n", i+1, NUM_PC_SOURCES, buf, parameter_manager);
+      Serial_flush();
       if (parameter_manager==nullptr) {
-        Serial.println("setup_pc_usb_pitchbend_parameter_inputs: parameter_manager is null!"); Serial.flush();
+        Serial_println("setup_pc_usb_pitchbend_parameter_inputs: parameter_manager is null!"); Serial_flush();
       } else {
-        Serial.printf("setup_pc_usb_pitchbend_parameter_inputs: parameter_manager is at %p\n", parameter_manager); Serial.flush();
+        Serial_printf("setup_pc_usb_pitchbend_parameter_inputs: parameter_manager is at %p\n", parameter_manager); Serial_flush();
         parameter_manager->addInput(pb_inputs[i]);
-        Serial.println("ADDED!"); Serial.flush();
+        Serial_println("ADDED!"); Serial_flush();
       }
     }
-    Serial.println("setup_pc_usb_pitchbend_parameter_inputs done!"); Serial.flush();
+    Serial_println("setup_pc_usb_pitchbend_parameter_inputs done!"); Serial_flush();
   }
 #endif
 

@@ -98,29 +98,29 @@ class VirtualBehaviour_Arpeggiator : virtual public VirtualBehaviourBase {
     }*/
 
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (this->debug) Serial.printf("%s#sendNoteOn(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
+        if (this->debug) Serial_printf("%s#sendNoteOn(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
 
         if (channel==MIDI_CHANNEL_CHORDS) {
-            if (debug) Serial.printf("Arpeggiator#sendNoteOn: channel 1: holding chord note\n");
+            if (debug) Serial_printf("Arpeggiator#sendNoteOn: channel 1: holding chord note\n");
             chord_note_tracker.held_note_on(note, note);
         } else if (channel==MIDI_CHANNEL_TRIGGER) {
-            if (debug) Serial.printf("Arpeggiator#sendNoteOn: channel 2, so triggering next note\n");
+            if (debug) Serial_printf("Arpeggiator#sendNoteOn: channel 2, so triggering next note\n");
             this->trigger_next_note_on();
         } else {
-            if (debug) Serial.printf("Arpeggiator#sendNoteOn: channel %i not recognised\n", channel);
+            if (debug) Serial_printf("Arpeggiator#sendNoteOn: channel %i not recognised\n", channel);
         }
     }
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (debug) Serial.printf("%s#sendNoteOff(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
+        if (debug) Serial_printf("%s#sendNoteOff(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
 
         if (channel==MIDI_CHANNEL_CHORDS) {
-            if (debug) Serial.printf("Arpeggiator#sendNoteOff: channel 1, so releasing chord note\n");
+            if (debug) Serial_printf("Arpeggiator#sendNoteOff: channel 1, so releasing chord note\n");
             chord_note_tracker.held_note_off(note);
         } else if (channel==MIDI_CHANNEL_TRIGGER) {
-            if (debug) Serial.printf("Arpeggiator#sendNoteOff: channel 2, so stopping note\n");
+            if (debug) Serial_printf("Arpeggiator#sendNoteOff: channel 2, so stopping note\n");
             this->trigger_note_off();
         } else {
-            if (debug) Serial.printf("Arpeggiator#sendNoteOff: channel %i not recognised\n", channel);
+            if (debug) Serial_printf("Arpeggiator#sendNoteOff: channel %i not recognised\n", channel);
         }
     }
 

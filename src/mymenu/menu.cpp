@@ -145,7 +145,7 @@ void setup_menu_transport() {
 //FLASHMEM // causes a section type conflict with 'void Menu::add(MenuItemList*, uint16_t)'
 #endif
 void setup_menu(bool button_high_state) {
-    Serial.println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
+    Serial_println(F("Starting setup_menu()..")); //Instantiating DisplayTranslator_STeensy.."));
 
     #ifdef PIN_BUTTON_A
         pushButtonA.setPressedState(button_high_state);
@@ -171,10 +171,10 @@ void setup_menu(bool button_high_state) {
     //delay(50);
     //Serial.println(F("Finished  constructor"));
     Serial_flush();
-    Serial.println(F("Creating Menu object.."));
+    Serial_println(F("Creating Menu object.."));
     Serial_flush();
     menu = new Menu(tft, button_high_state);
-    Serial.println(F("Created Menu object"));
+    Serial_println(F("Created Menu object"));
     Serial_flush();
 
     menu->set_messages_log(&message_log);
@@ -209,7 +209,7 @@ void setup_menu(bool button_high_state) {
     //     setup_menu_looper();
     // #endif
 
-    Serial.println(F("Exiting setup_menu"));
+    Serial_println(F("Exiting setup_menu"));
     Serial_flush();
 
     /*menu->add(&test_item_1);

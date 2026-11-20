@@ -104,7 +104,7 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
 
     // virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
     virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
-        if (this->debug) Serial.printf(F("behaviour_flexiarp#sendNoteOff(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
+        if (this->debug) Serial_printf(F("behaviour_flexiarp#sendNoteOff(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i\n"), channel, note, velocity, source_id);
         
         // Route to appropriate matrix source based on channel
         if (channel>1 && channel <= NUM_FLEXIARP_PATTERNS) {
@@ -116,7 +116,7 @@ class VirtualBehaviour_FlexiArp : virtual public DeviceBehaviourUltimateBase {
 
     bool already_initialised = false;
     virtual ParameterList *initialise_parameters() override {
-        Serial.printf("%s#initialise_parameters()...", this->get_label());
+        Serial_printf("%s#initialise_parameters()...", this->get_label());
         if (already_initialised && this->parameters!=nullptr)
             return this->parameters;
 

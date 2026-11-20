@@ -24,7 +24,7 @@ class DeviceBehaviour_DrumKit : virtual public DeviceBehaviourSerialBase {
 
         //FLASHMEM // crashes on setup if in FLASHMEM ?
         virtual void setup_callbacks() override {
-            Serial.println(F("DeviceBehaviour_DrumKit#setup_callbacks.."));
+            Serial_println(F("DeviceBehaviour_DrumKit#setup_callbacks.."));
             this->input_device->setHandleNoteOn(drumkit_note_on);
             this->input_device->setHandleNoteOff(drumkit_note_off);
         }

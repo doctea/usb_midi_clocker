@@ -29,7 +29,7 @@ FLASHMEM void setPSRamSpeed(int mhz) {
   //Turn FlexSPI2 clock back on
   CCM_CCGR7 |= CCM_CCGR7_FLEXSPI2(CCM_CCGR_ON);
 
-  Serial.printf("Update FLEXSPI2 speed: %u clk:%u div:%u Actual:%u\n", mhz, clk_save, divider_save,
+  Serial_printf("Update FLEXSPI2 speed: %u clk:%u div:%u Actual:%u\n", mhz, clk_save, divider_save,
       flexspi2_clock_speeds[clk_save] / (divider_save + 1));
 
   psram_clocked_at = flexspi2_clock_speeds[clk_save] / (divider_save + 1); // save the clock speed for later use

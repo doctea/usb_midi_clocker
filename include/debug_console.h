@@ -31,19 +31,19 @@ bool serial_connected = false;
 
 uint32_t list_files_in_directory(const char *path, int max_depth = 8, int current_depth = 0) {
     if (current_depth > max_depth) {
-        Serial.printf("Max directory depth of %i reached at path: %s\n", max_depth, path);
+        Serial_printf("Max directory depth of %i reached at path: %s\n", max_depth, path);
         return 0;
     }
     File dir = SD.open(path);
     if (!dir) {
-        Serial.printf("Error opening directory %s\n", path);
+        Serial_printf("Error opening directory %s\n", path);
         return 0;
     }
     uint32_t total_size = 0;
     while (File entry = dir.openNextFile()) {
         for (int i = 0; i < current_depth; i++)
-            Serial.print("\t");
-        Serial.printf("%s%s (%lu bytes)\n", entry.name(), entry.isDirectory() ? "/" : "", entry.size());
+            Serial_print("\t");
+        Serial_printf("%s%s (%lu bytes)\n", entry.name(), entry.isDirectory() ? "/" : "", entry.size());
         total_size += entry.size();
         if (entry.isDirectory()) {
             char subpath[256];
@@ -96,7 +96,7 @@ bool execute_command(const char *command_line) {
         while (t >= arg2 && (*t == '\n' || *t == '\r')) { *t = '\0'; t--; }
     }
 
-    Serial.printf("Received command: '%s', arg1: '%s', arg2: '%s'\n", command, arg1, arg2);
+    Serial_printf("Received command: '%s', arg1: '%s', arg2: '%s'\n", command, arg1, arg2);
     
     if (strcmp(command, "notes") == 0) {
         execute_midi_note_debug_command(midi_matrix_manager, arg1, arg2);
@@ -104,38 +104,38 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "debug") == 0) {
         if (strcmp(arg1, "on") == 0) {
             pass_debug = true;
-            Serial.println("Debug output enabled");
+            Serial_println("Debug output enabled");
         } else if (strcmp(arg1, "off") == 0) {
             pass_debug = false;
-            Serial.println("Debug output disabled");
+            Serial_println("Debug output disabled");
         } else {
-            Serial.println("Usage: debug <on|off>");
+            Serial_println("Usage: debug <on|off>");
         }
         return true;
     } else if (strcmp(command, "ping") == 0) {
-        Serial.println("pong");
+        Serial_println("pong");
         return true;
     } else if (strcmp(command, "status") == 0) {
-        Serial.println("Status: All systems nominal.");
-        Serial.printf("Current project: %i, selected scene: %i\n", project->current_project_number, project->selected_scene_number);
-        Serial.printf("Free RAM: %i bytes\n", freeRam());
-        Serial.printf("SD card present: %s\n", SD.begin(BUILTIN_SDCARD) ? "yes" : "no");
+        Serial_println("Status: All systems nominal.");
+        Serial_printf("Current project: %i, selected scene: %i\n", project->current_project_number, project->selected_scene_number);
+        Serial_printf("Free RAM: %i bytes\n", freeRam());
+        Serial_printf("SD card present: %s\n", SD.begin(BUILTIN_SDCARD) ? "yes" : "no");
 
         SL_TreeCounts sl_tree_counts_all = sl_count_tree(project->save_tree);
-        Serial.printf("Savetree counts - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_all.nodes, sl_tree_counts_all.settings, sl_tree_counts_all.bytes);
+        Serial_printf("Savetree counts - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_all.nodes, sl_tree_counts_all.settings, sl_tree_counts_all.bytes);
         SL_TreeCounts sl_tree_counts_scene = sl_count_tree(project->save_tree, false, SL_SCOPE_SCENE);
         SL_TreeCounts sl_tree_counts_project = sl_count_tree(project->save_tree, false, SL_SCOPE_PROJECT);
         SL_TreeCounts sl_tree_counts_routing = sl_count_tree(project->save_tree, false, SL_SCOPE_ROUTING);
         SL_TreeCounts sl_tree_counts_system = sl_count_tree(project->save_tree, false, SL_SCOPE_SYSTEM);
-        Serial.printf("Savetree counts by scope:\n");
-        Serial.printf("  SCENE - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_scene.nodes, sl_tree_counts_scene.settings, sl_tree_counts_scene.bytes);
-        Serial.printf("  PROJECT - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_project.nodes, sl_tree_counts_project.settings, sl_tree_counts_project.bytes);
-        Serial.printf("  ROUTING - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_routing.nodes, sl_tree_counts_routing.settings, sl_tree_counts_routing.bytes);
-        Serial.printf("  SYSTEM - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_system.nodes, sl_tree_counts_system.settings, sl_tree_counts_system.bytes);
+        Serial_printf("Savetree counts by scope:\n");
+        Serial_printf("  SCENE - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_scene.nodes, sl_tree_counts_scene.settings, sl_tree_counts_scene.bytes);
+        Serial_printf("  PROJECT - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_project.nodes, sl_tree_counts_project.settings, sl_tree_counts_project.bytes);
+        Serial_printf("  ROUTING - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_routing.nodes, sl_tree_counts_routing.settings, sl_tree_counts_routing.bytes);
+        Serial_printf("  SYSTEM - nodes: %lu, settings: %lu, bytes: %lu\n", sl_tree_counts_system.nodes, sl_tree_counts_system.settings, sl_tree_counts_system.bytes);
 
         return true;
     } else if (strcmp(command, "reset") == 0) {
-        Serial.println("Resetting device...");
+        Serial_println("Resetting device...");
         reset_teensy(); // This is a Teensy-specific function to reset the device
         return true;
     } else if (strcmp(command, "FLASH") == 0) {
@@ -148,11 +148,11 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "usb_pool") == 0) {
         uint32_t devices, pipes, transfers, strings;
         USBHost::countFree(devices, pipes, transfers, strings);
-        Serial.printf("USB free pools: devices=%lu, pipes=%lu, transfers=%lu, strings=%lu\n",
+        Serial_printf("USB free pools: devices=%lu, pipes=%lu, transfers=%lu, strings=%lu\n",
                       (unsigned long)devices, (unsigned long)pipes,
                       (unsigned long)transfers, (unsigned long)strings);
         if (devices == UINT32_MAX || pipes == UINT32_MAX || transfers == UINT32_MAX || strings == UINT32_MAX)
-            Serial.println("USB free-list corruption: UINT32_MAX counts are invalid; run usb_debug for details");
+            Serial_println("USB free-list corruption: UINT32_MAX counts are invalid; run usb_debug for details");
         return true;
     } else if (strcmp(command, "usb_debug") == 0) {
         dump_usb_diagnostics();
@@ -169,11 +169,11 @@ bool execute_command(const char *command_line) {
     #if defined(ENABLE_USB_WATCHDOG) && USBHOST_T36_ENABLE_DIAGNOSTICS
         } else if (strcmp(command, "usb_debug_test") == 0) {
             if (strcmp(arg1, "reset") != 0 && strcmp(arg1, "watchdog") != 0) {
-                Serial.println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");
+                Serial_println("Usage: usb_debug_test <reset|watchdog> (reboots; unsaved changes lost)");
                 return true;
             }
-            Serial.println("Writing retention test marker; rebooting (watchdog: within 8 seconds)");
-            Serial.flush();
+            Serial_println("Writing retention test marker; rebooting (watchdog: within 8 seconds)");
+            Serial_flush();
             USBHost::setDiagnosticPhase(USBHost::DiagnosticPhase::RetentionTest);
             if (strcmp(arg1, "watchdog") == 0) {
                 for (;;) { __asm__ volatile("nop"); }
@@ -184,7 +184,7 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "usb_tx") == 0) {
         for (unsigned int port = 0; port < NUM_USB_MIDI_DEVICES; port++) {
             MIDIDeviceBase *device = usb_midi_slots[port].device;
-            Serial.printf("USB MIDI port=%u id=%04X:%04X queue_ready=%u pending=%u realtime_pending=%u dropped=%lu realtime_dropped=%lu\n",
+            Serial_printf("USB MIDI port=%u id=%04X:%04X queue_ready=%u pending=%u realtime_pending=%u dropped=%lu realtime_dropped=%lu\n",
                           port, device->idVendor(), device->idProduct(),
                           (unsigned int)device->hasTransmitQueueStorage(),
                           (unsigned int)device->getTransmitPendingCount(),
@@ -201,9 +201,9 @@ bool execute_command(const char *command_line) {
         clear_crashreport_log();
         return true;
     } else if (strcmp(command, "listbehaviours") == 0) {
-        Serial.println("Behaviours:");
+        Serial_println("Behaviours:");
         for (auto* b : *behaviour_manager->behaviours) {
-            Serial.printf(
+            Serial_printf(
                 "  Label: '%s', Type: '%s', Indicator: '%s'\n", 
                 b->get_label(), 
                 b->getType() == BehaviourType::serial ? "Serial" : 
@@ -218,12 +218,12 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "playnote") == 0 || strcmp(command, "stopnote") == 0) {
         // take a behaviour label and note number as arguments, find the behaviour and play/stop the note on it (for testing)
         if (arg1[0] == '\0' || arg2[0] == '\0') {
-            Serial.println("Usage: playnote|stopnote <behaviour_label> <note_number>");
+            Serial_println("Usage: playnote|stopnote <behaviour_label> <note_number>");
             return true;
         }
         DeviceBehaviourUltimateBase* b = behaviour_manager->find_behaviour_for_label(arg1);
         if (b == nullptr) {
-            Serial.printf("No behaviour found with label '%s'\n", arg1);
+            Serial_printf("No behaviour found with label '%s'\n", arg1);
             return true;
         }
         int8_t note_number = atoi(arg2);
@@ -232,24 +232,24 @@ bool execute_command(const char *command_line) {
                 b->sendNoteOn(note_number, MIDI_MAX_VELOCITY, b->current_channel);
             else if (strcmp(command, "stopnote") == 0)
                 b->sendNoteOff(note_number, MIDI_MAX_VELOCITY, b->current_channel);
-            Serial.printf("%s note %i on behaviour '%s'\n", strcmp(command, "playnote") == 0 ? "Played" : "Stopped", note_number, arg1);
+            Serial_printf("%s note %i on behaviour '%s'\n", strcmp(command, "playnote") == 0 ? "Played" : "Stopped", note_number, arg1);
         } else {
-            Serial.printf("Invalid note number: %i\n", note_number);
+            Serial_printf("Invalid note number: %i\n", note_number);
         }
         return true;
     } else if (strcmp(command, "setdebugbehaviour") == 0) {
         if (arg1[0] == '\0' || arg2[0] == '\0') {
-            Serial.println("Usage: setdebugbehaviour <label> <on|off> (toggles debug output on/off)");
+            Serial_println("Usage: setdebugbehaviour <label> <on|off> (toggles debug output on/off)");
             return true;
         }
         DeviceBehaviourUltimateBase* b = behaviour_manager->find_behaviour_for_label(arg1);
         if (b == nullptr) {
-            Serial.printf("No behaviour found with label '%s'\n", arg1);
+            Serial_printf("No behaviour found with label '%s'\n", arg1);
             return true;
         }
         // set debug on/off for specified behaviour
         if (arg2[0] == '\0') {
-            Serial.println("Usage: setdebugbehaviour <label> <on|off>");
+            Serial_println("Usage: setdebugbehaviour <label> <on|off>");
             return true;
         }
         bool debug_value;
@@ -258,70 +258,70 @@ bool execute_command(const char *command_line) {
         } else if (strcmp(arg2, "off") == 0) {
             debug_value = false;
         } else {
-            Serial.println("Usage: setdebugbehaviour <label> <on|off>");
+            Serial_println("Usage: setdebugbehaviour <label> <on|off>");
             return true;
         }
         b->debug = debug_value;
-        Serial.printf("Set debug output for behaviour '%s' to %s\n", arg1, debug_value ? "enabled" : "disabled");
+        Serial_printf("Set debug output for behaviour '%s' to %s\n", arg1, debug_value ? "enabled" : "disabled");
         return true;
     } else if (strcmp(command, "list") == 0) {
         // list files and filesize on SD card in given project folder
         // recurse into folders if possible (up to 2 levels deep?) and print files with relative path from project folder
         if (arg1[0] == '\0') {
-            Serial.println("Usage: list <project_number>");
+            Serial_println("Usage: list <project_number>");
             return true;
         }
         int project_number = atoi(arg1);
         if (project_number < 0) {
-            Serial.printf("Invalid project number: %i\n", project_number);
+            Serial_printf("Invalid project number: %i\n", project_number);
             return true;
         }
         char path[MAX_FILEPATH];
         snprintf(path, MAX_FILEPATH, "project%i", project_number);
-        Serial.printf("Files in %s:\n", path);
+        Serial_printf("Files in %s:\n", path);
 
         uint32_t total_size = list_files_in_directory(path, 2, 0);
 
-        Serial.printf("Total storage used in project %i: %lu bytes\n", project_number, total_size);
+        Serial_printf("Total storage used in project %i: %lu bytes\n", project_number, total_size);
 
         return true;
     } else if (strcmp(command, "set") == 0) {
         // switch to project number or scene number
         if (arg1[0] == '\0' || arg2[0] == '\0') {
-            Serial.println("Usage: set <project|scene> <number>");
+            Serial_println("Usage: set <project|scene> <number>");
             return true;
         }
         int number = atoi(arg2);
         if (strcmp(arg1, "project") == 0) {
             if (number < 0) {
-                Serial.printf("Invalid project number: %i\n", number);
+                Serial_printf("Invalid project number: %i\n", number);
                 return true;
             }
             project->loadProjectNumber(number);
-            Serial.printf("Current project set to %i\n", number);
+            Serial_printf("Current project set to %i\n", number);
             return true;
         } else if (strcmp(arg1, "scene") == 0) {
             if (number < 0 || number >= NUM_SCENE_SLOTS_PER_PROJECT) {
-                Serial.printf("Invalid scene number: %i\n", number);
+                Serial_printf("Invalid scene number: %i\n", number);
                 return true;
             }
             project->selected_scene_number = number;
-            Serial.printf("Selected scene set to %i\n", number);
+            Serial_printf("Selected scene set to %i\n", number);
             return true;
         } else {
-            Serial.printf("Unknown type: %s\n", arg1);
+            Serial_printf("Unknown type: %s\n", arg1);
             return true;
         }
     } else if (strcmp(command, "show") == 0) {
         if (arg1[0] == '\0') {
-            Serial.println("Usage: show <type> <slot_number>");
+            Serial_println("Usage: show <type> <slot_number>");
             return true;
         }
         char *filename = nullptr;
 
         if (strcmp(arg1, "scene") == 0) {
             if (arg2[0] == '\0') {
-                Serial.println("Usage: show scene <slot_number> (using currently selected slot if slot_number not provided)");
+                Serial_println("Usage: show scene <slot_number> (using currently selected slot if slot_number not provided)");
                 // show current scene
                 sprintf(arg2, "%i", project->selected_scene_number); // default to slot 0 if no slot number provided
                 return false;
@@ -329,11 +329,11 @@ bool execute_command(const char *command_line) {
 
             int desired_scene_number = atoi(arg2);
             if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
-                Serial.printf("Invalid slot number: %i\n", desired_scene_number);
+                Serial_printf("Invalid slot number: %i\n", desired_scene_number);
                 return true;
             }
             if (project->is_selected_scene_number_empty(desired_scene_number)) {
-                Serial.printf("No scene file found for slot %i\n", desired_scene_number);
+                Serial_printf("No scene file found for slot %i\n", desired_scene_number);
                 return true;
             }
             // read the appropriate file from disc and output its contents to serial
@@ -342,13 +342,13 @@ bool execute_command(const char *command_line) {
             // show specified project settings
 
             if (arg2[0] == '\0') {
-                Serial.println("Usage: show proj <project_number>");
+                Serial_println("Usage: show proj <project_number>");
                 return false;
             }
 
             int desired_project_number = atoi(arg2);
             if (desired_project_number < 0) {
-                Serial.printf("Invalid project number: %i\n", desired_project_number);
+                Serial_printf("Invalid project number: %i\n", desired_project_number);
                 return true;
             }
             
@@ -359,34 +359,34 @@ bool execute_command(const char *command_line) {
         } else if (strcmp(arg1, "loop") == 0) {
             // show loop settings
             if (arg2[0] == '\0') {
-                Serial.println("Usage: show loop <project_number> <recording_number>");
+                Serial_println("Usage: show loop <project_number> <recording_number>");
                 return true;
             }
             int recording_number = atoi(arg2);
             if (recording_number < 0) {
-                Serial.printf("Invalid recording number: %i\n", recording_number);
+                Serial_printf("Invalid recording number: %i\n", recording_number);
                 return true;
             }
             filename = (char*)midi_looper.get_loop_filename(project->current_project_number, recording_number);
         } else {
-            Serial.printf("Unknown type: %s\n", arg1);
+            Serial_printf("Unknown type: %s\n", arg1);
             return true;
         }
 
         if (filename == nullptr) {
-            Serial.println("Unknown file to show. Usage: show <type> <filename>");
+            Serial_println("Unknown file to show. Usage: show <type> <filename>");
             return true;
         } 
 
         Serial.printf("------- Contents of %s: -------\n", filename);
         if (!SD.exists(filename) ) {
-            Serial.printf("File %s does not exist!\n", filename);
+            Serial_printf("File %s does not exist!\n", filename);
             return true;
         }
 
         File file = SD.open(filename, FILE_READ);
         if (!file) {
-            Serial.printf("Error opening file %s\n", filename);
+            Serial_printf("Error opening file %s\n", filename);
             return true;
         }
         while (file.available()) {
@@ -400,120 +400,120 @@ bool execute_command(const char *command_line) {
     } else if (strcmp(command, "load") == 0) {
         // load a scene, project, etc from a file on the SD card. Usage: load <type> <filename>
         if (arg1[0] == '\0' || arg2[0] == '\0') {
-            Serial.println("Usage: load <type> <filename>");
+            Serial_println("Usage: load <type> <filename>");
             return true;
         }
         if (strcmp(arg1, "proj") == 0) {
             // load project settings from the specified file
             if (arg2[0] == '\0') {
-                Serial.println("Usage: load proj <filename>");
+                Serial_println("Usage: load proj <filename>");
                 return true;
             }
             int project_number = atoi(arg2);
             if (project_number < 0) {
-                Serial.printf("Invalid project number: %i\n", project_number);
+                Serial_printf("Invalid project number: %i\n", project_number);
                 return true;
             }
-            Serial.printf("Loading project settings from file %i...\n", project_number);
+            Serial_printf("Loading project settings from file %i...\n", project_number);
             project->load_project_settings(project_number);
 
             return true;
         } else if (strcmp(arg1, "scene") == 0) {
             if (arg2[0] == '\0') {
-                Serial.println("Usage: load scene <filename>");
+                Serial_println("Usage: load scene <filename>");
                 return true;
             }
             // load a scene from the specified file
-            Serial.printf("Loading scene from file %s...\n", arg2);
+            Serial_printf("Loading scene from file %s...\n", arg2);
 
             int desired_scene_number = atoi(arg2);
             if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
-                Serial.printf("Invalid slot number: %i\n", desired_scene_number);
+                Serial_printf("Invalid slot number: %i\n", desired_scene_number);
                 return true;
             }
             if (project->is_selected_scene_number_empty(desired_scene_number)) {
-                Serial.printf("No scene file found for slot %i\n", desired_scene_number);
+                Serial_printf("No scene file found for slot %i\n", desired_scene_number);
                 return true;
             }
 
-            Serial.printf("Loading scene from file %i...\n", desired_scene_number);
+            Serial_printf("Loading scene from file %i...\n", desired_scene_number);
             project->load_scene(desired_scene_number, pass_debug);
 
             return true;
         } else if (strcmp(arg1, "system") == 0) {
-            Serial.printf("Loading system settings from file %s...\n", arg2);
+            Serial_printf("Loading system settings from file %s...\n", arg2);
             load_system_settings();
             return true;
         } else {
-            Serial.printf("Unknown type: %s\n", arg1);
+            Serial_printf("Unknown type: %s\n", arg1);
             return true;
         }
     } else if (strcmp(command, "save") == 0) {
         // save a scene, project, etc to a file on the SD card. Usage: save <type> <filename>
         if (arg1[0] == '\0' || arg2[0] == '\0') {
-            Serial.println("Usage: save <type> <filename>");
+            Serial_println("Usage: save <type> <filename>");
             return true;
         }
         if (strcmp(arg1, "proj") == 0) {
             if (arg2[0] == '\0') {
                 // save current project settings to the specified file
-                Serial.printf("Saving project settings to file %s...\n", arg2);
+                Serial_printf("Saving project settings to file %s...\n", arg2);
                 project->save_project_settings();
                 return true;
             } else {
                 int desired_project_number = atoi(arg2);
                 if (desired_project_number < 0) {
-                    Serial.printf("Invalid project number: %i\n", desired_project_number);
+                    Serial_printf("Invalid project number: %i\n", desired_project_number);
                     return true;
                 }
-                Serial.printf("Saving project settings to slot %i...\n", desired_project_number);
+                Serial_printf("Saving project settings to slot %i...\n", desired_project_number);
                 project->save_project_settings(desired_project_number);
                 return true;
             }
         } else if (strcmp(arg1, "scene") == 0) {
             if (arg2[0] == '\0') {
                 // save current scene to the specified file
-                Serial.printf("Saving scene to file %s...\n", arg2);
+                Serial_printf("Saving scene to file %s...\n", arg2);
                 project->save_scene();
                 return true;
             } else {
                 int desired_scene_number = atoi(arg2);
                 if (desired_scene_number < 0 || desired_scene_number >= NUM_SCENE_SLOTS_PER_PROJECT) {
-                    Serial.printf("Invalid slot number: %i\n", desired_scene_number);
+                    Serial_printf("Invalid slot number: %i\n", desired_scene_number);
                     return true;
                 }
-                Serial.printf("Saving scene to slot %i...\n", desired_scene_number);
+                Serial_printf("Saving scene to slot %i...\n", desired_scene_number);
                 if (!project->save_scene(desired_scene_number)) {
-                    Serial.printf("Error saving scene to slot %i\n", desired_scene_number);
+                    Serial_printf("Error saving scene to slot %i\n", desired_scene_number);
                 } else {
-                    Serial.printf("Saved scene to slot %i\n", desired_scene_number);
+                    Serial_printf("Saved scene to slot %i\n", desired_scene_number);
                 }
                 return true;
             }
         } else if (strcmp(arg1, "system") == 0) {
             if (arg2[0] == '\0') {
                 // save current system settings to the specified file
-                Serial.printf("Saving system settings to file %s...\n", arg2);
+                Serial_printf("Saving system settings to file %s...\n", arg2);
                 save_system_settings();
                 return true;
             } else {
-                Serial.println("System settings can only be saved to the default system settings file. Usage: save system");
+                Serial_println("System settings can only be saved to the default system settings file. Usage: save system");
                 return true;
             }
         } else {
-            Serial.printf("Unknown type: %s\n", arg1);
+            Serial_printf("Unknown type: %s\n", arg1);
             return true;
         }
     } else if (strcmp(command, "loadline") == 0) {
         // load a line from serial input as if it were a line from a file, for testing parsing of 
         // scene files without needing to write to the SD card. Usage: loadline <line_contents>
         if (arg1[0] == '\0') {
-            Serial.println("Usage: loadline <type> <line_contents>");
+            Serial_println("Usage: loadline <type> <line_contents>");
             return true;
         }
         char line_buffer[512];
         if (arg2[0] == '\0') {
-            Serial.println("Usage: loadline <type> <line_contents>");
+            Serial_println("Usage: loadline <type> <line_contents>");
             return true;
         }
 
@@ -535,31 +535,31 @@ bool execute_command(const char *command_line) {
             scope = SL_SCOPE_SYSTEM;
             Serial_println("Done.");
         } else {
-            Serial.printf("Unknown type: %s\n", arg1);
+            Serial_printf("Unknown type: %s\n", arg1);
         }
 
         // attempt to load the line via the saveloadlib tree
         bool result = sl_parse_line_buffer(line_buffer, scope);
-        Serial.printf("Result of parsing line: %s\n", result ? "success" : "failure");
+        Serial_printf("Result of parsing line: %s\n", result ? "success" : "failure");
         
         return true;
     } else if (strcmp(command, "listplaylists") == 0) {
-        Serial.println("Playlist entries:");
+        Serial_println("Playlist entries:");
         for (int i = 0; i < NUM_PLAYLIST_SLOTS; i++) {
             playlist_entry_t &e = arranger->playlist.entries[i];
-            Serial.printf("  Slot %i: Section %i %s\t, Repeats %i, Max Bars %i\n", i, e.section, get_section_name(e.section), e.repeats, e.max_bars);
+            Serial_printf("  Slot %i: Section %i %s\t, Repeats %i, Max Bars %i\n", i, e.section, get_section_name(e.section), e.repeats, e.max_bars);
         }
         return true;
     } else if (strcmp(command, "listsections") == 0) {
-        Serial.println("Song sections:");
+        Serial_println("Song sections:");
         for (int i = 0; i < NUM_SONG_SECTIONS; i++) {
             song_section_t &s = arranger->song_sections[i];
-            Serial.printf("  Section %i: Label '%s',\t Length=%i, Bars-per-phrase=%i, Time Signature=%i/%i\n", 
+            Serial_printf("  Section %i: Label '%s',\t Length=%i, Bars-per-phrase=%i, Time Signature=%i/%i\n", 
                 i, get_section_name(i), s.length, s.bars_per_phrase, s.time_signature.numerator, s.time_signature.denominator
             );
             for (int j = 0; j < CHORDS_PER_SECTION ; j++) {
                 chord_identity_t &c = s.grid[j];
-                Serial.printf(
+                Serial_printf(
                     "\tChord %i: Degree %i, Type %i %s, Inversion %i\n", 
                     j, 
                     c.degree, 
@@ -568,7 +568,7 @@ bool execute_command(const char *command_line) {
                     c.inversion
                 );
             }
-            Serial.println("--");
+            Serial_println("--");
         }
         return true;
     } else if (strcmp(command, "showtree") == 0) {
@@ -585,22 +585,22 @@ bool execute_command(const char *command_line) {
                 scopemask = sl_scope_from_string(arg1);
             }
         }
-        Serial.printf("Dumping settings tree (to depth 8 with scopemask=0x%02X aka %s):\n", scopemask, sl_scope_to_string(scopemask));
+        Serial_printf("Dumping settings tree (to depth 8 with scopemask=0x%02X aka %s):\n", scopemask, sl_scope_to_string(scopemask));
         if (settings_root) {
             sl_print_tree_to_print(settings_root, Serial, 8, scopemask);
         } else {
-            Serial.println("No settings root found!");
+            Serial_println("No settings root found!");
         }
 
         // output available scopes
-        Serial.print("Available scopes:\t");
+        Serial_print("Available scopes:\t");
         for (size_t i = 0 ; i < SL_SCOPE_ENTRY_COUNT ; i++) {
-            Serial.printf("  %s (0x%02X)\t", sl_scope_to_string(1 << i), 1 << i);
+            Serial_printf("  %s (0x%02X)\t", sl_scope_to_string(1 << i), 1 << i);
         }
-        Serial.println();
+        Serial_println();
 
         SL_TreeCounts counts = sl_count_tree(settings_root);
-        Serial.printf(
+        Serial_printf(
             "There are %i settings and %i host nodes in the tree, occupying %i bytes (averaging %i bytes per setting).\n", 
             counts.settings, 
             counts.nodes, 
@@ -609,25 +609,25 @@ bool execute_command(const char *command_line) {
         );
         return true;
     } else if (strcmp(command, "info") == 0) {
-        Serial.println("Tyrell Corp Nexus6 USB Teensy Clocker");
-        Serial.println("Build date: " __DATE__ " " __TIME__);
-        Serial.println("Git commit: " COMMIT_INFO);
-        Serial.println("Build env: " ENV_NAME);
+        Serial_println("Tyrell Corp Nexus6 USB Teensy Clocker");
+        Serial_println("Build date: " __DATE__ " " __TIME__);
+        Serial_println("Git commit: " COMMIT_INFO);
+        Serial_println("Build env: " ENV_NAME);
         return true;
 #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
     } else if (strcmp(command, "uclocktrace") == 0) {
         if (strcmp(arg1, "on") == 0) {
             uclock_trace_output_enabled = true;
-            Serial.println("uClock trace output enabled");
+            Serial_println("uClock trace output enabled");
         } else if (strcmp(arg1, "off") == 0) {
             uclock_trace_output_enabled = false;
-            Serial.println("uClock trace output disabled");
+            Serial_println("uClock trace output disabled");
         } else if (strcmp(arg1, "clear") == 0) {
             uClock.clearTrace();
-            Serial.println("uClock trace cleared");
+            Serial_println("uClock trace cleared");
         } else if (strcmp(arg1, "status") == 0) {
             ExternalClockDiagnostics clock_diagnostics = get_external_clock_diagnostics();
-            Serial.printf("uClock trace output: %s, frozen: %s, dropped records: %lu, external: %s, budget: %u, pulse age: %luus, accepted interval: %luus\n",
+            Serial_printf("uClock trace output: %s, frozen: %s, dropped records: %lu, external: %s, budget: %u, pulse age: %luus, accepted interval: %luus\n",
                           uclock_trace_output_enabled ? "on" : "off",
                           uClock.isTraceFrozen() ? "yes" : "no",
                           (unsigned long)uClock.getTraceDroppedCount(),
@@ -635,7 +635,7 @@ bool execute_command(const char *command_line) {
                           (unsigned int)uClock.getExternalTicksRemaining(),
                           (unsigned long)uClock.getExternalClockPulseAge(),
                           (unsigned long)uClock.getLastAcceptedExternalInterval());
-            Serial.printf("External clocks: source=%u, input PPQN=%u, received=%lu, expected=%lu, delivered=%lu, outstanding=%ld, rejected=%lu, overflow=%lu\n",
+            Serial_printf("External clocks: source=%u, input PPQN=%u, received=%lu, expected=%lu, delivered=%lu, outstanding=%ld, rejected=%lu, overflow=%lu\n",
                           (unsigned int)clock_diagnostics.source,
                           (unsigned int)clock_diagnostics.input_ppqn,
                           (unsigned long)clock_diagnostics.received_pulses,
@@ -644,54 +644,54 @@ bool execute_command(const char *command_line) {
                           (long)clock_diagnostics.expected_sync_ticks - (long)clock_diagnostics.delivered_sync_ticks,
                           (unsigned long)clock_diagnostics.rejected_pulses,
                           (unsigned long)clock_diagnostics.adapter_overflow);
-            Serial.printf("Internal tap slew: correction=%ldus, remaining ticks=%u\n",
+            Serial_printf("Internal tap slew: correction=%ldus, remaining ticks=%u\n",
                           (long)uClock.getInternalPhaseCorrectionUs(),
                           (unsigned int)uClock.getInternalPhaseSlewTicksRemaining());
         } else {
-            Serial.println("Usage: uclocktrace <on|off|clear|status>");
+            Serial_println("Usage: uclocktrace <on|off|clear|status>");
         }
         return true;
 #endif
     } else if (strcmp(command, "help") == 0) {
-        Serial.println("Available commands:");
-        Serial.println("  == info/status ==");
-        Serial.println("    info - show build info");
-        Serial.println("    free_ram - Check available RAM");
-        Serial.println("    ping - Check if the device is responsive");
-        Serial.println("    status - Get the current status of the device");
-        Serial.println("    reset - Reset the device");
-        Serial.println("    FLASH - reset in bootloader/ready-to-flash mode");
-        Serial.println("    help - Show this help message");
-        Serial.println("  == saveload/file commands ==");
-        Serial.println("    showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
-        Serial.println("    list <project_number> - List files on the SD card for the given project");
-        Serial.println("    set project/scene <number> - Set the current project or scene number");
-        Serial.println("    show <scene|proj|system|loop> [number] - Show the contents of a scene, project, system settings, or loop file");
-        Serial.println("    save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
-        Serial.println("    load <scene|proj> <number> - Load a scene or project settings from the given slot number");
-        Serial.println("    loadline - Load a line of text as if it were from a scene file (for testing parsing)");
-        Serial.println("  == Playlist and Song section commmands ==");
-        Serial.println("    listplaylists - List all playlist entries with their section, repeats, and max bars");
-        Serial.println("    listsections - List all song sections with their labels, number of chords, length, bars, time signatures, and chords.");
-        Serial.println("  == behaviour testing commands ==");
-        Serial.println("    listbehaviours - List all behaviours with their labels and types");
-        Serial.println("    playnote <behaviour_label> <note_number> - Send a Note On message for the given note number to the behaviour with the given label");
-        Serial.println("    stopnote <behaviour_label> <note_number> - Send a Note Off message for the given note number to the behaviour with the given label");
-        Serial.println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
-        Serial.println("  == debug/crashlog commands ==");
-        Serial.printf("     debug on/off - Enable or disable debug output (currently %s)\n", pass_debug ? "on" : "off");
-        Serial.println("    notes list|status|on [src|-1] [tgt|-1]|off|clear|dump|held [src|-1] [tgt|-1]|owner <label>");
-        Serial.println("    crashlog - Dump the crash report log (if any)");
-        Serial.println("    clearcrashlog - Clear the crash report log (if any)");
-        Serial.println("  == clock debugging commands ==");
-        Serial.println("    debug-state <lock|shuffle0|shuffle1|simples1|all> - Set the clock to a particular debug state");
-        Serial.println("  == USB debugging commands ==");
-        Serial.println("    usb_debug - Show the current USB host diagnostic information");
-        Serial.println("    usb_debug_clearerror - Clear the retained USB host error");
-        Serial.println("    usb_debug_clearlog - Clear the retained USB host log");
-        Serial.println("    usb_debug_test - Run the USB host diagnostic test (requires hub connection)");
+        Serial_println("Available commands:");
+        Serial_println("  == info/status ==");
+        Serial_println("    info - show build info");
+        Serial_println("    free_ram - Check available RAM");
+        Serial_println("    ping - Check if the device is responsive");
+        Serial_println("    status - Get the current status of the device");
+        Serial_println("    reset - Reset the device");
+        Serial_println("    FLASH - reset in bootloader/ready-to-flash mode");
+        Serial_println("    help - Show this help message");
+        Serial_println("  == saveload/file commands ==");
+        Serial_println("    showtree [scopemask] - Show the current settings tree (optional scopemask, outputs to depth 8)");
+        Serial_println("    list <project_number> - List files on the SD card for the given project");
+        Serial_println("    set project/scene <number> - Set the current project or scene number");
+        Serial_println("    show <scene|proj|system|loop> [number] - Show the contents of a scene, project, system settings, or loop file");
+        Serial_println("    save <scene|proj> [number] - Save the current scene or project settings to the given slot number (or current if not provided)");
+        Serial_println("    load <scene|proj> <number> - Load a scene or project settings from the given slot number");
+        Serial_println("    loadline - Load a line of text as if it were from a scene file (for testing parsing)");
+        Serial_println("  == Playlist and Song section commmands ==");
+        Serial_println("    listplaylists - List all playlist entries with their section, repeats, and max bars");
+        Serial_println("    listsections - List all song sections with their labels, number of chords, length, bars, time signatures, and chords.");
+        Serial_println("  == behaviour testing commands ==");
+        Serial_println("    listbehaviours - List all behaviours with their labels and types");
+        Serial_println("    playnote <behaviour_label> <note_number> - Send a Note On message for the given note number to the behaviour with the given label");
+        Serial_println("    stopnote <behaviour_label> <note_number> - Send a Note Off message for the given note number to the behaviour with the given label");
+        Serial_println("    setdebug behaviour <behaviour_label> <on|off> - Enable or disable debug output for the behaviour with the given label");
+        Serial_println("  == debug/crashlog commands ==");
+        Serial_printf("     debug on/off - Enable or disable debug output (currently %s)\n", pass_debug ? "on" : "off");
+        Serial_println("    notes list|status|on [src|-1] [tgt|-1]|off|clear|dump|held [src|-1] [tgt|-1]|owner <label>");
+        Serial_println("    crashlog - Dump the crash report log (if any)");
+        Serial_println("    clearcrashlog - Clear the crash report log (if any)");
+        Serial_println("  == clock debugging commands ==");
+        Serial_println("    debug-state <lock|shuffle0|shuffle1|simples1|all> - Set the clock to a particular debug state");
+        Serial_println("  == USB debugging commands ==");
+        Serial_println("    usb_debug - Show the current USB host diagnostic information");
+        Serial_println("    usb_debug_clearerror - Clear the retained USB host error");
+        Serial_println("    usb_debug_clearlog - Clear the retained USB host log");
+        Serial_println("    usb_debug_test - Run the USB host diagnostic test (requires hub connection)");
         #if defined(USE_UCLOCK) && defined(UCLOCK_ENABLE_TRACE)
-            Serial.println("    uclocktrace <on|off|clear|status> - Control structured uClock trace output");
+            Serial_println("    uclocktrace <on|off|clear|status> - Control structured uClock trace output");
         #endif
         return true;
     } else if (strcmp(command, "debug-state") == 0) {
@@ -724,9 +724,9 @@ bool execute_command(const char *command_line) {
             int new_tempo = atoi(arg1);
             if (new_tempo > 0) {
                 set_bpm(new_tempo); // Replace with actual function to set tempo
-                Serial.printf("Tempo set to %d\n", new_tempo);
+                Serial_printf("Tempo set to %d\n", new_tempo);
             } else {
-                Serial.println("Invalid tempo value");
+                Serial_println("Invalid tempo value");
             }
         }
     }
@@ -736,7 +736,7 @@ bool execute_command(const char *command_line) {
 void update_serial() {
 
     if (Serial && !serial_connected) {
-        Serial.println("[[[[[ Welcome to Intex Systems (help for help) ]]]]]");
+        Serial_println("[[[[[ Welcome to Intex Systems (help for help) ]]]]]");
         serial_connected = true;
     }
 
@@ -752,13 +752,13 @@ void update_serial() {
             serial_buffer_index = 0; // reset buffer index for next command
 
             if (!execute_command(serial_buffer)) {
-                Serial.printf("Unknown command: %s\n", serial_buffer);
+                Serial_printf("Unknown command: %s\n", serial_buffer);
             }
         } else if (serial_buffer_index < sizeof(serial_buffer) - 1) {
             serial_buffer[serial_buffer_index++] = in_char; // add char to buffer
         } else {
             // buffer overflow, reset index and ignore input
-            Serial.println("Serial buffer overflow, command too long!");
+            Serial_println("Serial buffer overflow, command too long!");
             serial_buffer_index = 0;
         }
     }

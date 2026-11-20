@@ -1,5 +1,7 @@
 #pragma once
 
+#include <shared_debug.h>
+
 ///// DEBUG options
 /////////////////// now moved to BootConfig.h  #define WAIT_FOR_SERIAL         // wait for serial terminal before starting setup -- for debugging startup
 //#define DEBUG_LOOP_LOADER     // debug LOOPER file loading

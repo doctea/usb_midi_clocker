@@ -70,7 +70,7 @@ class DeviceBehaviourUSBBase : virtual public DeviceBehaviourUltimateBase {
 
         virtual void actualSendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
             if (!is_connected()) return;
-            if (debug) Serial.printf("USB#%s#actualSendNoteOn(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
+            if (debug) Serial_printf("USB#%s#actualSendNoteOn(%i, %i, %i)\n", this->get_label(), note, velocity, channel);
             this->device->sendNoteOn(note, velocity, channel);
         };
         virtual void actualSendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {

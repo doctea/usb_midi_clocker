@@ -49,7 +49,7 @@ class DeviceBehaviour_MIDILights : virtual public DeviceBehaviourUSBBase, virtua
             /*this->device->setHandleControlChange(midilights_control_change);
             this->device->setHandleNoteOn(midilights_note_on);
             this->device->setHandleNoteOff(midilights_note_off);*/
-            Serial.println(F("DeviceBehaviour_MIDILights#setup_callbacks()")); Serial_flush();
+            Serial_println(F("DeviceBehaviour_MIDILights#setup_callbacks()")); Serial_flush();
         };
 
         //virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override;

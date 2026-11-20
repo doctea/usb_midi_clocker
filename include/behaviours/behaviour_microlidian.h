@@ -66,7 +66,7 @@ class DeviceBehaviour_Microlidian : virtual public DeviceBehaviourUSBBase, virtu
             this->device->setHandleControlChange(microlidian_control_change);
             this->device->setHandleNoteOn(microlidian_note_on);
             this->device->setHandleNoteOff(microlidian_note_off);
-            Serial.println(F("DeviceBehaviour_Microlidian#setup_callbacks()")); Serial_flush();
+            Serial_println(F("DeviceBehaviour_Microlidian#setup_callbacks()")); Serial_flush();
         };
 
         virtual void receive_note_on(uint8_t channel, uint8_t note, uint8_t velocity) override;

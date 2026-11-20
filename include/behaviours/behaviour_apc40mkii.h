@@ -63,9 +63,9 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
 
         APC40CueKnobParameterInput *cue_knob_input = nullptr;
         APC40LogicalKnobParameterInput *track_knob_inputs[3][8] = {};
-#ifdef ENABLE_APC40_DEVICE_KNOBS
-        APC40LogicalKnobParameterInput *device_knob_inputs[8][8] = {};
-#endif
+        #ifdef ENABLE_APC40_DEVICE_KNOBS
+            APC40LogicalKnobParameterInput *device_knob_inputs[8][8] = {};
+        #endif
         APC40TempoKnobWrapper *tempo_knob_input = nullptr;
         APC40ParameterInputMap apc_control_inputs;
 
@@ -73,128 +73,128 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         MIDICCParameterInput *master_fader_input = nullptr;
         MIDICCParameterInput *crossfader_input = nullptr;
 
-#ifdef ENABLE_APC40_DEVICE_KNOBS
-        void initialize_device_knob_inputs() {
-            for (uint8_t bank = 0; bank < 8; ++bank) {
-                for (uint8_t knob = 0; knob < 8; ++knob) {
-                    this->device_knob_inputs[bank][knob] = new APC40LogicalKnobParameterInput(
-                        this->apc_controller, bank, knob
-                    );
-                    this->addParameterInput(this->device_knob_inputs[bank][knob]);
-                    #ifdef ENABLE_PARAMETERS_MIDI_LEARN
-                    this->apc_control_inputs.bind(this->device_knob_inputs[bank][knob]->get_control_id(),
-                        this->device_knob_inputs[bank][knob]);
-                    #endif
+        #ifdef ENABLE_APC40_DEVICE_KNOBS
+            void initialize_device_knob_inputs() {
+                for (uint8_t bank = 0; bank < 8; ++bank) {
+                    for (uint8_t knob = 0; knob < 8; ++knob) {
+                        this->device_knob_inputs[bank][knob] = new APC40LogicalKnobParameterInput(
+                            this->apc_controller, bank, knob
+                        );
+                        this->addParameterInput(this->device_knob_inputs[bank][knob]);
+                        #ifdef ENABLE_PARAMETERS_MIDI_LEARN
+                        this->apc_control_inputs.bind(this->device_knob_inputs[bank][knob]->get_control_id(),
+                            this->device_knob_inputs[bank][knob]);
+                        #endif
+                    }
                 }
             }
-        }
-#endif
+        #endif
 
-#ifdef APC40_HAS_NOTE_INPUTS
-        APC40NoteParameterInput *add_note_parameter_input(APC40ControlId control,
-                const char *name, const char *group_name) {
-            auto *input = new APC40NoteParameterInput(
-                const_cast<char *>(name), group_name, control
-            );
-            if (!this->apc_control_inputs.bind_note(control, input)) {
-                delete input;
-                return nullptr;
-            }
-            this->addParameterInput(input);
-            return input;
-        }
-
-        void initialize_note_parameter_inputs() {
-            #ifdef ENABLE_APC40_CLIP_PADS
-            for (uint8_t row = 0; row < 5; ++row) {
-                for (uint8_t track = 0; track < 8; ++track) {
-                    char name[17];
-                    snprintf(name, sizeof(name), "Clip %u.%u",
-                        static_cast<unsigned>(row + 1), static_cast<unsigned>(track + 1));
-                    const uint8_t note = static_cast<uint8_t>((4 - row) * 8 + track);
-                    this->add_note_parameter_input(
-                        {APC40ControlKind::Pad, 0, note}, name, "APC40 Clip Pads"
-                    );
-                }
-            }
-            #endif
-
-            #ifdef ENABLE_APC40_TRACK_BUTTONS
-            static const uint8_t track_button_notes[] = {
-                APC40MKII::tracks::BUTTON_ASSIGN_AB,
-                APC40MKII::tracks::BUTTON_RECORD,
-                APC40MKII::tracks::BUTTON_SOLO,
-                APC40MKII::tracks::BUTTON_ACTIVATOR,
-                APC40MKII::tracks::BUTTON_SELECTOR,
-                APC40MKII::scene::BUTTON_CLIP_STOP
-            };
-            static const char *const track_button_names[] = {
-                "Assign", "Record", "Solo", "Activator", "Select", "Clip Stop"
-            };
-            constexpr uint8_t track_button_count =
-                sizeof(track_button_notes) / sizeof(track_button_notes[0]);
-            for (uint8_t track = 0; track < 8; ++track) {
-                for (uint8_t button = 0; button < track_button_count; ++button) {
-                    char name[17];
-                    snprintf(name, sizeof(name), "T%u %s",
-                        static_cast<unsigned>(track + 1), track_button_names[button]);
-                    this->add_note_parameter_input(
-                        {APC40ControlKind::Button, track, track_button_notes[button]},
-                        name, "APC40 Track Buttons"
-                    );
-                }
-            }
-            #endif
-
-            #ifdef ENABLE_APC40_GENERAL_BUTTONS
-            static const uint8_t general_button_notes[] = {
-                APC40MKII::device::NOTE_BUTTON_1, APC40MKII::device::NOTE_BUTTON_2,
-                APC40MKII::device::NOTE_BUTTON_3, APC40MKII::device::NOTE_BUTTON_4,
-                APC40MKII::device::NOTE_BUTTON_5, APC40MKII::device::NOTE_BUTTON_6,
-                APC40MKII::device::NOTE_BUTTON_7, APC40MKII::device::NOTE_BUTTON_8,
-                APC40MKII::tracks::NOTE_BUTTON_PAN, APC40MKII::tracks::NOTE_BUTTON_SENDS,
-                APC40MKII::tracks::NOTE_BUTTON_USER,
-                APC40MKII::scene::BUTTON_CLIP_STOP_ALL,
-                APC40MKII::scene::SCENE_LAUNCH_ROW_1, APC40MKII::scene::SCENE_LAUNCH_ROW_2,
-                APC40MKII::scene::SCENE_LAUNCH_ROW_3, APC40MKII::scene::SCENE_LAUNCH_ROW_4,
-                APC40MKII::scene::SCENE_LAUNCH_ROW_5,
-                APC40MKII::tempo::NOTE_BUTTON_METRONOME, APC40MKII::tempo::NOTE_BUTTON_TAP_TEMPO,
-                APC40MKII::tempo::NOTE_BUTTON_NUDGE_LEFT, APC40MKII::tempo::NOTE_BUTTON_NUDGE_RIGHT,
-                APC40MKII::transport::NOTE_BUTTON_PLAY, APC40MKII::transport::NOTE_BUTTON_RECORD,
-                APC40MKII::transport::NOTE_BUTTON_SESSION, NOTE_BUTTON_SHIFT,
-                APC40MKII::device::NOTE_BUTTON_BANK_SELECT_UP,
-                APC40MKII::device::NOTE_BUTTON_BANK_SELECT_DOWN,
-                APC40MKII::device::NOTE_BUTTON_BANK_SELECT_RIGHT,
-                APC40MKII::device::NOTE_BUTTON_BANK_SELECT_LEFT,
-                APC40MKII::device::NOTE_BUTTON_BANK
-            };
-            constexpr uint8_t general_button_count =
-                sizeof(general_button_notes) / sizeof(general_button_notes[0]);
-            for (uint8_t index = 0; index < general_button_count; ++index) {
-                char name[17];
-                snprintf(name, sizeof(name), "Button %u",
-                    static_cast<unsigned>(general_button_notes[index]));
-                this->add_note_parameter_input(
-                    {APC40ControlKind::Button, 0, general_button_notes[index]},
-                    name, "APC40 Buttons"
+        #ifdef APC40_HAS_NOTE_INPUTS
+            APC40NoteParameterInput *add_note_parameter_input(APC40ControlId control,
+                    const char *name, const char *group_name) {
+                auto *input = new APC40NoteParameterInput(
+                    const_cast<char *>(name), group_name, control
                 );
+                if (!this->apc_control_inputs.bind_note(control, input)) {
+                    delete input;
+                    return nullptr;
+                }
+                this->addParameterInput(input);
+                return input;
             }
-            #endif
-        }
 
-        void update_note_parameter_inputs(uint8_t channel, uint8_t note, APC40InputPhase phase) {
-            if (channel < 1 || channel > 16)
-                return;
-            const uint8_t zero_based_channel = channel - 1;
-            for (APC40ControlKind kind : {APC40ControlKind::Button, APC40ControlKind::Pad}) {
-                auto *input = static_cast<APC40NoteParameterInput *>(this->apc_control_inputs.resolve(
-                    {kind, zero_based_channel, note}
-                ));
-                if (input != nullptr)
-                    input->apply(phase);
+            void initialize_note_parameter_inputs() {
+                #ifdef ENABLE_APC40_CLIP_PADS
+                for (uint8_t row = 0; row < 5; ++row) {
+                    for (uint8_t track = 0; track < 8; ++track) {
+                        char name[17];
+                        snprintf(name, sizeof(name), "Clip %u.%u",
+                            static_cast<unsigned>(row + 1), static_cast<unsigned>(track + 1));
+                        const uint8_t note = static_cast<uint8_t>((4 - row) * 8 + track);
+                        this->add_note_parameter_input(
+                            {APC40ControlKind::Pad, 0, note}, name, "APC40 Clip Pads"
+                        );
+                    }
+                }
+                #endif
+
+                #ifdef ENABLE_APC40_TRACK_BUTTONS
+                static const uint8_t track_button_notes[] = {
+                    APC40MKII::tracks::BUTTON_ASSIGN_AB,
+                    APC40MKII::tracks::BUTTON_RECORD,
+                    APC40MKII::tracks::BUTTON_SOLO,
+                    APC40MKII::tracks::BUTTON_ACTIVATOR,
+                    APC40MKII::tracks::BUTTON_SELECTOR,
+                    APC40MKII::scene::BUTTON_CLIP_STOP
+                };
+                static const char *const track_button_names[] = {
+                    "Assign", "Record", "Solo", "Activator", "Select", "Clip Stop"
+                };
+                constexpr uint8_t track_button_count =
+                    sizeof(track_button_notes) / sizeof(track_button_notes[0]);
+                for (uint8_t track = 0; track < 8; ++track) {
+                    for (uint8_t button = 0; button < track_button_count; ++button) {
+                        char name[17];
+                        snprintf(name, sizeof(name), "T%u %s",
+                            static_cast<unsigned>(track + 1), track_button_names[button]);
+                        this->add_note_parameter_input(
+                            {APC40ControlKind::Button, track, track_button_notes[button]},
+                            name, "APC40 Track Buttons"
+                        );
+                    }
+                }
+                #endif
+
+                #ifdef ENABLE_APC40_GENERAL_BUTTONS
+                    static const uint8_t general_button_notes[] = {
+                        APC40MKII::device::NOTE_BUTTON_1, APC40MKII::device::NOTE_BUTTON_2,
+                        APC40MKII::device::NOTE_BUTTON_3, APC40MKII::device::NOTE_BUTTON_4,
+                        APC40MKII::device::NOTE_BUTTON_5, APC40MKII::device::NOTE_BUTTON_6,
+                        APC40MKII::device::NOTE_BUTTON_7, APC40MKII::device::NOTE_BUTTON_8,
+                        APC40MKII::tracks::NOTE_BUTTON_PAN, APC40MKII::tracks::NOTE_BUTTON_SENDS,
+                        APC40MKII::tracks::NOTE_BUTTON_USER,
+                        APC40MKII::scene::BUTTON_CLIP_STOP_ALL,
+                        APC40MKII::scene::SCENE_LAUNCH_ROW_1, APC40MKII::scene::SCENE_LAUNCH_ROW_2,
+                        APC40MKII::scene::SCENE_LAUNCH_ROW_3, APC40MKII::scene::SCENE_LAUNCH_ROW_4,
+                        APC40MKII::scene::SCENE_LAUNCH_ROW_5,
+                        APC40MKII::tempo::NOTE_BUTTON_METRONOME, APC40MKII::tempo::NOTE_BUTTON_TAP_TEMPO,
+                        APC40MKII::tempo::NOTE_BUTTON_NUDGE_LEFT, APC40MKII::tempo::NOTE_BUTTON_NUDGE_RIGHT,
+                        APC40MKII::transport::NOTE_BUTTON_PLAY, APC40MKII::transport::NOTE_BUTTON_RECORD,
+                        APC40MKII::transport::NOTE_BUTTON_SESSION, NOTE_BUTTON_SHIFT,
+                        APC40MKII::device::NOTE_BUTTON_BANK_SELECT_UP,
+                        APC40MKII::device::NOTE_BUTTON_BANK_SELECT_DOWN,
+                        APC40MKII::device::NOTE_BUTTON_BANK_SELECT_RIGHT,
+                        APC40MKII::device::NOTE_BUTTON_BANK_SELECT_LEFT,
+                        APC40MKII::device::NOTE_BUTTON_BANK
+                    };
+                    constexpr uint8_t general_button_count =
+                        sizeof(general_button_notes) / sizeof(general_button_notes[0]);
+                    for (uint8_t index = 0; index < general_button_count; ++index) {
+                        char name[17];
+                        snprintf(name, sizeof(name), "Button %u",
+                            static_cast<unsigned>(general_button_notes[index]));
+                        this->add_note_parameter_input(
+                            {APC40ControlKind::Button, 0, general_button_notes[index]},
+                            name, "APC40 Buttons"
+                        );
+                    }
+                #endif
             }
-        }
-#endif
+
+            void update_note_parameter_inputs(uint8_t channel, uint8_t note, APC40InputPhase phase) {
+                if (channel < 1 || channel > 16)
+                    return;
+                const uint8_t zero_based_channel = channel - 1;
+                for (APC40ControlKind kind : {APC40ControlKind::Button, APC40ControlKind::Pad}) {
+                    auto *input = static_cast<APC40NoteParameterInput *>(this->apc_control_inputs.resolve(
+                        {kind, zero_based_channel, note}
+                    ));
+                    if (input != nullptr)
+                        input->apply(phase);
+                }
+            }
+        #endif
 
         void synchronize_transport_state() {
             this->apc_controller.setPlayState(playing);
@@ -249,24 +249,24 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         }
 
         APC40LogicalKnobParameterInput *get_device_knob_input(uint8_t bank, uint8_t knob) const {
-#ifdef ENABLE_APC40_DEVICE_KNOBS
-            return bank < 8 && knob < 8 ? this->device_knob_inputs[bank][knob] : nullptr;
-#else
-            (void)bank;
-            (void)knob;
-            return nullptr;
-#endif
+            #ifdef ENABLE_APC40_DEVICE_KNOBS
+                return bank < 8 && knob < 8 ? this->device_knob_inputs[bank][knob] : nullptr;
+            #else
+                (void)bank;
+                (void)knob;
+                return nullptr;
+            #endif
         }
 
         APC40NoteParameterInput *get_note_input(APC40ControlId control) const {
-#ifdef APC40_HAS_NOTE_INPUTS
-            if (control.kind != APC40ControlKind::Button && control.kind != APC40ControlKind::Pad)
+            #ifdef APC40_HAS_NOTE_INPUTS
+                if (control.kind != APC40ControlKind::Button && control.kind != APC40ControlKind::Pad)
+                    return nullptr;
+                return static_cast<APC40NoteParameterInput *>(this->apc_control_inputs.resolve(control));
+            #else
+                (void)control;
                 return nullptr;
-            return static_cast<APC40NoteParameterInput *>(this->apc_control_inputs.resolve(control));
-#else
-            (void)control;
-            return nullptr;
-#endif
+            #endif
         }
 
         DeviceBehaviour_APC40MKII() : DeviceBehaviourUSBBase(), apc_controller(apc_transport) {
@@ -441,9 +441,9 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
         }
 
         virtual void disconnect_device() override {
-    #ifdef APC40_HAS_NOTE_INPUTS
-            this->apc_control_inputs.release_note_inputs();
-#endif
+            #ifdef APC40_HAS_NOTE_INPUTS
+                this->apc_control_inputs.release_note_inputs();
+            #endif
             this->apc_transport.set_device(nullptr);
             DeviceBehaviourUSBBase::disconnect_device();
         }
@@ -454,33 +454,35 @@ class DeviceBehaviour_APC40MKII : virtual public DeviceBehaviourUSBBase, virtual
                 this->synchronize_midi_learn_state();
             #endif
             this->apc_transport.receiveMidiMessage(0x90, inChannel, inNumber, inVelocity);
-#ifdef APC40_HAS_NOTE_INPUTS
-            this->update_note_parameter_inputs(inChannel, inNumber,
-                inVelocity == 0 ? APC40InputPhase::Release : APC40InputPhase::Press);
-#endif
+            #ifdef APC40_HAS_NOTE_INPUTS
+                this->update_note_parameter_inputs(
+                    inChannel, inNumber,
+                    inVelocity == 0 ? APC40InputPhase::Release : APC40InputPhase::Press
+                );
+            #endif
             Debug_printf(F("apc40mkii_note_on for %i, %i, %i\n"), inChannel, inNumber, inVelocity);
 
             // if (inNumber==APC40_BUTTON_SHIFT) {
             //     apc40mkii_shift_held = true;            
             //     Serial.print("APC40MKII Shift button pressed\n");
             // }
-            if (Serial) Serial.printf("APC40MKII Note On received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
+            Debug_printf("APC40MKII Note On received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
         }
 
         virtual void receive_note_off(uint8_t inChannel, uint8_t inNumber, uint8_t inVelocity) override {
             this->apc_transport.receiveMidiMessage(0x80, inChannel, inNumber, inVelocity);
-#ifdef APC40_HAS_NOTE_INPUTS
-            this->update_note_parameter_inputs(inChannel, inNumber, APC40InputPhase::Release);
-#endif
+            #ifdef APC40_HAS_NOTE_INPUTS
+                this->update_note_parameter_inputs(inChannel, inNumber, APC40InputPhase::Release);
+            #endif
             // if (inNumber==APC40_BUTTON_SHIFT) {
             //     apc40mkii_shift_held = false;
             //     Serial.print("APC40MKII Shift button released\n");
             // }
-            if (Serial) Serial.printf("APC40MKII Note Off received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
+            Debug_printf("APC40MKII Note Off received: channel=%d, number=%d, value=%d\n", inChannel, inNumber, inVelocity);
         }
 
         virtual void receive_control_change(uint8_t channel, uint8_t number, uint8_t value) override {
-            if (Serial) Serial.printf("APC40MKII CC received: channel=%d, number=%d, value=%d\n", channel, number, value);
+            Debug_printf("APC40MKII CC received: channel=%d, number=%d, value=%d\n", channel, number, value);
             #ifdef ENABLE_PARAMETERS_MIDI_LEARN
                 // @@TODO: not sure we need this or here either?
                 this->synchronize_midi_learn_state();

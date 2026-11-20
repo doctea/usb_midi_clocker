@@ -73,9 +73,9 @@ class LooperQuantizeControl : public SelectorControl<int> {
         }
 
         virtual void setter (int new_value) {
-            Serial.printf("LooperQuantizerChanger setting quantize value to %i\n", new_value);
+            Serial_printf("LooperQuantizerChanger setting quantize value to %i\n", new_value);
             loop_track->set_quantization_value(new_value); //available_values[selected_value]);
-            Serial.printf("did set!");
+            Serial_printf("did set!");
         }
         virtual int getter () {
             return loop_track->get_quantization_value();

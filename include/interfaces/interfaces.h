@@ -177,7 +177,7 @@ class GateManager : virtual public IGateTarget {
     void add_bank_interface(int bank, BankInterface *iface) {
         //banks[bank].add(iface);
         if (num_banks>=NUM_GATE_BANKS) {
-            Serial.printf("ERROR: attempted to add too many banks (%i of %i)!", bank+1, NUM_GATE_BANKS);
+            Serial_printf("ERROR: attempted to add too many banks (%i of %i)!", bank+1, NUM_GATE_BANKS);
             messages_log_add(String("ERROR: attempted to add too many banks!"));
         }
 

@@ -17,7 +17,7 @@ GateManager *gate_manager = new GateManager();
     //#define DUPLICATE_CLOCKS
 
     void setup_gate_manager() {
-        Serial.println("setup_gate_manager..");
+        Serial_println("setup_gate_manager..");
 
         SPI1.setMISO(MCP23S17_SPI_MISO);
         SPI1.setMOSI(MCP23S17_SPI_MOSI);
@@ -33,7 +33,7 @@ GateManager *gate_manager = new GateManager();
         #else
             MCP23S17BankInterface *mcp_interface = new MCP23S17BankInterface("MCP1", MCP23S17_SPI_CS1_PIN, 0, &SPI1);
         #endif
-        Serial.println("\tdid mcp_interface");
+        Serial_println("\tdid mcp_interface");
         byte num_gates = 8;
         /*  // for some reason, these are all coming out funny on the current pcb revision, so here is the empirical mappings to use
             0 -> 0 -> 7
@@ -95,13 +95,13 @@ GateManager *gate_manager = new GateManager();
             //, 0, num_gates, false));
         #endif
         
-        Serial.println("returning from setup_gate_manager().");
-        Serial.flush();
+        Serial_println("returning from setup_gate_manager().");
+        Serial_flush();
 
     }
 #else
     void setup_gate_manager() {
-        Serial.println("setup_gate_manager: No gates enabled (no ENABLE_GATES_GPIO or ENABLE_GATES_MCP23S17)");
+        Serial_println("setup_gate_manager: No gates enabled (no ENABLE_GATES_GPIO or ENABLE_GATES_MCP23S17)");
     }
 #endif
 
@@ -187,21 +187,21 @@ void set_sequence_gate(int gate_number, bool state) {
 
         byte gate_count = 0;
 
-        Serial.println("GateManager::create_controls("); Serial_flush();
+        Serial_println("GateManager::create_controls("); Serial_flush();
         debug_free_ram();
         
         char label[MENU_C_MAX];
         for (int bank = 0 ; bank < this->num_banks ; bank++) {
             snprintf(label, MENU_C_MAX, "Bank %i: %s", bank, bank==BANK_CLOCK ? "Clocks" : "Sequences");
-            Serial.printf("Creating gate toggles for bank %i (%s), size=%u\n", bank, label,
+            Serial_printf("Creating gate toggles for bank %i (%s), size=%u\n", bank, label,
                 static_cast<unsigned>(sizeof(ObjectMultiToggleControl))); Serial_flush();
             ObjectMultiToggleControl *gate_toggles = new (std::nothrow) ObjectMultiToggleControl(label, true);
             if (gate_toggles == nullptr) {
-                Serial.printf("GateManager: allocation failed for bank %i\n", bank); Serial_flush();
+                Serial_printf("GateManager: allocation failed for bank %i\n", bank); Serial_flush();
                 debug_free_ram();
                 return;
             }
-            Serial.printf("Gate toggle control allocated at %p\n", static_cast<void *>(gate_toggles)); Serial_flush();
+            Serial_printf("Gate toggle control allocated at %p\n", static_cast<void *>(gate_toggles)); Serial_flush();
             for (int gate = 0 ; gate < this->banks[bank]->num_gates ; gate++) {
                 //snprintf(label, MENU_C_MAX, "G%2i", gate);
                 gate_toggles->addItem(new GateMultiToggleItem(gate_labels[gate_count++], bank, gate));

@@ -106,7 +106,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOn(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_on ...
         //if (this->debug) 
-        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
+        if (this->debug) Serial_printf(F("behaviour_euclidianrhythms#receive_note_on(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOn(this->source_id, note, MIDI_MAX_VELOCITY, channel);
         } else if (channel==MISC_CHANNEL_8) {
@@ -120,7 +120,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     virtual void sendNoteOff(uint8_t note, uint8_t velocity, uint8_t channel) override {
         // this was/should really be receive_note_off !
         //if (this->debug) Serial.printf(F("!! behaviour_lestrum#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i)with source_id %i: \n"), channel, note, velocity, source_id_2);
-        if (this->debug) Serial.printf(F("behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
+        if (this->debug) Serial_printf(F("behaviour_euclidianrhythms#receive_note_off(\tchannel %i,\tnote %i,\tvelocity %i) with source_id %i: \n"), channel, note, velocity, source_id);
         if (channel==GM_CHANNEL_DRUMS) {
             midi_matrix_manager->processNoteOff(this->source_id, note, MIDI_MIN_VELOCITY, channel);
         } else if (channel==MISC_CHANNEL_8) {
@@ -137,7 +137,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     //FLASHMEM 
     // also initialises menu items!
     virtual ParameterList *initialise_parameters() override {
-        Serial.printf("%s#initialise_parameters()...", this->get_label());
+        Serial_printf("%s#initialise_parameters()...", this->get_label());
         if (already_initialised && this->parameters!=nullptr)
             return this->parameters;
 
@@ -186,7 +186,7 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     }
 
     void debug_lock() {
-        Serial.println("Debugging Euclidian lock");
+        Serial_println("Debugging Euclidian lock");
         this->sequencer->set_mutation_count(0);
         EuclidianPattern *pattern = (EuclidianPattern*)this->sequencer->get_pattern(10);
         pattern->set_pulses(16);
@@ -199,14 +199,14 @@ class VirtualBehaviour_EuclidianRhythms : virtual public DeviceBehaviourUltimate
     }
 
     void debug_shuffle(uint8_t index) {
-        Serial.printf("Debugging Euclidian shuffle %d\n", index);
+        Serial_printf("Debugging Euclidian shuffle %d\n", index);
         int8_t shuffle_75[] = {0, 12, 0, 12, 0, 12, 0, 12}; //, 12, 0, 12, 0, 12, 0, 12};
         shuffle_pattern_wrapper[index]->set_steps(shuffle_75, sizeof(shuffle_75));
         shuffle_pattern_wrapper[index]->update_target();
     }
 
     void debug_simples() {
-        Serial.println("Debugging Euclidian simples");
+        Serial_println("Debugging Euclidian simples");
         for (int i = 0; i < this->sequencer->get_number_patterns(); i++) {
             EuclidianPattern *pattern = (EuclidianPattern*)this->sequencer->get_pattern(i);
             if (strcmp(pattern->get_output_label(), "Kick") == 0

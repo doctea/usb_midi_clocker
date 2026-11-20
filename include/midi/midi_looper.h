@@ -85,7 +85,7 @@ class MIDITrack {
         } else if (quantization==-2) {
             ticks_per_quant_level = PPQN * 4;
         } else {
-            Serial.printf(F("quantization level %i not known - disabling?\n"), quantization);
+            Serial_printf(F("quantization level %i not known - disabling?\n"), quantization);
             return time;
         }
 
@@ -105,7 +105,7 @@ class MIDITrack {
         int quantized_time = step % LOOP_LENGTH_TICKS;    // wrap around
         //Serial.printf("quantised time\t%i to\t%i\n", time, quantized_time);
         if (debug)
-            Serial.printf(F("Quantize level\t%i: quantized time\t%i to\t%i\n"), quantization, time, quantized_time);
+            Serial_printf(F("Quantize level\t%i: quantized time\t%i to\t%i\n"), quantization, time, quantized_time);
         return quantized_time;
     }
     int quantize_time(int time, int quantization = -1) {
@@ -139,7 +139,7 @@ class MIDITrack {
             for(int i = 0 ; i < MAX_LOOP_LENGTH_STEPS ; i++) {
                 this->frames[i] = new LinkedList<midi_message>();
                 if (!this->frames[i]) {
-                    Serial.printf(F("!!! MIDITrack constructor failed to allocate frames[%i]!\n"), i);
+                    Serial_printf(F("!!! MIDITrack constructor failed to allocate frames[%i]!\n"), i);
                 }
             }
         };
@@ -189,10 +189,10 @@ class MIDITrack {
         }
         // for actually storing values into buffer (also used when reloading from save)
         void store_event(unsigned long time, midi_message midi_event) {
-            if (this->debug) Serial.printf(F("store_event passed time %i...\n"), time);
+            if (this->debug) Serial_printf(F("store_event passed time %i...\n"), time);
             time = quantize_time(time);
             time = ticks_to_sequence_step(time);
-            if (this->debug) Serial.printf(F("Recording event at\t%i\n"), time);
+            if (this->debug) Serial_printf(F("Recording event at\t%i\n"), time);
             int event_duplicate = is_event_duplicate(midi_event, time);
             if (event_duplicate)
                 frames[time]->remove(event_duplicate);
@@ -212,7 +212,7 @@ class MIDITrack {
             }
             //Serial.printf("store_event at %i with pitch %i is recording\n", time, midi_event.pitch);
             pitch_contains_notes[midi_event.pitch] = true;
-            if (this->debug) Serial.printf(F("sizeof frames at %i is now %i\n"), time, frames[time]->size());
+            if (this->debug) Serial_printf(F("sizeof frames at %i is now %i\n"), time, frames[time]->size());
         }
 
         unsigned int is_event_duplicate(midi_message midi_event, unsigned long time) {
@@ -319,14 +319,14 @@ class MIDITrack {
             for (int_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
                 int transposed_pitch = i + transpose_amount;
                 if (!is_valid_note(transposed_pitch)) {
-                    if (this->debug) { Serial.printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
+                    if (this->debug) { Serial_printf(F("\t!!transposed pitch %i (was %i with transpose %i) went out of range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
                     continue;;
                 } else {
-                    if (this->debug) { Serial.printf(F("\ttransposed pitch %i (was %i with transpose %i) within range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
+                    if (this->debug) { Serial_printf(F("\ttransposed pitch %i (was %i with transpose %i) within range!\n"), transposed_pitch, i, transpose_amount); Serial_flush(); }
                 }
 
                 if (track_playing[i].playing && (*piano_roll_bitmap)[time][i]==0) {
-                    if (this->debug) Serial.printf(F("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n"), time, i, (*piano_roll_bitmap)[time][i]);
+                    if (this->debug) Serial_printf(F("NOTE OFF play_events at\t%i: stopping pitch\t%i at vel\t%i\n"), time, i, (*piano_roll_bitmap)[time][i]);
 
                     this->sendNoteOff(transposed_pitch, 0);
                     track_playing_off(ticks, i, 0);
@@ -334,7 +334,7 @@ class MIDITrack {
                     if (i==current_note) // todo: properly check that there are no other notes playing
                         current_note = -1;
                 } else if (!track_playing[i].playing && (*piano_roll_bitmap)[time][i]>0) {
-                    if (this->debug) Serial.printf(F("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n"), time, i, (*piano_roll_bitmap)[time][i]);
+                    if (this->debug) Serial_printf(F("NOTE ON play_events at\t%i: playing pitch\t%i at vel\t%i\n"), time, i, (*piano_roll_bitmap)[time][i]);
                     this->sendNoteOn(transposed_pitch, (*piano_roll_bitmap)[time][i]);
                     track_playing_on(ticks, i, (*piano_roll_bitmap)[time][i]);
                     current_note = transposed_pitch;
@@ -346,13 +346,13 @@ class MIDITrack {
         // wipe all recorded events
         void clear_all() {
             stop_all_notes();
-            Serial.println(F("clearing recording.."));
+            Serial_println(F("clearing recording.."));
             for (unsigned int i = 0 ; i < MAX_LOOP_LENGTH_STEPS ; i++) {
                 // todo: actually free the recorded memory..?
                 frames[i]->clear();
                 //clear_tick(i);
             }
-            Serial.println(F("cleared"));
+            Serial_println(F("cleared"));
             this->wipe_piano_roll_bitmap();
         }
 
@@ -406,12 +406,12 @@ class MIDITrack {
         }
         // enable 'play head'
         void start_playing() {
-            Serial.println(F("Looper: Start playing!"));
+            Serial_println(F("Looper: Start playing!"));
             this->playing = true;
         }
         // disable 'play head'
         void stop_playing() {
-            Serial.println(F("Looper: Stop playing!"));
+            Serial_println(F("Looper: Stop playing!"));
             if (this->playing)
                 this->stop_all_notes();
             this->playing = false;
@@ -432,13 +432,13 @@ class MIDITrack {
         }
         // enable 'record head'
         void start_recording() {
-            Serial.println(F("Looper: Started recording"));
+            Serial_println(F("Looper: Started recording"));
             // uhhh nothing to do rn?
             recording = true;
         }
         // disable 'record head' and stop playing any notes that
         void stop_recording() {
-            Serial.println(F("looper stopped recording"));
+            Serial_println(F("looper stopped recording"));
             recording = false;
             // send & record note-offs for all notes that are playing due to being recorded
             for (uint_fast8_t i = 0 ; i < MIDI_NUM_NOTES ; i++) {
@@ -515,7 +515,7 @@ class MIDITrack {
         void draw_piano_roll_bitmap_from_save() {
             if (!this->bitmap_enabled) return;
 
-            if(this->debug) { Serial.println(F("draw_piano_roll_bitmap_from_save")); Serial_flush(); }
+            if(this->debug) { Serial_println(F("draw_piano_roll_bitmap_from_save")); Serial_flush(); }
             piano_roll_highest = 0;
             piano_roll_lowest = MIDI_MAX_NOTE;
 
@@ -540,7 +540,7 @@ class MIDITrack {
                     (*piano_roll_bitmap)[x][p] = piano_roll_held[p];
                 }
             }
-            if(this->debug) { Serial.println(F("bitmap built..")); Serial_flush(); }
+            if(this->debug) { Serial_println(F("bitmap built..")); Serial_flush(); }
 
             /*Serial.println("draw bitmap:");
             for (int p = 0 ; p < 127 ; p++) {
@@ -612,7 +612,7 @@ class MIDITrack {
         void convert_from_bitmap() {
             if (!this->bitmap_enabled) return;
 
-            if (this->debug) Serial.println(F(("Converting from bitmap...")));
+            if (this->debug) Serial_println(F(("Converting from bitmap...")));
 
             // store current quantization setting so that we don't quantize during conversion, else shit gets all fucked up!
             int previous_quant = this->quantization_value;  
@@ -646,13 +646,13 @@ class MIDITrack {
                         this->store_event(t * LOOP_LENGTH_STEP_SIZE, midi::NoteOff, p, 0);
                     } else {
                         //Serial.printf("\tno change - held_state is %i\n", held_state[p]);
-                        if (this->debug) Serial.print(F("."));
+                        if (this->debug) Serial_print(F("."));
                     }
                 }
             }
             //if (this->debug) Serial.printf(F("Converted: found %i note ons, %i note offs\n"), note_on_count, note_off_count);
             if (note_on_count>note_off_count) {
-                Serial.printf(F("WARNING in MIDITrack#convert_from_bitmap: found more note ons than note offs!"));
+                Serial_printf(F("WARNING in MIDITrack#convert_from_bitmap: found more note ons than note offs!"));
                 // todo: fix note on/off mismatches
             }
 
@@ -684,15 +684,15 @@ class MIDITrack {
 
             char filename[MAX_FILEPATH] = "";
             snprintf(filename, MAX_FILEPATH, FILEPATH_LOOP_FORMAT, project_number, recording_number);
-            Serial.printf(F("save_loop(%i) writing to %s\n"), recording_number, filename);
+            Serial_printf(F("save_loop(%i) writing to %s\n"), recording_number, filename);
             if (SD.exists(filename)) {
-                Serial.printf(F("\t%s exists, deleting first\n"), filename);
+                Serial_printf(F("\t%s exists, deleting first\n"), filename);
                 SD.remove(filename);
             }
             f = SD.open(filename, FILE_WRITE_BEGIN | (uint8_t)O_TRUNC); //FILE_WRITE_BEGIN);
             if (!f) {    
                 //if (irqs_enabled) __enable_irq();
-                Serial.printf(F("\tError: couldn't open %s for writing\n"), filename);
+                Serial_printf(F("\tError: couldn't open %s for writing\n"), filename);
                 return false;
             }
             f.println(F("; begin loop"));
@@ -725,13 +725,13 @@ class MIDITrack {
             f.println(F("; end loop"));
             f.close();
             //if (irqs_enabled) __enable_irq();
-            Serial.printf(F("Finished saving, %i lines written!\n"), lines_written);
+            Serial_printf(F("Finished saving, %i lines written!\n"), lines_written);
 
             if (lines_written==0) {
                 // TODO:  delete the empty file / update project availability so it displays the slot as empty
             }
 
-            Serial.println(F("Re-drawing bitmap from save..."));
+            Serial_println(F("Re-drawing bitmap from save..."));
             clear_hanging();
             this->draw_piano_roll_bitmap_from_save();
             clear_hanging();
@@ -756,27 +756,27 @@ class MIDITrack {
         bool load_loop(int project_number, int recording_number) {
             #ifdef ENABLE_SD
             //this->debug = true;
-            Serial.println("load_loop: top of load_loop()"); Serial_flush();
+            Serial_println("load_loop: top of load_loop()"); Serial_flush();
             ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
             if (global_load_lock) {
-                Serial.println("load_loop: global_load_lock is set, so returning!");
+                Serial_println("load_loop: global_load_lock is set, so returning!");
                 return false;
             }
             static volatile bool already_loading = false;
             if (already_loading) {
-                Serial.println("load_loop: global_load_lock is set, so returning!");
+                Serial_println("load_loop: global_load_lock is set, so returning!");
                 return false;
             }
             already_loading = true;
             global_load_lock = true;
 
             const char *filename = get_loop_filename(project_number, recording_number);
-            Serial.printf(F("load_loop: midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
+            Serial_printf(F("load_loop: midi_looper::load_loop(%i) opening %s\n"), recording_number, filename); Serial_flush();
 
             File f;
             f = SD.open(filename, FILE_READ);
             if (!f) {
-                Serial.printf(F("\tload_loop: Error: Couldn't open %s for reading!\n"), filename); Serial_flush();
+                Serial_printf(F("\tload_loop: Error: Couldn't open %s for reading!\n"), filename); Serial_flush();
                 /*#ifdef ENABLE_SCREEN
                     menu.set_last_message("Error loading recording!");//, recording_number);
                     menu.set_message_colour(ST77XX_RED);
@@ -790,7 +790,7 @@ class MIDITrack {
 
             clear_all();
 
-            Serial.printf("\tload_loop: Entering load loop for project %i and recording_number %i..\n", project_number, recording_number);
+            Serial_printf("\tload_loop: Entering load loop for project %i and recording_number %i..\n", project_number, recording_number);
             Serial_flush();
 
             int loop_length_size = 1;   // default to 1-to-1 time:event time mapping, like in old format
@@ -799,7 +799,7 @@ class MIDITrack {
             String line;
             int time = 0;
             while (line = f.readStringUntil('\n')) {
-                if (this->debug) { Serial.printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
+                if (this->debug) { Serial_printf(F("--reading line %s\n"), line.c_str()); Serial_flush(); }
                 //load_scene_parse_line(line, output);
                 if (line.startsWith(F("starts_at="))) {
                     time =      line.remove(0,String(F("starts_at=")).length()).toInt() * loop_length_size;
@@ -834,27 +834,27 @@ class MIDITrack {
                         m.pitch = tmp_pitch;
                         m.velocity = tmp_velocity;
                         #ifdef DEBUG_LOOP_LOADER
-                            Serial.printf(F("read message int8_ts: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
+                            Serial_printf(F("read message int8_ts: %02x, %02x, %02x, %02x\n"), m.message_type, m.channel, m.pitch, m.velocity); Serial_flush();
                         #endif
-                        if (this->debug) { Serial.printf(F("storing event at %i\n"), time); Serial_flush(); }
+                        if (this->debug) { Serial_printf(F("storing event at %i\n"), time); Serial_flush(); }
                         store_event(time, m);
                         messages_count++;
                         tok = strtok(NULL,",;:");
                     }
                     #ifdef DEBUG_LOOP_LOADER
-                        Serial.printf(F("load_loop: for time\t%i read\t%i messages\n"), time, messages_count);
+                        Serial_printf(F("load_loop: for time\t%i read\t%i messages\n"), time, messages_count);
                     #endif
                     total_messages += messages_count;
                     time++;
                 }
             }
             #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("load_loop: Closing file.."));
+                Serial_println(F("load_loop: Closing file.."));
             #endif
             f.close();
             //if (irqs_enabled) __enable_irq();
             #ifdef DEBUG_LOOP_LOADER
-                Serial.println(F("load_loop: File closed"));
+                Serial_println(F("load_loop: File closed"));
             #endif
 
             //Serial.printf("Loaded preset from [%s] [%i clocks, %i sequences of %i steps]\n", filename, clock_multiplier_index, sequence_data_index, output->size_steps);
@@ -862,7 +862,7 @@ class MIDITrack {
                 menu.set_last_message("Loaded recording %i"); //, recording_number);
                 menu.set_message_colour(ST77XX_GREEN);
             #endif*/
-            Serial.printf(F("load_loop: Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
+            Serial_printf(F("load_loop: Loaded recording from [%s] - [%i] frames with total [%i] messages\n"), filename, total_frames, total_messages); Serial_flush();
             
             loaded_recording_number = recording_number;
             clear_hanging();

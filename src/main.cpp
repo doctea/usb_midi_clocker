@@ -216,7 +216,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setTimeout(0);
   #ifdef ENABLE_SERIAL_OUTPUT_QUEUE
-    (void)foundling::serial_output();
+    foundling::serial_output().begin();
   #endif
   #ifdef WAIT_FOR_SERIAL
     //tft_print("\nWaiting for serial connection..");
@@ -236,14 +236,14 @@ void setup() {
     asm volatile("mov %0, sp" : "=r"(_sp));
     uint32_t static_free  = (uint32_t)&_estack - (uint32_t)&_ebss;
     uint32_t frame_depth  = (uint32_t)&_estack - _sp;
-    Serial.printf("Stack: %u bytes static free, setup() frame depth %u bytes\n",
+    Serial_printf("Stack: %u bytes static free, setup() frame depth %u bytes\n",
                   static_free, frame_depth);
     if (static_free < 8192)
-      Serial.printf("*** WARNING: only %u bytes of stack available - likely to crash! ***\n",
+      Serial_printf("*** WARNING: only %u bytes of stack available - likely to crash! ***\n",
                     static_free);
     else if (static_free < 16384)
-      Serial.printf("*** CAUTION: stack headroom is low (%u bytes) ***\n", static_free);
-    Serial.flush();
+      Serial_printf("*** CAUTION: stack headroom is low (%u bytes) ***\n", static_free);
+    Serial_flush();
   }
   
   if (CrashReport) {
@@ -336,7 +336,7 @@ void setup() {
       usb_watchdog_reset = runtime_watchdog.expired();
     #endif
     if (storage::log_usb_diagnostics_after_reset(usb_watchdog_reset)) {
-      Serial.println("Previous USB diagnostics appended to usb_debug.log");
+      Serial_println("Previous USB diagnostics appended to usb_debug.log");
     }
   #endif
   Debug_printf(F("after setup_sd(), free RAM is %u\n"), freeRam());
@@ -446,7 +446,7 @@ void setup() {
 
   
   // After setup, check usage:
-  Serial.printf("vlpp arena: %u / %u bytes\n",
+  Serial_printf("vlpp arena: %u / %u bytes\n",
                 vlpp_arena_obj.bytes_used(), vlpp_arena_obj.capacity);
 
 
@@ -497,7 +497,7 @@ void setup() {
 
   #ifdef MENU_ITEM_ARENA
     menu_item_arena_obj.close_allocations();
-    Serial.printf("MenuItem arena: %lu/%lu bytes used, peak %lu, %lu allocations, %lu heap fallbacks (%lu bytes)\n",
+    Serial_printf("MenuItem arena: %lu/%lu bytes used, peak %lu, %lu allocations, %lu heap fallbacks (%lu bytes)\n",
                   (unsigned long)menu_item_arena_obj.bytes_used(),
                   (unsigned long)menu_item_arena_obj.bytes_capacity(),
                   (unsigned long)menu_item_arena_obj.peak_bytes_used(),
@@ -507,7 +507,7 @@ void setup() {
   #endif
 
   // passes true so that value is recounted
-  if (Serial) Serial.printf("Free extRAM at boot: %i bytes\n", freeExtRam(true));
+  Serial_printf("Free extRAM at boot: %i bytes\n", freeExtRam(true));
 }
 
 //long loop_counter = 0;
@@ -883,7 +883,7 @@ void do_tick(uint32_t in_ticks) {
   if (last_processed_tick == in_ticks) {
     //if (debug) { 
       Serial_println(F("do_tick(): already done this tick, returning")); Serial_flush(); 
-      Serial.printf("do_tick(): already processed tick %u, returning\n", in_ticks);
+      Serial_printf("do_tick(): already processed tick %u, returning\n", in_ticks);
     //}
     return;   // already did this tick
   }

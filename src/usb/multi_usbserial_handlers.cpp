@@ -38,40 +38,40 @@
             pid = 0x0000FFFF & packed_id;
         }
         if ((uint32_t)((usb_serial_slots[idx].usbdevice->idVendor()<<16) | (usb_serial_slots[idx].usbdevice->idProduct())) != packed_id) {
-            Serial.printf(F("packed_id %08X and newly-generated packed_id %08X don't match already?!"), 
+            Serial_printf(F("packed_id %08X and newly-generated packed_id %08X don't match already?!"), 
                 (usb_serial_slots[idx].usbdevice->idVendor()<<16) | (usb_serial_slots[idx].usbdevice->idProduct()),
                 packed_id 
             );
             return;
         }
-        Serial.printf(F("USBSerial Port %d changed from %08X to %08X (now "), idx, usb_serial_slots[idx].packed_id, packed_id);
+        Serial_printf(F("USBSerial Port %d changed from %08X to %08X (now "), idx, usb_serial_slots[idx].packed_id, packed_id);
         if (usb_serial_slots[idx].usbdevice!=nullptr)
-            Serial.printf(F("'%s' '%s')\n"), usb_serial_slots[idx].usbdevice->manufacturer(), usb_serial_slots[idx].usbdevice->product());
+            Serial_printf(F("'%s' '%s')\n"), usb_serial_slots[idx].usbdevice->manufacturer(), usb_serial_slots[idx].usbdevice->product());
         else 
-            Serial.println(F("disconnected)"));
+            Serial_println(F("disconnected)"));
         usb_serial_slots[idx].packed_id = packed_id;
 
         // remove handlers that might already be set on this port -- new ones assigned below thru xxx_init() functions
         if (usb_serial_slots[idx].behaviour!=nullptr) {
-            Serial.printf(F("Disconnecting usbserial_slot %i behaviour\n"), idx);
+            Serial_printf(F("Disconnecting usbserial_slot %i behaviour\n"), idx);
             usb_serial_slots[idx].behaviour->disconnect_device();
         }
 
         if (packed_id==0) {
             usb_serial_slots[idx].packed_id = 0;
-            Serial.printf(F("Disconnected usbserial device on port %i\n"), idx);
+            Serial_printf(F("Disconnected usbserial device on port %i\n"), idx);
             return;
         }
 
         // attempt to connect this device to a registered behaviour type
-        Serial.printf(F("About to attempt to connect port %d w/ %08x\n"), idx, packed_id);
+        Serial_printf(F("About to attempt to connect port %d w/ %08x\n"), idx, packed_id);
         if (behaviour_manager->attempt_usbserial_device_connect(idx, packed_id))
             return;
 
         //usb_midi_connected[idx] = packed_id;
         usb_serial_slots[idx].packed_id = packed_id;
 
-        Serial.printf(F("Detected unknown (or disabled) USB Serial device vid=%04x pid=%04x\n"), vid, pid);
+        Serial_printf(F("Detected unknown (or disabled) USB Serial device vid=%04x pid=%04x\n"), vid, pid);
     }
 
 
@@ -90,10 +90,10 @@
                     // device at this port has changed since we last saw it -- ie, disconnection or connection
                     // unassign the midi_xxx helper pointers if appropriate
                     //usb_serial_slots[port].behaviour = nullptr;
-                    Serial.printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_serial_slots[port].packed_id);
+                    Serial_printf(F("update_usbserial_device_connections(): device at port %i is %08X which differs from current %08X!\n"), port, packed_id, usb_serial_slots[port].packed_id);
                     // call setup_usb_midi_device() to assign device to port and set handlers
                     setup_usbserial_midi_device(port, packed_id);
-                    Serial.println(F("-----"));
+                    Serial_println(F("-----"));
                 }
         }
     }

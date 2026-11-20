@@ -274,7 +274,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             void send_preset_change(int phrase_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % BEATSTEP_NUM_PATTERNS);
+                Serial_printf(F("beatstep#send_preset_change(%i)\n"), phrase_number % BEATSTEP_NUM_PATTERNS);
 
                 uint8_t data[] = {
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x05, (uint8_t)/*1+*/(phrase_number % BEATSTEP_NUM_PATTERNS), 0xF7
@@ -286,7 +286,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             void send_preset_save(int preset_number) {
                 if (this->device==nullptr) return;
 
-                Serial.printf(F("beatstep#send_preset_save(%i)\n"), preset_number % BEATSTEP_NUM_PATTERNS);
+                Serial_printf(F("beatstep#send_preset_save(%i)\n"), preset_number % BEATSTEP_NUM_PATTERNS);
 
                 uint8_t data[] = {
                     0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x06, (uint8_t)/*1+*/(preset_number % BEATSTEP_NUM_PATTERNS), 0xF7
@@ -445,7 +445,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
                 this->request_all_sysex_parameters(3);
             }
             void request_all_sysex_parameters(int delay) {
-                if (debug_sysex) Serial.printf("request_all_sysex_parameters with delay %i!!\n", delay);
+                if (debug_sysex) Serial_printf("request_all_sysex_parameters with delay %i!!\n", delay);
                 /*this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_PATTERN_LENGTH, delay);
                 this->request_sysex_parameter(BEATSTEP_GLOBAL, BEATSTEP_DIRECTION, 0);            */
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
@@ -457,10 +457,10 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             void process_sysex_request(BeatstepSysexRequest req) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x01,0x00,req.pp,req.cc,0xF7 };
                 if (debug_sysex) {
-                    Serial.print("Sending Sysex to BeatStep\t[ ");
+                    Serial_print("Sending Sysex to BeatStep\t[ ");
                     for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
-                        Serial.printf("%02x ", data[i]);
-                    Serial.println("] (request)");
+                        Serial_printf("%02x ", data[i]);
+                    Serial_println("] (request)");
                 }
                 if (this->device) {
                     //this->device->sendSysEx(sizeof(data), data, true);
@@ -470,17 +470,17 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             }
             // put a new request into the sysex queue
             void request_sysex_parameter(byte pp, byte cc, int delay = 0) {
-                if (debug_sysex) Serial.printf("Queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
+                if (debug_sysex) Serial_printf("Queueing request for %02x, %02x with %ims delay\n", pp, cc, delay);
                 this->sysex_request_queue->push(BeatstepSysexRequest {pp, cc}, SYSEX_TIMEOUT, delay);
             }
             // set a beatstep sysex parameter
             void set_sysex_parameter(byte pp, byte cc, byte vv) {
                 const uint8_t data[] = { 0xF0,0x00,0x20,0x6B,0x7F,0x42,0x02,0x00,pp,cc,vv,0xF7 };
                 if (debug_sysex) {
-                    Serial.print("Sending Sysex to BeatStep\t[ ");
+                    Serial_print("Sending Sysex to BeatStep\t[ ");
                     for(uint32_t i = 0 ; i < sizeof(data) ; i++) 
-                        Serial.printf("%02x ", data[i]);
-                    Serial.printf("] (setting %02x,%02x to %02x)\n", pp, cc, vv);
+                        Serial_printf("%02x ", data[i]);
+                    Serial_printf("] (setting %02x,%02x to %02x)\n", pp, cc, vv);
                 }
                 if (this->device)
                     this->device->sendSysEx(sizeof(data), data, true);
@@ -489,19 +489,19 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
             // handles incoming sysex from beatstep to update internal state - unpauses the queue if we've received something
             void handle_sysex(const uint8_t *data, uint16_t length, bool complete) {
                 if (debug_sysex) {
-                    Serial.print("BeatStep replied with Sysex:\t[ ");
+                    Serial_print("BeatStep replied with Sysex:\t[ ");
                     for (uint32_t i = 0 ; i < length ; i++) {
-                        Serial.printf("%02x ", data[i]);
+                        Serial_printf("%02x ", data[i]);
                     }
-                    Serial.print("] ");
-                    Serial.print(complete ? "complete" : "incomplete");
-                    Serial.println();
+                    Serial_print("] ");
+                    Serial_print(complete ? "complete" : "incomplete");
+                    Serial_println();
                 }
                 #define BROAD_POS 8
                 #define SPEC_POS 9
                 #define VALUE_POS 10
                 if (length < BROAD_POS-1 || !complete) {
-                    if (debug_sysex) Serial.printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
+                    if (debug_sysex) Serial_printf("handle_sysex received incomplete message with length %i - ignoring!\n", length);
                     return;
                 }
                 for (unsigned int i = 0 ; i < NUM_SYSEX_PARAMETERS ; i++) {
@@ -542,12 +542,12 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
 
         // UNTESTED!!! 
         void configure_cntrl_for_mock_sequencer() {
-            Serial.println("starting configure_cntrl_for_mock_sequencer...");
+            Serial_println("starting configure_cntrl_for_mock_sequencer...");
             for (int preset = 0 ; preset < 16 ; preset++) {
                 this->send_preset_change(preset);
                 delay(10);
                 for (int pad = 0 ; pad < NUM_ENCODERS ; pad++) {
-                    Serial.printf("Processing pad/encoder %i/%i..\n", pad, NUM_ENCODERS+1);
+                    Serial_printf("Processing pad/encoder %i/%i..\n", pad, NUM_ENCODERS+1);
                     this->set_sysex_parameter(SYSEX_CHANNEL,    BEATSTEP_SYSEX_BASE_ENCODER + pad, 0x41);
                     this->set_sysex_parameter(SYSEX_CHANNEL,    BEATSTEP_SYSEX_BASE_PADS    + pad, 0x41);
                     this->set_sysex_parameter(SYSEX_BEHAVIOUR,  BEATSTEP_SYSEX_BASE_PADS    + pad, SYSEX_PAD_MODE_SILENT_CC_SWITCH);
@@ -556,7 +556,7 @@ class DeviceBehaviour_Beatstep : virtual public DeviceBehaviourUSBBase, virtual 
                 this->send_preset_save(preset);
                 delay(10);
             }
-            Serial.println("finished configure_cntrl_for_mock_sequencer");
+            Serial_println("finished configure_cntrl_for_mock_sequencer");
         }
 
 };

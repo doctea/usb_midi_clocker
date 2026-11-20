@@ -383,10 +383,10 @@
     }
 
     void OnExtrasPress(uint32_t top, uint16_t code) {
-        Serial.printf("OnExtrasPress top=0x%04x, code=0x%02x\n", top, code);
+        Serial_printf("OnExtrasPress top=0x%04x, code=0x%02x\n", top, code);
     }
     void OnExtrasRelease(uint32_t top, uint16_t code) {
-        Serial.printf("OnExtrasPress top=0x%04x, code=0x%02x\n", top, code);
+        Serial_printf("OnExtrasPress top=0x%04x, code=0x%02x\n", top, code);
     }    
 
     #ifndef GDB_DEBUG
